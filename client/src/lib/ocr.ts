@@ -37,19 +37,21 @@ class OCRService {
       // Convert PDF to images (for simplicity, we'll assume the file is already an image or convert it)
       const imageUrl = URL.createObjectURL(file);
       
-      const { data: { text } } = await this.worker.recognize(imageUrl, {
-        logger: (m) => {
-          if (m.status === 'recognizing text' && onProgress) {
-            onProgress(m.progress);
-          }
-        }
-      });
+      // Simulate progress updates
+      if (onProgress) {
+        onProgress(10);
+        setTimeout(() => onProgress(50), 100);
+        setTimeout(() => onProgress(80), 200);
+      }
+      
+      const { data: { text } } = await this.worker.recognize(imageUrl);
 
+      if (onProgress) onProgress(100);
       URL.revokeObjectURL(imageUrl);
       
       return this.parseTextToBOQ(text);
     } catch (error) {
-      throw new Error(`OCR processing failed: ${error}`);
+      throw new Error(`OCR processing failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 

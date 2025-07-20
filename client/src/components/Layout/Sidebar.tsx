@@ -74,16 +74,14 @@ export default function Sidebar() {
             const isActive = location === item.href || (item.href !== '/' && location.startsWith(item.href));
             
             return (
-              <Link key={item.name} href={item.href}>
-                <a className={cn(
-                  "flex items-center space-x-3 px-4 py-3 rounded-lg font-medium transition-colors",
-                  isActive
-                    ? "text-primary bg-primary/10"
-                    : "text-gray-700 hover:bg-gray-100"
-                )}>
-                  <item.icon className="w-5 h-5" />
-                  <span>{item.name}</span>
-                </a>
+              <Link key={item.name} href={item.href} className={cn(
+                "flex items-center space-x-3 px-4 py-3 rounded-lg font-medium transition-colors",
+                isActive
+                  ? "text-primary bg-primary/10"
+                  : "text-gray-700 hover:bg-gray-100"
+              )}>
+                <item.icon className="w-5 h-5" />
+                <span>{item.name}</span>
               </Link>
             );
           })}
