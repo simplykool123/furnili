@@ -134,10 +134,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/products", authenticateToken, requireRole(["admin", "manager"]), productImageUpload.single("image"), async (req, res) => {
     try {
-      const productData = insertProductSchema.parse(req.body);
+      // Convert FormData strings to proper types
+      const formDataSchema = z.object({
+        name: z.string().min(1, "Product name is required"),
+        category: z.string().min(1, "Category is required"),
+        brand: z.string().optional(),
+        size: z.string().optional(),
+        sku: z.string().optional(),
+        price: z.string().transform((val) => parseFloat(val)).pipe(z.number().min(0, "Price must be positive")),
+        currentStock: z.string().transform((val) => parseInt(val, 10)).pipe(z.number().int().min(0, "Stock must be non-negative")),
+        minStock: z.string().transform((val) => parseInt(val, 10)).pipe(z.number().int().min(0, "Minimum stock must be non-negative")),
+        unit: z.string().min(1, "Unit is required"),
+      });
+      
+      const productData = formDataSchema.parse(req.body);
       
       if (req.file) {
-        productData.imageUrl = `/uploads/products/${req.file.filename}`;
+        (productData as any).imageUrl = `/uploads/products/${req.file.filename}`;
       }
       
       const product = await storage.createProduct(productData);
@@ -153,10 +166,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/products/:id", authenticateToken, requireRole(["admin", "manager"]), productImageUpload.single("image"), async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      const updates = req.body;
+      
+      // Convert FormData strings to proper types for updates
+      const formDataSchema = z.object({
+        name: z.string().min(1, "Product name is required").optional(),
+        category: z.string().min(1, "Category is required").optional(),
+        brand: z.string().optional(),
+        size: z.string().optional(),
+        sku: z.string().optional(),
+        price: z.string().transform((val) => parseFloat(val)).pipe(z.number().min(0, "Price must be positive")).optional(),
+        currentStock: z.string().transform((val) => parseInt(val, 10)).pipe(z.number().int().min(0, "Stock must be non-negative")).optional(),
+        minStock: z.string().transform((val) => parseInt(val, 10)).pipe(z.number().int().min(0, "Minimum stock must be non-negative")).optional(),
+        unit: z.string().min(1, "Unit is required").optional(),
+      });
+      
+      const updates = formDataSchema.parse(req.body);
       
       if (req.file) {
-        updates.imageUrl = `/uploads/products/${req.file.filename}`;
+        (updates as any).imageUrl = `/uploads/products/${req.file.filename}`;
       }
       
       const product = await storage.updateProduct(id, updates);
@@ -167,6 +194,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json(product);
     } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Validation failed", errors: error.errors });
+      }
       res.status(500).json({ message: "Failed to update product", error });
     }
   });
