@@ -1,0 +1,121 @@
+Build a full-stack **Inventory Management & Material Request System** with **BOQ OCR**, **Role-Based Access**, and **Offline Hosting Support** (to run fully on a private/local server or LAN).
+
+---
+
+### 🔐 Authentication & User Roles:
+
+Enable login/logout with secure role-based access control:
+
+- **Admin**:
+  - Full control over users, system settings, inventory, and reports
+
+- **Manager**:
+  - Can add/edit products, upload BOQ files, and request materials
+
+- **Storekeeper**:
+  - Can issue stock, maintain inventory, and approve/reject requests
+
+- **User**:
+  - Can only submit material requests and view their own request history
+
+Use **JWT or session-based authentication** with role-based route protection.
+
+---
+
+### 📦 Product Management:
+
+Each product must have:
+- Product Name (Text)
+- Category (Dropdown/Text)
+- Brand (Text)
+- Size (Text or dropdown)
+- Price (Rate per unit)
+- SKU (optional)
+- Stock Quantity (number)
+- Minimum Stock Quantity (for low-stock alerts)
+- Image Upload (preview image in dashboard)
+
+Admins and Managers can manage products.  
+Low stock alerts shown on dashboard if stock < minimumQuantity.
+
+---
+
+### 📄 BOQ Upload + OCR:
+
+- Managers should be able to upload **BOQ PDFs**
+- Extract structured data using **Tesseract.js (OCR)**:
+  - Item description
+  - Quantity
+  - Unit
+  - Rate
+- Preview and confirm before auto-creating material requests
+
+---
+
+### 📥 Material Request System:
+
+Allow Users/Managers to submit Material Requests with:
+
+- Client Name
+- Order Number
+- Requested Date (auto)
+- Requested By (auto)
+- List of Products + Quantity
+- BOQ Reference (optional)
+- Remarks (optional)
+
+Workflow:
+- Request starts as **Pending**
+- Storekeeper **approves**, **issues**, or **rejects**
+- Approved requests reduce stock
+- Request history and statuses viewable by role
+
+---
+
+### 📊 Dashboards & Reports:
+
+Role-specific dashboards:
+
+- **Admin**: Total requests, low-stock alerts, stock stats
+- **Manager**: BOQ history, request tracker, inventory
+- **Storekeeper**: Stock overview, approval queue
+- **User**: Request history by client/order
+
+CSV Reports:
+- Export inventory data
+- Request logs by client/order/date
+- Low stock product list
+
+---
+
+### 💻 Offline / Self-Hosted Deployment:
+
+- **App must run fully offline** on user's own server or local network (LAN)
+- Provide documentation to:
+  - Install Node.js + MongoDB
+  - Set up `.env` for local DB + file paths
+  - Run using `npm start`
+  - Serve frontend locally (React or static HTML)
+- No cloud dependencies required (OCR and DB are local)
+- Optional: Docker support for one-click local deployment
+
+---
+
+### ⚙️ Tech Stack:
+
+- **Frontend**: React.js (with Tailwind optional) or HTML/CSS/JS
+- **Backend**: Node.js with Express.js
+- **Database**: MongoDB (self-hosted)
+- **OCR**: Tesseract.js (runs locally)
+- **File Uploads**: Multer (for product images, BOQ PDFs)
+- **Authentication**: JWT or session-based
+
+---
+
+### ✅ Additional Notes:
+
+- Models: `Product`, `MaterialRequest`, `User`, `BOQUpload`
+- Middleware: Role validation, error handling, input sanitization
+- Include README to set up and run app offline
+- Reusable components for forms, tables, and dashboards
+- Option to filter reports by date, client, category, and status
