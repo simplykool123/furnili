@@ -26,6 +26,10 @@ interface OCRResult {
   items: BOQExtractedItem[];
   projectName?: string;
   totalValue: number;
+  client?: string;
+  workOrderNumber?: string;
+  workOrderDate?: string;
+  description?: string;
 }
 
 export default function BOQUpload() {
@@ -211,10 +215,10 @@ export default function BOQUpload() {
 
     const requestData = {
       request: {
-        clientName: extractedData.projectName || 'BOQ Project',
-        orderNumber: `BOQ-${Date.now()}`,
-        boqReference: `BOQ-${Date.now()}`,
-        remarks: `Created from BOQ upload - ${validItems.length} items`,
+        clientName: extractedData.client || extractedData.projectName || 'BOQ Project',
+        orderNumber: extractedData.workOrderNumber || `BOQ-${Date.now()}`,
+        boqReference: `${extractedData.projectName || 'BOQ'}-${extractedData.workOrderNumber || Date.now()}`,
+        remarks: `Created from BOQ: ${extractedData.projectName} (${validItems.length} items)${extractedData.description ? ` - ${extractedData.description}` : ''}`,
         priority: 'medium',
       },
       items: validItems.map(item => ({
@@ -324,9 +328,37 @@ export default function BOQUpload() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="mb-4">
-              <p className="font-medium">Project: {extractedData.projectName}</p>
-              <p className="text-sm text-gray-600">Total Items: {extractedData.items.length}</p>
+            {/* Project Information */}
+            <div className="mb-6 p-4 bg-blue-50 rounded-lg">
+              <h3 className="font-semibold text-blue-900 mb-3">Project Details</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
+                <div>
+                  <span className="font-medium text-gray-700">Project:</span>
+                  <p className="text-gray-900">{extractedData.projectName || 'N/A'}</p>
+                </div>
+                <div>
+                  <span className="font-medium text-gray-700">Client:</span>
+                  <p className="text-gray-900">{extractedData.client || 'N/A'}</p>
+                </div>
+                <div>
+                  <span className="font-medium text-gray-700">Work Order #:</span>
+                  <p className="text-gray-900">{extractedData.workOrderNumber || 'N/A'}</p>
+                </div>
+                <div>
+                  <span className="font-medium text-gray-700">Work Order Date:</span>
+                  <p className="text-gray-900">{extractedData.workOrderDate || 'N/A'}</p>
+                </div>
+              </div>
+              {extractedData.description && (
+                <div className="mt-3">
+                  <span className="font-medium text-gray-700">Description:</span>
+                  <p className="text-gray-900 text-sm mt-1">{extractedData.description}</p>
+                </div>
+              )}
+              <div className="mt-3">
+                <span className="font-medium text-gray-700">Total Items Extracted:</span>
+                <span className="text-gray-900 ml-2">{extractedData.items.length}</span>
+              </div>
             </div>
 
             <div className="overflow-x-auto">

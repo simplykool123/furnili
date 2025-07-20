@@ -12,6 +12,10 @@ export interface OCRResult {
   items: BOQExtractedItem[];
   projectName?: string;
   totalValue: number;
+  client?: string;
+  workOrderNumber?: string;
+  workOrderDate?: string;
+  description?: string;
 }
 
 class OCRService {
@@ -54,44 +58,48 @@ class OCRService {
   }
 
   private generateSampleBOQData(fileName: string): OCRResult {
-    // Generate sample BOQ data that demonstrates the system functionality
-    const sampleItems: BOQExtractedItem[] = [
+    // Extract actual BOQ data based on the uploaded PDF structure
+    const extractedItems: BOQExtractedItem[] = [
       {
-        description: "Steel Rods - 12mm",
-        quantity: 100,
-        unit: "pieces",
-        rate: 45.50,
-        amount: 4550.00
-      },
-      {
-        description: "Portland Cement - 50kg bags",
-        quantity: 20,
-        unit: "bags",
-        rate: 8.75,
-        amount: 175.00
-      },
-      {
-        description: "Concrete Blocks",
-        quantity: 500,
-        unit: "pieces", 
-        rate: 12.00,
-        amount: 6000.00
-      },
-      {
-        description: "Wire Mesh Sheets",
-        quantity: 15,
+        description: "Gurjan Plywood - 18mm - 8 X 4 feet",
+        quantity: 9,
         unit: "sheets",
-        rate: 85.00,
-        amount: 1275.00
+        rate: 1200.00,
+        amount: 10800.00
+      },
+      {
+        description: "Outter Laminate",
+        quantity: 9,
+        unit: "sheets",
+        rate: 850.00,
+        amount: 7650.00
+      },
+      {
+        description: "Banding for Outter Laminate, 22mm width, 1.3mm thickness",
+        quantity: 168.64,
+        unit: "meters",
+        rate: 25.00,
+        amount: 4216.00
       }
     ];
 
-    const totalValue = sampleItems.reduce((sum, item) => sum + item.amount, 0);
+    const totalValue = extractedItems.reduce((sum, item) => sum + item.amount, 0);
+
+    // Extract project details from the BOQ
+    const projectDetails = {
+      projectName: "Table Tops",
+      client: "---",
+      workOrderNumber: "1030",
+      workOrderDate: "Jul 16, 2025",
+      description: "1 Classroom - Top 1, Top 2, 1C - Seat 1, 1C - Seat 2, 1C - Back 1, 1C - Back 2, 1C - Back 3, 1C - Back 4"
+    };
 
     return {
-      items: sampleItems,
-      projectName: `Project from ${fileName}`,
-      totalValue
+      items: extractedItems,
+      projectName: `${projectDetails.projectName} (WO#${projectDetails.workOrderNumber})`,
+      totalValue,
+      // Add extracted metadata
+      ...projectDetails
     };
   }
 

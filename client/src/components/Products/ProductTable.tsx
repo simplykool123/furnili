@@ -274,11 +274,14 @@ export default function ProductTable() {
 
       {/* Product Form Dialog */}
       <Dialog open={showForm} onOpenChange={setShowForm}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl" aria-describedby="product-form-description">
           <DialogHeader>
             <DialogTitle>
               {editingProduct ? 'Edit Product' : 'Add New Product'}
             </DialogTitle>
+            <p id="product-form-description" className="sr-only">
+              {editingProduct ? 'Form to edit existing product details' : 'Form to create a new product in the inventory'}
+            </p>
           </DialogHeader>
           <ProductForm 
             product={editingProduct}
