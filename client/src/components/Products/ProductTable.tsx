@@ -44,7 +44,7 @@ export default function ProductTable() {
     queryFn: async () => {
       const params = new URLSearchParams();
       Object.entries(filters).forEach(([key, value]) => {
-        if (value) params.append(key, value);
+        if (value && value !== 'all') params.append(key, value);
       });
       
       const response = await authenticatedApiRequest('GET', `/api/products?${params}`);
@@ -76,7 +76,7 @@ export default function ProductTable() {
     try {
       const params = new URLSearchParams();
       Object.entries(filters).forEach(([key, value]) => {
-        if (value) params.append(key, value);
+        if (value && value !== 'all') params.append(key, value);
       });
       
       const response = await authenticatedApiRequest('GET', `/api/export/products?${params}`);
@@ -156,7 +156,7 @@ export default function ProductTable() {
                 <SelectValue placeholder="All Categories" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Categories</SelectItem>
+                <SelectItem value="all">All Categories</SelectItem>
                 <SelectItem value="Construction Materials">Construction Materials</SelectItem>
                 <SelectItem value="Electrical Supplies">Electrical Supplies</SelectItem>
                 <SelectItem value="Plumbing Supplies">Plumbing Supplies</SelectItem>
@@ -172,7 +172,7 @@ export default function ProductTable() {
                 <SelectValue placeholder="All Stock Levels" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Stock Levels</SelectItem>
+                <SelectItem value="all">All Stock Levels</SelectItem>
                 <SelectItem value="in-stock">In Stock</SelectItem>
                 <SelectItem value="low-stock">Low Stock</SelectItem>
                 <SelectItem value="out-of-stock">Out of Stock</SelectItem>
