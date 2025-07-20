@@ -382,14 +382,14 @@ export default function BOQUpload() {
                       </TableCell>
                       <TableCell>
                         <Select 
-                          value={item.matchedProductId?.toString() || ""}
-                          onValueChange={(value) => updateExtractedItem(index, 'matchedProductId', value ? parseInt(value) : undefined)}
+                          value={item.matchedProductId?.toString() || "none"}
+                          onValueChange={(value) => updateExtractedItem(index, 'matchedProductId', (value && value !== 'none') ? parseInt(value) : undefined)}
                         >
                           <SelectTrigger className="w-48">
                             <SelectValue placeholder="Select product" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="">No match</SelectItem>
+                            <SelectItem value="none">No match</SelectItem>
                             {products?.map((product: any) => (
                               <SelectItem key={product.id} value={product.id.toString()}>
                                 {product.name} ({product.sku})

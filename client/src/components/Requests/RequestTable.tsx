@@ -44,7 +44,7 @@ export default function RequestTable() {
     queryFn: async () => {
       const params = new URLSearchParams();
       Object.entries(filters).forEach(([key, value]) => {
-        if (value) params.append(key, value);
+        if (value && value !== 'all') params.append(key, value);
       });
       
       const response = await authenticatedApiRequest('GET', `/api/requests?${params}`);
@@ -78,7 +78,7 @@ export default function RequestTable() {
     try {
       const params = new URLSearchParams();
       Object.entries(filters).forEach(([key, value]) => {
-        if (value) params.append(key, value);
+        if (value && value !== 'all') params.append(key, value);
       });
       
       const response = await authenticatedApiRequest('GET', `/api/export/requests?${params}`);
@@ -218,7 +218,7 @@ export default function RequestTable() {
                 <SelectValue placeholder="All Status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Status</SelectItem>
+                <SelectItem value="all">All Status</SelectItem>
                 <SelectItem value="pending">Pending</SelectItem>
                 <SelectItem value="approved">Approved</SelectItem>
                 <SelectItem value="issued">Issued</SelectItem>

@@ -180,7 +180,7 @@ export default function ReportsView() {
                   <SelectValue placeholder="All Categories" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Categories</SelectItem>
+                  <SelectItem value="all">All Categories</SelectItem>
                   <SelectItem value="Construction Materials">Construction Materials</SelectItem>
                   <SelectItem value="Electrical Supplies">Electrical Supplies</SelectItem>
                   <SelectItem value="Plumbing Supplies">Plumbing Supplies</SelectItem>
