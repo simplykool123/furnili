@@ -21,9 +21,12 @@ export default function Products() {
       <ProductTable />
       
       <Dialog open={showAddProduct} onOpenChange={setShowAddProduct}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl" aria-describedby="add-product-description">
           <DialogHeader>
             <DialogTitle>Add New Product</DialogTitle>
+            <p id="add-product-description" className="sr-only">
+              Form to add a new product to the inventory system
+            </p>
           </DialogHeader>
           <ProductForm onClose={() => setShowAddProduct(false)} />
         </DialogContent>

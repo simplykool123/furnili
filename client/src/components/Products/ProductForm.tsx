@@ -17,9 +17,9 @@ const productSchema = z.object({
   brand: z.string().optional(),
   size: z.string().optional(),
   sku: z.string().optional(),
-  price: z.number().min(0, "Price must be positive"),
-  currentStock: z.number().int().min(0, "Stock must be non-negative"),
-  minStock: z.number().int().min(0, "Minimum stock must be non-negative"),
+  price: z.coerce.number().min(0, "Price must be positive"),
+  currentStock: z.coerce.number().int().min(0, "Stock must be non-negative"),
+  minStock: z.coerce.number().int().min(0, "Minimum stock must be non-negative"),
   unit: z.string().min(1, "Unit is required"),
 });
 
@@ -117,9 +117,16 @@ export default function ProductForm({ product, onClose }: ProductFormProps) {
     try {
       const formData = new FormData();
       
-      // Append all form fields
+      // Append all form fields with proper type conversion
       Object.entries(data).forEach(([key, value]) => {
-        formData.append(key, value.toString());
+        if (value === undefined || value === null) return;
+        
+        // Convert numbers properly
+        if (typeof value === 'number') {
+          formData.append(key, value.toString());
+        } else {
+          formData.append(key, value.toString());
+        }
       });
       
       // Append image if selected
@@ -254,7 +261,7 @@ export default function ProductForm({ product, onClose }: ProductFormProps) {
             id="price"
             type="number"
             step="0.01"
-            {...register("price", { valueAsNumber: true })}
+            {...register("price")}
             className={errors.price ? "border-red-500" : ""}
             placeholder="0.00"
           />
@@ -290,7 +297,7 @@ export default function ProductForm({ product, onClose }: ProductFormProps) {
           <Input
             id="currentStock"
             type="number"
-            {...register("currentStock", { valueAsNumber: true })}
+            {...register("currentStock")}
             className={errors.currentStock ? "border-red-500" : ""}
             placeholder="0"
           />
@@ -304,7 +311,7 @@ export default function ProductForm({ product, onClose }: ProductFormProps) {
           <Input
             id="minStock"
             type="number"
-            {...register("minStock", { valueAsNumber: true })}
+            {...register("minStock")}
             className={errors.minStock ? "border-red-500" : ""}
             placeholder="10"
           />
