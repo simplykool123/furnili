@@ -226,12 +226,15 @@ export default function Users() {
 
         {/* Add User Dialog */}
         <Dialog open={showAddUser} onOpenChange={setShowAddUser}>
-          <DialogContent>
+          <DialogContent aria-describedby="add-user-description">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <UserPlus className="w-5 h-5" />
                 Add New User
               </DialogTitle>
+              <p id="add-user-description" className="sr-only">
+                Form to create a new user account with name, email, and role
+              </p>
             </DialogHeader>
             
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">

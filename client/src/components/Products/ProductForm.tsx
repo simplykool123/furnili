@@ -16,6 +16,7 @@ const productSchema = z.object({
   category: z.string().min(1, "Category is required"),
   brand: z.string().optional(),
   size: z.string().optional(),
+  thickness: z.string().optional(),
   sku: z.string().optional(),
   price: z.coerce.number().min(0, "Price must be positive"),
   currentStock: z.coerce.number().int().min(0, "Stock must be non-negative"),
@@ -31,6 +32,7 @@ interface Product {
   category: string;
   brand?: string;
   size?: string;
+  thickness?: string;
   sku?: string;
   price: number;
   currentStock: number;
@@ -65,6 +67,7 @@ export default function ProductForm({ product, onClose }: ProductFormProps) {
       category: product?.category || "",
       brand: product?.brand || "",
       size: product?.size || "",
+      thickness: product?.thickness || "",
       sku: product?.sku || "",
       price: product?.price || 0,
       currentStock: product?.currentStock || 0,
@@ -225,7 +228,7 @@ export default function ProductForm({ product, onClose }: ProductFormProps) {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div>
           <Label htmlFor="brand">Brand</Label>
           <Input
@@ -240,7 +243,16 @@ export default function ProductForm({ product, onClose }: ProductFormProps) {
           <Input
             id="size"
             {...register("size")}
-            placeholder="e.g., 12mm diameter"
+            placeholder="e.g., 8 X 4 feet"
+          />
+        </div>
+
+        <div>
+          <Label htmlFor="thickness">Thickness</Label>
+          <Input
+            id="thickness"
+            {...register("thickness")}
+            placeholder="e.g., 12 mm, 6 mm, 16 mm"
           />
         </div>
       </div>

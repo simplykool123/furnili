@@ -21,9 +21,12 @@ export default function MaterialRequests() {
       <RequestTable />
       
       <Dialog open={showNewRequest} onOpenChange={setShowNewRequest}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto" aria-describedby="new-request-description">
           <DialogHeader>
             <DialogTitle>Create New Material Request</DialogTitle>
+            <p id="new-request-description" className="sr-only">
+              Form to create a new material request with client details and product items
+            </p>
           </DialogHeader>
           <RequestForm onClose={() => setShowNewRequest(false)} />
         </DialogContent>

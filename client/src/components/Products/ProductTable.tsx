@@ -18,6 +18,7 @@ interface Product {
   category: string;
   brand: string;
   size: string;
+  thickness: string;
   sku: string;
   price: number;
   currentStock: number;
@@ -199,6 +200,9 @@ export default function ProductTable() {
                 <TableRow>
                   <TableHead>Product</TableHead>
                   <TableHead>Category</TableHead>
+                  <TableHead>Brand</TableHead>
+                  <TableHead>Size</TableHead>
+                  <TableHead>Thickness</TableHead>
                   <TableHead>SKU</TableHead>
                   <TableHead>Stock</TableHead>
                   <TableHead>Price</TableHead>
@@ -226,11 +230,20 @@ export default function ProductTable() {
                         </div>
                         <div>
                           <p className="font-medium">{product.name}</p>
-                          <p className="text-sm text-gray-600">{product.brand}</p>
+                          <p className="text-sm text-gray-600">{product.sku}</p>
                         </div>
                       </div>
                     </TableCell>
                     <TableCell>{product.category}</TableCell>
+                    <TableCell>
+                      <span className="text-sm text-gray-900">{product.brand || '-'}</span>
+                    </TableCell>
+                    <TableCell>
+                      <span className="text-sm text-gray-900">{product.size || '-'}</span>
+                    </TableCell>
+                    <TableCell>
+                      <span className="text-sm font-medium text-blue-600">{product.thickness || '-'}</span>
+                    </TableCell>
                     <TableCell className="font-mono text-sm">{product.sku}</TableCell>
                     <TableCell>
                       <div>

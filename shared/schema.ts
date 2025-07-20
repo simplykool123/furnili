@@ -18,6 +18,7 @@ export const products = pgTable("products", {
   category: text("category").notNull(),
   brand: text("brand"),
   size: text("size"),
+  thickness: text("thickness"), // e.g., "12 mm", "6 mm", "16 mm"
   sku: text("sku").unique(),
   price: real("price").notNull(),
   currentStock: integer("current_stock").notNull().default(0),
