@@ -9,6 +9,7 @@ import { exportProductsCSV, exportRequestsCSV, exportLowStockCSV } from "./utils
 import {
   insertUserSchema,
   insertProductSchema,
+  insertCategorySchema,
   insertMaterialRequestSchema,
   insertRequestItemSchema,
   insertBOQUploadSchema,
@@ -97,6 +98,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ message: "User deleted successfully" });
     } catch (error) {
       res.status(500).json({ message: "Failed to delete user", error });
+    }
+  });
+
+  // Category routes
+  app.get("/api/categories", authenticateToken, async (req, res) => {
+    try {
+      const categories = await storage.getAllCategories();
+      res.json(categories);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch categories", error });
+    }
+  });
+
+  app.post("/api/categories", authenticateToken, requireRole(["admin", "manager"]), async (req, res) => {
+    try {
+      const categoryData = insertCategorySchema.parse(req.body);
+      const category = await storage.createCategory(categoryData);
+      res.status(201).json(category);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Validation failed", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create category", error });
+    }
+  });
+
+  app.put("/api/categories/:id", authenticateToken, requireRole(["admin", "manager"]), async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const updates = insertCategorySchema.partial().parse(req.body);
+      
+      const category = await storage.updateCategory(id, updates);
+      
+      if (!category) {
+        return res.status(404).json({ message: "Category not found" });
+      }
+      
+      res.json(category);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Validation failed", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to update category", error });
+    }
+  });
+
+  app.delete("/api/categories/:id", authenticateToken, requireRole(["admin", "manager"]), async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const deleted = await storage.deleteCategory(id);
+      
+      if (!deleted) {
+        return res.status(404).json({ message: "Category not found" });
+      }
+      
+      res.json({ message: "Category deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete category", error });
     }
   });
 

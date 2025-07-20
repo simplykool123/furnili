@@ -4,6 +4,7 @@ import { authService } from "@/lib/auth";
 import { 
   LayoutDashboard, 
   Package, 
+  Tag,
   ClipboardList, 
   FileText, 
   BarChart3, 
@@ -15,6 +16,7 @@ import {
 const navigation = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard, roles: ['admin', 'manager', 'storekeeper', 'user'] },
   { name: 'Products', href: '/products', icon: Package, roles: ['admin', 'manager'] },
+  { name: 'Categories', href: '/categories', icon: Tag, roles: ['admin', 'manager'] },
   { name: 'Material Requests', href: '/requests', icon: ClipboardList, roles: ['admin', 'manager', 'storekeeper', 'user'] },
   { name: 'BOQ Upload', href: '/boq', icon: FileText, roles: ['admin', 'manager'] },
   { name: 'Inventory', href: '/inventory', icon: Warehouse, roles: ['admin', 'storekeeper'] },

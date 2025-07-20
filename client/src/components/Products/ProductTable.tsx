@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import type { Category } from "@shared/schema";
 import { authenticatedApiRequest } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
@@ -51,6 +52,11 @@ export default function ProductTable() {
       const response = await authenticatedApiRequest('GET', `/api/products?${params}`);
       return response.json();
     },
+  });
+
+  // Fetch categories for filter dropdown
+  const { data: categories = [] } = useQuery<Category[]>({
+    queryKey: ["/api/categories"],
   });
 
   const deleteProductMutation = useMutation({
@@ -158,10 +164,9 @@ export default function ProductTable() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Categories</SelectItem>
-                <SelectItem value="Construction Materials">Construction Materials</SelectItem>
-                <SelectItem value="Electrical Supplies">Electrical Supplies</SelectItem>
-                <SelectItem value="Plumbing Supplies">Plumbing Supplies</SelectItem>
-                <SelectItem value="Tools & Equipment">Tools & Equipment</SelectItem>
+                {categories.map((category) => (
+                  <SelectItem key={category.id} value={category.name}>{category.name}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
 

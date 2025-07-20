@@ -12,6 +12,7 @@ import BOQ from "@/pages/BOQ";
 import MaterialRequests from "@/pages/MaterialRequests";
 import Reports from "@/pages/Reports";
 import Users from "@/pages/Users";
+import Categories from "@/pages/Categories";
 import NotFound from "@/pages/not-found";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -74,6 +75,12 @@ function Router() {
       <Route path="/products">
         <ProtectedRoute>
           <Products />
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/categories">
+        <ProtectedRoute>
+          <Categories />
         </ProtectedRoute>
       </Route>
       

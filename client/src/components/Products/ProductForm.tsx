@@ -2,9 +2,10 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { authenticatedApiRequest } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
+import type { Category } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -176,16 +177,10 @@ export default function ProductForm({ product, onClose }: ProductFormProps) {
     setImagePreview(null);
   };
 
-  const categories = [
-    "Construction Materials",
-    "Electrical Supplies", 
-    "Plumbing Supplies",
-    "Tools & Equipment",
-    "Hardware & Fasteners",
-    "Safety Equipment",
-    "Cement & Concrete",
-    "Steel & Metal",
-  ];
+  // Fetch categories from API
+  const { data: categories = [] } = useQuery<Category[]>({
+    queryKey: ["/api/categories"],
+  });
 
   const units = [
     "pieces", "meters", "kg", "bags", "boxes", "liters", "tons", "feet", "inches", "sq.ft", "cubic.ft"
@@ -218,7 +213,7 @@ export default function ProductForm({ product, onClose }: ProductFormProps) {
             </SelectTrigger>
             <SelectContent>
               {categories.map((category) => (
-                <SelectItem key={category} value={category}>{category}</SelectItem>
+                <SelectItem key={category.id} value={category.name}>{category.name}</SelectItem>
               ))}
             </SelectContent>
           </Select>

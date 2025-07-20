@@ -1,5 +1,6 @@
 import {
   users,
+  categories,
   products,
   materialRequests,
   requestItems,
@@ -7,6 +8,8 @@ import {
   stockMovements,
   type User,
   type InsertUser,
+  type Category,
+  type InsertCategory,
   type Product,
   type InsertProduct,
   type MaterialRequest,
@@ -32,6 +35,13 @@ export interface IStorage {
   updateUser(id: number, updates: Partial<InsertUser>): Promise<User | undefined>;
   getAllUsers(): Promise<User[]>;
   deleteUser(id: number): Promise<boolean>;
+
+  // Category operations
+  getCategory(id: number): Promise<Category | undefined>;
+  getAllCategories(): Promise<Category[]>;
+  createCategory(category: InsertCategory): Promise<Category>;
+  updateCategory(id: number, updates: Partial<InsertCategory>): Promise<Category | undefined>;
+  deleteCategory(id: number): Promise<boolean>;
   
   // Product operations
   getProduct(id: number): Promise<Product | undefined>;
@@ -80,6 +90,7 @@ export interface IStorage {
 
 export class MemStorage implements IStorage {
   private users: Map<number, User> = new Map();
+  private categories: Map<number, Category> = new Map();
   private products: Map<number, Product> = new Map();
   private materialRequests: Map<number, MaterialRequest> = new Map();
   private requestItems: Map<number, RequestItem[]> = new Map();
@@ -184,7 +195,72 @@ export class MemStorage implements IStorage {
       createdAt: new Date(),
     });
 
-    this.currentId = 5;
+    // Create default categories
+    this.categories.set(1, {
+      id: 1,
+      name: "Construction Materials",
+      description: "Basic construction materials like cement, steel, bricks",
+      isActive: true,
+      createdAt: new Date(),
+    });
+
+    this.categories.set(2, {
+      id: 2,
+      name: "Electrical Supplies",
+      description: "Electrical components, wires, switches, fixtures",
+      isActive: true,
+      createdAt: new Date(),
+    });
+
+    this.categories.set(3, {
+      id: 3,
+      name: "Plumbing Supplies",
+      description: "Pipes, fittings, valves, pumps",
+      isActive: true,
+      createdAt: new Date(),
+    });
+
+    this.categories.set(4, {
+      id: 4,
+      name: "Tools & Equipment",
+      description: "Hand tools, power tools, machinery",
+      isActive: true,
+      createdAt: new Date(),
+    });
+
+    this.categories.set(5, {
+      id: 5,
+      name: "Hardware & Fasteners",
+      description: "Bolts, screws, nails, hinges, locks",
+      isActive: true,
+      createdAt: new Date(),
+    });
+
+    this.categories.set(6, {
+      id: 6,
+      name: "Safety Equipment",
+      description: "Safety gear, protective equipment, first aid",
+      isActive: true,
+      createdAt: new Date(),
+    });
+
+    this.categories.set(7, {
+      id: 7,
+      name: "Cement & Concrete",
+      description: "Different types of cement, concrete mixes, additives",
+      isActive: true,
+      createdAt: new Date(),
+    });
+
+    this.categories.set(8, {
+      id: 8,
+      name: "Steel & Metal",
+      description: "Steel bars, sheets, pipes, metal fabrication materials",
+      isActive: true,
+      createdAt: new Date(),
+    });
+
+    this.currentId = 10;
   }
 
   // User operations
@@ -231,6 +307,45 @@ export class MemStorage implements IStorage {
 
   async deleteUser(id: number): Promise<boolean> {
     return this.users.delete(id);
+  }
+
+  // Category operations
+  async getCategory(id: number): Promise<Category | undefined> {
+    return this.categories.get(id);
+  }
+
+  async getAllCategories(): Promise<Category[]> {
+    return Array.from(this.categories.values()).filter(cat => cat.isActive);
+  }
+
+  async createCategory(category: InsertCategory): Promise<Category> {
+    const id = this.currentId++;
+    const newCategory: Category = {
+      ...category,
+      id,
+      createdAt: new Date(),
+    };
+    this.categories.set(id, newCategory);
+    return newCategory;
+  }
+
+  async updateCategory(id: number, updates: Partial<InsertCategory>): Promise<Category | undefined> {
+    const category = this.categories.get(id);
+    if (!category) return undefined;
+
+    const updatedCategory = { ...category, ...updates };
+    this.categories.set(id, updatedCategory);
+    return updatedCategory;
+  }
+
+  async deleteCategory(id: number): Promise<boolean> {
+    const category = this.categories.get(id);
+    if (!category) return false;
+    
+    // Soft delete by setting isActive to false
+    category.isActive = false;
+    this.categories.set(id, category);
+    return true;
   }
 
   // Product operations
