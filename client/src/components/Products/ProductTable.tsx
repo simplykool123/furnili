@@ -367,6 +367,10 @@ export default function ProductTable() {
               <Plus className="w-3 h-3 mr-1" />
               Add Product
             </Button>
+            <Button onClick={() => setShowForm(true)} variant="default" size="sm" className="h-8">
+              <Plus className="w-3 h-3 mr-1" />
+              Add Product
+            </Button>
           </div>
         </div>
       </div>
