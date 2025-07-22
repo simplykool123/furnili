@@ -549,9 +549,7 @@ export default function PettyCash() {
                   <TableCell>{format(new Date(expense.expenseDate), 'dd MMM yyyy')}</TableCell>
                   <TableCell className="font-semibold text-green-600">₹{expense.amount.toFixed(2)}</TableCell>
                   <TableCell className="font-medium">{expense.vendor}</TableCell>
-                  <TableCell>
-                    <Badge variant="secondary">{expense.user?.name || expense.user?.username || 'N/A'}</Badge>
-                  </TableCell>
+                  <TableCell className="font-medium">{expense.user?.name || expense.user?.username || 'N/A'}</TableCell>
                   <TableCell className="max-w-[200px] truncate">{expense.description || '-'}</TableCell>
                   <TableCell>
                     <Badge variant="outline">{expense.category}</Badge>
