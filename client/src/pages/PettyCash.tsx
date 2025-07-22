@@ -179,57 +179,64 @@ export default function PettyCash() {
               updatedData.paidTo = nextLine;
             }
           }
+          break; // Stop after finding the first "paid" pattern
         }
       }
       
       // Extract purpose/description and order number - look for descriptive text
-      for (const line of lines) {
+      // First, find lines that could contain purpose/order information
+      const purposeLines = lines.filter(line => {
         const lowerLine = line.toLowerCase();
-        // Skip technical lines and focus on descriptive content
-        if (line.length > 5 && 
-            !lowerLine.includes('paid') && 
-            !lowerLine.includes('@') && 
-            !lowerLine.includes('txn') &&
-            !lowerLine.includes('powered') &&
-            !lowerLine.includes('cred') &&
-            !lowerLine.includes('securely') &&
-            !/^[0-9,\.\s₹]+$/.test(line) &&
-            !lowerLine.includes('jul') &&
-            !lowerLine.includes('pm') &&
-            !lowerLine.includes('am') &&
-            !/^\d{4}$/.test(line) && // Skip year numbers
-            line.includes(' ') && // Ensure it has multiple words
-            !/^[A-Z\s]+$/.test(line)) { // Skip all-caps names like "DOLLY VIKESH OSWAL"
-          
-          const purposeText = line.trim();
-          
-          // Check if this line contains order information
-          if (lowerLine.includes('order')) {
-            // Pattern: "description - name order" or "description name order"
-            const dashSplit = purposeText.split(/\s*[-–]\s*/);
-            if (dashSplit.length >= 2) {
-              // Found dash: "furnili Powder cosring legs - pintu order"
-              updatedData.purpose = dashSplit[0].trim();
-              const orderPart = dashSplit[1].trim();
-              // Extract order name before "order"
-              const orderName = orderPart.replace(/\s+order$/i, '').trim();
-              updatedData.orderNo = orderName.charAt(0).toUpperCase() + orderName.slice(1) + " Order";
-            } else {
-              // No dash, try to split before "order"
-              const orderMatch = purposeText.match(/(.+?)\s+(\w+)\s+order/i);
-              if (orderMatch) {
-                updatedData.purpose = orderMatch[1].trim();
-                updatedData.orderNo = orderMatch[2].charAt(0).toUpperCase() + orderMatch[2].slice(1) + " Order";
-              } else {
-                updatedData.purpose = purposeText;
-              }
-            }
+        return line.length > 5 && 
+               !lowerLine.includes('paid') && 
+               !lowerLine.includes('@') && 
+               !lowerLine.includes('txn') &&
+               !lowerLine.includes('powered') &&
+               !lowerLine.includes('cred') &&
+               !lowerLine.includes('securely') &&
+               !/^[0-9,\.\s₹]+$/.test(line) &&
+               !lowerLine.includes('jul') &&
+               !lowerLine.includes('pm') &&
+               !lowerLine.includes('am') &&
+               !/^\d{4}$/.test(line) && // Skip year numbers
+               line.includes(' ') && // Ensure it has multiple words
+               !/^[A-Z\s]+$/.test(line) && // Skip all-caps names like "DOLLY VIKESH OSWAL"
+               line.trim() !== updatedData.paidTo; // Don't use the same line as paidTo
+      });
+      
+      // Process purpose lines - prioritize lines with "order" keyword
+      for (const line of purposeLines) {
+        const purposeText = line.trim();
+        const lowerLine = line.toLowerCase();
+        
+        // Check if this line contains order information
+        if (lowerLine.includes('order')) {
+          // Pattern: "description - name order" or "description name order"
+          const dashSplit = purposeText.split(/\s*[-–]\s*/);
+          if (dashSplit.length >= 2) {
+            // Found dash: "furnili Powder cosring legs - pintu order"
+            updatedData.purpose = dashSplit[0].trim();
+            const orderPart = dashSplit[1].trim();
+            // Extract order name before "order"
+            const orderName = orderPart.replace(/\s+order$/i, '').trim();
+            updatedData.orderNo = orderName.charAt(0).toUpperCase() + orderName.slice(1) + " Order";
           } else {
-            // No order info, just use as purpose
-            updatedData.purpose = purposeText;
+            // No dash, try to split before "order"
+            const orderMatch = purposeText.match(/(.+?)\s+(\w+)\s+order/i);
+            if (orderMatch) {
+              updatedData.purpose = orderMatch[1].trim();
+              updatedData.orderNo = orderMatch[2].charAt(0).toUpperCase() + orderMatch[2].slice(1) + " Order";
+            } else {
+              updatedData.purpose = purposeText;
+            }
           }
-          break;
+          break; // Found order info, stop here
         }
+      }
+      
+      // If no order info found, use the first descriptive line as purpose
+      if (!updatedData.purpose && purposeLines.length > 0) {
+        updatedData.purpose = purposeLines[0].trim();
       }
       
       // Extract date
