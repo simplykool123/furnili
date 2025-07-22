@@ -161,7 +161,7 @@ export interface IStorage {
   createStockMovement(movement: InsertStockMovement): Promise<StockMovement>;
   
   // Dashboard/Analytics
-  getDashboardStats(userRole: string): Promise<{
+  getDashboardStats(userRole?: string): Promise<{
     totalProducts: number;
     pendingRequests: number;
     lowStockItems: number;
@@ -169,9 +169,54 @@ export interface IStorage {
     recentRequests: MaterialRequestWithItems[];
     lowStockProducts: ProductWithStock[];
   }>;
+
+  // Payroll Operations (missing methods)
+  getPayroll(id: number): Promise<Payroll | undefined>;
+  getUserPayroll(userId: number, month?: number, year?: number): Promise<Payroll[]>;
+  getAllPayroll(month?: number, year?: number): Promise<Payroll[]>;
+  createPayroll(payroll: InsertPayroll): Promise<Payroll>;
+  updatePayroll(id: number, updates: Partial<InsertPayroll>): Promise<Payroll | undefined>;
+  deletePayroll(id: number): Promise<boolean>;
+
+  // Leave Operations (missing methods)
+  getLeave(id: number): Promise<Leave | undefined>;
+  getUserLeaves(userId: number): Promise<Leave[]>;
+  getAllLeaves(): Promise<Leave[]>;
+  createLeave(leave: InsertLeave): Promise<Leave>;
+  updateLeave(id: number, updates: Partial<InsertLeave>): Promise<Leave | undefined>;
+  deleteLeave(id: number): Promise<boolean>;
+
+  // Enhanced Attendance Operations
+  checkIn(userId: number, checkInBy?: number, location?: string, notes?: string): Promise<Attendance>;
+  checkOut(attendanceId: number, checkOutBy?: number): Promise<Attendance | undefined>;
+  markAttendance(attendance: InsertAttendance): Promise<Attendance>;
+  updateAttendance(id: number, updates: Partial<InsertAttendance>): Promise<Attendance | undefined>;
+  getUserAttendance(userId: number, month?: number, year?: number): Promise<Attendance[]>;
+  getAllAttendance(month?: number, year?: number): Promise<Attendance[]>;
+
+  // Petty Cash Operations  
+  getPettyCashExpense(id: number): Promise<PettyCashExpense | undefined>;
+  getAllPettyCashExpenses(month?: number, year?: number): Promise<PettyCashExpense[]>;
+  createPettyCashExpense(expense: InsertPettyCashExpense): Promise<PettyCashExpense>;
+  updatePettyCashExpense(id: number, updates: Partial<InsertPettyCashExpense>): Promise<PettyCashExpense | undefined>;
+  deletePettyCashExpense(id: number): Promise<boolean>;
+
+  // Task Operations
+  getTask(id: number): Promise<Task | undefined>;
+  getAllTasks(assignedTo?: number): Promise<Task[]>;
+  createTask(task: InsertTask): Promise<Task>;
+  updateTask(id: number, updates: Partial<InsertTask>): Promise<Task | undefined>;
+  deleteTask(id: number): Promise<boolean>;
+
+  // Price Comparison Operations
+  getPriceComparison(id: number): Promise<PriceComparison | undefined>;
+  getAllPriceComparisons(): Promise<PriceComparison[]>;
+  createPriceComparison(comparison: InsertPriceComparison): Promise<PriceComparison>;
+  updatePriceComparison(id: number, updates: Partial<InsertPriceComparison>): Promise<PriceComparison | undefined>;
+  deletePriceComparison(id: number): Promise<boolean>;
 }
 
-export class MemStorage implements IStorage {
+export class MemStorage {
   private users: Map<number, User> = new Map();
   private categories: Map<number, Category> = new Map();
   private clients: Map<number, Client> = new Map();
@@ -672,6 +717,7 @@ export class MemStorage implements IStorage {
       category: "Cement & Concrete",
       brand: "UltraTech",
       size: "50kg bags",
+      thickness: null,
       sku: "CEM-OPC53-001",
       pricePerUnit: 380.00,
       currentStock: 8,
@@ -689,6 +735,7 @@ export class MemStorage implements IStorage {
       category: "Plumbing Supplies",
       brand: "Supreme",
       size: "4 inch diameter",
+      thickness: "4mm",
       sku: "PVC-4IN-001",
       pricePerUnit: 180.00,
       currentStock: 125,
@@ -1071,16 +1118,19 @@ export class MemStorage implements IStorage {
     const id = this.currentId++;
     
     // Enrich items with product prices if not provided
-    const enrichedItems = items.map(item => {
+    const enrichedItems = items.map((item, index) => {
       const product = this.products.get(item.productId);
       const unitPrice = item.unitPrice || (product?.pricePerUnit || 0);
       const totalPrice = item.totalPrice || (unitPrice * item.requestedQuantity);
       
       return {
-        ...item,
+        id: this.currentId++,
+        requestId: id,
+        productId: item.productId,
+        requestedQuantity: item.requestedQuantity,
+        approvedQuantity: null,
         unitPrice,
         totalPrice,
-        requestId: id
       };
     });
     
@@ -1090,6 +1140,12 @@ export class MemStorage implements IStorage {
       ...request,
       id,
       totalValue,
+      status: request.status || "pending",
+      priority: request.priority || "medium",
+      approvedBy: null,
+      approvedAt: null,
+      issuedBy: null,
+      issuedAt: null,
       createdAt: new Date(),
     };
 
