@@ -45,8 +45,8 @@ const categories = ["Material", "Transport", "Site", "Office", "Food", "Fuel", "
 export default function PettyCash() {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("");
-  const [selectedPaymentMode, setSelectedPaymentMode] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [selectedPaymentMode, setSelectedPaymentMode] = useState("all");
   const [dateFilter, setDateFilter] = useState("");
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showImageDialog, setShowImageDialog] = useState(false);
@@ -199,8 +199,8 @@ export default function PettyCash() {
   const filteredExpenses = expenses.filter((expense: PettyCashExpense) => {
     const matchesSearch = expense.paidTo.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          (expense.note?.toLowerCase().includes(searchTerm.toLowerCase()) || false);
-    const matchesCategory = !selectedCategory || expense.category === selectedCategory;
-    const matchesPaymentMode = !selectedPaymentMode || expense.paymentMode === selectedPaymentMode;
+    const matchesCategory = !selectedCategory || selectedCategory === 'all' || expense.category === selectedCategory;
+    const matchesPaymentMode = !selectedPaymentMode || selectedPaymentMode === 'all' || expense.paymentMode === selectedPaymentMode;
     const matchesDate = !dateFilter || expense.date.startsWith(dateFilter);
     
     return matchesSearch && matchesCategory && matchesPaymentMode && matchesDate;
@@ -208,18 +208,18 @@ export default function PettyCash() {
 
   // Export functions
   const exportToWhatsApp = () => {
-    const text = filteredExpenses.map(expense => 
+    const text = filteredExpenses.map((expense: PettyCashExpense) => 
       `📄 ${expense.paidTo}\n💰 ₹${expense.amount}\n📅 ${format(new Date(expense.date), 'dd MMM yyyy')}\n🏷️ ${expense.category}\n💳 ${expense.paymentMode}\n${expense.note ? `📝 ${expense.note}\n` : ''}\n---`
     ).join('\n\n');
     
-    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(`💰 Petty Cash Report\n\n${text}\n\n💸 Total: ₹${filteredExpenses.reduce((sum, exp) => sum + exp.amount, 0)}`)}`;
+    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(`💰 Petty Cash Report\n\n${text}\n\n💸 Total: ₹${filteredExpenses.reduce((sum: number, exp: PettyCashExpense) => sum + exp.amount, 0)}`)}`;
     window.open(whatsappUrl, '_blank');
   };
 
   const exportToExcel = () => {
     const csvContent = [
       'Date,Paid To,Amount,Payment Mode,Category,Note',
-      ...filteredExpenses.map(expense => 
+      ...filteredExpenses.map((expense: PettyCashExpense) => 
         `${expense.date},"${expense.paidTo}",${expense.amount},"${expense.paymentMode}","${expense.category}","${expense.note || ''}"`
       )
     ].join('\n');
@@ -311,7 +311,7 @@ export default function PettyCash() {
                   <SelectValue placeholder="All Categories" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Categories</SelectItem>
+                  <SelectItem value="all">All Categories</SelectItem>
                   {categories.map((category) => (
                     <SelectItem key={category} value={category}>
                       {category}
@@ -327,7 +327,7 @@ export default function PettyCash() {
                   <SelectValue placeholder="All Modes" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Modes</SelectItem>
+                  <SelectItem value="all">All Modes</SelectItem>
                   {paymentModes.map((mode) => (
                     <SelectItem key={mode} value={mode}>
                       {mode}

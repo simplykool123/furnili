@@ -242,7 +242,7 @@ export default function ProductComparison() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Categories</SelectItem>
-                {categories.map((category) => (
+                {categories.filter(category => category.name && category.name.trim() !== '').map((category) => (
                   <SelectItem key={category.id} value={category.name}>
                     {category.name}
                   </SelectItem>
