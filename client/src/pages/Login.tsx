@@ -28,16 +28,26 @@ export default function Login() {
 
     setIsLoading(true);
     try {
-      const response = await apiRequest("/api/auth/login", {
+      const response = await fetch("/api/auth/login", {
         method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({ username, password }),
-      }) as { user: any; token: string };
+      });
 
-      setToken(response.token);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Login failed");
+      }
+
+      const data = await response.json();
+
+      setToken(data.token);
       
       toast({
         title: "Login successful",
-        description: `Welcome back, ${response.user.name}!`,
+        description: `Welcome back, ${data.user.name}!`,
       });
 
       window.location.href = "/";
@@ -69,7 +79,7 @@ export default function Login() {
         <CardContent className="space-y-6">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Username</label>
+              <label className="text-sm font-medium text-gray-700">Email Address</label>
               <div className="relative">
                 <User className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
                 <Input
