@@ -234,18 +234,22 @@ export default function PettyCash() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Petty Cash Management</h1>
-        <Button onClick={() => setShowAddDialog(true)}>
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-0">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold">Petty Cash Management</h1>
+          <p className="text-sm text-gray-600 mt-1">Track expenses and manage cash flow</p>
+        </div>
+        <Button onClick={() => setShowAddDialog(true)} className="w-full sm:w-auto">
           <Plus className="mr-2 h-4 w-4" />
-          Add Expense
+          <span className="sm:hidden">Add New Expense</span>
+          <span className="hidden sm:inline">Add Expense</span>
         </Button>
       </div>
 
       {/* Stats Cards */}
       {stats && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Expenses</CardTitle>
@@ -286,8 +290,8 @@ export default function PettyCash() {
       {/* Filters */}
       <Card>
         <CardContent className="pt-6">
-          <div className="flex flex-wrap gap-4">
-            <div className="flex-1 min-w-[200px]">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:flex lg:flex-wrap gap-3 lg:gap-4">
+            <div className="lg:flex-1 lg:min-w-[200px] sm:col-span-2">
               <Label htmlFor="search">Search</Label>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -303,7 +307,7 @@ export default function PettyCash() {
             <div>
               <Label htmlFor="category-filter">Category</Label>
               <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                <SelectTrigger className="w-[150px]">
+                <SelectTrigger className="w-full lg:w-[150px]">
                   <SelectValue placeholder="All Categories" />
                 </SelectTrigger>
                 <SelectContent>
@@ -319,7 +323,7 @@ export default function PettyCash() {
             <div>
               <Label htmlFor="payment-filter">Payment Mode</Label>
               <Select value={selectedPaymentMode} onValueChange={setSelectedPaymentMode}>
-                <SelectTrigger className="w-[150px]">
+                <SelectTrigger className="w-full lg:w-[150px]">
                   <SelectValue placeholder="All Modes" />
                 </SelectTrigger>
                 <SelectContent>
@@ -339,15 +343,15 @@ export default function PettyCash() {
                 type="date"
                 value={dateFilter}
                 onChange={(e) => setDateFilter(e.target.value)}
-                className="w-[150px]"
+                className="w-full lg:w-[150px]"
               />
             </div>
-            <div className="flex items-end gap-2">
-              <Button variant="outline" onClick={exportToWhatsApp}>
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-end gap-2 sm:col-span-2 lg:col-span-1">
+              <Button variant="outline" onClick={exportToWhatsApp} className="flex-1 sm:flex-none">
                 <Share2 className="mr-2 h-4 w-4" />
                 WhatsApp
               </Button>
-              <Button variant="outline" onClick={exportToExcel}>
+              <Button variant="outline" onClick={exportToExcel} className="flex-1 sm:flex-none">
                 <Download className="mr-2 h-4 w-4" />
                 Excel
               </Button>

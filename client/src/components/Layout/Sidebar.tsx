@@ -35,7 +35,11 @@ const navigation = [
   { name: 'Users', href: '/users', icon: Users, roles: ['admin'] },
 ];
 
-export default function Sidebar() {
+interface SidebarProps {
+  onItemClick?: () => void;
+}
+
+export default function Sidebar({ onItemClick }: SidebarProps = {}) {
   const [location] = useLocation();
   const user = authService.getUser();
   
@@ -51,7 +55,7 @@ export default function Sidebar() {
   );
 
   return (
-    <aside className="w-56 bg-white shadow-lg border-r border-gray-200" data-testid="main-sidebar">
+    <aside className="w-56 lg:w-64 bg-white shadow-lg border-r border-gray-200 h-full flex flex-col" data-testid="main-sidebar">
       {/* Logo/Brand */}
       <div className="p-4 border-b border-gray-200">
         <div className="flex items-center space-x-2">
@@ -87,14 +91,19 @@ export default function Sidebar() {
             const isActive = location === item.href || (item.href !== '/' && location.startsWith(item.href));
             
             return (
-              <Link key={item.name} href={item.href} className={cn(
-                "flex items-center space-x-2 px-3 py-2 rounded-lg font-medium transition-colors text-sm",
-                isActive
-                  ? "text-primary bg-primary/10"
-                  : "text-gray-700 hover:bg-gray-100"
-              )}>
-                <item.icon className="w-4 h-4" />
-                <span>{item.name}</span>
+              <Link 
+                key={item.name} 
+                href={item.href} 
+                className={cn(
+                  "flex items-center space-x-2 px-3 py-2 rounded-lg font-medium transition-colors text-sm",
+                  isActive
+                    ? "text-primary bg-primary/10"
+                    : "text-gray-700 hover:bg-gray-100"
+                )}
+                onClick={onItemClick}
+              >
+                <item.icon className="w-4 h-4 flex-shrink-0" />
+                <span className="truncate">{item.name}</span>
               </Link>
             );
           })}

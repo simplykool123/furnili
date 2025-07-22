@@ -1,4 +1,4 @@
-import { Bell, Plus } from "lucide-react";
+import { Bell, Plus, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -16,9 +16,10 @@ interface HeaderProps {
   subtitle: string;
   showAddButton?: boolean;
   onAddClick?: () => void;
+  onMenuClick?: () => void;
 }
 
-export default function Header({ title, subtitle, showAddButton = false, onAddClick }: HeaderProps) {
+export default function Header({ title, subtitle, showAddButton = false, onAddClick, onMenuClick }: HeaderProps) {
   const user = authService.getUser();
   
   const { data: stats } = useQuery({
@@ -32,30 +33,44 @@ export default function Header({ title, subtitle, showAddButton = false, onAddCl
   const lowStockCount = stats?.lowStockItems || (Array.isArray(stats?.lowStockProducts) ? stats.lowStockProducts.length : 0);
 
   return (
-    <header className="bg-white border-b border-gray-200 px-6 py-4">
+    <header className="bg-white border-b border-gray-200 px-3 sm:px-4 lg:px-6 py-3 sm:py-4">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
-          <p className="text-gray-600">{subtitle}</p>
+        <div className="flex items-center space-x-3">
+          {/* Mobile Menu Button */}
+          {onMenuClick && (
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="lg:hidden"
+              onClick={onMenuClick}
+            >
+              <Menu className="w-5 h-5" />
+            </Button>
+          )}
+          
+          <div className="min-w-0 flex-1">
+            <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 truncate">{title}</h1>
+            <p className="text-sm sm:text-base text-gray-600 truncate">{subtitle}</p>
+          </div>
         </div>
         
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-2 sm:space-x-3 lg:space-x-4">
           {/* Low Stock Notification */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="sm" className="relative">
-                <Bell className="w-5 h-5" />
+                <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
                 {lowStockCount > 0 && (
                   <Badge 
                     variant="destructive" 
-                    className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs"
+                    className="absolute -top-1 -right-1 h-4 w-4 sm:h-5 sm:w-5 rounded-full p-0 flex items-center justify-center text-xs"
                   >
                     {lowStockCount}
                   </Badge>
                 )}
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-80">
+            <DropdownMenuContent align="end" className="w-72 sm:w-80">
               <div className="p-3 border-b">
                 <h4 className="font-medium">Low Stock Alerts</h4>
                 <p className="text-sm text-gray-600">{lowStockCount} items need attention</p>
@@ -63,13 +78,13 @@ export default function Header({ title, subtitle, showAddButton = false, onAddCl
               {Array.isArray(stats?.lowStockProducts) && stats.lowStockProducts.length > 0 ? (
                 stats.lowStockProducts.slice(0, 3).map((product: any) => (
                   <DropdownMenuItem key={product.id} className="flex items-center justify-between p-3">
-                    <div>
-                      <p className="font-medium">{String(product.name || 'Unknown Product')}</p>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium truncate">{String(product.name || 'Unknown Product')}</p>
                       <p className="text-sm text-gray-600">
                         Stock: {Number(product.currentStock) || 0} / {Number(product.minStock) || 0}
                       </p>
                     </div>
-                    <Badge variant="destructive" className="text-xs">Low</Badge>
+                    <Badge variant="destructive" className="text-xs ml-2">Low</Badge>
                   </DropdownMenuItem>
                 ))
               ) : (
@@ -81,13 +96,13 @@ export default function Header({ title, subtitle, showAddButton = false, onAddCl
           </DropdownMenu>
 
           {/* User Info */}
-          <div className="flex items-center space-x-3">
-            <div className="text-right">
-              <p className="font-medium text-gray-900">{user?.name}</p>
-              <p className="text-sm text-gray-600 capitalize">{user?.role}</p>
+          <div className="flex items-center space-x-2 sm:space-x-3">
+            <div className="text-right hidden sm:block">
+              <p className="font-medium text-gray-900 text-sm lg:text-base truncate">{user?.name}</p>
+              <p className="text-xs sm:text-sm text-gray-600 capitalize">{user?.role}</p>
             </div>
-            <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center">
-              <span className="text-white font-medium">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-primary rounded-full flex items-center justify-center">
+              <span className="text-white font-medium text-xs sm:text-sm">
                 {user?.name.split(' ').map(n => n[0]).join('').toUpperCase()}
               </span>
             </div>
@@ -95,9 +110,17 @@ export default function Header({ title, subtitle, showAddButton = false, onAddCl
 
           {/* Add Button */}
           {showAddButton && onAddClick && (
-            <Button onClick={onAddClick}>
+            <Button onClick={onAddClick} size="sm" className="hidden sm:flex">
               <Plus className="w-4 h-4 mr-2" />
-              Add New
+              <span className="hidden lg:inline">Add New</span>
+              <span className="sm:inline lg:hidden">Add</span>
+            </Button>
+          )}
+          
+          {/* Mobile Add Button */}
+          {showAddButton && onAddClick && (
+            <Button onClick={onAddClick} size="sm" className="sm:hidden">
+              <Plus className="w-4 h-4" />
             </Button>
           )}
         </div>

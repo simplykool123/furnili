@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import { ReactNode, useState } from "react";
 import Sidebar from "./Sidebar";
 import Header from "./Header";
 import { authService } from "@/lib/auth";
@@ -19,6 +19,7 @@ export default function Layout({
   onAddClick 
 }: LayoutProps) {
   const user = authService.getUser();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   
   if (!user) {
     return null; // Will redirect to login
@@ -26,19 +27,36 @@ export default function Layout({
 
   return (
     <div className="min-h-screen flex bg-amber-50" data-testid="main-layout">
-      <Sidebar />
+      {/* Desktop Sidebar */}
+      <div className="hidden lg:block">
+        <Sidebar />
+      </div>
       
-      <main className="flex-1 flex flex-col overflow-hidden ml-0">
+      {/* Mobile Sidebar Overlay */}
+      {sidebarOpen && (
+        <div className="fixed inset-0 z-50 lg:hidden">
+          <div 
+            className="fixed inset-0 bg-black bg-opacity-50" 
+            onClick={() => setSidebarOpen(false)}
+          />
+          <div className="fixed inset-y-0 left-0 w-64 bg-white">
+            <Sidebar onItemClick={() => setSidebarOpen(false)} />
+          </div>
+        </div>
+      )}
+      
+      <main className="flex-1 flex flex-col overflow-hidden">
         {title && (
           <Header 
             title={title}
             subtitle={subtitle}
             showAddButton={showAddButton}
             onAddClick={onAddClick}
+            onMenuClick={() => setSidebarOpen(!sidebarOpen)}
           />
         )}
         
-        <div className="flex-1 overflow-auto p-6">
+        <div className="flex-1 overflow-auto p-3 sm:p-4 lg:p-6">
           {children}
         </div>
       </main>
