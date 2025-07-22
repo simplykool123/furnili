@@ -37,6 +37,7 @@ import {
   Edit,
   UserPlus
 } from "lucide-react";
+// @ts-ignore
 import html2pdf from 'html2pdf.js';
 
 // Form schemas

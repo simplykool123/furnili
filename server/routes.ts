@@ -975,6 +975,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/petty-cash/summary", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const stats = await storage.getPettyCashStats();
+      res.json(stats);
+    } catch (error) {
+      console.error("Failed to fetch summary:", error);
+      res.status(500).json({ message: "Failed to fetch summary", error: String(error) });
+    }
+  });
+
   // Get staff balances
   app.get("/api/petty-cash/staff-balances", authenticateToken, async (req: AuthRequest, res) => {
     try {
