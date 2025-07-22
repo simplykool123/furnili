@@ -321,7 +321,7 @@ export default function PettyCash() {
         }
       }
       
-      setFormData(updatedData);
+      setFormData(prev => ({ ...updatedData, receiptImage: prev.receiptImage }));
       toast({ title: "Payment details extracted from screenshot", description: "Review and submit the expense" });
     } catch (error) {
       console.error('OCR Error:', error);
@@ -355,7 +355,10 @@ export default function PettyCash() {
     formDataToSend.append('orderNo', formData.orderNo);
     
     if (formData.receiptImage) {
+      console.log("Appending receipt file:", formData.receiptImage);
       formDataToSend.append('receipt', formData.receiptImage);
+    } else {
+      console.log("No receipt file to append");
     }
     
     addExpenseMutation.mutate(formDataToSend);
