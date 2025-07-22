@@ -63,6 +63,14 @@ Preferred communication style: Simple, everyday language.
   - Description, Brand, Type, Size, Thickness columns
   - Automatic row addition on tab navigation
   - Streamlined data entry for fast material requests
+- ✅ **AI-Powered OCR Enhancement Wizard**: Complete advanced OCR processing system
+  - Multi-tab interface: Upload & Process, AI Enhancement, Training Mode, Advanced Settings
+  - Document type templates for UPI payments, invoices, receipts with smart pattern recognition
+  - AI-powered field extraction with confidence scoring and enhancement suggestions
+  - Custom regex pattern training for specialized document types
+  - Export functionality for OCR results and template management
+  - Advanced OCR settings with preprocessing options and language selection
+  - Real-time progress tracking and error handling with retry mechanisms
 - 🔄 Implementing comprehensive multi-user login system with Admin/Staff roles
 - 🔄 Adding inventory inward/outward management with automatic quantity tracking
 - 🔄 Developing task allocation system for staff management

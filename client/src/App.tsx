@@ -16,6 +16,7 @@ import Users from "@/pages/Users";
 import Categories from "@/pages/Categories";
 import Attendance from "@/pages/Attendance";
 import PettyCash from "@/pages/PettyCash";
+import OCRWizard from "@/pages/OCRWizard";
 import TaskManagement from "@/pages/TaskManagement";
 import PriceComparison from "@/pages/PriceComparison";
 import ProductComparison from "@/pages/ProductComparison";
@@ -175,6 +176,17 @@ function Router() {
         <ProtectedRoute>
           <Layout>
             <PettyCash />
+          </Layout>
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/ocr-wizard">
+        <ProtectedRoute>
+          <Layout 
+            title="AI-Powered OCR Enhancement Wizard" 
+            subtitle="Advanced OCR processing with AI-powered field extraction"
+          >
+            <OCRWizard />
           </Layout>
         </ProtectedRoute>
       </Route>
