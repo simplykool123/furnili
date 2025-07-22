@@ -108,21 +108,9 @@ export default function Header({ title, subtitle, showAddButton = false, onAddCl
             </div>
           </div>
 
-          {/* Add Button */}
-          {showAddButton && onAddClick && (
-            <Button onClick={onAddClick} size="sm" className="hidden sm:flex">
-              <Plus className="w-4 h-4 mr-2" />
-              <span className="hidden lg:inline">Add New</span>
-              <span className="sm:inline lg:hidden">Add</span>
-            </Button>
-          )}
           
-          {/* Mobile Add Button */}
-          {showAddButton && onAddClick && (
-            <Button onClick={onAddClick} size="sm" className="sm:hidden">
-              <Plus className="w-4 h-4" />
-            </Button>
-          )}
+          
+          
         </div>
       </div>
     </header>
