@@ -22,7 +22,9 @@ import {
   ChevronRight,
   Database,
   GitCompare,
-  Brain
+  Brain,
+  Settings,
+  Download
 } from "lucide-react";
 
 const navigation = [
@@ -39,6 +41,8 @@ const navigation = [
       { name: 'Inventory Movement', href: '/inventory-movement', icon: ArrowUpDown, roles: ['admin', 'staff'] },
       { name: 'Categories', href: '/categories', icon: Tag, roles: ['admin', 'staff'] },
       { name: 'Users', href: '/users', icon: Users, roles: ['admin'] },
+      { name: 'Display Settings', href: '/display-settings', icon: Settings, roles: ['admin', 'staff'] },
+      { name: 'Backups', href: '/backups', icon: Download, roles: ['admin'] },
     ]
   },
   { name: 'Staff Attendance', href: '/attendance', icon: Clock, roles: ['admin', 'staff'] },

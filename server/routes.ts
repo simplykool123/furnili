@@ -6,6 +6,7 @@ import { storage } from "./storage";
 import { authenticateToken, requireRole, generateToken, comparePassword, type AuthRequest } from "./middleware/auth";
 import { productImageUpload, boqFileUpload, receiptImageUpload, csvFileUpload } from "./utils/fileUpload";
 import { exportProductsCSV, exportRequestsCSV, exportLowStockCSV } from "./utils/csvExport";
+import { createBackupZip } from "./utils/backupExport";
 import {
   insertUserSchema,
   insertProductSchema,
@@ -1255,6 +1256,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(movement);
     } catch (error) {
       res.status(500).json({ message: "Failed to record movement", error });
+    }
+  });
+
+  // Backup routes
+  app.get("/api/backups/download-all", authenticateToken, requireRole(['admin']), async (req: AuthRequest, res) => {
+    try {
+      console.log('Generating backup ZIP for user:', req.user!.username);
+      
+      const zipBuffer = await createBackupZip();
+      const filename = `furnili_backup_${new Date().toISOString().split('T')[0]}.zip`;
+      
+      res.setHeader('Content-Type', 'application/zip');
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      res.setHeader('Content-Length', zipBuffer.length);
+      
+      res.send(zipBuffer);
+    } catch (error) {
+      console.error('Backup generation error:', error);
+      res.status(500).json({ 
+        message: "Failed to generate backup", 
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
     }
   });
 

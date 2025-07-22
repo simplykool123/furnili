@@ -3,6 +3,7 @@ import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { ThemeProvider } from "@/contexts/ThemeContext";
 import { authService } from "@/lib/auth";
 import { useEffect, useState } from "react";
 import LoginSimple from "@/pages/LoginSimple";
@@ -22,6 +23,8 @@ import PriceComparison from "@/pages/PriceComparison";
 import ProductComparison from "@/pages/ProductComparison";
 import WhatsAppExport from "@/pages/WhatsAppExport";
 import InventoryMovement from "@/pages/InventoryMovement";
+import DisplaySettings from "@/pages/DisplaySettings";
+import Backups from "@/pages/Backups";
 import NotFound from "@/pages/not-found";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -226,6 +229,22 @@ function Router() {
         </ProtectedRoute>
       </Route>
       
+      <Route path="/display-settings">
+        <ProtectedRoute>
+          <Layout>
+            <DisplaySettings />
+          </Layout>
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/backups">
+        <ProtectedRoute>
+          <Layout>
+            <Backups />
+          </Layout>
+        </ProtectedRoute>
+      </Route>
+      
       <Route component={NotFound} />
     </Switch>
   );
@@ -234,10 +253,12 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Router />
-      </TooltipProvider>
+      <ThemeProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Router />
+        </TooltipProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }

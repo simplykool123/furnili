@@ -111,6 +111,29 @@
   }
 }
 
+/* Custom Furnili Brand Colors for Sidebar */
+:root {
+  --sidebar-background: #D4B896;
+  --sidebar-foreground: #654B35;
+  --sidebar-primary: #B8965C;
+  --sidebar-primary-foreground: white;
+  --sidebar-accent: #B8965C;
+  --sidebar-accent-foreground: white;
+  --sidebar-border: #B8965C;
+  --sidebar-ring: #B8965C;
+}
+
+.dark {
+  --sidebar-background: #2D2D2D;
+  --sidebar-foreground: #E5E5E5;
+  --sidebar-primary: #D4B896;
+  --sidebar-primary-foreground: #1F1F1F;
+  --sidebar-accent: #D4B896;
+  --sidebar-accent-foreground: #1F1F1F;
+  --sidebar-border: #404040;
+  --sidebar-ring: #D4B896;
+}
+
 /* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
