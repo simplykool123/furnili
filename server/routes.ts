@@ -904,10 +904,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Petty Cash routes
   app.get("/api/petty-cash", authenticateToken, async (req: AuthRequest, res) => {
     try {
-      const expenses = await storage.getAllPettyCashExpenses();
+      const { category, status, addedBy } = req.query;
+      const filters = {
+        category: category as string,
+        status: status as string,
+        addedBy: addedBy ? parseInt(addedBy as string) : undefined,
+      };
+      const expenses = await storage.getAllPettyCashExpenses(filters);
       res.json(expenses);
     } catch (error) {
-      res.status(500).json({ message: "Failed to fetch expenses", error });
+      console.error("Failed to fetch expenses:", error);
+      res.status(500).json({ message: "Failed to fetch expenses", error: String(error) });
     }
   });
 
@@ -916,22 +923,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const stats = await storage.getPettyCashStats();
       res.json(stats);
     } catch (error) {
-      res.status(500).json({ message: "Failed to fetch stats", error });
+      console.error("Failed to fetch stats:", error);
+      res.status(500).json({ message: "Failed to fetch stats", error: String(error) });
     }
   });
 
   app.post("/api/petty-cash", authenticateToken, receiptImageUpload.single("receipt"), async (req: AuthRequest, res) => {
     try {
-      const expenseData = {
+      const expenseData = insertPettyCashExpenseSchema.parse({
         ...req.body,
         amount: parseFloat(req.body.amount),
+        date: new Date(req.body.date),
         addedBy: req.user!.id,
         receiptImageUrl: req.file?.path || null,
-      };
+      });
+      
       const expense = await storage.createPettyCashExpense(expenseData);
       res.json(expense);
     } catch (error) {
-      res.status(500).json({ message: "Failed to add expense", error });
+      console.error("Failed to add expense:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid expense data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to add expense", error: String(error) });
+    }
+  });
+
+  app.put("/api/petty-cash/:id", authenticateToken, receiptImageUpload.single("receipt"), async (req: AuthRequest, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const updateData = {
+        ...req.body,
+        amount: req.body.amount ? parseFloat(req.body.amount) : undefined,
+        date: req.body.date ? new Date(req.body.date) : undefined,
+        receiptImageUrl: req.file?.path || undefined,
+      };
+      
+      const expense = await storage.updatePettyCashExpense(id, updateData);
+      if (!expense) {
+        return res.status(404).json({ message: "Expense not found" });
+      }
+      res.json(expense);
+    } catch (error) {
+      console.error("Failed to update expense:", error);
+      res.status(500).json({ message: "Failed to update expense", error: String(error) });
+    }
+  });
+
+  app.delete("/api/petty-cash/:id", authenticateToken, requireRole(["admin", "manager"]), async (req: AuthRequest, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const deleted = await storage.deletePettyCashExpense(id);
+      if (!deleted) {
+        return res.status(404).json({ message: "Expense not found" });
+      }
+      res.json({ message: "Expense deleted successfully" });
+    } catch (error) {
+      console.error("Failed to delete expense:", error);
+      res.status(500).json({ message: "Failed to delete expense", error: String(error) });
     }
   });
 

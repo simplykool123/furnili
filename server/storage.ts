@@ -372,15 +372,30 @@ export class MemStorage implements IStorage {
       allExpenses = allExpenses.filter(e => e.addedBy === filters.addedBy);
     }
     
-    return allExpenses.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+    // Include user information
+    const expensesWithUsers = await Promise.all(
+      allExpenses.map(async (expense) => {
+        const user = await this.getUser(expense.addedBy);
+        return {
+          ...expense,
+          user: user ? { id: user.id, name: user.name, email: user.email } : null,
+        };
+      })
+    );
+    
+    return expensesWithUsers.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
   }
 
   async createPettyCashExpense(expense: InsertPettyCashExpense): Promise<PettyCashExpense> {
     const id = this.currentId++;
+    const now = new Date();
+    
     const newExpense: PettyCashExpense = {
       id,
       ...expense,
-      createdAt: new Date(),
+      status: 'expense', // Default status
+      createdAt: now,
+      updatedAt: now,
     };
     
     this.pettyCashExpenses.set(id, newExpense);
@@ -394,24 +409,51 @@ export class MemStorage implements IStorage {
     const updatedExpense: PettyCashExpense = {
       ...expense,
       ...updates,
+      updatedAt: new Date(),
     };
     
     this.pettyCashExpenses.set(id, updatedExpense);
     return updatedExpense;
   }
 
-  async approvePettyCashExpense(id: number, approvedBy: number): Promise<PettyCashExpense | undefined> {
-    const expense = this.pettyCashExpenses.get(id);
-    if (!expense) return undefined;
+  async deletePettyCashExpense(id: number): Promise<boolean> {
+    return this.pettyCashExpenses.delete(id);
+  }
+
+  async getPettyCashStats(): Promise<{
+    totalExpenses: number;
+    totalIncome: number;
+    balance: number;
+    currentMonthExpenses: number;
+  }> {
+    const allExpenses = Array.from(this.pettyCashExpenses.values());
     
-    const updatedExpense: PettyCashExpense = {
-      ...expense,
-      status: "approved",
-      approvedBy,
+    const totalExpenses = allExpenses
+      .filter(e => e.status === 'expense')
+      .reduce((sum, e) => sum + e.amount, 0);
+    
+    const totalIncome = allExpenses
+      .filter(e => e.status === 'income')
+      .reduce((sum, e) => sum + e.amount, 0);
+    
+    const currentMonth = new Date().getMonth();
+    const currentYear = new Date().getFullYear();
+    
+    const currentMonthExpenses = allExpenses
+      .filter(e => {
+        const expenseDate = new Date(e.date);
+        return expenseDate.getMonth() === currentMonth && 
+               expenseDate.getFullYear() === currentYear &&
+               e.status === 'expense';
+      })
+      .reduce((sum, e) => sum + e.amount, 0);
+    
+    return {
+      totalExpenses,
+      totalIncome,
+      balance: totalIncome - totalExpenses,
+      currentMonthExpenses,
     };
-    
-    this.pettyCashExpenses.set(id, updatedExpense);
-    return updatedExpense;
   }
 
   // Task operations
