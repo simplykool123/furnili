@@ -204,39 +204,72 @@ export class MemStorage implements IStorage {
     return attendance;
   }
 
-  async checkOut(attendanceId: number): Promise<Attendance | undefined> {
+  async checkOut(attendanceId: number, checkOutBy?: number): Promise<Attendance | undefined> {
     const attendance = this.attendance.get(attendanceId);
     if (!attendance) return undefined;
     
     const checkOutTime = new Date();
-    const workingHours = (checkOutTime.getTime() - attendance.checkInTime.getTime()) / (1000 * 60 * 60);
+    const workingHours = (checkOutTime.getTime() - attendance.checkInTime!.getTime()) / (1000 * 60 * 60);
+    const overtimeHours = workingHours > 8 ? workingHours - 8 : 0;
     
     const updatedAttendance: Attendance = {
       ...attendance,
       checkOutTime,
       workingHours,
-      status: "checked_out",
+      overtimeHours,
+      checkOutBy: checkOutBy || null,
+      status: "present",
+      updatedAt: new Date(),
     };
     
     this.attendance.set(attendanceId, updatedAttendance);
     return updatedAttendance;
   }
 
-  async getUserAttendance(userId: number, date?: string): Promise<Attendance[]> {
+  async markAttendance(attendance: InsertAttendance): Promise<Attendance> {
+    const id = this.currentId++;
+    const now = new Date();
+    
+    const newAttendance: Attendance = {
+      id,
+      ...attendance,
+      createdAt: now,
+      updatedAt: now,
+    };
+    
+    this.attendance.set(id, newAttendance);
+    return newAttendance;
+  }
+
+  async updateAttendance(id: number, updates: Partial<InsertAttendance>): Promise<Attendance | undefined> {
+    const attendance = this.attendance.get(id);
+    if (!attendance) return undefined;
+    
+    const updatedAttendance: Attendance = {
+      ...attendance,
+      ...updates,
+      updatedAt: new Date(),
+    };
+    
+    this.attendance.set(id, updatedAttendance);
+    return updatedAttendance;
+  }
+
+  async getUserAttendance(userId: number, month?: number, year?: number): Promise<Attendance[]> {
     const allAttendance = Array.from(this.attendance.values());
     let filtered = allAttendance.filter(a => a.userId === userId);
     
-    if (date) {
-      const targetDate = new Date(date);
-      filtered = filtered.filter(a => 
-        a.checkInTime.toDateString() === targetDate.toDateString()
-      );
+    if (month && year) {
+      filtered = filtered.filter(a => {
+        const date = new Date(a.date);
+        return date.getMonth() + 1 === month && date.getFullYear() === year;
+      });
     }
     
-    return filtered.sort((a, b) => b.checkInTime.getTime() - a.checkInTime.getTime());
+    return filtered.sort((a, b) => b.date.getTime() - a.date.getTime());
   }
 
-  async getAllAttendance(filters?: { userId?: number; date?: string }): Promise<Attendance[]> {
+  async getAllAttendance(filters?: { userId?: number; date?: string; month?: number; year?: number }): Promise<Attendance[]> {
     let allAttendance = Array.from(this.attendance.values());
     
     if (filters?.userId) {
@@ -246,11 +279,77 @@ export class MemStorage implements IStorage {
     if (filters?.date) {
       const targetDate = new Date(filters.date);
       allAttendance = allAttendance.filter(a => 
-        a.checkInTime.toDateString() === targetDate.toDateString()
+        a.date.toDateString() === targetDate.toDateString()
       );
     }
     
-    return allAttendance.sort((a, b) => b.checkInTime.getTime() - a.checkInTime.getTime());
+    if (filters?.month && filters?.year) {
+      allAttendance = allAttendance.filter(a => {
+        const date = new Date(a.date);
+        return date.getMonth() + 1 === filters.month && date.getFullYear() === filters.year;
+      });
+    }
+    
+    return allAttendance.sort((a, b) => b.date.getTime() - a.date.getTime());
+  }
+
+  async getTodayAttendance(): Promise<Attendance[]> {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const allAttendance = Array.from(this.attendance.values());
+    const todayAttendance = allAttendance.filter(a => {
+      const attendanceDate = new Date(a.date);
+      attendanceDate.setHours(0, 0, 0, 0);
+      return attendanceDate.getTime() === today.getTime();
+    });
+    
+    // Include user information
+    const attendanceWithUsers = await Promise.all(
+      todayAttendance.map(async (attendance) => {
+        const user = await this.getUser(attendance.userId);
+        return {
+          ...attendance,
+          user: user ? { id: user.id, name: user.name, email: user.email } : null,
+        };
+      })
+    );
+    
+    return attendanceWithUsers;
+  }
+
+  async getAttendanceStats(userId?: number, month?: number, year?: number): Promise<{
+    totalDays: number;
+    presentDays: number;
+    absentDays: number;
+    totalHours: number;
+    overtimeHours: number;
+  }> {
+    const filters = { userId, month, year };
+    const attendance = await this.getAllAttendance(filters);
+    
+    const presentDays = attendance.filter(a => a.status === "present").length;
+    const totalHours = attendance.reduce((sum, a) => sum + (a.workingHours || 0), 0);
+    const overtimeHours = attendance.reduce((sum, a) => sum + (a.overtimeHours || 0), 0);
+    
+    // Calculate total working days in month if month/year specified
+    let totalDays = attendance.length;
+    if (month && year) {
+      const daysInMonth = new Date(year, month, 0).getDate();
+      const weekdays = Array.from({ length: daysInMonth }, (_, i) => {
+        const date = new Date(year, month - 1, i + 1);
+        return date.getDay();
+      }).filter(day => day !== 0 && day !== 6).length; // Exclude weekends
+      totalDays = weekdays;
+    }
+    
+    return {
+      totalDays,
+      presentDays,
+      absentDays: totalDays - presentDays,
+      totalHours,
+      overtimeHours,
+    };
   }
 
   // Petty Cash operations

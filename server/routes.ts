@@ -702,37 +702,202 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Attendance routes
   app.get("/api/attendance", authenticateToken, async (req: AuthRequest, res) => {
     try {
-      const attendance = await storage.getAllAttendance();
-      res.json(attendance);
+      const { month, year, userId } = req.query;
+      const filters = {
+        month: month ? parseInt(month as string) : undefined,
+        year: year ? parseInt(year as string) : undefined,
+        userId: userId ? parseInt(userId as string) : undefined,
+      };
+      
+      const attendance = await storage.getAllAttendance(filters);
+      
+      // Include user information
+      const attendanceWithUsers = await Promise.all(
+        attendance.map(async (att) => {
+          const user = await storage.getUser(att.userId);
+          return {
+            ...att,
+            user: user ? { id: user.id, name: user.name, email: user.email } : null,
+          };
+        })
+      );
+      
+      res.json(attendanceWithUsers);
     } catch (error) {
-      res.status(500).json({ message: "Failed to fetch attendance", error });
+      console.error("Failed to fetch attendance:", error);
+      res.status(500).json({ message: "Failed to fetch attendance", error: String(error) });
     }
   });
 
   app.get("/api/attendance/today", authenticateToken, async (req: AuthRequest, res) => {
     try {
-      const attendance = await storage.getTodayAttendance(req.user!.id);
+      const attendance = await storage.getTodayAttendance();
       res.json(attendance);
     } catch (error) {
-      res.status(500).json({ message: "Failed to fetch today's attendance", error });
+      console.error("Failed to fetch today's attendance:", error);
+      res.status(500).json({ message: "Failed to fetch today's attendance", error: String(error) });
+    }
+  });
+
+  app.get("/api/attendance/stats", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const { month, year, userId } = req.query;
+      const stats = await storage.getAttendanceStats(
+        userId ? parseInt(userId as string) : undefined,
+        month ? parseInt(month as string) : undefined,
+        year ? parseInt(year as string) : undefined
+      );
+      res.json(stats);
+    } catch (error) {
+      console.error("Failed to fetch attendance stats:", error);
+      res.status(500).json({ message: "Failed to fetch attendance stats", error: String(error) });
     }
   });
 
   app.post("/api/attendance/checkin", authenticateToken, async (req: AuthRequest, res) => {
     try {
-      const attendance = await storage.checkIn(req.user!.id);
+      const { location, notes } = req.body;
+      const attendance = await storage.checkIn(req.user!.id, undefined, location, notes);
       res.json(attendance);
     } catch (error) {
-      res.status(500).json({ message: "Check-in failed", error });
+      console.error("Check-in failed:", error);
+      res.status(500).json({ message: "Check-in failed", error: String(error) });
     }
   });
 
   app.post("/api/attendance/checkout", authenticateToken, async (req: AuthRequest, res) => {
     try {
-      const attendance = await storage.checkOut(req.user!.id);
+      // Find today's attendance for the user
+      const todayAttendance = await storage.getTodayAttendance();
+      const userAttendance = todayAttendance.find(a => a.userId === req.user!.id && !a.checkOutTime);
+      
+      if (!userAttendance) {
+        return res.status(404).json({ message: "No active check-in found for today" });
+      }
+      
+      const attendance = await storage.checkOut(userAttendance.id);
       res.json(attendance);
     } catch (error) {
-      res.status(500).json({ message: "Check-out failed", error });
+      console.error("Check-out failed:", error);
+      res.status(500).json({ message: "Check-out failed", error: String(error) });
+    }
+  });
+
+  // Admin attendance management
+  app.post("/api/attendance/admin-checkin", authenticateToken, requireRole(["admin", "manager"]), async (req: AuthRequest, res) => {
+    try {
+      const { userId, location, notes } = req.body;
+      
+      if (!userId) {
+        return res.status(400).json({ message: "User ID is required" });
+      }
+      
+      const attendance = await storage.checkIn(userId, req.user!.id, location, notes);
+      res.json(attendance);
+    } catch (error) {
+      console.error("Admin check-in failed:", error);
+      res.status(500).json({ message: "Admin check-in failed", error: String(error) });
+    }
+  });
+
+  app.post("/api/attendance/admin-checkout", authenticateToken, requireRole(["admin", "manager"]), async (req: AuthRequest, res) => {
+    try {
+      const { attendanceId, notes } = req.body;
+      
+      if (!attendanceId) {
+        return res.status(400).json({ message: "Attendance ID is required" });
+      }
+      
+      const attendance = await storage.checkOut(attendanceId, req.user!.id);
+      
+      if (notes) {
+        await storage.updateAttendance(attendanceId, { notes });
+      }
+      
+      res.json(attendance);
+    } catch (error) {
+      console.error("Admin check-out failed:", error);
+      res.status(500).json({ message: "Admin check-out failed", error: String(error) });
+    }
+  });
+
+  app.post("/api/attendance/mark", authenticateToken, requireRole(["admin", "manager"]), async (req: AuthRequest, res) => {
+    try {
+      const attendanceData = insertAttendanceSchema.parse(req.body);
+      const attendance = await storage.markAttendance(attendanceData);
+      res.json(attendance);
+    } catch (error) {
+      console.error("Mark attendance failed:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid attendance data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Mark attendance failed", error: String(error) });
+    }
+  });
+
+  // Payroll routes
+  app.get("/api/payroll", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const { month, year } = req.query;
+      const filters = {
+        month: month ? parseInt(month as string) : undefined,
+        year: year ? parseInt(year as string) : undefined,
+      };
+      
+      // For now, return empty array since payroll implementation is not complete
+      res.json([]);
+    } catch (error) {
+      console.error("Failed to fetch payroll:", error);
+      res.status(500).json({ message: "Failed to fetch payroll", error: String(error) });
+    }
+  });
+
+  app.post("/api/payroll/generate", authenticateToken, requireRole(["admin", "manager"]), async (req: AuthRequest, res) => {
+    try {
+      const { userId, month, year } = req.body;
+      
+      if (!userId || !month || !year) {
+        return res.status(400).json({ message: "User ID, month, and year are required" });
+      }
+      
+      // Mock payroll generation for now
+      const payrollData = {
+        id: Math.floor(Math.random() * 10000),
+        userId,
+        month,
+        year,
+        basicSalary: 25000,
+        actualWorkingDays: 22,
+        totalHours: 176,
+        overtimeHours: 8,
+        netSalary: 26000,
+        status: "generated",
+        createdAt: new Date(),
+      };
+      
+      res.json(payrollData);
+    } catch (error) {
+      console.error("Payroll generation failed:", error);
+      res.status(500).json({ message: "Payroll generation failed", error: String(error) });
+    }
+  });
+
+  app.post("/api/payroll/:id/process", authenticateToken, requireRole(["admin", "manager"]), async (req: AuthRequest, res) => {
+    try {
+      const { id } = req.params;
+      
+      // Mock payroll processing for now
+      const processedPayroll = {
+        id: parseInt(id),
+        status: "paid",
+        processedAt: new Date(),
+        processedBy: req.user!.id,
+      };
+      
+      res.json(processedPayroll);
+    } catch (error) {
+      console.error("Payroll processing failed:", error);
+      res.status(500).json({ message: "Payroll processing failed", error: String(error) });
     }
   });
 
