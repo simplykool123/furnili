@@ -89,9 +89,10 @@ export default function Login() {
                         <Input
                           {...field}
                           type="text"
-                          placeholder="Enter your username"
+                          placeholder="Type: admin"
                           className="pl-10 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                           disabled={isLoading}
+                          autoComplete="username"
                         />
                       </div>
                     </FormControl>
@@ -166,9 +167,12 @@ export default function Login() {
                 <p className="text-gray-600">user@demo.com</p>
               </div>
             </div>
-            <div className="mt-3 p-2 bg-blue-50 rounded text-center">
-              <p className="text-xs font-medium text-blue-800">
-                Use username: <strong>admin</strong> & password: <strong>admin123</strong>
+            <div className="mt-3 p-3 bg-red-100 border border-red-300 rounded text-center">
+              <p className="text-sm font-bold text-red-800">
+                IMPORTANT: Enter exactly → admin (not email format!)
+              </p>
+              <p className="text-xs text-red-700 mt-1">
+                Password: admin123
               </p>
             </div>
           </div>
