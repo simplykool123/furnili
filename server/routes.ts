@@ -3,8 +3,8 @@ import { createServer, type Server } from "http";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { storage } from "./storage";
-import { authenticateToken, requireRole, generateToken, type AuthRequest } from "./middleware/auth";
-import { productImageUpload, boqFileUpload } from "./utils/fileUpload";
+import { authenticateToken, requireRole, generateToken, comparePassword, type AuthRequest } from "./middleware/auth";
+import { productImageUpload, boqFileUpload, receiptImageUpload } from "./utils/fileUpload";
 import { exportProductsCSV, exportRequestsCSV, exportLowStockCSV } from "./utils/csvExport";
 import {
   insertUserSchema,
@@ -13,36 +13,94 @@ import {
   insertMaterialRequestSchema,
   insertRequestItemSchema,
   insertBOQUploadSchema,
+  insertAttendanceSchema,
+  insertPettyCashExpenseSchema,
+  insertTaskSchema,
+  insertPriceComparisonSchema,
 } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth routes
   app.post("/api/auth/login", async (req, res) => {
     try {
-      const { email, password } = req.body;
+      const { username, password } = req.body;
       
-      if (!email || !password) {
-        return res.status(400).json({ message: "Email and password are required" });
+      if (!username || !password) {
+        return res.status(400).json({ message: "Username and password are required" });
       }
 
-      const user = await storage.getUserByEmail(email);
-      if (!user || !(await bcrypt.compare(password, user.password))) {
+      const user = await storage.getUserByUsername(username);
+      if (!user) {
         return res.status(401).json({ message: "Invalid credentials" });
       }
 
-      const token = generateToken(user);
-      
+      const isValidPassword = await comparePassword(password, user.password);
+      if (!isValidPassword) {
+        return res.status(401).json({ message: "Invalid credentials" });
+      }
+
+      // Update last login
+      await storage.updateUser(user.id, { 
+        lastLogin: new Date()
+      });
+
+      const token = generateToken({ 
+        id: user.id, 
+        username: user.username, 
+        role: user.role 
+      });
+
+      const { password: _, ...userWithoutPassword } = user;
+
       res.json({
+        user: userWithoutPassword,
         token,
-        user: {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          role: user.role,
-        },
       });
     } catch (error) {
-      res.status(500).json({ message: "Login failed", error });
+      console.error("Login error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Get current user
+  app.get("/api/auth/user", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const user = await storage.getUser(req.user!.id);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      const { password: _, ...userWithoutPassword } = user;
+      res.json(userWithoutPassword);
+    } catch (error) {
+      console.error("Get user error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Dashboard stats
+  app.get("/api/dashboard/stats", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const stats = await storage.getDashboardStats();
+      res.json(stats);
+    } catch (error) {
+      console.error("Dashboard stats error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Dashboard activity
+  app.get("/api/dashboard/activity", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      res.json([
+        { description: "New product added: Steel Rods", time: "2 hours ago" },
+        { description: "Stock movement: Cement bags", time: "3 hours ago" },
+        { description: "Task completed: Inventory check", time: "1 day ago" },
+        { description: "User checked in: John Staff", time: "1 day ago" }
+      ]);
+    } catch (error) {
+      console.error("Dashboard activity error:", error);
+      res.status(500).json({ message: "Internal server error" });
     }
   });
 
@@ -472,6 +530,178 @@ export async function registerRoutes(app: Express): Promise<Server> {
         res.status(404).json({ message: 'File not found' });
       }
     });
+  });
+
+  // Attendance routes
+  app.get("/api/attendance", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const attendance = await storage.getAllAttendance();
+      res.json(attendance);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch attendance", error });
+    }
+  });
+
+  app.get("/api/attendance/today", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const attendance = await storage.getTodayAttendance(req.user!.id);
+      res.json(attendance);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch today's attendance", error });
+    }
+  });
+
+  app.post("/api/attendance/checkin", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const attendance = await storage.checkIn(req.user!.id);
+      res.json(attendance);
+    } catch (error) {
+      res.status(500).json({ message: "Check-in failed", error });
+    }
+  });
+
+  app.post("/api/attendance/checkout", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const attendance = await storage.checkOut(req.user!.id);
+      res.json(attendance);
+    } catch (error) {
+      res.status(500).json({ message: "Check-out failed", error });
+    }
+  });
+
+  // Petty Cash routes
+  app.get("/api/petty-cash", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const expenses = await storage.getAllPettyCashExpenses();
+      res.json(expenses);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch expenses", error });
+    }
+  });
+
+  app.get("/api/petty-cash/stats", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const stats = await storage.getPettyCashStats();
+      res.json(stats);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch stats", error });
+    }
+  });
+
+  app.post("/api/petty-cash", authenticateToken, receiptImageUpload.single("receipt"), async (req: AuthRequest, res) => {
+    try {
+      const expenseData = {
+        ...req.body,
+        amount: parseFloat(req.body.amount),
+        addedBy: req.user!.id,
+        receiptImageUrl: req.file?.path || null,
+      };
+      const expense = await storage.createPettyCashExpense(expenseData);
+      res.json(expense);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to add expense", error });
+    }
+  });
+
+  // Task Management routes
+  app.get("/api/tasks", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const tasks = await storage.getAllTasks();
+      res.json(tasks);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch tasks", error });
+    }
+  });
+
+  app.post("/api/tasks", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const taskData = {
+        ...req.body,
+        assignedTo: parseInt(req.body.assignedTo),
+        createdBy: req.user!.id,
+        dueDate: req.body.dueDate ? new Date(req.body.dueDate) : null,
+      };
+      const task = await storage.createTask(taskData);
+      res.json(task);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to create task", error });
+    }
+  });
+
+  app.patch("/api/tasks/:id/status", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const taskId = parseInt(req.params.id);
+      const { status } = req.body;
+      const task = await storage.updateTaskStatus(taskId, status);
+      res.json(task);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update task", error });
+    }
+  });
+
+  // Price Comparison routes
+  app.get("/api/price-comparisons", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const comparisons = await storage.getAllPriceComparisons();
+      res.json(comparisons);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch comparisons", error });
+    }
+  });
+
+  app.post("/api/price-comparisons", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const comparison = await storage.createPriceComparison({
+        ...req.body,
+        createdBy: req.user!.id,
+      });
+      res.json(comparison);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to create comparison", error });
+    }
+  });
+
+  // WhatsApp Export routes
+  app.post("/api/whatsapp/generate-message", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const { template, items } = req.body;
+      const message = await storage.generateWhatsAppMessage(template, items);
+      res.json({ message });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to generate message", error });
+    }
+  });
+
+  app.post("/api/whatsapp/send", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      // This would integrate with WhatsApp Business API
+      // For now, just return success
+      res.json({ success: true, message: "Message prepared for WhatsApp" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to send message", error });
+    }
+  });
+
+  // Inventory Movement routes
+  app.get("/api/inventory/movements", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const movements = await storage.getAllStockMovements();
+      res.json(movements);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch movements", error });
+    }
+  });
+
+  app.post("/api/inventory/movements", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const movement = await storage.createStockMovement({
+        ...req.body,
+        recordedBy: req.user!.id,
+      });
+      res.json(movement);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to record movement", error });
+    }
   });
 
   const httpServer = createServer(app);

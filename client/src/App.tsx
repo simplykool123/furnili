@@ -13,6 +13,12 @@ import MaterialRequests from "@/pages/MaterialRequests";
 import Reports from "@/pages/Reports";
 import Users from "@/pages/Users";
 import Categories from "@/pages/Categories";
+import Attendance from "@/pages/Attendance";
+import PettyCash from "@/pages/PettyCash";
+import TaskManagement from "@/pages/TaskManagement";
+import PriceComparison from "@/pages/PriceComparison";
+import WhatsAppExport from "@/pages/WhatsAppExport";
+import InventoryMovement from "@/pages/InventoryMovement";
 import NotFound from "@/pages/not-found";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -111,6 +117,42 @@ function Router() {
       <Route path="/users">
         <ProtectedRoute>
           <Users />
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/attendance">
+        <ProtectedRoute>
+          <Attendance />
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/petty-cash">
+        <ProtectedRoute>
+          <PettyCash />
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/tasks">
+        <ProtectedRoute>
+          <TaskManagement />
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/price-comparison">
+        <ProtectedRoute>
+          <PriceComparison />
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/whatsapp">
+        <ProtectedRoute>
+          <WhatsAppExport />
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/inventory-movement">
+        <ProtectedRoute>
+          <InventoryMovement />
         </ProtectedRoute>
       </Route>
       

@@ -1,99 +1,58 @@
-import { type Response } from "express";
+import { Response } from "express";
 import { storage } from "../storage";
 
-export async function exportProductsCSV(res: Response, filters?: any) {
+export const exportProductsCSV = async (res: Response) => {
   try {
-    const products = await storage.getAllProducts(filters);
+    const products = await storage.getAllProducts();
     
-    const csvHeaders = [
-      'ID', 'Name', 'Category', 'Brand', 'Size', 'SKU', 'Price', 
-      'Current Stock', 'Min Stock', 'Unit', 'Stock Status', 'Created At'
-    ];
+    const csvHeaders = "ID,Name,Category,Brand,Size,Thickness,SKU,Price Per Unit,Current Stock,Min Stock,Unit,Active,Created At\n";
     
-    const csvRows = products.map(product => [
-      product.id,
-      `"${product.name}"`,
-      `"${product.category}"`,
-      `"${product.brand || ''}"`,
-      `"${product.size || ''}"`,
-      `"${product.sku || ''}"`,
-      product.price,
-      product.currentStock,
-      product.minStock,
-      `"${product.unit}"`,
-      `"${product.stockStatus}"`,
-      product.createdAt?.toISOString().split('T')[0] || ''
-    ]);
-    
-    const csvContent = [csvHeaders.join(','), ...csvRows.map(row => row.join(','))].join('\n');
-    
-    res.setHeader('Content-Type', 'text/csv');
-    res.setHeader('Content-Disposition', `attachment; filename="products_${Date.now()}.csv"`);
-    res.send(csvContent);
-  } catch (error) {
-    res.status(500).json({ message: 'Failed to export products', error: error });
-  }
-}
+    const csvData = products.map(product => 
+      `${product.id},"${product.name}","${product.category}","${product.brand || ''}","${product.size || ''}","${product.thickness || ''}","${product.sku || ''}",${product.pricePerUnit},${product.currentStock},${product.minStock},"${product.unit}",${product.isActive},"${product.createdAt}"`
+    ).join("\n");
 
-export async function exportRequestsCSV(res: Response, filters?: any) {
-  try {
-    const requests = await storage.getAllMaterialRequests(filters);
-    
-    const csvHeaders = [
-      'ID', 'Client Name', 'Order Number', 'Requested By', 'Status', 
-      'Priority', 'Total Value', 'BOQ Reference', 'Created At', 'Approved At'
-    ];
-    
-    const csvRows = requests.map(request => [
-      request.id,
-      `"${request.clientName}"`,
-      `"${request.orderNumber}"`,
-      `"${request.requestedByUser.name}"`,
-      `"${request.status}"`,
-      `"${request.priority}"`,
-      request.totalValue,
-      `"${request.boqReference || ''}"`,
-      request.createdAt?.toISOString().split('T')[0] || '',
-      request.approvedAt?.toISOString().split('T')[0] || ''
-    ]);
-    
-    const csvContent = [csvHeaders.join(','), ...csvRows.map(row => row.join(','))].join('\n');
-    
-    res.setHeader('Content-Type', 'text/csv');
-    res.setHeader('Content-Disposition', `attachment; filename="requests_${Date.now()}.csv"`);
-    res.send(csvContent);
+    res.setHeader("Content-Type", "text/csv");
+    res.setHeader("Content-Disposition", "attachment; filename=products.csv");
+    res.send(csvHeaders + csvData);
   } catch (error) {
-    res.status(500).json({ message: 'Failed to export requests', error: error });
+    res.status(500).json({ message: "Export failed", error });
   }
-}
+};
 
-export async function exportLowStockCSV(res: Response) {
+export const exportRequestsCSV = async (res: Response) => {
   try {
-    const products = await storage.getLowStockProducts();
+    const requests = await storage.getAllMaterialRequests();
     
-    const csvHeaders = [
-      'ID', 'Name', 'Category', 'Current Stock', 'Min Stock', 
-      'Stock Deficit', 'Unit', 'Price', 'Total Value'
-    ];
+    const csvHeaders = "ID,Client Name,Order Number,Status,Priority,Total Value,Requested By,Created At\n";
     
-    const csvRows = products.map(product => [
-      product.id,
-      `"${product.name}"`,
-      `"${product.category}"`,
-      product.currentStock,
-      product.minStock,
-      product.minStock - product.currentStock,
-      `"${product.unit}"`,
-      product.price,
-      product.price * product.currentStock
-    ]);
-    
-    const csvContent = [csvHeaders.join(','), ...csvRows.map(row => row.join(','))].join('\n');
-    
-    res.setHeader('Content-Type', 'text/csv');
-    res.setHeader('Content-Disposition', `attachment; filename="low_stock_${Date.now()}.csv"`);
-    res.send(csvContent);
+    const csvData = requests.map(request => 
+      `${request.id},"${request.clientName}","${request.orderNumber}","${request.status}","${request.priority}",${request.totalValue},${request.requestedBy},"${request.createdAt}"`
+    ).join("\n");
+
+    res.setHeader("Content-Type", "text/csv");
+    res.setHeader("Content-Disposition", "attachment; filename=material_requests.csv");
+    res.send(csvHeaders + csvData);
   } catch (error) {
-    res.status(500).json({ message: 'Failed to export low stock data', error: error });
+    res.status(500).json({ message: "Export failed", error });
   }
-}
+};
+
+export const exportLowStockCSV = async (res: Response) => {
+  try {
+    const stats = await storage.getDashboardStats();
+    const products = await storage.getAllProducts();
+    const lowStockProducts = products.filter(p => p.currentStock <= p.minStock);
+    
+    const csvHeaders = "ID,Name,Category,Current Stock,Min Stock,Shortage,Unit\n";
+    
+    const csvData = lowStockProducts.map(product => 
+      `${product.id},"${product.name}","${product.category}",${product.currentStock},${product.minStock},${product.minStock - product.currentStock},"${product.unit}"`
+    ).join("\n");
+
+    res.setHeader("Content-Type", "text/csv");
+    res.setHeader("Content-Disposition", "attachment; filename=low_stock_report.csv");
+    res.send(csvHeaders + csvData);
+  } catch (error) {
+    res.status(500).json({ message: "Export failed", error });
+  }
+};

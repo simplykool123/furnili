@@ -1,7 +1,7 @@
-import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
 import { Request, Response, NextFunction } from "express";
-import { storage } from "../storage";
+import { storage } from "./storage";
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-here";
 
@@ -65,6 +65,10 @@ export const generateToken = (user: { id: number; username: string; role: string
     JWT_SECRET,
     { expiresIn: "7d" }
   );
+};
+
+export const hashPassword = async (password: string): Promise<string> => {
+  return bcrypt.hash(password, 10);
 };
 
 export const comparePassword = async (password: string, hash: string): Promise<boolean> => {

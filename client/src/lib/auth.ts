@@ -1,4 +1,4 @@
-import { apiRequest } from "@/lib/queryClient";
+import { queryClient } from "./queryClient";
 
 export interface User {
   id: number;
@@ -7,111 +7,122 @@ export interface User {
   role: string;
 }
 
-export interface AuthResponse {
-  token: string;
-  user: User;
+export interface LoginCredentials {
+  email: string;
+  password: string;
 }
 
 class AuthService {
-  private token: string | null = null;
   private user: User | null = null;
+  private token: string | null = null;
 
   constructor() {
-    // Initialize from localStorage if available
-    if (typeof window !== 'undefined') {
-      this.token = localStorage.getItem('auth_token');
-      const savedUser = localStorage.getItem('auth_user');
-      this.user = savedUser ? JSON.parse(savedUser) : null;
+    // Load user and token from localStorage on initialization
+    const storedToken = localStorage.getItem('authToken');
+    const storedUser = localStorage.getItem('authUser');
+    
+    if (storedToken && storedUser) {
+      this.token = storedToken;
+      try {
+        this.user = JSON.parse(storedUser);
+      } catch (e) {
+        // If parsing fails, clear stored data
+        this.logout();
+      }
     }
   }
 
-  async login(email: string, password: string): Promise<AuthResponse> {
-    const response = await apiRequest('POST', '/api/auth/login', { email, password });
-    const data: AuthResponse = await response.json();
+  async login(credentials: LoginCredentials): Promise<{ user: User; token: string }> {
+    const response = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(credentials),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Login failed');
+    }
+
+    const data = await response.json();
     
-    this.setAuth(data.token, data.user);
+    // Store token and user data
+    this.token = data.token;
+    this.user = data.user;
+    
+    localStorage.setItem('authToken', data.token);
+    localStorage.setItem('authUser', JSON.stringify(data.user));
+    
     return data;
   }
 
-  logout() {
-    this.token = null;
+  logout(): void {
     this.user = null;
-    
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('auth_token');
-      localStorage.removeItem('auth_user');
-    }
-  }
-
-  setAuth(token: string, user: User) {
-    this.token = token;
-    this.user = user;
-    
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('auth_token', token);
-      localStorage.setItem('auth_user', JSON.stringify(user));
-    }
-  }
-
-  getToken(): string | null {
-    return this.token;
+    this.token = null;
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('authUser');
+    queryClient.clear();
   }
 
   getUser(): User | null {
     return this.user;
   }
 
+  getToken(): string | null {
+    return this.token;
+  }
+
   isAuthenticated(): boolean {
-    return !!(this.token && this.user);
+    return !!this.user && !!this.token;
   }
 
   hasRole(roles: string[]): boolean {
-    return !!(this.user && roles.includes(this.user.role));
-  }
-
-  async getCurrentUser(): Promise<User> {
-    const response = await apiRequest('GET', '/api/auth/me');
-    const user: User = await response.json();
-    this.user = user;
-    
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('auth_user', JSON.stringify(user));
-    }
-    
-    return user;
+    return this.user ? roles.includes(this.user.role) : false;
   }
 }
 
 export const authService = new AuthService();
 
-// Add token to requests automatically
-const originalApiRequest = apiRequest;
-export const authenticatedApiRequest = async (
-  method: string,
-  url: string,
-  data?: unknown | undefined,
-): Promise<Response> => {
+// Helper function for making authenticated API requests
+export async function authenticatedApiRequest(url: string, options: RequestInit = {}): Promise<any> {
   const token = authService.getToken();
   
-  const res = await fetch(url, {
-    method,
-    headers: {
-      ...(data ? { "Content-Type": "application/json" } : {}),
-      ...(token ? { "Authorization": `Bearer ${token}` } : {}),
-    },
-    body: data ? JSON.stringify(data) : undefined,
-    credentials: "include",
+  if (!token) {
+    throw new Error('No authentication token available');
+  }
+
+  const headers = {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${token}`,
+    ...options.headers,
+  };
+
+  const response = await fetch(url, {
+    ...options,
+    headers,
   });
 
-  if (res.status === 401) {
+  if (response.status === 401) {
     authService.logout();
     window.location.href = '/login';
+    throw new Error('401: Unauthorized - Session expired');
   }
 
-  if (!res.ok) {
-    const text = (await res.text()) || res.statusText;
-    throw new Error(`${res.status}: ${text}`);
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ message: 'Request failed' }));
+    throw new Error(error.message || `Request failed with status ${response.status}`);
   }
 
-  return res;
-};
+  return response.json();
+}
+
+// Legacy exports for backward compatibility
+export const getCurrentUser = () => authService.getUser();
+export const getToken = () => authService.getToken();
+export const isAuthenticated = () => authService.isAuthenticated();
+export const logout = () => authService.logout();
+export const hasRole = (role: string) => authService.hasRole([role]);
+export const isAdmin = () => authService.hasRole(['admin']);
+export const isStaff = () => authService.hasRole(['admin', 'staff']);

@@ -1,12 +1,25 @@
-# Inventory Management & Material Request System
+# Comprehensive Inventory Management System
 
 ## Overview
 
-This is a comprehensive offline inventory management system built as a full-stack web application. The system features BOQ (Bill of Quantities) OCR processing, role-based access control, and material request workflows. It's designed to run completely self-hosted on private/local servers or LAN environments.
+This is a full-featured inventory management system built as a web application with React frontend and Express backend. The system includes multi-user authentication, role-based access control, inventory tracking, staff management, financial tracking, and task allocation. It's designed for businesses that need comprehensive inventory and staff management capabilities.
 
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
+
+## Recent Changes (January 2025)
+
+- ✅ Added category management system with database schema and API
+- ✅ Created Categories page with create, edit, delete functionality  
+- ✅ Updated ProductForm to use dynamic categories from database
+- ✅ Fixed navigation to include Categories menu item
+- ✅ Updated product filters to use dynamic categories
+- 🔄 Implementing comprehensive multi-user login system with Admin/Staff roles
+- 🔄 Adding inventory inward/outward management with automatic quantity tracking
+- 🔄 Building staff attendance module with check-in/out functionality
+- 🔄 Creating petty cash tracker with OCR receipt processing
+- 🔄 Developing task allocation system for staff management
 
 ## System Architecture
 

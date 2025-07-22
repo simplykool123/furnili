@@ -1,71 +1,59 @@
 import multer from "multer";
 import path from "path";
-import fs from "fs";
 
-// Ensure upload directories exist
-const uploadDir = path.join(process.cwd(), "uploads");
-const productImagesDir = path.join(uploadDir, "products");
-const boqFilesDir = path.join(uploadDir, "boq");
-
-[uploadDir, productImagesDir, boqFilesDir].forEach(dir => {
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
-  }
-});
-
-// Storage configuration for product images
-const productImageStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, productImagesDir);
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, `product-${uniqueSuffix}${path.extname(file.originalname)}`);
-  }
-});
-
-// Storage configuration for BOQ PDFs
-const boqFileStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, boqFilesDir);
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, `boq-${uniqueSuffix}${path.extname(file.originalname)}`);
-  }
-});
-
-// File filter for images
-const imageFilter = (req: any, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
-  if (file.mimetype.startsWith('image/')) {
-    cb(null, true);
-  } else {
-    cb(new Error('Only image files are allowed!'));
-  }
-};
-
-// File filter for PDFs
-const pdfFilter = (req: any, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
-  if (file.mimetype === 'application/pdf') {
-    cb(null, true);
-  } else {
-    cb(new Error('Only PDF files are allowed!'));
-  }
-};
-
-// Multer configurations
+// Product image upload configuration
 export const productImageUpload = multer({
-  storage: productImageStorage,
-  fileFilter: imageFilter,
+  dest: "uploads/products/",
   limits: {
     fileSize: 5 * 1024 * 1024, // 5MB limit
-  }
+  },
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = /jpeg|jpg|png|gif/;
+    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+    const mimetype = allowedTypes.test(file.mimetype);
+
+    if (mimetype && extname) {
+      return cb(null, true);
+    } else {
+      cb(new Error("Only image files are allowed"));
+    }
+  },
 });
 
+// BOQ file upload configuration
 export const boqFileUpload = multer({
-  storage: boqFileStorage,
-  fileFilter: pdfFilter,
+  dest: "uploads/boq/",
   limits: {
     fileSize: 10 * 1024 * 1024, // 10MB limit
-  }
+  },
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = /pdf/;
+    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+    const mimetype = file.mimetype === "application/pdf";
+
+    if (mimetype && extname) {
+      return cb(null, true);
+    } else {
+      cb(new Error("Only PDF files are allowed"));
+    }
+  },
+});
+
+// Receipt image upload for petty cash
+export const receiptImageUpload = multer({
+  dest: "uploads/receipts/",
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = /jpeg|jpg|png/;
+    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+    const mimetype = allowedTypes.test(file.mimetype);
+
+    if (mimetype && extname) {
+      return cb(null, true);
+    } else {
+      cb(new Error("Only image files are allowed for receipts"));
+    }
+  },
 });

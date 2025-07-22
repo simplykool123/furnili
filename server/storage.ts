@@ -6,6 +6,10 @@ import {
   requestItems,
   boqUploads,
   stockMovements,
+  attendance,
+  pettyCashExpenses,
+  tasks,
+  priceComparisons,
   type User,
   type InsertUser,
   type Category,
@@ -20,6 +24,14 @@ import {
   type InsertBOQUpload,
   type StockMovement,
   type InsertStockMovement,
+  type Attendance,
+  type InsertAttendance,
+  type PettyCashExpense,
+  type InsertPettyCashExpense,
+  type Task,
+  type InsertTask,
+  type PriceComparison,
+  type InsertPriceComparison,
   type MaterialRequestWithItems,
   type ProductWithStock,
   type BOQExtractedItem,
@@ -42,6 +54,32 @@ export interface IStorage {
   createCategory(category: InsertCategory): Promise<Category>;
   updateCategory(id: number, updates: Partial<InsertCategory>): Promise<Category | undefined>;
   deleteCategory(id: number): Promise<boolean>;
+
+  // Attendance operations
+  checkIn(userId: number, notes?: string): Promise<Attendance>;
+  checkOut(attendanceId: number): Promise<Attendance | undefined>;
+  getUserAttendance(userId: number, date?: string): Promise<Attendance[]>;
+  getAllAttendance(filters?: { userId?: number; date?: string }): Promise<Attendance[]>;
+
+  // Petty Cash operations
+  getPettyCashExpense(id: number): Promise<PettyCashExpense | undefined>;
+  getAllPettyCashExpenses(filters?: { status?: string; category?: string; addedBy?: number }): Promise<PettyCashExpense[]>;
+  createPettyCashExpense(expense: InsertPettyCashExpense): Promise<PettyCashExpense>;
+  updatePettyCashExpense(id: number, updates: Partial<InsertPettyCashExpense>): Promise<PettyCashExpense | undefined>;
+  approvePettyCashExpense(id: number, approvedBy: number): Promise<PettyCashExpense | undefined>;
+
+  // Task operations
+  getTask(id: number): Promise<Task | undefined>;
+  getAllTasks(filters?: { assignedTo?: number; status?: string; assignedBy?: number }): Promise<Task[]>;
+  createTask(task: InsertTask): Promise<Task>;
+  updateTask(id: number, updates: Partial<InsertTask>): Promise<Task | undefined>;
+  deleteTask(id: number): Promise<boolean>;
+
+  // Price Comparison operations
+  getAllPriceComparisons(productName?: string): Promise<PriceComparison[]>;
+  createPriceComparison(comparison: InsertPriceComparison): Promise<PriceComparison>;
+  updatePriceComparison(id: number, updates: Partial<InsertPriceComparison>): Promise<PriceComparison | undefined>;
+  deletePriceComparison(id: number): Promise<boolean>;
   
   // Product operations
   getProduct(id: number): Promise<Product | undefined>;
@@ -96,7 +134,242 @@ export class MemStorage implements IStorage {
   private requestItems: Map<number, RequestItem[]> = new Map();
   private boqUploads: Map<number, BOQUpload> = new Map();
   private stockMovements: Map<number, StockMovement[]> = new Map();
+  private attendance: Map<number, Attendance> = new Map();
+  private pettyCashExpenses: Map<number, PettyCashExpense> = new Map();
+  private tasks: Map<number, Task> = new Map();
+  private priceComparisons: Map<number, PriceComparison> = new Map();
   private currentId = 1;
+
+  // Attendance operations  
+  async checkIn(userId: number, notes?: string): Promise<Attendance> {
+    const id = this.currentId++;
+    const checkInTime = new Date();
+    
+    const attendance: Attendance = {
+      id,
+      userId,
+      checkInTime,
+      checkOutTime: null,
+      workingHours: null,
+      status: "checked_in",
+      notes: notes || null,
+      createdAt: checkInTime,
+    };
+    
+    this.attendance.set(id, attendance);
+    return attendance;
+  }
+
+  async checkOut(attendanceId: number): Promise<Attendance | undefined> {
+    const attendance = this.attendance.get(attendanceId);
+    if (!attendance) return undefined;
+    
+    const checkOutTime = new Date();
+    const workingHours = (checkOutTime.getTime() - attendance.checkInTime.getTime()) / (1000 * 60 * 60);
+    
+    const updatedAttendance: Attendance = {
+      ...attendance,
+      checkOutTime,
+      workingHours,
+      status: "checked_out",
+    };
+    
+    this.attendance.set(attendanceId, updatedAttendance);
+    return updatedAttendance;
+  }
+
+  async getUserAttendance(userId: number, date?: string): Promise<Attendance[]> {
+    const allAttendance = Array.from(this.attendance.values());
+    let filtered = allAttendance.filter(a => a.userId === userId);
+    
+    if (date) {
+      const targetDate = new Date(date);
+      filtered = filtered.filter(a => 
+        a.checkInTime.toDateString() === targetDate.toDateString()
+      );
+    }
+    
+    return filtered.sort((a, b) => b.checkInTime.getTime() - a.checkInTime.getTime());
+  }
+
+  async getAllAttendance(filters?: { userId?: number; date?: string }): Promise<Attendance[]> {
+    let allAttendance = Array.from(this.attendance.values());
+    
+    if (filters?.userId) {
+      allAttendance = allAttendance.filter(a => a.userId === filters.userId);
+    }
+    
+    if (filters?.date) {
+      const targetDate = new Date(filters.date);
+      allAttendance = allAttendance.filter(a => 
+        a.checkInTime.toDateString() === targetDate.toDateString()
+      );
+    }
+    
+    return allAttendance.sort((a, b) => b.checkInTime.getTime() - a.checkInTime.getTime());
+  }
+
+  // Petty Cash operations
+  async getPettyCashExpense(id: number): Promise<PettyCashExpense | undefined> {
+    return this.pettyCashExpenses.get(id);
+  }
+
+  async getAllPettyCashExpenses(filters?: { status?: string; category?: string; addedBy?: number }): Promise<PettyCashExpense[]> {
+    let allExpenses = Array.from(this.pettyCashExpenses.values());
+    
+    if (filters?.status) {
+      allExpenses = allExpenses.filter(e => e.status === filters.status);
+    }
+    
+    if (filters?.category) {
+      allExpenses = allExpenses.filter(e => e.category === filters.category);
+    }
+    
+    if (filters?.addedBy) {
+      allExpenses = allExpenses.filter(e => e.addedBy === filters.addedBy);
+    }
+    
+    return allExpenses.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  }
+
+  async createPettyCashExpense(expense: InsertPettyCashExpense): Promise<PettyCashExpense> {
+    const id = this.currentId++;
+    const newExpense: PettyCashExpense = {
+      id,
+      ...expense,
+      createdAt: new Date(),
+    };
+    
+    this.pettyCashExpenses.set(id, newExpense);
+    return newExpense;
+  }
+
+  async updatePettyCashExpense(id: number, updates: Partial<InsertPettyCashExpense>): Promise<PettyCashExpense | undefined> {
+    const expense = this.pettyCashExpenses.get(id);
+    if (!expense) return undefined;
+    
+    const updatedExpense: PettyCashExpense = {
+      ...expense,
+      ...updates,
+    };
+    
+    this.pettyCashExpenses.set(id, updatedExpense);
+    return updatedExpense;
+  }
+
+  async approvePettyCashExpense(id: number, approvedBy: number): Promise<PettyCashExpense | undefined> {
+    const expense = this.pettyCashExpenses.get(id);
+    if (!expense) return undefined;
+    
+    const updatedExpense: PettyCashExpense = {
+      ...expense,
+      status: "approved",
+      approvedBy,
+    };
+    
+    this.pettyCashExpenses.set(id, updatedExpense);
+    return updatedExpense;
+  }
+
+  // Task operations
+  async getTask(id: number): Promise<Task | undefined> {
+    return this.tasks.get(id);
+  }
+
+  async getAllTasks(filters?: { assignedTo?: number; status?: string; assignedBy?: number }): Promise<Task[]> {
+    let allTasks = Array.from(this.tasks.values());
+    
+    if (filters?.assignedTo) {
+      allTasks = allTasks.filter(t => t.assignedTo === filters.assignedTo);
+    }
+    
+    if (filters?.status) {
+      allTasks = allTasks.filter(t => t.status === filters.status);
+    }
+    
+    if (filters?.assignedBy) {
+      allTasks = allTasks.filter(t => t.assignedBy === filters.assignedBy);
+    }
+    
+    return allTasks.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  }
+
+  async createTask(task: InsertTask): Promise<Task> {
+    const id = this.currentId++;
+    const newTask: Task = {
+      id,
+      ...task,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    
+    this.tasks.set(id, newTask);
+    return newTask;
+  }
+
+  async updateTask(id: number, updates: Partial<InsertTask>): Promise<Task | undefined> {
+    const task = this.tasks.get(id);
+    if (!task) return undefined;
+    
+    const updatedTask: Task = {
+      ...task,
+      ...updates,
+      updatedAt: new Date(),
+    };
+    
+    this.tasks.set(id, updatedTask);
+    return updatedTask;
+  }
+
+  async deleteTask(id: number): Promise<boolean> {
+    return this.tasks.delete(id);
+  }
+
+  // Price Comparison operations
+  async getAllPriceComparisons(productName?: string): Promise<PriceComparison[]> {
+    let allComparisons = Array.from(this.priceComparisons.values());
+    
+    if (productName) {
+      allComparisons = allComparisons.filter(p => 
+        p.productName.toLowerCase().includes(productName.toLowerCase())
+      );
+    }
+    
+    return allComparisons
+      .filter(p => p.isActive)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  }
+
+  async createPriceComparison(comparison: InsertPriceComparison): Promise<PriceComparison> {
+    const id = this.currentId++;
+    const newComparison: PriceComparison = {
+      id,
+      ...comparison,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    
+    this.priceComparisons.set(id, newComparison);
+    return newComparison;
+  }
+
+  async updatePriceComparison(id: number, updates: Partial<InsertPriceComparison>): Promise<PriceComparison | undefined> {
+    const comparison = this.priceComparisons.get(id);
+    if (!comparison) return undefined;
+    
+    const updatedComparison: PriceComparison = {
+      ...comparison,
+      ...updates,
+      updatedAt: new Date(),
+    };
+    
+    this.priceComparisons.set(id, updatedComparison);
+    return updatedComparison;
+  }
+
+  async deletePriceComparison(id: number): Promise<boolean> {
+    return this.priceComparisons.delete(id);
+  }
 
   constructor() {
     this.initializeData();
@@ -116,36 +389,48 @@ export class MemStorage implements IStorage {
       password: adminPassword,
       name: "System Administrator",
       role: "admin",
+      phone: "+91-9876543210",
+      isActive: true,
+      lastLogin: null,
       createdAt: new Date(),
     });
 
     this.users.set(2, {
       id: 2,
-      username: "manager",
-      email: "manager@demo.com",
+      username: "staff1",
+      email: "staff1@demo.com",
       password: managerPassword,
-      name: "John Manager",
-      role: "manager",
+      name: "John Staff Member",
+      role: "staff",
+      phone: "+91-9876543211",
+      isActive: true,
+      lastLogin: null,
       createdAt: new Date(),
     });
 
     this.users.set(3, {
       id: 3,
-      username: "storekeeper",
-      email: "keeper@demo.com",
+      username: "staff2",
+      email: "staff2@demo.com",
       password: storekeepPassword,
-      name: "Mike Storekeeper",
-      role: "storekeeper",
+      name: "Mike Staff Member",
+      role: "staff",
+      phone: "+91-9876543212",
+      isActive: true,
+      lastLogin: null,
       createdAt: new Date(),
     });
 
     this.users.set(4, {
       id: 4,
-      username: "user",
-      email: "user@demo.com",
+      username: "staff3",
+      email: "staff3@demo.com",
       password: userPassword,
-      name: "Sarah User",
-      role: "user",
+      name: "Sarah Staff Member",
+      role: "staff",
+      phone: "+91-9876543213",
+      isActive: true,
+      lastLogin: null,
       createdAt: new Date(),
     });
 
@@ -157,7 +442,7 @@ export class MemStorage implements IStorage {
       brand: "Tata Steel",
       size: "12mm diameter",
       sku: "STL-12MM-001",
-      price: 450.00,
+      pricePerUnit: 450.00,
       currentStock: 15,
       minStock: 50,
       unit: "pieces",

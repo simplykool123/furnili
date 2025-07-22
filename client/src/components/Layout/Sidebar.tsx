@@ -10,17 +10,28 @@ import {
   BarChart3, 
   Users, 
   LogOut,
-  Warehouse 
+  Warehouse,
+  Clock,
+  Wallet,
+  CheckSquare,
+  TrendingUp,
+  MessageCircle,
+  ArrowUpDown
 } from "lucide-react";
 
 const navigation = [
-  { name: 'Dashboard', href: '/', icon: LayoutDashboard, roles: ['admin', 'manager', 'storekeeper', 'user'] },
-  { name: 'Products', href: '/products', icon: Package, roles: ['admin', 'manager'] },
-  { name: 'Categories', href: '/categories', icon: Tag, roles: ['admin', 'manager'] },
-  { name: 'Material Requests', href: '/requests', icon: ClipboardList, roles: ['admin', 'manager', 'storekeeper', 'user'] },
-  { name: 'BOQ Upload', href: '/boq', icon: FileText, roles: ['admin', 'manager'] },
-  { name: 'Inventory', href: '/inventory', icon: Warehouse, roles: ['admin', 'storekeeper'] },
-  { name: 'Reports', href: '/reports', icon: BarChart3, roles: ['admin', 'manager', 'storekeeper'] },
+  { name: 'Dashboard', href: '/', icon: LayoutDashboard, roles: ['admin', 'staff'] },
+  { name: 'Products', href: '/products', icon: Package, roles: ['admin', 'staff'] },
+  { name: 'Categories', href: '/categories', icon: Tag, roles: ['admin', 'staff'] },
+  { name: 'Material Requests', href: '/requests', icon: ClipboardList, roles: ['admin', 'staff'] },
+  { name: 'BOQ Upload', href: '/boq', icon: FileText, roles: ['admin', 'staff'] },
+  { name: 'Inventory Movement', href: '/inventory-movement', icon: ArrowUpDown, roles: ['admin', 'staff'] },
+  { name: 'Staff Attendance', href: '/attendance', icon: Clock, roles: ['admin', 'staff'] },
+  { name: 'Petty Cash', href: '/petty-cash', icon: Wallet, roles: ['admin', 'staff'] },
+  { name: 'Task Management', href: '/tasks', icon: CheckSquare, roles: ['admin', 'staff'] },
+  { name: 'Price Comparison', href: '/price-comparison', icon: TrendingUp, roles: ['admin', 'staff'] },
+  { name: 'WhatsApp Export', href: '/whatsapp', icon: MessageCircle, roles: ['admin', 'staff'] },
+  { name: 'Reports', href: '/reports', icon: BarChart3, roles: ['admin', 'staff'] },
   { name: 'Users', href: '/users', icon: Users, roles: ['admin'] },
 ];
 
