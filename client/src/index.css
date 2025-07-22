@@ -9,7 +9,7 @@
   --furnili-dark: hsl(25, 25%, 15%); /* Dark brown */
   --furnili-accent: hsl(39, 60%, 55%); /* Darker tan for accents */
   
-  --background: hsl(44, 52%, 95%);
+  --background: hsl(44, 52%, 95%); /* Cream background for pages */
   --foreground: hsl(25, 25%, 15%);
   --muted: hsl(39, 30%, 90%);
   --muted-foreground: hsl(39, 15%, 45%);

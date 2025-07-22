@@ -105,7 +105,7 @@ export default function Sidebar({ onItemClick }: SidebarProps = {}) {
   });
 
   return (
-    <aside className="w-64 lg:w-72 furnili-gradient shadow-xl border-r border-primary-foreground/20 h-full flex flex-col transition-all duration-300" data-testid="main-sidebar">
+    <aside className="w-64 lg:w-72 shadow-xl border-r border-primary-foreground/20 h-full flex flex-col transition-all duration-300" style={{backgroundColor: '#D4B896'}} data-testid="main-sidebar">
       {/* Logo/Brand */}
       <div className="p-6 border-b border-primary-foreground/20">
         <div className="flex items-center space-x-3">
