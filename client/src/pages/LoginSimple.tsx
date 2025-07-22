@@ -1,0 +1,146 @@
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useToast } from "@/hooks/use-toast";
+import { setToken } from "@/lib/auth";
+import { Eye, EyeOff, Lock, User, Package } from "lucide-react";
+
+export default function LoginSimple() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
+
+  const handleLogin = async () => {
+    if (!email || !password) {
+      toast({
+        title: "Error",
+        description: "Please enter both email and password",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          username: email,
+          password: password,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setToken(data.token);
+        toast({
+          title: "Success",
+          description: "Login successful!",
+        });
+        window.location.href = "/";
+      } else {
+        toast({
+          title: "Login failed",
+          description: data.message || "Invalid credentials",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Network error occurred",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 to-amber-50 p-4">
+      <Card className="w-full max-w-md shadow-xl">
+        <CardHeader className="space-y-3 text-center pb-6">
+          <div className="w-16 h-16 bg-blue-500 rounded-2xl flex items-center justify-center mx-auto">
+            <Package className="w-8 h-8 text-white" />
+          </div>
+          <CardTitle className="text-3xl font-bold text-gray-900">
+            Inventory Management
+          </CardTitle>
+          <CardDescription className="text-gray-600">
+            Sign in to your account
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700">Email Address</label>
+              <div className="relative">
+                <User className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
+                <Input
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="admin@demo.com"
+                  className="pl-10 border-gray-300 focus:border-blue-500"
+                  disabled={isLoading}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700">Password</label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
+                <Input
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  type={showPassword ? "text" : "password"}
+                  placeholder="admin123"
+                  className="pl-10 pr-10 border-gray-300 focus:border-blue-500"
+                  disabled={isLoading}
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4 text-gray-500" />
+                  ) : (
+                    <Eye className="h-4 w-4 text-gray-500" />
+                  )}
+                </Button>
+              </div>
+            </div>
+
+            <Button
+              onClick={handleLogin}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5"
+              disabled={isLoading}
+            >
+              {isLoading ? "Signing in..." : "Sign In"}
+            </Button>
+          </div>
+
+          <div className="bg-gray-50 rounded-lg p-4">
+            <p className="text-sm font-medium text-gray-700 mb-3">Demo Accounts:</p>
+            <div className="space-y-2 text-sm">
+              <div className="bg-white p-2 rounded border">
+                <p className="font-medium text-blue-700">Admin: admin@demo.com</p>
+                <p className="text-gray-600">Password: admin123</p>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}

@@ -5,7 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { authService } from "@/lib/auth";
 import { useEffect, useState } from "react";
-import LoginForm from "@/components/Auth/LoginForm";
+import LoginSimple from "@/pages/LoginSimple";
 import Dashboard from "@/pages/Dashboard";
 import Products from "@/pages/Products";
 import BOQ from "@/pages/BOQ";
@@ -53,7 +53,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   }
 
   if (!isAuthenticated) {
-    return <LoginForm onLoginSuccess={() => setIsAuthenticated(true)} />;
+    return <LoginSimple />;
   }
 
   return <>{children}</>;
@@ -68,7 +68,7 @@ function Router() {
             window.location.href = "/";
             return null;
           }
-          return <LoginForm onLoginSuccess={() => window.location.href = "/"} />;
+          return <LoginSimple />;
         }}
       </Route>
       

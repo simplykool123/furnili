@@ -121,6 +121,10 @@ export async function authenticatedApiRequest(url: string, options: RequestInit 
 // Legacy exports for backward compatibility
 export const getCurrentUser = () => authService.getUser();
 export const getToken = () => authService.getToken();
+export const setToken = (token: string) => {
+  localStorage.setItem('authToken', token);
+  (authService as any).token = token;
+};
 export const isAuthenticated = () => authService.isAuthenticated();
 export const logout = () => authService.logout();
 export const hasRole = (role: string) => authService.hasRole([role]);
