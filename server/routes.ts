@@ -97,12 +97,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Dashboard activity
   app.get("/api/dashboard/activity", authenticateToken, async (req: AuthRequest, res) => {
     try {
-      res.json([
+      // Ensure all activity items have properly formatted string values
+      const activities = [
         { description: "New product added: Steel Rods", time: "2 hours ago" },
         { description: "Stock movement: Cement bags", time: "3 hours ago" },
         { description: "Task completed: Inventory check", time: "1 day ago" },
         { description: "User checked in: John Staff", time: "1 day ago" }
-      ]);
+      ].map(activity => ({
+        description: String(activity.description),
+        time: String(activity.time)
+      }));
+      
+      res.json(activities);
     } catch (error) {
       console.error("Dashboard activity error:", error);
       res.status(500).json({ message: "Internal server error" });
@@ -654,7 +660,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/dashboard/low-stock", authenticateToken, async (req, res) => {
     try {
       const lowStockProducts = await storage.getLowStockProducts();
-      res.json(lowStockProducts);
+      // Transform products to ensure no complex objects are rendered as React children
+      const transformedProducts = lowStockProducts.map(product => ({
+        id: product.id,
+        name: product.name,
+        category: product.category,
+        currentStock: product.currentStock,
+        minStock: product.minStock,
+        stockStatus: product.currentStock <= product.minStock ? 'low-stock' : 'in-stock'
+      }));
+      res.json(transformedProducts);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch low stock products", error });
     }
