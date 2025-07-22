@@ -26,7 +26,7 @@ export default function Layout({
   }
 
   return (
-    <div className="min-h-screen flex bg-amber-50" data-testid="main-layout">
+    <div className="min-h-screen flex" data-testid="main-layout" style={{backgroundColor: '#F5F0E8'}}>
       {/* Desktop Sidebar */}
       <div className="hidden lg:block">
         <Sidebar />
@@ -39,7 +39,7 @@ export default function Layout({
             className="fixed inset-0 bg-black bg-opacity-50" 
             onClick={() => setSidebarOpen(false)}
           />
-          <div className="fixed inset-y-0 left-0 w-64" style={{backgroundColor: '#8B5A2B'}}>
+          <div className="fixed inset-y-0 left-0 w-64" style={{backgroundColor: '#D4B896'}}>
             <Sidebar onItemClick={() => setSidebarOpen(false)} />
           </div>
         </div>

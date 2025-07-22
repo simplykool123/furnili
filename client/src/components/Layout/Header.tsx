@@ -33,7 +33,7 @@ export default function Header({ title, subtitle, showAddButton = false, onAddCl
   const lowStockCount = stats?.lowStockItems || (Array.isArray(stats?.lowStockProducts) ? stats.lowStockProducts.length : 0);
 
   return (
-    <header className="bg-white border-b border-gray-200 px-3 sm:px-4 lg:px-6 py-3 sm:py-4">
+    <header className="border-b border-amber-300 px-3 sm:px-4 lg:px-6 py-3 sm:py-4" style={{backgroundColor: '#F5F0E8'}}>
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-3">
           {/* Mobile Menu Button */}

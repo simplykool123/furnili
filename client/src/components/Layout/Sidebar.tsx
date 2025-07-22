@@ -97,9 +97,9 @@ export default function Sidebar({ onItemClick }: SidebarProps = {}) {
   });
 
   return (
-    <aside className="w-56 lg:w-64 bg-amber-900 shadow-lg border-r border-amber-800 h-full flex flex-col" data-testid="main-sidebar" style={{backgroundColor: '#8B5A2B'}}>
+    <aside className="w-56 lg:w-64 shadow-lg border-r border-amber-700 h-full flex flex-col" data-testid="main-sidebar" style={{backgroundColor: '#D4B896'}}>
       {/* Logo/Brand */}
-      <div className="p-4 border-b border-amber-800">
+      <div className="p-4 border-b border-amber-700">
         <div className="flex items-center space-x-2">
           <div className="w-8 h-8 rounded-lg overflow-hidden flex items-center justify-center">
             <img 
@@ -113,8 +113,8 @@ export default function Sidebar({ onItemClick }: SidebarProps = {}) {
             />
           </div>
           <div>
-            <h2 className="font-semibold text-white text-sm">Furnili MS</h2>
-            <p className="text-xs text-amber-200 capitalize">{user.role}</p>
+            <h2 className="font-semibold text-amber-900 text-sm">Furnili MS</h2>
+            <p className="text-xs text-amber-800 capitalize">{user.role}</p>
           </div>
         </div>
       </div>
@@ -139,8 +139,8 @@ export default function Sidebar({ onItemClick }: SidebarProps = {}) {
                     className={cn(
                       "flex items-center justify-between w-full px-3 py-2 rounded-lg font-medium transition-colors text-sm",
                       hasActiveSubItem || isExpanded
-                        ? "text-white bg-amber-800"
-                        : "text-amber-100 hover:bg-amber-800/50"
+                        ? "text-amber-900 bg-amber-200"
+                        : "text-amber-800 hover:bg-amber-200/50"
                     )}
                   >
                     <div className="flex items-center space-x-2">
@@ -167,8 +167,8 @@ export default function Sidebar({ onItemClick }: SidebarProps = {}) {
                             className={cn(
                               "flex items-center space-x-2 px-3 py-2 rounded-lg font-medium transition-colors text-sm",
                               isActive
-                                ? "text-white bg-amber-800"
-                                : "text-amber-200 hover:bg-amber-800/50"
+                                ? "text-amber-900 bg-amber-200"
+                                : "text-amber-700 hover:bg-amber-200/50"
                             )}
                             onClick={onItemClick}
                           >
@@ -192,8 +192,8 @@ export default function Sidebar({ onItemClick }: SidebarProps = {}) {
                   className={cn(
                     "flex items-center space-x-2 px-3 py-2 rounded-lg font-medium transition-colors text-sm",
                     isActive
-                      ? "text-white bg-amber-800"
-                      : "text-amber-100 hover:bg-amber-800/50"
+                      ? "text-amber-900 bg-amber-200"
+                      : "text-amber-800 hover:bg-amber-200/50"
                   )}
                   onClick={onItemClick}
                 >
@@ -207,10 +207,10 @@ export default function Sidebar({ onItemClick }: SidebarProps = {}) {
       </nav>
 
       {/* Logout */}
-      <div className="p-3 border-t border-amber-800">
+      <div className="p-3 border-t border-amber-700">
         <button 
           onClick={handleLogout}
-          className="flex items-center space-x-2 px-3 py-2 text-amber-100 hover:bg-amber-800/50 rounded-lg transition-colors w-full text-sm"
+          className="flex items-center space-x-2 px-3 py-2 text-amber-800 hover:bg-amber-200/50 rounded-lg transition-colors w-full text-sm"
         >
           <LogOut className="w-4 h-4" />
           <span>Logout</span>
