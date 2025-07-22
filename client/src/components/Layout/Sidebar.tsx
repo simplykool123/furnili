@@ -69,20 +69,7 @@ export default function Sidebar({ onItemClick }: SidebarProps = {}) {
         </div>
       </div>
 
-      {/* User Profile */}
-      <div className="p-3 border-b border-gray-200">
-        <div className="flex items-center space-x-2">
-          <div className="w-8 h-8 bg-secondary rounded-full flex items-center justify-center">
-            <span className="text-white font-medium text-xs">
-              {user.name.split(' ').map(n => n[0]).join('').toUpperCase()}
-            </span>
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="font-medium text-gray-900 truncate text-sm">{user.name}</p>
-            <p className="text-xs text-gray-600 truncate">{user.email}</p>
-          </div>
-        </div>
-      </div>
+      
 
       {/* Navigation */}
       <nav className="flex-1 p-3">
