@@ -90,9 +90,13 @@ export default function WhatsAppExport() {
       return;
     }
 
+    // Get selected product data instead of just IDs
+    const availableItems = getItemsForTemplate();
+    const selectedItemsData = availableItems.filter((item: any) => selectedItems.includes(item.id));
+    
     const data = {
       template: selectedTemplate,
-      items: selectedItems,
+      items: selectedItemsData,
       phoneNumber,
     };
 

@@ -184,86 +184,74 @@ export default function Dashboard() {
       <StockWarnings />
 
       {/* Stats Grid */}
-      <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        <Card className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-blue-500 bg-gradient-to-br from-card to-blue-50/20 dark:to-blue-950/20">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-            <CardTitle className="text-sm font-semibold text-card-foreground">Total Products</CardTitle>
-            <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center">
-              <Package className="h-5 w-5 text-blue-600" />
-            </div>
+      <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6">
+        <Card className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-blue-500 bg-gradient-to-br from-card to-blue-50/20">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-xs font-semibold text-card-foreground">Products</CardTitle>
+            <Package className="h-4 w-4 text-blue-600" />
           </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-foreground">{stats?.totalProducts || 0}</div>
-            <p className="text-sm text-muted-foreground mt-1">Active inventory items</p>
+          <CardContent className="pb-3">
+            <div className="text-2xl font-bold text-foreground">{stats?.totalProducts || 0}</div>
+            <p className="text-xs text-muted-foreground mt-1">Active items</p>
           </CardContent>
         </Card>
 
-        <Card className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-red-500 bg-gradient-to-br from-card to-red-50/20 dark:to-red-950/20">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-            <CardTitle className="text-sm font-semibold text-card-foreground">Low Stock Alert</CardTitle>
-            <div className="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/50 flex items-center justify-center">
-              <AlertTriangle className="h-5 w-5 text-red-600" />
-            </div>
+        <Card className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-red-500 bg-gradient-to-br from-card to-red-50/20">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-xs font-semibold text-card-foreground">Low Stock</CardTitle>
+            <AlertTriangle className="h-4 w-4 text-red-600" />
           </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-red-600">
+          <CardContent className="pb-3">
+            <div className="text-2xl font-bold text-red-600">
               {Array.isArray(stats?.lowStockProducts) ? stats.lowStockProducts.length : 0}
             </div>
-            <p className="text-sm text-muted-foreground mt-1">Items need restocking</p>
+            <p className="text-xs text-muted-foreground mt-1">Need restocking</p>
           </CardContent>
         </Card>
 
-        <Card className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-orange-500 bg-gradient-to-br from-card to-orange-50/20 dark:to-orange-950/20">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-            <CardTitle className="text-sm font-semibold text-card-foreground">Today's Attendance</CardTitle>
-            <div className="w-10 h-10 rounded-full bg-orange-100 dark:bg-orange-900/50 flex items-center justify-center">
-              <Clock className="h-5 w-5 text-orange-600" />
-            </div>
+        <Card className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-orange-500 bg-gradient-to-br from-card to-orange-50/20">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-xs font-semibold text-card-foreground">Attendance</CardTitle>
+            <Clock className="h-4 w-4 text-orange-600" />
           </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-foreground">{stats?.todayAttendance || 0}</div>
-            <p className="text-sm text-muted-foreground mt-1">Staff checked in</p>
+          <CardContent className="pb-3">
+            <div className="text-2xl font-bold text-foreground">{stats?.todayAttendance || 0}</div>
+            <p className="text-xs text-muted-foreground mt-1">Staff today</p>
           </CardContent>
         </Card>
 
-        <Card className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-purple-500 bg-gradient-to-br from-card to-purple-50/20 dark:to-purple-950/20">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-            <CardTitle className="text-sm font-semibold text-card-foreground">Active Tasks</CardTitle>
-            <div className="w-10 h-10 rounded-full bg-purple-100 dark:bg-purple-900/50 flex items-center justify-center">
-              <CheckCircle className="h-5 w-5 text-purple-600" />
-            </div>
+        <Card className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-purple-500 bg-gradient-to-br from-card to-purple-50/20">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-xs font-semibold text-card-foreground">Tasks</CardTitle>
+            <CheckCircle className="h-4 w-4 text-purple-600" />
           </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-foreground">{stats?.activeTasks || 0}</div>
-            <p className="text-sm text-muted-foreground mt-1">Tasks in progress</p>
+          <CardContent className="pb-3">
+            <div className="text-2xl font-bold text-foreground">{stats?.activeTasks || 0}</div>
+            <p className="text-xs text-muted-foreground mt-1">In progress</p>
           </CardContent>
         </Card>
 
-        <Card className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-indigo-500 bg-gradient-to-br from-card to-indigo-50/20 dark:to-indigo-950/20">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-            <CardTitle className="text-sm font-semibold text-card-foreground">Pending Requests</CardTitle>
-            <div className="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center">
-              <TrendingUp className="h-5 w-5 text-indigo-600" />
-            </div>
+        <Card className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-indigo-500 bg-gradient-to-br from-card to-indigo-50/20">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-xs font-semibold text-card-foreground">Requests</CardTitle>
+            <TrendingUp className="h-4 w-4 text-indigo-600" />
           </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-foreground">{stats?.pendingRequests || 0}</div>
-            <p className="text-sm text-muted-foreground mt-1">Material requests</p>
+          <CardContent className="pb-3">
+            <div className="text-2xl font-bold text-foreground">{stats?.pendingRequests || 0}</div>
+            <p className="text-xs text-muted-foreground mt-1">Pending</p>
           </CardContent>
         </Card>
 
-        <Card className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-yellow-500 bg-gradient-to-br from-card to-yellow-50/20 dark:to-yellow-950/20">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-            <CardTitle className="text-sm font-semibold text-card-foreground">Monthly Expenses</CardTitle>
-            <div className="w-10 h-10 rounded-full bg-yellow-100 dark:bg-yellow-900/50 flex items-center justify-center">
-              <DollarSign className="h-5 w-5 text-yellow-600" />
-            </div>
+        <Card className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-yellow-500 bg-gradient-to-br from-card to-yellow-50/20">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-xs font-semibold text-card-foreground">Expenses</CardTitle>
+            <DollarSign className="h-4 w-4 text-yellow-600" />
           </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-foreground">
+          <CardContent className="pb-3">
+            <div className="text-2xl font-bold text-foreground">
               ₹{stats?.monthlyExpenses?.toLocaleString() || 0}
             </div>
-            <p className="text-sm text-muted-foreground mt-1">This month's petty cash</p>
+            <p className="text-xs text-muted-foreground mt-1">This month</p>
           </CardContent>
         </Card>
       </div>

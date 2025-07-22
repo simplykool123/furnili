@@ -105,9 +105,9 @@ export default function Sidebar({ onItemClick }: SidebarProps = {}) {
   });
 
   return (
-    <aside className="w-64 lg:w-72 shadow-xl border-r border-primary-foreground/20 h-full flex flex-col transition-all duration-300" style={{backgroundColor: '#D4B896'}} data-testid="main-sidebar">
+    <aside className="w-56 lg:w-60 shadow-xl border-r border-primary-foreground/20 h-full flex flex-col transition-all duration-300" style={{backgroundColor: '#D4B896'}} data-testid="main-sidebar">
       {/* Logo/Brand */}
-      <div className="p-6 border-b border-primary-foreground/20">
+      <div className="p-4 border-b border-primary-foreground/20">
         <div className="flex items-center space-x-3">
           <div className="w-10 h-10 rounded-xl overflow-hidden bg-white/10 backdrop-blur-sm flex items-center justify-center shadow-lg">
             <img 
@@ -134,8 +134,8 @@ export default function Sidebar({ onItemClick }: SidebarProps = {}) {
       
 
       {/* Navigation */}
-      <nav className="flex-1 p-4">
-        <div className="space-y-2">
+      <nav className="flex-1 p-3">
+        <div className="space-y-1">
           {filteredNavigation.map((item) => {
             if (item.isCollapsible && item.subItems) {
               const isExpanded = expandedItems.includes(item.name);
@@ -149,7 +149,7 @@ export default function Sidebar({ onItemClick }: SidebarProps = {}) {
                   <button
                     onClick={() => toggleExpanded(item.name)}
                     className={cn(
-                      "flex items-center justify-between w-full px-4 py-3 rounded-xl font-medium transition-all duration-200 text-sm group hover:shadow-md",
+                      "flex items-center justify-between w-full px-3 py-2 rounded-lg font-medium transition-all duration-200 text-sm group hover:shadow-md",
                       hasActiveSubItem || isExpanded
                         ? "text-white bg-white/20 shadow-lg backdrop-blur-sm"
                         : "text-white/90 hover:bg-white/10 hover:text-white"
@@ -177,7 +177,7 @@ export default function Sidebar({ onItemClick }: SidebarProps = {}) {
                             key={subItem.name}
                             href={subItem.href}
                             className={cn(
-                              "flex items-center space-x-3 w-full px-4 py-2.5 rounded-lg font-medium transition-all duration-200 text-sm group",
+                              "flex items-center space-x-3 w-full px-3 py-2 rounded-lg font-medium transition-all duration-200 text-sm group",
                               isActive
                                 ? "text-white bg-white/25 shadow-md backdrop-blur-sm border border-white/20"
                                 : "text-white/80 hover:bg-white/15 hover:text-white"
@@ -202,7 +202,7 @@ export default function Sidebar({ onItemClick }: SidebarProps = {}) {
                   key={item.name}
                   href={item.href}
                   className={cn(
-                    "flex items-center space-x-3 px-4 py-3 rounded-xl font-medium transition-all duration-200 text-sm group hover:shadow-md",
+                    "flex items-center space-x-3 px-3 py-2 rounded-lg font-medium transition-all duration-200 text-sm group hover:shadow-md",
                     isActive
                       ? "text-white bg-white/20 shadow-lg backdrop-blur-sm"
                       : "text-white/90 hover:bg-white/10 hover:text-white"
@@ -219,10 +219,10 @@ export default function Sidebar({ onItemClick }: SidebarProps = {}) {
       </nav>
 
       {/* Logout */}
-      <div className="p-4 border-t border-primary-foreground/20">
+      <div className="p-3 border-t border-primary-foreground/20">
         <button 
           onClick={handleLogout}
-          className="flex items-center space-x-3 px-4 py-3 text-white/90 hover:bg-white/10 hover:text-white rounded-xl transition-all duration-200 w-full text-sm font-medium group"
+          className="flex items-center space-x-3 px-3 py-2 text-white/90 hover:bg-white/10 hover:text-white rounded-lg transition-all duration-200 w-full text-sm font-medium group"
         >
           <LogOut className="w-5 h-5 flex-shrink-0" />
           <span className="font-semibold">Logout</span>
