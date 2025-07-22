@@ -231,110 +231,259 @@ export default function Attendance() {
   // Pay slip generation function
   const generatePaySlip = (payroll: any, staffMember: any) => {
     const paySlipHTML = `
-      <div style="width: 800px; margin: 0 auto; padding: 40px; font-family: Arial, sans-serif; background: white;">
-        <div style="text-align: center; margin-bottom: 30px;">
-          <h1 style="color: #D4B896; margin: 0; font-size: 24px;">Furnili MS</h1>
-          <h2 style="color: #333; margin: 10px 0; font-size: 18px;">Salary Slip</h2>
-        </div>
-        
-        <div style="border: 2px solid #D4B896; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
-          <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
-            <div>
-              <strong>Employee Name:</strong> ${staffMember.name}
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Pay Slip - ${staffMember.name}</title>
+        <style>
+          * { margin: 0; padding: 0; box-sizing: border-box; }
+          body { font-family: 'Arial', sans-serif; line-height: 1.4; color: #333; }
+          .container { width: 210mm; height: 297mm; margin: 0 auto; padding: 20mm; background: white; }
+          .header { text-align: center; margin-bottom: 25px; border-bottom: 3px solid #D4B896; padding-bottom: 15px; }
+          .logo { height: 60px; margin-bottom: 10px; }
+          .company-name { font-size: 24px; font-weight: bold; color: #D4B896; margin-bottom: 5px; }
+          .tagline { font-size: 12px; color: #666; letter-spacing: 1px; }
+          .pay-slip-title { font-size: 20px; font-weight: bold; color: #333; margin-top: 15px; }
+          
+          .info-section { border: 2px solid #D4B896; border-radius: 8px; padding: 20px; margin-bottom: 20px; }
+          .info-row { display: flex; justify-content: space-between; margin-bottom: 12px; }
+          .info-row:last-child { margin-bottom: 0; }
+          .label { font-weight: bold; color: #444; }
+          .value { color: #666; }
+          
+          .earnings-deductions { display: flex; gap: 20px; margin-bottom: 20px; }
+          .earnings, .deductions { flex: 1; border: 1px solid #D4B896; border-radius: 8px; }
+          .section-header { background: #D4B896; color: white; padding: 10px; text-align: center; font-weight: bold; border-radius: 6px 6px 0 0; }
+          .section-content { padding: 15px; }
+          .item { display: flex; justify-content: space-between; margin-bottom: 8px; padding: 5px 0; }
+          .item:not(:last-child) { border-bottom: 1px dotted #ddd; }
+          
+          .total-section { background: #f8f9fa; border: 2px solid #D4B896; border-radius: 8px; padding: 15px; margin-bottom: 20px; }
+          .total-row { display: flex; justify-content: space-between; font-weight: bold; font-size: 18px; color: #D4B896; }
+          
+          .attendance-summary { border: 1px solid #ddd; border-radius: 8px; padding: 15px; margin-bottom: 20px; }
+          .attendance-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+          
+          .footer { text-align: center; font-size: 11px; color: #666; margin-top: 30px; border-top: 1px solid #eee; padding-top: 15px; }
+          .signature-section { display: flex; justify-content: space-between; margin-top: 40px; }
+          .signature-box { text-align: center; width: 200px; }
+          .signature-line { border-bottom: 1px solid #333; margin-bottom: 5px; height: 40px; }
+          
+          @media print {
+            .container { margin: 0; padding: 10mm; }
+            body { -webkit-print-color-adjust: exact; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <img src="/furnili-logo-big.png" alt="Furnili Logo" class="logo" onerror="this.style.display='none'">
+            <div class="company-name">FURNILI</div>
+            <div class="tagline">BESPOKE MODULAR FURNITURE</div>
+            <div class="pay-slip-title">SALARY SLIP</div>
+          </div>
+          
+          <div class="info-section">
+            <div class="info-row">
+              <span class="label">Employee Name:</span>
+              <span class="value">${staffMember.name}</span>
             </div>
-            <div>
-              <strong>Employee ID:</strong> ${staffMember.employeeId || 'N/A'}
+            <div class="info-row">
+              <span class="label">Employee ID:</span>
+              <span class="value">${staffMember.employeeId || 'N/A'}</span>
+            </div>
+            <div class="info-row">
+              <span class="label">Department:</span>
+              <span class="value">${staffMember.department || 'N/A'}</span>
+            </div>
+            <div class="info-row">
+              <span class="label">Designation:</span>
+              <span class="value">${staffMember.designation || 'N/A'}</span>
+            </div>
+            <div class="info-row">
+              <span class="label">Month/Year:</span>
+              <span class="value">${new Date(0, payroll.month - 1).toLocaleString('default', { month: 'long' })} ${payroll.year}</span>
+            </div>
+            <div class="info-row">
+              <span class="label">Pay Date:</span>
+              <span class="value">${new Date().toLocaleDateString()}</span>
             </div>
           </div>
           
-          <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
-            <div>
-              <strong>Department:</strong> ${staffMember.department || 'N/A'}
+          <div class="earnings-deductions">
+            <div class="earnings">
+              <div class="section-header">EARNINGS</div>
+              <div class="section-content">
+                <div class="item">
+                  <span>Basic Salary</span>
+                  <span>₹${payroll.basicSalary?.toFixed(2) || '0.00'}</span>
+                </div>
+                <div class="item">
+                  <span>Overtime Pay</span>
+                  <span>₹${payroll.overtimePay?.toFixed(2) || '0.00'}</span>
+                </div>
+                <div class="item">
+                  <span>Allowances</span>
+                  <span>₹${payroll.allowances?.toFixed(2) || '0.00'}</span>
+                </div>
+                <div class="item">
+                  <span>Bonus</span>
+                  <span>₹${payroll.bonus?.toFixed(2) || '0.00'}</span>
+                </div>
+                <div class="item" style="border-top: 2px solid #D4B896; font-weight: bold; color: #D4B896;">
+                  <span>Total Earnings</span>
+                  <span>₹${((payroll.basicSalary || 0) + (payroll.overtimePay || 0) + (payroll.allowances || 0) + (payroll.bonus || 0)).toFixed(2)}</span>
+                </div>
+              </div>
             </div>
-            <div>
-              <strong>Designation:</strong> ${staffMember.designation || 'N/A'}
+            
+            <div class="deductions">
+              <div class="section-header" style="background: #dc3545;">DEDUCTIONS</div>
+              <div class="section-content">
+                <div class="item">
+                  <span>Professional Tax</span>
+                  <span>₹${(payroll.deductions * 0.1)?.toFixed(2) || '0.00'}</span>
+                </div>
+                <div class="item">
+                  <span>PF Contribution</span>
+                  <span>₹${(payroll.deductions * 0.6)?.toFixed(2) || '0.00'}</span>
+                </div>
+                <div class="item">
+                  <span>ESI</span>
+                  <span>₹${(payroll.deductions * 0.2)?.toFixed(2) || '0.00'}</span>
+                </div>
+                <div class="item">
+                  <span>Other Deductions</span>
+                  <span>₹${(payroll.deductions * 0.1)?.toFixed(2) || '0.00'}</span>
+                </div>
+                <div class="item" style="border-top: 2px solid #dc3545; font-weight: bold; color: #dc3545;">
+                  <span>Total Deductions</span>
+                  <span>₹${payroll.deductions?.toFixed(2) || '0.00'}</span>
+                </div>
+              </div>
             </div>
           </div>
           
-          <div style="display: flex; justify-content: space-between;">
-            <div>
-              <strong>Month/Year:</strong> ${new Date(0, payroll.month - 1).toLocaleString('default', { month: 'long' })} ${payroll.year}
-            </div>
-            <div>
-              <strong>Pay Date:</strong> ${new Date().toLocaleDateString()}
+          <div class="total-section">
+            <div class="total-row">
+              <span>NET SALARY</span>
+              <span>₹${payroll.netSalary?.toFixed(2) || '0.00'}</span>
             </div>
           </div>
-        </div>
-
-        <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
-          <tr style="background-color: #F5F0E8;">
-            <th style="border: 1px solid #ddd; padding: 12px; text-align: left;">Earnings</th>
-            <th style="border: 1px solid #ddd; padding: 12px; text-align: right;">Amount (₹)</th>
-          </tr>
-          <tr>
-            <td style="border: 1px solid #ddd; padding: 8px;">Basic Salary</td>
-            <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">${payroll.basicSalary?.toLocaleString('en-IN') || '0'}</td>
-          </tr>
-          <tr>
-            <td style="border: 1px solid #ddd; padding: 8px;">Allowances</td>
-            <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">${payroll.allowances?.toLocaleString('en-IN') || '0'}</td>
-          </tr>
-          <tr>
-            <td style="border: 1px solid #ddd; padding: 8px;">Overtime Pay</td>
-            <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">${payroll.overtimePay?.toLocaleString('en-IN') || '0'}</td>
-          </tr>
-          <tr>
-            <td style="border: 1px solid #ddd; padding: 8px;">Bonus</td>
-            <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">${payroll.bonus?.toLocaleString('en-IN') || '0'}</td>
-          </tr>
-          <tr style="background-color: #F5F0E8; font-weight: bold;">
-            <td style="border: 1px solid #ddd; padding: 8px;">Gross Earnings</td>
-            <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">₹${((payroll.basicSalary || 0) + (payroll.allowances || 0) + (payroll.overtimePay || 0) + (payroll.bonus || 0)).toLocaleString('en-IN')}</td>
-          </tr>
-        </table>
-
-        <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
-          <tr style="background-color: #F5F0E8;">
-            <th style="border: 1px solid #ddd; padding: 12px; text-align: left;">Deductions</th>
-            <th style="border: 1px solid #ddd; padding: 12px; text-align: right;">Amount (₹)</th>
-          </tr>
-          <tr>
-            <td style="border: 1px solid #ddd; padding: 8px;">Total Deductions</td>
-            <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">${payroll.deductions?.toLocaleString('en-IN') || '0'}</td>
-          </tr>
-        </table>
-
-        <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px;">
-          <tr style="background-color: #D4B896; color: white; font-weight: bold; font-size: 16px;">
-            <td style="border: 1px solid #ddd; padding: 12px;">Net Salary</td>
-            <td style="border: 1px solid #ddd; padding: 12px; text-align: right;">₹${payroll.netSalary?.toLocaleString('en-IN') || '0'}</td>
-          </tr>
-        </table>
-
-        <div style="display: flex; justify-content: space-between; margin-top: 30px;">
-          <div>
-            <div><strong>Working Days:</strong> ${payroll.totalWorkingDays || 0}</div>
-            <div><strong>Present Days:</strong> ${payroll.actualWorkingDays || 0}</div>
+          
+          <div class="attendance-summary">
+            <h3 style="margin-bottom: 15px; color: #D4B896; text-align: center;">ATTENDANCE SUMMARY</h3>
+            <div class="attendance-grid">
+              <div class="item">
+                <span class="label">Working Days:</span>
+                <span class="value">${payroll.totalWorkingDays || 30}</span>
+              </div>
+              <div class="item">
+                <span class="label">Present Days:</span>
+                <span class="value">${payroll.actualWorkingDays || 25}</span>
+              </div>
+              <div class="item">
+                <span class="label">Total Hours:</span>
+                <span class="value">${payroll.totalHours?.toFixed(1) || '0.0'} hrs</span>
+              </div>
+              <div class="item">
+                <span class="label">Overtime Hours:</span>
+                <span class="value">${payroll.overtimeHours?.toFixed(1) || '0.0'} hrs</span>
+              </div>
+              <div class="item">
+                <span class="label">Leave Days:</span>
+                <span class="value">${payroll.leaveDays || 0}</span>
+              </div>
+              <div class="item">
+                <span class="label">Salary in Words:</span>
+                <span class="value" style="font-style: italic;">Rupees ${numberToWords(payroll.netSalary || 0)} Only</span>
+              </div>
+            </div>
           </div>
-          <div>
-            <div><strong>Total Hours:</strong> ${payroll.totalHours?.toFixed(1) || '0.0'}h</div>
-            <div><strong>Overtime Hours:</strong> ${payroll.overtimeHours?.toFixed(1) || '0.0'}h</div>
+          
+          <div class="signature-section">
+            <div class="signature-box">
+              <div class="signature-line"></div>
+              <div style="font-weight: bold;">Employee Signature</div>
+            </div>
+            <div class="signature-box">
+              <div class="signature-line"></div>
+              <div style="font-weight: bold;">HR Manager</div>
+            </div>
+          </div>
+          
+          <div class="footer">
+            <div>This is a system generated payslip and does not require signature.</div>
+            <div style="margin-top: 5px;">Generated by Furnili Management System on ${new Date().toLocaleString()}</div>
+            <div style="margin-top: 5px; font-size: 10px;">For queries, contact HR Department</div>
           </div>
         </div>
-
-        <div style="text-align: center; margin-top: 40px; color: #666; font-size: 12px;">
-          Generated by Furnili Management System on ${new Date().toLocaleString()}
-        </div>
-      </div>
+      </body>
+      </html>
     `;
 
-    // Generate PDF
+    // Number to words conversion function
+    const numberToWords = (num: number): string => {
+      const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine'];
+      const teens = ['Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
+      const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+      
+      if (num === 0) return 'Zero';
+      
+      const convertBelow1000 = (n: number): string => {
+        let result = '';
+        if (n >= 100) {
+          result += ones[Math.floor(n / 100)] + ' Hundred ';
+          n %= 100;
+        }
+        if (n >= 20) {
+          result += tens[Math.floor(n / 10)] + ' ';
+          n %= 10;
+        } else if (n >= 10) {
+          result += teens[n - 10] + ' ';
+          n = 0;
+        }
+        if (n > 0) {
+          result += ones[n] + ' ';
+        }
+        return result;
+      };
+      
+      let result = '';
+      const crores = Math.floor(num / 10000000);
+      const lakhs = Math.floor((num % 10000000) / 100000);
+      const thousands = Math.floor((num % 100000) / 1000);
+      const remaining = num % 1000;
+      
+      if (crores > 0) result += convertBelow1000(crores) + 'Crore ';
+      if (lakhs > 0) result += convertBelow1000(lakhs) + 'Lakh ';
+      if (thousands > 0) result += convertBelow1000(thousands) + 'Thousand ';
+      if (remaining > 0) result += convertBelow1000(remaining);
+      
+      return result.trim();
+    };
+
+    // Generate PDF with optimized settings for better formatting
     const options = {
-      margin: 0.5,
+      margin: [0.5, 0.3, 0.5, 0.3], // top, right, bottom, left in inches
       filename: `PaySlip_${staffMember.name}_${new Date(0, payroll.month - 1).toLocaleString('default', { month: 'long' })}_${payroll.year}.pdf`,
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2 },
-      jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+      image: { type: 'jpeg', quality: 0.95 },
+      html2canvas: { 
+        scale: 1.5,
+        useCORS: true,
+        allowTaint: true,
+        logging: false,
+        letterRendering: true
+      },
+      jsPDF: { 
+        unit: 'in', 
+        format: 'a4', 
+        orientation: 'portrait',
+        compress: true
+      }
     };
 
     html2pdf().set(options).from(paySlipHTML).save();
