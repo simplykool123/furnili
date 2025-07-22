@@ -41,6 +41,7 @@ interface Product {
   thickness?: string;
   currentStock: number;
   unit: string;
+  pricePerUnit?: number;
 }
 
 interface Category {

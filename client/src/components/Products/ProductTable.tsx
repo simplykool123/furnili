@@ -21,7 +21,7 @@ interface Product {
   size: string;
   thickness: string;
   sku: string;
-  price: number;
+  pricePerUnit: number;
   currentStock: number;
   minStock: number;
   unit: string;
@@ -262,7 +262,7 @@ export default function ProductTable() {
                         <p className="text-sm text-gray-600">{product.unit}</p>
                       </div>
                     </TableCell>
-                    <TableCell>₹{product.price.toFixed(2)}</TableCell>
+                    <TableCell>₹{(product.pricePerUnit || 0).toFixed(2)}</TableCell>
                     <TableCell>{getStockStatusBadge(product.stockStatus)}</TableCell>
                     <TableCell>
                       <div className="flex items-center space-x-2">
