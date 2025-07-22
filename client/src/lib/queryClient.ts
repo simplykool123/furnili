@@ -1,4 +1,5 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
+import { debugToken, cleanToken } from "../utils/tokenDebug";
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
@@ -12,11 +13,14 @@ export async function apiRequest(
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
-  const token = localStorage.getItem('authToken');
+  // Debug and clean token before use
+  debugToken();
+  const token = cleanToken();
   
   // Clean the method string and validate
   const cleanMethod = method.trim().toUpperCase();
   if (!['GET', 'POST', 'PUT', 'DELETE', 'PATCH'].includes(cleanMethod)) {
+    console.error('Invalid HTTP method provided:', method);
     throw new Error(`Invalid HTTP method: ${method}`);
   }
   
@@ -27,9 +31,7 @@ export async function apiRequest(
   }
   
   if (token) {
-    // Clean the token to remove any invalid characters
-    const cleanToken = token.trim();
-    headers['Authorization'] = `Bearer ${cleanToken}`;
+    headers['Authorization'] = `Bearer ${token}`;
   }
 
   console.log('API Request:', cleanMethod, url, 'Token exists:', !!token);

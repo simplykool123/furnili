@@ -25,7 +25,7 @@ export default function Header({ title, subtitle, showAddButton = false, onAddCl
   const { data: stats } = useQuery({
     queryKey: ['/api/dashboard/stats'],
     queryFn: async () => {
-      return await authenticatedApiRequest('/api/dashboard/stats');
+      return await authenticatedApiRequest('GET', '/api/dashboard/stats');
     },
     enabled: !!user,
   });
