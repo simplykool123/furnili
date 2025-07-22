@@ -224,8 +224,8 @@ export default function BOQUpload() {
       items: validItems.map(item => ({
         productId: item.matchedProductId,
         requestedQuantity: item.quantity,
-        unitPrice: item.rate || 0,
-        totalPrice: (item.quantity * (item.rate || 0))
+        unitPrice: 0, // Will be fetched from product data
+        totalPrice: 0 // Will be calculated by backend
       }))
     };
 
@@ -365,22 +365,55 @@ export default function BOQUpload() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Description</TableHead>
+                    <TableHead>Product Name</TableHead>
+                    <TableHead>Thickness</TableHead>
+                    <TableHead>Size</TableHead>
                     <TableHead>Quantity</TableHead>
                     <TableHead>Unit</TableHead>
-                    <TableHead>Rate</TableHead>
                     <TableHead>Match Product</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {extractedData.items.map((item, index) => (
-                    <TableRow key={index}>
+                  {extractedData.items.map((item, index) => {
+                    // Parse product name, thickness, and size from description
+                    const parseDescription = (desc: string) => {
+                      // Example: "Gurjan Plywood - 18mm - 8 X 4 feet"
+                      const parts = desc.split(' - ');
+                      const productName = parts[0] || desc;
+                      const thickness = parts.find(p => p.includes('mm')) || '';
+                      const size = parts.find(p => p.includes('X') || p.includes('x') || p.includes('feet') || p.includes('ft')) || '';
+                      return { productName, thickness, size };
+                    };
+                    
+                    const parsed = parseDescription(item.description);
+                    
+                    return (
+                      <TableRow key={index}>
                       <TableCell>
                         <input
                           type="text"
-                          value={item.description}
-                          onChange={(e) => updateExtractedItem(index, 'description', e.target.value)}
+                          value={(item as any).productName || parsed.productName}
+                          onChange={(e) => updateExtractedItem(index, 'productName', e.target.value)}
                           className="w-full p-2 border border-gray-300 rounded"
+                          placeholder="Product Name"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <input
+                          type="text"
+                          value={(item as any).thickness || parsed.thickness}
+                          onChange={(e) => updateExtractedItem(index, 'thickness', e.target.value)}
+                          className="w-20 p-2 border border-gray-300 rounded"
+                          placeholder="18mm"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <input
+                          type="text"
+                          value={(item as any).size || parsed.size}
+                          onChange={(e) => updateExtractedItem(index, 'size', e.target.value)}
+                          className="w-24 p-2 border border-gray-300 rounded"
+                          placeholder="8x4 ft"
                         />
                       </TableCell>
                       <TableCell>
@@ -400,16 +433,6 @@ export default function BOQUpload() {
                         />
                       </TableCell>
                       <TableCell>
-                        <input
-                          type="number"
-                          step="0.01"
-                          value={item.rate}
-                          onChange={(e) => updateExtractedItem(index, 'rate', parseFloat(e.target.value) || 0)}
-                          className="w-24 p-2 border border-gray-300 rounded"
-                        />
-                      </TableCell>
-
-                      <TableCell>
                         <Select 
                           value={item.matchedProductId?.toString() || "none"}
                           onValueChange={(value) => updateExtractedItem(index, 'matchedProductId', (value && value !== 'none') ? parseInt(value) : undefined)}
@@ -428,7 +451,8 @@ export default function BOQUpload() {
                         </Select>
                       </TableCell>
                     </TableRow>
-                  ))}
+                    );
+                  })}
                 </TableBody>
               </Table>
             </div>

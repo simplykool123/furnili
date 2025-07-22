@@ -600,9 +600,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         requestedBy: (req as AuthRequest).user?.id,
       });
       
-      const validatedItems = items.map((item: any) => 
-        insertRequestItemSchema.parse(item)
-      );
+      // Add requestId after validation but before storage
+      const validatedItems = items.map((item: any) => {
+        const validatedItem = insertRequestItemSchema.parse(item);
+        return validatedItem;
+      });
       
       const request = await storage.createMaterialRequest(validatedRequest, validatedItems);
       res.status(201).json(request);
