@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Edit, Trash2, Eye, Download, Search } from "lucide-react";
+import { Edit, Trash2, Eye, Download, Search, Grid3X3, List, Package } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import ProductForm from "./ProductForm";
 
@@ -37,6 +37,7 @@ export default function ProductTable() {
   });
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [showForm, setShowForm] = useState(false);
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -123,13 +124,13 @@ export default function ProductTable() {
   const getStockStatusBadge = (status: string) => {
     switch (status) {
       case 'in-stock':
-        return <Badge className="bg-green-100 text-green-800 hover:bg-green-100">In Stock</Badge>;
+        return <Badge className="bg-green-100 text-green-800 hover:bg-green-100 text-xs">In Stock</Badge>;
       case 'low-stock':
-        return <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100">Low Stock</Badge>;
+        return <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100 text-xs">Low Stock</Badge>;
       case 'out-of-stock':
-        return <Badge className="bg-red-100 text-red-800 hover:bg-red-100">Out of Stock</Badge>;
+        return <Badge className="bg-red-100 text-red-800 hover:bg-red-100 text-xs">Out of Stock</Badge>;
       default:
-        return <Badge variant="secondary">Unknown</Badge>;
+        return <Badge variant="secondary" className="text-xs">Unknown</Badge>;
     }
   };
 
@@ -143,154 +144,236 @@ export default function ProductTable() {
     );
   }
 
-  return (
-    <div className="space-y-6">
-      {/* Filters */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-              <Input
-                placeholder="Search products..."
-                value={filters.search}
-                onChange={(e) => setFilters({ ...filters, search: e.target.value })}
-                className="pl-10"
-              />
+  const GridView = () => (
+    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      {products?.map((product: Product) => (
+        <Card key={product.id} className="hover:shadow-md transition-shadow">
+          <CardContent className="p-4">
+            <div className="space-y-3">
+              {/* Product Image */}
+              <div className="w-full h-24 bg-gray-100 rounded-lg overflow-hidden">
+                {product.imageUrl ? (
+                  <img 
+                    src={product.imageUrl} 
+                    alt={product.name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                    <Package className="w-8 h-8 text-gray-400" />
+                  </div>
+                )}
+              </div>
+              
+              {/* Product Info */}
+              <div className="space-y-1">
+                <h3 className="font-medium text-sm truncate" title={product.name}>
+                  {product.name}
+                </h3>
+                <p className="text-xs text-gray-500">{product.category}</p>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-gray-600">{product.brand || '-'}</span>
+                  <span className="font-medium">₹{(product.pricePerUnit || 0).toFixed(0)}</span>
+                </div>
+              </div>
+              
+              {/* Stock & Status */}
+              <div className="flex items-center justify-between">
+                <div className="text-xs">
+                  <span className="font-medium">{product.currentStock}</span>
+                  <span className="text-gray-500"> {product.unit}</span>
+                </div>
+                {getStockStatusBadge(product.stockStatus)}
+              </div>
+              
+              {/* Actions */}
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleEdit(product)}
+                  className="flex-1 h-7 text-xs"
+                >
+                  <Edit className="w-3 h-3 mr-1" />
+                  Edit
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    if (confirm('Delete this product?')) {
+                      deleteProductMutation.mutate(product.id);
+                    }
+                  }}
+                  className="h-7 px-2"
+                >
+                  <Trash2 className="w-3 h-3 text-red-600" />
+                </Button>
+              </div>
             </div>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  );
 
-            <Select 
-              value={filters.category}
-              onValueChange={(value) => setFilters({ ...filters, category: value })}
+  const ListView = () => (
+    <div className="overflow-x-auto">
+      <Table>
+        <TableHeader>
+          <TableRow className="text-xs">
+            <TableHead className="w-[200px]">Product</TableHead>
+            <TableHead>Category</TableHead>
+            <TableHead>Brand</TableHead>
+            <TableHead>Size</TableHead>
+            <TableHead>Thk.</TableHead>
+            <TableHead>Stock</TableHead>
+            <TableHead>Price</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead className="w-[80px]">Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {products?.map((product: Product) => (
+            <TableRow key={product.id} className="text-sm">
+              <TableCell>
+                <div className="flex items-center space-x-2">
+                  <div className="w-8 h-8 bg-gray-200 rounded overflow-hidden flex-shrink-0">
+                    {product.imageUrl ? (
+                      <img 
+                        src={product.imageUrl} 
+                        alt={product.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gray-300 flex items-center justify-center">
+                        <Package className="w-3 h-3 text-gray-500" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-medium truncate text-xs">{product.name}</p>
+                    <p className="text-xs text-gray-500">{product.sku}</p>
+                  </div>
+                </div>
+              </TableCell>
+              <TableCell className="text-xs">{product.category}</TableCell>
+              <TableCell className="text-xs">{product.brand || '-'}</TableCell>
+              <TableCell className="text-xs">{product.size || '-'}</TableCell>
+              <TableCell className="text-xs font-medium text-blue-600">{product.thickness || '-'}</TableCell>
+              <TableCell className="text-xs">
+                <div>
+                  <span className="font-medium">{product.currentStock}</span>
+                  <span className="text-gray-500 ml-1">{product.unit}</span>
+                </div>
+              </TableCell>
+              <TableCell className="text-xs font-medium">₹{(product.pricePerUnit || 0).toFixed(0)}</TableCell>
+              <TableCell>{getStockStatusBadge(product.stockStatus)}</TableCell>
+              <TableCell>
+                <div className="flex items-center space-x-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleEdit(product)}
+                    className="h-6 w-6 p-0"
+                  >
+                    <Edit className="w-3 h-3" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      if (confirm('Delete this product?')) {
+                        deleteProductMutation.mutate(product.id);
+                      }
+                    }}
+                    className="h-6 w-6 p-0"
+                  >
+                    <Trash2 className="w-3 h-3 text-red-600" />
+                  </Button>
+                </div>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  );
+
+  return (
+    <div className="space-y-4">
+      {/* Compact Filters & Controls */}
+      <div className="bg-white rounded-lg border p-3">
+        <div className="flex items-center gap-3 flex-wrap">
+          <Input
+            placeholder="Search products..."
+            value={filters.search}
+            onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+            className="max-w-xs h-8 text-sm"
+          />
+          <Select 
+            value={filters.category}
+            onValueChange={(value) => setFilters({ ...filters, category: value })}
+          >
+            <SelectTrigger className="w-40 h-8 text-sm">
+              <SelectValue placeholder="Category" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Categories</SelectItem>
+              {categories.map((category) => (
+                <SelectItem key={category.id} value={category.name}>
+                  {category.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select 
+            value={filters.stockStatus}
+            onValueChange={(value) => setFilters({ ...filters, stockStatus: value })}
+          >
+            <SelectTrigger className="w-32 h-8 text-sm">
+              <SelectValue placeholder="Stock" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Stock</SelectItem>
+              <SelectItem value="in-stock">In Stock</SelectItem>
+              <SelectItem value="low-stock">Low Stock</SelectItem>
+              <SelectItem value="out-of-stock">Out of Stock</SelectItem>
+            </SelectContent>
+          </Select>
+          <div className="flex-1" />
+          <div className="flex items-center gap-2">
+            <Button
+              variant={viewMode === 'list' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setViewMode('list')}
+              className="h-8 px-3"
             >
-              <SelectTrigger>
-                <SelectValue placeholder="All Categories" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Categories</SelectItem>
-                {categories.map((category) => (
-                  <SelectItem key={category.id} value={category.name}>{category.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Select 
-              value={filters.stockStatus}
-              onValueChange={(value) => setFilters({ ...filters, stockStatus: value })}
+              <List className="w-4 h-4" />
+            </Button>
+            <Button
+              variant={viewMode === 'grid' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setViewMode('grid')}
+              className="h-8 px-3"
             >
-              <SelectTrigger>
-                <SelectValue placeholder="All Stock Levels" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Stock Levels</SelectItem>
-                <SelectItem value="in-stock">In Stock</SelectItem>
-                <SelectItem value="low-stock">Low Stock</SelectItem>
-                <SelectItem value="out-of-stock">Out of Stock</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Button onClick={exportProducts} variant="outline">
-              <Download className="w-4 h-4 mr-2" />
-              Export CSV
+              <Grid3X3 className="w-4 h-4" />
+            </Button>
+            <Button onClick={exportProducts} variant="outline" size="sm" className="h-8">
+              <Download className="w-3 h-3 mr-1" />
+              Export
             </Button>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
-      {/* Products Table */}
+      {/* Products Display */}
       <Card>
-        <CardHeader>
-          <CardTitle>Products ({products?.length || 0})</CardTitle>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg">Products ({products?.length || 0})</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Product</TableHead>
-                  <TableHead>Category</TableHead>
-                  <TableHead>Brand</TableHead>
-                  <TableHead>Size</TableHead>
-                  <TableHead>Thickness</TableHead>
-                  <TableHead>SKU</TableHead>
-                  <TableHead>Stock</TableHead>
-                  <TableHead>Price</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="w-[100px]">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {products?.map((product: Product) => (
-                  <TableRow key={product.id}>
-                    <TableCell>
-                      <div className="flex items-center space-x-3">
-                        <div className="w-12 h-12 bg-gray-200 rounded-lg overflow-hidden">
-                          {product.imageUrl ? (
-                            <img 
-                              src={product.imageUrl} 
-                              alt={product.name}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <div className="w-full h-full bg-gray-300 flex items-center justify-center text-gray-500 text-xs">
-                              No Image
-                            </div>
-                          )}
-                        </div>
-                        <div>
-                          <p className="font-medium">{product.name}</p>
-                          <p className="text-sm text-gray-600">{product.sku}</p>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>{product.category}</TableCell>
-                    <TableCell>
-                      <span className="text-sm text-gray-900">{product.brand || '-'}</span>
-                    </TableCell>
-                    <TableCell>
-                      <span className="text-sm text-gray-900">{product.size || '-'}</span>
-                    </TableCell>
-                    <TableCell>
-                      <span className="text-sm font-medium text-blue-600">{product.thickness || '-'}</span>
-                    </TableCell>
-                    <TableCell className="font-mono text-sm">{product.sku}</TableCell>
-                    <TableCell>
-                      <div>
-                        <span className="font-medium">
-                          {product.currentStock} / {product.minStock}
-                        </span>
-                        <p className="text-sm text-gray-600">{product.unit}</p>
-                      </div>
-                    </TableCell>
-                    <TableCell>₹{(product.pricePerUnit || 0).toFixed(2)}</TableCell>
-                    <TableCell>{getStockStatusBadge(product.stockStatus)}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center space-x-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleEdit(product)}
-                        >
-                          <Edit className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            if (confirm('Are you sure you want to delete this product?')) {
-                              deleteProductMutation.mutate(product.id);
-                            }
-                          }}
-                        >
-                          <Trash2 className="w-4 h-4 text-red-600" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+          {viewMode === 'grid' ? <GridView /> : <ListView />}
         </CardContent>
       </Card>
 
