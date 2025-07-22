@@ -39,7 +39,7 @@ export default function Layout({
             className="fixed inset-0 bg-black bg-opacity-50" 
             onClick={() => setSidebarOpen(false)}
           />
-          <div className="fixed inset-y-0 left-0 w-64 bg-white">
+          <div className="fixed inset-y-0 left-0 w-64" style={{backgroundColor: '#8B5A2B'}}>
             <Sidebar onItemClick={() => setSidebarOpen(false)} />
           </div>
         </div>
