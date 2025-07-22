@@ -16,7 +16,8 @@ import { authService } from "@/lib/auth";
 
 interface DashboardStats {
   totalProducts: number;
-  lowStockProducts: number;
+  lowStockProducts: any[];
+  lowStockItems: number;
   totalUsers: number;
   activeUsers: number;
   pendingRequests: number;
@@ -83,7 +84,7 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-red-600">
-              {stats?.lowStockProducts || 0}
+              {Array.isArray(stats?.lowStockProducts) ? stats.lowStockProducts.length : 0}
             </div>
             <p className="text-xs text-muted-foreground">Items need restocking</p>
           </CardContent>

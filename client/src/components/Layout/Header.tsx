@@ -30,7 +30,7 @@ export default function Header({ title, subtitle, showAddButton = false, onAddCl
     enabled: !!user,
   });
 
-  const lowStockCount = stats?.lowStockItems || 0;
+  const lowStockCount = stats?.lowStockItems || (Array.isArray(stats?.lowStockProducts) ? stats.lowStockProducts.length : 0);
 
   return (
     <header className="bg-white border-b border-gray-200 px-6 py-4">
