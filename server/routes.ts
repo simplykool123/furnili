@@ -969,6 +969,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get staff balances
+  app.get("/api/petty-cash/staff-balances", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const balances = await storage.getAllStaffBalances();
+      res.json(balances);
+    } catch (error) {
+      console.error("Failed to fetch staff balances:", error);
+      res.status(500).json({ message: "Failed to fetch staff balances", error: String(error) });
+    }
+  });
+
+  // Get individual staff balance
+  app.get("/api/petty-cash/staff-balance/:userId", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const balance = await storage.getStaffBalance(userId);
+      res.json(balance);
+    } catch (error) {
+      console.error("Failed to fetch staff balance:", error);
+      res.status(500).json({ message: "Failed to fetch staff balance", error: String(error) });
+    }
+  });
+
   app.post("/api/petty-cash", authenticateToken, receiptImageUpload.single("receipt"), async (req: AuthRequest, res) => {
     try {
       console.log("File uploaded:", req.file);
@@ -1011,7 +1034,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         vendor: req.body.paidTo, // Source of funds
         description: req.body.note,
         orderNo: "",
-        paidBy: undefined,
+        paidBy: req.body.receivedBy ? parseInt(req.body.receivedBy) : undefined, // Staff member who received funds
         expenseDate: new Date(req.body.expenseDate),
         addedBy: req.user!.id,
         receiptImageUrl: req.file?.path || null,

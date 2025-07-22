@@ -200,6 +200,8 @@ export interface IStorage {
   createPettyCashExpense(expense: InsertPettyCashExpense): Promise<PettyCashExpense>;
   updatePettyCashExpense(id: number, updates: Partial<InsertPettyCashExpense>): Promise<PettyCashExpense | undefined>;
   deletePettyCashExpense(id: number): Promise<boolean>;
+  getStaffBalance(userId: number): Promise<{ received: number; spent: number; balance: number }>;
+  getAllStaffBalances(): Promise<Array<{ userId: number; userName: string; received: number; spent: number; balance: number }>>;
 
   // Task Operations
   getTask(id: number): Promise<Task | undefined>;
@@ -527,6 +529,46 @@ export class MemStorage {
       balance: totalIncome - totalExpenses,
       currentMonthExpenses,
     };
+  }
+
+  // Get individual staff balance
+  async getStaffBalance(userId: number): Promise<{ received: number; spent: number; balance: number }> {
+    const allExpenses = Array.from(this.pettyCashExpenses.values());
+    
+    // Money received by this staff member (income entries where paidBy = userId)
+    const received = allExpenses
+      .filter(e => e.status === 'income' && e.paidBy === userId)
+      .reduce((sum, e) => sum + e.amount, 0);
+    
+    // Money spent by this staff member (expense entries where paidBy = userId)  
+    const spent = allExpenses
+      .filter(e => e.status === 'expense' && e.paidBy === userId)
+      .reduce((sum, e) => sum + e.amount, 0);
+    
+    return {
+      received,
+      spent,
+      balance: received - spent,
+    };
+  }
+
+  // Get all staff balances
+  async getAllStaffBalances(): Promise<Array<{ userId: number; userName: string; received: number; spent: number; balance: number }>> {
+    const allUsers = Array.from(this.users.values());
+    const balances = [];
+    
+    for (const user of allUsers) {
+      const balance = await this.getStaffBalance(user.id);
+      if (balance.received > 0 || balance.spent > 0) { // Only include users with transactions
+        balances.push({
+          userId: user.id,
+          userName: user.name || user.username,
+          ...balance,
+        });
+      }
+    }
+    
+    return balances.sort((a, b) => b.balance - a.balance); // Sort by balance descending
   }
 
   // Task operations

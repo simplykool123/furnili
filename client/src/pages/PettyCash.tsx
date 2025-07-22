@@ -76,6 +76,7 @@ export default function PettyCash() {
     date: format(new Date(), "yyyy-MM-dd"),
     amount: "",
     source: "", // Source of funds
+    receivedBy: "", // Staff member who received the funds
     purpose: "", // Purpose/Description 
     receiptImage: null as File | null,
   });
@@ -102,6 +103,7 @@ export default function PettyCash() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/petty-cash"] });
       queryClient.invalidateQueries({ queryKey: ["/api/petty-cash/stats"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/petty-cash/staff-balances"] });
       setShowEditDialog(false);
       setEditingExpense(null);
       toast({ title: "Success", description: "Expense updated successfully!" });
@@ -119,6 +121,7 @@ export default function PettyCash() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/petty-cash"] });
       queryClient.invalidateQueries({ queryKey: ["/api/petty-cash/stats"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/petty-cash/staff-balances"] });
       toast({ title: "Success", description: "Expense deleted successfully!" });
     },
     onError: (error: any) => {
@@ -159,6 +162,11 @@ export default function PettyCash() {
     queryFn: () => authenticatedApiRequest("GET", "/api/petty-cash/stats"),
   });
 
+  const { data: staffBalances = [] } = useQuery({
+    queryKey: ["/api/petty-cash/staff-balances"],
+    queryFn: () => authenticatedApiRequest("GET", "/api/petty-cash/staff-balances"),
+  });
+
   // Fetch users for Paid By dropdown
   const { data: users = [] } = useQuery({
     queryKey: ["/api/users"],
@@ -186,6 +194,7 @@ export default function PettyCash() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/petty-cash"] });
       queryClient.invalidateQueries({ queryKey: ["/api/petty-cash/stats"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/petty-cash/staff-balances"] });
       setShowAddDialog(false);
       resetForm();
       toast({ title: "Expense added successfully" });
@@ -216,6 +225,7 @@ export default function PettyCash() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/petty-cash"] });
       queryClient.invalidateQueries({ queryKey: ["/api/petty-cash/stats"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/petty-cash/staff-balances"] });
       setShowAddFundsDialog(false);
       resetFundsForm();
       toast({ title: "Funds added successfully" });
@@ -244,6 +254,7 @@ export default function PettyCash() {
       date: format(new Date(), "yyyy-MM-dd"),
       amount: "",
       source: "",
+      receivedBy: "",
       purpose: "",
       receiptImage: null,
     });
@@ -517,6 +528,43 @@ export default function PettyCash() {
           </Card>
         </div>
       )}
+
+      {/* Staff Balances */}
+      {staffBalances.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Individual Staff Balances</CardTitle>
+            <p className="text-sm text-gray-600">Track funds received vs spent by each staff member</p>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {staffBalances.map((staff: any) => (
+                <div key={staff.userId} className="p-4 border rounded-lg bg-gray-50">
+                  <div className="font-medium text-sm mb-2">{staff.userName}</div>
+                  <div className="space-y-1 text-xs">
+                    <div className="flex justify-between">
+                      <span className="text-green-600">Received:</span>
+                      <span className="font-medium text-green-600">+₹{staff.received.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-red-600">Spent:</span>
+                      <span className="font-medium text-red-600">-₹{staff.spent.toLocaleString()}</span>
+                    </div>
+                    <hr className="my-2" />
+                    <div className="flex justify-between">
+                      <span className="font-medium">Balance:</span>
+                      <span className={`font-bold ${staff.balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        {staff.balance >= 0 ? '+' : ''}₹{staff.balance.toLocaleString()}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Filters */}
       <Card>
         <CardContent className="pt-6">
@@ -999,6 +1047,7 @@ export default function PettyCash() {
             formDataToSend.append('paidTo', fundsFormData.source);
             formDataToSend.append('amount', fundsFormData.amount);
             formDataToSend.append('note', fundsFormData.purpose);
+            formDataToSend.append('receivedBy', fundsFormData.receivedBy);
             formDataToSend.append('status', 'income');
             
             if (fundsFormData.receiptImage) {
@@ -1032,15 +1081,36 @@ export default function PettyCash() {
               </div>
             </div>
 
-            <div>
-              <Label htmlFor="funds-source">Source *</Label>
-              <Input
-                id="funds-source"
-                placeholder="Cash from office, Bank transfer, etc."
-                value={fundsFormData.source}
-                onChange={(e) => setFundsFormData(prev => ({ ...prev, source: e.target.value }))}
-                required
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="funds-source">Source *</Label>
+                <Input
+                  id="funds-source"
+                  placeholder="Cash from office, Bank transfer, etc."
+                  value={fundsFormData.source}
+                  onChange={(e) => setFundsFormData(prev => ({ ...prev, source: e.target.value }))}
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="funds-receivedBy">Received By (Staff) *</Label>
+                <Select 
+                  value={fundsFormData.receivedBy || ""} 
+                  onValueChange={(value) => setFundsFormData(prev => ({ ...prev, receivedBy: value }))}
+                  required
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select staff member" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {users?.map((user: any) => (
+                      <SelectItem key={user.id} value={user.id.toString()}>
+                        {user.name || user.username}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             <div>
