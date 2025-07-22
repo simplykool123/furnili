@@ -369,7 +369,6 @@ export default function BOQUpload() {
                     <TableHead>Quantity</TableHead>
                     <TableHead>Unit</TableHead>
                     <TableHead>Rate</TableHead>
-                    <TableHead>Amount</TableHead>
                     <TableHead>Match Product</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -409,9 +408,7 @@ export default function BOQUpload() {
                           className="w-24 p-2 border border-gray-300 rounded"
                         />
                       </TableCell>
-                      <TableCell className="font-medium">
-                        ₹{item.amount.toFixed(2)}
-                      </TableCell>
+
                       <TableCell>
                         <Select 
                           value={item.matchedProductId?.toString() || "none"}

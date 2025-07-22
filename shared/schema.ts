@@ -261,6 +261,7 @@ export const insertMaterialRequestSchema = createInsertSchema(materialRequests).
 
 export const insertRequestItemSchema = createInsertSchema(requestItems).omit({
   id: true,
+  requestId: true, // This will be set by the server
 });
 
 export const insertBOQUploadSchema = createInsertSchema(boqUploads).omit({
