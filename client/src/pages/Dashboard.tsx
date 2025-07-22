@@ -151,27 +151,27 @@ export default function Dashboard() {
     <div className="space-y-8 animate-fade-in max-w-7xl mx-auto">
       {/* Welcome Header */}
       <div className="text-center sm:text-left">
-        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-amber-900 dark:text-amber-100">
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-amber-900">
           Welcome back, {currentUser?.name || 'Admin'}!
         </h1>
-        <p className="text-base sm:text-lg text-amber-700 dark:text-amber-200 mt-2">
+        <p className="text-base sm:text-lg text-amber-800 mt-2">
           Here's your business overview and key metrics for today.
         </p>
       </div>
 
       {/* Motivational Quote */}
       {dailyQuote && (
-        <Card className="furnili-gradient shadow-lg border-0 text-white">
+        <Card className="shadow-lg border border-amber-200 bg-white">
           <CardContent className="pt-6">
             <div className="flex items-start space-x-4">
               <div className="flex-shrink-0">
-                <Quote className="h-8 w-8 text-white/80" />
+                <Quote className="h-8 w-8 text-amber-600" />
               </div>
               <div className="flex-1">
-                <blockquote className="text-lg font-medium text-white leading-relaxed">
+                <blockquote className="text-lg font-medium text-amber-900 leading-relaxed">
                   "{dailyQuote.text}"
                 </blockquote>
-                <cite className="block text-right text-white/90 font-semibold mt-3">
+                <cite className="block text-right text-amber-700 font-semibold mt-3">
                   — {dailyQuote.author}
                 </cite>
               </div>
