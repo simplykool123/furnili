@@ -35,10 +35,7 @@ export default function WhatsAppExport() {
 
   const generateMessageMutation = useMutation({
     mutationFn: async (data: any) => {
-      return authenticatedApiRequest("/api/whatsapp/generate-message", {
-        method: "POST",
-        body: JSON.stringify(data),
-      });
+      return authenticatedApiRequest("POST", "/api/whatsapp/generate-message", data);
     },
     onSuccess: (data) => {
       setCustomMessage(data.message);
@@ -58,10 +55,7 @@ export default function WhatsAppExport() {
 
   const sendWhatsAppMutation = useMutation({
     mutationFn: async (data: any) => {
-      return authenticatedApiRequest("/api/whatsapp/send", {
-        method: "POST",
-        body: JSON.stringify(data),
-      });
+      return authenticatedApiRequest("POST", "/api/whatsapp/send", data);
     },
     onSuccess: () => {
       toast({

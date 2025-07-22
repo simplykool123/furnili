@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
-import { authenticatedApiRequest } from "@/lib/auth";
+import { authenticatedApiRequest, authService } from "@/lib/auth";
 import { queryClient } from "@/lib/queryClient";
 import { format } from "date-fns";
 import { Plus, Search, Filter, Download, Upload, Camera, Eye, Share2 } from "lucide-react";
@@ -68,21 +68,31 @@ export default function PettyCash() {
   // Fetch expenses and stats
   const { data: expenses = [] } = useQuery({
     queryKey: ["/api/petty-cash"],
-    queryFn: () => authenticatedApiRequest("/api/petty-cash"),
+    queryFn: () => authenticatedApiRequest("GET", "/api/petty-cash"),
   });
 
   const { data: stats } = useQuery({
     queryKey: ["/api/petty-cash/stats"],
-    queryFn: () => authenticatedApiRequest("/api/petty-cash/stats"),
+    queryFn: () => authenticatedApiRequest("GET", "/api/petty-cash/stats"),
   });
 
   // Create expense mutation
   const addExpenseMutation = useMutation({
     mutationFn: async (expenseData: FormData) => {
-      return authenticatedApiRequest("/api/petty-cash", {
+      // For FormData, we need to handle it specially
+      const token = authService.getToken();
+      if (!token) throw new Error('No authentication token available');
+      
+      const response = await fetch("/api/petty-cash", {
         method: "POST",
-        body: expenseData,
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+        body: expenseData, // FormData - don't stringify or set Content-Type
       });
+      
+      if (!response.ok) throw new Error('Upload failed');
+      return await response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/petty-cash"] });
@@ -181,7 +191,7 @@ export default function PettyCash() {
     e.preventDefault();
     
     const formDataToSend = new FormData();
-    formDataToSend.append('date', formData.date);
+    formDataToSend.append('expenseDate', formData.date);
     formDataToSend.append('paidTo', formData.paidTo);
     formDataToSend.append('amount', formData.amount);
     formDataToSend.append('paymentMode', formData.paymentMode);

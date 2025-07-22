@@ -39,10 +39,7 @@ export default function PriceComparison() {
 
   const addComparisonMutation = useMutation({
     mutationFn: async (data: any) => {
-      return authenticatedApiRequest("/api/price-comparisons", {
-        method: "POST",
-        body: JSON.stringify(data),
-      });
+      return authenticatedApiRequest("POST", "/api/price-comparisons", data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/price-comparisons"] });
