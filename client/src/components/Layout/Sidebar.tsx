@@ -20,7 +20,8 @@ import {
   ArrowUpDown,
   ChevronDown,
   ChevronRight,
-  Database
+  Database,
+  GitCompare
 } from "lucide-react";
 
 const navigation = [
@@ -43,6 +44,7 @@ const navigation = [
   { name: 'Petty Cash', href: '/petty-cash', icon: Wallet, roles: ['admin', 'staff'] },
   { name: 'Task Management', href: '/tasks', icon: CheckSquare, roles: ['admin', 'staff'] },
   { name: 'Price Comparison', href: '/price-comparison', icon: TrendingUp, roles: ['admin', 'staff'] },
+  { name: 'Product Comparison', href: '/product-comparison', icon: GitCompare, roles: ['admin', 'staff'] },
   { name: 'WhatsApp Export', href: '/whatsapp', icon: MessageCircle, roles: ['admin', 'staff'] },
   { name: 'Reports', href: '/reports', icon: BarChart3, roles: ['admin', 'staff'] },
 ];

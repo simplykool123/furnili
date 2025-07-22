@@ -27,6 +27,7 @@ export default function BulkImportModal({ onSuccess }: BulkImportModalProps) {
       'category',
       'brand', 
       'size',
+      'thickness',
       'sku',
       'pricePerUnit',
       'currentStock',
@@ -35,8 +36,8 @@ export default function BulkImportModal({ onSuccess }: BulkImportModalProps) {
     ];
     
     const sampleData = [
-      'Sample Product,Electronics,Samsung,Medium,SAM001,299.99,50,10,pieces',
-      'Another Product,Furniture,IKEA,Large,IKE002,199.50,25,5,units'
+      'Sample Product,Electronics,Samsung,Medium,2mm,SAM001,299.99,50,10,pieces',
+      'Another Product,Furniture,IKEA,Large,5mm,IKE002,199.50,25,5,units'
     ];
     
     const csvContent = [headers.join(','), ...sampleData].join('\n');

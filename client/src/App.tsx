@@ -18,6 +18,7 @@ import Attendance from "@/pages/Attendance";
 import PettyCash from "@/pages/PettyCash";
 import TaskManagement from "@/pages/TaskManagement";
 import PriceComparison from "@/pages/PriceComparison";
+import ProductComparison from "@/pages/ProductComparison";
 import WhatsAppExport from "@/pages/WhatsAppExport";
 import InventoryMovement from "@/pages/InventoryMovement";
 import NotFound from "@/pages/not-found";
@@ -190,6 +191,17 @@ function Router() {
         <ProtectedRoute>
           <Layout>
             <PriceComparison />
+          </Layout>
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/product-comparison">
+        <ProtectedRoute>
+          <Layout 
+            title="Product Comparison" 
+            subtitle="Compare products by category and find the best prices"
+          >
+            <ProductComparison />
           </Layout>
         </ProtectedRoute>
       </Route>
