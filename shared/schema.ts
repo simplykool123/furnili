@@ -10,6 +10,22 @@ export const users = pgTable("users", {
   name: text("name").notNull(),
   role: text("role").notNull().default("staff"), // admin, staff, store_incharge
   phone: text("phone"),
+  // Staff Management Fields
+  aadharNumber: text("aadhar_number").unique(),
+  employeeId: text("employee_id").unique(),
+  department: text("department"),
+  designation: text("designation"),
+  joiningDate: timestamp("joining_date"),
+  basicSalary: real("basic_salary").default(0),
+  allowances: real("allowances").default(0), // HRA, DA, etc.
+  profilePhotoUrl: text("profile_photo_url"),
+  aadharCardUrl: text("aadhar_card_url"),
+  documentsUrls: text("documents_urls").array().default([]), // Additional documents
+  bankAccountNumber: text("bank_account_number"),
+  ifscCode: text("ifsc_code"),
+  address: text("address"),
+  emergencyContact: text("emergency_contact"),
+  emergencyContactPhone: text("emergency_contact_phone"),
   isActive: boolean("is_active").notNull().default(true),
   lastLogin: timestamp("last_login"),
   createdAt: timestamp("created_at").defaultNow(),
@@ -97,16 +113,65 @@ export const stockMovements = pgTable("stock_movements", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-// Staff Attendance Table
+// Staff Attendance Table - Enhanced for Payroll
 export const attendance = pgTable("attendance", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").references(() => users.id).notNull(),
-  checkInTime: timestamp("check_in_time").notNull(),
+  date: timestamp("date").notNull(), // Date of attendance
+  checkInTime: timestamp("check_in_time"),
   checkOutTime: timestamp("check_out_time"),
-  workingHours: real("working_hours"), // Calculated hours
-  status: text("status").notNull().default("checked_in"), // checked_in, checked_out
+  workingHours: real("working_hours").default(0), // Calculated hours
+  overtimeHours: real("overtime_hours").default(0), // Hours above 8
+  status: text("status").notNull().default("present"), // present, absent, half_day, late, on_leave
+  leaveType: text("leave_type"), // sick, casual, earned, emergency
+  checkInBy: integer("check_in_by").references(() => users.id), // Admin who checked in
+  checkOutBy: integer("check_out_by").references(() => users.id), // Admin who checked out
+  location: text("location"), // Check-in location if needed
   notes: text("notes"),
+  isManualEntry: boolean("is_manual_entry").default(false), // Admin manual entry
   createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Monthly Payroll Table
+export const payroll = pgTable("payroll", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  month: integer("month").notNull(), // 1-12
+  year: integer("year").notNull(),
+  basicSalary: real("basic_salary").notNull(),
+  allowances: real("allowances").default(0),
+  overtimePay: real("overtime_pay").default(0),
+  bonus: real("bonus").default(0),
+  deductions: real("deductions").default(0), // PF, ESI, tax, etc.
+  netSalary: real("net_salary").notNull(),
+  totalWorkingDays: integer("total_working_days").default(30),
+  actualWorkingDays: integer("actual_working_days").notNull(),
+  totalHours: real("total_hours").default(0),
+  overtimeHours: real("overtime_hours").default(0),
+  leaveDays: integer("leave_days").default(0),
+  paySlipUrl: text("pay_slip_url"), // Generated PDF
+  status: text("status").notNull().default("draft"), // draft, processed, paid
+  processedBy: integer("processed_by").references(() => users.id),
+  processedAt: timestamp("processed_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Leave Management Table
+export const leaves = pgTable("leaves", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id).notNull(),
+  leaveType: text("leave_type").notNull(), // sick, casual, earned, emergency, maternity
+  startDate: timestamp("start_date").notNull(),
+  endDate: timestamp("end_date").notNull(),
+  totalDays: integer("total_days").notNull(),
+  reason: text("reason").notNull(),
+  status: text("status").notNull().default("pending"), // pending, approved, rejected
+  appliedAt: timestamp("applied_at").defaultNow(),
+  approvedBy: integer("approved_by").references(() => users.id),
+  approvedAt: timestamp("approved_at"),
+  rejectionReason: text("rejection_reason"),
+  documentUrl: text("document_url"), // Medical certificate, etc.
 });
 
 // Petty Cash Expenses Table
@@ -198,6 +263,17 @@ export const insertStockMovementSchema = createInsertSchema(stockMovements).omit
 export const insertAttendanceSchema = createInsertSchema(attendance).omit({
   id: true,
   createdAt: true,
+  updatedAt: true,
+});
+
+export const insertPayrollSchema = createInsertSchema(payroll).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertLeaveSchema = createInsertSchema(leaves).omit({
+  id: true,
+  appliedAt: true,
 });
 
 export const insertPettyCashExpenseSchema = createInsertSchema(pettyCashExpenses).omit({
@@ -232,6 +308,10 @@ export type Task = typeof tasks.$inferSelect;
 export type InsertTask = z.infer<typeof insertTaskSchema>;
 export type PriceComparison = typeof priceComparisons.$inferSelect;
 export type InsertPriceComparison = z.infer<typeof insertPriceComparisonSchema>;
+export type Payroll = typeof payroll.$inferSelect;
+export type InsertPayroll = z.infer<typeof insertPayrollSchema>;
+export type Leave = typeof leaves.$inferSelect;
+export type InsertLeave = z.infer<typeof insertLeaveSchema>;
 export type MaterialRequest = typeof materialRequests.$inferSelect;
 export type InsertMaterialRequest = z.infer<typeof insertMaterialRequestSchema>;
 export type RequestItem = typeof requestItems.$inferSelect;

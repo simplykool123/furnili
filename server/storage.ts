@@ -10,6 +10,8 @@ import {
   pettyCashExpenses,
   tasks,
   priceComparisons,
+  payroll,
+  leaves,
   type User,
   type InsertUser,
   type Category,
@@ -32,6 +34,10 @@ import {
   type InsertTask,
   type PriceComparison,
   type InsertPriceComparison,
+  type Payroll,
+  type InsertPayroll,
+  type Leave,
+  type InsertLeave,
   type MaterialRequestWithItems,
   type ProductWithStock,
   type BOQExtractedItem,
@@ -55,11 +61,39 @@ export interface IStorage {
   updateCategory(id: number, updates: Partial<InsertCategory>): Promise<Category | undefined>;
   deleteCategory(id: number): Promise<boolean>;
 
-  // Attendance operations
-  checkIn(userId: number, notes?: string): Promise<Attendance>;
-  checkOut(attendanceId: number): Promise<Attendance | undefined>;
-  getUserAttendance(userId: number, date?: string): Promise<Attendance[]>;
-  getAllAttendance(filters?: { userId?: number; date?: string }): Promise<Attendance[]>;
+  // Enhanced Attendance operations
+  checkIn(userId: number, checkInBy?: number, location?: string, notes?: string): Promise<Attendance>;
+  checkOut(attendanceId: number, checkOutBy?: number): Promise<Attendance | undefined>;
+  markAttendance(attendance: InsertAttendance): Promise<Attendance>;
+  updateAttendance(id: number, updates: Partial<InsertAttendance>): Promise<Attendance | undefined>;
+  getUserAttendance(userId: number, month?: number, year?: number): Promise<Attendance[]>;
+  getAllAttendance(filters?: { userId?: number; date?: string; month?: number; year?: number }): Promise<Attendance[]>;
+  getTodayAttendance(): Promise<Attendance[]>;
+  getAttendanceStats(userId?: number, month?: number, year?: number): Promise<{
+    totalDays: number;
+    presentDays: number;
+    absentDays: number;
+    totalHours: number;
+    overtimeHours: number;
+  }>;
+
+  // Payroll operations
+  getPayroll(id: number): Promise<Payroll | undefined>;
+  getUserPayroll(userId: number, month?: number, year?: number): Promise<Payroll[]>;
+  getAllPayroll(filters?: { month?: number; year?: number; status?: string }): Promise<Payroll[]>;
+  createPayroll(payroll: InsertPayroll): Promise<Payroll>;
+  updatePayroll(id: number, updates: Partial<InsertPayroll>): Promise<Payroll | undefined>;
+  generatePayroll(userId: number, month: number, year: number): Promise<Payroll>;
+  processPayroll(id: number, processedBy: number): Promise<Payroll | undefined>;
+
+  // Leave Management operations
+  getLeave(id: number): Promise<Leave | undefined>;
+  getUserLeaves(userId: number, year?: number): Promise<Leave[]>;
+  getAllLeaves(filters?: { status?: string; leaveType?: string }): Promise<Leave[]>;
+  createLeave(leave: InsertLeave): Promise<Leave>;
+  updateLeave(id: number, updates: Partial<InsertLeave>): Promise<Leave | undefined>;
+  approveLeave(id: number, approvedBy: number): Promise<Leave | undefined>;
+  rejectLeave(id: number, approvedBy: number, rejectionReason: string): Promise<Leave | undefined>;
 
   // Petty Cash operations
   getPettyCashExpense(id: number): Promise<PettyCashExpense | undefined>;
@@ -138,22 +172,32 @@ export class MemStorage implements IStorage {
   private pettyCashExpenses: Map<number, PettyCashExpense> = new Map();
   private tasks: Map<number, Task> = new Map();
   private priceComparisons: Map<number, PriceComparison> = new Map();
+  private payroll: Map<number, Payroll> = new Map();
+  private leaves: Map<number, Leave> = new Map();
   private currentId = 1;
 
-  // Attendance operations  
-  async checkIn(userId: number, notes?: string): Promise<Attendance> {
+  // Enhanced Attendance operations  
+  async checkIn(userId: number, checkInBy?: number, location?: string, notes?: string): Promise<Attendance> {
     const id = this.currentId++;
-    const checkInTime = new Date();
+    const now = new Date();
     
     const attendance: Attendance = {
       id,
       userId,
-      checkInTime,
+      date: now,
+      checkInTime: now,
       checkOutTime: null,
-      workingHours: null,
-      status: "checked_in",
+      workingHours: 0,
+      overtimeHours: 0,
+      status: "present",
+      leaveType: null,
+      checkInBy: checkInBy || null,
+      checkOutBy: null,
+      location: location || null,
       notes: notes || null,
-      createdAt: checkInTime,
+      isManualEntry: !!checkInBy,
+      createdAt: now,
+      updatedAt: now,
     };
     
     this.attendance.set(id, attendance);
