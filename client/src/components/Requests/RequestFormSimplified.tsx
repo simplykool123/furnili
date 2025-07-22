@@ -111,16 +111,21 @@ export default function RequestFormSimplified({ onClose, onSuccess }: RequestFor
   // Create client mutation
   const createClientMutation = useMutation({
     mutationFn: async (clientData: { name: string }) => {
+      console.log("Creating client:", clientData);
       const response = await apiRequest("POST", "/api/clients", clientData);
       return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/clients"] });
     },
+    onError: (error) => {
+      console.error("Client creation error:", error);
+    }
   });
 
   const createRequestMutation = useMutation({
     mutationFn: async (data: any) => {
+      console.log("Creating request:", data);
       const response = await apiRequest("POST", "/api/requests", data);
       return response.json();
     },

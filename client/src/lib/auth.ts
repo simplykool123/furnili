@@ -63,6 +63,9 @@ class AuthService {
     this.token = null;
     localStorage.removeItem('authToken');
     localStorage.removeItem('authUser');
+    // Also clean any legacy token formats
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('token');
     queryClient.clear();
   }
 

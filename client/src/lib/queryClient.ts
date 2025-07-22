@@ -13,6 +13,13 @@ export async function apiRequest(
   data?: unknown | undefined,
 ): Promise<Response> {
   const token = localStorage.getItem('authToken');
+  
+  // Clean the method string and validate
+  const cleanMethod = method.trim().toUpperCase();
+  if (!['GET', 'POST', 'PUT', 'DELETE', 'PATCH'].includes(cleanMethod)) {
+    throw new Error(`Invalid HTTP method: ${method}`);
+  }
+  
   const headers: Record<string, string> = {};
   
   if (data) {
@@ -20,11 +27,15 @@ export async function apiRequest(
   }
   
   if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
+    // Clean the token to remove any invalid characters
+    const cleanToken = token.trim();
+    headers['Authorization'] = `Bearer ${cleanToken}`;
   }
 
+  console.log('API Request:', cleanMethod, url, headers);
+
   const res = await fetch(url, {
-    method,
+    method: cleanMethod,
     headers,
     body: data ? JSON.stringify(data) : undefined,
     credentials: "include",
