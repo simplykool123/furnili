@@ -118,9 +118,9 @@ export function CategoryForm({ category, onSuccess }: CategoryFormProps) {
         </p>
       </DialogHeader>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div>
-          <Label htmlFor="name">Category Name *</Label>
+          <Label htmlFor="name" className="text-sm">Category Name *</Label>
           <Input
             id="name"
             {...register("name")}
@@ -128,21 +128,21 @@ export function CategoryForm({ category, onSuccess }: CategoryFormProps) {
             placeholder="e.g., Construction Materials"
           />
           {errors.name && (
-            <p className="text-sm text-red-600 mt-1">{errors.name.message}</p>
+            <p className="text-xs text-red-600 mt-1">{errors.name.message}</p>
           )}
         </div>
 
         <div>
-          <Label htmlFor="description">Description</Label>
+          <Label htmlFor="description" className="text-sm">Description</Label>
           <Textarea
             id="description"
             {...register("description")}
             className={errors.description ? "border-red-500" : ""}
             placeholder="Brief description of this category"
-            rows={3}
+            rows={2}
           />
           {errors.description && (
-            <p className="text-sm text-red-600 mt-1">{errors.description.message}</p>
+            <p className="text-xs text-red-600 mt-1">{errors.description.message}</p>
           )}
         </div>
 
@@ -152,16 +152,15 @@ export function CategoryForm({ category, onSuccess }: CategoryFormProps) {
             checked={isActive}
             onCheckedChange={(checked) => setValue("isActive", checked)}
           />
-          <Label htmlFor="isActive">Active Category</Label>
+          <Label htmlFor="isActive" className="text-sm">Active Category</Label>
         </div>
 
-        <div className="flex space-x-4">
-          <Button
-            type="submit"
-            disabled={isLoading}
-            className="flex-1"
-          >
-            {isLoading ? "Saving..." : category ? "Update Category" : "Create Category"}
+        <div className="flex items-center justify-end space-x-3 pt-2">
+          <Button type="button" variant="outline" size="sm" onClick={onSuccess}>
+            Cancel
+          </Button>
+          <Button type="submit" size="sm" disabled={isLoading}>
+            {isLoading ? "Saving..." : category ? "Update" : "Create"}
           </Button>
         </div>
       </form>
