@@ -56,7 +56,7 @@ export default function Dashboard() {
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold text-amber-900">
-          Welcome back, {currentUser?.username}!
+          Welcome back, {currentUser?.name || 'admin'}!
         </h1>
         <p className="text-amber-700">
           Here's what's happening with your inventory today.
@@ -214,15 +214,17 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              {(recentActivity as any[])?.slice(0, 4).map((activity: any, index: number) => (
-                <div key={index} className="flex items-start space-x-2 text-sm">
-                  <div className="w-2 h-2 bg-amber-500 rounded-full mt-2"></div>
-                  <div>
-                    <p className="text-gray-900">{activity.description}</p>
-                    <p className="text-gray-500 text-xs">{activity.time}</p>
+              {Array.isArray(recentActivity) && recentActivity.length > 0 ? (
+                recentActivity.slice(0, 4).map((activity: any, index: number) => (
+                  <div key={index} className="flex items-start space-x-2 text-sm">
+                    <div className="w-2 h-2 bg-amber-500 rounded-full mt-2"></div>
+                    <div>
+                      <p className="text-gray-900">{String(activity.description || 'Activity')}</p>
+                      <p className="text-gray-500 text-xs">{String(activity.time || 'Recently')}</p>
+                    </div>
                   </div>
-                </div>
-              )) || (
+                ))
+              ) : (
                 <p className="text-gray-500 text-sm">No recent activity</p>
               )}
             </div>
