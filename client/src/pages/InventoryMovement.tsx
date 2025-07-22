@@ -1,368 +1,366 @@
 import { useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { authenticatedApiRequest } from "@/lib/auth";
+import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useToast } from "@/hooks/use-toast";
-import { queryClient } from "@/lib/queryClient";
-import { authenticatedApiRequest } from "@/lib/auth";
-import { Plus, ArrowUp, ArrowDown, Package, TrendingUp, TrendingDown } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ArrowUpCircle, ArrowDownCircle, Package, Calendar, User, Hash } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+
+const movementSchema = z.object({
+  productId: z.string().min(1, "Product is required"),
+  type: z.enum(["inward", "outward"]),
+  quantity: z.coerce.number().positive("Quantity must be positive"),
+  reason: z.string().min(1, "Reason is required"),
+  reference: z.string().optional(),
+  notes: z.string().optional(),
+});
+
+type MovementFormData = z.infer<typeof movementSchema>;
 
 export default function InventoryMovement() {
+  const [showAddMovement, setShowAddMovement] = useState(false);
+  const [activeTab, setActiveTab] = useState("recent");
   const { toast } = useToast();
-  const [isAddingMovement, setIsAddingMovement] = useState(false);
-  const [movementForm, setMovementForm] = useState({
-    productId: "",
-    movementType: "",
-    quantity: "",
-    reason: "",
-    referenceNumber: "",
+  const queryClient = useQueryClient();
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+    setValue,
+    watch,
+  } = useForm<MovementFormData>({
+    resolver: zodResolver(movementSchema),
+    defaultValues: {
+      type: "inward",
+      quantity: 1,
+    },
   });
 
-  const { data: movements, isLoading } = useQuery({
-    queryKey: ["/api/inventory/movements"],
-  });
-
+  // Fetch products for dropdown
   const { data: products } = useQuery({
-    queryKey: ["/api/products"],
+    queryKey: ['/api/products'],
+    queryFn: async () => {
+      const response = await authenticatedApiRequest('GET', '/api/products');
+      return response.json();
+    },
   });
 
-  const addMovementMutation = useMutation({
-    mutationFn: async (movementData: any) => {
-      return authenticatedApiRequest("/api/inventory/movements", {
-        method: "POST",
-        body: JSON.stringify(movementData),
-      });
+  // Fetch movements
+  const { data: movements, isLoading } = useQuery({
+    queryKey: ['/api/inventory/movements'],
+    queryFn: async () => {
+      const response = await authenticatedApiRequest('GET', '/api/inventory/movements');
+      return response.json();
+    },
+  });
+
+  // Create movement mutation
+  const createMovementMutation = useMutation({
+    mutationFn: async (data: MovementFormData) => {
+      const response = await authenticatedApiRequest('POST', '/api/inventory/movements', data);
+      return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/inventory/movements"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/products"] });
-      setIsAddingMovement(false);
-      setMovementForm({
-        productId: "",
-        movementType: "",
-        quantity: "",
-        reason: "",
-        referenceNumber: "",
-      });
       toast({
-        title: "Stock movement recorded",
-        description: "The inventory movement has been recorded successfully.",
+        title: "Success",
+        description: "Inventory movement recorded successfully",
       });
+      queryClient.invalidateQueries({ queryKey: ['/api/inventory/movements'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/products'] });
+      setShowAddMovement(false);
+      reset();
     },
     onError: (error: any) => {
       toast({
-        title: "Failed to record movement",
-        description: error.message,
+        title: "Error",
+        description: error.message || "Failed to record movement",
         variant: "destructive",
       });
     },
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!movementForm.productId || !movementForm.movementType || !movementForm.quantity) {
-      toast({
-        title: "Missing information",
-        description: "Please fill in all required fields.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const quantity = parseInt(movementForm.quantity);
-    if (quantity <= 0) {
-      toast({
-        title: "Invalid quantity",
-        description: "Quantity must be greater than 0.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    addMovementMutation.mutate({
-      ...movementForm,
-      productId: parseInt(movementForm.productId),
-      quantity,
-    });
+  const onSubmit = (data: MovementFormData) => {
+    createMovementMutation.mutate(data);
   };
 
-  const getMovementTypeColor = (type: string) => {
-    return type === "inward" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800";
+  const getMovementTypeIcon = (type: string) => {
+    return type === 'inward' ? (
+      <ArrowUpCircle className="w-4 h-4 text-green-600" />
+    ) : (
+      <ArrowDownCircle className="w-4 h-4 text-red-600" />
+    );
+  };
+
+  const getMovementTypeBadge = (type: string) => {
+    return (
+      <Badge variant={type === 'inward' ? 'default' : 'destructive'}>
+        {type === 'inward' ? 'Inward' : 'Outward'}
+      </Badge>
+    );
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleString();
+  };
+
+  const getProductName = (productId: number) => {
+    const product = products?.find((p: any) => p.id === productId);
+    return product ? product.name : `Product #${productId}`;
   };
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-96">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-600"></div>
+      <div className="space-y-4">
+        {[...Array(5)].map((_, i) => (
+          <div key={i} className="h-16 bg-gray-200 rounded-lg animate-pulse" />
+        ))}
       </div>
     );
   }
 
-  const movementStats = {
-    totalMovements: movements?.length || 0,
-    inwardMovements: movements?.filter((m: any) => m.movementType === "inward").length || 0,
-    outwardMovements: movements?.filter((m: any) => m.movementType === "outward").length || 0,
-    todayMovements: movements?.filter((m: any) => {
-      const today = new Date().toDateString();
-      return new Date(m.createdAt).toDateString() === today;
-    }).length || 0,
-  };
-
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-gray-900">Inventory Movement</h1>
-        <Dialog open={isAddingMovement} onOpenChange={setIsAddingMovement}>
-          <DialogTrigger asChild>
-            <Button className="bg-amber-600 hover:bg-amber-700">
-              <Plus className="mr-2 h-4 w-4" />
-              Record Movement
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[500px]">
-            <DialogHeader>
-              <DialogTitle>Record Stock Movement</DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <Label htmlFor="productId">Product *</Label>
-                <Select 
-                  value={movementForm.productId}
-                  onValueChange={(value) => setMovementForm(prev => ({ ...prev, productId: value }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select product" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {products?.map((product: any) => (
-                      <SelectItem key={product.id} value={product.id.toString()}>
-                        {product.name} (Current: {product.currentStock} {product.unit})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label htmlFor="movementType">Movement Type *</Label>
-                <Select 
-                  value={movementForm.movementType}
-                  onValueChange={(value) => setMovementForm(prev => ({ ...prev, movementType: value }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select movement type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="inward">Inward (Stock In)</SelectItem>
-                    <SelectItem value="outward">Outward (Stock Out)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label htmlFor="quantity">Quantity *</Label>
-                <Input
-                  id="quantity"
-                  type="number"
-                  min="1"
-                  value={movementForm.quantity}
-                  onChange={(e) => setMovementForm(prev => ({ ...prev, quantity: e.target.value }))}
-                  placeholder="Enter quantity"
-                  required
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="reason">Reason *</Label>
-                <Select 
-                  value={movementForm.reason}
-                  onValueChange={(value) => setMovementForm(prev => ({ ...prev, reason: value }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select reason" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {movementForm.movementType === "inward" ? (
-                      <>
-                        <SelectItem value="purchase">Purchase</SelectItem>
-                        <SelectItem value="return">Return from Customer</SelectItem>
-                        <SelectItem value="transfer-in">Transfer In</SelectItem>
-                        <SelectItem value="adjustment">Stock Adjustment</SelectItem>
-                        <SelectItem value="production">Production</SelectItem>
-                      </>
-                    ) : (
-                      <>
-                        <SelectItem value="sale">Sale</SelectItem>
-                        <SelectItem value="material-request">Material Request</SelectItem>
-                        <SelectItem value="transfer-out">Transfer Out</SelectItem>
-                        <SelectItem value="damage">Damage/Loss</SelectItem>
-                        <SelectItem value="adjustment">Stock Adjustment</SelectItem>
-                      </>
-                    )}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label htmlFor="referenceNumber">Reference Number</Label>
-                <Input
-                  id="referenceNumber"
-                  value={movementForm.referenceNumber}
-                  onChange={(e) => setMovementForm(prev => ({ ...prev, referenceNumber: e.target.value }))}
-                  placeholder="Invoice/Order number (optional)"
-                />
-              </div>
-
-              <div className="flex justify-end space-x-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setIsAddingMovement(false)}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={addMovementMutation.isPending}
-                  className="bg-amber-600 hover:bg-amber-700"
-                >
-                  {addMovementMutation.isPending ? "Recording..." : "Record Movement"}
-                </Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
-      </div>
-
-      {/* Movement Statistics */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="border-l-4 border-l-blue-500">
+      {/* Header Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Movements</CardTitle>
             <Package className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{movementStats.totalMovements}</div>
-            <p className="text-xs text-muted-foreground">
-              All time movements
-            </p>
+            <div className="text-2xl font-bold">{movements?.length || 0}</div>
+            <p className="text-xs text-muted-foreground">All time</p>
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-green-500">
+        <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Inward Movements</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Inward Today</CardTitle>
+            <ArrowUpCircle className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{movementStats.inwardMovements}</div>
-            <p className="text-xs text-muted-foreground">
-              Stock received
-            </p>
+            <div className="text-2xl font-bold text-green-600">
+              {movements?.filter((m: any) => 
+                m.type === 'inward' && 
+                new Date(m.createdAt).toDateString() === new Date().toDateString()
+              ).length || 0}
+            </div>
+            <p className="text-xs text-muted-foreground">Today's inward movements</p>
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-red-500">
+        <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Outward Movements</CardTitle>
-            <TrendingDown className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Outward Today</CardTitle>
+            <ArrowDownCircle className="h-4 w-4 text-red-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{movementStats.outwardMovements}</div>
-            <p className="text-xs text-muted-foreground">
-              Stock issued
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-l-4 border-l-amber-500">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Today's Movements</CardTitle>
-            <ArrowUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{movementStats.todayMovements}</div>
-            <p className="text-xs text-muted-foreground">
-              Movements today
-            </p>
+            <div className="text-2xl font-bold text-red-600">
+              {movements?.filter((m: any) => 
+                m.type === 'outward' && 
+                new Date(m.createdAt).toDateString() === new Date().toDateString()
+              ).length || 0}
+            </div>
+            <p className="text-xs text-muted-foreground">Today's outward movements</p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Recent Movements */}
+      {/* Add Movement Button */}
+      <div className="flex justify-between items-center">
+        <h3 className="text-lg font-semibold">Movement History</h3>
+        <Button onClick={() => setShowAddMovement(true)}>
+          <Package className="w-4 h-4 mr-2" />
+          Record Movement
+        </Button>
+      </div>
+
+      {/* Movements Table */}
       <Card>
-        <CardHeader>
-          <CardTitle>Recent Stock Movements</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Date & Time</TableHead>
-                <TableHead>Product</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Quantity</TableHead>
-                <TableHead>Reason</TableHead>
-                <TableHead>Reference</TableHead>
-                <TableHead>By</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {movements?.map((movement: any) => (
-                <TableRow key={movement.id}>
-                  <TableCell>
-                    <div>
-                      <div className="font-medium">
-                        {new Date(movement.createdAt).toLocaleDateString()}
-                      </div>
-                      <div className="text-sm text-gray-500">
-                        {new Date(movement.createdAt).toLocaleTimeString()}
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell className="font-medium">
-                    {movement.productName || `Product ${movement.productId}`}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center">
-                      {movement.movementType === "inward" ? (
-                        <ArrowUp className="h-4 w-4 text-green-500 mr-2" />
-                      ) : (
-                        <ArrowDown className="h-4 w-4 text-red-500 mr-2" />
-                      )}
-                      <Badge className={getMovementTypeColor(movement.movementType)}>
-                        {movement.movementType}
-                      </Badge>
-                    </div>
-                  </TableCell>
-                  <TableCell className="font-semibold">
-                    {movement.movementType === "inward" ? "+" : "-"}{movement.quantity}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="outline">
-                      {movement.reason?.replace("-", " ").replace(/\b\w/g, (l: string) => l.toUpperCase())}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    {movement.referenceNumber || "—"}
-                  </TableCell>
-                  <TableCell>
-                    {movement.recordedBy || "System"}
-                  </TableCell>
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Product</TableHead>
+                  <TableHead>Quantity</TableHead>
+                  <TableHead>Reason</TableHead>
+                  <TableHead>Reference</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>User</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {movements?.map((movement: any) => (
+                  <TableRow key={movement.id}>
+                    <TableCell>
+                      <div className="flex items-center space-x-2">
+                        {getMovementTypeIcon(movement.type)}
+                        {getMovementTypeBadge(movement.type)}
+                      </div>
+                    </TableCell>
+                    <TableCell className="font-medium">
+                      {getProductName(movement.productId)}
+                    </TableCell>
+                    <TableCell>
+                      <span className={`font-medium ${
+                        movement.type === 'inward' ? 'text-green-600' : 'text-red-600'
+                      }`}>
+                        {movement.type === 'inward' ? '+' : '-'}{movement.quantity}
+                      </span>
+                    </TableCell>
+                    <TableCell>{movement.reason}</TableCell>
+                    <TableCell>{movement.reference || '-'}</TableCell>
+                    <TableCell>{formatDate(movement.createdAt)}</TableCell>
+                    <TableCell>{movement.userName || 'System'}</TableCell>
+                  </TableRow>
+                )) || (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center py-8 text-gray-500">
+                      No movements recorded yet
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
+
+      {/* Add Movement Dialog */}
+      <Dialog open={showAddMovement} onOpenChange={setShowAddMovement}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Record Inventory Movement</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <div>
+              <Label htmlFor="productId">Product *</Label>
+              <Select 
+                value={watch("productId")}
+                onValueChange={(value) => setValue("productId", value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a product" />
+                </SelectTrigger>
+                <SelectContent>
+                  {products?.map((product: any) => (
+                    <SelectItem key={product.id} value={product.id.toString()}>
+                      {product.name} (Stock: {product.currentStock})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {errors.productId && (
+                <p className="text-sm text-red-600 mt-1">{errors.productId.message}</p>
+              )}
+            </div>
+
+            <div>
+              <Label htmlFor="type">Movement Type *</Label>
+              <Select 
+                value={watch("type")}
+                onValueChange={(value) => setValue("type", value as "inward" | "outward")}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="inward">Inward (Stock In)</SelectItem>
+                  <SelectItem value="outward">Outward (Stock Out)</SelectItem>
+                </SelectContent>
+              </Select>
+              {errors.type && (
+                <p className="text-sm text-red-600 mt-1">{errors.type.message}</p>
+              )}
+            </div>
+
+            <div>
+              <Label htmlFor="quantity">Quantity *</Label>
+              <Input 
+                type="number" 
+                {...register("quantity")}
+                placeholder="Enter quantity"
+                min="1"
+              />
+              {errors.quantity && (
+                <p className="text-sm text-red-600 mt-1">{errors.quantity.message}</p>
+              )}
+            </div>
+
+            <div>
+              <Label htmlFor="reason">Reason *</Label>
+              <Select 
+                value={watch("reason")}
+                onValueChange={(value) => setValue("reason", value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a reason" />
+                </SelectTrigger>
+                <SelectContent>
+                  {watch("type") === "inward" ? (
+                    <>
+                      <SelectItem value="Purchase">Purchase</SelectItem>
+                      <SelectItem value="Return">Return</SelectItem>
+                      <SelectItem value="Transfer In">Transfer In</SelectItem>
+                      <SelectItem value="Adjustment">Adjustment</SelectItem>
+                    </>
+                  ) : (
+                    <>
+                      <SelectItem value="Sale">Sale</SelectItem>
+                      <SelectItem value="Issue">Issue</SelectItem>
+                      <SelectItem value="Transfer Out">Transfer Out</SelectItem>
+                      <SelectItem value="Damage">Damage</SelectItem>
+                      <SelectItem value="Adjustment">Adjustment</SelectItem>
+                    </>
+                  )}
+                </SelectContent>
+              </Select>
+              {errors.reason && (
+                <p className="text-sm text-red-600 mt-1">{errors.reason.message}</p>
+              )}
+            </div>
+
+            <div>
+              <Label htmlFor="reference">Reference (Optional)</Label>
+              <Input 
+                {...register("reference")}
+                placeholder="Invoice/PO number, etc."
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="notes">Notes (Optional)</Label>
+              <Input 
+                {...register("notes")}
+                placeholder="Additional notes"
+              />
+            </div>
+
+            <div className="flex items-center justify-end space-x-4 pt-4">
+              <Button type="button" variant="outline" onClick={() => setShowAddMovement(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={createMovementMutation.isPending}>
+                {createMovementMutation.isPending ? "Recording..." : "Record Movement"}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

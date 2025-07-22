@@ -129,9 +129,12 @@ function Router() {
         </ProtectedRoute>
       </Route>
       
-      <Route path="/inventory">
+      <Route path="/inventory-movement">
         <ProtectedRoute>
-          <Layout>
+          <Layout 
+            title="Inventory Movement" 
+            subtitle="Track inward and outward inventory transactions"
+          >
             <InventoryMovement />
           </Layout>
         </ProtectedRoute>
