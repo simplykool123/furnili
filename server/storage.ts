@@ -946,7 +946,14 @@ export class MemStorage implements IStorage {
       lowStockItems: lowStockProducts.length,
       totalValue,
       recentRequests,
-      lowStockProducts: lowStockProducts.slice(0, 5),
+      lowStockProducts: lowStockProducts.slice(0, 5).map(product => ({
+        id: product.id,
+        name: product.name,
+        category: product.category,
+        currentStock: product.currentStock,
+        minStock: product.minStock,
+        stockStatus: product.currentStock <= product.minStock ? 'low-stock' : 'in-stock'
+      })),
     };
   }
 }

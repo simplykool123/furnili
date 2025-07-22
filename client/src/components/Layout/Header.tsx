@@ -61,15 +61,23 @@ export default function Header({ title, subtitle, showAddButton = false, onAddCl
                 <h4 className="font-medium">Low Stock Alerts</h4>
                 <p className="text-sm text-gray-600">{lowStockCount} items need attention</p>
               </div>
-              {stats?.lowStockProducts?.slice(0, 3).map((product: any) => (
-                <DropdownMenuItem key={product.id} className="flex items-center justify-between p-3">
-                  <div>
-                    <p className="font-medium">{product.name}</p>
-                    <p className="text-sm text-gray-600">Stock: {product.currentStock} / {product.minStock}</p>
-                  </div>
-                  <Badge variant="destructive" className="text-xs">Low</Badge>
+              {Array.isArray(stats?.lowStockProducts) && stats.lowStockProducts.length > 0 ? (
+                stats.lowStockProducts.slice(0, 3).map((product: any) => (
+                  <DropdownMenuItem key={product.id} className="flex items-center justify-between p-3">
+                    <div>
+                      <p className="font-medium">{String(product.name || 'Unknown Product')}</p>
+                      <p className="text-sm text-gray-600">
+                        Stock: {Number(product.currentStock) || 0} / {Number(product.minStock) || 0}
+                      </p>
+                    </div>
+                    <Badge variant="destructive" className="text-xs">Low</Badge>
+                  </DropdownMenuItem>
+                ))
+              ) : (
+                <DropdownMenuItem className="p-3 text-center text-gray-500">
+                  No low stock items
                 </DropdownMenuItem>
-              ))}
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
 
