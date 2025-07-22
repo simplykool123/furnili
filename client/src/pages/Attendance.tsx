@@ -1,5 +1,8 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -10,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
 import { authenticatedApiRequest } from "@/lib/auth";
@@ -29,8 +33,29 @@ import {
   MapPin,
   Timer,
   Calculator,
-  CreditCard
+  CreditCard,
+  Edit,
+  UserPlus
 } from "lucide-react";
+
+// Form schemas
+const staffFormSchema = z.object({
+  name: z.string().min(2, "Name must be at least 2 characters"),
+  email: z.string().email("Invalid email address"),
+  phone: z.string().min(10, "Phone must be at least 10 digits"),
+  employeeId: z.string().optional(),
+  department: z.string().optional(),
+  designation: z.string().optional(),
+  basicSalary: z.number().min(0, "Salary must be positive"),
+  aadharNumber: z.string().optional(),
+  address: z.string().optional(),
+  joiningDate: z.string().optional(),
+  bankAccount: z.string().optional(),
+  ifscCode: z.string().optional(),
+  role: z.enum(["admin", "manager", "storekeeper", "user"]),
+});
+
+type StaffFormData = z.infer<typeof staffFormSchema>;
 
 export default function Attendance() {
   const { toast } = useToast();
@@ -38,6 +63,33 @@ export default function Attendance() {
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [selectedStaff, setSelectedStaff] = useState<string>("");
   const [isProcessingPayroll, setIsProcessingPayroll] = useState(false);
+  const [isAddStaffOpen, setIsAddStaffOpen] = useState(false);
+  const [isEditStaffOpen, setIsEditStaffOpen] = useState(false);
+  const [editingStaff, setEditingStaff] = useState<any>(null);
+
+  // Forms
+  const addStaffForm = useForm<StaffFormData>({
+    resolver: zodResolver(staffFormSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      phone: "",
+      employeeId: "",
+      department: "",
+      designation: "",
+      basicSalary: 0,
+      aadharNumber: "",
+      address: "",
+      joiningDate: "",
+      bankAccount: "",
+      ifscCode: "",
+      role: "user",
+    },
+  });
+
+  const editStaffForm = useForm<StaffFormData>({
+    resolver: zodResolver(staffFormSchema),
+  });
 
   // Queries
   const { data: attendanceRecords = [], isLoading } = useQuery({
@@ -137,6 +189,51 @@ export default function Attendance() {
     },
   });
 
+  const createStaffMutation = useMutation({
+    mutationFn: async (data: StaffFormData) => {
+      return authenticatedApiRequest("/api/users", {
+        method: "POST",
+        body: JSON.stringify({ ...data, username: data.email }),
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+      setIsAddStaffOpen(false);
+      addStaffForm.reset();
+      toast({ title: "Staff member added successfully" });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to add staff member",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const updateStaffMutation = useMutation({
+    mutationFn: async (data: { id: number; updates: Partial<StaffFormData> }) => {
+      return authenticatedApiRequest(`/api/users/${data.id}`, {
+        method: "PATCH",
+        body: JSON.stringify(data.updates),
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+      setIsEditStaffOpen(false);
+      setEditingStaff(null);
+      editStaffForm.reset();
+      toast({ title: "Staff member updated successfully" });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to update staff member",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   // Helper functions
   const getStatusBadge = (status: string) => {
     const statusConfig = {
@@ -171,6 +268,36 @@ export default function Attendance() {
       style: "currency",
       currency: "INR",
     }).format(amount);
+  };
+
+  const handleEditStaff = (staffMember: any) => {
+    setEditingStaff(staffMember);
+    editStaffForm.reset({
+      name: staffMember.name || "",
+      email: staffMember.email || "",
+      phone: staffMember.phone || "",
+      employeeId: staffMember.employeeId || "",
+      department: staffMember.department || "",
+      designation: staffMember.designation || "",
+      basicSalary: staffMember.basicSalary || 0,
+      aadharNumber: staffMember.aadharNumber || "",
+      address: staffMember.address || "",
+      joiningDate: staffMember.joiningDate || "",
+      bankAccount: staffMember.bankAccount || "",
+      ifscCode: staffMember.ifscCode || "",
+      role: staffMember.role || "user",
+    });
+    setIsEditStaffOpen(true);
+  };
+
+  const onAddStaffSubmit = (data: StaffFormData) => {
+    createStaffMutation.mutate(data);
+  };
+
+  const onEditStaffSubmit = (data: StaffFormData) => {
+    if (editingStaff) {
+      updateStaffMutation.mutate({ id: editingStaff.id, updates: data });
+    }
   };
 
   if (isLoading) {
@@ -479,7 +606,7 @@ export default function Attendance() {
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
                 Staff Management
-                <Button size="sm">
+                <Button size="sm" onClick={() => setIsAddStaffOpen(true)}>
                   <Plus className="w-4 h-4 mr-2" />
                   Add Staff
                 </Button>
@@ -542,7 +669,12 @@ export default function Attendance() {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Button size="sm" variant="outline">
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => handleEditStaff(member)}
+                        >
+                          <Edit className="w-3 h-3 mr-1" />
                           Edit
                         </Button>
                       </TableCell>
@@ -667,6 +799,456 @@ export default function Attendance() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Add Staff Dialog */}
+      <Dialog open={isAddStaffOpen} onOpenChange={setIsAddStaffOpen}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <UserPlus className="w-5 h-5" />
+              Add New Staff Member
+            </DialogTitle>
+          </DialogHeader>
+          <Form {...addStaffForm}>
+            <form onSubmit={addStaffForm.handleSubmit(onAddStaffSubmit)} className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={addStaffForm.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Full Name *</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter full name" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={addStaffForm.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email *</FormLabel>
+                      <FormControl>
+                        <Input type="email" placeholder="Enter email address" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={addStaffForm.control}
+                  name="phone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Phone Number *</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter phone number" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={addStaffForm.control}
+                  name="employeeId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Employee ID</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter employee ID" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={addStaffForm.control}
+                  name="department"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Department</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter department" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={addStaffForm.control}
+                  name="designation"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Designation</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter designation" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={addStaffForm.control}
+                  name="basicSalary"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Basic Salary *</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="number" 
+                          placeholder="Enter basic salary"
+                          {...field}
+                          onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={addStaffForm.control}
+                  name="aadharNumber"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Aadhar Number</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter Aadhar number" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={addStaffForm.control}
+                  name="joiningDate"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Joining Date</FormLabel>
+                      <FormControl>
+                        <Input type="date" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={addStaffForm.control}
+                  name="role"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Role *</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select role" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="user">User</SelectItem>
+                          <SelectItem value="storekeeper">Storekeeper</SelectItem>
+                          <SelectItem value="manager">Manager</SelectItem>
+                          <SelectItem value="admin">Admin</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              
+              <FormField
+                control={addStaffForm.control}
+                name="address"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Address</FormLabel>
+                    <FormControl>
+                      <Textarea placeholder="Enter full address" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={addStaffForm.control}
+                  name="bankAccount"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Bank Account Number</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter bank account number" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={addStaffForm.control}
+                  name="ifscCode"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>IFSC Code</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter IFSC code" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              
+              <div className="flex justify-end gap-2">
+                <Button type="button" variant="outline" onClick={() => setIsAddStaffOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={createStaffMutation.isPending}>
+                  {createStaffMutation.isPending ? "Adding..." : "Add Staff Member"}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Staff Dialog */}
+      <Dialog open={isEditStaffOpen} onOpenChange={setIsEditStaffOpen}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Edit className="w-5 h-5" />
+              Edit Staff Member
+            </DialogTitle>
+          </DialogHeader>
+          <Form {...editStaffForm}>
+            <form onSubmit={editStaffForm.handleSubmit(onEditStaffSubmit)} className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={editStaffForm.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Full Name *</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter full name" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={editStaffForm.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email *</FormLabel>
+                      <FormControl>
+                        <Input type="email" placeholder="Enter email address" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={editStaffForm.control}
+                  name="phone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Phone Number *</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter phone number" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={editStaffForm.control}
+                  name="employeeId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Employee ID</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter employee ID" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={editStaffForm.control}
+                  name="department"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Department</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter department" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={editStaffForm.control}
+                  name="designation"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Designation</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter designation" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={editStaffForm.control}
+                  name="basicSalary"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Basic Salary *</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="number" 
+                          placeholder="Enter basic salary"
+                          {...field}
+                          onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={editStaffForm.control}
+                  name="aadharNumber"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Aadhar Number</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter Aadhar number" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={editStaffForm.control}
+                  name="joiningDate"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Joining Date</FormLabel>
+                      <FormControl>
+                        <Input type="date" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={editStaffForm.control}
+                  name="role"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Role *</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select role" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="user">User</SelectItem>
+                          <SelectItem value="storekeeper">Storekeeper</SelectItem>
+                          <SelectItem value="manager">Manager</SelectItem>
+                          <SelectItem value="admin">Admin</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              
+              <FormField
+                control={editStaffForm.control}
+                name="address"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Address</FormLabel>
+                    <FormControl>
+                      <Textarea placeholder="Enter full address" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={editStaffForm.control}
+                  name="bankAccount"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Bank Account Number</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter bank account number" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={editStaffForm.control}
+                  name="ifscCode"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>IFSC Code</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter IFSC code" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              
+              <div className="flex justify-end gap-2">
+                <Button type="button" variant="outline" onClick={() => setIsEditStaffOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={updateStaffMutation.isPending}>
+                  {updateStaffMutation.isPending ? "Updating..." : "Update Staff Member"}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
