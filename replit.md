@@ -48,6 +48,11 @@ Preferred communication style: Simple, everyday language.
   - Touch-friendly button sizes and proper spacing on mobile devices
   - Responsive forms and filters that work across all screen sizes
   - Fixed authentication token issue preventing product creation
+- ✅ **Master Menu Organization**: Created collapsible Master section in sidebar
+  - Grouped Inventory Movement, Categories, and Users under Master menu
+  - Added expandable/collapsible functionality with chevron indicators
+  - Auto-expands Master menu when any sub-item is active for better UX
+  - Maintains role-based access control for sub-menu items
 - ✅ **Compact Material Request Form**: Redesigned with tab-friendly grid layout
   - Description, Brand, Type, Size, Thickness columns
   - Automatic row addition on tab navigation
