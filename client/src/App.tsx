@@ -26,15 +26,16 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    const checkAuth = async () => {
+    const checkAuth = () => {
       try {
-        if (authService.isAuthenticated()) {
-          // Verify token is still valid
-          await authService.getCurrentUser();
+        const token = localStorage.getItem('authToken');
+        const user = localStorage.getItem('authUser');
+        if (token && user) {
           setIsAuthenticated(true);
+        } else {
+          setIsAuthenticated(false);
         }
       } catch (error) {
-        authService.logout();
         setIsAuthenticated(false);
       } finally {
         setIsLoading(false);

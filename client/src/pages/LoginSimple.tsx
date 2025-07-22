@@ -40,11 +40,14 @@ export default function LoginSimple() {
 
       if (response.ok) {
         setToken(data.token);
+        localStorage.setItem('authUser', JSON.stringify(data.user));
         toast({
-          title: "Success",
+          title: "Success", 
           description: "Login successful!",
         });
-        window.location.href = "/";
+        setTimeout(() => {
+          window.location.reload();
+        }, 500);
       } else {
         toast({
           title: "Login failed",
