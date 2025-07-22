@@ -219,9 +219,6 @@ export default function RequestFormSimplified({ onClose, onSuccess }: RequestFor
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <Card>
-        <CardHeader>
-          <CardTitle>Create New Material Request</CardTitle>
-        </CardHeader>
         <CardContent className="space-y-4">
           {/* Client Name, Order No, Priority in one row */}
           <div className="grid grid-cols-12 gap-3">
