@@ -164,18 +164,18 @@ export default function RequestFormSimplified({ onClose, onSuccess }: RequestFor
     console.log('Form data:', data);
     
     const requestData = {
-      clientName: data.clientName,
-      orderNumber: data.orderNumber,
-      priority: data.priority,
-      remarks: data.remarks || "",
-      requestedBy: 1, // Will be set by backend from auth
+      request: {
+        clientName: data.clientName,
+        orderNumber: data.orderNumber,
+        priority: data.priority,
+        remarks: data.remarks || "",
+        totalValue: 0 // Will be calculated by backend
+      },
       items: data.items.map((item: any) => ({
-        description: item.description,
-        brand: item.brand || "",
-        size: item.size || "",
-        thickness: item.thickness || "",
-        quantity: item.quantity,
-        unit: item.unit
+        productId: item.productId || null,
+        requestedQuantity: item.quantity,
+        unitPrice: 0, // Will be set from product data
+        totalPrice: 0 // Will be calculated by backend
       }))
     };
 

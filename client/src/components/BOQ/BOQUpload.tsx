@@ -214,20 +214,18 @@ export default function BOQUpload() {
     }
 
     const requestData = {
-      clientName: extractedData.client || extractedData.projectName || 'BOQ Project',
-      orderNumber: extractedData.workOrderNumber || `BOQ-${Date.now()}`,
-      boqReference: `${extractedData.projectName || 'BOQ'}-${extractedData.workOrderNumber || Date.now()}`,
-      remarks: `Created from BOQ: ${extractedData.projectName} (${validItems.length} items)${extractedData.description ? ` - ${extractedData.description}` : ''}`,
-      priority: 'medium',
+      request: {
+        clientName: extractedData.client || extractedData.projectName || 'BOQ Project',
+        orderNumber: extractedData.workOrderNumber || `BOQ-${Date.now()}`,
+        boqReference: `${extractedData.projectName || 'BOQ'}-${extractedData.workOrderNumber || Date.now()}`,
+        remarks: `Created from BOQ: ${extractedData.projectName} (${validItems.length} items)${extractedData.description ? ` - ${extractedData.description}` : ''}`,
+        priority: 'medium'
+      },
       items: validItems.map(item => ({
         productId: item.matchedProductId,
-        quantity: item.quantity,
-        description: item.description,
-        unit: item.unit,
-        brand: '',
-        category: '',
-        size: '',
-        thickness: ''
+        requestedQuantity: item.quantity,
+        unitPrice: item.rate || 0,
+        totalPrice: (item.quantity * (item.rate || 0))
       }))
     };
 
