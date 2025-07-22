@@ -22,7 +22,7 @@ const userSchema = z.object({
   email: z.string().email("Invalid email address"),
   password: z.string().min(6, "Password must be at least 6 characters"),
   name: z.string().min(1, "Name is required"),
-  role: z.enum(["admin", "manager", "storekeeper", "user"]),
+  role: z.enum(["admin", "staff", "store_incharge"]),
 });
 
 type UserFormData = z.infer<typeof userSchema>;
@@ -61,7 +61,7 @@ export default function Users() {
       email: "",
       password: "",
       name: "",
-      role: "user",
+      role: "staff",
     },
   });
 
@@ -113,17 +113,18 @@ export default function Users() {
   };
 
   const getRoleBadge = (role: string) => {
-    const roleStyles = {
-      admin: "bg-red-100 text-red-800 hover:bg-red-100",
-      manager: "bg-blue-100 text-blue-800 hover:bg-blue-100",
-      storekeeper: "bg-green-100 text-green-800 hover:bg-green-100",
-      user: "bg-gray-100 text-gray-800 hover:bg-gray-100",
+    const roleInfo = {
+      admin: { style: "bg-red-100 text-red-800 hover:bg-red-100", label: "🔑 Admin", desc: "Full Access" },
+      staff: { style: "bg-blue-100 text-blue-800 hover:bg-blue-100", label: "👷 Staff", desc: "Daily Operations" },
+      store_incharge: { style: "bg-green-100 text-green-800 hover:bg-green-100", label: "🧰 Store Incharge", desc: "Inventory Manager" },
     };
     
+    const info = roleInfo[role as keyof typeof roleInfo] || roleInfo.staff;
+    
     return (
-      <Badge className={roleStyles[role as keyof typeof roleStyles]}>
+      <Badge className={info.style}>
         <Shield className="w-3 h-3 mr-1" />
-        {role.charAt(0).toUpperCase() + role.slice(1)}
+        {info.label}
       </Badge>
     );
   };
@@ -145,15 +146,21 @@ export default function Users() {
   return (
     <>
       <div className="space-y-6">
+        {/* Add User Button */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-lg font-semibold">System Users ({users?.length || 0})</h2>
+            <p className="text-sm text-muted-foreground">Manage user accounts and roles</p>
+          </div>
+          <Button onClick={() => setShowAddUser(true)}>
+            <UserPlus className="w-4 h-4 mr-2" />
+            Add User
+          </Button>
+        </div>
+
         {/* Users Table */}
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Shield className="w-5 h-5" />
-              System Users ({users?.length || 0})
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+          <CardContent className="p-0">
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
@@ -214,7 +221,6 @@ export default function Users() {
                 </TableBody>
               </Table>
             </div>
-          </CardContent>
         </Card>
 
         {/* Add User Dialog */}
@@ -297,10 +303,9 @@ export default function Users() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="user">User</SelectItem>
-                    <SelectItem value="storekeeper">Storekeeper</SelectItem>
-                    <SelectItem value="manager">Manager</SelectItem>
-                    <SelectItem value="admin">Admin</SelectItem>
+                    <SelectItem value="admin">🔑 Admin (Full Access)</SelectItem>
+                    <SelectItem value="staff">👷 Staff (Daily Operations)</SelectItem>
+                    <SelectItem value="store_incharge">🧰 Store Incharge (Inventory Manager)</SelectItem>
                   </SelectContent>
                 </Select>
                 {errors.role && (
