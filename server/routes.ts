@@ -977,10 +977,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         amount: parseFloat(req.body.amount),
         vendor: req.body.paidTo,
         description: req.body.note,
+        orderNo: req.body.orderNo,
+        paidBy: req.body.paidBy ? parseInt(req.body.paidBy) : undefined,
         expenseDate: new Date(req.body.expenseDate),
         addedBy: req.user!.id,
         receiptImageUrl: req.file?.path || null,
-        status: "pending",
+        status: "expense", // Default to expense status
       };
       
       const expense = await storage.createPettyCashExpense(expenseData);

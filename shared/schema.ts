@@ -194,6 +194,8 @@ export const pettyCashExpenses = pgTable("petty_cash_expenses", {
   amount: real("amount").notNull(),
   vendor: text("vendor"),
   description: text("description"),
+  orderNo: text("order_no"), // Order No./Client Reference
+  paidBy: integer("paid_by").references(() => users.id), // Staff member who paid
   receiptImageUrl: text("receipt_image_url"), // Google Pay screenshot
   extractedData: jsonb("extracted_data"), // OCR extracted data
   expenseDate: timestamp("expense_date").notNull(),

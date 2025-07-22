@@ -29,7 +29,8 @@ interface PettyCashExpense {
   status: string;
   addedBy: number;
   createdAt: string;
-  user?: { id: number; name: string; email: string };
+  orderNo?: string; // Add orderNo field
+  user?: { id: number; name: string; email: string; username?: string }; // Add username field
 }
 
 interface PettyCashStats {
@@ -127,7 +128,7 @@ export default function PettyCash() {
     });
   };
 
-  // OCR processing function
+  // Enhanced OCR processing for UPI payment screenshots with improved parsing
   const processImageWithOCR = async (file: File) => {
     setIsProcessingOCR(true);
     try {
@@ -138,44 +139,93 @@ export default function PettyCash() {
       const text = result.data.text;
       console.log('OCR Result:', text);
       
-      // Extract amount (look for ₹ symbol or "Rs" followed by numbers)
-      const amountMatch = text.match(/₹\s*([0-9,]+(?:\.[0-9]{2})?)|Rs\.?\s*([0-9,]+(?:\.[0-9]{2})?)/i);
-      if (amountMatch) {
-        const amount = (amountMatch[1] || amountMatch[2]).replace(/,/g, '');
-        setFormData(prev => ({ ...prev, amount }));
-      }
-
-      // Extract recipient/merchant name (look for common patterns)
-      const merchantMatch = text.match(/To\s+([A-Za-z\s]+)|Paid to\s+([A-Za-z\s]+)|Merchant:\s*([A-Za-z\s]+)/i);
-      if (merchantMatch) {
-        const merchant = (merchantMatch[1] || merchantMatch[2] || merchantMatch[3]).trim();
-        setFormData(prev => ({ ...prev, paidTo: merchant }));
-      }
-
-      // Extract date (look for date patterns)
-      const dateMatch = text.match(/(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})|(\d{1,2}\s+[A-Za-z]+\s+\d{2,4})/i);
-      if (dateMatch) {
-        try {
-          const dateStr = dateMatch[0];
-          const parsedDate = new Date(dateStr);
-          if (!isNaN(parsedDate.getTime())) {
-            setFormData(prev => ({ ...prev, date: format(parsedDate, "yyyy-MM-dd") }));
-          }
-        } catch (error) {
-          console.log('Could not parse date:', dateMatch[0]);
+      const updatedData = { ...formData };
+      const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+      
+      // Extract amount (look for standalone number, often on its own line)
+      for (const line of lines) {
+        const amountMatch = line.match(/^₹?[\s]?([0-9,]+\.?[0-9]*)$/);
+        if (amountMatch) {
+          const amount = amountMatch[1].replace(/,/g, '');
+          updatedData.amount = amount;
+          break;
         }
       }
-
-      // Auto-detect payment mode based on text content
-      const upiKeywords = ['UPI', 'GPay', 'PhonePe', 'Paytm', 'Google Pay'];
-      const detectedMode = upiKeywords.find(mode => 
-        text.toLowerCase().includes(mode.toLowerCase())
-      );
-      if (detectedMode) {
-        setFormData(prev => ({ ...prev, paymentMode: detectedMode }));
+      
+      // Extract Paid By and Paid To from payment context
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        
+        // Pattern: "Name paid" - extract the name before "paid"
+        if (line.toLowerCase().includes('paid') && !line.toLowerCase().includes('securely')) {
+          const paidByMatch = line.match(/^(.+?)\s+paid/i);
+          if (paidByMatch) {
+            const paidByName = paidByMatch[1].trim();
+            // Find user ID by name
+            const matchingUser = users.find((user: any) => 
+              (user.name && user.name.toLowerCase().includes(paidByName.toLowerCase())) ||
+              (user.username && user.username.toLowerCase().includes(paidByName.toLowerCase()))
+            );
+            if (matchingUser) {
+              updatedData.paidBy = matchingUser.id.toString();
+            }
+          }
+          
+          // Next line after "paid" is usually the recipient
+          if (i + 1 < lines.length) {
+            const nextLine = lines[i + 1];
+            // Check if it looks like a name (contains letters, not email/UPI ID)
+            if (/^[a-zA-Z\s]+$/.test(nextLine) && nextLine.length > 3 && !nextLine.includes('@')) {
+              updatedData.paidTo = nextLine;
+            }
+          }
+        }
       }
-
-      toast({ title: "OCR processing completed", description: "Please verify the extracted information" });
+      
+      // Extract purpose/description - look for descriptive text
+      for (const line of lines) {
+        const lowerLine = line.toLowerCase();
+        // Skip technical lines and focus on descriptive content
+        if (line.length > 5 && 
+            !lowerLine.includes('paid') && 
+            !lowerLine.includes('@') && 
+            !lowerLine.includes('txn') &&
+            !lowerLine.includes('powered') &&
+            !lowerLine.includes('cred') &&
+            !lowerLine.includes('securely') &&
+            !/^[0-9,\.\s₹]+$/.test(line) &&
+            !lowerLine.includes('jul') &&
+            !lowerLine.includes('pm') &&
+            line.includes(' ')) { // Ensure it has multiple words
+          
+          // Extract purpose and order details
+          const purposeText = line;
+          
+          // Try to separate purpose and order number
+          const orderMatch = purposeText.match(/(.+?)\s*[-–]\s*(.+?)\s+order/i);
+          if (orderMatch) {
+            updatedData.purpose = orderMatch[1].trim();
+            updatedData.orderNo = orderMatch[2].trim() + " Order";
+          } else {
+            updatedData.purpose = purposeText;
+          }
+          break;
+        }
+      }
+      
+      // Extract date
+      const dateMatch = text.match(/(\d{1,2})\s+(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)\s+(\d{4})/i);
+      if (dateMatch) {
+        const [, day, month, year] = dateMatch;
+        const monthNum = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'].indexOf(month.toUpperCase()) + 1;
+        if (monthNum > 0) {
+          const formattedDate = `${year}-${String(monthNum).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+          updatedData.date = formattedDate;
+        }
+      }
+      
+      setFormData(updatedData);
+      toast({ title: "Payment details extracted from screenshot", description: "Review and submit the expense" });
     } catch (error) {
       console.error('OCR Error:', error);
       toast({ title: "OCR processing failed", description: "Please fill the details manually", variant: "destructive" });
