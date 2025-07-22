@@ -9,9 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Edit, Trash2, Eye, Download, Search, Grid3X3, List, Package, Plus } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import ProductForm from "./ProductForm";
+import { Edit, Trash2, Search, Grid3X3, List, Package } from "lucide-react";
 
 interface Product {
   id: number;
@@ -36,7 +34,6 @@ export default function ProductTable() {
     stockStatus: "",
   });
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-  const [showForm, setShowForm] = useState(false);
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
 
   const { toast } = useToast();
@@ -79,46 +76,12 @@ export default function ProductTable() {
     },
   });
 
-  const exportProducts = async () => {
-    try {
-      const params = new URLSearchParams();
-      Object.entries(filters).forEach(([key, value]) => {
-        if (value && value !== 'all') params.append(key, value);
-      });
-      
-      const response = await fetch(`/api/export/products?${params}`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
-        },
-      });
-      const blob = await response.blob();
-      
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `products_${Date.now()}.csv`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-    } catch (error) {
-      toast({
-        title: "Export failed",
-        description: "Failed to export products data",
-        variant: "destructive",
-      });
-    }
-  };
+
 
   const handleEdit = (product: Product) => {
     setEditingProduct(product);
-    setShowForm(true);
-  };
-
-  const handleFormClose = () => {
-    setShowForm(false);
-    setEditingProduct(null);
+    // Trigger the global edit product modal
+    window.dispatchEvent(new CustomEvent('openEditProductModal', { detail: product }));
   };
 
   const getStockStatusBadge = (status: string) => {
@@ -341,67 +304,41 @@ export default function ProductTable() {
               <SelectItem value="out-of-stock">Out of Stock</SelectItem>
             </SelectContent>
           </Select>
-          <div className="flex-1" />
-          <div className="flex items-center gap-2">
-            <Button
-              variant={viewMode === 'list' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setViewMode('list')}
-              className="h-8 px-3"
-            >
-              <List className="w-4 h-4" />
-            </Button>
-            <Button
-              variant={viewMode === 'grid' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setViewMode('grid')}
-              className="h-8 px-3"
-            >
-              <Grid3X3 className="w-4 h-4" />
-            </Button>
-            <Button onClick={exportProducts} variant="outline" size="sm" className="h-8">
-              <Download className="w-3 h-3 mr-1" />
-              Export
-            </Button>
-            <Button onClick={() => setShowForm(true)} variant="default" size="sm" className="h-8">
-              <Plus className="w-3 h-3 mr-1" />
-              Add Product
-            </Button>
-            <Button onClick={() => setShowForm(true)} variant="default" size="sm" className="h-8">
-              <Plus className="w-3 h-3 mr-1" />
-              Add Product
-            </Button>
-          </div>
+
         </div>
       </div>
 
       {/* Products Display */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-lg">Products ({products?.length || 0})</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-lg">Products ({products?.length || 0})</CardTitle>
+            <div className="flex items-center gap-2">
+              <Button
+                variant={viewMode === 'list' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setViewMode('list')}
+                className="h-8 px-3"
+              >
+                <List className="w-4 h-4" />
+              </Button>
+              <Button
+                variant={viewMode === 'grid' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setViewMode('grid')}
+                className="h-8 px-3"
+              >
+                <Grid3X3 className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           {viewMode === 'grid' ? <GridView /> : <ListView />}
         </CardContent>
       </Card>
 
-      {/* Product Form Dialog */}
-      <Dialog open={showForm} onOpenChange={setShowForm}>
-        <DialogContent className="max-w-2xl" aria-describedby="product-form-description">
-          <DialogHeader>
-            <DialogTitle>
-              {editingProduct ? 'Edit Product' : 'Add New Product'}
-            </DialogTitle>
-            <p id="product-form-description" className="sr-only">
-              {editingProduct ? 'Form to edit existing product details' : 'Form to create a new product in the inventory'}
-            </p>
-          </DialogHeader>
-          <ProductForm 
-            product={editingProduct}
-            onClose={handleFormClose}
-          />
-        </DialogContent>
-      </Dialog>
+
     </div>
   );
 }
