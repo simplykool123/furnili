@@ -1,4 +1,3 @@
-import Layout from "@/components/Layout/Layout";
 import ReportsView from "@/components/Reports/ReportsView";
 import { authService } from "@/lib/auth";
 import { useEffect } from "react";
@@ -16,12 +15,5 @@ export default function Reports() {
     return null;
   }
 
-  return (
-    <Layout 
-      title="Reports & Analytics" 
-      subtitle="Generate reports and export data for analysis"
-    >
-      <ReportsView />
-    </Layout>
-  );
+  return <ReportsView />;
 }

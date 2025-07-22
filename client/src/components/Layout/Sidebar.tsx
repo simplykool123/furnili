@@ -51,7 +51,7 @@ export default function Sidebar() {
   );
 
   return (
-    <aside className="w-64 bg-white shadow-lg border-r border-gray-200">
+    <aside className="w-64 bg-white shadow-lg border-r border-gray-200" data-testid="main-sidebar">
       {/* Logo/Brand */}
       <div className="p-6 border-b border-gray-200">
         <div className="flex items-center space-x-3">

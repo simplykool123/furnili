@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { authenticatedApiRequest, authService } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
-import Layout from "@/components/Layout/Layout";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -134,23 +134,16 @@ export default function Users() {
 
   if (isLoading) {
     return (
-      <Layout title="User Management" subtitle="Manage system users and their roles">
-        <div className="space-y-4">
-          {[...Array(5)].map((_, i) => (
-            <div key={i} className="h-16 bg-gray-200 rounded-lg animate-pulse" />
-          ))}
-        </div>
-      </Layout>
+      <div className="space-y-4">
+        {[...Array(5)].map((_, i) => (
+          <div key={i} className="h-16 bg-gray-200 rounded-lg animate-pulse" />
+        ))}
+      </div>
     );
   }
 
   return (
-    <Layout 
-      title="User Management" 
-      subtitle="Manage system users and their roles"
-      showAddButton={true}
-      onAddClick={() => setShowAddUser(true)}
-    >
+    <>
       <div className="space-y-6">
         {/* Users Table */}
         <Card>
@@ -327,6 +320,6 @@ export default function Users() {
           </DialogContent>
         </Dialog>
       </div>
-    </Layout>
+    </>
   );
 }

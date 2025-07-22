@@ -84,7 +84,10 @@ function Router() {
       
       <Route path="/products">
         <ProtectedRoute>
-          <Layout>
+          <Layout 
+            title="Product Management" 
+            subtitle="Manage your inventory products and stock levels"
+          >
             <Products />
           </Layout>
         </ProtectedRoute>
@@ -100,7 +103,10 @@ function Router() {
       
       <Route path="/boq">
         <ProtectedRoute>
-          <Layout>
+          <Layout 
+            title="BOQ Upload & Processing" 
+            subtitle="Upload PDF BOQ files and extract material data automatically"
+          >
             <BOQ />
           </Layout>
         </ProtectedRoute>
@@ -108,7 +114,10 @@ function Router() {
       
       <Route path="/requests">
         <ProtectedRoute>
-          <Layout>
+          <Layout 
+            title="Material Requests" 
+            subtitle="Manage and track all material request workflows"
+          >
             <MaterialRequests />
           </Layout>
         </ProtectedRoute>
@@ -124,7 +133,10 @@ function Router() {
       
       <Route path="/reports">
         <ProtectedRoute>
-          <Layout>
+          <Layout 
+            title="Reports & Analytics" 
+            subtitle="Generate reports and export data for analysis"
+          >
             <Reports />
           </Layout>
         </ProtectedRoute>
@@ -132,7 +144,10 @@ function Router() {
       
       <Route path="/users">
         <ProtectedRoute>
-          <Layout>
+          <Layout 
+            title="User Management" 
+            subtitle="Manage system users and their roles"
+          >
             <Users />
           </Layout>
         </ProtectedRoute>

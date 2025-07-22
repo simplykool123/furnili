@@ -25,7 +25,7 @@ export default function Layout({
   }
 
   return (
-    <div className="min-h-screen flex bg-amber-50">
+    <div className="min-h-screen flex bg-amber-50" data-testid="main-layout">
       <Sidebar />
       
       <main className="flex-1 flex flex-col overflow-hidden">
