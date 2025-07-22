@@ -110,16 +110,20 @@ export default function RequestFormSimplified({ onClose, onSuccess }: RequestFor
 
   // Create client mutation
   const createClientMutation = useMutation({
-    mutationFn: (clientData: { name: string }) =>
-      apiRequest("/api/clients", "POST", clientData),
+    mutationFn: async (clientData: { name: string }) => {
+      const response = await apiRequest("POST", "/api/clients", clientData);
+      return response.json();
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/clients"] });
     },
   });
 
   const createRequestMutation = useMutation({
-    mutationFn: (data: any) => 
-      apiRequest("/api/requests", "POST", data),
+    mutationFn: async (data: any) => {
+      const response = await apiRequest("POST", "/api/requests", data);
+      return response.json();
+    },
     onSuccess: () => {
       toast({ 
         title: "Success", 
@@ -168,11 +172,11 @@ export default function RequestFormSimplified({ onClose, onSuccess }: RequestFor
   };
 
   // Get unique brands for selected category
-  const getBrandsForCategory = (categoryName?: string) => {
+  const getBrandsForCategory = (categoryName?: string): string[] => {
     const filteredProducts = categoryName 
       ? products.filter(p => p.category === categoryName)
       : products;
-    const brands = Array.from(new Set(filteredProducts.map(p => p.brand).filter(Boolean)));
+    const brands = Array.from(new Set(filteredProducts.map(p => p.brand).filter(Boolean))) as string[];
     return brands;
   };
 
@@ -261,7 +265,7 @@ export default function RequestFormSimplified({ onClose, onSuccess }: RequestFor
                     <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-full p-0">
+                <PopoverContent className="w-[400px] p-0">
                   <Command>
                     <CommandInput 
                       placeholder="Search clients or type new client name..." 
