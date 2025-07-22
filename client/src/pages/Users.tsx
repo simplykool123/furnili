@@ -42,8 +42,7 @@ export default function Users() {
   const { data: users, isLoading } = useQuery({
     queryKey: ['/api/users'],
     queryFn: async () => {
-      const response = await authenticatedApiRequest('GET', '/api/users');
-      return response.json();
+      return await authenticatedApiRequest('/api/users');
     },
   });
 
@@ -67,8 +66,10 @@ export default function Users() {
 
   const createUserMutation = useMutation({
     mutationFn: async (userData: UserFormData) => {
-      const response = await authenticatedApiRequest('POST', '/api/auth/register', userData);
-      return response.json();
+      return await authenticatedApiRequest('/api/auth/register', {
+        method: 'POST',
+        body: JSON.stringify(userData),
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/users'] });
@@ -90,7 +91,9 @@ export default function Users() {
 
   const deleteUserMutation = useMutation({
     mutationFn: async (id: number) => {
-      await authenticatedApiRequest('DELETE', `/api/users/${id}`);
+      return await authenticatedApiRequest(`/api/users/${id}`, {
+        method: 'DELETE',
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/users'] });
@@ -221,6 +224,7 @@ export default function Users() {
                 </TableBody>
               </Table>
             </div>
+          </CardContent>
         </Card>
 
         {/* Add User Dialog */}
