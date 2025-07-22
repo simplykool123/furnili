@@ -280,11 +280,6 @@ export default function RequestFormSimplified({ onClose, onSuccess }: RequestFor
                       ))}
                     </SelectContent>
                   </Select>
-                  <Input
-                    {...register(`items.${index}.description`)}
-                    placeholder="Or type description..."
-                    className="border-0 h-8 text-xs focus:ring-1 focus:ring-blue-500 mt-1"
-                  />
                   {errors.items?.[index]?.description && (
                     <p className="text-xs text-red-600 mt-1">{errors.items[index]?.description?.message}</p>
                   )}
