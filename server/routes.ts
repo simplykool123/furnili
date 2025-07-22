@@ -971,6 +971,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/petty-cash", authenticateToken, receiptImageUpload.single("receipt"), async (req: AuthRequest, res) => {
     try {
+      console.log("File uploaded:", req.file);
+      console.log("Request body:", req.body);
+      
       // Manually construct expense data to bypass strict Zod validation
       const expenseData = {
         category: req.body.category,
