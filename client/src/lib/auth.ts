@@ -86,22 +86,25 @@ class AuthService {
 export const authService = new AuthService();
 
 // Helper function for making authenticated API requests
-export async function authenticatedApiRequest(url: string, options: RequestInit = {}): Promise<any> {
+export async function authenticatedApiRequest(method: string, url: string, data?: any): Promise<any> {
   const token = authService.getToken();
   
   if (!token) {
     throw new Error('No authentication token available');
   }
 
-  const headers = {
-    'Content-Type': 'application/json',
+  const headers: Record<string, string> = {
     'Authorization': `Bearer ${token}`,
-    ...options.headers,
   };
+  
+  if (data) {
+    headers['Content-Type'] = 'application/json';
+  }
 
   const response = await fetch(url, {
-    ...options,
+    method,
     headers,
+    body: data ? JSON.stringify(data) : undefined,
   });
 
   if (response.status === 401) {
@@ -115,7 +118,7 @@ export async function authenticatedApiRequest(url: string, options: RequestInit 
     throw new Error(error.message || `Request failed with status ${response.status}`);
   }
 
-  return response.json();
+  return response;
 }
 
 // Legacy exports for backward compatibility

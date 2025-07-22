@@ -67,7 +67,7 @@ export default function BOQUpload() {
       const response = await fetch('/api/boq/upload', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
         },
         body: formData,
       });
@@ -214,19 +214,21 @@ export default function BOQUpload() {
     }
 
     const requestData = {
-      request: {
-        clientName: extractedData.client || extractedData.projectName || 'BOQ Project',
-        orderNumber: extractedData.workOrderNumber || `BOQ-${Date.now()}`,
-        boqReference: `${extractedData.projectName || 'BOQ'}-${extractedData.workOrderNumber || Date.now()}`,
-        remarks: `Created from BOQ: ${extractedData.projectName} (${validItems.length} items)${extractedData.description ? ` - ${extractedData.description}` : ''}`,
-        priority: 'medium',
-      },
+      clientName: extractedData.client || extractedData.projectName || 'BOQ Project',
+      orderNumber: extractedData.workOrderNumber || `BOQ-${Date.now()}`,
+      boqReference: `${extractedData.projectName || 'BOQ'}-${extractedData.workOrderNumber || Date.now()}`,
+      remarks: `Created from BOQ: ${extractedData.projectName} (${validItems.length} items)${extractedData.description ? ` - ${extractedData.description}` : ''}`,
+      priority: 'medium',
       items: validItems.map(item => ({
         productId: item.matchedProductId,
-        requestedQuantity: item.quantity,
-        unitPrice: item.rate,
-        totalPrice: item.amount,
-      })),
+        quantity: item.quantity,
+        description: item.description,
+        unit: item.unit,
+        brand: '',
+        category: '',
+        size: '',
+        thickness: ''
+      }))
     };
 
     createRequestMutation.mutate(requestData);
