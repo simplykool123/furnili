@@ -21,8 +21,13 @@ const requestSchema = z.object({
   boqReference: z.string().optional(),
   remarks: z.string().optional(),
   items: z.array(z.object({
-    productId: z.number().min(1, "Product is required"),
-    requestedQuantity: z.number().min(1, "Quantity must be at least 1"),
+    description: z.string().min(1, "Description is required"),
+    brand: z.string().optional(),
+    type: z.string().optional(),
+    size: z.string().optional(),
+    thickness: z.string().optional(),
+    quantity: z.number().min(1, "Quantity must be at least 1"),
+    unit: z.string().default("pcs"),
   })).min(1, "At least one item is required"),
 });
 
@@ -41,8 +46,7 @@ export default function RequestForm({ onClose }: RequestFormProps) {
   const { data: products } = useQuery({
     queryKey: ['/api/products'],
     queryFn: async () => {
-      const response = await authenticatedApiRequest('GET', '/api/products');
-      return response.json();
+      return await authenticatedApiRequest('/api/products');
     },
   });
 
@@ -61,7 +65,15 @@ export default function RequestForm({ onClose }: RequestFormProps) {
       priority: "medium",
       boqReference: "",
       remarks: "",
-      items: [{ productId: 0, requestedQuantity: 1 }],
+      items: [{ 
+        description: "", 
+        brand: "", 
+        type: "", 
+        size: "", 
+        thickness: "", 
+        quantity: 1, 
+        unit: "pcs" 
+      }],
     },
   });
 
@@ -72,18 +84,12 @@ export default function RequestForm({ onClose }: RequestFormProps) {
 
   const createRequestMutation = useMutation({
     mutationFn: async (data: RequestFormData) => {
-      // Calculate total value and prepare items
-      const itemsWithDetails = data.items.map(item => {
-        const product = products?.find((p: any) => p.id === item.productId);
-        if (!product) throw new Error(`Product with ID ${item.productId} not found`);
-        
-        return {
-          productId: item.productId,
-          requestedQuantity: item.requestedQuantity,
-          unitPrice: product.price,
-          totalPrice: product.price * item.requestedQuantity,
-        };
-      });
+      // Filter out empty items and prepare data
+      const validItems = data.items.filter(item => item.description.trim() !== "");
+      
+      if (validItems.length === 0) {
+        throw new Error("At least one item is required");
+      }
 
       const requestData = {
         request: {
@@ -93,11 +99,23 @@ export default function RequestForm({ onClose }: RequestFormProps) {
           boqReference: data.boqReference || undefined,
           remarks: data.remarks || undefined,
         },
-        items: itemsWithDetails,
+        items: validItems.map(item => ({
+          description: item.description,
+          brand: item.brand || "",
+          type: item.type || "",
+          size: item.size || "",
+          thickness: item.thickness || "",
+          quantity: item.quantity,
+          unit: item.unit,
+          unitPrice: 0, // Will be set by backend
+          totalPrice: 0, // Will be calculated by backend
+        })),
       };
 
-      const response = await authenticatedApiRequest('POST', '/api/requests', requestData);
-      return response.json();
+      return await authenticatedApiRequest('/api/requests', {
+        method: 'POST',
+        body: JSON.stringify(requestData),
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/requests'] });
@@ -130,18 +148,28 @@ export default function RequestForm({ onClose }: RequestFormProps) {
 
   const watchedItems = watch("items");
   
-  const calculateTotal = () => {
-    return watchedItems.reduce((total, item) => {
-      const product = products?.find((p: any) => p.id === item.productId);
-      if (product && item.requestedQuantity > 0) {
-        return total + (product.price * item.requestedQuantity);
+  // Add new row automatically when tabbing from the last field
+  const handleKeyDown = (e: React.KeyboardEvent, index: number, fieldName: string) => {
+    if (e.key === 'Tab' && !e.shiftKey) {
+      // If we're on the last field (quantity) of the last row, add a new row
+      if (fieldName === 'quantity' && index === fields.length - 1) {
+        e.preventDefault();
+        append({ 
+          description: "", 
+          brand: "", 
+          type: "", 
+          size: "", 
+          thickness: "", 
+          quantity: 1, 
+          unit: "pcs" 
+        });
+        // Focus will be handled by React automatically
+        setTimeout(() => {
+          const nextInput = document.querySelector(`input[name="items.${index + 1}.description"]`) as HTMLInputElement;
+          if (nextInput) nextInput.focus();
+        }, 50);
       }
-      return total;
-    }, 0);
-  };
-
-  const getProductInfo = (productId: number) => {
-    return products?.find((p: any) => p.id === productId);
+    }
   };
 
   return (
@@ -220,136 +248,160 @@ export default function RequestForm({ onClose }: RequestFormProps) {
         </CardContent>
       </Card>
 
-      {/* Items */}
+      {/* Goods Table - Compact Design */}
       <Card>
-        <CardHeader>
+        <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
-            <CardTitle>Requested Items</CardTitle>
+            <CardTitle className="text-lg">Goods</CardTitle>
             <Button
               type="button"
               variant="outline"
-              onClick={() => append({ productId: 0, requestedQuantity: 1 })}
+              size="sm"
+              onClick={() => append({ 
+                description: "", 
+                brand: "", 
+                type: "", 
+                size: "", 
+                thickness: "", 
+                quantity: 1, 
+                unit: "pcs" 
+              })}
             >
-              <Plus className="w-4 h-4 mr-2" />
-              Add Item
+              <Plus className="w-4 h-4 mr-1" />
+              Add Row
             </Button>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0">
           {errors.items && (
-            <p className="text-sm text-red-600 mb-4">{errors.items.message}</p>
+            <p className="text-sm text-red-600 mb-4 px-6">{errors.items.message}</p>
           )}
           
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Product</TableHead>
-                <TableHead>Current Stock</TableHead>
-                <TableHead>Quantity</TableHead>
-                <TableHead>Unit Price</TableHead>
-                <TableHead>Total</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {fields.map((field, index) => {
-                const product = getProductInfo(watchedItems[index]?.productId);
-                const quantity = watchedItems[index]?.requestedQuantity || 0;
-                const total = product ? product.price * quantity : 0;
-                
-                return (
-                  <TableRow key={field.id}>
-                    <TableCell>
-                      <Select
-                        value={watchedItems[index]?.productId?.toString() || ""}
-                        onValueChange={(value) => setValue(`items.${index}.productId`, parseInt(value))}
-                      >
-                        <SelectTrigger className="min-w-[200px]">
-                          <SelectValue placeholder="Select product" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {products?.map((product: any) => (
-                            <SelectItem key={product.id} value={product.id.toString()}>
-                              {product.name} ({product.sku})
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      {errors.items?.[index]?.productId && (
-                        <p className="text-sm text-red-600 mt-1">
-                          {errors.items[index]?.productId?.message}
-                        </p>
-                      )}
-                    </TableCell>
-                    
-                    <TableCell>
-                      {product && (
-                        <div>
-                          <p className="font-medium">{product.currentStock} {product.unit}</p>
-                          {product.currentStock < quantity && (
-                            <p className="text-sm text-red-600">Insufficient stock</p>
-                          )}
-                        </div>
-                      )}
-                    </TableCell>
-                    
-                    <TableCell>
-                      <Input
-                        type="number"
-                        min="1"
-                        className="w-24"
-                        {...register(`items.${index}.requestedQuantity`, { valueAsNumber: true })}
-                      />
-                      {errors.items?.[index]?.requestedQuantity && (
-                        <p className="text-sm text-red-600 mt-1">
-                          {errors.items[index]?.requestedQuantity?.message}
-                        </p>
-                      )}
-                    </TableCell>
-                    
-                    <TableCell>
-                      {product ? `₹${product.price.toFixed(2)}` : '-'}
-                    </TableCell>
-                    
-                    <TableCell>
-                      <p className="font-medium">₹{total.toFixed(2)}</p>
-                    </TableCell>
-                    
-                    <TableCell>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => remove(index)}
-                        disabled={fields.length === 1}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-
-          <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-            <div className="flex justify-between items-center">
-              <span className="font-medium">Total Request Value:</span>
-              <span className="text-2xl font-bold text-primary">
-                ₹{calculateTotal().toFixed(2)}
-              </span>
+          {/* Compact Grid Layout */}
+          <div className="border rounded-lg overflow-hidden">
+            {/* Header */}
+            <div className="grid grid-cols-12 bg-gray-50 border-b text-sm font-medium text-gray-700">
+              <div className="px-2 py-2 border-r text-center">#</div>
+              <div className="px-2 py-2 border-r col-span-4">Description</div>
+              <div className="px-2 py-2 border-r col-span-2">Brand</div>
+              <div className="px-2 py-2 border-r">Type</div>
+              <div className="px-2 py-2 border-r">Size</div>
+              <div className="px-2 py-2 border-r">Thickness</div>
+              <div className="px-2 py-2 border-r">Quantity</div>
+              <div className="px-2 py-2 text-center">Action</div>
             </div>
+            
+            {/* Data Rows */}
+            {fields.map((field, index) => (
+              <div key={field.id} className="grid grid-cols-12 border-b hover:bg-gray-50 text-sm">
+                {/* Row Number */}
+                <div className="px-2 py-1 border-r text-center text-gray-500 flex items-center justify-center">
+                  {index + 1}
+                </div>
+                
+                {/* Description */}
+                <div className="px-1 py-1 border-r col-span-4">
+                  <Input
+                    {...register(`items.${index}.description`)}
+                    placeholder="e.g., Gurjan Plywood - 18mm - 8 X 4 feet"
+                    className="border-0 h-8 text-xs focus:ring-1 focus:ring-blue-500"
+                    onKeyDown={(e) => handleKeyDown(e, index, 'description')}
+                  />
+                  {errors.items?.[index]?.description && (
+                    <p className="text-xs text-red-600 mt-1">{errors.items[index]?.description?.message}</p>
+                  )}
+                </div>
+                
+                {/* Brand */}
+                <div className="px-1 py-1 border-r col-span-2">
+                  <Input
+                    {...register(`items.${index}.brand`)}
+                    placeholder="e.g., Master"
+                    className="border-0 h-8 text-xs focus:ring-1 focus:ring-blue-500"
+                    onKeyDown={(e) => handleKeyDown(e, index, 'brand')}
+                  />
+                </div>
+                
+                {/* Type */}
+                <div className="px-1 py-1 border-r">
+                  <Input
+                    {...register(`items.${index}.type`)}
+                    placeholder="e.g., Material"
+                    className="border-0 h-8 text-xs focus:ring-1 focus:ring-blue-500"
+                    onKeyDown={(e) => handleKeyDown(e, index, 'type')}
+                  />
+                </div>
+                
+                {/* Size */}
+                <div className="px-1 py-1 border-r">
+                  <Input
+                    {...register(`items.${index}.size`)}
+                    placeholder="e.g., 8x4"
+                    className="border-0 h-8 text-xs focus:ring-1 focus:ring-blue-500"
+                    onKeyDown={(e) => handleKeyDown(e, index, 'size')}
+                  />
+                </div>
+                
+                {/* Thickness */}
+                <div className="px-1 py-1 border-r">
+                  <Input
+                    {...register(`items.${index}.thickness`)}
+                    placeholder="e.g., 18mm"
+                    className="border-0 h-8 text-xs focus:ring-1 focus:ring-blue-500"
+                    onKeyDown={(e) => handleKeyDown(e, index, 'thickness')}
+                  />
+                </div>
+                
+                {/* Quantity */}
+                <div className="px-1 py-1 border-r">
+                  <Input
+                    type="number"
+                    {...register(`items.${index}.quantity`, { valueAsNumber: true })}
+                    min="1"
+                    step="1"
+                    className="border-0 h-8 text-xs text-right focus:ring-1 focus:ring-blue-500"
+                    onKeyDown={(e) => handleKeyDown(e, index, 'quantity')}
+                  />
+                  {errors.items?.[index]?.quantity && (
+                    <p className="text-xs text-red-600 mt-1">{errors.items[index]?.quantity?.message}</p>
+                  )}
+                </div>
+                
+                {/* Delete Action */}
+                <div className="px-1 py-1 text-center flex items-center justify-center">
+                  {fields.length > 1 && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => remove(index)}
+                      className="h-6 w-6 p-0 text-red-600 hover:text-red-800 hover:bg-red-50"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </Button>
+                  )}
+                </div>
+              </div>
+            ))}
           </div>
         </CardContent>
       </Card>
 
       {/* Actions */}
       <div className="flex items-center justify-end space-x-4 pt-6 border-t">
-        <Button type="button" variant="outline" onClick={onClose}>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onClose}
+          disabled={isLoading}
+        >
           Cancel
         </Button>
-        <Button type="submit" disabled={isLoading}>
-          {isLoading ? "Submitting..." : "Submit Request"}
+        <Button
+          type="submit"
+          disabled={isLoading || createRequestMutation.isPending}
+        >
+          {isLoading || createRequestMutation.isPending ? "Creating..." : "Create Request"}
         </Button>
       </div>
     </form>
