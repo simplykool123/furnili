@@ -259,10 +259,10 @@ export default function WhatsAppExport() {
   return (
     <div className="space-y-8 animate-fade-in max-w-7xl mx-auto">
       <div className="text-center sm:text-left">
-        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-amber-900 dark:text-amber-100">
           WhatsApp Business Export
         </h1>
-        <p className="text-base sm:text-lg text-muted-foreground mt-2">
+        <p className="text-base sm:text-lg text-amber-700 dark:text-amber-200 mt-2">
           Generate and share professional business messages with clients and suppliers
         </p>
       </div>

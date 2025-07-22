@@ -49,8 +49,8 @@ export default function Header({ title, subtitle, showAddButton = false, onAddCl
           )}
           
           <div className="min-w-0 flex-1">
-            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground truncate">{title}</h1>
-            <p className="text-sm sm:text-base text-muted-foreground truncate mt-1">{subtitle}</p>
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-amber-900 dark:text-amber-100 truncate">{title}</h1>
+            <p className="text-sm sm:text-base text-amber-700 dark:text-amber-200 truncate mt-1">{subtitle}</p>
           </div>
         </div>
         
