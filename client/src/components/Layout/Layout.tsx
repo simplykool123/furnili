@@ -5,16 +5,16 @@ import { authService } from "@/lib/auth";
 
 interface LayoutProps {
   children: ReactNode;
-  title: string;
-  subtitle: string;
+  title?: string;
+  subtitle?: string;
   showAddButton?: boolean;
   onAddClick?: () => void;
 }
 
 export default function Layout({ 
   children, 
-  title, 
-  subtitle, 
+  title = "", 
+  subtitle = "", 
   showAddButton = false, 
   onAddClick 
 }: LayoutProps) {
@@ -25,16 +25,18 @@ export default function Layout({
   }
 
   return (
-    <div className="min-h-screen flex bg-gray-50">
+    <div className="min-h-screen flex bg-amber-50">
       <Sidebar />
       
       <main className="flex-1 flex flex-col overflow-hidden">
-        <Header 
-          title={title}
-          subtitle={subtitle}
-          showAddButton={showAddButton}
-          onAddClick={onAddClick}
-        />
+        {title && (
+          <Header 
+            title={title}
+            subtitle={subtitle}
+            showAddButton={showAddButton}
+            onAddClick={onAddClick}
+          />
+        )}
         
         <div className="flex-1 overflow-auto p-6">
           {children}

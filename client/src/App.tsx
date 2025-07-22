@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { authService } from "@/lib/auth";
 import { useEffect, useState } from "react";
 import LoginSimple from "@/pages/LoginSimple";
+import Layout from "@/components/Layout/Layout";
 import Dashboard from "@/pages/Dashboard";
 import Products from "@/pages/Products";
 import BOQ from "@/pages/BOQ";
@@ -75,85 +76,105 @@ function Router() {
       
       <Route path="/">
         <ProtectedRoute>
-          <Dashboard />
+          <Layout>
+            <Dashboard />
+          </Layout>
         </ProtectedRoute>
       </Route>
       
       <Route path="/products">
         <ProtectedRoute>
-          <Products />
+          <Layout>
+            <Products />
+          </Layout>
         </ProtectedRoute>
       </Route>
       
       <Route path="/categories">
         <ProtectedRoute>
-          <Categories />
+          <Layout>
+            <Categories />
+          </Layout>
         </ProtectedRoute>
       </Route>
       
       <Route path="/boq">
         <ProtectedRoute>
-          <BOQ />
+          <Layout>
+            <BOQ />
+          </Layout>
         </ProtectedRoute>
       </Route>
       
       <Route path="/requests">
         <ProtectedRoute>
-          <MaterialRequests />
+          <Layout>
+            <MaterialRequests />
+          </Layout>
         </ProtectedRoute>
       </Route>
       
       <Route path="/inventory">
         <ProtectedRoute>
-          <Products />
+          <Layout>
+            <InventoryMovement />
+          </Layout>
         </ProtectedRoute>
       </Route>
       
       <Route path="/reports">
         <ProtectedRoute>
-          <Reports />
+          <Layout>
+            <Reports />
+          </Layout>
         </ProtectedRoute>
       </Route>
       
       <Route path="/users">
         <ProtectedRoute>
-          <Users />
+          <Layout>
+            <Users />
+          </Layout>
         </ProtectedRoute>
       </Route>
       
       <Route path="/attendance">
         <ProtectedRoute>
-          <Attendance />
+          <Layout>
+            <Attendance />
+          </Layout>
         </ProtectedRoute>
       </Route>
       
       <Route path="/petty-cash">
         <ProtectedRoute>
-          <PettyCash />
+          <Layout>
+            <PettyCash />
+          </Layout>
         </ProtectedRoute>
       </Route>
       
       <Route path="/tasks">
         <ProtectedRoute>
-          <TaskManagement />
+          <Layout>
+            <TaskManagement />
+          </Layout>
         </ProtectedRoute>
       </Route>
       
       <Route path="/price-comparison">
         <ProtectedRoute>
-          <PriceComparison />
+          <Layout>
+            <PriceComparison />
+          </Layout>
         </ProtectedRoute>
       </Route>
       
       <Route path="/whatsapp">
         <ProtectedRoute>
-          <WhatsAppExport />
-        </ProtectedRoute>
-      </Route>
-      
-      <Route path="/inventory-movement">
-        <ProtectedRoute>
-          <InventoryMovement />
+          <Layout>
+            <WhatsAppExport />
+          </Layout>
         </ProtectedRoute>
       </Route>
       
