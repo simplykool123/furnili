@@ -47,7 +47,7 @@ export default function PettyCash() {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
-  const [selectedPaymentMode, setSelectedPaymentMode] = useState("all");
+  const [selectedPaidBy, setSelectedPaidBy] = useState("all");
   const [dateFilter, setDateFilter] = useState("");
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showAddFundsDialog, setShowAddFundsDialog] = useState(false);
@@ -419,16 +419,17 @@ export default function PettyCash() {
     const matchesSearch = expense.vendor?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          (expense.description?.toLowerCase().includes(searchTerm.toLowerCase()) || false);
     const matchesCategory = !selectedCategory || selectedCategory === 'all' || expense.category === selectedCategory;
-    const matchesPaymentMode = !selectedPaymentMode || selectedPaymentMode === 'all' || expense.paymentMode === selectedPaymentMode;
+    const paidByName = expense.user?.name || expense.user?.username || '';
+    const matchesPaidBy = !selectedPaidBy || selectedPaidBy === 'all' || paidByName === selectedPaidBy;
     const matchesDate = !dateFilter || expense.expenseDate.startsWith(dateFilter);
     
-    return matchesSearch && matchesCategory && matchesPaymentMode && matchesDate;
+    return matchesSearch && matchesCategory && matchesPaidBy && matchesDate;
   });
 
   // Export functions
   const exportToWhatsApp = () => {
     const text = filteredExpenses.map((expense: PettyCashExpense) => 
-      `📄 ${expense.vendor}\n💰 ₹${expense.amount}\n📅 ${format(new Date(expense.expenseDate), 'dd MMM yyyy')}\n🏷️ ${expense.category}\n💳 ${expense.paymentMode || 'N/A'}\n${expense.description ? `📝 ${expense.description}\n` : ''}\n---`
+      `📄 ${expense.vendor}\n💰 ₹${expense.amount}\n📅 ${format(new Date(expense.expenseDate), 'dd MMM yyyy')}\n🏷️ ${expense.category}\n👤 ${expense.user?.name || expense.user?.username || 'N/A'}\n${expense.description ? `📝 ${expense.description}\n` : ''}\n---`
     ).join('\n\n');
     
     const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(`💰 Petty Cash Report\n\n${text}\n\n💸 Total: ₹${filteredExpenses.reduce((sum: number, exp: PettyCashExpense) => sum + exp.amount, 0)}`)}`;
@@ -437,9 +438,9 @@ export default function PettyCash() {
 
   const exportToExcel = () => {
     const csvContent = [
-      'Date,Paid To,Amount,Payment Mode,Category,Description',
+      'Date,Paid To,Amount,Paid By,Category,Description',
       ...filteredExpenses.map((expense: PettyCashExpense) => 
-        `${expense.expenseDate},"${expense.vendor}",${expense.amount},"${expense.paymentMode || 'N/A'}","${expense.category}","${expense.description || ''}"`
+        `${expense.expenseDate},"${expense.vendor}",${expense.amount},"${expense.user?.name || expense.user?.username || 'N/A'}","${expense.category}","${expense.description || ''}"`
       )
     ].join('\n');
     
@@ -550,16 +551,16 @@ export default function PettyCash() {
               </Select>
             </div>
             <div>
-              <Label htmlFor="payment-filter">Payment Mode</Label>
-              <Select value={selectedPaymentMode} onValueChange={setSelectedPaymentMode}>
+              <Label htmlFor="paid-by-filter">Paid By</Label>
+              <Select value={selectedPaidBy} onValueChange={setSelectedPaidBy}>
                 <SelectTrigger className="w-full lg:w-[150px]">
-                  <SelectValue placeholder="All Modes" />
+                  <SelectValue placeholder="All Staff" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Modes</SelectItem>
-                  {paymentModes.map((mode) => (
-                    <SelectItem key={mode} value={mode}>
-                      {mode}
+                  <SelectItem value="all">All Staff</SelectItem>
+                  {users.map((user: any) => (
+                    <SelectItem key={user.id} value={user.name || user.username}>
+                      {user.name || user.username}
                     </SelectItem>
                   ))}
                 </SelectContent>

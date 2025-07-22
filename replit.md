@@ -34,13 +34,15 @@ Preferred communication style: Simple, everyday language.
   - **Updated**: Fixed year dropdown to show 2024-2030 range instead of 2020-2024
   - **Updated**: Added Sundays as holidays in attendance calculation with proper working days tracking
 - ✅ **Complete Petty Cash Management System**: Built comprehensive expense tracking module
-  - Manual entry form with Date, Paid To, Amount, Payment Mode, Category, Upload Screenshot
+  - Manual entry form with Date, Paid To, Amount, Paid By (Staff), Category, Upload Screenshot
   - Smart OCR processing using Tesseract.js for UPI payment screenshots (GPay, PhonePe, etc.)
   - Auto-extracts amount, receiver, date from payment images
-  - Dashboard with filtering by Date/Category/Payment Mode and search functionality
-  - Balance tracking: Total Expenses, Total Income, Current Balance, This Month stats
-  - WhatsApp and Excel export for easy sharing and reporting
-  - Real-time image thumbnail viewing in expense table
+  - Dashboard with filtering by Date/Category/Paid By and search functionality
+  - **Enhanced Balance Tracking**: Debit/Credit format with + and - indicators showing proper fund management
+  - **Add Funds Feature**: Green button for adding income/funds with dedicated form and receipt upload
+  - **Visual Improvements**: Credit/Debit badges in expense table with color-coded amounts
+  - WhatsApp and Excel export for easy sharing and reporting (updated to show Paid By instead of Payment Mode)
+  - Real-time image thumbnail viewing in expense table with proper file upload preservation during OCR
 - ✅ **Mobile Optimization**: Implemented comprehensive mobile-responsive design
   - Responsive sidebar with mobile overlay and desktop fixed layout
   - Mobile-friendly header with hamburger menu and optimized spacing
