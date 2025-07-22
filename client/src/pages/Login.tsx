@@ -10,7 +10,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { setToken } from "@/lib/auth";
-import { Eye, EyeOff, Lock, User } from "lucide-react";
+import { Eye, EyeOff, Lock, User, Package } from "lucide-react";
 
 const loginSchema = z.object({
   username: z.string().min(1, "Username is required"),
@@ -62,16 +62,19 @@ export default function Login() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 to-amber-50 p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1 text-center">
-          <CardTitle className="text-3xl font-bold text-amber-900">
-            Inventory System
+      <Card className="w-full max-w-md shadow-xl">
+        <CardHeader className="space-y-3 text-center pb-6">
+          <div className="w-16 h-16 bg-blue-500 rounded-2xl flex items-center justify-center mx-auto">
+            <Package className="w-8 h-8 text-white" />
+          </div>
+          <CardTitle className="text-3xl font-bold text-gray-900">
+            Inventory Management
           </CardTitle>
-          <CardDescription className="text-amber-700">
-            Sign in to your account to continue
+          <CardDescription className="text-gray-600">
+            Sign in to your account
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-6">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField
@@ -79,15 +82,16 @@ export default function Login() {
                 name="username"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Username</FormLabel>
+                    <FormLabel className="text-sm font-medium text-gray-700">Username</FormLabel>
                     <FormControl>
                       <div className="relative">
-                        <User className="absolute left-3 top-3 h-4 w-4 text-amber-600" />
+                        <User className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
                         <Input
                           {...field}
                           type="text"
                           placeholder="Enter your username"
-                          className="pl-10"
+                          className="pl-10 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                          disabled={isLoading}
                         />
                       </div>
                     </FormControl>
@@ -101,15 +105,16 @@ export default function Login() {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Password</FormLabel>
+                    <FormLabel className="text-sm font-medium text-gray-700">Password</FormLabel>
                     <FormControl>
                       <div className="relative">
-                        <Lock className="absolute left-3 top-3 h-4 w-4 text-amber-600" />
+                        <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
                         <Input
                           {...field}
                           type={showPassword ? "text" : "password"}
                           placeholder="Enter your password"
-                          className="pl-10 pr-10"
+                          className="pl-10 pr-10 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                          disabled={isLoading}
                         />
                         <Button
                           type="button"
@@ -119,9 +124,9 @@ export default function Login() {
                           onClick={() => setShowPassword(!showPassword)}
                         >
                           {showPassword ? (
-                            <EyeOff className="h-4 w-4 text-amber-600" />
+                            <EyeOff className="h-4 w-4 text-gray-500" />
                           ) : (
-                            <Eye className="h-4 w-4 text-amber-600" />
+                            <Eye className="h-4 w-4 text-gray-500" />
                           )}
                         </Button>
                       </div>
@@ -133,7 +138,7 @@ export default function Login() {
 
               <Button
                 type="submit"
-                className="w-full bg-amber-600 hover:bg-amber-700"
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5"
                 disabled={isLoading}
               >
                 {isLoading ? "Signing in..." : "Sign In"}
@@ -141,11 +146,30 @@ export default function Login() {
             </form>
           </Form>
 
-          <div className="mt-6 p-4 bg-amber-50 rounded-lg">
-            <p className="text-sm font-medium text-amber-900 mb-2">Demo Accounts:</p>
-            <div className="space-y-1 text-xs text-amber-700">
-              <p><strong>Admin:</strong> admin / admin123</p>
-              <p><strong>Staff:</strong> staff1 / staff123</p>
+          <div className="bg-gray-50 rounded-lg p-4">
+            <p className="text-sm font-medium text-gray-700 mb-3">Demo Accounts:</p>
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              <div className="bg-white p-2 rounded border">
+                <p className="font-medium text-blue-700">Admin</p>
+                <p className="text-gray-600">admin@demo.com</p>
+              </div>
+              <div className="bg-white p-2 rounded border">
+                <p className="font-medium text-green-700">Manager</p>
+                <p className="text-gray-600">manager@demo.com</p>
+              </div>
+              <div className="bg-white p-2 rounded border">
+                <p className="font-medium text-purple-700">Storekeeper</p>
+                <p className="text-gray-600">keeper@demo.com</p>
+              </div>
+              <div className="bg-white p-2 rounded border">
+                <p className="font-medium text-orange-700">User</p>
+                <p className="text-gray-600">user@demo.com</p>
+              </div>
+            </div>
+            <div className="mt-3 p-2 bg-blue-50 rounded text-center">
+              <p className="text-xs font-medium text-blue-800">
+                Use username: <strong>admin</strong> & password: <strong>admin123</strong>
+              </p>
             </div>
           </div>
         </CardContent>
