@@ -49,8 +49,7 @@ export default function ProductTable() {
         if (value && value !== 'all') params.append(key, value);
       });
       
-      const response = await authenticatedApiRequest('GET', `/api/products?${params}`);
-      return response.json();
+      return await authenticatedApiRequest(`/api/products?${params}`, { method: 'GET' });
     },
   });
 
@@ -61,7 +60,7 @@ export default function ProductTable() {
 
   const deleteProductMutation = useMutation({
     mutationFn: async (id: number) => {
-      await authenticatedApiRequest('DELETE', `/api/products/${id}`);
+      return await authenticatedApiRequest(`/api/products/${id}`, { method: 'DELETE' });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/products'] });
@@ -86,7 +85,12 @@ export default function ProductTable() {
         if (value && value !== 'all') params.append(key, value);
       });
       
-      const response = await authenticatedApiRequest('GET', `/api/export/products?${params}`);
+      const response = await fetch(`/api/export/products?${params}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+        },
+      });
       const blob = await response.blob();
       
       const url = window.URL.createObjectURL(blob);
