@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Edit, Trash2, Eye, Download, Search, Grid3X3, List, Package } from "lucide-react";
+import { Edit, Trash2, Eye, Download, Search, Grid3X3, List, Package, Plus } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import ProductForm from "./ProductForm";
 
@@ -362,6 +362,10 @@ export default function ProductTable() {
             <Button onClick={exportProducts} variant="outline" size="sm" className="h-8">
               <Download className="w-3 h-3 mr-1" />
               Export
+            </Button>
+            <Button onClick={() => setShowForm(true)} variant="default" size="sm" className="h-8">
+              <Plus className="w-3 h-3 mr-1" />
+              Add Product
             </Button>
           </div>
         </div>
