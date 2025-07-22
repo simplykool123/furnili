@@ -150,10 +150,7 @@ export default function Attendance() {
       checkOutTime?: string;
       notes?: string;
     }) => {
-      return authenticatedApiRequest("/api/attendance/mark", {
-        method: "POST",
-        body: JSON.stringify(data),
-      });
+      return authenticatedApiRequest("POST", "/api/attendance/mark", data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/attendance"] });
@@ -163,10 +160,7 @@ export default function Attendance() {
 
   const generatePayrollMutation = useMutation({
     mutationFn: async (data: { userId: number; month: number; year: number }) => {
-      return authenticatedApiRequest("/api/payroll/generate", {
-        method: "POST",
-        body: JSON.stringify(data),
-      });
+      return authenticatedApiRequest("POST", "/api/payroll/generate", data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/payroll"] });
@@ -176,9 +170,7 @@ export default function Attendance() {
 
   const processPayrollMutation = useMutation({
     mutationFn: async (payrollId: number) => {
-      return authenticatedApiRequest(`/api/payroll/${payrollId}/process`, {
-        method: "POST",
-      });
+      return authenticatedApiRequest("POST", `/api/payroll/${payrollId}/process`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/payroll"] });
@@ -188,10 +180,7 @@ export default function Attendance() {
 
   const createStaffMutation = useMutation({
     mutationFn: async (data: StaffFormData) => {
-      return authenticatedApiRequest("/api/users", {
-        method: "POST",
-        body: JSON.stringify({ ...data, username: data.email }),
-      });
+      return authenticatedApiRequest("POST", "/api/users", { ...data, username: data.email });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });
@@ -210,10 +199,7 @@ export default function Attendance() {
 
   const updateStaffMutation = useMutation({
     mutationFn: async (data: { id: number; updates: Partial<StaffFormData> }) => {
-      return authenticatedApiRequest(`/api/users/${data.id}`, {
-        method: "PATCH",
-        body: JSON.stringify(data.updates),
-      });
+      return authenticatedApiRequest("PATCH", `/api/users/${data.id}`, data.updates);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });

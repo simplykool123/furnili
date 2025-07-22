@@ -35,10 +35,7 @@ export default function TaskManagement() {
 
   const addTaskMutation = useMutation({
     mutationFn: async (taskData: typeof taskForm) => {
-      return authenticatedApiRequest("/api/tasks", {
-        method: "POST",
-        body: JSON.stringify(taskData),
-      });
+      return authenticatedApiRequest("POST", "/api/tasks", taskData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/tasks"] });
