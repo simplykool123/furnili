@@ -156,6 +156,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.patch("/api/users/:id", authenticateToken, requireRole(["admin"]), async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const updates = insertUserSchema.partial().parse(req.body);
+      
+      const updatedUser = await storage.updateUser(id, updates);
+      
+      if (!updatedUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Return sanitized user (no password)
+      const { password, ...sanitizedUser } = updatedUser;
+      res.json(sanitizedUser);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Validation failed", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to update user", error });
+    }
+  });
+
   app.delete("/api/users/:id", authenticateToken, requireRole(["admin"]), async (req, res) => {
     try {
       const id = parseInt(req.params.id);
