@@ -123,11 +123,21 @@ export default function Attendance() {
   // Mutations
   const adminCheckInMutation = useMutation({
     mutationFn: async (data: { userId: number; location?: string; notes?: string }) => {
-      return authenticatedApiRequest("POST", "/api/attendance/admin-checkin", data);
+      console.log("Admin check-in mutation triggered for user:", data.userId);
+      const result = await authenticatedApiRequest("POST", "/api/attendance/admin-checkin", data);
+      console.log("Admin check-in result:", result);
+      return result;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log("Admin check-in successful:", data);
       queryClient.invalidateQueries({ queryKey: ["/api/attendance"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/attendance/today"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/attendance/stats"] });
       toast({ title: "Staff checked in successfully" });
+    },
+    onError: (error) => {
+      console.error("Admin check-in failed:", error);
+      toast({ title: "Check-in failed", description: String(error), variant: "destructive" });
     },
   });
 
@@ -137,6 +147,8 @@ export default function Attendance() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/attendance"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/attendance/today"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/attendance/stats"] });
       toast({ title: "Staff checked out successfully" });
     },
   });
@@ -154,6 +166,8 @@ export default function Attendance() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/attendance"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/attendance/today"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/attendance/stats"] });
       toast({ title: "Attendance marked successfully" });
     },
   });
