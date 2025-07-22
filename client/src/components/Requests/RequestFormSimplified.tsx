@@ -148,6 +148,21 @@ export default function RequestFormSimplified({ onClose, onSuccess }: RequestFor
   });
 
   const onSubmit = (data: RequestFormData) => {
+    // Check if user is authenticated
+    const token = localStorage.getItem('authToken');
+    console.log('Form submission - Token exists:', !!token);
+    
+    if (!token) {
+      toast({
+        title: "Authentication Required",
+        description: "Please log in again to create requests.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    console.log('Form data:', data);
+    
     const requestData = {
       clientName: data.clientName,
       orderNumber: data.orderNumber,

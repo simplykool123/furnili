@@ -32,7 +32,7 @@ export async function apiRequest(
     headers['Authorization'] = `Bearer ${cleanToken}`;
   }
 
-  console.log('API Request:', cleanMethod, url, headers);
+  console.log('API Request:', cleanMethod, url, 'Token exists:', !!token);
 
   const res = await fetch(url, {
     method: cleanMethod,
