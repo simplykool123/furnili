@@ -985,7 +985,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         expenseDate: new Date(req.body.expenseDate),
         addedBy: req.user!.id,
         receiptImageUrl: req.file?.path || null,
-        status: "expense", // Default to expense status
+        status: req.body.status || "expense", // Default to expense status, allow income
       };
       
       const expense = await storage.createPettyCashExpense(expenseData);
@@ -996,6 +996,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid expense data", errors: error.errors });
       }
       res.status(500).json({ message: "Failed to add expense", error: String(error) });
+    }
+  });
+
+  // Add funds endpoint (income)
+  app.post("/api/petty-cash/funds", authenticateToken, receiptImageUpload.single("receipt"), async (req: AuthRequest, res) => {
+    try {
+      console.log("Funds file uploaded:", req.file);
+      console.log("Funds request body:", req.body);
+      
+      const fundsData = {
+        category: "", // Funds don't need category
+        amount: parseFloat(req.body.amount),
+        vendor: req.body.paidTo, // Source of funds
+        description: req.body.note,
+        orderNo: "",
+        paidBy: undefined,
+        expenseDate: new Date(req.body.expenseDate),
+        addedBy: req.user!.id,
+        receiptImageUrl: req.file?.path || null,
+        status: "income", // Always income for funds
+      };
+      
+      const funds = await storage.createPettyCashExpense(fundsData);
+      res.json(funds);
+    } catch (error) {
+      console.error("Failed to add funds:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid funds data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to add funds", error: String(error) });
     }
   });
 

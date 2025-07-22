@@ -26,7 +26,7 @@ interface PettyCashExpense {
   description?: string; // This was note in frontend but API returns description
   category: string;
   receiptImageUrl?: string;
-  status: string;
+  status: string; // "expense" or "income"
   addedBy: number;
   createdAt: string;
   orderNo?: string; // Add orderNo field
@@ -50,6 +50,7 @@ export default function PettyCash() {
   const [selectedPaymentMode, setSelectedPaymentMode] = useState("all");
   const [dateFilter, setDateFilter] = useState("");
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const [showAddFundsDialog, setShowAddFundsDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [editingExpense, setEditingExpense] = useState<PettyCashExpense | null>(null);
   const [showImageDialog, setShowImageDialog] = useState(false);
@@ -68,6 +69,15 @@ export default function PettyCash() {
     orderNo: "", // Order No./Client Reference
     receiptImage: null as File | null,
     category: "", // Keep for filtering
+  });
+
+  // Add funds form state
+  const [fundsFormData, setFundsFormData] = useState({
+    date: format(new Date(), "yyyy-MM-dd"),
+    amount: "",
+    source: "", // Source of funds
+    purpose: "", // Purpose/Description 
+    receiptImage: null as File | null,
   });
 
   const [isProcessingOCR, setIsProcessingOCR] = useState(false);
@@ -186,6 +196,36 @@ export default function PettyCash() {
     },
   });
 
+  // Add funds mutation
+  const addFundsMutation = useMutation({
+    mutationFn: async (fundsData: FormData) => {
+      const token = authService.getToken();
+      if (!token) throw new Error('No authentication token available');
+      
+      const response = await fetch("/api/petty-cash/funds", {
+        method: "POST",
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+        body: fundsData,
+      });
+      
+      if (!response.ok) throw new Error('Upload failed');
+      return await response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/petty-cash"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/petty-cash/stats"] });
+      setShowAddFundsDialog(false);
+      resetFundsForm();
+      toast({ title: "Funds added successfully" });
+    },
+    onError: (error) => {
+      toast({ title: "Failed to add funds", variant: "destructive" });
+      console.error("Error adding funds:", error);
+    },
+  });
+
   const resetForm = () => {
     setFormData({
       date: format(new Date(), "yyyy-MM-dd"),
@@ -196,6 +236,16 @@ export default function PettyCash() {
       orderNo: "",
       receiptImage: null,
       category: "",
+    });
+  };
+
+  const resetFundsForm = () => {
+    setFundsFormData({
+      date: format(new Date(), "yyyy-MM-dd"),
+      amount: "",
+      source: "",
+      purpose: "",
+      receiptImage: null,
     });
   };
 
@@ -409,29 +459,38 @@ export default function PettyCash() {
           <h1 className="text-2xl sm:text-3xl font-bold">Petty Cash Management</h1>
           <p className="text-sm text-gray-600 mt-1">Track expenses and manage cash flow</p>
         </div>
-        <Button onClick={() => setShowAddDialog(true)} className="w-full sm:w-auto">
-          <Plus className="mr-2 h-4 w-4" />
-          <span className="sm:hidden">Add New Expense</span>
-          <span className="hidden sm:inline">Add Expense</span>
-        </Button>
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+          <Button onClick={() => setShowAddDialog(true)} className="flex-1 sm:flex-none">
+            <Plus className="mr-2 h-4 w-4" />
+            <span className="sm:hidden">Add Expense</span>
+            <span className="hidden sm:inline">Add Expense</span>
+          </Button>
+          <Button onClick={() => setShowAddFundsDialog(true)} variant="outline" className="flex-1 sm:flex-none bg-green-50 border-green-200 hover:bg-green-100 text-green-700">
+            <Plus className="mr-2 h-4 w-4" />
+            <span className="sm:hidden">Add Funds</span>
+            <span className="hidden sm:inline">Add Funds</span>
+          </Button>
+        </div>
       </div>
       {/* Stats Cards */}
       {stats && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Expenses</CardTitle>
+              <CardTitle className="text-sm font-medium">Total Expenses (Debit)</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-red-600">₹{stats.totalExpenses?.toLocaleString()}</div>
+              <div className="text-2xl font-bold text-red-600">-₹{stats.totalExpenses?.toLocaleString()}</div>
+              <p className="text-xs text-red-500 mt-1">Money Out</p>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Income</CardTitle>
+              <CardTitle className="text-sm font-medium">Total Funds (Credit)</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-600">₹{stats.totalIncome?.toLocaleString()}</div>
+              <div className="text-2xl font-bold text-green-600">+₹{stats.totalIncome?.toLocaleString()}</div>
+              <p className="text-xs text-green-500 mt-1">Money In</p>
             </CardContent>
           </Card>
           <Card>
@@ -440,8 +499,11 @@ export default function PettyCash() {
             </CardHeader>
             <CardContent>
               <div className={`text-2xl font-bold ${stats.balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                ₹{stats.balance?.toLocaleString()}
+                {stats.balance >= 0 ? '+' : ''}₹{stats.balance?.toLocaleString()}
               </div>
+              <p className={`text-xs mt-1 ${stats.balance >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                {stats.balance >= 0 ? 'Available Funds' : 'Deficit'}
+              </p>
             </CardContent>
           </Card>
           <Card>
@@ -536,8 +598,9 @@ export default function PettyCash() {
             <TableHeader>
               <TableRow>
                 <TableHead>Date</TableHead>
+                <TableHead>Type</TableHead>
                 <TableHead>Amount</TableHead>
-                <TableHead>Paid To</TableHead>
+                <TableHead>Paid To/Source</TableHead>
                 <TableHead>Paid By</TableHead>
                 <TableHead>Purpose</TableHead>
                 <TableHead>Category</TableHead>
@@ -550,7 +613,20 @@ export default function PettyCash() {
               {filteredExpenses.map((expense: PettyCashExpense) => (
                 <TableRow key={expense.id}>
                   <TableCell>{format(new Date(expense.expenseDate), 'dd MMM yyyy')}</TableCell>
-                  <TableCell className="font-semibold text-green-600">₹{expense.amount.toFixed(2)}</TableCell>
+                  <TableCell>
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      expense.status === 'income' 
+                        ? 'bg-green-100 text-green-800' 
+                        : 'bg-red-100 text-red-800'
+                    }`}>
+                      {expense.status === 'income' ? 'Credit' : 'Debit'}
+                    </span>
+                  </TableCell>
+                  <TableCell className={`font-semibold ${
+                    expense.status === 'income' ? 'text-green-600' : 'text-red-600'
+                  }`}>
+                    {expense.status === 'income' ? '+' : '-'}₹{expense.amount.toFixed(2)}
+                  </TableCell>
                   <TableCell className="font-medium">{expense.vendor}</TableCell>
                   <TableCell className="font-medium">{expense.user?.name || expense.user?.username || 'N/A'}</TableCell>
                   <TableCell className="max-w-[200px] truncate">{expense.description || '-'}</TableCell>
@@ -902,6 +978,106 @@ export default function PettyCash() {
               </Button>
               <Button type="submit" disabled={editExpenseMutation.isPending}>
                 {editExpenseMutation.isPending ? "Updating..." : "Update Expense"}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Funds Dialog */}
+      <Dialog open={showAddFundsDialog} onOpenChange={setShowAddFundsDialog}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Add Funds (Income)</DialogTitle>
+            <p className="text-sm text-gray-600">Add money to petty cash fund</p>
+          </DialogHeader>
+          <form onSubmit={(e) => {
+            e.preventDefault();
+            const formDataToSend = new FormData();
+            formDataToSend.append('expenseDate', fundsFormData.date);
+            formDataToSend.append('paidTo', fundsFormData.source);
+            formDataToSend.append('amount', fundsFormData.amount);
+            formDataToSend.append('note', fundsFormData.purpose);
+            formDataToSend.append('status', 'income');
+            
+            if (fundsFormData.receiptImage) {
+              formDataToSend.append('receipt', fundsFormData.receiptImage);
+            }
+            
+            addFundsMutation.mutate(formDataToSend);
+          }} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="funds-amount">Amount *</Label>
+                <Input
+                  id="funds-amount"
+                  type="number"
+                  placeholder="5000"
+                  step="0.01"
+                  value={fundsFormData.amount}
+                  onChange={(e) => setFundsFormData(prev => ({ ...prev, amount: e.target.value }))}
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="funds-date">Date *</Label>
+                <Input
+                  id="funds-date"
+                  type="date"
+                  value={fundsFormData.date}
+                  onChange={(e) => setFundsFormData(prev => ({ ...prev, date: e.target.value }))}
+                  required
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="funds-source">Source *</Label>
+              <Input
+                id="funds-source"
+                placeholder="Cash from office, Bank transfer, etc."
+                value={fundsFormData.source}
+                onChange={(e) => setFundsFormData(prev => ({ ...prev, source: e.target.value }))}
+                required
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="funds-purpose">Purpose / Description *</Label>
+              <Textarea
+                id="funds-purpose"
+                placeholder="Petty cash fund replenishment"
+                value={fundsFormData.purpose}
+                onChange={(e) => setFundsFormData(prev => ({ ...prev, purpose: e.target.value }))}
+                required
+                rows={3}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="funds-receipt">Proof Attachment (Optional)</Label>
+              <Input
+                id="funds-receipt"
+                type="file"
+                accept="image/*"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    setFundsFormData(prev => ({ ...prev, receiptImage: file }));
+                  }
+                }}
+              />
+              <p className="text-sm text-gray-500 mt-1">
+                Upload bank transfer receipt, cash deposit slip, etc.
+              </p>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-4">
+              <Button type="button" variant="outline" onClick={() => setShowAddFundsDialog(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={addFundsMutation.isPending} className="bg-green-600 hover:bg-green-700 text-white">
+                {addFundsMutation.isPending ? "Adding..." : "Add Funds"}
               </Button>
             </div>
           </form>
