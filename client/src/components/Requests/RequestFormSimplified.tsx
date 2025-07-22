@@ -7,7 +7,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Trash2, Download, AlertTriangle } from "lucide-react";
+import { Plus, Trash2, Download, AlertTriangle, Search } from "lucide-react";
+import { Command, CommandInput, CommandList, CommandItem, CommandEmpty } from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { insertMaterialRequestSchema } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -49,6 +51,14 @@ interface Category {
   name: string;
 }
 
+interface Client {
+  id: number;
+  name: string;
+  contactPerson?: string;
+  email?: string;
+  phone?: string;
+}
+
 interface RequestFormSimplifiedProps {
   onClose: () => void;
   onSuccess?: () => void;
@@ -57,6 +67,8 @@ interface RequestFormSimplifiedProps {
 export default function RequestFormSimplified({ onClose, onSuccess }: RequestFormSimplifiedProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [isClientDropdownOpen, setIsClientDropdownOpen] = useState(false);
+  const [clientSearchTerm, setClientSearchTerm] = useState("");
 
   // Fetch products and categories
   const { data: products = [] } = useQuery<Product[]>({
@@ -65,6 +77,10 @@ export default function RequestFormSimplified({ onClose, onSuccess }: RequestFor
 
   const { data: categories = [] } = useQuery<Category[]>({
     queryKey: ["/api/categories"],
+  });
+
+  const { data: clients = [] } = useQuery<Client[]>({
+    queryKey: ["/api/clients"],
   });
 
   const form = useForm<RequestFormData>({
@@ -90,6 +106,15 @@ export default function RequestFormSimplified({ onClose, onSuccess }: RequestFor
   const { fields, append, remove } = useFieldArray({
     control,
     name: "items"
+  });
+
+  // Create client mutation
+  const createClientMutation = useMutation({
+    mutationFn: (clientData: { name: string }) =>
+      apiRequest("/api/clients", "POST", clientData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/clients"] });
+    },
   });
 
   const createRequestMutation = useMutation({
@@ -224,12 +249,82 @@ export default function RequestFormSimplified({ onClose, onSuccess }: RequestFor
           <div className="grid grid-cols-12 gap-3">
             <div className="col-span-5">
               <Label htmlFor="clientName">Client Name *</Label>
-              <Input
-                id="clientName"
-                {...register("clientName")}
-                placeholder="e.g., ABC Construction Ltd."
-                className={errors.clientName ? "border-red-500" : ""}
-              />
+              <Popover open={isClientDropdownOpen} onOpenChange={setIsClientDropdownOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={isClientDropdownOpen}
+                    className={`w-full justify-between ${errors.clientName ? "border-red-500" : ""}`}
+                  >
+                    {watch("clientName") || "Select or add client..."}
+                    <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-full p-0">
+                  <Command>
+                    <CommandInput 
+                      placeholder="Search clients or type new client name..." 
+                      value={clientSearchTerm}
+                      onValueChange={setClientSearchTerm}
+                    />
+                    <CommandList>
+                      <CommandEmpty>
+                        <div className="p-2">
+                          <Button
+                            variant="ghost"
+                            className="w-full justify-start"
+                            onClick={() => {
+                              if (clientSearchTerm.trim()) {
+                                // Create new client
+                                createClientMutation.mutate(
+                                  { name: clientSearchTerm.trim() },
+                                  {
+                                    onSuccess: () => {
+                                      setValue("clientName", clientSearchTerm.trim());
+                                      setIsClientDropdownOpen(false);
+                                      setClientSearchTerm("");
+                                      toast({
+                                        title: "Client added",
+                                        description: `${clientSearchTerm.trim()} has been added to the client list.`
+                                      });
+                                    }
+                                  }
+                                );
+                              }
+                            }}
+                          >
+                            <Plus className="mr-2 h-4 w-4" />
+                            Add "{clientSearchTerm}" as new client
+                          </Button>
+                        </div>
+                      </CommandEmpty>
+                      {clients
+                        .filter(client => 
+                          client.name.toLowerCase().includes(clientSearchTerm.toLowerCase())
+                        )
+                        .map((client) => (
+                          <CommandItem
+                            key={client.id}
+                            value={client.name}
+                            onSelect={() => {
+                              setValue("clientName", client.name);
+                              setIsClientDropdownOpen(false);
+                              setClientSearchTerm("");
+                            }}
+                          >
+                            {client.name}
+                            {client.contactPerson && (
+                              <span className="ml-2 text-sm text-gray-500">
+                                ({client.contactPerson})
+                              </span>
+                            )}
+                          </CommandItem>
+                        ))}
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
               {errors.clientName && (
                 <p className="text-sm text-red-600 mt-1">{errors.clientName.message}</p>
               )}

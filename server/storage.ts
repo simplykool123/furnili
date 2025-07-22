@@ -12,6 +12,7 @@ import {
   priceComparisons,
   payroll,
   leaves,
+  clients,
   type User,
   type InsertUser,
   type Category,
@@ -38,6 +39,8 @@ import {
   type InsertPayroll,
   type Leave,
   type InsertLeave,
+  type Client,
+  type InsertClient,
   type MaterialRequestWithItems,
   type ProductWithStock,
   type BOQExtractedItem,
@@ -60,6 +63,14 @@ export interface IStorage {
   createCategory(category: InsertCategory): Promise<Category>;
   updateCategory(id: number, updates: Partial<InsertCategory>): Promise<Category | undefined>;
   deleteCategory(id: number): Promise<boolean>;
+
+  // Client operations
+  getClient(id: number): Promise<Client | undefined>;
+  getAllClients(): Promise<Client[]>;
+  getClientByName(name: string): Promise<Client | undefined>;
+  createClient(client: InsertClient): Promise<Client>;
+  updateClient(id: number, updates: Partial<InsertClient>): Promise<Client | undefined>;
+  deleteClient(id: number): Promise<boolean>;
 
   // Enhanced Attendance operations
   checkIn(userId: number, checkInBy?: number, location?: string, notes?: string): Promise<Attendance>;
@@ -163,6 +174,7 @@ export interface IStorage {
 export class MemStorage implements IStorage {
   private users: Map<number, User> = new Map();
   private categories: Map<number, Category> = new Map();
+  private clients: Map<number, Client> = new Map();
   private products: Map<number, Product> = new Map();
   private materialRequests: Map<number, MaterialRequest> = new Map();
   private requestItems: Map<number, RequestItem[]> = new Map();
@@ -834,6 +846,50 @@ export class MemStorage implements IStorage {
     return true;
   }
 
+  // Client operations
+  async getClient(id: number): Promise<Client | undefined> {
+    return this.clients.get(id);
+  }
+
+  async getAllClients(): Promise<Client[]> {
+    return Array.from(this.clients.values()).filter(c => c.isActive);
+  }
+
+  async getClientByName(name: string): Promise<Client | undefined> {
+    return Array.from(this.clients.values()).find(c => c.name === name && c.isActive);
+  }
+
+  async createClient(client: InsertClient): Promise<Client> {
+    const id = this.currentId++;
+    const newClient: Client = {
+      ...client,
+      id,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.clients.set(id, newClient);
+    return newClient;
+  }
+
+  async updateClient(id: number, updates: Partial<InsertClient>): Promise<Client | undefined> {
+    const client = this.clients.get(id);
+    if (!client) return undefined;
+
+    const updatedClient = { ...client, ...updates, updatedAt: new Date() };
+    this.clients.set(id, updatedClient);
+    return updatedClient;
+  }
+
+  async deleteClient(id: number): Promise<boolean> {
+    const client = this.clients.get(id);
+    if (!client) return false;
+    
+    // Soft delete by setting isActive to false
+    client.isActive = false;
+    this.clients.set(id, client);
+    return true;
+  }
+
   // Product operations
   async getProduct(id: number): Promise<Product | undefined> {
     return this.products.get(id);
@@ -1160,3 +1216,34 @@ export class MemStorage implements IStorage {
 }
 
 export const storage = new MemStorage();
+
+// Initialize with some default clients
+storage.createClient({
+  name: "ABC Construction Ltd.",
+  contactPerson: "John Smith",
+  email: "john@abcconstruction.com",
+  phone: "+91 9876543210",
+  address: "123 Industrial Area, Mumbai",
+  gstNumber: "27ABCDE1234F1Z5",
+  isActive: true,
+});
+
+storage.createClient({
+  name: "XYZ Builders Pvt Ltd",
+  contactPerson: "Sarah Johnson", 
+  email: "sarah@xyzbuilders.com",
+  phone: "+91 9876543211",
+  address: "456 Business Park, Pune",
+  gstNumber: "27XYZAB5678G2H3",
+  isActive: true,
+});
+
+storage.createClient({
+  name: "Furnili Projects",
+  contactPerson: "Rajesh Kumar",
+  email: "rajesh@furniliprojects.com", 
+  phone: "+91 9876543212",
+  address: "789 Commercial Complex, Delhi",
+  gstNumber: "07FURNI9012J3K4",
+  isActive: true,
+});

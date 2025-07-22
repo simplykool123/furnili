@@ -10,6 +10,7 @@ import {
   insertUserSchema,
   insertProductSchema,
   insertCategorySchema,
+  insertClientSchema,
   insertMaterialRequestSchema,
   insertRequestItemSchema,
   insertBOQUploadSchema,
@@ -225,6 +226,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ message: "Category deleted successfully" });
     } catch (error) {
       res.status(500).json({ message: "Failed to delete category", error });
+    }
+  });
+
+  // Client routes
+  app.get("/api/clients", authenticateToken, async (req, res) => {
+    try {
+      const clients = await storage.getAllClients();
+      res.json(clients);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch clients", error });
+    }
+  });
+
+  app.post("/api/clients", authenticateToken, requireRole(["admin", "manager"]), async (req, res) => {
+    try {
+      const clientData = insertClientSchema.parse(req.body);
+      const client = await storage.createClient(clientData);
+      res.status(201).json(client);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Validation failed", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create client", error });
+    }
+  });
+
+  app.get("/api/clients/:id", authenticateToken, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const client = await storage.getClient(id);
+      
+      if (!client) {
+        return res.status(404).json({ message: "Client not found" });
+      }
+      
+      res.json(client);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch client", error });
     }
   });
 
