@@ -19,11 +19,11 @@ import Tesseract from 'tesseract.js';
 
 interface PettyCashExpense {
   id: number;
-  date: string;
-  paidTo: string;
+  expenseDate: string;
+  vendor: string; // This was paidTo in frontend but API returns vendor
   amount: number;
-  paymentMode: string;
-  note?: string;
+  paymentMode?: string;
+  description?: string; // This was note in frontend but API returns description
   category: string;
   receiptImageUrl?: string;
   status: string;
@@ -52,15 +52,16 @@ export default function PettyCash() {
   const [showImageDialog, setShowImageDialog] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string>("");
   
-  // Form state
+  // Form state - Updated to match user requirements
   const [formData, setFormData] = useState({
     date: format(new Date(), "yyyy-MM-dd"),
-    paidTo: "",
     amount: "",
-    paymentMode: "",
-    note: "",
-    category: "",
+    paidTo: "", // Name of person/vendor
+    paidBy: "", // Staff member who paid (linked to user)
+    purpose: "", // Purpose/Description 
+    orderNo: "", // Order No./Client Reference
     receiptImage: null as File | null,
+    category: "", // Keep for filtering
   });
 
   const [isProcessingOCR, setIsProcessingOCR] = useState(false);
@@ -74,6 +75,12 @@ export default function PettyCash() {
   const { data: stats } = useQuery({
     queryKey: ["/api/petty-cash/stats"],
     queryFn: () => authenticatedApiRequest("GET", "/api/petty-cash/stats"),
+  });
+
+  // Fetch users for Paid By dropdown
+  const { data: users = [] } = useQuery({
+    queryKey: ["/api/users"],
+    queryFn: () => authenticatedApiRequest("GET", "/api/users"),
   });
 
   // Create expense mutation
@@ -110,12 +117,13 @@ export default function PettyCash() {
   const resetForm = () => {
     setFormData({
       date: format(new Date(), "yyyy-MM-dd"),
-      paidTo: "",
       amount: "",
-      paymentMode: "",
-      note: "",
-      category: "",
+      paidTo: "",
+      paidBy: "",
+      purpose: "",
+      orderNo: "",
       receiptImage: null,
+      category: "",
     });
   };
 
@@ -194,9 +202,10 @@ export default function PettyCash() {
     formDataToSend.append('expenseDate', formData.date);
     formDataToSend.append('paidTo', formData.paidTo);
     formDataToSend.append('amount', formData.amount);
-    formDataToSend.append('paymentMode', formData.paymentMode);
-    formDataToSend.append('note', formData.note);
+    formDataToSend.append('paidBy', formData.paidBy);
+    formDataToSend.append('note', formData.purpose);
     formDataToSend.append('category', formData.category);
+    formDataToSend.append('orderNo', formData.orderNo);
     
     if (formData.receiptImage) {
       formDataToSend.append('receipt', formData.receiptImage);
@@ -207,11 +216,11 @@ export default function PettyCash() {
 
   // Filter expenses
   const filteredExpenses = expenses.filter((expense: PettyCashExpense) => {
-    const matchesSearch = expense.paidTo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         (expense.note?.toLowerCase().includes(searchTerm.toLowerCase()) || false);
+    const matchesSearch = expense.vendor?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (expense.description?.toLowerCase().includes(searchTerm.toLowerCase()) || false);
     const matchesCategory = !selectedCategory || selectedCategory === 'all' || expense.category === selectedCategory;
     const matchesPaymentMode = !selectedPaymentMode || selectedPaymentMode === 'all' || expense.paymentMode === selectedPaymentMode;
-    const matchesDate = !dateFilter || expense.date.startsWith(dateFilter);
+    const matchesDate = !dateFilter || expense.expenseDate.startsWith(dateFilter);
     
     return matchesSearch && matchesCategory && matchesPaymentMode && matchesDate;
   });
@@ -219,7 +228,7 @@ export default function PettyCash() {
   // Export functions
   const exportToWhatsApp = () => {
     const text = filteredExpenses.map((expense: PettyCashExpense) => 
-      `📄 ${expense.paidTo}\n💰 ₹${expense.amount}\n📅 ${format(new Date(expense.date), 'dd MMM yyyy')}\n🏷️ ${expense.category}\n💳 ${expense.paymentMode}\n${expense.note ? `📝 ${expense.note}\n` : ''}\n---`
+      `📄 ${expense.vendor}\n💰 ₹${expense.amount}\n📅 ${format(new Date(expense.expenseDate), 'dd MMM yyyy')}\n🏷️ ${expense.category}\n💳 ${expense.paymentMode || 'N/A'}\n${expense.description ? `📝 ${expense.description}\n` : ''}\n---`
     ).join('\n\n');
     
     const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(`💰 Petty Cash Report\n\n${text}\n\n💸 Total: ₹${filteredExpenses.reduce((sum: number, exp: PettyCashExpense) => sum + exp.amount, 0)}`)}`;
@@ -228,9 +237,9 @@ export default function PettyCash() {
 
   const exportToExcel = () => {
     const csvContent = [
-      'Date,Paid To,Amount,Payment Mode,Category,Note',
+      'Date,Paid To,Amount,Payment Mode,Category,Description',
       ...filteredExpenses.map((expense: PettyCashExpense) => 
-        `${expense.date},"${expense.paidTo}",${expense.amount},"${expense.paymentMode}","${expense.category}","${expense.note || ''}"`
+        `${expense.expenseDate},"${expense.vendor}",${expense.amount},"${expense.paymentMode || 'N/A'}","${expense.category}","${expense.description || ''}"`
       )
     ].join('\n');
     
@@ -380,26 +389,29 @@ export default function PettyCash() {
             <TableHeader>
               <TableRow>
                 <TableHead>Date</TableHead>
-                <TableHead>Paid To</TableHead>
                 <TableHead>Amount</TableHead>
-                <TableHead>Payment Mode</TableHead>
+                <TableHead>Paid To</TableHead>
+                <TableHead>Paid By</TableHead>
+                <TableHead>Purpose</TableHead>
                 <TableHead>Category</TableHead>
+                <TableHead>Order No.</TableHead>
                 <TableHead>Receipt</TableHead>
-                <TableHead>Note</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredExpenses.map((expense: PettyCashExpense) => (
                 <TableRow key={expense.id}>
-                  <TableCell>{format(new Date(expense.date), 'dd MMM yyyy')}</TableCell>
-                  <TableCell className="font-medium">{expense.paidTo}</TableCell>
-                  <TableCell className="font-bold text-red-600">₹{expense.amount.toLocaleString()}</TableCell>
+                  <TableCell>{format(new Date(expense.expenseDate), 'dd MMM yyyy')}</TableCell>
+                  <TableCell className="font-semibold text-green-600">₹{expense.amount.toFixed(2)}</TableCell>
+                  <TableCell className="font-medium">{expense.vendor}</TableCell>
                   <TableCell>
-                    <Badge variant="outline">{expense.paymentMode}</Badge>
+                    <Badge variant="secondary">{expense.user?.name || expense.user?.username || 'N/A'}</Badge>
                   </TableCell>
+                  <TableCell className="max-w-[200px] truncate">{expense.description || '-'}</TableCell>
                   <TableCell>
-                    <Badge>{expense.category}</Badge>
+                    <Badge variant="outline">{expense.category}</Badge>
                   </TableCell>
+                  <TableCell className="text-sm text-gray-600">{expense.orderNo || '-'}</TableCell>
                   <TableCell>
                     {expense.receiptImageUrl ? (
                       <Button
@@ -416,12 +428,11 @@ export default function PettyCash() {
                       <span className="text-gray-400">No receipt</span>
                     )}
                   </TableCell>
-                  <TableCell className="max-w-[200px] truncate">{expense.note || '-'}</TableCell>
                 </TableRow>
               ))}
               {filteredExpenses.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center text-gray-500 py-8">
+                  <TableCell colSpan={8} className="text-center text-gray-500 py-8">
                     No expenses found matching your filters
                   </TableCell>
                 </TableRow>
@@ -438,9 +449,22 @@ export default function PettyCash() {
             <DialogTitle>Add New Expense</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Amount and Date */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="date">Date</Label>
+                <Label htmlFor="amount">Amount (₹) *</Label>
+                <Input
+                  id="amount"
+                  type="number"
+                  step="0.01"
+                  placeholder="2700"
+                  value={formData.amount}
+                  onChange={(e) => setFormData(prev => ({ ...prev, amount: e.target.value }))}
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="date">Date *</Label>
                 <Input
                   id="date"
                   type="date"
@@ -449,50 +473,65 @@ export default function PettyCash() {
                   required
                 />
               </div>
+            </div>
+            
+            {/* Paid To and Paid By */}
+            <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="amount">Amount (₹)</Label>
+                <Label htmlFor="paidTo">Paid To *</Label>
                 <Input
-                  id="amount"
-                  type="number"
-                  step="0.01"
-                  value={formData.amount}
-                  onChange={(e) => setFormData(prev => ({ ...prev, amount: e.target.value }))}
+                  id="paidTo"
+                  placeholder="Dolly Vikesh Oswal"
+                  value={formData.paidTo}
+                  onChange={(e) => setFormData(prev => ({ ...prev, paidTo: e.target.value }))}
                   required
                 />
               </div>
-            </div>
-            
-            <div>
-              <Label htmlFor="paidTo">Paid To</Label>
-              <Input
-                id="paidTo"
-                value={formData.paidTo}
-                onChange={(e) => setFormData(prev => ({ ...prev, paidTo: e.target.value }))}
-                required
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="paymentMode">Payment Mode</Label>
+                <Label htmlFor="paidBy">Paid By (Staff Member) *</Label>
                 <Select 
-                  value={formData.paymentMode} 
-                  onValueChange={(value) => setFormData(prev => ({ ...prev, paymentMode: value }))}
+                  value={formData.paidBy} 
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, paidBy: value }))}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select mode" />
+                    <SelectValue placeholder="Select staff member" />
                   </SelectTrigger>
                   <SelectContent>
-                    {paymentModes.map((mode) => (
-                      <SelectItem key={mode} value={mode}>
-                        {mode}
+                    {users.map((user: any) => (
+                      <SelectItem key={user.id} value={user.id.toString()}>
+                        {user.name || user.username}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
+            </div>
+
+            {/* Purpose and Order No */}
+            <div>
+              <Label htmlFor="purpose">Purpose / Description *</Label>
+              <Textarea
+                id="purpose"
+                placeholder="Furnili powder coating for legs – Pintu order"
+                value={formData.purpose}
+                onChange={(e) => setFormData(prev => ({ ...prev, purpose: e.target.value }))}
+                required
+                rows={3}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="category">Category</Label>
+                <Label htmlFor="orderNo">Order No. / Client Reference</Label>
+                <Input
+                  id="orderNo"
+                  placeholder="Pintu Order"
+                  value={formData.orderNo}
+                  onChange={(e) => setFormData(prev => ({ ...prev, orderNo: e.target.value }))}
+                />
+              </div>
+              <div>
+                <Label htmlFor="category">Category (For Reports)</Label>
                 <Select 
                   value={formData.category} 
                   onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}
@@ -511,18 +550,9 @@ export default function PettyCash() {
               </div>
             </div>
 
+            {/* Proof Attachment with OCR */}
             <div>
-              <Label htmlFor="note">Note (Optional)</Label>
-              <Textarea
-                id="note"
-                value={formData.note}
-                onChange={(e) => setFormData(prev => ({ ...prev, note: e.target.value }))}
-                rows={3}
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="receipt">Upload Receipt (Optional)</Label>
+              <Label htmlFor="receipt">Proof Attachment (GPay, CRED, Invoice, etc.)</Label>
               <div className="flex items-center gap-2">
                 <Input
                   id="receipt"
@@ -535,7 +565,7 @@ export default function PettyCash() {
                 )}
               </div>
               <p className="text-sm text-gray-500 mt-1">
-                Upload UPI payment screenshot for automatic data extraction
+                📱 Upload UPI payment screenshot for automatic data extraction (GPay, PhonePe, CRED)
               </p>
             </div>
 
