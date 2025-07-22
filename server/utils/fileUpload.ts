@@ -39,6 +39,30 @@ export const boqFileUpload = multer({
   },
 });
 
+// CSV/Excel file upload for bulk operations
+export const csvFileUpload = multer({
+  dest: "uploads/csv/",
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = /csv|xlsx|xls/;
+    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+    const allowedMimeTypes = [
+      'text/csv',
+      'application/vnd.ms-excel',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    ];
+    const mimetype = allowedMimeTypes.includes(file.mimetype);
+
+    if (mimetype || extname) {
+      return cb(null, true);
+    } else {
+      cb(new Error("Only CSV and Excel files are allowed"));
+    }
+  },
+});
+
 // Receipt image upload for petty cash
 export const receiptImageUpload = multer({
   dest: "uploads/receipts/",

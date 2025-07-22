@@ -4,7 +4,7 @@ import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { storage } from "./storage";
 import { authenticateToken, requireRole, generateToken, comparePassword, type AuthRequest } from "./middleware/auth";
-import { productImageUpload, boqFileUpload, receiptImageUpload } from "./utils/fileUpload";
+import { productImageUpload, boqFileUpload, receiptImageUpload, csvFileUpload } from "./utils/fileUpload";
 import { exportProductsCSV, exportRequestsCSV, exportLowStockCSV } from "./utils/csvExport";
 import {
   insertUserSchema,
@@ -358,6 +358,153 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ message: "Stock updated successfully" });
     } catch (error) {
       res.status(500).json({ message: "Failed to update stock", error });
+    }
+  });
+
+  // Bulk import/export routes
+  app.post("/api/products/bulk-import", authenticateToken, requireRole(["admin", "manager"]), csvFileUpload.single("file"), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: "No file uploaded" });
+      }
+
+      const { parse } = await import("csv-parse");
+      const fs = await import("fs");
+      
+      const results: any[] = [];
+      const errors: string[] = [];
+      let successful = 0;
+      let failed = 0;
+
+      const records = await new Promise<any[]>((resolve, reject) => {
+        const output: any[] = [];
+        fs.createReadStream(req.file!.path)
+          .pipe(parse({ 
+            columns: true, 
+            skip_empty_lines: true,
+            trim: true 
+          }))
+          .on('data', (data) => output.push(data))
+          .on('error', reject)
+          .on('end', () => resolve(output));
+      });
+
+      for (const record of records) {
+        try {
+          const productData = {
+            name: record.name?.trim(),
+            category: record.category?.trim(),
+            brand: record.brand?.trim() || null,
+            size: record.size?.trim() || null,
+            sku: record.sku?.trim() || null,
+            pricePerUnit: parseFloat(record.pricePerUnit || record.price || "0"),
+            currentStock: parseInt(record.currentStock || record.stock || "0", 10),
+            minStock: parseInt(record.minStock || "10", 10),
+            unit: record.unit?.trim() || "pieces",
+          };
+
+          // Validate required fields
+          if (!productData.name || !productData.category || productData.pricePerUnit <= 0) {
+            errors.push(`Row with name "${productData.name || 'Unknown'}": Missing required fields or invalid price`);
+            failed++;
+            continue;
+          }
+
+          await storage.createProduct(productData);
+          successful++;
+        } catch (error: any) {
+          errors.push(`Row with name "${record.name || 'Unknown'}": ${error.message}`);
+          failed++;
+        }
+      }
+
+      // Cleanup uploaded file
+      fs.unlinkSync(req.file.path);
+
+      res.json({
+        successful,
+        failed,
+        errors: errors.slice(0, 10), // Limit errors to first 10
+        total: records.length
+      });
+    } catch (error: any) {
+      // Cleanup uploaded file if it exists
+      if (req.file) {
+        const fs = await import("fs");
+        try {
+          fs.unlinkSync(req.file.path);
+        } catch {}
+      }
+      res.status(500).json({ message: "Import failed", error: error.message });
+    }
+  });
+
+  app.get("/api/products/bulk-export", authenticateToken, async (req, res) => {
+    try {
+      const { format = 'csv', fields = '', filter = 'all', category = '' } = req.query;
+      
+      let products = await storage.getAllProducts({});
+      
+      // Apply filters
+      if (filter === 'low-stock') {
+        products = products.filter(p => p.currentStock <= p.minStock);
+      } else if (filter === 'category' && category) {
+        products = products.filter(p => p.category === category);
+      }
+
+      // Select fields
+      const selectedFields = fields ? (fields as string).split(',') : [
+        'name', 'category', 'brand', 'size', 'sku', 'pricePerUnit', 'currentStock', 'minStock', 'unit'
+      ];
+
+      const exportData = products.map(product => {
+        const row: any = {};
+        selectedFields.forEach(field => {
+          if (field === 'stockStatus') {
+            row[field] = product.currentStock <= product.minStock ? 'Low Stock' : 'In Stock';
+          } else if (field === 'createdAt') {
+            row[field] = product.createdAt ? new Date(product.createdAt).toLocaleDateString() : '';
+          } else {
+            row[field] = (product as any)[field] || '';
+          }
+        });
+        return row;
+      });
+
+      if (format === 'excel') {
+        // For now, export as CSV with Excel-friendly format
+        const { stringify } = await import("csv-stringify");
+        const csvString = await new Promise<string>((resolve, reject) => {
+          stringify(exportData, { 
+            header: true,
+            quoted: true 
+          }, (err, output) => {
+            if (err) reject(err);
+            else resolve(output);
+          });
+        });
+        
+        res.setHeader('Content-Type', 'application/vnd.ms-excel');
+        res.setHeader('Content-Disposition', 'attachment; filename="products_export.csv"');
+        res.send(csvString);
+      } else {
+        // CSV format
+        const { stringify } = await import("csv-stringify");
+        const csvString = await new Promise<string>((resolve, reject) => {
+          stringify(exportData, { 
+            header: true 
+          }, (err, output) => {
+            if (err) reject(err);
+            else resolve(output);
+          });
+        });
+        
+        res.setHeader('Content-Type', 'text/csv');
+        res.setHeader('Content-Disposition', 'attachment; filename="products_export.csv"');
+        res.send(csvString);
+      }
+    } catch (error: any) {
+      res.status(500).json({ message: "Export failed", error: error.message });
     }
   });
 
