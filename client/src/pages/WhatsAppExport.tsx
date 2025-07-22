@@ -161,13 +161,13 @@ export default function WhatsAppExport() {
   const getItemsForTemplate = () => {
     switch (selectedTemplate) {
       case "low-stock":
-        return products?.filter((p: any) => p.currentStock <= p.minStock) || [];
+        return (Array.isArray(products) ? products : []).filter((p: any) => p.currentStock <= p.minStock);
       case "material-request":
-        return materialRequests?.filter((r: any) => r.status === "pending") || [];
+        return (Array.isArray(materialRequests) ? materialRequests : []).filter((r: any) => r.status === "pending");
       case "price-comparison":
-        return priceComparisons || [];
+        return Array.isArray(priceComparisons) ? priceComparisons : [];
       case "inventory-report":
-        return products || [];
+        return Array.isArray(products) ? products : [];
       default:
         return [];
     }
@@ -178,14 +178,14 @@ export default function WhatsAppExport() {
     if (!items.length) return null;
 
     return (
-      <Card className="mt-4">
+      <Card className="mt-6 hover:shadow-lg transition-all duration-300">
         <CardHeader>
-          <CardTitle>Select Items to Include</CardTitle>
+          <CardTitle className="text-lg font-semibold text-foreground">Select Items to Include</CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
-              <TableRow>
+              <TableRow className="hover:bg-muted/50">
                 <TableHead className="w-12">
                   <input
                     type="checkbox"
@@ -196,11 +196,12 @@ export default function WhatsAppExport() {
                         setSelectedItems([]);
                       }
                     }}
+                    className="rounded"
                   />
                 </TableHead>
-                <TableHead>Name</TableHead>
-                <TableHead>Details</TableHead>
-                <TableHead>Status</TableHead>
+                <TableHead className="font-semibold">Name</TableHead>
+                <TableHead className="font-semibold">Details</TableHead>
+                <TableHead className="font-semibold">Status</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -256,25 +257,32 @@ export default function WhatsAppExport() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-gray-900">WhatsApp Export</h1>
+    <div className="space-y-8 animate-fade-in max-w-7xl mx-auto">
+      <div className="text-center sm:text-left">
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+          WhatsApp Business Export
+        </h1>
+        <p className="text-base sm:text-lg text-muted-foreground mt-2">
+          Generate and share professional business messages with clients and suppliers
+        </p>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Message Composer */}
-        <Card>
+        <Card className="hover:shadow-lg transition-all duration-300">
           <CardHeader>
-            <CardTitle className="flex items-center">
-              <MessageCircle className="mr-2 h-5 w-5" />
+            <CardTitle className="flex items-center text-foreground">
+              <div className="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/50 flex items-center justify-center mr-3">
+                <MessageCircle className="h-5 w-5 text-green-600" />
+              </div>
               Message Composer
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Label htmlFor="template">Message Template</Label>
+              <Label htmlFor="template" className="text-sm font-semibold text-foreground">Message Template</Label>
               <Select value={selectedTemplate} onValueChange={setSelectedTemplate}>
-                <SelectTrigger>
+                <SelectTrigger className="mt-2">
                   <SelectValue placeholder="Select message template" />
                 </SelectTrigger>
                 <SelectContent>
@@ -288,12 +296,13 @@ export default function WhatsAppExport() {
             </div>
 
             <div>
-              <Label htmlFor="phoneNumber">Phone Number</Label>
+              <Label htmlFor="phoneNumber" className="text-sm font-semibold text-foreground">Phone Number</Label>
               <Input
                 id="phoneNumber"
                 value={phoneNumber}
                 onChange={(e) => setPhoneNumber(e.target.value)}
                 placeholder="+91 9876543210"
+                className="mt-2"
               />
             </div>
 
@@ -301,30 +310,30 @@ export default function WhatsAppExport() {
               <Button
                 onClick={handleGenerateMessage}
                 disabled={generateMessageMutation.isPending}
-                className="w-full"
+                className="w-full furnili-gradient hover:opacity-90 text-white font-medium shadow-md hover:shadow-lg transition-all duration-200"
               >
                 {generateMessageMutation.isPending ? "Generating..." : "Generate Message"}
               </Button>
             )}
 
             <div>
-              <Label htmlFor="message">Message</Label>
+              <Label htmlFor="message" className="text-sm font-semibold text-foreground">Message</Label>
               <Textarea
                 id="message"
                 value={customMessage}
                 onChange={(e) => setCustomMessage(e.target.value)}
                 placeholder="Enter your message here..."
                 rows={8}
-                className="resize-none"
+                className="resize-none mt-2"
               />
             </div>
 
-            <div className="flex space-x-2">
+            <div className="flex space-x-3">
               <Button
                 onClick={copyToClipboard}
                 variant="outline"
                 disabled={!customMessage}
-                className="flex-1"
+                className="flex-1 hover:bg-muted/50 transition-colors"
               >
                 <Copy className="mr-2 h-4 w-4" />
                 Copy
@@ -332,7 +341,7 @@ export default function WhatsAppExport() {
               <Button
                 onClick={openWhatsApp}
                 disabled={!phoneNumber || !customMessage}
-                className="flex-1 bg-green-600 hover:bg-green-700"
+                className="flex-1 bg-green-600 hover:bg-green-700 text-white font-medium shadow-md hover:shadow-lg transition-all duration-200"
               >
                 <MessageCircle className="mr-2 h-4 w-4" />
                 Open WhatsApp
@@ -342,9 +351,14 @@ export default function WhatsAppExport() {
         </Card>
 
         {/* Quick Actions */}
-        <Card>
+        <Card className="hover:shadow-lg transition-all duration-300">
           <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
+            <CardTitle className="flex items-center text-foreground">
+              <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center mr-3">
+                <Send className="h-5 w-5 text-blue-600" />
+              </div>
+              Quick Actions
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid gap-3">
@@ -354,9 +368,9 @@ export default function WhatsAppExport() {
                   setSelectedTemplate("low-stock");
                   handleGenerateMessage();
                 }}
-                className="justify-start"
+                className="justify-start hover:bg-red-50 border-red-200 transition-colors"
               >
-                <Badge className="mr-2 bg-red-100 text-red-800">Alert</Badge>
+                <Badge className="mr-2 bg-red-100 text-red-800 text-xs font-semibold">Alert</Badge>
                 Send Low Stock Alert
               </Button>
 
@@ -366,9 +380,9 @@ export default function WhatsAppExport() {
                   setSelectedTemplate("material-request");
                   handleGenerateMessage();
                 }}
-                className="justify-start"
+                className="justify-start hover:bg-blue-50 border-blue-200 transition-colors"
               >
-                <Badge className="mr-2 bg-blue-100 text-blue-800">Request</Badge>
+                <Badge className="mr-2 bg-blue-100 text-blue-800 text-xs font-semibold">Request</Badge>
                 Share Material Requests
               </Button>
 
@@ -378,9 +392,9 @@ export default function WhatsAppExport() {
                   setSelectedTemplate("inventory-report");
                   handleGenerateMessage();
                 }}
-                className="justify-start"
+                className="justify-start hover:bg-green-50 border-green-200 transition-colors"
               >
-                <Badge className="mr-2 bg-green-100 text-green-800">Report</Badge>
+                <Badge className="mr-2 bg-green-100 text-green-800 text-xs font-semibold">Report</Badge>
                 Send Inventory Report
               </Button>
 
@@ -390,20 +404,32 @@ export default function WhatsAppExport() {
                   setSelectedTemplate("price-comparison");
                   handleGenerateMessage();
                 }}
-                className="justify-start"
+                className="justify-start hover:bg-purple-50 border-purple-200 transition-colors"
               >
-                <Badge className="mr-2 bg-purple-100 text-purple-800">Price</Badge>
+                <Badge className="mr-2 bg-purple-100 text-purple-800 text-xs font-semibold">Price</Badge>
                 Share Price Comparisons
               </Button>
             </div>
 
-            <div className="pt-4 border-t">
-              <h3 className="font-medium mb-2">Message Templates</h3>
-              <div className="text-sm text-gray-600 space-y-2">
-                <div><strong>Low Stock:</strong> Alerts for items below minimum stock</div>
-                <div><strong>Material Request:</strong> Pending material requests summary</div>
-                <div><strong>Price Comparison:</strong> Supplier price comparisons</div>
-                <div><strong>Inventory Report:</strong> Current inventory status</div>
+            <div className="pt-4 border-t border-border">
+              <h3 className="font-semibold text-foreground mb-3">Message Templates</h3>
+              <div className="text-sm text-muted-foreground space-y-3">
+                <div className="flex items-start">
+                  <div className="w-2 h-2 bg-red-500 rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                  <div><strong className="text-foreground">Low Stock:</strong> Alerts for items below minimum stock</div>
+                </div>
+                <div className="flex items-start">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                  <div><strong className="text-foreground">Material Request:</strong> Pending material requests summary</div>
+                </div>
+                <div className="flex items-start">
+                  <div className="w-2 h-2 bg-purple-500 rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                  <div><strong className="text-foreground">Price Comparison:</strong> Supplier price comparisons</div>
+                </div>
+                <div className="flex items-start">
+                  <div className="w-2 h-2 bg-green-500 rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                  <div><strong className="text-foreground">Inventory Report:</strong> Current inventory status</div>
+                </div>
               </div>
             </div>
           </CardContent>
