@@ -75,7 +75,7 @@ export default function Login() {
                 <Input
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  placeholder="Type: admin"
+                  placeholder="admin@demo.com"
                   className="pl-10 border-gray-300 focus:border-blue-500"
                   disabled={isLoading}
                   autoComplete="off"
@@ -121,22 +121,13 @@ export default function Login() {
             </Button>
           </form>
 
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-            <div className="text-center">
-              <p className="text-lg font-bold text-red-800 mb-2">
-                🔑 LOGIN CREDENTIALS
-              </p>
-              <div className="bg-white p-3 rounded border-2 border-red-300">
-                <p className="text-sm font-mono text-red-900">
-                  Username: <span className="font-bold text-xl">admin</span>
-                </p>
-                <p className="text-sm font-mono text-red-900">
-                  Password: <span className="font-bold text-xl">admin123</span>
-                </p>
+          <div className="bg-gray-50 rounded-lg p-4">
+            <p className="text-sm font-medium text-gray-700 mb-3">Demo Accounts:</p>
+            <div className="space-y-2 text-sm">
+              <div className="bg-white p-2 rounded border">
+                <p className="font-medium text-blue-700">Admin: admin@demo.com</p>
+                <p className="text-gray-600">Password: admin123</p>
               </div>
-              <p className="text-xs text-red-700 mt-2">
-                ⚠️ Type exactly as shown above (no email format)
-              </p>
             </div>
           </div>
         </CardContent>
