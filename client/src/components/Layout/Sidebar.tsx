@@ -103,9 +103,13 @@ export default function Sidebar({ onItemClick }: SidebarProps = {}) {
         <div className="flex items-center space-x-2">
           <div className="w-8 h-8 rounded-lg overflow-hidden flex items-center justify-center">
             <img 
-              src="/attached_assets/furnili_small_1753206717917.png" 
+              src="/furnili-logo.png" 
               alt="Furnili Logo" 
               className="w-8 h-8 object-contain"
+              onError={(e) => {
+                // Fallback to SVG version
+                (e.target as HTMLImageElement).src = '/furnili-logo.svg';
+              }}
             />
           </div>
           <div>
