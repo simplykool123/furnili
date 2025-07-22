@@ -1331,6 +1331,141 @@ export class MemStorage {
       })),
     };
   }
+
+  // Payroll operations
+  async getAllPayroll(filters?: { month?: number; year?: number; status?: string }): Promise<Payroll[]> {
+    const allPayroll = Array.from(this.payroll.values());
+    
+    if (!filters) return allPayroll;
+
+    return allPayroll.filter(payroll => {
+      if (filters.month !== undefined && payroll.month !== filters.month) return false;
+      if (filters.year !== undefined && payroll.year !== filters.year) return false;
+      if (filters.status && payroll.status !== filters.status) return false;
+      return true;
+    });
+  }
+
+  async createPayroll(payrollData: InsertPayroll): Promise<Payroll> {
+    const id = this.currentId++;
+    const payroll: Payroll = {
+      id,
+      userId: payrollData.userId,
+      month: payrollData.month,
+      year: payrollData.year,
+      basicSalary: payrollData.basicSalary,
+      allowances: payrollData.allowances || 0,
+      overtimePay: payrollData.overtimePay || 0,
+      bonus: payrollData.bonus || 0,
+      deductions: payrollData.deductions || 0,
+      netSalary: payrollData.netSalary,
+      totalWorkingDays: payrollData.totalWorkingDays || 30,
+      actualWorkingDays: payrollData.actualWorkingDays,
+      totalHours: payrollData.totalHours || 0,
+      overtimeHours: payrollData.overtimeHours || 0,
+      leaveDays: payrollData.leaveDays || 0,
+      paySlipUrl: payrollData.paySlipUrl || null,
+      status: payrollData.status || "draft",
+      processedBy: payrollData.processedBy || null,
+      processedAt: payrollData.processedAt || null,
+      createdAt: new Date(),
+    };
+    this.payroll.set(id, payroll);
+    return payroll;
+  }
+
+  async updatePayroll(id: number, updates: Partial<InsertPayroll>): Promise<Payroll | undefined> {
+    const payroll = this.payroll.get(id);
+    if (!payroll) return undefined;
+
+    const updatedPayroll = { ...payroll, ...updates };
+    this.payroll.set(id, updatedPayroll);
+    return updatedPayroll;
+  }
+
+  async generatePayroll(userId: number, month: number, year: number): Promise<Payroll> {
+    // Check if payroll already exists
+    const existingPayroll = Array.from(this.payroll.values()).find(
+      p => p.userId === userId && p.month === month && p.year === year
+    );
+    
+    if (existingPayroll) {
+      return existingPayroll;
+    }
+
+    // Get user details
+    const user = this.users.get(userId);
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    // Calculate attendance for the month - simplified version
+    const allAttendance = Array.from(this.attendance.values()).filter(a => 
+      a.userId === userId && 
+      new Date(a.date).getMonth() + 1 === month && 
+      new Date(a.date).getFullYear() === year
+    );
+    
+    const presentDays = allAttendance.filter(a => a.status === 'present').length;
+    const totalHours = allAttendance.reduce((sum, a) => sum + (a.workingHours || 8), 0);
+    const overtimeHours = allAttendance.reduce((sum, a) => sum + (a.overtimeHours || 0), 0);
+    const absentDays = allAttendance.filter(a => a.status === 'absent').length;
+    
+    // Basic salary from user profile or default
+    const basicSalary = user.basicSalary || 25000;
+    const allowances = user.allowances || 0;
+    
+    // Calculate working days in the month
+    const daysInMonth = new Date(year, month, 0).getDate();
+    const totalWorkingDays = daysInMonth - Math.floor(daysInMonth / 7) * 2; // Approximate working days (excluding weekends)
+    
+    // Calculate salary based on attendance
+    const dailySalary = basicSalary / totalWorkingDays;
+    const earnedSalary = dailySalary * presentDays;
+    
+    // Calculate overtime pay (if any)
+    const overtimePayAmount = overtimeHours * 50; // ₹50 per hour overtime
+    
+    // Basic deductions (can be enhanced later)
+    const deductions = earnedSalary * 0.12; // 12% for PF, ESI, etc.
+    
+    const netSalary = earnedSalary + allowances + overtimePayAmount - deductions;
+
+    const payrollData: InsertPayroll = {
+      userId,
+      month,
+      year,
+      basicSalary,
+      allowances,
+      overtimePay: overtimePayAmount,
+      bonus: 0,
+      deductions,
+      netSalary,
+      totalWorkingDays,
+      actualWorkingDays: presentDays,
+      totalHours,
+      overtimeHours,
+      leaveDays: absentDays,
+      status: "generated",
+    };
+
+    return this.createPayroll(payrollData);
+  }
+
+  async processPayroll(id: number, processedBy: number): Promise<Payroll | undefined> {
+    const payroll = this.payroll.get(id);
+    if (!payroll) return undefined;
+
+    const updatedPayroll = {
+      ...payroll,
+      status: "paid" as const,
+      processedBy,
+      processedAt: new Date(),
+    };
+
+    this.payroll.set(id, updatedPayroll);
+    return updatedPayroll;
+  }
 }
 
 export const storage = new MemStorage();

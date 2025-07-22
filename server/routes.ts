@@ -907,8 +907,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         year: year ? parseInt(year as string) : undefined,
       };
       
-      // For now, return empty array since payroll implementation is not complete
-      res.json([]);
+      const payrollRecords = await storage.getAllPayroll(filters);
+      res.json(payrollRecords);
     } catch (error) {
       console.error("Failed to fetch payroll:", error);
       res.status(500).json({ message: "Failed to fetch payroll", error: String(error) });
@@ -923,22 +923,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "User ID, month, and year are required" });
       }
       
-      // Mock payroll generation for now
-      const payrollData = {
-        id: Math.floor(Math.random() * 10000),
-        userId,
-        month,
-        year,
-        basicSalary: 25000,
-        actualWorkingDays: 22,
-        totalHours: 176,
-        overtimeHours: 8,
-        netSalary: 26000,
-        status: "generated",
-        createdAt: new Date(),
-      };
-      
-      res.json(payrollData);
+      const payroll = await storage.generatePayroll(userId, month, year);
+      res.json(payroll);
     } catch (error) {
       console.error("Payroll generation failed:", error);
       res.status(500).json({ message: "Payroll generation failed", error: String(error) });
@@ -947,15 +933,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/payroll/:id/process", authenticateToken, requireRole(["admin", "manager"]), async (req: AuthRequest, res) => {
     try {
-      const { id } = req.params;
+      const id = parseInt(req.params.id);
       
-      // Mock payroll processing for now
-      const processedPayroll = {
-        id: parseInt(id),
-        status: "paid",
-        processedAt: new Date(),
-        processedBy: req.user!.id,
-      };
+      const processedPayroll = await storage.processPayroll(id, req.user!.id);
+      
+      if (!processedPayroll) {
+        return res.status(404).json({ message: "Payroll not found" });
+      }
       
       res.json(processedPayroll);
     } catch (error) {
