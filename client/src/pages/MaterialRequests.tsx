@@ -1,6 +1,6 @@
 import { useState } from "react";
 import RequestTable from "@/components/Requests/RequestTable";
-import RequestForm from "@/components/Requests/RequestForm";
+import RequestFormSimplified from "@/components/Requests/RequestFormSimplified";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { authService } from "@/lib/auth";
@@ -38,7 +38,7 @@ export default function MaterialRequests() {
               Form to create a new material request with client details and product items
             </p>
           </DialogHeader>
-          <RequestForm onClose={() => setShowNewRequest(false)} />
+          <RequestFormSimplified onClose={() => setShowNewRequest(false)} />
         </DialogContent>
       </Dialog>
     </div>
