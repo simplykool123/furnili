@@ -61,6 +61,9 @@ export default function Attendance() {
   const { toast } = useToast();
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  
+  // Generate year options from 2024 to 2030
+  const yearOptions = Array.from({ length: 7 }, (_, i) => 2024 + i);
   const [selectedStaff, setSelectedStaff] = useState<string>("");
   const [isProcessingPayroll, setIsProcessingPayroll] = useState(false);
   const [isAddStaffOpen, setIsAddStaffOpen] = useState(false);
@@ -337,9 +340,9 @@ export default function Attendance() {
               <SelectValue placeholder="Year" />
             </SelectTrigger>
             <SelectContent>
-              {Array.from({ length: 5 }, (_, i) => (
-                <SelectItem key={2020 + i} value={(2020 + i).toString()}>
-                  {2020 + i}
+              {yearOptions.map(year => (
+                <SelectItem key={year} value={year.toString()}>
+                  {year}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -348,7 +351,7 @@ export default function Attendance() {
       </div>
 
       {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Present Today</CardTitle>
@@ -377,12 +380,12 @@ export default function Attendance() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Total Hours</CardTitle>
-            <Timer className="h-4 w-4 text-blue-600" />
+            <CardTitle className="text-sm font-medium">Working Days</CardTitle>
+            <Calendar className="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-blue-600">
-              {attendanceStats?.totalHours?.toFixed(1) || "0.0"}
+              {attendanceStats?.workingDays || attendanceStats?.totalDays || 0}
             </div>
             <p className="text-xs text-gray-600">this month</p>
           </CardContent>
@@ -390,14 +393,27 @@ export default function Attendance() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Payroll</CardTitle>
-            <IndianRupee className="h-4 w-4 text-purple-600" />
+            <CardTitle className="text-sm font-medium">Sundays/Holidays</CardTitle>
+            <Calendar className="h-4 w-4 text-orange-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-orange-600">
+              {attendanceStats?.holidays || 0}
+            </div>
+            <p className="text-xs text-gray-600">this month</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Total Hours</CardTitle>
+            <Timer className="h-4 w-4 text-purple-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-purple-600">
-              {payrollRecords.reduce((sum: number, p: any) => sum + p.netSalary, 0).toLocaleString()}
+              {attendanceStats?.totalHours?.toFixed(1) || "0.0"}
             </div>
-            <p className="text-xs text-gray-600">total this month</p>
+            <p className="text-xs text-gray-600">this month</p>
           </CardContent>
         </Card>
       </div>

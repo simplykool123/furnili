@@ -324,6 +324,8 @@ export class MemStorage implements IStorage {
     absentDays: number;
     totalHours: number;
     overtimeHours: number;
+    holidays: number;
+    workingDays: number;
   }> {
     const filters = { userId, month, year };
     const attendance = await this.getAllAttendance(filters);
@@ -332,23 +334,37 @@ export class MemStorage implements IStorage {
     const totalHours = attendance.reduce((sum, a) => sum + (a.workingHours || 0), 0);
     const overtimeHours = attendance.reduce((sum, a) => sum + (a.overtimeHours || 0), 0);
     
-    // Calculate total working days in month if month/year specified
+    // Calculate working days and holidays in month if month/year specified
     let totalDays = attendance.length;
+    let holidays = 0;
+    let workingDays = 0;
+    
     if (month && year) {
       const daysInMonth = new Date(year, month, 0).getDate();
-      const weekdays = Array.from({ length: daysInMonth }, (_, i) => {
-        const date = new Date(year, month - 1, i + 1);
-        return date.getDay();
-      }).filter(day => day !== 0 && day !== 6).length; // Exclude weekends
-      totalDays = weekdays;
+      
+      // Count Sundays as holidays
+      for (let i = 1; i <= daysInMonth; i++) {
+        const date = new Date(year, month - 1, i);
+        const dayOfWeek = date.getDay();
+        
+        if (dayOfWeek === 0) { // Sunday
+          holidays++;
+        } else {
+          workingDays++;
+        }
+      }
+      
+      totalDays = daysInMonth;
     }
     
     return {
       totalDays,
       presentDays,
-      absentDays: totalDays - presentDays,
+      absentDays: workingDays - presentDays,
       totalHours,
       overtimeHours,
+      holidays,
+      workingDays,
     };
   }
 

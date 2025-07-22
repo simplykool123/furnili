@@ -31,13 +31,22 @@ Preferred communication style: Simple, everyday language.
   - Automated payroll calculation with overtime and deductions
   - Pay slip generation and processing system
   - 5-tab interface: Dashboard, Check In/Out, Attendance Records, Staff Management, Payroll
+  - **Updated**: Fixed year dropdown to show 2024-2030 range instead of 2020-2024
+  - **Updated**: Added Sundays as holidays in attendance calculation with proper working days tracking
+- ✅ **Complete Petty Cash Management System**: Built comprehensive expense tracking module
+  - Manual entry form with Date, Paid To, Amount, Payment Mode, Category, Upload Screenshot
+  - Smart OCR processing using Tesseract.js for UPI payment screenshots (GPay, PhonePe, etc.)
+  - Auto-extracts amount, receiver, date from payment images
+  - Dashboard with filtering by Date/Category/Payment Mode and search functionality
+  - Balance tracking: Total Expenses, Total Income, Current Balance, This Month stats
+  - WhatsApp and Excel export for easy sharing and reporting
+  - Real-time image thumbnail viewing in expense table
 - ✅ **Compact Material Request Form**: Redesigned with tab-friendly grid layout
   - Description, Brand, Type, Size, Thickness columns
   - Automatic row addition on tab navigation
   - Streamlined data entry for fast material requests
 - 🔄 Implementing comprehensive multi-user login system with Admin/Staff roles
 - 🔄 Adding inventory inward/outward management with automatic quantity tracking
-- 🔄 Creating petty cash tracker with OCR receipt processing
 - 🔄 Developing task allocation system for staff management
 
 ## System Architecture
