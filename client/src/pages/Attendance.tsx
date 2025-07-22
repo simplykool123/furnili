@@ -37,6 +37,7 @@ import {
   Edit,
   UserPlus
 } from "lucide-react";
+import html2pdf from 'html2pdf.js';
 
 // Form schemas
 const staffFormSchema = z.object({
@@ -225,6 +226,124 @@ export default function Attendance() {
       });
     },
   });
+
+  // Pay slip generation function
+  const generatePaySlip = (payroll: any, staffMember: any) => {
+    const paySlipHTML = `
+      <div style="width: 800px; margin: 0 auto; padding: 40px; font-family: Arial, sans-serif; background: white;">
+        <div style="text-align: center; margin-bottom: 30px;">
+          <h1 style="color: #D4B896; margin: 0; font-size: 24px;">Furnili MS</h1>
+          <h2 style="color: #333; margin: 10px 0; font-size: 18px;">Salary Slip</h2>
+        </div>
+        
+        <div style="border: 2px solid #D4B896; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
+            <div>
+              <strong>Employee Name:</strong> ${staffMember.name}
+            </div>
+            <div>
+              <strong>Employee ID:</strong> ${staffMember.employeeId || 'N/A'}
+            </div>
+          </div>
+          
+          <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
+            <div>
+              <strong>Department:</strong> ${staffMember.department || 'N/A'}
+            </div>
+            <div>
+              <strong>Designation:</strong> ${staffMember.designation || 'N/A'}
+            </div>
+          </div>
+          
+          <div style="display: flex; justify-content: space-between;">
+            <div>
+              <strong>Month/Year:</strong> ${new Date(0, payroll.month - 1).toLocaleString('default', { month: 'long' })} ${payroll.year}
+            </div>
+            <div>
+              <strong>Pay Date:</strong> ${new Date().toLocaleDateString()}
+            </div>
+          </div>
+        </div>
+
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+          <tr style="background-color: #F5F0E8;">
+            <th style="border: 1px solid #ddd; padding: 12px; text-align: left;">Earnings</th>
+            <th style="border: 1px solid #ddd; padding: 12px; text-align: right;">Amount (₹)</th>
+          </tr>
+          <tr>
+            <td style="border: 1px solid #ddd; padding: 8px;">Basic Salary</td>
+            <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">${payroll.basicSalary?.toLocaleString('en-IN') || '0'}</td>
+          </tr>
+          <tr>
+            <td style="border: 1px solid #ddd; padding: 8px;">Allowances</td>
+            <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">${payroll.allowances?.toLocaleString('en-IN') || '0'}</td>
+          </tr>
+          <tr>
+            <td style="border: 1px solid #ddd; padding: 8px;">Overtime Pay</td>
+            <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">${payroll.overtimePay?.toLocaleString('en-IN') || '0'}</td>
+          </tr>
+          <tr>
+            <td style="border: 1px solid #ddd; padding: 8px;">Bonus</td>
+            <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">${payroll.bonus?.toLocaleString('en-IN') || '0'}</td>
+          </tr>
+          <tr style="background-color: #F5F0E8; font-weight: bold;">
+            <td style="border: 1px solid #ddd; padding: 8px;">Gross Earnings</td>
+            <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">₹${((payroll.basicSalary || 0) + (payroll.allowances || 0) + (payroll.overtimePay || 0) + (payroll.bonus || 0)).toLocaleString('en-IN')}</td>
+          </tr>
+        </table>
+
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+          <tr style="background-color: #F5F0E8;">
+            <th style="border: 1px solid #ddd; padding: 12px; text-align: left;">Deductions</th>
+            <th style="border: 1px solid #ddd; padding: 12px; text-align: right;">Amount (₹)</th>
+          </tr>
+          <tr>
+            <td style="border: 1px solid #ddd; padding: 8px;">Total Deductions</td>
+            <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">${payroll.deductions?.toLocaleString('en-IN') || '0'}</td>
+          </tr>
+        </table>
+
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px;">
+          <tr style="background-color: #D4B896; color: white; font-weight: bold; font-size: 16px;">
+            <td style="border: 1px solid #ddd; padding: 12px;">Net Salary</td>
+            <td style="border: 1px solid #ddd; padding: 12px; text-align: right;">₹${payroll.netSalary?.toLocaleString('en-IN') || '0'}</td>
+          </tr>
+        </table>
+
+        <div style="display: flex; justify-content: space-between; margin-top: 30px;">
+          <div>
+            <div><strong>Working Days:</strong> ${payroll.totalWorkingDays || 0}</div>
+            <div><strong>Present Days:</strong> ${payroll.actualWorkingDays || 0}</div>
+          </div>
+          <div>
+            <div><strong>Total Hours:</strong> ${payroll.totalHours?.toFixed(1) || '0.0'}h</div>
+            <div><strong>Overtime Hours:</strong> ${payroll.overtimeHours?.toFixed(1) || '0.0'}h</div>
+          </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 40px; color: #666; font-size: 12px;">
+          Generated by Furnili Management System on ${new Date().toLocaleString()}
+        </div>
+      </div>
+    `;
+
+    // Generate PDF
+    const options = {
+      margin: 0.5,
+      filename: `PaySlip_${staffMember.name}_${new Date(0, payroll.month - 1).toLocaleString('default', { month: 'long' })}_${payroll.year}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2 },
+      jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+    };
+
+    html2pdf().set(options).from(paySlipHTML).save();
+    
+    // Show success toast
+    toast({ 
+      title: "Pay slip generated", 
+      description: `PDF download started for ${staffMember.name}` 
+    });
+  };
 
   // Helper functions
   const getStatusBadge = (status: string) => {
@@ -777,7 +896,11 @@ export default function Attendance() {
                               </Button>
                             ) : (
                               <>
-                                <Button size="sm" variant="outline">
+                                <Button 
+                                  size="sm" 
+                                  variant="outline"
+                                  onClick={() => generatePaySlip(payroll, member)}
+                                >
                                   <FileText className="w-3 h-3 mr-1" />
                                   Pay Slip
                                 </Button>
