@@ -1,7 +1,7 @@
 import { Link, useLocation } from "wouter";
 import { cn } from "@/lib/utils";
 import { authService } from "@/lib/auth";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { 
   LayoutDashboard, 
   Package, 
@@ -59,15 +59,17 @@ export default function Sidebar({ onItemClick }: SidebarProps = {}) {
   if (!user) return null;
 
   // Auto-expand Master menu if any sub-item is active
-  const masterItem = navigation.find(item => item.name === 'Master');
-  if (masterItem?.subItems) {
-    const hasActiveMasterSubItem = masterItem.subItems.some(subItem => 
-      location === subItem.href || (subItem.href !== '/' && location.startsWith(subItem.href))
-    );
-    if (hasActiveMasterSubItem && !expandedItems.includes('Master')) {
-      setExpandedItems(prev => [...prev, 'Master']);
+  useEffect(() => {
+    const masterItem = navigation.find(item => item.name === 'Master');
+    if (masterItem?.subItems) {
+      const hasActiveMasterSubItem = masterItem.subItems.some(subItem => 
+        subItem.href && (location === subItem.href || (subItem.href !== '/' && location.startsWith(subItem.href)))
+      );
+      if (hasActiveMasterSubItem && !expandedItems.includes('Master')) {
+        setExpandedItems(prev => [...prev, 'Master']);
+      }
     }
-  }
+  }, [location, expandedItems]);
 
   const handleLogout = () => {
     authService.logout();
@@ -122,7 +124,7 @@ export default function Sidebar({ onItemClick }: SidebarProps = {}) {
             if (item.isCollapsible && item.subItems) {
               const isExpanded = expandedItems.includes(item.name);
               const hasActiveSubItem = item.subItems.some(subItem => 
-                location === subItem.href || (subItem.href !== '/' && location.startsWith(subItem.href))
+                subItem.href && (location === subItem.href || (subItem.href !== '/' && location.startsWith(subItem.href)))
               );
               
               return (
@@ -152,9 +154,9 @@ export default function Sidebar({ onItemClick }: SidebarProps = {}) {
                   {isExpanded && (
                     <div className="ml-6 mt-1 space-y-1">
                       {item.subItems.map((subItem) => {
-                        const isActive = location === subItem.href || (subItem.href !== '/' && location.startsWith(subItem.href));
+                        const isActive = subItem.href && (location === subItem.href || (subItem.href !== '/' && location.startsWith(subItem.href)));
                         
-                        return (
+                        return subItem.href ? (
                           <Link
                             key={subItem.name}
                             href={subItem.href}
@@ -169,7 +171,7 @@ export default function Sidebar({ onItemClick }: SidebarProps = {}) {
                             <subItem.icon className="w-4 h-4 flex-shrink-0" />
                             <span className="truncate">{subItem.name}</span>
                           </Link>
-                        );
+                        ) : null;
                       })}
                     </div>
                   )}
@@ -177,9 +179,9 @@ export default function Sidebar({ onItemClick }: SidebarProps = {}) {
               );
             } else {
               // Regular menu item
-              const isActive = location === item.href || (item.href !== '/' && location.startsWith(item.href));
+              const isActive = item.href && (location === item.href || (item.href !== '/' && location.startsWith(item.href)));
               
-              return (
+              return item.href ? (
                 <Link 
                   key={item.name} 
                   href={item.href} 
@@ -194,7 +196,7 @@ export default function Sidebar({ onItemClick }: SidebarProps = {}) {
                   <item.icon className="w-4 h-4 flex-shrink-0" />
                   <span className="truncate">{item.name}</span>
                 </Link>
-              );
+              ) : null;
             }
           })}
         </div>
