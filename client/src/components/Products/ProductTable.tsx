@@ -47,7 +47,7 @@ export default function ProductTable() {
         if (value && value !== 'all') params.append(key, value);
       });
       
-      return await authenticatedApiRequest(`/api/products?${params}`, { method: 'GET' });
+      return await authenticatedApiRequest('GET', `/api/products?${params}`);
     },
   });
 
@@ -58,7 +58,7 @@ export default function ProductTable() {
 
   const deleteProductMutation = useMutation({
     mutationFn: async (id: number) => {
-      return await authenticatedApiRequest(`/api/products/${id}`, { method: 'DELETE' });
+      return await authenticatedApiRequest('DELETE', `/api/products/${id}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/products'] });

@@ -47,16 +47,13 @@ export default function RequestTable() {
         if (value && value !== 'all') params.append(key, value);
       });
       
-      return await authenticatedApiRequest(`/api/requests?${params}`);
+      return await authenticatedApiRequest('GET', `/api/requests?${params}`);
     },
   });
 
   const updateStatusMutation = useMutation({
     mutationFn: async ({ id, status }: { id: number; status: string }) => {
-      return await authenticatedApiRequest(`/api/requests/${id}/status`, {
-        method: 'PATCH',
-        body: JSON.stringify({ status }),
-      });
+      return await authenticatedApiRequest('PATCH', `/api/requests/${id}/status`, { status });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/requests'] });

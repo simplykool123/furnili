@@ -18,9 +18,9 @@ export async function apiRequest(
   const token = cleanToken();
   
   // Clean the method string and validate
-  const cleanMethod = method.trim().toUpperCase();
+  const cleanMethod = String(method || 'GET').trim().toUpperCase();
   if (!['GET', 'POST', 'PUT', 'DELETE', 'PATCH'].includes(cleanMethod)) {
-    console.error('Invalid HTTP method provided:', method);
+    console.error('Invalid HTTP method provided:', method, 'typeof:', typeof method);
     throw new Error(`Invalid HTTP method: ${method}`);
   }
   

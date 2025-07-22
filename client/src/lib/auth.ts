@@ -121,7 +121,8 @@ export async function authenticatedApiRequest(method: string, url: string, data?
     throw new Error(error.message || `Request failed with status ${response.status}`);
   }
 
-  return response;
+  // Return JSON data instead of Response object
+  return await response.json();
 }
 
 // Legacy exports for backward compatibility

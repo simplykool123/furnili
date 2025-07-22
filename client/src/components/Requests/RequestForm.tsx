@@ -45,7 +45,7 @@ export default function RequestForm({ onClose }: RequestFormProps) {
   const { data: products } = useQuery({
     queryKey: ['/api/products'],
     queryFn: async () => {
-      return await authenticatedApiRequest('/api/products');
+      return await authenticatedApiRequest('GET', '/api/products');
     },
   });
 
@@ -109,10 +109,7 @@ export default function RequestForm({ onClose }: RequestFormProps) {
         })),
       };
 
-      return await authenticatedApiRequest('/api/requests', {
-        method: 'POST',
-        body: JSON.stringify(requestData),
-      });
+      return await authenticatedApiRequest('POST', '/api/requests', requestData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/requests'] });

@@ -42,7 +42,7 @@ export default function Users() {
   const { data: users, isLoading } = useQuery({
     queryKey: ['/api/users'],
     queryFn: async () => {
-      return await authenticatedApiRequest('/api/users');
+      return await authenticatedApiRequest('GET', '/api/users');
     },
   });
 
@@ -66,10 +66,7 @@ export default function Users() {
 
   const createUserMutation = useMutation({
     mutationFn: async (userData: UserFormData) => {
-      return await authenticatedApiRequest('/api/auth/register', {
-        method: 'POST',
-        body: JSON.stringify(userData),
-      });
+      return await authenticatedApiRequest('POST', '/api/auth/register', userData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/users'] });
@@ -91,9 +88,7 @@ export default function Users() {
 
   const deleteUserMutation = useMutation({
     mutationFn: async (id: number) => {
-      return await authenticatedApiRequest(`/api/users/${id}`, {
-        method: 'DELETE',
-      });
+      return await authenticatedApiRequest('DELETE', `/api/users/${id}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/users'] });

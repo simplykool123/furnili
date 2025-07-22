@@ -97,36 +97,33 @@ export default function Attendance() {
   // Queries
   const { data: attendanceRecords = [], isLoading } = useQuery({
     queryKey: ["/api/attendance", selectedMonth, selectedYear],
-    queryFn: () => authenticatedApiRequest(`/api/attendance?month=${selectedMonth}&year=${selectedYear}`),
+    queryFn: () => authenticatedApiRequest('GET', `/api/attendance?month=${selectedMonth}&year=${selectedYear}`),
   });
 
   const { data: todayAttendance = [] } = useQuery({
     queryKey: ["/api/attendance/today"],
-    queryFn: () => authenticatedApiRequest("/api/attendance/today"),
+    queryFn: () => authenticatedApiRequest('GET', "/api/attendance/today"),
   });
 
   const { data: staff = [] } = useQuery({
     queryKey: ["/api/users"],
-    queryFn: () => authenticatedApiRequest("/api/users"),
+    queryFn: () => authenticatedApiRequest('GET', "/api/users"),
   });
 
   const { data: payrollRecords = [] } = useQuery({
     queryKey: ["/api/payroll", selectedMonth, selectedYear],
-    queryFn: () => authenticatedApiRequest(`/api/payroll?month=${selectedMonth}&year=${selectedYear}`),
+    queryFn: () => authenticatedApiRequest('GET', `/api/payroll?month=${selectedMonth}&year=${selectedYear}`),
   });
 
   const { data: attendanceStats } = useQuery({
     queryKey: ["/api/attendance/stats", selectedMonth, selectedYear],
-    queryFn: () => authenticatedApiRequest(`/api/attendance/stats?month=${selectedMonth}&year=${selectedYear}`),
+    queryFn: () => authenticatedApiRequest('GET', `/api/attendance/stats?month=${selectedMonth}&year=${selectedYear}`),
   });
 
   // Mutations
   const adminCheckInMutation = useMutation({
     mutationFn: async (data: { userId: number; location?: string; notes?: string }) => {
-      return authenticatedApiRequest("/api/attendance/admin-checkin", {
-        method: "POST",
-        body: JSON.stringify(data),
-      });
+      return authenticatedApiRequest("POST", "/api/attendance/admin-checkin", data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/attendance"] });
@@ -136,10 +133,7 @@ export default function Attendance() {
 
   const adminCheckOutMutation = useMutation({
     mutationFn: async (data: { attendanceId: number; notes?: string }) => {
-      return authenticatedApiRequest("/api/attendance/admin-checkout", {
-        method: "POST",
-        body: JSON.stringify(data),
-      });
+      return authenticatedApiRequest("POST", "/api/attendance/admin-checkout", data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/attendance"] });

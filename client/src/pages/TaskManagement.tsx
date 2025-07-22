@@ -60,10 +60,7 @@ export default function TaskManagement() {
 
   const updateTaskStatusMutation = useMutation({
     mutationFn: async ({ taskId, status }: { taskId: number; status: string }) => {
-      return authenticatedApiRequest(`/api/tasks/${taskId}/status`, {
-        method: "PATCH",
-        body: JSON.stringify({ status }),
-      });
+      return authenticatedApiRequest("PATCH", `/api/tasks/${taskId}/status`, { status });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/tasks"] });
