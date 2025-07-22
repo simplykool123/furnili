@@ -18,7 +18,6 @@ const requestSchema = z.object({
   clientName: z.string().min(1, "Client name is required"),
   orderNumber: z.string().min(1, "Order number is required"),
   priority: z.enum(["high", "medium", "low"]),
-  boqReference: z.string().optional(),
   remarks: z.string().optional(),
   items: z.array(z.object({
     description: z.string().min(1, "Description is required"),
@@ -63,7 +62,6 @@ export default function RequestForm({ onClose }: RequestFormProps) {
       clientName: "",
       orderNumber: "",
       priority: "medium",
-      boqReference: "",
       remarks: "",
       items: [{ 
         description: "", 
@@ -96,7 +94,6 @@ export default function RequestForm({ onClose }: RequestFormProps) {
           clientName: data.clientName,
           orderNumber: data.orderNumber,
           priority: data.priority,
-          boqReference: data.boqReference || undefined,
           remarks: data.remarks || undefined,
         },
         items: validItems.map(item => ({
@@ -208,32 +205,21 @@ export default function RequestForm({ onClose }: RequestFormProps) {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="priority">Priority</Label>
-              <Select 
-                value={watch("priority")}
-                onValueChange={(value) => setValue("priority", value as "high" | "medium" | "low")}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select priority" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="high">High Priority</SelectItem>
-                  <SelectItem value="medium">Medium Priority</SelectItem>
-                  <SelectItem value="low">Low Priority</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label htmlFor="boqReference">BOQ Reference</Label>
-              <Input
-                id="boqReference"
-                {...register("boqReference")}
-                placeholder="e.g., BOQ-2024-001"
-              />
-            </div>
+          <div>
+            <Label htmlFor="priority">Priority</Label>
+            <Select 
+              value={watch("priority")}
+              onValueChange={(value) => setValue("priority", value as "high" | "medium" | "low")}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select priority" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="high">High Priority</SelectItem>
+                <SelectItem value="medium">Medium Priority</SelectItem>
+                <SelectItem value="low">Low Priority</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div>

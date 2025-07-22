@@ -10,9 +10,11 @@ import {
   Clock, 
   DollarSign,
   CheckCircle,
-  Calendar
+  Calendar,
+  Quote
 } from "lucide-react";
 import { authService } from "@/lib/auth";
+import { useState, useEffect } from "react";
 
 interface DashboardStats {
   totalProducts: number;
@@ -26,9 +28,99 @@ interface DashboardStats {
   activeTasks: number;
 }
 
+const motivationalQuotes = [
+  {
+    text: "Success is not final, failure is not fatal: it is the courage to continue that counts.",
+    author: "Winston Churchill"
+  },
+  {
+    text: "The way to get started is to quit talking and begin doing.",
+    author: "Walt Disney"
+  },
+  {
+    text: "Innovation distinguishes between a leader and a follower.",
+    author: "Steve Jobs"
+  },
+  {
+    text: "Don't be afraid to give up the good to go for the great.",
+    author: "John D. Rockefeller"
+  },
+  {
+    text: "The only impossible journey is the one you never begin.",
+    author: "Tony Robbins"
+  },
+  {
+    text: "Success is walking from failure to failure with no loss of enthusiasm.",
+    author: "Winston Churchill"
+  },
+  {
+    text: "Quality is not an act, it is a habit.",
+    author: "Aristotle"
+  },
+  {
+    text: "The best time to plant a tree was 20 years ago. The second best time is now.",
+    author: "Chinese Proverb"
+  },
+  {
+    text: "Your limitation—it's only your imagination.",
+    author: "Unknown"
+  },
+  {
+    text: "Great things never come from comfort zones.",
+    author: "Unknown"
+  },
+  {
+    text: "Dream it. Wish it. Do it.",
+    author: "Unknown"
+  },
+  {
+    text: "Success doesn't just find you. You have to go out and get it.",
+    author: "Unknown"
+  },
+  {
+    text: "The harder you work for something, the greater you'll feel when you achieve it.",
+    author: "Unknown"
+  },
+  {
+    text: "Dream bigger. Do bigger.",
+    author: "Unknown"
+  },
+  {
+    text: "Don't stop when you're tired. Stop when you're done.",
+    author: "Unknown"
+  },
+  {
+    text: "Wake up with determination. Go to bed with satisfaction.",
+    author: "Unknown"
+  },
+  {
+    text: "Do something today that your future self will thank you for.",
+    author: "Sean Patrick Flanery"
+  },
+  {
+    text: "Little things make big days.",
+    author: "Unknown"
+  },
+  {
+    text: "It's going to be hard, but hard does not mean impossible.",
+    author: "Unknown"
+  },
+  {
+    text: "Don't wait for opportunity. Create it.",
+    author: "Unknown"
+  }
+];
+
 export default function Dashboard() {
   const currentUser = authService.getUser();
   const admin = authService.hasRole(['admin']);
+  const [dailyQuote, setDailyQuote] = useState<typeof motivationalQuotes[0] | null>(null);
+
+  // Select a random quote on component mount
+  useEffect(() => {
+    const randomIndex = Math.floor(Math.random() * motivationalQuotes.length);
+    setDailyQuote(motivationalQuotes[randomIndex]);
+  }, []);
 
   const { data: stats, isLoading } = useQuery<DashboardStats>({
     queryKey: ["/api/dashboard/stats"],
@@ -63,6 +155,27 @@ export default function Dashboard() {
           Here's what's happening with your inventory today.
         </p>
       </div>
+
+      {/* Motivational Quote */}
+      {dailyQuote && (
+        <Card className="bg-gradient-to-r from-amber-50 to-orange-50 border-amber-200">
+          <CardContent className="pt-6">
+            <div className="flex items-start space-x-4">
+              <div className="flex-shrink-0">
+                <Quote className="h-8 w-8 text-amber-600" />
+              </div>
+              <div className="flex-1">
+                <blockquote className="text-lg font-medium text-amber-900 italic leading-relaxed">
+                  "{dailyQuote.text}"
+                </blockquote>
+                <cite className="block text-right text-amber-700 font-semibold mt-3">
+                  — {dailyQuote.author}
+                </cite>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Stats Grid */}
       <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
