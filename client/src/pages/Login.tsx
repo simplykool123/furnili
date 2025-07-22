@@ -1,43 +1,36 @@
 import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { setToken } from "@/lib/auth";
 import { Eye, EyeOff, Lock, User, Package } from "lucide-react";
 
-const loginSchema = z.object({
-  username: z.string().min(1, "Username is required"),
-  password: z.string().min(1, "Password is required"),
-});
-
-type LoginFormData = z.infer<typeof loginSchema>;
-
 export default function Login() {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
-  const form = useForm<LoginFormData>({
-    resolver: zodResolver(loginSchema),
-    defaultValues: {
-      username: "",
-      password: "",
-    },
-  });
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!username || !password) {
+      toast({
+        title: "Missing fields",
+        description: "Please enter both username and password",
+        variant: "destructive",
+      });
+      return;
+    }
 
-  const onSubmit = async (data: LoginFormData) => {
     setIsLoading(true);
     try {
       const response = await apiRequest("/api/auth/login", {
         method: "POST",
-        body: JSON.stringify(data),
+        body: JSON.stringify({ username, password }),
       }) as { user: any; token: string };
 
       setToken(response.token);
@@ -47,7 +40,6 @@ export default function Login() {
         description: `Welcome back, ${response.user.name}!`,
       });
 
-      // Redirect to dashboard
       window.location.href = "/";
     } catch (error: any) {
       toast({
@@ -75,104 +67,75 @@ export default function Login() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="username"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-sm font-medium text-gray-700">Username</FormLabel>
-                    <FormControl>
-                      <div className="relative">
-                        <User className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
-                        <Input
-                          {...field}
-                          type="text"
-                          placeholder="Type: admin"
-                          className="pl-10 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-                          disabled={isLoading}
-                          autoComplete="username"
-                        />
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-sm font-medium text-gray-700">Password</FormLabel>
-                    <FormControl>
-                      <div className="relative">
-                        <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
-                        <Input
-                          {...field}
-                          type={showPassword ? "text" : "password"}
-                          placeholder="Enter your password"
-                          className="pl-10 pr-10 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-                          disabled={isLoading}
-                        />
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                          onClick={() => setShowPassword(!showPassword)}
-                        >
-                          {showPassword ? (
-                            <EyeOff className="h-4 w-4 text-gray-500" />
-                          ) : (
-                            <Eye className="h-4 w-4 text-gray-500" />
-                          )}
-                        </Button>
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <Button
-                type="submit"
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5"
-                disabled={isLoading}
-              >
-                {isLoading ? "Signing in..." : "Sign In"}
-              </Button>
-            </form>
-          </Form>
-
-          <div className="bg-gray-50 rounded-lg p-4">
-            <p className="text-sm font-medium text-gray-700 mb-3">Demo Accounts:</p>
-            <div className="grid grid-cols-2 gap-3 text-sm">
-              <div className="bg-white p-2 rounded border">
-                <p className="font-medium text-blue-700">Admin</p>
-                <p className="text-gray-600">admin@demo.com</p>
-              </div>
-              <div className="bg-white p-2 rounded border">
-                <p className="font-medium text-green-700">Manager</p>
-                <p className="text-gray-600">manager@demo.com</p>
-              </div>
-              <div className="bg-white p-2 rounded border">
-                <p className="font-medium text-purple-700">Storekeeper</p>
-                <p className="text-gray-600">keeper@demo.com</p>
-              </div>
-              <div className="bg-white p-2 rounded border">
-                <p className="font-medium text-orange-700">User</p>
-                <p className="text-gray-600">user@demo.com</p>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700">Username</label>
+              <div className="relative">
+                <User className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
+                <Input
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  placeholder="Type: admin"
+                  className="pl-10 border-gray-300 focus:border-blue-500"
+                  disabled={isLoading}
+                  autoComplete="off"
+                />
               </div>
             </div>
-            <div className="mt-3 p-3 bg-red-100 border border-red-300 rounded text-center">
-              <p className="text-sm font-bold text-red-800">
-                IMPORTANT: Enter exactly → admin (not email format!)
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700">Password</label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
+                <Input
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Type: admin123"
+                  className="pl-10 pr-10 border-gray-300 focus:border-blue-500"
+                  disabled={isLoading}
+                  autoComplete="off"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4 text-gray-500" />
+                  ) : (
+                    <Eye className="h-4 w-4 text-gray-500" />
+                  )}
+                </Button>
+              </div>
+            </div>
+
+            <Button
+              type="submit"
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5"
+              disabled={isLoading}
+            >
+              {isLoading ? "Signing in..." : "Sign In"}
+            </Button>
+          </form>
+
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+            <div className="text-center">
+              <p className="text-lg font-bold text-red-800 mb-2">
+                🔑 LOGIN CREDENTIALS
               </p>
-              <p className="text-xs text-red-700 mt-1">
-                Password: admin123
+              <div className="bg-white p-3 rounded border-2 border-red-300">
+                <p className="text-sm font-mono text-red-900">
+                  Username: <span className="font-bold text-xl">admin</span>
+                </p>
+                <p className="text-sm font-mono text-red-900">
+                  Password: <span className="font-bold text-xl">admin123</span>
+                </p>
+              </div>
+              <p className="text-xs text-red-700 mt-2">
+                ⚠️ Type exactly as shown above (no email format)
               </p>
             </div>
           </div>
