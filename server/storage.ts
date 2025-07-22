@@ -654,13 +654,16 @@ export class MemStorage implements IStorage {
       category: "Construction Materials",
       brand: "Tata Steel",
       size: "12mm diameter",
+      thickness: "12mm",
       sku: "STL-12MM-001",
       pricePerUnit: 450.00,
       currentStock: 15,
       minStock: 50,
       unit: "pieces",
       imageUrl: null,
+      isActive: true,
       createdAt: new Date(),
+      updatedAt: new Date(),
     });
 
     this.products.set(2, {
@@ -670,12 +673,14 @@ export class MemStorage implements IStorage {
       brand: "UltraTech",
       size: "50kg bags",
       sku: "CEM-OPC53-001",
-      price: 380.00,
+      pricePerUnit: 380.00,
       currentStock: 8,
       minStock: 25,
       unit: "bags",
       imageUrl: null,
+      isActive: true,
       createdAt: new Date(),
+      updatedAt: new Date(),
     });
 
     this.products.set(3, {
@@ -685,12 +690,14 @@ export class MemStorage implements IStorage {
       brand: "Supreme",
       size: "4 inch diameter",
       sku: "PVC-4IN-001",
-      price: 180.00,
+      pricePerUnit: 180.00,
       currentStock: 125,
       minStock: 50,
       unit: "meters",
       imageUrl: null,
+      isActive: true,
       createdAt: new Date(),
+      updatedAt: new Date(),
     });
 
     // Create default categories
@@ -1062,7 +1069,22 @@ export class MemStorage implements IStorage {
     items: InsertRequestItem[]
   ): Promise<MaterialRequest> {
     const id = this.currentId++;
-    const totalValue = items.reduce((sum, item) => sum + item.totalPrice, 0);
+    
+    // Enrich items with product prices if not provided
+    const enrichedItems = items.map(item => {
+      const product = this.products.get(item.productId);
+      const unitPrice = item.unitPrice || (product?.pricePerUnit || 0);
+      const totalPrice = item.totalPrice || (unitPrice * item.requestedQuantity);
+      
+      return {
+        ...item,
+        unitPrice,
+        totalPrice,
+        requestId: id
+      };
+    });
+    
+    const totalValue = enrichedItems.reduce((sum, item) => sum + item.totalPrice, 0);
     
     const newRequest: MaterialRequest = {
       ...request,
@@ -1072,9 +1094,7 @@ export class MemStorage implements IStorage {
     };
 
     this.materialRequests.set(id, newRequest);
-    
-    const requestItemsWithIds = items.map(item => ({ ...item, requestId: id }));
-    this.requestItems.set(id, requestItemsWithIds);
+    this.requestItems.set(id, enrichedItems);
 
     return newRequest;
   }
