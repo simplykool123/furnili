@@ -334,7 +334,6 @@ export default function PettyCash() {
           <span className="hidden sm:inline">Add Expense</span>
         </Button>
       </div>
-
       {/* Stats Cards */}
       {stats && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
@@ -374,7 +373,6 @@ export default function PettyCash() {
           </Card>
         </div>
       )}
-
       {/* Filters */}
       <Card>
         <CardContent className="pt-6">
@@ -447,7 +445,6 @@ export default function PettyCash() {
           </div>
         </CardContent>
       </Card>
-
       {/* Expenses Table */}
       <Card>
         <CardHeader>
@@ -510,7 +507,6 @@ export default function PettyCash() {
           </Table>
         </CardContent>
       </Card>
-
       {/* Add Expense Dialog */}
       <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
         <DialogContent className="sm:max-w-[500px]">
@@ -557,7 +553,7 @@ export default function PettyCash() {
                 />
               </div>
               <div>
-                <Label htmlFor="paidBy">Paid By (Staff Member) *</Label>
+                <Label htmlFor="paidBy">Paid By *</Label>
                 <Select 
                   value={formData.paidBy} 
                   onValueChange={(value) => setFormData(prev => ({ ...prev, paidBy: value }))}
@@ -649,7 +645,6 @@ export default function PettyCash() {
           </form>
         </DialogContent>
       </Dialog>
-
       {/* Image Preview Dialog */}
       <Dialog open={showImageDialog} onOpenChange={setShowImageDialog}>
         <DialogContent className="sm:max-w-[600px]">
