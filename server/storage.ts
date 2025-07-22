@@ -466,7 +466,7 @@ export class MemStorage {
     const newExpense: PettyCashExpense = {
       id,
       ...expense,
-      status: 'expense', // Default status
+      status: expense.status || 'expense', // Use provided status or default to expense
       createdAt: now,
       updatedAt: now,
     };
@@ -514,7 +514,7 @@ export class MemStorage {
     
     const currentMonthExpenses = allExpenses
       .filter(e => {
-        const expenseDate = new Date(e.date);
+        const expenseDate = new Date(e.expenseDate);
         return expenseDate.getMonth() === currentMonth && 
                expenseDate.getFullYear() === currentYear &&
                e.status === 'expense';
