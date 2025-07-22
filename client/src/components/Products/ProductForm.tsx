@@ -82,17 +82,29 @@ export default function ProductForm({ product, onClose }: ProductFormProps) {
       const url = product ? `/api/products/${product.id}` : '/api/products';
       const method = product ? 'PUT' : 'POST';
       
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+      
       const response = await fetch(url, {
         method,
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+          'Authorization': `Bearer ${token}`,
         },
         body: formData,
       });
 
       if (!response.ok) {
-        const error = await response.text();
-        throw new Error(error || 'Failed to save product');
+        if (response.status === 401) {
+          // Token expired, redirect to login
+          localStorage.removeItem('authToken');
+          localStorage.removeItem('authUser');
+          window.location.href = '/login';
+          return;
+        }
+        const error = await response.json().catch(() => ({ message: 'Unknown error' }));
+        throw new Error(error.message || 'Failed to save product');
       }
 
       return response.json();
