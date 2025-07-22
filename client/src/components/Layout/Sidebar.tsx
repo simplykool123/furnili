@@ -99,11 +99,15 @@ export default function Sidebar({ onItemClick }: SidebarProps = {}) {
       {/* Logo/Brand */}
       <div className="p-4 border-b border-gray-200">
         <div className="flex items-center space-x-2">
-          <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-            <Warehouse className="w-5 h-5 text-white" />
+          <div className="w-8 h-8 rounded-lg overflow-hidden flex items-center justify-center">
+            <img 
+              src="/attached_assets/furnili_small_1753206717917.png" 
+              alt="Furnili Logo" 
+              className="w-8 h-8 object-contain"
+            />
           </div>
           <div>
-            <h2 className="font-semibold text-gray-900 text-sm">Inventory MS</h2>
+            <h2 className="font-semibold text-gray-900 text-sm">Furnili MS</h2>
             <p className="text-xs text-gray-600 capitalize">{user.role}</p>
           </div>
         </div>

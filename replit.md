@@ -53,6 +53,10 @@ Preferred communication style: Simple, everyday language.
   - Added expandable/collapsible functionality with chevron indicators
   - Auto-expands Master menu when any sub-item is active for better UX
   - Maintains role-based access control for sub-menu items
+- ✅ **Custom Branding**: Updated application branding with Furnili logo
+  - Replaced generic warehouse icon with custom Furnili circular logo
+  - Updated application title to "Furnili MS" in sidebar and page title
+  - Maintained consistent branding across the application
 - ✅ **Compact Material Request Form**: Redesigned with tab-friendly grid layout
   - Description, Brand, Type, Size, Thickness columns
   - Automatic row addition on tab navigation
