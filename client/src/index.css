@@ -3,59 +3,66 @@
 @tailwind utilities;
 
 :root {
-  --background: hsl(0, 0%, 100%);
-  --foreground: hsl(224, 71.4%, 4.1%);
-  --muted: hsl(220, 14.3%, 95.9%);
-  --muted-foreground: hsl(220, 8.9%, 46.1%);
+  /* Furnili Brand Colors */
+  --furnili-primary: hsl(39, 47%, 68%); /* #D4B896 - Warm tan */
+  --furnili-cream: hsl(44, 52%, 95%); /* #F5F0E8 - Cream background */
+  --furnili-dark: hsl(25, 25%, 15%); /* Dark brown */
+  --furnili-accent: hsl(39, 60%, 55%); /* Darker tan for accents */
+  
+  --background: hsl(44, 52%, 95%);
+  --foreground: hsl(25, 25%, 15%);
+  --muted: hsl(39, 30%, 90%);
+  --muted-foreground: hsl(39, 15%, 45%);
   --popover: hsl(0, 0%, 100%);
-  --popover-foreground: hsl(224, 71.4%, 4.1%);
+  --popover-foreground: hsl(25, 25%, 15%);
   --card: hsl(0, 0%, 100%);
-  --card-foreground: hsl(224, 71.4%, 4.1%);
-  --border: hsl(220, 13%, 91%);
-  --input: hsl(220, 13%, 91%);
-  --primary: hsl(207, 90%, 54%);
-  --primary-foreground: hsl(210, 40%, 98%);
-  --secondary: hsl(122, 39%, 49%);
-  --secondary-foreground: hsl(210, 40%, 98%);
-  --accent: hsl(220, 14.3%, 95.9%);
-  --accent-foreground: hsl(220, 8.9%, 46.1%);
+  --card-foreground: hsl(25, 25%, 15%);
+  --border: hsl(39, 20%, 85%);
+  --input: hsl(39, 20%, 92%);
+  --primary: var(--furnili-primary);
+  --primary-foreground: hsl(0, 0%, 100%);
+  --secondary: hsl(39, 60%, 55%);
+  --secondary-foreground: hsl(0, 0%, 100%);
+  --accent: hsl(39, 30%, 90%);
+  --accent-foreground: hsl(25, 25%, 15%);
   --destructive: hsl(0, 84.2%, 60.2%);
-  --destructive-foreground: hsl(210, 40%, 98%);
-  --ring: hsl(207, 90%, 54%);
-  --radius: 0.5rem;
+  --destructive-foreground: hsl(0, 0%, 100%);
+  --ring: var(--furnili-primary);
+  --radius: 0.75rem;
   
   /* Surface colors */
-  --surface: hsl(220, 14.3%, 97.9%);
+  --surface: var(--furnili-cream);
   
   /* Status colors */
-  --warning: hsl(38, 92%, 50%);
-  --warning-foreground: hsl(48, 96%, 89%);
-  --success: hsl(122, 39%, 49%);
-  --success-foreground: hsl(210, 40%, 98%);
+  --warning: hsl(45, 93%, 47%);
+  --warning-foreground: hsl(0, 0%, 100%);
+  --success: hsl(142, 76%, 36%);
+  --success-foreground: hsl(0, 0%, 100%);
   --error: hsl(0, 84.2%, 60.2%);
-  --error-foreground: hsl(210, 40%, 98%);
+  --error-foreground: hsl(0, 0%, 100%);
 }
 
 .dark {
-  --background: hsl(224, 71.4%, 4.1%);
-  --foreground: hsl(210, 40%, 98%);
-  --muted: hsl(223, 47%, 11%);
-  --muted-foreground: hsl(215.4, 16.3%, 56.9%);
-  --popover: hsl(224, 71.4%, 4.1%);
-  --popover-foreground: hsl(210, 40%, 98%);
-  --card: hsl(224, 71.4%, 4.1%);
-  --card-foreground: hsl(210, 40%, 98%);
-  --border: hsl(216, 12.2%, 16.9%);
-  --input: hsl(216, 12.2%, 16.9%);
-  --primary: hsl(207, 90%, 54%);
-  --primary-foreground: hsl(210, 40%, 98%);
-  --secondary: hsl(122, 39%, 49%);
-  --secondary-foreground: hsl(210, 40%, 98%);
-  --accent: hsl(216, 12.2%, 16.9%);
-  --accent-foreground: hsl(210, 40%, 98%);
-  --destructive: hsl(0, 62.8%, 30.6%);
-  --destructive-foreground: hsl(210, 40%, 98%);
-  --ring: hsl(207, 90%, 54%);
+  /* Dark theme with Furnili accents */
+  --background: hsl(25, 25%, 8%);
+  --foreground: hsl(39, 20%, 90%);
+  --muted: hsl(25, 15%, 15%);
+  --muted-foreground: hsl(39, 10%, 60%);
+  --popover: hsl(25, 25%, 12%);
+  --popover-foreground: hsl(39, 20%, 90%);
+  --card: hsl(25, 20%, 12%);
+  --card-foreground: hsl(39, 20%, 90%);
+  --border: hsl(25, 15%, 20%);
+  --input: hsl(25, 15%, 18%);
+  --primary: var(--furnili-primary);
+  --primary-foreground: hsl(25, 25%, 15%);
+  --secondary: hsl(39, 60%, 55%);
+  --secondary-foreground: hsl(25, 25%, 15%);
+  --accent: hsl(25, 15%, 18%);
+  --accent-foreground: hsl(39, 20%, 90%);
+  --destructive: hsl(0, 62.8%, 50%);
+  --destructive-foreground: hsl(0, 0%, 100%);
+  --ring: var(--furnili-primary);
 }
 
 @layer base {
@@ -64,12 +71,57 @@
   }
 
   body {
-    @apply font-inter antialiased bg-surface text-foreground;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+    @apply antialiased bg-background text-foreground transition-colors duration-300;
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+    line-height: 1.6;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    @apply font-semibold;
+    @apply font-semibold text-foreground;
+  }
+
+  /* Enhanced scrollbars */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply rounded-full;
+    background-color: hsl(var(--muted) / 0.3);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply rounded-full transition-colors;
+    background-color: hsl(var(--primary) / 0.5);
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: hsl(var(--primary) / 0.7);
+  }
+
+  /* Custom utilities */
+  .furnili-gradient {
+    background: linear-gradient(135deg, hsl(var(--furnili-primary)) 0%, hsl(var(--furnili-accent)) 100%);
+  }
+
+  .glass-effect {
+    backdrop-filter: blur(10px);
+    background: hsla(0, 0%, 100%, 0.7);
+  }
+
+  .dark .glass-effect {
+    background: hsla(var(--background), 0.7);
+  }
+
+  /* Animation classes */
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-in-out;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
   }
 }
 

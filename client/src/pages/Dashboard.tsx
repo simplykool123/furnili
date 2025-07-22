@@ -133,12 +133,13 @@ export default function Dashboard() {
 
   if (isLoading) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-8 animate-fade-in">
         <div className="animate-pulse">
-          <div className="h-8 bg-amber-200 rounded w-1/3 mb-4"></div>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <div className="h-10 bg-primary/20 rounded-lg w-1/2 mb-3"></div>
+          <div className="h-6 bg-muted rounded-md w-1/3 mb-8"></div>
+          <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {[...Array(8)].map((_, i) => (
-              <div key={i} className="h-32 bg-amber-100 rounded"></div>
+              <div key={i} className="h-32 bg-card rounded-xl shadow-md"></div>
             ))}
           </div>
         </div>
@@ -147,29 +148,30 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-amber-900">
-          Welcome back, {currentUser?.name || 'admin'}!
+    <div className="space-y-8 animate-fade-in max-w-7xl mx-auto">
+      {/* Welcome Header */}
+      <div className="text-center sm:text-left">
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+          Welcome back, {currentUser?.name || 'Admin'}!
         </h1>
-        <p className="text-amber-700">
-          Here's what's happening with your inventory today.
+        <p className="text-base sm:text-lg text-muted-foreground mt-2">
+          Here's your business overview and key metrics for today.
         </p>
       </div>
 
       {/* Motivational Quote */}
       {dailyQuote && (
-        <Card className="bg-gradient-to-r from-amber-50 to-orange-50 border-amber-200">
+        <Card className="furnili-gradient shadow-lg border-0 text-white">
           <CardContent className="pt-6">
             <div className="flex items-start space-x-4">
               <div className="flex-shrink-0">
-                <Quote className="h-8 w-8 text-amber-600" />
+                <Quote className="h-8 w-8 text-white/80" />
               </div>
               <div className="flex-1">
-                <blockquote className="text-lg font-medium text-amber-900 italic leading-relaxed">
+                <blockquote className="text-lg font-medium text-white leading-relaxed">
                   "{dailyQuote.text}"
                 </blockquote>
-                <cite className="block text-right text-amber-700 font-semibold mt-3">
+                <cite className="block text-right text-white/90 font-semibold mt-3">
                   — {dailyQuote.author}
                 </cite>
               </div>
@@ -182,126 +184,143 @@ export default function Dashboard() {
       <StockWarnings />
 
       {/* Stats Grid */}
-      <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        <Card className="border-l-4 border-l-blue-500">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Products</CardTitle>
-            <Package className="h-4 w-4 text-blue-600" />
+      <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <Card className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-blue-500 bg-gradient-to-br from-card to-blue-50/20 dark:to-blue-950/20">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+            <CardTitle className="text-sm font-semibold text-card-foreground">Total Products</CardTitle>
+            <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center">
+              <Package className="h-5 w-5 text-blue-600" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats?.totalProducts || 0}</div>
-            <p className="text-xs text-muted-foreground">Active inventory items</p>
+            <div className="text-3xl font-bold text-foreground">{stats?.totalProducts || 0}</div>
+            <p className="text-sm text-muted-foreground mt-1">Active inventory items</p>
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-red-500">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Low Stock Alert</CardTitle>
-            <AlertTriangle className="h-4 w-4 text-red-600" />
+        <Card className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-red-500 bg-gradient-to-br from-card to-red-50/20 dark:to-red-950/20">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+            <CardTitle className="text-sm font-semibold text-card-foreground">Low Stock Alert</CardTitle>
+            <div className="w-10 h-10 rounded-full bg-red-100 dark:bg-red-900/50 flex items-center justify-center">
+              <AlertTriangle className="h-5 w-5 text-red-600" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">
+            <div className="text-3xl font-bold text-red-600">
               {Array.isArray(stats?.lowStockProducts) ? stats.lowStockProducts.length : 0}
             </div>
-            <p className="text-xs text-muted-foreground">Items need restocking</p>
+            <p className="text-sm text-muted-foreground mt-1">Items need restocking</p>
           </CardContent>
         </Card>
 
-        
-
-        <Card className="border-l-4 border-l-orange-500">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Today's Attendance</CardTitle>
-            <Clock className="h-4 w-4 text-orange-600" />
+        <Card className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-orange-500 bg-gradient-to-br from-card to-orange-50/20 dark:to-orange-950/20">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+            <CardTitle className="text-sm font-semibold text-card-foreground">Today's Attendance</CardTitle>
+            <div className="w-10 h-10 rounded-full bg-orange-100 dark:bg-orange-900/50 flex items-center justify-center">
+              <Clock className="h-5 w-5 text-orange-600" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats?.todayAttendance || 0}</div>
-            <p className="text-xs text-muted-foreground">Staff checked in</p>
+            <div className="text-3xl font-bold text-foreground">{stats?.todayAttendance || 0}</div>
+            <p className="text-sm text-muted-foreground mt-1">Staff checked in</p>
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-purple-500">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Tasks</CardTitle>
-            <CheckCircle className="h-4 w-4 text-purple-600" />
+        <Card className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-purple-500 bg-gradient-to-br from-card to-purple-50/20 dark:to-purple-950/20">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+            <CardTitle className="text-sm font-semibold text-card-foreground">Active Tasks</CardTitle>
+            <div className="w-10 h-10 rounded-full bg-purple-100 dark:bg-purple-900/50 flex items-center justify-center">
+              <CheckCircle className="h-5 w-5 text-purple-600" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats?.activeTasks || 0}</div>
-            <p className="text-xs text-muted-foreground">Tasks in progress</p>
+            <div className="text-3xl font-bold text-foreground">{stats?.activeTasks || 0}</div>
+            <p className="text-sm text-muted-foreground mt-1">Tasks in progress</p>
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-indigo-500">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pending Requests</CardTitle>
-            <TrendingUp className="h-4 w-4 text-indigo-600" />
+        <Card className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-indigo-500 bg-gradient-to-br from-card to-indigo-50/20 dark:to-indigo-950/20">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+            <CardTitle className="text-sm font-semibold text-card-foreground">Pending Requests</CardTitle>
+            <div className="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center">
+              <TrendingUp className="h-5 w-5 text-indigo-600" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats?.pendingRequests || 0}</div>
-            <p className="text-xs text-muted-foreground">Material requests</p>
+            <div className="text-3xl font-bold text-foreground">{stats?.pendingRequests || 0}</div>
+            <p className="text-sm text-muted-foreground mt-1">Material requests</p>
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-yellow-500">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Monthly Expenses</CardTitle>
-            <DollarSign className="h-4 w-4 text-yellow-600" />
+        <Card className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-yellow-500 bg-gradient-to-br from-card to-yellow-50/20 dark:to-yellow-950/20">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+            <CardTitle className="text-sm font-semibold text-card-foreground">Monthly Expenses</CardTitle>
+            <div className="w-10 h-10 rounded-full bg-yellow-100 dark:bg-yellow-900/50 flex items-center justify-center">
+              <DollarSign className="h-5 w-5 text-yellow-600" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className="text-3xl font-bold text-foreground">
               ₹{stats?.monthlyExpenses?.toLocaleString() || 0}
             </div>
-            <p className="text-xs text-muted-foreground">This month's petty cash</p>
+            <p className="text-sm text-muted-foreground mt-1">This month's petty cash</p>
           </CardContent>
         </Card>
-
-        
       </div>
 
-      {/* Quick Actions */}
-      <div className="grid gap-3 sm:gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-        <Card>
+      {/* Quick Actions & Recent Activity */}
+      <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
+        <Card className="hover:shadow-lg transition-all duration-300">
           <CardHeader>
-            <CardTitle className="text-lg">Quick Actions</CardTitle>
+            <CardTitle className="text-lg font-semibold text-foreground">Quick Actions</CardTitle>
+            <CardDescription className="text-muted-foreground">Common tasks and shortcuts</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-2">
-            <div className="grid gap-2">
-              <Badge variant="outline" className="justify-start p-2 cursor-pointer hover:bg-amber-50">
-                <Package className="h-4 w-4 mr-2" />
-                Add New Product
-              </Badge>
-              <Badge variant="outline" className="justify-start p-2 cursor-pointer hover:bg-amber-50">
-                <TrendingUp className="h-4 w-4 mr-2" />
-                Stock Movement
-              </Badge>
-              <Badge variant="outline" className="justify-start p-2 cursor-pointer hover:bg-amber-50">
-                <Clock className="h-4 w-4 mr-2" />
-                Check In/Out
-              </Badge>
+          <CardContent className="space-y-3">
+            <div className="grid gap-3">
+              <div className="flex items-center p-3 rounded-lg border border-border hover:bg-muted/50 cursor-pointer transition-colors">
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mr-3">
+                  <Package className="h-5 w-5 text-primary" />
+                </div>
+                <span className="font-medium text-foreground">Add New Product</span>
+              </div>
+              <div className="flex items-center p-3 rounded-lg border border-border hover:bg-muted/50 cursor-pointer transition-colors">
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mr-3">
+                  <TrendingUp className="h-5 w-5 text-primary" />
+                </div>
+                <span className="font-medium text-foreground">Stock Movement</span>
+              </div>
+              <div className="flex items-center p-3 rounded-lg border border-border hover:bg-muted/50 cursor-pointer transition-colors">
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mr-3">
+                  <Clock className="h-5 w-5 text-primary" />
+                </div>
+                <span className="font-medium text-foreground">Check In/Out</span>
+              </div>
             </div>
           </CardContent>
         </Card>
 
-        
-
-        <Card>
+        <Card className="hover:shadow-lg transition-all duration-300">
           <CardHeader>
-            <CardTitle className="text-lg">Recent Activity</CardTitle>
+            <CardTitle className="text-lg font-semibold text-foreground">Recent Activity</CardTitle>
+            <CardDescription className="text-muted-foreground">Latest system updates</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2">
+            <div className="space-y-3">
               {Array.isArray(recentActivity) && recentActivity.length > 0 ? (
                 recentActivity.slice(0, 4).map((activity: any, index: number) => (
-                  <div key={index} className="flex items-start space-x-2 text-sm">
-                    <div className="w-2 h-2 bg-amber-500 rounded-full mt-2"></div>
-                    <div>
-                      <p className="text-gray-900">{String(activity.description || 'Activity')}</p>
-                      <p className="text-gray-500 text-xs">{String(activity.time || 'Recently')}</p>
+                  <div key={index} className="flex items-start space-x-3 p-3 rounded-lg hover:bg-muted/50 transition-colors">
+                    <div className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0"></div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-foreground text-sm">{String(activity.description || 'Activity')}</p>
+                      <p className="text-muted-foreground text-xs mt-1">{String(activity.time || 'Recently')}</p>
                     </div>
                   </div>
                 ))
               ) : (
-                <p className="text-gray-500 text-sm">No recent activity</p>
+                <div className="text-center py-6">
+                  <Calendar className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+                  <p className="text-muted-foreground text-sm">No recent activity</p>
+                </div>
               )}
             </div>
           </CardContent>

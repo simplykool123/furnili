@@ -41,7 +41,7 @@ export default function Products() {
   return (
     <>
       {/* Bulk Operations */}
-      <div className="flex gap-2 mb-6">
+      <div className="flex flex-wrap gap-3 mb-8">
         <BulkExportModal />
         {canManageProducts && (
           <BulkImportModal onSuccess={() => {
@@ -50,7 +50,10 @@ export default function Products() {
           }} />
         )}
         {canManageProducts && (
-          <Button onClick={() => setShowAddProduct(true)} className="h-9">
+          <Button 
+            onClick={() => setShowAddProduct(true)} 
+            className="furnili-gradient hover:opacity-90 text-white font-medium shadow-md hover:shadow-lg transition-all duration-200"
+          >
             <Plus className="w-4 h-4 mr-2" />
             Add New Product
           </Button>
@@ -63,11 +66,13 @@ export default function Products() {
         setShowAddProduct(open);
         if (!open) setEditingProduct(null);
       }}>
-        <DialogContent className="max-w-2xl" aria-describedby="product-form-description">
-          <DialogHeader>
-            <DialogTitle>{editingProduct ? 'Edit Product' : 'Add New Product'}</DialogTitle>
-            <p id="product-form-description" className="sr-only">
-              {editingProduct ? 'Form to edit existing product' : 'Form to add a new product to the inventory system'}
+        <DialogContent className="max-w-3xl" aria-describedby="product-form-description">
+          <DialogHeader className="space-y-3">
+            <DialogTitle className="text-xl font-semibold text-foreground">
+              {editingProduct ? 'Edit Product' : 'Add New Product'}
+            </DialogTitle>
+            <p id="product-form-description" className="text-sm text-muted-foreground">
+              {editingProduct ? 'Update product information and inventory details' : 'Add a new product to the inventory system with complete specifications'}
             </p>
           </DialogHeader>
           <ProductForm 

@@ -33,84 +33,98 @@ export default function Header({ title, subtitle, showAddButton = false, onAddCl
   const lowStockCount = stats?.lowStockItems || (Array.isArray(stats?.lowStockProducts) ? stats.lowStockProducts.length : 0);
 
   return (
-    <header className="border-b border-amber-300 px-3 sm:px-4 lg:px-6 py-3 sm:py-4" style={{backgroundColor: '#F5F0E8'}}>
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-3">
+    <header className="border-b border-border bg-card/50 backdrop-blur-sm px-4 sm:px-6 lg:px-8 py-4 sm:py-5 sticky top-0 z-40">
+      <div className="flex items-center justify-between max-w-7xl mx-auto">
+        <div className="flex items-center space-x-4">
           {/* Mobile Menu Button */}
           {onMenuClick && (
             <Button 
               variant="ghost" 
               size="sm" 
-              className="lg:hidden"
+              className="lg:hidden hover:bg-primary/10 dark:hover:bg-primary/20"
               onClick={onMenuClick}
             >
-              <Menu className="w-5 h-5" />
+              <Menu className="w-5 h-5 text-foreground" />
             </Button>
           )}
           
           <div className="min-w-0 flex-1">
-            <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 truncate">{title}</h1>
-            <p className="text-sm sm:text-base text-gray-600 truncate">{subtitle}</p>
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground truncate">{title}</h1>
+            <p className="text-sm sm:text-base text-muted-foreground truncate mt-1">{subtitle}</p>
           </div>
         </div>
         
-        <div className="flex items-center space-x-2 sm:space-x-3 lg:space-x-4">
+        <div className="flex items-center space-x-3 sm:space-x-4">
           {/* Low Stock Notification */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="relative">
-                <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="relative hover:bg-primary/10 dark:hover:bg-primary/20 transition-colors"
+              >
+                <Bell className="w-5 h-5 text-foreground" />
                 {lowStockCount > 0 && (
                   <Badge 
                     variant="destructive" 
-                    className="absolute -top-1 -right-1 h-4 w-4 sm:h-5 sm:w-5 rounded-full p-0 flex items-center justify-center text-xs"
+                    className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs font-bold animate-pulse"
                   >
                     {lowStockCount}
                   </Badge>
                 )}
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-72 sm:w-80">
-              <div className="p-3 border-b">
-                <h4 className="font-medium">Low Stock Alerts</h4>
-                <p className="text-sm text-gray-600">{lowStockCount} items need attention</p>
+            <DropdownMenuContent align="end" className="w-80 sm:w-96 glass-effect border shadow-lg">
+              <div className="p-4 border-b border-border">
+                <h4 className="font-semibold text-foreground">Low Stock Alerts</h4>
+                <p className="text-sm text-muted-foreground">{lowStockCount} items need attention</p>
               </div>
-              {Array.isArray(stats?.lowStockProducts) && stats.lowStockProducts.length > 0 ? (
-                stats.lowStockProducts.slice(0, 3).map((product: any) => (
-                  <DropdownMenuItem key={product.id} className="flex items-center justify-between p-3">
-                    <div className="min-w-0 flex-1">
-                      <p className="font-medium truncate">{String(product.name || 'Unknown Product')}</p>
-                      <p className="text-sm text-gray-600">
-                        Stock: {Number(product.currentStock) || 0} / {Number(product.minStock) || 0}
-                      </p>
-                    </div>
-                    <Badge variant="destructive" className="text-xs ml-2">Low</Badge>
+              <div className="max-h-64 overflow-y-auto">
+                {Array.isArray(stats?.lowStockProducts) && stats.lowStockProducts.length > 0 ? (
+                  stats.lowStockProducts.slice(0, 5).map((product: any) => (
+                    <DropdownMenuItem key={product.id} className="flex items-center justify-between p-3 hover:bg-muted/50">
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium truncate text-foreground">{String(product.name || 'Unknown Product')}</p>
+                        <p className="text-sm text-muted-foreground">
+                          Stock: {Number(product.currentStock) || 0} / {Number(product.minStock) || 0}
+                        </p>
+                      </div>
+                      <Badge variant="destructive" className="text-xs ml-2 animate-pulse">Low</Badge>
+                    </DropdownMenuItem>
+                  ))
+                ) : (
+                  <DropdownMenuItem className="p-4 text-center text-muted-foreground">
+                    All stock levels are healthy
                   </DropdownMenuItem>
-                ))
-              ) : (
-                <DropdownMenuItem className="p-3 text-center text-gray-500">
-                  No low stock items
-                </DropdownMenuItem>
-              )}
+                )}
+              </div>
             </DropdownMenuContent>
           </DropdownMenu>
 
-          {/* User Info */}
-          <div className="flex items-center space-x-2 sm:space-x-3">
+          {/* User Profile */}
+          <div className="flex items-center space-x-3">
             <div className="text-right hidden sm:block">
-              <p className="font-medium text-gray-900 text-sm lg:text-base truncate">{user?.name}</p>
-              <p className="text-xs sm:text-sm text-gray-600 capitalize">{user?.role}</p>
+              <p className="font-semibold text-foreground text-sm lg:text-base truncate">{user?.name}</p>
+              <p className="text-xs text-muted-foreground capitalize">{user?.role}</p>
             </div>
-            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-primary rounded-full flex items-center justify-center">
-              <span className="text-white font-medium text-xs sm:text-sm">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 furnili-gradient rounded-full flex items-center justify-center shadow-md">
+              <span className="text-white font-bold text-sm">
                 {user?.name.split(' ').map(n => n[0]).join('').toUpperCase()}
               </span>
             </div>
           </div>
 
-          
-          
-          
+          {/* Add Button */}
+          {showAddButton && (
+            <Button 
+              onClick={onAddClick}
+              size="sm"
+              className="furnili-gradient hover:opacity-90 text-white font-medium shadow-md hover:shadow-lg transition-all duration-200"
+            >
+              <Plus className="w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2" />
+              <span className="text-sm font-medium">Add New</span>
+            </Button>
+          )}
         </div>
       </div>
     </header>
