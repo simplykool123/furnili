@@ -47,15 +47,16 @@ export default function RequestTable() {
         if (value && value !== 'all') params.append(key, value);
       });
       
-      const response = await authenticatedApiRequest('GET', `/api/requests?${params}`);
-      return response.json();
+      return await authenticatedApiRequest(`/api/requests?${params}`);
     },
   });
 
   const updateStatusMutation = useMutation({
     mutationFn: async ({ id, status }: { id: number; status: string }) => {
-      const response = await authenticatedApiRequest('PATCH', `/api/requests/${id}/status`, { status });
-      return response.json();
+      return await authenticatedApiRequest(`/api/requests/${id}/status`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status }),
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/requests'] });
@@ -81,7 +82,11 @@ export default function RequestTable() {
         if (value && value !== 'all') params.append(key, value);
       });
       
-      const response = await authenticatedApiRequest('GET', `/api/export/requests?${params}`);
+      const response = await fetch(`/api/export/requests?${params}`, {
+        headers: {
+          'Authorization': `Bearer ${authService.getToken()}`
+        }
+      });
       const blob = await response.blob();
       
       const url = window.URL.createObjectURL(blob);
