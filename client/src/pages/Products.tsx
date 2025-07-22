@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import ProductTable from "@/components/Products/ProductTable";
 import ProductForm from "@/components/Products/ProductForm";
 import BulkImportModal from "@/components/Products/BulkImportModal";
@@ -11,6 +11,18 @@ export default function Products() {
   const user = authService.getUser();
   
   const canManageProducts = user && ['admin', 'manager'].includes(user.role);
+
+  // Listen for the add product event from Layout
+  useEffect(() => {
+    const handleOpenAddProduct = () => {
+      if (canManageProducts) {
+        setShowAddProduct(true);
+      }
+    };
+
+    window.addEventListener('openAddProductModal', handleOpenAddProduct);
+    return () => window.removeEventListener('openAddProductModal', handleOpenAddProduct);
+  }, [canManageProducts]);
 
   return (
     <>

@@ -87,6 +87,12 @@ function Router() {
           <Layout 
             title="Product Management" 
             subtitle="Manage your inventory products and stock levels"
+            showAddButton={true}
+            onAddClick={() => {
+              // This will be handled by the Products component
+              const event = new CustomEvent('openAddProductModal');
+              window.dispatchEvent(event);
+            }}
           >
             <Products />
           </Layout>
