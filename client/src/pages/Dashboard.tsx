@@ -90,20 +90,7 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        {admin && (
-          <Card className="border-l-4 border-l-green-500">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Active Users</CardTitle>
-              <Users className="h-4 w-4 text-green-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats?.activeUsers || 0}</div>
-              <p className="text-xs text-muted-foreground">
-                of {stats?.totalUsers || 0} total users
-              </p>
-            </CardContent>
-          </Card>
-        )}
+        
 
         <Card className="border-l-4 border-l-orange-500">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -187,27 +174,7 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">System Health</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <div className="flex justify-between mb-1">
-                <span className="text-sm">Storage Usage</span>
-                <span className="text-sm">75%</span>
-              </div>
-              <Progress value={75} className="h-2" />
-            </div>
-            <div>
-              <div className="flex justify-between mb-1">
-                <span className="text-sm">Active Sessions</span>
-                <span className="text-sm">85%</span>
-              </div>
-              <Progress value={85} className="h-2" />
-            </div>
-          </CardContent>
-        </Card>
+        
 
         <Card>
           <CardHeader>
