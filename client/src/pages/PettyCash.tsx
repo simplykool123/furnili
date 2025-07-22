@@ -14,7 +14,7 @@ import { toast } from "@/hooks/use-toast";
 import { authenticatedApiRequest, authService } from "@/lib/auth";
 import { queryClient } from "@/lib/queryClient";
 import { format } from "date-fns";
-import { Plus, Search, Filter, Download, Upload, Camera, Eye, Share2 } from "lucide-react";
+import { Plus, Search, Filter, Download, Upload, Camera, Eye, Share2, Pencil, Trash2 } from "lucide-react";
 import Tesseract from 'tesseract.js';
 
 interface PettyCashExpense {
@@ -50,8 +50,13 @@ export default function PettyCash() {
   const [selectedPaymentMode, setSelectedPaymentMode] = useState("all");
   const [dateFilter, setDateFilter] = useState("");
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [editingExpense, setEditingExpense] = useState<PettyCashExpense | null>(null);
   const [showImageDialog, setShowImageDialog] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string>("");
+  
+  // Get current user
+  const user = authService.getUser();
   
   // Form state - Updated to match user requirements
   const [formData, setFormData] = useState({
@@ -66,6 +71,72 @@ export default function PettyCash() {
   });
 
   const [isProcessingOCR, setIsProcessingOCR] = useState(false);
+
+  // Edit expense mutation
+  const editExpenseMutation = useMutation({
+    mutationFn: async ({ id, expenseData }: { id: number, expenseData: FormData }) => {
+      const token = authService.getToken();
+      if (!token) throw new Error('No authentication token available');
+      
+      const response = await fetch(`/api/petty-cash/${id}`, {
+        method: "PUT",
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+        body: expenseData,
+      });
+      
+      if (!response.ok) throw new Error('Update failed');
+      return await response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/petty-cash"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/petty-cash/stats"] });
+      setShowEditDialog(false);
+      setEditingExpense(null);
+      toast({ title: "Success", description: "Expense updated successfully!" });
+    },
+    onError: (error: any) => {
+      toast({ title: "Error", description: error.message || "Failed to update expense", variant: "destructive" });
+    }
+  });
+
+  // Delete expense mutation
+  const deleteExpenseMutation = useMutation({
+    mutationFn: async (id: number) => {
+      return authenticatedApiRequest("DELETE", `/api/petty-cash/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/petty-cash"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/petty-cash/stats"] });
+      toast({ title: "Success", description: "Expense deleted successfully!" });
+    },
+    onError: (error: any) => {
+      toast({ title: "Error", description: error.message || "Failed to delete expense", variant: "destructive" });
+    }
+  });
+
+  // Handler functions
+  const handleEditExpense = (expense: PettyCashExpense) => {
+    setEditingExpense(expense);
+    setFormData({
+      date: format(new Date(expense.expenseDate), "yyyy-MM-dd"),
+      amount: expense.amount.toString(),
+      paidTo: expense.vendor || '',
+      paidBy: expense.user?.id?.toString() || '',
+      purpose: expense.description || '',
+      orderNo: expense.orderNo || '',
+      receiptImage: null,
+      category: expense.category
+    });
+    setShowEditDialog(true);
+  };
+
+  const handleDeleteExpense = async (id: number) => {
+    if (window.confirm("Are you sure you want to delete this expense?")) {
+      deleteExpenseMutation.mutate(id);
+    }
+  };
 
   // Fetch expenses and stats
   const { data: expenses = [] } = useQuery({
@@ -469,6 +540,7 @@ export default function PettyCash() {
                 <TableHead>Category</TableHead>
                 <TableHead>Order No.</TableHead>
                 <TableHead>Receipt</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -487,25 +559,63 @@ export default function PettyCash() {
                   <TableCell className="text-sm text-gray-600">{expense.orderNo || '-'}</TableCell>
                   <TableCell>
                     {expense.receiptImageUrl ? (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setSelectedImage(expense.receiptImageUrl!);
-                          setShowImageDialog(true);
-                        }}
-                      >
-                        <Eye className="h-4 w-4" />
-                      </Button>
+                      <div className="flex items-center gap-2">
+                        <img 
+                          src={`/${expense.receiptImageUrl}`}
+                          alt="Receipt"
+                          className="w-8 h-8 object-cover rounded cursor-pointer border"
+                          onClick={() => {
+                            setSelectedImage(`/${expense.receiptImageUrl}`);
+                            setShowImageDialog(true);
+                          }}
+                          title="Click to view full image"
+                        />
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedImage(`/${expense.receiptImageUrl}`);
+                            setShowImageDialog(true);
+                          }}
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                      </div>
                     ) : (
                       <span className="text-gray-400">No receipt</span>
                     )}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex items-center justify-end gap-2">
+                      {/* Only show edit/delete for creator or admin */}
+                      {(expense.addedBy === user?.id || user?.role === 'admin') && (
+                        <>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEditExpense(expense)}
+                            title="Edit expense"
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteExpense(expense.id)}
+                            className="text-red-600 hover:text-red-700"
+                            title="Delete expense"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </>
+                      )}
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
               {filteredExpenses.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center text-gray-500 py-8">
+                  <TableCell colSpan={9} className="text-center text-gray-500 py-8">
                     No expenses found matching your filters
                   </TableCell>
                 </TableRow>
@@ -652,6 +762,151 @@ export default function PettyCash() {
           </form>
         </DialogContent>
       </Dialog>
+      {/* Edit Expense Dialog */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Edit Expense</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={(e) => {
+            e.preventDefault();
+            const formPayload = new FormData();
+            formPayload.append('expenseDate', formData.date);
+            formPayload.append('amount', formData.amount);
+            formPayload.append('paidTo', formData.paidTo);
+            formPayload.append('paidBy', formData.paidBy);
+            formPayload.append('note', formData.purpose);
+            formPayload.append('orderNo', formData.orderNo);
+            formPayload.append('category', formData.category);
+            if (formData.receiptImage) {
+              formPayload.append('receipt', formData.receiptImage);
+            }
+            editExpenseMutation.mutate({ id: editingExpense!.id, expenseData: formPayload });
+          }} className="space-y-4">
+            {/* Same form fields as add dialog */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="edit-amount">Amount *</Label>
+                <Input
+                  id="edit-amount"
+                  type="number"
+                  placeholder="2700"
+                  step="0.01"
+                  value={formData.amount}
+                  onChange={(e) => setFormData(prev => ({ ...prev, amount: e.target.value }))}
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-date">Date *</Label>
+                <Input
+                  id="edit-date"
+                  type="date"
+                  value={formData.date}
+                  onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="edit-paidTo">Paid To *</Label>
+                <Input
+                  id="edit-paidTo"
+                  placeholder="Dolly Vikesh Oswal"
+                  value={formData.paidTo}
+                  onChange={(e) => setFormData(prev => ({ ...prev, paidTo: e.target.value }))}
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-paidBy">Paid By (Staff Member) *</Label>
+                <Select 
+                  value={formData.paidBy}
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, paidBy: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select staff member" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {users.map((user: any) => (
+                      <SelectItem key={user.id} value={user.id.toString()}>
+                        {user.name || user.username}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="edit-purpose">Purpose / Description *</Label>
+              <Textarea
+                id="edit-purpose"
+                placeholder="Furnili powder coating for legs – Pintu order"
+                value={formData.purpose}
+                onChange={(e) => setFormData(prev => ({ ...prev, purpose: e.target.value }))}
+                required
+                rows={3}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="edit-orderNo">Order No. / Client Reference</Label>
+                <Input
+                  id="edit-orderNo"
+                  placeholder="Pintu Order"
+                  value={formData.orderNo}
+                  onChange={(e) => setFormData(prev => ({ ...prev, orderNo: e.target.value }))}
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-category">Category (For Reports)</Label>
+                <Select 
+                  value={formData.category} 
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((category) => (
+                      <SelectItem key={category} value={category}>
+                        {category}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="edit-receipt">Update Receipt Attachment</Label>
+              <Input
+                id="edit-receipt"
+                type="file"
+                accept="image/*"
+                onChange={(e) => setFormData(prev => ({ ...prev, receiptImage: e.target.files?.[0] || null }))}
+              />
+              <p className="text-sm text-gray-500 mt-1">
+                📱 Leave blank to keep existing receipt
+              </p>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-4">
+              <Button type="button" variant="outline" onClick={() => setShowEditDialog(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={editExpenseMutation.isPending}>
+                {editExpenseMutation.isPending ? "Updating..." : "Update Expense"}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
       {/* Image Preview Dialog */}
       <Dialog open={showImageDialog} onOpenChange={setShowImageDialog}>
         <DialogContent className="sm:max-w-[600px]">
