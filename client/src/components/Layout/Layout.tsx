@@ -1,4 +1,4 @@
-import { ReactNode, useState } from "react";
+import { ReactNode, useState, useEffect } from "react";
 import Sidebar from "./Sidebar";
 import Header from "./Header";
 import { authService } from "@/lib/auth";
@@ -21,6 +21,18 @@ export default function Layout({
 }: LayoutProps) {
   const user = authService.getUser();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Listen for mobile sidebar toggle events
+  useEffect(() => {
+    const handleToggleSidebar = () => {
+      setSidebarOpen(prev => !prev);
+    };
+
+    window.addEventListener('toggleMobileSidebar', handleToggleSidebar);
+    return () => {
+      window.removeEventListener('toggleMobileSidebar', handleToggleSidebar);
+    };
+  }, []);
   
   if (!user) {
     return null; // Will redirect to login

@@ -3,6 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import { authenticatedApiRequest } from "@/lib/auth";
 import { MobileGrid, MobileCard, MobileHeading, MobileText, useIsMobile } from "./MobileOptimizer";
+import { useLocation } from "wouter";
+import { Menu } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface DashboardStats {
   totalProducts: number;
@@ -14,8 +17,13 @@ interface DashboardStats {
   lowStockItems?: number;
 }
 
-export default function MobileDashboard() {
+interface MobileDashboardProps {
+  onMenuClick?: () => void;
+}
+
+export default function MobileDashboard({ onMenuClick }: MobileDashboardProps) {
   const { isMobile } = useIsMobile();
+  const [, setLocation] = useLocation();
 
   const { data: stats, isLoading } = useQuery({
     queryKey: ['/api/dashboard/stats'],
@@ -61,7 +69,8 @@ export default function MobileDashboard() {
       description: "Active items",
       icon: Package,
       color: "blue",
-      gradient: "from-blue-500 to-blue-600"
+      gradient: "from-blue-500 to-blue-600",
+      href: "/products"
     },
     {
       title: "Low Stock",
@@ -69,7 +78,8 @@ export default function MobileDashboard() {
       description: "Need restocking",
       icon: AlertTriangle,
       color: "red",
-      gradient: "from-red-500 to-red-600"
+      gradient: "from-red-500 to-red-600",
+      href: "/products"
     },
     {
       title: "Attendance",
@@ -77,7 +87,8 @@ export default function MobileDashboard() {
       description: "Staff today",
       icon: Clock,
       color: "orange",
-      gradient: "from-orange-500 to-orange-600"
+      gradient: "from-orange-500 to-orange-600",
+      href: "/attendance"
     },
     {
       title: "Tasks",
@@ -85,7 +96,8 @@ export default function MobileDashboard() {
       description: "In progress",
       icon: CheckCircle,
       color: "purple",
-      gradient: "from-purple-500 to-purple-600"
+      gradient: "from-purple-500 to-purple-600",
+      href: "/attendance"
     },
     {
       title: "Requests",
@@ -93,7 +105,8 @@ export default function MobileDashboard() {
       description: "Pending",
       icon: TrendingUp,
       color: "indigo",
-      gradient: "from-indigo-500 to-indigo-600"
+      gradient: "from-indigo-500 to-indigo-600",
+      href: "/requests"
     },
     {
       title: "Expenses",
@@ -101,16 +114,31 @@ export default function MobileDashboard() {
       description: "This month",
       icon: DollarSign,
       color: "yellow",
-      gradient: "from-yellow-500 to-yellow-600"
+      gradient: "from-yellow-500 to-yellow-600",
+      href: "/petty-cash"
     }
   ];
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="space-y-2">
-        <MobileHeading>Dashboard Overview</MobileHeading>
-        <MobileText>Real-time business metrics and insights</MobileText>
+      {/* Mobile Header with Menu Button */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-3">
+          {onMenuClick && (
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={onMenuClick}
+              className="touch-target hover:bg-primary/10"
+            >
+              <Menu className="w-5 h-5 text-foreground" />
+            </Button>
+          )}
+          <div className="space-y-1">
+            <MobileHeading>Dashboard Overview</MobileHeading>
+            <MobileText>Real-time business metrics and insights</MobileText>
+          </div>
+        </div>
       </div>
 
       {/* Stats Grid */}
@@ -121,11 +149,11 @@ export default function MobileDashboard() {
         className="gap-3 sm:gap-4"
       >
         {statCards.map((stat, index) => (
-          <MobileCard
+          <div
             key={index}
-            padding="sm"
-            className="relative overflow-hidden group hover:shadow-lg transition-all duration-300 animate-bounce-in border-l-4 border-l-current"
+            className="relative overflow-hidden group hover:shadow-lg transition-all duration-300 animate-bounce-in border-l-4 border-l-current cursor-pointer active:scale-95 bg-card rounded-lg p-4 shadow-sm"
             style={{ borderLeftColor: `var(--${stat.color}-500, #6b7280)` }}
+            onClick={() => setLocation(stat.href)}
           >
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center space-x-2">
@@ -156,7 +184,7 @@ export default function MobileDashboard() {
 
             {/* Gradient overlay */}
             <div className={`absolute inset-0 bg-gradient-to-br ${stat.gradient} opacity-0 group-hover:opacity-5 transition-opacity duration-300 pointer-events-none`} />
-          </MobileCard>
+          </div>
         ))}
       </MobileGrid>
 
@@ -165,13 +193,20 @@ export default function MobileDashboard() {
         <MobileHeading className="text-lg">Quick Actions</MobileHeading>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {[
-            { label: "Add Product", icon: Package, color: "bg-blue-100 text-blue-700" },
-            { label: "Check In/Out", icon: Clock, color: "bg-green-100 text-green-700" },
-            { label: "New Request", icon: TrendingUp, color: "bg-purple-100 text-purple-700" }
+            { label: "Add Product", icon: Package, color: "bg-blue-100 text-blue-700", action: () => {
+              setLocation('/products');
+              // Trigger add product modal
+              setTimeout(() => {
+                window.dispatchEvent(new Event('openAddProductModal'));
+              }, 100);
+            }},
+            { label: "Check In/Out", icon: Clock, color: "bg-green-100 text-green-700", action: () => setLocation('/attendance') },
+            { label: "New Request", icon: TrendingUp, color: "bg-purple-100 text-purple-700", action: () => setLocation('/requests') }
           ].map((action, index) => (
             <button
               key={index}
-              className={`flex items-center space-x-3 p-4 rounded-lg border border-border hover:bg-muted/50 transition-all duration-200 group ${isMobile ? 'min-h-[56px]' : 'min-h-[48px]'}`}
+              onClick={action.action}
+              className={`flex items-center space-x-3 p-4 rounded-lg border border-border hover:bg-muted/50 transition-all duration-200 group active:scale-95 ${isMobile ? 'min-h-[56px]' : 'min-h-[48px]'}`}
             >
               <div className={`w-10 h-10 rounded-full ${action.color} flex items-center justify-center group-hover:scale-110 transition-transform duration-200`}>
                 <action.icon className="w-5 h-5" />

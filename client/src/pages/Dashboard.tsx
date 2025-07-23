@@ -152,7 +152,10 @@ export default function Dashboard() {
 
   // Use mobile dashboard for mobile devices
   if (isMobile) {
-    return <MobileDashboard />;
+    return <MobileDashboard onMenuClick={() => {
+      // Trigger sidebar toggle event for mobile
+      window.dispatchEvent(new CustomEvent('toggleMobileSidebar'));
+    }} />;
   }
 
   return (
