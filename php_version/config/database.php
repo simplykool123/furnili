@@ -4,17 +4,17 @@
  * PHP/MySQL Version
  */
 
-// Database configuration - UPDATE THESE VALUES FOR YOUR HOSTING
-define('DB_HOST', 'localhost');        // Usually 'localhost' for shared hosting
-define('DB_NAME', 'furnili_ms');       // Your database name
-define('DB_USER', 'root');             // Your database username (default for local testing)
-define('DB_PASS', '');                 // Your database password (empty for local testing)
+// Database configuration for app.furnili.in - UPDATE WITH YOUR HOSTINGER DETAILS
+define('DB_HOST', 'localhost');        // Always 'localhost' for Hostinger
+define('DB_NAME', 'u123456789_furnili'); // Your Hostinger database name (replace with actual)
+define('DB_USER', 'u123456789_furnili'); // Your Hostinger database username (replace with actual)
+define('DB_PASS', 'your_db_password');   // Your Hostinger database password (replace with actual)
 define('DB_CHARSET', 'utf8mb4');
 
 // Application configuration
 define('APP_NAME', 'Furnili MS');
 define('APP_VERSION', '1.0.0');
-define('BASE_URL', 'http://localhost/furnili'); // Update with your domain
+define('BASE_URL', 'https://app.furnili.in'); // Your production domain
 
 // File upload configuration
 define('UPLOAD_PATH', __DIR__ . '/../uploads/');
@@ -56,8 +56,8 @@ class Database {
     }
 }
 
-// Development mode for testing
-define('DEVELOPMENT_MODE', true);
+// Production mode for app.furnili.in
+// define('DEVELOPMENT_MODE', true); // Commented out for production
 
 // Error reporting for development (disable in production)
 if (defined('DEVELOPMENT_MODE') && DEVELOPMENT_MODE) {

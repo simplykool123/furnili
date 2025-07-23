@@ -1,203 +1,216 @@
 -- =============================================
--- FURNILI MANAGEMENT SYSTEM - COMPLETE SQL EXPORT
--- For Hostinger Shared Hosting Deployment
--- Generated: January 23, 2025
+-- FURNILI MANAGEMENT SYSTEM - HOSTINGER EXPORT
+-- Optimized for app.furnili.in deployment
 -- =============================================
 
--- Drop existing tables if they exist (careful in production!)
-DROP TABLE IF EXISTS price_comparisons CASCADE;
-DROP TABLE IF EXISTS tasks CASCADE;
-DROP TABLE IF EXISTS boq_uploads CASCADE;
-DROP TABLE IF EXISTS stock_movements CASCADE;
-DROP TABLE IF EXISTS petty_cash_expenses CASCADE;
-DROP TABLE IF EXISTS attendance CASCADE;
-DROP TABLE IF EXISTS request_items CASCADE;
-DROP TABLE IF EXISTS material_requests CASCADE;
-DROP TABLE IF EXISTS products CASCADE;
-DROP TABLE IF EXISTS categories CASCADE;
-DROP TABLE IF EXISTS users CASCADE;
+SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+SET AUTOCOMMIT = 0;
+START TRANSACTION;
+SET time_zone = "+00:00";
 
 -- =============================================
--- TABLE STRUCTURES
+-- TABLE STRUCTURES FOR HOSTINGER
 -- =============================================
 
 -- Users table
-CREATE TABLE users (
-    id SERIAL PRIMARY KEY,
-    username VARCHAR(255) UNIQUE NOT NULL,
-    email VARCHAR(255) UNIQUE NOT NULL,
-    password VARCHAR(255) NOT NULL,
-    name VARCHAR(255) NOT NULL,
-    role VARCHAR(50) NOT NULL DEFAULT 'user',
-    employee_id VARCHAR(100),
-    aadhar_number VARCHAR(12),
-    phone VARCHAR(15),
-    address TEXT,
-    salary DECIMAL(10,2),
-    overtime_rate DECIMAL(10,2) DEFAULT 50.00,
-    photo_url VARCHAR(255),
-    document_url VARCHAR(255),
-    is_active BOOLEAN DEFAULT true,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+CREATE TABLE `users` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `username` varchar(255) NOT NULL,
+  `email` varchar(255) NOT NULL,
+  `password` varchar(255) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `role` enum('admin','manager','storekeeper','user') NOT NULL DEFAULT 'user',
+  `employee_id` varchar(100) DEFAULT NULL,
+  `aadhar_number` varchar(12) DEFAULT NULL,
+  `phone` varchar(15) DEFAULT NULL,
+  `address` text DEFAULT NULL,
+  `salary` decimal(10,2) DEFAULT NULL,
+  `overtime_rate` decimal(10,2) DEFAULT 50.00,
+  `photo_url` varchar(255) DEFAULT NULL,
+  `document_url` varchar(255) DEFAULT NULL,
+  `is_active` tinyint(1) DEFAULT 1,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `last_login` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `username` (`username`),
+  UNIQUE KEY `email` (`email`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Categories table
-CREATE TABLE categories (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(255) UNIQUE NOT NULL,
-    description TEXT,
-    is_active BOOLEAN DEFAULT true,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+CREATE TABLE `categories` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) NOT NULL,
+  `description` text DEFAULT NULL,
+  `is_active` tinyint(1) DEFAULT 1,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `name` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Products table
-CREATE TABLE products (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    category VARCHAR(255) NOT NULL,
-    brand VARCHAR(255),
-    size VARCHAR(100),
-    thickness VARCHAR(100),
-    price_per_unit DECIMAL(10,2) NOT NULL,
-    current_stock INTEGER NOT NULL DEFAULT 0,
-    min_stock INTEGER NOT NULL DEFAULT 10,
-    unit VARCHAR(50) NOT NULL DEFAULT 'pieces',
-    sku VARCHAR(100) UNIQUE,
-    image_url VARCHAR(255),
-    is_active BOOLEAN DEFAULT true,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+CREATE TABLE `products` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) NOT NULL,
+  `category` varchar(255) NOT NULL,
+  `brand` varchar(255) DEFAULT NULL,
+  `size` varchar(100) DEFAULT NULL,
+  `thickness` varchar(100) DEFAULT NULL,
+  `price_per_unit` decimal(10,2) NOT NULL,
+  `current_stock` int(11) NOT NULL DEFAULT 0,
+  `min_stock` int(11) NOT NULL DEFAULT 10,
+  `unit` varchar(50) NOT NULL DEFAULT 'pieces',
+  `sku` varchar(100) DEFAULT NULL,
+  `image_url` varchar(255) DEFAULT NULL,
+  `is_active` tinyint(1) DEFAULT 1,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `sku` (`sku`),
+  KEY `category` (`category`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Material requests table
-CREATE TABLE material_requests (
-    id SERIAL PRIMARY KEY,
-    request_number VARCHAR(100) UNIQUE NOT NULL,
-    user_id INTEGER REFERENCES users(id),
-    client_name VARCHAR(255),
-    site_location VARCHAR(255),
-    total_amount DECIMAL(10,2) DEFAULT 0,
-    status VARCHAR(50) DEFAULT 'pending',
-    priority VARCHAR(20) DEFAULT 'medium',
-    boq_reference VARCHAR(255),
-    notes TEXT,
-    requested_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    approved_date TIMESTAMP,
-    completed_date TIMESTAMP
-);
+CREATE TABLE `material_requests` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `request_number` varchar(100) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `client_name` varchar(255) DEFAULT NULL,
+  `site_location` varchar(255) DEFAULT NULL,
+  `total_amount` decimal(10,2) DEFAULT 0.00,
+  `status` enum('pending','approved','rejected','issued','completed') DEFAULT 'pending',
+  `priority` enum('low','medium','high') DEFAULT 'medium',
+  `boq_reference` varchar(255) DEFAULT NULL,
+  `notes` text DEFAULT NULL,
+  `requested_date` timestamp NOT NULL DEFAULT current_timestamp(),
+  `approved_date` timestamp NULL DEFAULT NULL,
+  `completed_date` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `request_number` (`request_number`),
+  KEY `user_id` (`user_id`),
+  CONSTRAINT `material_requests_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Request items table
-CREATE TABLE request_items (
-    id SERIAL PRIMARY KEY,
-    request_id INTEGER REFERENCES material_requests(id) ON DELETE CASCADE,
-    product_id INTEGER REFERENCES products(id),
-    product_name VARCHAR(255) NOT NULL,
-    quantity INTEGER NOT NULL,
-    unit_price DECIMAL(10,2),
-    total_price DECIMAL(10,2),
-    status VARCHAR(50) DEFAULT 'pending'
-);
+CREATE TABLE `request_items` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `request_id` int(11) NOT NULL,
+  `product_id` int(11) DEFAULT NULL,
+  `product_name` varchar(255) NOT NULL,
+  `quantity` int(11) NOT NULL,
+  `unit_price` decimal(10,2) DEFAULT NULL,
+  `total_price` decimal(10,2) DEFAULT NULL,
+  `status` enum('pending','approved','issued') DEFAULT 'pending',
+  PRIMARY KEY (`id`),
+  KEY `request_id` (`request_id`),
+  KEY `product_id` (`product_id`),
+  CONSTRAINT `request_items_ibfk_1` FOREIGN KEY (`request_id`) REFERENCES `material_requests` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `request_items_ibfk_2` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Attendance table
-CREATE TABLE attendance (
-    id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES users(id),
-    date DATE NOT NULL,
-    check_in_time TIME,
-    check_out_time TIME,
-    total_hours DECIMAL(4,2) DEFAULT 0,
-    overtime_hours DECIMAL(4,2) DEFAULT 0,
-    status VARCHAR(20) DEFAULT 'present',
-    notes TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(user_id, date)
-);
+CREATE TABLE `attendance` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) NOT NULL,
+  `date` date NOT NULL,
+  `check_in_time` time DEFAULT NULL,
+  `check_out_time` time DEFAULT NULL,
+  `total_hours` decimal(4,2) DEFAULT 0.00,
+  `overtime_hours` decimal(4,2) DEFAULT 0.00,
+  `status` enum('present','absent','half_day','holiday') DEFAULT 'present',
+  `notes` text DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `user_date` (`user_id`,`date`),
+  CONSTRAINT `attendance_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Petty cash expenses table
-CREATE TABLE petty_cash_expenses (
-    id SERIAL PRIMARY KEY,
-    date DATE NOT NULL,
-    paid_to VARCHAR(255) NOT NULL,
-    amount DECIMAL(10,2) NOT NULL,
-    paid_by_staff_id INTEGER REFERENCES users(id),
-    category VARCHAR(100),
-    description TEXT,
-    receipt_url VARCHAR(255),
-    payment_mode VARCHAR(50) DEFAULT 'cash',
-    is_credit BOOLEAN DEFAULT false,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+CREATE TABLE `petty_cash_expenses` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `date` date NOT NULL,
+  `paid_to` varchar(255) NOT NULL,
+  `amount` decimal(10,2) NOT NULL,
+  `paid_by_staff_id` int(11) DEFAULT NULL,
+  `category` varchar(100) DEFAULT NULL,
+  `description` text DEFAULT NULL,
+  `receipt_url` varchar(255) DEFAULT NULL,
+  `payment_mode` enum('cash','upi','card','bank_transfer') DEFAULT 'cash',
+  `is_credit` tinyint(1) DEFAULT 0,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `paid_by_staff_id` (`paid_by_staff_id`),
+  CONSTRAINT `petty_cash_expenses_ibfk_1` FOREIGN KEY (`paid_by_staff_id`) REFERENCES `users` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Stock movements table
-CREATE TABLE stock_movements (
-    id SERIAL PRIMARY KEY,
-    product_id INTEGER REFERENCES products(id),
-    movement_type VARCHAR(20) NOT NULL,
-    quantity INTEGER NOT NULL,
-    unit_price DECIMAL(10,2),
-    total_value DECIMAL(10,2),
-    reference_type VARCHAR(50),
-    reference_id INTEGER,
-    notes TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+CREATE TABLE `stock_movements` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `product_id` int(11) NOT NULL,
+  `movement_type` enum('in','out','adjustment') NOT NULL,
+  `quantity` int(11) NOT NULL,
+  `unit_price` decimal(10,2) DEFAULT NULL,
+  `total_value` decimal(10,2) DEFAULT NULL,
+  `reference_type` varchar(50) DEFAULT NULL,
+  `reference_id` int(11) DEFAULT NULL,
+  `notes` text DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `product_id` (`product_id`),
+  CONSTRAINT `stock_movements_ibfk_1` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- BOQ uploads table
-CREATE TABLE boq_uploads (
-    id SERIAL PRIMARY KEY,
-    filename VARCHAR(255) NOT NULL,
-    file_path VARCHAR(255) NOT NULL,
-    file_size INTEGER,
-    upload_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    status VARCHAR(50) DEFAULT 'uploaded',
-    extracted_text TEXT,
-    processed_items JSONB,
-    user_id INTEGER REFERENCES users(id)
-);
+CREATE TABLE `boq_uploads` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `filename` varchar(255) NOT NULL,
+  `file_path` varchar(255) NOT NULL,
+  `file_size` int(11) DEFAULT NULL,
+  `upload_date` timestamp NOT NULL DEFAULT current_timestamp(),
+  `status` enum('uploaded','processing','completed','failed') DEFAULT 'uploaded',
+  `extracted_text` longtext DEFAULT NULL,
+  `processed_items` json DEFAULT NULL,
+  `user_id` int(11) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `user_id` (`user_id`),
+  CONSTRAINT `boq_uploads_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Tasks table
-CREATE TABLE tasks (
-    id SERIAL PRIMARY KEY,
-    title VARCHAR(255) NOT NULL,
-    description TEXT,
-    assigned_to INTEGER REFERENCES users(id),
-    created_by INTEGER REFERENCES users(id),
-    status VARCHAR(50) DEFAULT 'pending',
-    priority VARCHAR(20) DEFAULT 'medium',
-    due_date DATE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    completed_at TIMESTAMP
-);
-
--- Price comparisons table
-CREATE TABLE price_comparisons (
-    id SERIAL PRIMARY KEY,
-    product_id INTEGER REFERENCES products(id),
-    supplier_name VARCHAR(255) NOT NULL,
-    price DECIMAL(10,2) NOT NULL,
-    min_quantity INTEGER,
-    delivery_time VARCHAR(100),
-    notes TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+CREATE TABLE `tasks` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `title` varchar(255) NOT NULL,
+  `description` text DEFAULT NULL,
+  `assigned_to` int(11) DEFAULT NULL,
+  `created_by` int(11) NOT NULL,
+  `status` enum('pending','in_progress','completed','cancelled') DEFAULT 'pending',
+  `priority` enum('low','medium','high') DEFAULT 'medium',
+  `due_date` date DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `completed_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `assigned_to` (`assigned_to`),
+  KEY `created_by` (`created_by`),
+  CONSTRAINT `tasks_ibfk_1` FOREIGN KEY (`assigned_to`) REFERENCES `users` (`id`),
+  CONSTRAINT `tasks_ibfk_2` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- =============================================
 -- SAMPLE DATA INSERTION
 -- =============================================
 
 -- Insert default admin user (password: admin123)
-INSERT INTO users (username, email, password, name, role, is_active) VALUES
-('admin', 'admin@furnili.com', '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'System Administrator', 'admin', true);
+INSERT INTO `users` (`username`, `email`, `password`, `name`, `role`, `is_active`) VALUES
+('admin', 'admin@furnili.in', '$2y$10$vZ.oOFzwC7ZKd/VVNgbJYeFb3aG2qrVWz4v.Ur9nZmxLyiCGK/3cS', 'Furnili Administrator', 'admin', 1);
 
 -- Insert sample categories
-INSERT INTO categories (name, description, is_active) VALUES
-('Steel', 'Steel products and materials', true),
-('Wood', 'Wooden materials and lumber', true),
-('Hardware', 'Hardware and fasteners', true),
-('Tools', 'Construction tools and equipment', true),
-('Electrical', 'Electrical components and wires', true);
+INSERT INTO `categories` (`name`, `description`, `is_active`) VALUES
+('Steel', 'Steel products and materials', 1),
+('Wood', 'Wooden materials and lumber', 1),
+('Hardware', 'Hardware and fasteners', 1),
+('Tools', 'Construction tools and equipment', 1),
+('Electrical', 'Electrical components and wires', 1);
 
 -- Insert sample products
-INSERT INTO products (name, category, brand, size, thickness, price_per_unit, current_stock, min_stock, unit, sku) VALUES
+INSERT INTO `products` (`name`, `category`, `brand`, `size`, `thickness`, `price_per_unit`, `current_stock`, `min_stock`, `unit`, `sku`) VALUES
 ('Steel Rods - 12mm', 'Steel', 'Tata Steel', '12mm', '12mm', 450.00, 100, 20, 'pieces', 'STL-ROD-12MM'),
 ('Plywood Sheet', 'Wood', 'Greenply', '4x8 ft', '18mm', 2500.00, 25, 5, 'sheets', 'PLY-18MM-4X8'),
 ('Screws - Wood', 'Hardware', 'Godrej', '2 inch', '4mm', 5.50, 500, 50, 'pieces', 'SCR-WOOD-2IN');
@@ -206,16 +219,14 @@ INSERT INTO products (name, category, brand, size, thickness, price_per_unit, cu
 -- INDEXES FOR PERFORMANCE
 -- =============================================
 
-CREATE INDEX idx_users_username ON users(username);
-CREATE INDEX idx_users_email ON users(email);
 CREATE INDEX idx_products_category ON products(category);
-CREATE INDEX idx_products_sku ON products(sku);
 CREATE INDEX idx_material_requests_status ON material_requests(status);
-CREATE INDEX idx_material_requests_user_id ON material_requests(user_id);
 CREATE INDEX idx_attendance_user_date ON attendance(user_id, date);
 CREATE INDEX idx_stock_movements_product_id ON stock_movements(product_id);
 CREATE INDEX idx_petty_cash_date ON petty_cash_expenses(date);
 
+COMMIT;
+
 -- =============================================
--- END OF SQL EXPORT
+-- END OF DATABASE STRUCTURE
 -- =============================================
