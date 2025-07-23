@@ -3,6 +3,9 @@
  * Login page for Furnili Management System
  */
 
+// Start session first
+session_start();
+
 require_once 'config/database.php';
 require_once 'includes/functions.php';
 require_once 'includes/auth.php';

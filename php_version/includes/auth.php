@@ -65,12 +65,20 @@ function loginUser($username, $password) {
             return ['success' => false, 'message' => 'Invalid credentials - wrong password'];
         }
         
+        // Start session if not already started
+        if (session_status() == PHP_SESSION_NONE) {
+            session_start();
+        }
+        
         // Create session
         $_SESSION['user_id'] = $user['id'];
         $_SESSION['username'] = $user['username'];
         $_SESSION['name'] = $user['name'];
         $_SESSION['role'] = $user['role'];
         $_SESSION['login_time'] = time();
+        
+        // Regenerate session ID for security
+        session_regenerate_id(true);
         
         // Update last login (add column if not exists)
         try {
