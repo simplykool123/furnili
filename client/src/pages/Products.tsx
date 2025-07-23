@@ -86,22 +86,27 @@ export default function Products() {
         setShowAddProduct(open);
         if (!open) setEditingProduct(null);
       }}>
-        <DialogContent className="max-w-3xl" aria-describedby="product-form-description">
-          <DialogHeader className="space-y-3">
-            <DialogTitle className="text-xl font-semibold text-foreground">
-              {editingProduct ? 'Edit Product' : 'Add New Product'}
-            </DialogTitle>
-            <p id="product-form-description" className="text-sm text-muted-foreground">
-              {editingProduct ? 'Update product information and inventory details' : 'Add a new product to the inventory system with complete specifications'}
+        <DialogContent className={`${isMobile ? 'max-w-[95vw] h-[95vh] p-0' : 'max-w-3xl'} overflow-hidden`} aria-describedby="product-form-description">
+          <div className={`${isMobile ? 'h-full flex flex-col' : ''}`}>
+            <DialogHeader className={`space-y-3 ${isMobile ? 'p-4 pb-2 border-b' : ''}`}>
+              <DialogTitle className="text-xl font-semibold text-foreground">
+                {editingProduct ? 'Edit Product' : 'Add New Product'}
+              </DialogTitle>
+              <p id="product-form-description" className="text-sm text-muted-foreground">
+                {editingProduct ? 'Update product information and inventory details' : 'Add a new product to the inventory system with complete specifications'}
             </p>
           </DialogHeader>
-          <ProductForm 
-            product={editingProduct}
-            onClose={() => {
-              setShowAddProduct(false);
-              setEditingProduct(null);
-            }} 
-          />
+          <div className={`${isMobile ? 'flex-1 overflow-hidden' : ''}`}>
+            <ProductForm 
+              product={editingProduct} 
+              onClose={() => {
+                setShowAddProduct(false);
+                setEditingProduct(null);
+              }}
+              isMobile={isMobile}
+            />
+          </div>
+          </div>
         </DialogContent>
       </Dialog>
     </>
