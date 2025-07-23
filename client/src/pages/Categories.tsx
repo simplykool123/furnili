@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useIsMobile, MobileCard, MobileHeading, MobileText } from "@/components/Mobile/MobileOptimizer";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import { Plus, Package, Tag, Users, Settings } from "lucide-react";
@@ -9,6 +10,7 @@ import type { Category } from "@shared/schema";
 
 export default function Categories() {
   const [isCreating, setIsCreating] = useState(false);
+  const { isMobile } = useIsMobile();
 
   const {
     data: categories = [],
@@ -23,8 +25,25 @@ export default function Categories() {
 
   return (
     <div className="space-y-4">
+      {/* Mobile-optimized Header */}
+      <MobileCard className="space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="space-y-1">
+            <MobileHeading>Categories Management</MobileHeading>
+            <MobileText>Organize and manage product categories</MobileText>
+          </div>
+          <Button 
+            onClick={() => setIsCreating(true)}
+            className={`furnili-gradient hover:opacity-90 text-white font-medium shadow-md hover:shadow-lg transition-all duration-200 ${isMobile ? 'w-full' : ''}`}
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Add Category
+          </Button>
+        </div>
+      </MobileCard>
+
       {/* Statistics Cards */}
-      <div className="grid gap-3 md:grid-cols-3">
+      <div className={`grid gap-3 ${isMobile ? 'grid-cols-1 sm:grid-cols-2' : 'md:grid-cols-3'}`}>
         <div className="rounded-lg border bg-card p-4">
           <div className="flex items-center">
             <Tag className="h-4 w-4 text-blue-600" />
@@ -59,20 +78,6 @@ export default function Categories() {
         </div>
       </div>
 
-      {/* Actions */}
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Categories List</h2>
-        <Dialog open={isCreating} onOpenChange={setIsCreating}>
-          <DialogTrigger asChild>
-            <Button size="sm">
-              <Plus className="mr-2 h-4 w-4" />
-              Add Category
-            </Button>
-          </DialogTrigger>
-          <CategoryForm onSuccess={() => setIsCreating(false)} />
-        </Dialog>
-      </div>
-
       {/* Error State */}
       {error && (
         <div className="rounded-md bg-destructive/15 border border-destructive/20 p-4">
@@ -82,11 +87,18 @@ export default function Categories() {
         </div>
       )}
 
-      {/* Category Table */}
-      <CategoryTable 
-        categories={categories}
-        isLoading={isLoading}
-      />
+      {/* Categories List Section */}
+      <MobileCard>
+        <CategoryTable 
+          categories={categories}
+          isLoading={isLoading}
+        />
+      </MobileCard>
+      
+      {/* Hidden Dialog for Add Category */}
+      <Dialog open={isCreating} onOpenChange={setIsCreating}>
+        <CategoryForm onSuccess={() => setIsCreating(false)} />
+      </Dialog>
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import BOQUpload from "@/components/BOQ/BOQUpload";
 import { authService } from "@/lib/auth";
 import { useEffect } from "react";
+import { useIsMobile, MobileCard, MobileHeading, MobileText } from "@/components/Mobile/MobileOptimizer";
 
 export default function BOQ() {
   const user = authService.getUser();
