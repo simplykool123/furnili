@@ -21,6 +21,34 @@ function checkSessionTimeout() {
 
 // hasPermission() function is defined in auth.php to avoid redeclaration error
 
+// addProduct() function is defined in individual page files to avoid redeclaration error
+
+/**
+ * Require authentication - redirect to login if not authenticated
+ */
+function requireAuth() {
+    if (!isLoggedIn()) {
+        header('Location: /login.php');
+        exit();
+    }
+}
+
+/**
+ * Require specific role(s) - redirect to dashboard if user doesn't have permission
+ */
+function requireRole($roles) {
+    if (!isLoggedIn()) {
+        header('Location: /login.php');
+        exit();
+    }
+    
+    $user = getCurrentUser();
+    if (!in_array($user['role'], (array)$roles)) {
+        header('Location: /index.php');
+        exit();
+    }
+}
+
 /**
  * Add new product with image upload
  */
@@ -45,15 +73,15 @@ function addProduct($data, $files = []) {
         
         $result = $stmt->execute([
             $data['name'],
-            $data['category'],
-            $data['brand'] ?? null,
-            $data['size'] ?? null,
-            $data['thickness'] ?? null,
+            $data['category'] ?? '',
+            $data['brand'] ?? '',
+            $data['size'] ?? '',
+            $data['thickness'] ?? '',
             $data['price_per_unit'],
             $data['current_stock'] ?? 0,
             $data['min_stock'] ?? 10,
             $data['unit'] ?? 'pieces',
-            $sku,
+            $data['sku'] ?? generateSKU($data['name']),
             $imageUrl
         ]);
         
