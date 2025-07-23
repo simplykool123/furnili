@@ -1,258 +1,159 @@
-/**
- * Custom styles for Furnili Management System
- * PHP/MySQL Version
- */
+/* Furnili Management System Custom Styles */
 
-/* Brand Colors */
-:root {
-    --furnili-primary: #D4B896;
-    --furnili-secondary: #F5F0E8;
-    --furnili-dark: #8B7355;
-    --furnili-light: #FDFCF9;
-}
-
-/* Global Styles */
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: var(--furnili-light);
+    background-color: #f8f9fc;
+    padding-top: 60px; /* Account for fixed navbar */
 }
 
-/* Custom Bootstrap overrides */
-.btn-primary {
-    background: linear-gradient(135deg, var(--furnili-primary) 0%, var(--furnili-dark) 100%);
-    border-color: var(--furnili-primary);
-    font-weight: 500;
-}
-
-.btn-primary:hover {
-    background: linear-gradient(135deg, var(--furnili-dark) 0%, #725B42 100%);
-    border-color: var(--furnili-dark);
-}
-
-.text-primary {
-    color: var(--furnili-dark) !important;
-}
-
-.bg-primary {
-    background: linear-gradient(135deg, var(--furnili-primary) 0%, var(--furnili-dark) 100%) !important;
-}
-
-/* Card styles */
-.card {
-    border: none;
-    border-radius: 12px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-    transition: box-shadow 0.3s ease;
-}
-
-.card:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.card-header {
-    background: linear-gradient(135deg, var(--furnili-secondary) 0%, var(--furnili-light) 100%);
-    border-bottom: 1px solid rgba(212, 184, 150, 0.2);
-    font-weight: 600;
-    color: var(--furnili-dark);
-}
-
-/* Dashboard cards */
-.border-left-primary {
-    border-left: 4px solid var(--furnili-primary) !important;
-}
-
-.border-left-warning {
-    border-left: 4px solid #ffc107 !important;
-}
-
-.border-left-info {
-    border-left: 4px solid #0dcaf0 !important;
-}
-
-.border-left-success {
-    border-left: 4px solid #198754 !important;
-}
-
-/* Forms */
-.form-control:focus {
-    border-color: var(--furnili-primary);
-    box-shadow: 0 0 0 0.2rem rgba(212, 184, 150, 0.25);
-}
-
-.form-select:focus {
-    border-color: var(--furnili-primary);
-    box-shadow: 0 0 0 0.2rem rgba(212, 184, 150, 0.25);
-}
-
-/* Tables */
-.table {
-    background: white;
-}
-
-.table th {
-    background: var(--furnili-secondary);
-    color: var(--furnili-dark);
-    font-weight: 600;
-    border-bottom: 2px solid var(--furnili-primary);
-}
-
-.table-striped > tbody > tr:nth-of-type(odd) > td {
-    background-color: rgba(245, 240, 232, 0.3);
-}
-
-/* Badges */
-.badge {
-    font-weight: 500;
-    font-size: 0.75rem;
-}
-
-/* Navigation */
-.navbar-dark .navbar-brand {
-    color: white !important;
-    font-weight: 600;
-}
-
-.dropdown-menu {
-    border: none;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    border-radius: 8px;
-}
-
-/* Sidebar */
+/* Sidebar Styles */
 .sidebar {
-    background: linear-gradient(180deg, var(--furnili-secondary) 0%, var(--furnili-light) 100%);
+    position: fixed;
+    top: 56px;
+    bottom: 0;
+    left: 0;
+    z-index: 100;
+    padding: 48px 0 0;
+    box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1);
+}
+
+.sidebar-brand {
+    padding: 1rem;
+    border-bottom: 1px solid #e3e6f0;
+    background: linear-gradient(135deg, #D4B896 0%, #F5F0E8 100%);
+    color: #5a5c69;
+    font-weight: bold;
 }
 
 .sidebar .nav-link {
-    color: var(--furnili-dark);
+    color: #5a5c69;
     font-weight: 500;
     padding: 0.75rem 1rem;
-    border-radius: 8px;
-    margin: 0.25rem 0.5rem;
-    transition: all 0.3s ease;
+    border-radius: 0.35rem;
+    margin: 0.125rem 0.5rem;
 }
 
 .sidebar .nav-link:hover {
-    background: rgba(212, 184, 150, 0.2);
-    color: var(--furnili-dark);
-    transform: translateX(5px);
+    background-color: #eaecf4;
+    color: #5a5c69;
 }
 
 .sidebar .nav-link.active {
-    background: linear-gradient(135deg, var(--furnili-primary) 0%, var(--furnili-dark) 100%);
+    background-color: #D4B896;
     color: white;
-    font-weight: 600;
 }
 
-.sidebar .nav-link i {
-    color: var(--furnili-dark);
-    width: 20px;
-    text-align: center;
-}
-
-.sidebar .nav-link:hover i,
-.sidebar .nav-link.active i {
-    color: currentColor;
-}
-
-/* Alerts */
-.alert {
+/* Card Styles */
+.card {
     border: none;
-    border-radius: 8px;
+    border-radius: 0.35rem;
+    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
 }
 
-.alert-success {
-    background: linear-gradient(135deg, #d1edde 0%, #c3e6cb 100%);
-    color: #155724;
+.card-header {
+    background-color: #f8f9fc;
+    border-bottom: 1px solid #e3e6f0;
 }
 
-.alert-danger {
-    background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
-    color: #721c24;
+/* Border utilities for dashboard cards */
+.border-left-primary {
+    border-left: 0.25rem solid #4e73df !important;
 }
 
-.alert-warning {
-    background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
-    color: #856404;
+.border-left-success {
+    border-left: 0.25rem solid #1cc88a !important;
 }
 
-.alert-info {
-    background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%);
-    color: #0c5460;
+.border-left-info {
+    border-left: 0.25rem solid #36b9cc !important;
 }
 
-/* Buttons */
+.border-left-warning {
+    border-left: 0.25rem solid #f6c23e !important;
+}
+
+/* Text colors */
+.text-primary {
+    color: #4e73df !important;
+}
+
+.text-success {
+    color: #1cc88a !important;
+}
+
+.text-info {
+    color: #36b9cc !important;
+}
+
+.text-warning {
+    color: #f6c23e !important;
+}
+
+.text-gray-300 {
+    color: #dddfeb !important;
+}
+
+.text-gray-800 {
+    color: #5a5c69 !important;
+}
+
+/* Font utilities */
+.text-xs {
+    font-size: 0.7rem;
+}
+
+.font-weight-bold {
+    font-weight: 700 !important;
+}
+
+/* Navigation adjustments */
+.navbar-brand {
+    font-weight: bold;
+    font-size: 1.5rem;
+}
+
+/* Button styles */
 .btn {
-    border-radius: 8px;
+    border-radius: 0.35rem;
     font-weight: 500;
-    padding: 0.5rem 1rem;
-    transition: all 0.3s ease;
 }
 
-.btn:hover {
-    transform: translateY(-1px);
+/* Table styles */
+.table {
+    color: #5a5c69;
 }
 
-.btn-outline-primary {
-    color: var(--furnili-dark);
-    border-color: var(--furnili-primary);
+.table th {
+    background-color: #f8f9fc;
+    border-color: #e3e6f0;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.8rem;
 }
 
-.btn-outline-primary:hover {
-    background: var(--furnili-primary);
-    border-color: var(--furnili-primary);
-    color: white;
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .sidebar {
+        position: relative;
+        top: 0;
+        padding: 0;
+    }
+    
+    body {
+        padding-top: 56px;
+    }
 }
 
-/* Modal */
-.modal-content {
-    border: none;
-    border-radius: 12px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+/* Form styles */
+.form-control:focus {
+    border-color: #D4B896;
+    box-shadow: 0 0 0 0.2rem rgba(212, 184, 150, 0.25);
 }
 
-.modal-header {
-    background: var(--furnili-secondary);
-    color: var(--furnili-dark);
-    border-bottom: 1px solid rgba(212, 184, 150, 0.2);
-    border-radius: 12px 12px 0 0;
-}
-
-/* Pagination */
-.pagination .page-link {
-    color: var(--furnili-dark);
-    border-color: var(--furnili-primary);
-}
-
-.pagination .page-item.active .page-link {
-    background: var(--furnili-primary);
-    border-color: var(--furnili-primary);
-}
-
-.pagination .page-link:hover {
-    background: rgba(212, 184, 150, 0.1);
-    color: var(--furnili-dark);
-}
-
-/* Status indicators */
-.status-pending {
-    color: #856404;
-    background: #fff3cd;
-}
-
-.status-approved {
-    color: #0c5460;
-    background: #d1ecf1;
-}
-
-.status-completed {
-    color: #155724;
-    background: #d1edde;
-}
-
-.status-rejected {
-    color: #721c24;
-    background: #f8d7da;
+/* Badge styles */
+.badge {
+    font-size: 0.75em;
+    font-weight: 500;
 }
 
 /* Loading states */
@@ -261,97 +162,35 @@ body {
     pointer-events: none;
 }
 
-.spinner-border-sm {
-    width: 1rem;
-    height: 1rem;
+/* Alert styles */
+.alert {
+    border-radius: 0.35rem;
+    border: none;
 }
 
-/* Mobile responsiveness */
-@media (max-width: 768px) {
-    .container-fluid {
-        padding: 0;
-    }
-    
-    .sidebar {
-        transform: translateX(-100%);
-        transition: transform 0.3s ease;
-    }
-    
-    .sidebar.show {
-        transform: translateX(0);
-    }
-    
-    .card {
-        margin: 0.5rem;
-        border-radius: 8px;
-    }
-    
-    .table-responsive {
-        font-size: 0.875rem;
-    }
-    
-    .btn {
-        padding: 0.4rem 0.8rem;
-        font-size: 0.875rem;
-    }
+/* Dashboard specific styles */
+.dashboard-stat-card {
+    transition: transform 0.2s;
 }
 
-/* Print styles */
-@media print {
-    .navbar,
-    .sidebar,
-    .btn,
-    .modal {
-        display: none !important;
-    }
-    
-    .main-content {
-        margin: 0 !important;
-        padding: 0 !important;
-    }
-    
-    .card {
-        border: 1px solid #ddd !important;
-        box-shadow: none !important;
-    }
+.dashboard-stat-card:hover {
+    transform: translateY(-5px);
 }
 
-/* Utility classes */
-.text-furnili {
-    color: var(--furnili-dark) !important;
+/* Custom scrollbar for sidebar */
+.sidebar::-webkit-scrollbar {
+    width: 6px;
 }
 
-.bg-furnili {
-    background: var(--furnili-primary) !important;
+.sidebar::-webkit-scrollbar-track {
+    background: #f1f1f1;
 }
 
-.bg-furnili-light {
-    background: var(--furnili-secondary) !important;
+.sidebar::-webkit-scrollbar-thumb {
+    background: #D4B896;
+    border-radius: 3px;
 }
 
-.border-furnili {
-    border-color: var(--furnili-primary) !important;
-}
-
-.shadow-furnili {
-    box-shadow: 0 4px 12px rgba(212, 184, 150, 0.3) !important;
-}
-
-/* Animation classes */
-.fade-in {
-    animation: fadeIn 0.5s ease-in;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-.slide-in {
-    animation: slideIn 0.3s ease-out;
-}
-
-@keyframes slideIn {
-    from { transform: translateX(-20px); opacity: 0; }
-    to { transform: translateX(0); opacity: 1; }
+.sidebar::-webkit-scrollbar-thumb:hover {
+    background: #c2a584;
 }

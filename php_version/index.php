@@ -41,7 +41,27 @@ if (!isLoggedIn()) {
 }
 
 $user = getCurrentUser();
-$stats = getDashboardStats($user['role']);
+
+// Initialize stats with defaults
+$stats = [
+    'total_products' => 0,
+    'low_stock_products' => 0,
+    'pending_requests' => 0,
+    'total_requests' => 0,
+    'total_users' => 0,
+    'petty_cash_balance' => 0
+];
+
+// Try to get dashboard stats
+try {
+    $dashboardStats = getDashboardStats($user['role']);
+    if ($dashboardStats) {
+        $stats = array_merge($stats, $dashboardStats);
+    }
+} catch (Exception $e) {
+    // Log error but continue with default stats
+    error_log("Dashboard stats error: " . $e->getMessage());
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -128,7 +148,7 @@ $stats = getDashboardStats($user['role']);
                                 <div class="row no-gutters align-items-center">
                                     <div class="col mr-2">
                                         <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Monthly Expenses</div>
-                                        <div class="h5 mb-0 font-weight-bold text-gray-800"><?php echo formatCurrency($stats['monthly_expenses']); ?></div>
+                                        <div class="h5 mb-0 font-weight-bold text-gray-800"><?php echo formatCurrency($stats['petty_cash_balance'] ?? 0); ?></div>
                                     </div>
                                     <div class="col-auto">
                                         <i class="fas fa-rupee-sign fa-2x text-gray-300"></i>
@@ -143,6 +163,82 @@ $stats = getDashboardStats($user['role']);
                 <div class="row">
                     <div class="col-lg-6">
                         <div class="card shadow mb-4">
+                            <div class="card-header py-3">
+                                <h6 class="m-0 font-weight-bold text-primary">Recent Products</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-bordered" width="100%" cellspacing="0">
+                                        <thead>
+                                            <tr>
+                                                <th>Product Name</th>
+                                                <th>Stock</th>
+                                                <th>Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <?php
+                                            try {
+                                                $db = Database::connect();
+                                                $stmt = $db->prepare("SELECT name, current_stock, min_stock FROM products WHERE is_active = 1 ORDER BY id DESC LIMIT 5");
+                                                $stmt->execute();
+                                                $products = $stmt->fetchAll();
+                                                
+                                                if ($products) {
+                                                    foreach ($products as $product) {
+                                                        $status = $product['current_stock'] <= $product['min_stock'] ? 'Low Stock' : 'In Stock';
+                                                        $statusClass = $product['current_stock'] <= $product['min_stock'] ? 'badge bg-warning' : 'badge bg-success';
+                                                        echo "<tr>";
+                                                        echo "<td>" . htmlspecialchars($product['name']) . "</td>";
+                                                        echo "<td>" . $product['current_stock'] . "</td>";
+                                                        echo "<td><span class='$statusClass'>$status</span></td>";
+                                                        echo "</tr>";
+                                                    }
+                                                } else {
+                                                    echo "<tr><td colspan='3' class='text-center'>No products found</td></tr>";
+                                                }
+                                            } catch (Exception $e) {
+                                                echo "<tr><td colspan='3' class='text-center text-danger'>Error loading products</td></tr>";
+                                            }
+                                            ?>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-lg-6">
+                        <div class="card shadow mb-4">
+                            <div class="card-header py-3">
+                                <h6 class="m-0 font-weight-bold text-primary">Quick Actions</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="d-grid gap-2">
+                                    <a href="products.php" class="btn btn-primary">
+                                        <i class="fas fa-plus-circle me-2"></i>Add New Product
+                                    </a>
+                                    <a href="requests.php" class="btn btn-info">
+                                        <i class="fas fa-clipboard-list me-2"></i>Material Requests
+                                    </a>
+                                    <a href="attendance.php" class="btn btn-success">
+                                        <i class="fas fa-clock me-2"></i>Staff Attendance
+                                    </a>
+                                    <a href="petty_cash.php" class="btn btn-warning">
+                                        <i class="fas fa-wallet me-2"></i>Petty Cash
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
                             <div class="card-header py-3">
                                 <h6 class="m-0 font-weight-bold text-primary">Recent Products</h6>
                             </div>
