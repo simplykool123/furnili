@@ -3,12 +3,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Download, FileArchive, Clock, Shield } from "lucide-react";
-// Get user from localStorage instead since useAuth is not exported
+import { useToast } from "@/hooks/use-toast";
+import { authenticatedApiRequest } from "@/lib/auth";
+
+// Get user from localStorage
 const getUser = () => {
   const userStr = localStorage.getItem('authUser');
   return userStr ? JSON.parse(userStr) : null;
 };
-import { useToast } from "@/hooks/use-toast";
 
 export default function Backups() {
   const [isDownloading, setIsDownloading] = useState(false);
@@ -28,15 +30,37 @@ export default function Backups() {
     setIsDownloading(true);
     
     try {
+      // Use the authenticated API request utility to handle token properly
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        throw new Error('Authentication token not found. Please log in again.');
+      }
+
       const response = await fetch('/api/backups/download-all', {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${token}`,
         },
       });
 
       if (!response.ok) {
-        throw new Error('Failed to download backup');
+        // Try to get error message from response
+        let errorMessage = 'Failed to download backup';
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.message || errorMessage;
+        } catch {
+          // If response is not JSON, use status text
+          errorMessage = response.statusText || errorMessage;
+        }
+        
+        if (response.status === 401) {
+          errorMessage = 'Authentication failed. Please log in again.';
+          // Optionally redirect to login or refresh the page
+          setTimeout(() => window.location.reload(), 2000);
+        }
+        
+        throw new Error(errorMessage);
       }
 
       // Get the filename from the response headers
@@ -64,7 +88,7 @@ export default function Backups() {
       console.error('Backup download error:', error);
       toast({
         title: "Download Failed",
-        description: "There was an error downloading the backup. Please try again.",
+        description: error instanceof Error ? error.message : "There was an error downloading the backup. Please try again.",
         variant: "destructive",
       });
     } finally {
