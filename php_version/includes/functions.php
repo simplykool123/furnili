@@ -79,6 +79,45 @@ function hasRole($requiredRoles) {
 }
 
 /**
+ * Check if user has specific permission
+ */
+function hasPermission($resource, $action) {
+    $user = getCurrentUser();
+    if (!$user) return false;
+    
+    $role = $user['role'];
+    
+    // Admin has all permissions
+    if ($role === 'admin') return true;
+    
+    // Define role-based permissions
+    $permissions = [
+        'manager' => [
+            'products' => ['create', 'read', 'update', 'delete'],
+            'requests' => ['create', 'read', 'update', 'delete'],
+            'attendance' => ['read', 'update'],
+            'petty_cash' => ['create', 'read', 'update'],
+            'users' => ['read'],
+            'reports' => ['read']
+        ],
+        'storekeeper' => [
+            'products' => ['create', 'read', 'update'],
+            'requests' => ['read', 'update'],
+            'attendance' => ['read'],
+            'reports' => ['read']
+        ],
+        'user' => [
+            'products' => ['read'],
+            'requests' => ['create', 'read'],
+            'reports' => ['read']
+        ]
+    ];
+    
+    return isset($permissions[$role][$resource]) && 
+           in_array($action, $permissions[$role][$resource]);
+}
+
+/**
  * Redirect if not authenticated
  */
 function requireAuth() {
