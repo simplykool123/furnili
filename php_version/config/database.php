@@ -45,7 +45,20 @@ class Database {
                 ]);
             } catch (PDOException $e) {
                 error_log("Database connection error: " . $e->getMessage());
-                die("Database connection failed. Please check your configuration.");
+                if (defined('DEVELOPMENT_MODE') && DEVELOPMENT_MODE) {
+                    die("<h3>Database Connection Error:</h3><p>" . $e->getMessage() . "</p>
+                         <p><strong>Please check:</strong></p>
+                         <ul>
+                         <li>Database name: " . DB_NAME . "</li>
+                         <li>Database user: " . DB_USER . "</li>
+                         <li>Database host: " . DB_HOST . "</li>
+                         <li>Make sure MySQL service is running</li>
+                         <li>Check database credentials</li>
+                         </ul>
+                         <p><a href='debug.php'>Run Debug Script</a></p>");
+                } else {
+                    die("Database connection failed. Please check your configuration.");
+                }
             }
         }
         return self::$connection;
@@ -57,12 +70,13 @@ class Database {
 }
 
 // Production mode for app.furnili.in
-// define('DEVELOPMENT_MODE', true); // Commented out for production
+define('DEVELOPMENT_MODE', true); // Enable for debugging white screen issues
 
-// Error reporting for development (disable in production)
+// Error reporting for development (enable for debugging)
 if (defined('DEVELOPMENT_MODE') && DEVELOPMENT_MODE) {
     error_reporting(E_ALL);
     ini_set('display_errors', 1);
+    ini_set('log_errors', 1);
 } else {
     error_reporting(0);
     ini_set('display_errors', 0);

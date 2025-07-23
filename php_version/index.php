@@ -4,6 +4,23 @@
  * PHP/MySQL Version
  */
 
+// Enable error reporting for debugging white screen issues
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
+// Check if critical files exist
+$required_files = [
+    'config/database.php',
+    'includes/functions.php', 
+    'includes/auth.php'
+];
+
+foreach ($required_files as $file) {
+    if (!file_exists($file)) {
+        die("Critical file missing: $file<br><a href='debug.php'>Run Debug</a>");
+    }
+}
+
 require_once 'config/database.php';
 require_once 'includes/functions.php';
 require_once 'includes/auth.php';
