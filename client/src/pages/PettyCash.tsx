@@ -766,7 +766,7 @@ export default function PettyCash() {
                   id="amount"
                   type="number"
                   step="0.01"
-                  placeholder="2700"
+                  placeholder=""
                   value={formData.amount}
                   onChange={(e) => setFormData(prev => ({ ...prev, amount: e.target.value }))}
                   required
@@ -790,7 +790,7 @@ export default function PettyCash() {
                 <Label htmlFor="paidTo">Paid To *</Label>
                 <Input
                   id="paidTo"
-                  placeholder="Dolly Vikesh Oswal"
+                  placeholder=""
                   value={formData.paidTo}
                   onChange={(e) => setFormData(prev => ({ ...prev, paidTo: e.target.value }))}
                   required
@@ -821,7 +821,7 @@ export default function PettyCash() {
               <Label htmlFor="purpose">Purpose / Description *</Label>
               <Textarea
                 id="purpose"
-                placeholder="Furnili powder coating for legs – Pintu order"
+                placeholder="For what Purpose"
                 value={formData.purpose}
                 onChange={(e) => setFormData(prev => ({ ...prev, purpose: e.target.value }))}
                 required
@@ -831,16 +831,16 @@ export default function PettyCash() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="orderNo">Order No. / Client Reference</Label>
+                <Label htmlFor="orderNo">Order No. / Client Name</Label>
                 <Input
                   id="orderNo"
-                  placeholder="Pintu Order"
+                  placeholder=""
                   value={formData.orderNo}
                   onChange={(e) => setFormData(prev => ({ ...prev, orderNo: e.target.value }))}
                 />
               </div>
               <div>
-                <Label htmlFor="category">Category (For Reports)</Label>
+                <Label htmlFor="category">Category </Label>
                 <Select 
                   value={formData.category} 
                   onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}

@@ -210,7 +210,7 @@ export default function ProductForm({ product, onClose, isMobile = false }: Prod
                 id="name"
                 {...register("name")}
                 className={errors.name ? "border-red-500" : ""}
-                placeholder="e.g., Steel Rods - 12mm"
+                placeholder="e.g., Calibrated ply"
               />
               {errors.name && (
                 <p className="text-sm text-red-600 mt-1">{errors.name.message}</p>
@@ -244,7 +244,7 @@ export default function ProductForm({ product, onClose, isMobile = false }: Prod
               <Input
                 id="brand"
                 {...register("brand")}
-                placeholder="e.g., Tata Steel"
+                placeholder="e.g.,  ebco"
               />
             </div>
 

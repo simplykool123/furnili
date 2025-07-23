@@ -114,17 +114,7 @@ export default function Header({ title, subtitle, showAddButton = false, onAddCl
             </div>
           </div>
 
-          {/* Add Button */}
-          {showAddButton && (
-            <Button 
-              onClick={onAddClick}
-              size="sm"
-              className="furnili-gradient hover:opacity-90 text-white font-medium shadow-md hover:shadow-lg transition-all duration-200"
-            >
-              <Plus className="w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2" />
-              <span className="text-sm font-medium">Add New</span>
-            </Button>
-          )}
+
         </div>
       </div>
     </header>

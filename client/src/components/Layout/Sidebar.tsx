@@ -125,8 +125,8 @@ export default function Sidebar({ onItemClick }: SidebarProps = {}) {
             />
           </div>
           <div className="flex-1">
-            <h2 className="font-bold text-white text-lg tracking-wide">Furnili MS</h2>
-            <p className="text-xs text-white/80 capitalize font-medium">{user.role}</p>
+            <h2 className="font-bold text-amber-900 text-lg tracking-wide">Furnili MS</h2>
+            <p className="text-xs text-amber-800 capitalize font-medium">{user.role}</p>
           </div>
         </div>
       </div>
@@ -151,8 +151,8 @@ export default function Sidebar({ onItemClick }: SidebarProps = {}) {
                     className={cn(
                       "flex items-center justify-between w-full px-3 py-2 rounded-lg font-medium transition-all duration-200 text-sm group hover:shadow-md",
                       hasActiveSubItem || isExpanded
-                        ? "text-white bg-white/20 shadow-lg backdrop-blur-sm"
-                        : "text-white/90 hover:bg-white/10 hover:text-white"
+                        ? "text-amber-900 bg-white/30 shadow-lg backdrop-blur-sm"
+                        : "text-amber-900 hover:bg-white/20 hover:text-amber-800"
                     )}
                   >
                     <div className="flex items-center space-x-3">
@@ -179,8 +179,8 @@ export default function Sidebar({ onItemClick }: SidebarProps = {}) {
                             className={cn(
                               "flex items-center space-x-3 w-full px-3 py-2 rounded-lg font-medium transition-all duration-200 text-sm group",
                               isActive
-                                ? "text-white bg-white/25 shadow-md backdrop-blur-sm border border-white/20"
-                                : "text-white/80 hover:bg-white/15 hover:text-white"
+                                ? "text-amber-900 bg-white/25 shadow-md backdrop-blur-sm border border-white/20"
+                                : "text-amber-900/80 hover:bg-white/15 hover:text-amber-800"
                             )}
                             onClick={onItemClick}
                           >
@@ -204,8 +204,8 @@ export default function Sidebar({ onItemClick }: SidebarProps = {}) {
                   className={cn(
                     "flex items-center space-x-3 px-3 py-2 rounded-lg font-medium transition-all duration-200 text-sm group hover:shadow-md",
                     isActive
-                      ? "text-white bg-white/20 shadow-lg backdrop-blur-sm"
-                      : "text-white/90 hover:bg-white/10 hover:text-white"
+                      ? "text-amber-900 bg-white/30 shadow-lg backdrop-blur-sm"
+                      : "text-amber-900/90 hover:bg-white/15 hover:text-amber-800"
                   )}
                   onClick={onItemClick}
                 >
@@ -222,7 +222,7 @@ export default function Sidebar({ onItemClick }: SidebarProps = {}) {
       <div className="p-3 border-t border-primary-foreground/20">
         <button 
           onClick={handleLogout}
-          className="flex items-center space-x-3 px-3 py-2 text-white/90 hover:bg-white/10 hover:text-white rounded-lg transition-all duration-200 w-full text-sm font-medium group"
+          className="flex items-center space-x-3 px-3 py-2 text-amber-900/90 hover:bg-white/15 hover:text-amber-800 rounded-lg transition-all duration-200 w-full text-sm font-medium group"
         >
           <LogOut className="w-5 h-5 flex-shrink-0" />
           <span className="font-semibold">Logout</span>
