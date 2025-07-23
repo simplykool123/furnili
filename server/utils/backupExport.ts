@@ -1,6 +1,8 @@
 import archiver from 'archiver';
 import { Writable } from 'stream';
 import { storage } from '../storage';
+import fs from 'fs';
+import path from 'path';
 
 interface BackupData {
   [key: string]: any[];
@@ -48,8 +50,6 @@ function addProjectFilesToZip(zip: any) {
   ];
 
   // Add each file if it exists
-  const fs = require('fs');
-  const path = require('path');
   
   projectFiles.forEach(file => {
     try {
@@ -86,8 +86,6 @@ function addProjectFilesToZip(zip: any) {
 
 // Recursively add directory to zip
 function addDirectoryToZip(zip: any, dirPath: string, zipPath: string) {
-  const fs = require('fs');
-  const path = require('path');
   
   if (!fs.existsSync(dirPath)) return;
   
@@ -337,7 +335,7 @@ export async function getAllBackupData(): Promise<BackupData> {
   }
 }
 
-// Create ZIP file with complete project and data backups
+// Create ZIP file with data backups and essential files
 export async function createBackupZip(): Promise<Buffer> {
   return new Promise(async (resolve, reject) => {
     try {
@@ -354,45 +352,69 @@ export async function createBackupZip(): Promise<Buffer> {
 
       archive.pipe(output);
       
-      // Add complete project files for Hostinger deployment
-      addProjectFilesToZip(archive);
-      
       // Get data and add CSV files
       const data = await getAllBackupData();
       Object.entries(data).forEach(([tableName, tableData]) => {
         if (tableData.length > 0) {
           const csvContent = createCSV(tableData, tableName);
-          archive.append(csvContent, { name: `data/${tableName}.csv` });
+          archive.append(csvContent, { name: `${tableName}.csv` });
         }
       });
 
+      // Add the SQL export file if it exists
+      try {
+        if (fs.existsSync('hostinger_sql_export.sql')) {
+          const sqlContent = fs.readFileSync('hostinger_sql_export.sql', 'utf8');
+          archive.append(sqlContent, { name: 'hostinger_sql_export.sql' });
+        }
+      } catch (error) {
+        console.log('Could not add SQL file:', error instanceof Error ? error.message : 'Unknown error');
+      }
+
       // Add deployment README
-      const deploymentReadme = `# Furnili Management System - Complete Deployment Package
+      const deploymentReadme = `# Furnili Management System - Data Backup Package
 
 ## What's Included:
-- Complete source code (client/, server/, shared/ folders)
+- All business data in CSV format
 - Database structure (hostinger_sql_export.sql)
-- Current data exports (data/ folder with CSV files)
-- Configuration files (package.json, tsconfig.json, etc.)
+- Deployment instructions
 
-## Quick Hostinger Deployment:
-1. Extract all files to your hosting directory
-2. Import hostinger_sql_export.sql to your database
-3. Set DATABASE_URL environment variable
-4. Run: npm install && npm run build
-5. Serve the dist/ folder
+## Quick Database Setup:
+1. Import hostinger_sql_export.sql to create tables
+2. Use CSV files to import your current data
+3. Default login: admin / admin123
 
-## Default Login:
-- Username: admin
-- Password: admin123
-
-## Data Files:
+## Data Files Included:
 ${Object.keys(data).map(table => `- ${table}.csv: ${data[table].length} records`).join('\n')}
 
+## For Complete Source Code:
+Contact your developer or access the original Replit project.
+
 Generated: ${new Date().toLocaleString()}
-Ready for production deployment on Hostinger!`;
+
+## Hostinger Deployment Instructions:
+1. Create a new database in Hostinger control panel
+2. Import the hostinger_sql_export.sql file 
+3. Upload source code files to public_html
+4. Configure database connection
+5. Install dependencies: npm install
+6. Build project: npm run build
+7. Serve the application
+
+Note: You'll need the complete source code for deployment.
+This package contains your data for backup/migration purposes.`;
       
       archive.append(deploymentReadme, { name: 'README.md' });
+
+      // Add hostinger deployment guide if it exists
+      try {
+        if (fs.existsSync('HOSTINGER_DEPLOYMENT_GUIDE.md')) {
+          const guideContent = fs.readFileSync('HOSTINGER_DEPLOYMENT_GUIDE.md', 'utf8');
+          archive.append(guideContent, { name: 'HOSTINGER_DEPLOYMENT_GUIDE.md' });
+        }
+      } catch (error) {
+        console.log('Could not add deployment guide:', error instanceof Error ? error.message : 'Unknown error');
+      }
 
       // Handle completion
       output.on('finish', () => {
