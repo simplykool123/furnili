@@ -20,26 +20,26 @@ $user = getCurrentUser();
 
         <ul class="nav flex-column">
             <li class="nav-item">
-                <a class="nav-link <?php echo $current_page === 'index' ? 'active' : ''; ?>" href="<?php echo BASE_URL; ?>">
+                <a class="nav-link <?php echo $current_page === 'index' ? 'active' : ''; ?>" href="/index.php">
                     <i class="fas fa-tachometer-alt"></i> Dashboard
                 </a>
             </li>
 
             <li class="nav-item">
-                <a class="nav-link <?php echo $current_page === 'products' ? 'active' : ''; ?>" href="<?php echo BASE_URL; ?>/pages/products.php">
+                <a class="nav-link <?php echo $current_page === 'products' ? 'active' : ''; ?>" href="/products.php">
                     <i class="fas fa-boxes"></i> Products
                 </a>
             </li>
 
             <li class="nav-item">
-                <a class="nav-link <?php echo $current_page === 'requests' ? 'active' : ''; ?>" href="<?php echo BASE_URL; ?>/pages/requests.php">
+                <a class="nav-link <?php echo $current_page === 'requests' ? 'active' : ''; ?>" href="/requests.php">
                     <i class="fas fa-clipboard-list"></i> Material Requests
                 </a>
             </li>
 
             <?php if (hasPermission('attendance', 'read')): ?>
             <li class="nav-item">
-                <a class="nav-link <?php echo $current_page === 'attendance' ? 'active' : ''; ?>" href="<?php echo BASE_URL; ?>/pages/attendance.php">
+                <a class="nav-link <?php echo $current_page === 'attendance' ? 'active' : ''; ?>" href="/attendance.php">
                     <i class="fas fa-clock"></i> Staff Attendance
                 </a>
             </li>
@@ -47,7 +47,7 @@ $user = getCurrentUser();
 
             <?php if (hasPermission('petty_cash', 'read')): ?>
             <li class="nav-item">
-                <a class="nav-link <?php echo $current_page === 'petty_cash' ? 'active' : ''; ?>" href="<?php echo BASE_URL; ?>/pages/petty_cash.php">
+                <a class="nav-link <?php echo $current_page === 'petty_cash' ? 'active' : ''; ?>" href="/petty_cash.php">
                     <i class="fas fa-wallet"></i> Petty Cash
                 </a>
             </li>
@@ -55,21 +55,33 @@ $user = getCurrentUser();
 
             <?php if (hasPermission('users', 'read')): ?>
             <li class="nav-item">
-                <a class="nav-link <?php echo $current_page === 'users' ? 'active' : ''; ?>" href="<?php echo BASE_URL; ?>/pages/users.php">
+                <a class="nav-link <?php echo $current_page === 'users' ? 'active' : ''; ?>" href="/users.php">
                     <i class="fas fa-users"></i> User Management
                 </a>
             </li>
             <?php endif; ?>
 
             <li class="nav-item">
-                <a class="nav-link <?php echo $current_page === 'boq_upload' ? 'active' : ''; ?>" href="<?php echo BASE_URL; ?>/pages/boq_upload.php">
+                <a class="nav-link <?php echo $current_page === 'boq_upload' ? 'active' : ''; ?>" href="/boq_upload.php">
                     <i class="fas fa-file-pdf"></i> BOQ & OCR
                 </a>
             </li>
             
             <li class="nav-item">
-                <a class="nav-link" href="<?php echo BASE_URL; ?>/pages/reports.php">
+                <a class="nav-link <?php echo $current_page === 'whatsapp_export' ? 'active' : ''; ?>" href="/whatsapp_export.php">
+                    <i class="fas fa-whatsapp"></i> WhatsApp Export
+                </a>
+            </li>
+            
+            <li class="nav-item">
+                <a class="nav-link <?php echo $current_page === 'reports' ? 'active' : ''; ?>" href="/reports.php">
                     <i class="fas fa-chart-bar"></i> Reports
+                </a>
+            </li>
+            
+            <li class="nav-item">
+                <a class="nav-link <?php echo $current_page === 'backup' ? 'active' : ''; ?>" href="/backup.php">
+                    <i class="fas fa-download"></i> Data Backup
                 </a>
             </li>
 
