@@ -64,9 +64,9 @@ function MobileTableCard({
                   {column.render ? column.render(row[column.key], row) : row[column.key]}
                 </h3>
               ) : (
-                <p className="text-sm text-muted-foreground">
+                <div className="text-sm text-muted-foreground">
                   {column.render ? column.render(row[column.key], row) : row[column.key]}
-                </p>
+                </div>
               )}
             </div>
           ))}
@@ -121,9 +121,9 @@ function MobileTableCard({
               <span className="text-sm text-muted-foreground font-medium">
                 {column.label}:
               </span>
-              <span className="text-sm text-foreground">
+              <div className="text-sm text-foreground">
                 {column.render ? column.render(row[column.key], row) : row[column.key]}
-              </span>
+              </div>
             </div>
           ))}
         </div>

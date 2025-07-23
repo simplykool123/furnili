@@ -78,9 +78,9 @@ export default function MobileProductTable({ onEdit, onDelete, onView }: MobileP
               </div>
             )}
             <div>
-              <p className="font-medium text-foreground">{value}</p>
+              <div className="font-medium text-foreground">{value}</div>
               {row.sku && (
-                <p className="text-xs text-muted-foreground">SKU: {row.sku}</p>
+                <div className="text-xs text-muted-foreground">SKU: {row.sku}</div>
               )}
             </div>
           </div>
@@ -100,12 +100,12 @@ export default function MobileProductTable({ onEdit, onDelete, onView }: MobileP
         label: 'Stock',
         render: (value, row) => (
           <div className="text-right">
-            <p className={`font-medium ${value <= row.minStock ? 'text-destructive' : 'text-foreground'}`}>
+            <div className={`font-medium ${value <= row.minStock ? 'text-destructive' : 'text-foreground'}`}>
               {value}
-            </p>
-            <p className="text-xs text-muted-foreground">
+            </div>
+            <div className="text-xs text-muted-foreground">
               Min: {row.minStock} {row.unit}
-            </p>
+            </div>
           </div>
         )
       },
@@ -114,8 +114,8 @@ export default function MobileProductTable({ onEdit, onDelete, onView }: MobileP
         label: 'Price',
         render: (value, row) => (
           <div className="text-right">
-            <p className="font-medium text-foreground">₹{value.toLocaleString()}</p>
-            <p className="text-xs text-muted-foreground">per {row.unit}</p>
+            <div className="font-medium text-foreground">₹{value.toLocaleString()}</div>
+            <div className="text-xs text-muted-foreground">per {row.unit}</div>
           </div>
         )
       },
@@ -219,9 +219,9 @@ export default function MobileProductTable({ onEdit, onDelete, onView }: MobileP
 
       {/* Results Count */}
       <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">
+        <div className="text-sm text-muted-foreground">
           {filteredProducts.length} of {products.length} products
-        </p>
+        </div>
         {(searchTerm || categoryFilter) && (
           <button
             onClick={() => {
@@ -247,12 +247,12 @@ export default function MobileProductTable({ onEdit, onDelete, onView }: MobileP
         <div className="text-center py-12">
           <Package className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
           <h3 className="text-lg font-medium text-foreground mb-2">No products found</h3>
-          <p className="text-muted-foreground">
+          <div className="text-muted-foreground">
             {searchTerm || categoryFilter 
               ? "Try adjusting your search filters"
               : "Start by adding your first product"
             }
-          </p>
+          </div>
         </div>
       )}
     </div>

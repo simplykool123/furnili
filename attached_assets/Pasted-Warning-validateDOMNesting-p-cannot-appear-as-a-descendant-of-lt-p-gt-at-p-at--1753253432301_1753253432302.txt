@@ -1,0 +1,88 @@
+Warning: validateDOMNesting(...): <p> cannot appear as a descendant of &lt;p&gt;.
+    at p
+    at div
+    at p
+    at div
+    at div
+    at div
+    at div
+    at MobileTableCard (https://146b5eab-e549-4175-9ce8-4723bed336c5-00-3g89nhnvj32mj.riker.replit.dev/src/components/Mobile/MobileTable.tsx:30:3)
+    at div
+    at MobileTable (https://146b5eab-e549-4175-9ce8-4723bed336c5-00-3g89nhnvj32mj.riker.replit.dev/src/components/Mobile/MobileTable.tsx:343:24)
+    at div
+    at MobileProductTable (https://146b5eab-e549-4175-9ce8-4723bed336c5-00-3g89nhnvj32mj.riker.replit.dev/src/components/Mobile/MobileProductTable.tsx:24:46)
+    at Products (https://146b5eab-e549-4175-9ce8-4723bed336c5-00-3g89nhnvj32mj.riker.replit.dev/src/pages/Products.tsx:31:47)
+    at div
+    at main
+    at div
+    at div
+    at MobileOptimizer (https://146b5eab-e549-4175-9ce8-4723bed336c5-00-3g89nhnvj32mj.riker.replit.dev/src/components/Mobile/MobileOptimizer.tsx:286:43)
+    at Layout (https://146b5eab-e549-4175-9ce8-4723bed336c5-00-3g89nhnvj32mj.riker.replit.dev/src/components/Layout/Layout.tsx:24:3)
+    at ProtectedRoute (https://146b5eab-e549-4175-9ce8-4723bed336c5-00-3g89nhnvj32mj.riker.replit.dev/src/App.tsx?v=ZUGFZ9ZzV7IsB7tHl6QPi:46:27)
+    at Route (https://146b5eab-e549-4175-9ce8-4723bed336c5-00-3g89nhnvj32mj.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=748eff92:323:16)
+    at Switch (https://146b5eab-e549-4175-9ce8-4723bed336c5-00-3g89nhnvj32mj.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=748eff92:379:17)
+    at Router
+    at Provider (https://146b5eab-e549-4175-9ce8-4723bed336c5-00-3g89nhnvj32mj.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-XOUBXFGS.js?v=748eff92:38:15)
+    at TooltipProvider (https://146b5eab-e549-4175-9ce8-4723bed336c5-00-3g89nhnvj32mj.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=748eff92:61:5)
+    at ThemeProvider (https://146b5eab-e549-4175-9ce8-4723bed336c5-00-3g89nhnvj32mj.riker.replit.dev/src/contexts/ThemeContext.tsx:20:33)
+    at QueryClientProvider (https://146b5eab-e549-4175-9ce8-4723bed336c5-00-3g89nhnvj32mj.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=748eff92:2805:3)
+    at App
+Warning: validateDOMNesting(...): <div> cannot appear as a descendant of &lt;p&gt;.
+    at div
+    at p
+    at div
+    at div
+    at div
+    at div
+    at MobileTableCard (https://146b5eab-e549-4175-9ce8-4723bed336c5-00-3g89nhnvj32mj.riker.replit.dev/src/components/Mobile/MobileTable.tsx:30:3)
+    at div
+    at MobileTable (https://146b5eab-e549-4175-9ce8-4723bed336c5-00-3g89nhnvj32mj.riker.replit.dev/src/components/Mobile/MobileTable.tsx:343:24)
+    at div
+    at MobileProductTable (https://146b5eab-e549-4175-9ce8-4723bed336c5-00-3g89nhnvj32mj.riker.replit.dev/src/components/Mobile/MobileProductTable.tsx:24:46)
+    at Products (https://146b5eab-e549-4175-9ce8-4723bed336c5-00-3g89nhnvj32mj.riker.replit.dev/src/pages/Products.tsx:31:47)
+    at div
+    at main
+    at div
+    at div
+    at MobileOptimizer (https://146b5eab-e549-4175-9ce8-4723bed336c5-00-3g89nhnvj32mj.riker.replit.dev/src/components/Mobile/MobileOptimizer.tsx:286:43)
+    at Layout (https://146b5eab-e549-4175-9ce8-4723bed336c5-00-3g89nhnvj32mj.riker.replit.dev/src/components/Layout/Layout.tsx:24:3)
+    at ProtectedRoute (https://146b5eab-e549-4175-9ce8-4723bed336c5-00-3g89nhnvj32mj.riker.replit.dev/src/App.tsx?v=ZUGFZ9ZzV7IsB7tHl6QPi:46:27)
+    at Route (https://146b5eab-e549-4175-9ce8-4723bed336c5-00-3g89nhnvj32mj.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=748eff92:323:16)
+    at Switch (https://146b5eab-e549-4175-9ce8-4723bed336c5-00-3g89nhnvj32mj.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=748eff92:379:17)
+    at Router
+    at Provider (https://146b5eab-e549-4175-9ce8-4723bed336c5-00-3g89nhnvj32mj.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-XOUBXFGS.js?v=748eff92:38:15)
+    at TooltipProvider (https://146b5eab-e549-4175-9ce8-4723bed336c5-00-3g89nhnvj32mj.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=748eff92:61:5)
+    at ThemeProvider (https://146b5eab-e549-4175-9ce8-4723bed336c5-00-3g89nhnvj32mj.riker.replit.dev/src/contexts/ThemeContext.tsx:20:33)
+    at QueryClientProvider (https://146b5eab-e549-4175-9ce8-4723bed336c5-00-3g89nhnvj32mj.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=748eff92:2805:3)
+    at App
+at div
+at p
+at div
+at div
+at div
+at div
+at MobileTableCard (https://146b5eab-e549-4175-9ce8-4723bed336c5-00-3g89nhnvj32mj.riker.replit.dev/src/components/Mobile/MobileTable.tsx:30:3)
+at div
+at MobileTable (https://146b5eab-e549-4175-9ce8-4723bed336c5-00-3g89nhnvj32mj.riker.replit.dev/src/components/Mobile/MobileTable.tsx:343:24)
+at div
+at MobileProductTable (https://146b5eab-e549-4175-9ce8-4723bed336c5-00-3g89nhnvj32mj.riker.replit.dev/src/components/Mobile/MobileProductTable.tsx:24:46)
+at Products (https://146b5eab-e549-4175-9ce8-4723bed336c5-00-3g89nhnvj32mj.riker.replit.dev/src/pages/Products.tsx:31:47)
+at div
+at main
+at div
+at div
+at MobileOptimizer (https://146b5eab-e549-4175-9ce8-4723bed336c5-00-3g89nhnvj32mj.riker.replit.dev/src/components/Mobile/MobileOptimizer.tsx:286:43)
+at Layout (https://146b5eab-e549-4175-9ce8-4723bed336c5-00-3g89nhnvj32mj.riker.replit.dev/src/components/Layout/Layout.tsx:24:3)
+at ProtectedRoute (https://146b5eab-e549-4175-9ce8-4723bed336c5-00-3g89nhnvj32mj.riker.replit.dev/src/App.tsx?v=ZUGFZ9ZzV7IsB7tHl6QPi:46:27)
+at Route (https://146b5eab-e549-4175-9ce8-4723bed336c5-00-3g89nhnvj32mj.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=748eff92:323:16)
+at Switch (https://146b5eab-e549-4175-9ce8-4723bed336c5-00-3g89nhnvj32mj.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=748eff92:379:17)
+at Router
+at Provider (https://146b5eab-e549-4175-9ce8-4723bed336c5-00-3g89nhnvj32mj.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-XOUBXFGS.js?v=748eff92:38:15)
+at TooltipProvider (https://146b5eab-e549-4175-9ce8-4723bed336c5-00-3g89nhnvj32mj.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=748eff92:61:5)
+at ThemeProvider (https://146b5eab-e549-4175-9ce8-4723bed336c5-00-3g89nhnvj32mj.riker.replit.dev/src/contexts/ThemeContext.tsx:20:33)
+at QueryClientProvider (https://146b5eab-e549-4175-9ce8-4723bed336c5-00-3g89nhnvj32mj.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=748eff92:2805:3)
+at App
+at t.value (https://146b5eab-e549-4175-9ce8-4723bed336c5-00-3g89nhnvj32mj.riker.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:17465)
+at new t (https://146b5eab-e549-4175-9ce8-4723bed336c5-00-3g89nhnvj32mj.riker.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:12630)
+at t.value (https://146b5eab-e549-4175-9ce8-4723bed336c5-00-3g89nhnvj32mj.riker.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:32766)
+at https://146b5eab-e549-4175-9ce8-4723bed336c5-00-3g89nhnvj32mj.riker.replit.dev/__replco/static/devtools/eruda/3.2.3/eruda.js:2:34400
