@@ -18,7 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         switch ($_POST['action']) {
             case 'add_product':
                 if (hasPermission('products', 'create')) {
-                    $result = addProduct($_POST);
+                    $result = addProduct($_POST, $_FILES);
                     $message = $result['message'];
                     $messageType = $result['success'] ? 'success' : 'danger';
                 }
@@ -26,7 +26,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 
             case 'update_product':
                 if (hasPermission('products', 'update')) {
-                    $result = updateProduct($_POST['id'], $_POST);
+                    $result = updateProduct($_POST['id'], $_POST, $_FILES);
                     $message = $result['message'];
                     $messageType = $result['success'] ? 'success' : 'danger';
                 }
@@ -35,6 +35,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             case 'delete_product':
                 if (hasPermission('products', 'delete')) {
                     $result = deleteProduct($_POST['id']);
+                    $message = $result['message'];
+                    $messageType = $result['success'] ? 'success' : 'danger';
+                }
+                break;
+                
+            case 'update_stock':
+                if (hasPermission('products', 'update')) {
+                    $result = updateProductStock($_POST);
                     $message = $result['message'];
                     $messageType = $result['success'] ? 'success' : 'danger';
                 }

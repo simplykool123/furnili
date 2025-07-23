@@ -62,6 +62,12 @@ $user = getCurrentUser();
             <?php endif; ?>
 
             <li class="nav-item">
+                <a class="nav-link <?php echo $current_page === 'boq_upload' ? 'active' : ''; ?>" href="<?php echo BASE_URL; ?>/pages/boq_upload.php">
+                    <i class="fas fa-file-pdf"></i> BOQ & OCR
+                </a>
+            </li>
+            
+            <li class="nav-item">
                 <a class="nav-link" href="<?php echo BASE_URL; ?>/pages/reports.php">
                     <i class="fas fa-chart-bar"></i> Reports
                 </a>
