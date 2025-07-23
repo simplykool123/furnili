@@ -29,6 +29,94 @@ function createCSV(data: any[], filename: string): string {
   return csvContent;
 }
 
+// Create a complete project backup including source code
+function addProjectFilesToZip(zip: any) {
+  // Add main project files
+  const projectFiles = [
+    'package.json',
+    'package-lock.json',
+    'tsconfig.json',
+    'vite.config.ts',
+    'tailwind.config.ts',
+    'postcss.config.js',
+    'components.json',
+    'drizzle.config.ts',
+    'README.md',
+    'HOSTINGER_DEPLOYMENT_GUIDE.md',
+    'hostinger_sql_export.sql',
+    'HOSTINGER_DEPLOYMENT_PACKAGE.md'
+  ];
+
+  // Add each file if it exists
+  const fs = require('fs');
+  const path = require('path');
+  
+  projectFiles.forEach(file => {
+    try {
+      if (fs.existsSync(file)) {
+        const content = fs.readFileSync(file, 'utf8');
+        zip.append(content, { name: file });
+      }
+    } catch (error) {
+      console.log(`Could not add ${file}:`, error instanceof Error ? error.message : 'Unknown error');
+    }
+  });
+
+  // Add client folder (React frontend)
+  try {
+    addDirectoryToZip(zip, 'client', 'client');
+  } catch (error) {
+    console.log('Could not add client folder:', error instanceof Error ? error.message : 'Unknown error');
+  }
+
+  // Add server folder (Express backend)
+  try {
+    addDirectoryToZip(zip, 'server', 'server');
+  } catch (error) {
+    console.log('Could not add server folder:', error instanceof Error ? error.message : 'Unknown error');
+  }
+
+  // Add shared folder
+  try {
+    addDirectoryToZip(zip, 'shared', 'shared');
+  } catch (error) {
+    console.log('Could not add shared folder:', error instanceof Error ? error.message : 'Unknown error');
+  }
+}
+
+// Recursively add directory to zip
+function addDirectoryToZip(zip: any, dirPath: string, zipPath: string) {
+  const fs = require('fs');
+  const path = require('path');
+  
+  if (!fs.existsSync(dirPath)) return;
+  
+  const items = fs.readdirSync(dirPath);
+  
+  items.forEach((item: string) => {
+    // Skip node_modules, dist, .git, and other unwanted directories
+    if (['node_modules', 'dist', '.git', '.next', 'build', 'coverage'].includes(item)) {
+      return;
+    }
+    
+    const itemPath = path.join(dirPath, item);
+    const itemZipPath = `${zipPath}/${item}`;
+    
+    const stat = fs.statSync(itemPath);
+    
+    if (stat.isDirectory()) {
+      addDirectoryToZip(zip, itemPath, itemZipPath);
+    } else {
+      try {
+        const content = fs.readFileSync(itemPath);
+        zip.append(content, { name: itemZipPath });
+      } catch (error) {
+        console.log(`Could not add file ${itemPath}:`, error instanceof Error ? error.message : 'Unknown error');
+      }
+    }
+  });
+}
+
 // Get all system data for backup
 export async function getAllBackupData(): Promise<BackupData> {
   try {
@@ -249,11 +337,10 @@ export async function getAllBackupData(): Promise<BackupData> {
   }
 }
 
-// Create ZIP file with all CSV backups
+// Create ZIP file with complete project and data backups
 export async function createBackupZip(): Promise<Buffer> {
   return new Promise(async (resolve, reject) => {
     try {
-      const data = await getAllBackupData();
       const archive = archiver('zip', { zlib: { level: 9 } });
       const chunks: Buffer[] = [];
       
@@ -267,33 +354,45 @@ export async function createBackupZip(): Promise<Buffer> {
 
       archive.pipe(output);
       
-      // Add each dataset as a CSV file
+      // Add complete project files for Hostinger deployment
+      addProjectFilesToZip(archive);
+      
+      // Get data and add CSV files
+      const data = await getAllBackupData();
       Object.entries(data).forEach(([tableName, tableData]) => {
         if (tableData.length > 0) {
           const csvContent = createCSV(tableData, tableName);
-          archive.append(csvContent, { name: `${tableName}.csv` });
+          archive.append(csvContent, { name: `data/${tableName}.csv` });
         }
       });
 
-      // Add a README file
-      const readme = `Furnili Management System - Complete Backup
+      // Add deployment README
+      const deploymentReadme = `# Furnili Management System - Complete Deployment Package
+
+## What's Included:
+- Complete source code (client/, server/, shared/ folders)
+- Database structure (hostinger_sql_export.sql)
+- Current data exports (data/ folder with CSV files)
+- Configuration files (package.json, tsconfig.json, etc.)
+
+## Quick Hostinger Deployment:
+1. Extract all files to your hosting directory
+2. Import hostinger_sql_export.sql to your database
+3. Set DATABASE_URL environment variable
+4. Run: npm install && npm run build
+5. Serve the dist/ folder
+
+## Default Login:
+- Username: admin
+- Password: admin123
+
+## Data Files:
+${Object.keys(data).map(table => `- ${table}.csv: ${data[table].length} records`).join('\n')}
+
 Generated: ${new Date().toLocaleString()}
-
-This ZIP contains CSV exports of all your business data:
-- products.csv: All product inventory data
-- categories.csv: Product categories
-- stock_movements.csv: Inventory movement history
-- material_requests.csv: All material requests
-- attendance.csv: Staff attendance records
-- payroll.csv: Payroll and salary information
-- petty_cash.csv: Expense tracking data
-- tasks.csv: Task assignments and status
-- users.csv: User accounts (passwords excluded)
-
-Import these files into Excel, Google Sheets, or any database system.
-For technical support, contact your system administrator.`;
+Ready for production deployment on Hostinger!`;
       
-      archive.append(readme, { name: 'README.txt' });
+      archive.append(deploymentReadme, { name: 'README.md' });
 
       // Handle completion
       output.on('finish', () => {
