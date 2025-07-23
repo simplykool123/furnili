@@ -65,7 +65,7 @@ export default function PettyCash() {
     date: format(new Date(), "yyyy-MM-dd"),
     amount: "",
     paidTo: "", // Name of person/vendor
-    paidBy: "", // Staff member who paid (linked to user)
+    paidBy: user ? user.id.toString() : "", // Default to current logged-in user
     purpose: "", // Purpose/Description 
     orderNo: "", // Order No./Client Reference
     receiptImage: null as File | null,
@@ -242,7 +242,7 @@ export default function PettyCash() {
       date: format(new Date(), "yyyy-MM-dd"),
       amount: "",
       paidTo: "",
-      paidBy: "",
+      paidBy: user ? user.id.toString() : "", // Always default to current user
       purpose: "",
       orderNo: "",
       receiptImage: null,
@@ -255,7 +255,7 @@ export default function PettyCash() {
       date: format(new Date(), "yyyy-MM-dd"),
       amount: "",
       source: "",
-      receivedBy: "",
+      receivedBy: user ? user.id.toString() : "", // Default to current user
       purpose: "",
       receiptImage: null,
     });
@@ -265,6 +265,7 @@ export default function PettyCash() {
   const processImageWithOCR = async (file: File) => {
     setIsProcessingOCR(true);
     try {
+      // Enhanced OCR settings for better accuracy
       const result = await Tesseract.recognize(file, 'eng', {
         logger: m => console.log(m)
       });
@@ -275,9 +276,26 @@ export default function PettyCash() {
       const updatedData = { ...formData };
       const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0);
       
-      // Extract amount (look for standalone number, often on its own line)
+      // Enhanced amount extraction with multiple patterns
       for (const line of lines) {
-        const amountMatch = line.match(/^₹?[\s]?([0-9,]+\.?[0-9]*)$/);
+        // Pattern 1: Standalone amount with ₹ symbol
+        let amountMatch = line.match(/₹\s?([0-9,]+\.?[0-9]*)/);
+        if (!amountMatch) {
+          // Pattern 2: Amount after "Paid" or "Amount"
+          amountMatch = line.match(/(?:paid|amount)[:\s]+₹?\s?([0-9,]+\.?[0-9]*)/i);
+        }
+        if (!amountMatch) {
+          // Pattern 3: Standalone number (likely amount)
+          amountMatch = line.match(/^([0-9,]+\.?[0-9]*)$/);
+          // Validate it's a reasonable amount (between 1 and 100000)
+          if (amountMatch) {
+            const amount = parseFloat(amountMatch[1].replace(/,/g, ''));
+            if (amount < 1 || amount > 100000) {
+              amountMatch = null;
+            }
+          }
+        }
+        
         if (amountMatch) {
           const amount = amountMatch[1].replace(/,/g, '');
           updatedData.amount = amount;
@@ -285,34 +303,49 @@ export default function PettyCash() {
         }
       }
       
-      // Extract Paid By and Paid To from payment context
+      // Enhanced Paid By and Paid To extraction
       for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
         
-        // Pattern: "Name paid" - extract the name before "paid"
+        // Pattern 1: "Name paid" - extract the name before "paid"
         if (line.toLowerCase().includes('paid') && !line.toLowerCase().includes('securely')) {
           const paidByMatch = line.match(/^(.+?)\s+paid/i);
           if (paidByMatch) {
             const paidByName = paidByMatch[1].trim();
-            // Find user ID by name
-            const matchingUser = users.find((user: any) => 
-              (user.name && user.name.toLowerCase().includes(paidByName.toLowerCase())) ||
-              (user.username && user.username.toLowerCase().includes(paidByName.toLowerCase()))
-            );
+            // Find user ID by name (more flexible matching)
+            const matchingUser = users.find((user: any) => {
+              const userName = (user.name || user.username || '').toLowerCase();
+              const extractedName = paidByName.toLowerCase();
+              return userName.includes(extractedName) || extractedName.includes(userName);
+            });
             if (matchingUser) {
               updatedData.paidBy = matchingUser.id.toString();
             }
           }
           
-          // Next line after "paid" is usually the recipient
-          if (i + 1 < lines.length) {
-            const nextLine = lines[i + 1];
-            // Check if it looks like a name (contains letters, not email/UPI ID)
-            if (/^[a-zA-Z\s]+$/.test(nextLine) && nextLine.length > 3 && !nextLine.includes('@')) {
-              updatedData.paidTo = nextLine;
+          // Look for recipient in next few lines
+          for (let j = i + 1; j < Math.min(i + 4, lines.length); j++) {
+            const nextLine = lines[j].trim();
+            // Check if it looks like a name (contains letters, reasonable length)
+            if (/^[a-zA-Z\s.]+$/.test(nextLine) && nextLine.length > 2 && nextLine.length < 50 && !nextLine.includes('@')) {
+              // Skip common UPI terms
+              const skipTerms = ['transaction', 'successful', 'completed', 'bank', 'upi', 'payment', 'sent', 'received'];
+              if (!skipTerms.some(term => nextLine.toLowerCase().includes(term))) {
+                updatedData.paidTo = nextLine;
+                break;
+              }
             }
           }
-          break; // Stop after finding the first "paid" pattern
+          break;
+        }
+        
+        // Pattern 2: "To: Name" format
+        const toMatch = line.match(/^to:\s*(.+)/i);
+        if (toMatch && !updatedData.paidTo) {
+          const name = toMatch[1].trim();
+          if (name.length > 2 && name.length < 50 && /^[a-zA-Z\s.]+$/.test(name)) {
+            updatedData.paidTo = name;
+          }
         }
       }
       
