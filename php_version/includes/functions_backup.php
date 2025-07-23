@@ -1,61 +1,81 @@
 <?php
 /**
- * Core Functions for Furnili Management System
- * PHP/MySQL Version - Clean version without syntax errors
+ * Common functions for Furnili Management System
  */
 
-/**
- * Session timeout check
- */
-function checkSessionTimeout() {
-    $timeout = 3600; // 1 hour
-    
-    if (isset($_SESSION['last_activity']) && (time() - $_SESSION['last_activity'] > $timeout)) {
-        session_destroy();
-        return false;
-    }
-    
-    $_SESSION['last_activity'] = time();
-    return true;
+// Start session if not already started
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
 }
 
 /**
- * Check if user has specific permission
+ * Sanitize input data
  */
-function hasPermission($resource, $action) {
+function sanitize($data) {
+    return htmlspecialchars(strip_tags(trim($data)));
+}
+
+/**
+ * Validate email format
+ */
+function validateEmail($email) {
+    return filter_var($email, FILTER_VALIDATE_EMAIL);
+}
+
+/**
+ * Hash password using PHP's password_hash
+ */
+function hashPassword($password) {
+    return password_hash($password, PASSWORD_DEFAULT);
+}
+
+/**
+ * Verify password
+ */
+function verifyPassword($password, $hash) {
+    return password_verify($password, $hash);
+}
+
+/**
+ * Generate random string for tokens
+ */
+function generateRandomString($length = 32) {
+    return bin2hex(random_bytes($length / 2));
+}
+
+/**
+ * Check if user is logged in
+ */
+function isLoggedIn() {
+    return isset($_SESSION['user_id']) && !empty($_SESSION['user_id']);
+}
+
+/**
+ * Get current user data
+ */
+function getCurrentUser() {
+    if (!isLoggedIn()) {
+        return null;
+    }
+    
+    $db = Database::connect();
+    $stmt = $db->prepare("SELECT id, username, email, name, role, is_active FROM users WHERE id = ?");
+    $stmt->execute([$_SESSION['user_id']]);
+    return $stmt->fetch();
+}
+
+/**
+ * Check if user has required role
+ */
+function hasRole($requiredRoles) {
     $user = getCurrentUser();
     if (!$user) return false;
     
-    $role = $user['role'];
+    if (is_string($requiredRoles)) {
+        $requiredRoles = [$requiredRoles];
+    }
     
-    // Admin has all permissions
-    if ($role === 'admin') return true;
-    
-    // Define role-based permissions
-    $permissions = [
-        'manager' => [
-            'products' => ['create', 'read', 'update', 'delete'],
-            'requests' => ['create', 'read', 'update', 'delete'],
-            'attendance' => ['read', 'update'],
-            'petty_cash' => ['create', 'read', 'update'],
-            'users' => ['read'],
-            'reports' => ['read']
-        ],
-        'storekeeper' => [
-            'products' => ['create', 'read', 'update'],
-            'requests' => ['read', 'update'],
-            'attendance' => ['read'],
-            'reports' => ['read']
-        ],
-        'user' => [
-            'products' => ['read'],
-            'requests' => ['create', 'read'],
-            'reports' => ['read']
-        ]
-    ];
-    
-    return isset($permissions[$role][$resource]) && 
-           in_array($action, $permissions[$role][$resource]);
+    return in_array($user['role'], $requiredRoles);
 }
 
 /**
@@ -155,23 +175,36 @@ function updateProduct($id, $data, $files = []) {
 }
 
 /**
- * Delete product
+ * Update product stock
  */
-function deleteProduct($id) {
+function updateProductStock($data) {
     try {
         $db = Database::connect();
         
-        // Soft delete - mark as inactive
-        $stmt = $db->prepare("UPDATE products SET is_active = 0 WHERE id = ?");
-        $result = $stmt->execute([$id]);
+        $stmt = $db->prepare("UPDATE products SET current_stock = ? WHERE id = ?");
+        $result = $stmt->execute([$data['new_stock'], $data['product_id']]);
         
-        return $result ? 
-            ['success' => true, 'message' => 'Product deleted successfully'] :
-            ['success' => false, 'message' => 'Failed to delete product'];
+        if ($result) {
+            // Record stock movement
+            $movementType = $data['movement_type']; // 'in', 'out', 'adjustment'
+            $quantity = abs($data['new_stock'] - $data['old_stock']);
             
+            recordStockMovement(
+                $data['product_id'], 
+                $movementType, 
+                $quantity, 
+                $data['unit_price'] ?? 0,
+                $data['notes'] ?? 'Stock adjustment'
+            );
+            
+            return ['success' => true, 'message' => 'Stock updated successfully'];
+        } else {
+            return ['success' => false, 'message' => 'Failed to update stock'];
+        }
+        
     } catch (Exception $e) {
-        error_log("Delete product error: " . $e->getMessage());
-        return ['success' => false, 'message' => 'Failed to delete product'];
+        error_log("Update stock error: " . $e->getMessage());
+        return ['success' => false, 'message' => 'Failed to update stock'];
     }
 }
 
@@ -239,6 +272,27 @@ function generateSKU($name) {
 }
 
 /**
+ * Delete product
+ */
+function deleteProduct($id) {
+    try {
+        $db = Database::connect();
+        
+        // Soft delete - mark as inactive
+        $stmt = $db->prepare("UPDATE products SET is_active = 0 WHERE id = ?");
+        $result = $stmt->execute([$id]);
+        
+        return $result ? 
+            ['success' => true, 'message' => 'Product deleted successfully'] :
+            ['success' => false, 'message' => 'Failed to delete product'];
+            
+    } catch (Exception $e) {
+        error_log("Delete product error: " . $e->getMessage());
+        return ['success' => false, 'message' => 'Failed to delete product'];
+    }
+}
+
+/**
  * Get dashboard statistics
  */
 function getDashboardStats($userRole) {
@@ -299,6 +353,81 @@ function getDashboardStats($userRole) {
 }
 
 /**
+ * Check if user has specific permission
+ */
+function hasPermission($resource, $action) {
+    $user = getCurrentUser();
+    if (!$user) return false;
+    
+    $role = $user['role'];
+    
+    // Admin has all permissions
+    if ($role === 'admin') return true;
+    
+    // Define role-based permissions
+    $permissions = [
+        'manager' => [
+            'products' => ['create', 'read', 'update', 'delete'],
+            'requests' => ['create', 'read', 'update', 'delete'],
+            'attendance' => ['read', 'update'],
+            'petty_cash' => ['create', 'read', 'update'],
+            'users' => ['read'],
+            'reports' => ['read']
+        ],
+        'storekeeper' => [
+            'products' => ['create', 'read', 'update'],
+            'requests' => ['read', 'update'],
+            'attendance' => ['read'],
+            'reports' => ['read']
+        ],
+        'user' => [
+            'products' => ['read'],
+            'requests' => ['create', 'read'],
+            'reports' => ['read']
+        ]
+    ];
+    
+    return isset($permissions[$role][$resource]) && 
+           in_array($action, $permissions[$role][$resource]);
+}
+
+/**
+ * Session timeout check
+ */
+function checkSessionTimeout() {
+    $timeout = 3600; // 1 hour
+    
+    if (isset($_SESSION['last_activity']) && (time() - $_SESSION['last_activity'] > $timeout)) {
+        session_destroy();
+        return false;
+    }
+    
+    $_SESSION['last_activity'] = time();
+    return true;
+}
+
+/**
+ * Redirect if not authenticated
+ */
+function requireAuth() {
+    if (!isLoggedIn()) {
+        header('Location: /login.php');
+        exit();
+    }
+}
+
+/**
+ * Redirect if insufficient role
+ */
+function requireRole($requiredRoles) {
+    requireAuth();
+    if (!hasRole($requiredRoles)) {
+        http_response_code(403);
+        die('Insufficient permissions');
+    }
+}
+
+/**
  * Format currency
  */
 function formatCurrency($amount) {
@@ -314,23 +443,104 @@ function formatDate($date, $format = 'Y-m-d H:i:s') {
 }
 
 /**
- * Format file size
+ * JSON response helper
  */
-function formatFileSize($size) {
-    if ($size < 1024) return $size . ' B';
-    if ($size < 1048576) return round($size / 1024, 2) . ' KB';
-    if ($size < 1073741824) return round($size / 1048576, 2) . ' MB';
-    return round($size / 1073741824, 2) . ' GB';
+function jsonResponse($data, $status = 200) {
+    http_response_code($status);
+    header('Content-Type: application/json');
+    echo json_encode($data);
+    exit();
 }
 
 /**
- * Pagination helper
+ * Success response
  */
-function paginate($currentPage, $totalPages, $baseUrl) {
-    if ($totalPages <= 1) return '';
+function successResponse($message, $data = null) {
+    jsonResponse([
+        'success' => true,
+        'message' => $message,
+        'data' => $data
+    ]);
+}
+
+/**
+ * Error response
+ */
+function errorResponse($message, $status = 400) {
+    jsonResponse([
+        'success' => false,
+        'message' => $message
+    ], $status);
+}
+
+/**
+ * Validate required fields
+ */
+function validateRequired($data, $requiredFields) {
+    $errors = [];
+    foreach ($requiredFields as $field) {
+        if (!isset($data[$field]) || empty(trim($data[$field]))) {
+            $errors[] = ucfirst(str_replace('_', ' ', $field)) . ' is required';
+        }
+    }
+    return $errors;
+}
+
+/**
+ * Upload file handler
+ */
+function uploadFile($file, $uploadDir, $allowedTypes = null) {
+    if (!isset($file['tmp_name']) || empty($file['tmp_name'])) {
+        throw new Exception('No file uploaded');
+    }
     
+    if ($file['error'] !== UPLOAD_ERR_OK) {
+        throw new Exception('File upload error: ' . $file['error']);
+    }
+    
+    if ($file['size'] > MAX_FILE_SIZE) {
+        throw new Exception('File size exceeds maximum limit');
+    }
+    
+    $fileInfo = pathinfo($file['name']);
+    $extension = strtolower($fileInfo['extension']);
+    
+    if ($allowedTypes && !in_array($extension, $allowedTypes)) {
+        throw new Exception('File type not allowed');
+    }
+    
+    // Create upload directory if it doesn't exist
+    if (!is_dir($uploadDir)) {
+        mkdir($uploadDir, 0755, true);
+    }
+    
+    // Generate unique filename
+    $filename = uniqid() . '_' . time() . '.' . $extension;
+    $filepath = $uploadDir . $filename;
+    
+    if (!move_uploaded_file($file['tmp_name'], $filepath)) {
+        throw new Exception('Failed to move uploaded file');
+    }
+    
+    return $filename;
+}
+
+/**
+ * Delete file
+ */
+function deleteFile($filepath) {
+    if (file_exists($filepath)) {
+        return unlink($filepath);
+    }
+    return true;
+}
+
+/**
+ * Generate pagination links
+ */
+function generatePagination($currentPage, $totalPages, $baseUrl) {
     $html = '<nav aria-label="Page navigation">';
-    $html .= '<ul class="pagination justify-content-center">';
+    $html .= '<ul class="pagination">';
     
     // Previous button
     if ($currentPage > 1) {
@@ -358,6 +568,47 @@ function paginate($currentPage, $totalPages, $baseUrl) {
     $html .= '</nav>';
     
     return $html;
+}
+
+/**
+ * Log activity
+ */
+function logActivity($userId, $action, $details = '') {
+    $db = Database::connect();
+    $stmt = $db->prepare("INSERT INTO activity_logs (user_id, action, details, created_at) VALUES (?, ?, ?, NOW())");
+    $stmt->execute([$userId, $action, $details]);
+}
+
+/**
+ * Get dashboard statistics
+ */
+function getDashboardStats($userRole = null) {
+    $db = Database::connect();
+    
+    $stats = [];
+    
+    // Total products
+    $stmt = $db->query("SELECT COUNT(*) as count FROM products WHERE is_active = 1");
+    $stats['total_products'] = $stmt->fetch()['count'];
+    
+    // Low stock products
+    $stmt = $db->query("SELECT COUNT(*) as count FROM products WHERE current_stock <= min_stock AND is_active = 1");
+    $stats['low_stock_products'] = $stmt->fetch()['count'];
+    
+    // Pending requests
+    $stmt = $db->query("SELECT COUNT(*) as count FROM material_requests WHERE status = 'pending'");
+    $stats['pending_requests'] = $stmt->fetch()['count'];
+    
+    // Total users
+    $stmt = $db->query("SELECT COUNT(*) as count FROM users WHERE is_active = 1");
+    $stats['total_users'] = $stmt->fetch()['count'];
+    
+    // Monthly expenses
+    $stmt = $db->query("SELECT SUM(amount) as total FROM petty_cash_expenses WHERE MONTH(date) = MONTH(CURRENT_DATE()) AND YEAR(date) = YEAR(CURRENT_DATE())");
+    $result = $stmt->fetch();
+    $stats['monthly_expenses'] = $result['total'] ?? 0;
+    
+    return $stats;
 }
 
 /**
