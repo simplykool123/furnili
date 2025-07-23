@@ -4,6 +4,38 @@
  */
 
 /**
+ * Check if user is logged in
+ */
+function isLoggedIn() {
+    return isset($_SESSION['user_id']) && !empty($_SESSION['user_id']);
+}
+
+/**
+ * Get current logged in user
+ */
+function getCurrentUser() {
+    if (!isLoggedIn()) {
+        return null;
+    }
+    
+    try {
+        $db = Database::connect();
+        $stmt = $db->prepare("SELECT id, username, email, name, role, is_active FROM users WHERE id = ? AND is_active = 1");
+        $stmt->execute([$_SESSION['user_id']]);
+        return $stmt->fetch();
+    } catch (Exception $e) {
+        return null;
+    }
+}
+
+/**
+ * Sanitize input data
+ */
+function sanitize($data) {
+    return htmlspecialchars(strip_tags(trim($data)));
+}
+
+/**
  * Login user
  */
 function loginUser($username, $password) {

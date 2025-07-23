@@ -22,10 +22,13 @@ define('MAX_FILE_SIZE', 10 * 1024 * 1024); // 10MB
 define('ALLOWED_IMAGE_TYPES', ['jpg', 'jpeg', 'png', 'gif']);
 define('ALLOWED_DOCUMENT_TYPES', ['pdf', 'doc', 'docx', 'xls', 'xlsx']);
 
-// Security configuration
+// Security configuration  
 define('JWT_SECRET', 'your-secret-key-change-this-in-production');
 define('SESSION_TIMEOUT', 3600); // 1 hour in seconds
 define('PASSWORD_MIN_LENGTH', 6);
+
+// Development mode
+define('DEVELOPMENT_MODE', true);
 
 // Pagination
 define('ITEMS_PER_PAGE', 20);
