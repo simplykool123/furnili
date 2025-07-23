@@ -184,20 +184,7 @@ function resetUserPassword($userId, $newPassword) {
     return ['success' => true, 'message' => 'Password reset successfully'];
 }
 
-/**
- * Check session timeout
- */
-function checkSessionTimeout() {
-    if (isset($_SESSION['login_time'])) {
-        if (time() - $_SESSION['login_time'] > SESSION_TIMEOUT) {
-            session_destroy();
-            return false;
-        }
-        // Update last activity time
-        $_SESSION['login_time'] = time();
-    }
-    return true;
-}
+// checkSessionTimeout() function is defined in functions.php to avoid redeclaration error
 
 /**
  * Get user permissions based on role
