@@ -114,14 +114,108 @@
     background: hsla(var(--background), 0.7);
   }
 
+  /* Mobile-specific styles */
+  .mobile-optimized {
+    font-size: 16px; /* Prevent zoom on iOS */
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .mobile-layout {
+    touch-action: manipulation;
+  }
+
+  .orientation-portrait {
+    --mobile-spacing: 0.75rem;
+  }
+
+  .orientation-landscape {
+    --mobile-spacing: 0.5rem;
+  }
+
+  /* Touch-friendly interactive elements */
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Smooth scrolling for mobile */
+  .mobile-scroll {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+
   /* Animation classes */
   .animate-fade-in {
     animation: fadeIn 0.3s ease-in-out;
   }
 
+  .animate-slide-up {
+    animation: slideUp 0.4s ease-out;
+  }
+
+  .animate-slide-down {
+    animation: slideDown 0.4s ease-out;
+  }
+
+  .animate-bounce-in {
+    animation: bounceIn 0.5s ease-out;
+  }
+
   @keyframes fadeIn {
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes slideDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes bounceIn {
+    0% { opacity: 0; transform: scale(0.3); }
+    50% { opacity: 1; transform: scale(1.05); }
+    70% { transform: scale(0.9); }
+    100% { opacity: 1; transform: scale(1); }
+  }
+
+  /* Mobile responsive utilities */
+  @media (max-width: 768px) {
+    .mobile-stack > * + * {
+      margin-top: 1rem;
+    }
+    
+    .mobile-full-width {
+      width: 100vw;
+      margin-left: calc(-50vw + 50%);
+    }
+    
+    .mobile-safe-area-top {
+      padding-top: env(safe-area-inset-top);
+    }
+    
+    .mobile-safe-area-bottom {
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+    
+    .mobile-hide {
+      display: none !important;
+    }
+    
+    .mobile-show {
+      display: block !important;
+    }
+  }
+
+  @media (min-width: 769px) {
+    .desktop-hide {
+      display: none !important;
+    }
   }
 }
 

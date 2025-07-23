@@ -7,11 +7,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { authService } from "@/lib/auth";
+import MobileProductTable from "@/components/Mobile/MobileProductTable";
+import { useIsMobile } from "@/components/Mobile/MobileOptimizer";
 
 export default function Products() {
   const [showAddProduct, setShowAddProduct] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const user = authService.getUser();
+  const { isMobile } = useIsMobile();
   
   const canManageProducts = user && ['admin', 'manager'].includes(user.role);
 
@@ -60,7 +63,24 @@ export default function Products() {
         )}
       </div>
 
-      <ProductTable />
+      {isMobile ? (
+        <MobileProductTable 
+          onEdit={(product) => {
+            setEditingProduct(product);
+            setShowAddProduct(true);
+          }}
+          onDelete={(product) => {
+            // Handle delete - could add confirmation dialog
+            console.log("Delete product:", product);
+          }}
+          onView={(product) => {
+            // Handle view details
+            console.log("View product:", product);
+          }}
+        />
+      ) : (
+        <ProductTable />
+      )}
       
       <Dialog open={showAddProduct} onOpenChange={(open) => {
         setShowAddProduct(open);
