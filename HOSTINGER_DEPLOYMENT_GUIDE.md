@@ -1,287 +1,285 @@
-# Hostinger Deployment Guide for Furnili MS
+# Hostinger Deployment Guide - Furnili MS
 
-## Overview
-This guide explains how to deploy your Furnili Management System on Hostinger hosting services. The application is a fullstack React/Express application with PostgreSQL database.
+## Complete Step-by-Step Guide for Hostinger Shared Hosting
 
-## Deployment Options on Hostinger
+### Prerequisites
+- Active Hostinger shared hosting plan
+- Access to Hostinger control panel (hPanel)
+- The PHP version files from this project
 
-### Option 1: VPS Hosting (Recommended)
-Best for full control and optimal performance.
+---
 
-#### Requirements:
-- Hostinger VPS plan (Business VPS or higher recommended)
-- SSH access
-- Domain name (optional but recommended)
+## Step 1: Prepare Your Hostinger Account
 
-#### Step-by-Step VPS Deployment:
+### 1.1 Access Your Hostinger Control Panel
+1. Login to your Hostinger account
+2. Go to **Hosting** → **Manage** for your domain
+3. Access the **hPanel** (Hostinger control panel)
 
-1. **Set Up VPS Environment**
-   ```bash
-   # Connect to your VPS via SSH
-   ssh root@your-vps-ip
-   
-   # Update system
-   apt update && apt upgrade -y
-   
-   # Install Node.js 20
-   curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
-   apt-get install -y nodejs
-   
-   # Install PostgreSQL
-   apt install postgresql postgresql-contrib -y
-   
-   # Install PM2 for process management
-   npm install -g pm2
-   
-   # Install Nginx for reverse proxy
-   apt install nginx -y
+### 1.2 Check PHP Version
+1. In hPanel, go to **Advanced** → **PHP Configuration**
+2. Ensure PHP version is **7.4 or higher** (8.0+ recommended)
+3. Enable required extensions: **PDO**, **PDO_MySQL**, **JSON**, **GD**
+
+---
+
+## Step 2: Database Setup
+
+### 2.1 Create MySQL Database
+1. In hPanel, go to **Databases** → **MySQL Databases**
+2. Click **Create Database**
+3. Fill in details:
+   - **Database Name**: `u123456789_furnili` (Hostinger format)
+   - **Database Username**: Create new user with full privileges
+   - **Password**: Generate strong password
+4. **Important**: Note down these credentials!
+
+### 2.2 Import Database Structure
+1. Go to **Databases** → **phpMyAdmin**
+2. Select your created database
+3. Click **Import** tab
+4. Upload the `database.sql` file from the php_version folder
+5. Click **Go** to import
+
+---
+
+## Step 3: File Upload
+
+### 3.1 Access File Manager
+1. In hPanel, go to **Files** → **File Manager**
+2. Navigate to `public_html` folder
+3. If you have a subdomain, navigate to the appropriate folder
+
+### 3.2 Upload PHP Files
+1. Upload all files from the `php_version` folder
+2. Maintain the folder structure:
+   ```
+   public_html/
+   ├── config/
+   ├── includes/
+   ├── pages/
+   ├── assets/
+   ├── uploads/ (create this folder)
+   ├── index.php
+   ├── login.php
+   └── other files...
    ```
 
-2. **Set Up PostgreSQL Database**
-   ```bash
-   # Switch to postgres user
-   sudo -u postgres psql
-   
-   # Create database and user
-   CREATE DATABASE furnili_ms;
-   CREATE USER furnili_user WITH PASSWORD 'your_secure_password';
-   GRANT ALL PRIVILEGES ON DATABASE furnili_ms TO furnili_user;
-   \q
-   ```
+### 3.3 Set File Permissions
+1. Right-click on `uploads` folder → **Permissions**
+2. Set to **755** (read, write, execute for owner)
+3. Ensure other folders are **755** and files are **644**
 
-3. **Upload and Configure Application**
-   ```bash
-   # Create application directory
-   mkdir -p /var/www/furnili-ms
-   cd /var/www/furnili-ms
-   
-   # Upload your application files (using SCP, SFTP, or Git)
-   # If using Git:
-   git clone https://github.com/yourusername/furnili-ms.git .
-   
-   # Install dependencies
-   npm install
-   
-   # Create production environment file
-   nano .env.production
-   ```
+---
 
-4. **Environment Configuration (.env.production)**
-   ```env
-   NODE_ENV=production
-   DATABASE_URL=postgresql://furnili_user:your_secure_password@localhost:5432/furnili_ms
-   JWT_SECRET=your_super_secure_jwt_secret_here
-   PORT=3000
-   ```
+## Step 4: Configuration
 
-5. **Build and Start Application**
-   ```bash
-   # Build the application
-   npm run build
-   
-   # Run database migrations
-   npm run db:push
-   
-   # Start with PM2
-   pm2 start dist/index.js --name "furnili-ms"
-   pm2 startup
-   pm2 save
-   ```
+### 4.1 Update Database Configuration
+1. Open `config/database.php` in File Manager editor
+2. Update with your Hostinger database details:
 
-6. **Configure Nginx Reverse Proxy**
-   ```bash
-   # Create Nginx configuration
-   nano /etc/nginx/sites-available/furnili-ms
-   ```
-   
-   Add this configuration:
-   ```nginx
-   server {
-       listen 80;
-       server_name your-domain.com www.your-domain.com;
-       
-       location / {
-           proxy_pass http://localhost:3000;
-           proxy_http_version 1.1;
-           proxy_set_header Upgrade $http_upgrade;
-           proxy_set_header Connection 'upgrade';
-           proxy_set_header Host $host;
-           proxy_set_header X-Real-IP $remote_addr;
-           proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-           proxy_set_header X-Forwarded-Proto $scheme;
-           proxy_cache_bypass $http_upgrade;
-       }
-   }
-   ```
-   
-   ```bash
-   # Enable the site
-   ln -s /etc/nginx/sites-available/furnili-ms /etc/nginx/sites-enabled/
-   nginx -t
-   systemctl reload nginx
-   ```
-
-7. **SSL Certificate (Optional but Recommended)**
-   ```bash
-   # Install Certbot
-   apt install certbot python3-certbot-nginx -y
-   
-   # Get SSL certificate
-   certbot --nginx -d your-domain.com -d www.your-domain.com
-   ```
-
-### Option 2: Shared Hosting with Node.js Support
-If Hostinger offers Node.js on shared hosting:
-
-1. **Check Node.js Support**
-   - Log into your Hostinger control panel
-   - Look for Node.js application settings
-   - Ensure Node.js 18+ is available
-
-2. **Upload Files**
-   - Use File Manager or FTP to upload your application
-   - Upload to the public_html directory or designated Node.js folder
-
-3. **Configure Database**
-   - Use Hostinger's database management tool
-   - Create PostgreSQL database (if available) or use MySQL
-   - Update your database configuration accordingly
-
-4. **Environment Setup**
-   - Create .env file with production settings
-   - Use Hostinger's environment variable settings if available
-
-### Option 3: Static Build Deployment (Limited Functionality)
-For basic hosting without server-side features:
-
-1. **Build Static Version**
-   ```bash
-   # Build frontend only
-   npm run build
-   ```
-
-2. **Upload to Hosting**
-   - Upload contents of `dist/public` to public_html
-   - Configure redirects for single-page application
-
-**Note:** This option won't support:
-- User authentication
-- Database operations
-- File uploads
-- Real-time features
-
-## Pre-Deployment Checklist
-
-### Code Preparation:
-- [ ] Update database configuration for production
-- [ ] Set proper CORS settings
-- [ ] Configure file upload paths
-- [ ] Update API endpoints to use production URLs
-- [ ] Remove development-only features
-
-### Security:
-- [ ] Generate strong JWT secret
-- [ ] Use secure database passwords
-- [ ] Configure firewall rules
-- [ ] Set up SSL certificates
-- [ ] Update CORS origins for production domain
-
-### Performance:
-- [ ] Enable production build optimizations
-- [ ] Configure static file caching
-- [ ] Set up CDN for static assets (optional)
-- [ ] Enable Gzip compression
-
-## Domain Configuration
-
-1. **Point Domain to VPS**
-   - Update DNS A record to point to your VPS IP
-   - Wait for DNS propagation (up to 24 hours)
-
-2. **Hostinger Domain Management**
-   - Use Hostinger's DNS management
-   - Add A record: @ points to VPS IP
-   - Add CNAME record: www points to @
-
-## Monitoring and Maintenance
-
-### Process Management:
-```bash
-# Check application status
-pm2 status
-
-# View logs
-pm2 logs furnili-ms
-
-# Restart application
-pm2 restart furnili-ms
-
-# Monitor resources
-pm2 monit
+```php
+define('DB_HOST', 'localhost');                    // Always localhost for Hostinger
+define('DB_NAME', 'u123456789_furnili');          // Your actual database name
+define('DB_USER', 'u123456789_dbuser');           // Your database username  
+define('DB_PASS', 'your_database_password');       // Your database password
 ```
 
-### Database Backups:
-```bash
-# Create backup script
-nano /home/backup_db.sh
-
-# Add this content:
-#!/bin/bash
-pg_dump -U furnili_user -h localhost furnili_ms > /home/backups/furnili_ms_$(date +%Y%m%d_%H%M%S).sql
-
-# Make executable and add to cron
-chmod +x /home/backup_db.sh
-crontab -e
-# Add: 0 2 * * * /home/backup_db.sh
+### 4.2 Update Base URL
+```php
+define('BASE_URL', 'https://yourdomain.com');      // Your actual domain
 ```
 
-## Troubleshooting
+### 4.3 Disable Development Mode
+```php
+// Comment out this line for production:
+// define('DEVELOPMENT_MODE', true);
+```
 
-### Common Issues:
+---
 
-1. **Database Connection Errors**
-   - Check PostgreSQL service: `systemctl status postgresql`
-   - Verify database credentials
-   - Check firewall settings
+## Step 5: SSL Setup (Important)
 
-2. **Application Won't Start**
-   - Check PM2 logs: `pm2 logs furnili-ms`
-   - Verify Node.js version: `node --version`
-   - Check dependencies: `npm ls`
+### 5.1 Enable SSL Certificate
+1. In hPanel, go to **Security** → **SSL/TLS**
+2. Enable **Let's Encrypt SSL** for your domain
+3. Force HTTPS redirect
 
-3. **Nginx Configuration Issues**
-   - Test configuration: `nginx -t`
-   - Check error logs: `tail -f /var/log/nginx/error.log`
+### 5.2 Update .htaccess (Create if needed)
+Create `.htaccess` file in public_html with:
 
-4. **SSL Certificate Problems**
-   - Renew certificates: `certbot renew`
-   - Check certificate status: `certbot certificates`
+```apache
+# Force HTTPS
+RewriteEngine On
+RewriteCond %{HTTPS} off
+RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
-## Cost Estimation
+# Security Headers
+Header always set X-Content-Type-Options nosniff
+Header always set X-Frame-Options DENY
+Header always set X-XSS-Protection "1; mode=block"
 
-### Hostinger VPS Pricing (approximate):
-- **VPS 1**: $3.95/month - Basic (1 vCPU, 1GB RAM)
-- **VPS 2**: $8.95/month - Recommended (2 vCPU, 4GB RAM)
-- **VPS 3**: $12.95/month - High Performance (4 vCPU, 8GB RAM)
+# Hide PHP version
+Header unset X-Powered-By
 
-### Additional Costs:
-- Domain name: $8.99/year
-- SSL certificate: Free with Let's Encrypt
-- Backups: Included or $2/month for automated backups
+# Protect sensitive files
+<Files "config/database.php">
+    Order allow,deny
+    Deny from all
+</Files>
 
-## Support Resources
+<Files "*.sql">
+    Order allow,deny
+    Deny from all
+</Files>
+```
 
-- **Hostinger Documentation**: https://support.hostinger.com/
-- **VPS Tutorials**: Available in Hostinger knowledge base
-- **Node.js Hosting**: Check Hostinger's Node.js hosting guides
+---
 
-## Next Steps
+## Step 6: Testing Your Installation
 
-1. Choose your hosting option (VPS recommended)
-2. Purchase hosting plan and domain
-3. Follow the deployment steps above
-4. Configure monitoring and backups
-5. Test all application features
-6. Set up regular maintenance schedule
+### 6.1 Access Your Website
+1. Visit: `https://yourdomain.com`
+2. You should see the Furnili MS login page
 
-Your Furnili MS application will be fully functional on Hostinger with proper database, file uploads, user authentication, and all current features preserved.
+### 6.2 Test Login
+- **Username**: `admin`
+- **Password**: `admin123`
+
+### 6.3 Troubleshooting Tools
+If login fails, visit these diagnostic pages:
+- `https://yourdomain.com/test_connection.php`
+- `https://yourdomain.com/setup_database.php`
+
+---
+
+## Step 7: Post-Deployment Security
+
+### 7.1 Change Default Credentials
+1. Login with admin/admin123
+2. Go to Profile → Change Password
+3. Update to a strong password immediately
+
+### 7.2 Delete Setup Files
+After successful installation, delete these files:
+- `test_connection.php`
+- `setup_database.php`
+- `database.sql`
+
+### 7.3 Update JWT Secret
+In `config/database.php`, change:
+```php
+define('JWT_SECRET', 'your-unique-production-secret-key-here');
+```
+
+---
+
+## Step 8: Configure Email (Optional)
+
+### 8.1 Hostinger Email Setup
+1. In hPanel, go to **Emails** → **Email Accounts**
+2. Create email account for system notifications
+3. Update PHP mail configuration if needed
+
+---
+
+## Common Hostinger-Specific Issues & Solutions
+
+### Issue 1: Database Connection Failed
+**Solution**: 
+- Double-check database credentials in config/database.php
+- Ensure database user has full privileges
+- Hostinger database names include your account prefix
+
+### Issue 2: File Upload Not Working
+**Solution**:
+- Check `uploads` folder permissions (755)
+- Verify PHP `upload_max_filesize` in PHP Configuration
+- Increase `post_max_size` if needed
+
+### Issue 3: Session Issues
+**Solution**:
+- Check if sessions are enabled in PHP Configuration
+- Verify `session.save_path` is writable
+
+### Issue 4: PHP Errors
+**Solution**:
+- Check **Error Logs** in hPanel → **Advanced** → **Error Logs**
+- Enable error reporting temporarily in development
+
+---
+
+## Hostinger-Specific Features to Use
+
+### 1. Automatic Backups
+- Enable automatic backups in hPanel
+- Download backups regularly
+
+### 2. Performance Optimization
+- Enable **LiteSpeed Cache** if available
+- Use **Cloudflare** integration for CDN
+
+### 3. File Compression
+- Enable Gzip compression in hPanel
+- Optimize images before uploading
+
+---
+
+## Support & Maintenance
+
+### Regular Tasks:
+1. **Weekly**: Check error logs and system performance
+2. **Monthly**: Download database backups
+3. **Quarterly**: Update passwords and review user accounts
+
+### Monitoring:
+- Monitor disk space usage in hPanel
+- Check database size regularly
+- Review access logs for security
+
+---
+
+## Hostinger-Specific File Structure
+
+Your final structure should look like:
+```
+public_html/                    ← Your domain root
+├── config/
+│   └── database.php           ← Updated with Hostinger DB details
+├── includes/
+├── pages/
+├── assets/
+├── uploads/                   ← Writable folder (755 permissions)
+├── .htaccess                  ← Security and SSL rules
+├── index.php                  ← Main application
+├── login.php
+└── [other files]
+```
+
+---
+
+## Emergency Recovery
+
+If something goes wrong:
+1. **Restore from Backup**: Use Hostinger's backup feature
+2. **Re-import Database**: Use phpMyAdmin to restore database
+3. **Check Error Logs**: hPanel → Advanced → Error Logs
+4. **Contact Support**: Hostinger has 24/7 chat support
+
+---
+
+## Performance Tips for Hostinger
+
+1. **Optimize Database**: Regularly clean old logs and unused data
+2. **Image Optimization**: Compress images before upload
+3. **Caching**: Use browser caching via .htaccess
+4. **Database Indexing**: Ensure proper indexes (already included)
+
+---
+
+**Your Furnili MS is now ready for production on Hostinger!**
+
+**Default Login**: admin / admin123 (change immediately)
+**System URL**: https://yourdomain.com
+
+Need help? Check the error logs in hPanel or contact Hostinger support for hosting-related issues.
