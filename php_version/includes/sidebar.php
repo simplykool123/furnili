@@ -20,26 +20,26 @@ $user = getCurrentUser();
 
         <ul class="nav flex-column">
             <li class="nav-item">
-                <a class="nav-link <?php echo $current_page === 'index' ? 'active' : ''; ?>" href="/index.php">
+                <a class="nav-link <?php echo $current_page === 'index' ? 'active' : ''; ?>" href="index.php">
                     <i class="fas fa-tachometer-alt"></i> Dashboard
                 </a>
             </li>
 
             <li class="nav-item">
-                <a class="nav-link <?php echo $current_page === 'products' ? 'active' : ''; ?>" href="/products.php">
+                <a class="nav-link <?php echo $current_page === 'products' ? 'active' : ''; ?>" href="pages/products.php">
                     <i class="fas fa-boxes"></i> Products
                 </a>
             </li>
 
             <li class="nav-item">
-                <a class="nav-link <?php echo $current_page === 'requests' ? 'active' : ''; ?>" href="/requests.php">
+                <a class="nav-link <?php echo $current_page === 'requests' ? 'active' : ''; ?>" href="pages/requests.php">
                     <i class="fas fa-clipboard-list"></i> Material Requests
                 </a>
             </li>
 
             <?php if (hasPermission('attendance', 'read')): ?>
             <li class="nav-item">
-                <a class="nav-link <?php echo $current_page === 'attendance' ? 'active' : ''; ?>" href="/attendance.php">
+                <a class="nav-link <?php echo $current_page === 'attendance' ? 'active' : ''; ?>" href="pages/attendance.php">
                     <i class="fas fa-clock"></i> Staff Attendance
                 </a>
             </li>
@@ -47,7 +47,7 @@ $user = getCurrentUser();
 
             <?php if (hasPermission('petty_cash', 'read')): ?>
             <li class="nav-item">
-                <a class="nav-link <?php echo $current_page === 'petty_cash' ? 'active' : ''; ?>" href="/petty_cash.php">
+                <a class="nav-link <?php echo $current_page === 'petty_cash' ? 'active' : ''; ?>" href="pages/petty_cash.php">
                     <i class="fas fa-wallet"></i> Petty Cash
                 </a>
             </li>

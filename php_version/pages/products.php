@@ -92,46 +92,7 @@ $products = $stmt->fetchAll();
 $categoriesStmt = $db->query("SELECT DISTINCT category FROM products WHERE is_active = 1 ORDER BY category");
 $categories = $categoriesStmt->fetchAll();
 
-// addProduct function moved to functions.php to avoid redeclaration error
-
-function updateProduct($id, $data) {
-    global $db;
-    
-    $stmt = $db->prepare("UPDATE products SET name=?, category=?, brand=?, size=?, thickness=?, price_per_unit=?, current_stock=?, min_stock=?, unit=?, sku=? WHERE id=?");
-    
-    try {
-        $stmt->execute([
-            $data['name'],
-            $data['category'],
-            $data['brand'] ?? '',
-            $data['size'] ?? '',
-            $data['thickness'] ?? '',
-            $data['price_per_unit'],
-            $data['current_stock'],
-            $data['min_stock'],
-            $data['unit'],
-            $data['sku'] ?? null,
-            $id
-        ]);
-        
-        return ['success' => true, 'message' => 'Product updated successfully'];
-    } catch (PDOException $e) {
-        return ['success' => false, 'message' => 'Failed to update product: ' . $e->getMessage()];
-    }
-}
-
-function deleteProduct($id) {
-    global $db;
-    
-    $stmt = $db->prepare("UPDATE products SET is_active = 0 WHERE id = ?");
-    
-    try {
-        $stmt->execute([$id]);
-        return ['success' => true, 'message' => 'Product deleted successfully'];
-    } catch (PDOException $e) {
-        return ['success' => false, 'message' => 'Failed to delete product: ' . $e->getMessage()];
-    }
-}
+// All product functions moved to functions.php to avoid redeclaration errors
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -141,6 +102,7 @@ function deleteProduct($id) {
     <title>Products - <?php echo APP_NAME; ?></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="../assets/css/style.css" rel="stylesheet">
 </head>
 <body>
     <?php include '../includes/header.php'; ?>
