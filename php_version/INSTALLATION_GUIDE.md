@@ -28,11 +28,18 @@
 6. **Note down**: Database name, username, and password
 
 ### Import Database Structure:
+
+**Option 1: Using phpMyAdmin (Recommended)**
 1. In Hostinger Control Panel, go to **phpMyAdmin**
 2. Select your created database
 3. Click **Import** tab
 4. Choose the `database.sql` file
 5. Click **Go** to import all tables and sample data
+
+**Option 2: Using Setup Script (Alternative)**
+1. Upload all files first
+2. Visit `https://yourdomain.com/setup_database.php`
+3. Follow the setup wizard to create database automatically
 
 ---
 

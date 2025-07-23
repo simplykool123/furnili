@@ -7,8 +7,8 @@
 // Database configuration - UPDATE THESE VALUES FOR YOUR HOSTING
 define('DB_HOST', 'localhost');        // Usually 'localhost' for shared hosting
 define('DB_NAME', 'furnili_ms');       // Your database name
-define('DB_USER', 'your_db_username'); // Your database username
-define('DB_PASS', 'your_db_password'); // Your database password
+define('DB_USER', 'root');             // Your database username (default for local testing)
+define('DB_PASS', '');                 // Your database password (empty for local testing)
 define('DB_CHARSET', 'utf8mb4');
 
 // Application configuration
@@ -55,6 +55,9 @@ class Database {
         self::$connection = null;
     }
 }
+
+// Development mode for testing
+define('DEVELOPMENT_MODE', true);
 
 // Error reporting for development (disable in production)
 if (defined('DEVELOPMENT_MODE') && DEVELOPMENT_MODE) {

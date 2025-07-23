@@ -7,43 +7,66 @@
  * Login user
  */
 function loginUser($username, $password) {
-    $db = Database::connect();
-    
-    // Get user by username or email
-    $stmt = $db->prepare("SELECT id, username, email, password, name, role, is_active FROM users WHERE (username = ? OR email = ?) AND is_active = 1");
-    $stmt->execute([$username, $username]);
-    $user = $stmt->fetch();
-    
-    if (!$user) {
-        return ['success' => false, 'message' => 'Invalid credentials'];
+    try {
+        $db = Database::connect();
+        
+        // Get user by username or email
+        $stmt = $db->prepare("SELECT id, username, email, password, name, role, is_active FROM users WHERE (username = ? OR email = ?) AND is_active = 1");
+        $stmt->execute([$username, $username]);
+        $user = $stmt->fetch();
+        
+        // Debug logging (remove in production)
+        if (defined('DEVELOPMENT_MODE') && DEVELOPMENT_MODE) {
+            error_log("Login attempt for: " . $username);
+            error_log("User found: " . ($user ? 'Yes' : 'No'));
+            if ($user) {
+                error_log("Stored hash: " . $user['password']);
+                error_log("Password verify result: " . (password_verify($password, $user['password']) ? 'Success' : 'Failed'));
+            }
+        }
+        
+        if (!$user) {
+            return ['success' => false, 'message' => 'Invalid credentials - user not found'];
+        }
+        
+        if (!password_verify($password, $user['password'])) {
+            return ['success' => false, 'message' => 'Invalid credentials - wrong password'];
+        }
+        
+        // Create session
+        $_SESSION['user_id'] = $user['id'];
+        $_SESSION['username'] = $user['username'];
+        $_SESSION['name'] = $user['name'];
+        $_SESSION['role'] = $user['role'];
+        $_SESSION['login_time'] = time();
+        
+        // Update last login (add column if not exists)
+        try {
+            $stmt = $db->prepare("UPDATE users SET last_login = NOW() WHERE id = ?");
+            $stmt->execute([$user['id']]);
+        } catch (PDOException $e) {
+            // Column might not exist, ignore this error
+        }
+        
+        return [
+            'success' => true,
+            'message' => 'Login successful',
+            'user' => [
+                'id' => $user['id'],
+                'username' => $user['username'],
+                'email' => $user['email'],
+                'name' => $user['name'],
+                'role' => $user['role']
+            ]
+        ];
+        
+    } catch (Exception $e) {
+        if (defined('DEVELOPMENT_MODE') && DEVELOPMENT_MODE) {
+            error_log("Login error: " . $e->getMessage());
+            return ['success' => false, 'message' => 'Login error: ' . $e->getMessage()];
+        }
+        return ['success' => false, 'message' => 'Login failed due to system error'];
     }
-    
-    if (!verifyPassword($password, $user['password'])) {
-        return ['success' => false, 'message' => 'Invalid credentials'];
-    }
-    
-    // Create session
-    $_SESSION['user_id'] = $user['id'];
-    $_SESSION['username'] = $user['username'];
-    $_SESSION['name'] = $user['name'];
-    $_SESSION['role'] = $user['role'];
-    $_SESSION['login_time'] = time();
-    
-    // Update last login
-    $stmt = $db->prepare("UPDATE users SET last_login = NOW() WHERE id = ?");
-    $stmt->execute([$user['id']]);
-    
-    return [
-        'success' => true,
-        'message' => 'Login successful',
-        'user' => [
-            'id' => $user['id'],
-            'username' => $user['username'],
-            'email' => $user['email'],
-            'name' => $user['name'],
-            'role' => $user['role']
-        ]
-    ];
 }
 
 /**

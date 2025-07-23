@@ -140,6 +140,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <small class="text-muted">
                                 Default Login: <strong>admin</strong> / <strong>admin123</strong>
                             </small>
+                            <br>
+                            <small class="text-info">
+                                <a href="test_connection.php" target="_blank">Test Database Connection</a>
+                            </small>
                         </div>
                     </div>
                 </div>

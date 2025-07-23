@@ -217,7 +217,7 @@ CREATE TABLE `price_comparisons` (
 
 -- Insert default admin user (password: admin123)
 INSERT INTO `users` (`username`, `email`, `password`, `name`, `role`, `is_active`) VALUES
-('admin', 'admin@furnili.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'System Administrator', 'admin', 1);
+('admin', 'admin@furnili.com', '$2y$10$vZ.oOFzwC7ZKd/VVNgbJYeFb3aG2qrVWz4v.Ur9nZmxLyiCGK/3cS', 'System Administrator', 'admin', 1);
 
 -- Insert sample categories
 INSERT INTO `categories` (`name`, `description`, `is_active`) VALUES
