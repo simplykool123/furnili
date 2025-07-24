@@ -93,53 +93,169 @@ const MonthlyAttendanceCalendar = ({
   };
 
   if (isMobile) {
-    // Mobile list view
+    // Enhanced Mobile Calendar View
     return (
-      <div className="space-y-3">
-        <div className="grid grid-cols-2 gap-2 text-xs mb-4">
-          {statusOptions.map(option => (
-            <div key={option.value} className={`p-2 rounded border text-center ${getStatusColor(option.value)}`}>
-              <div className="font-medium">{option.icon} {option.label}</div>
-            </div>
-          ))}
-        </div>
-        
-        <div className="space-y-2 max-h-96 overflow-y-auto">
-          {Array.from({ length: daysInMonth }, (_, i) => {
-            const day = i + 1;
-            const attendance = getAttendanceForDate(day);
-            const dayName = new Date(year, month - 1, day).toLocaleDateString('en-US', { weekday: 'short' });
-            const isToday = new Date().getDate() === day && 
-                           new Date().getMonth() === month - 1 && 
-                           new Date().getFullYear() === year;
-            
-            return (
-              <div key={day} className={`p-3 border rounded-lg ${isToday ? 'border-amber-300 bg-amber-50' : 'border-gray-200'}`}>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium text-lg">{day}</span>
-                    <span className="text-sm text-gray-600">{dayName}</span>
-                    {isToday && <Badge variant="outline" className="text-xs">Today</Badge>}
-                  </div>
-                  <Select
-                    value={attendance?.status || ''}
-                    onValueChange={(value) => handleStatusChange(day, value)}
-                  >
-                    <SelectTrigger className={`w-28 h-8 text-xs ${getStatusColor(attendance?.status || '')}`}>
-                      <SelectValue placeholder="Mark" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {statusOptions.map(option => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.icon} {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+      <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+        {/* Mobile Status Legend - Horizontal Scrollable */}
+        <div className="bg-gradient-to-r from-amber-50 to-orange-50 p-3 border-b">
+          <div className="flex gap-2 overflow-x-auto pb-2">
+            {statusOptions.map(option => (
+              <div 
+                key={option.value} 
+                className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium border ${getStatusColor(option.value)}`}
+              >
+                <span className="flex items-center gap-1.5">
+                  <span className="text-sm">{option.icon}</span>
+                  <span>{option.label}</span>
+                </span>
               </div>
-            );
-          })}
+            ))}
+          </div>
+        </div>
+
+        {/* Mobile Mini Calendar Grid */}
+        <div className="p-4">
+          <div className="grid grid-cols-7 gap-1 mb-3">
+            {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, index) => (
+              <div key={day} className="text-center text-xs font-semibold text-amber-800 py-2">
+                {day}
+              </div>
+            ))}
+          </div>
+          
+          <div className="grid grid-cols-7 gap-1">
+            {/* Empty cells for days before month starts */}
+            {Array.from({ length: firstDayOfMonth }, (_, i) => (
+              <div key={`empty-${i}`} className="h-10"></div>
+            ))}
+            
+            {/* Calendar days - Mobile optimized */}
+            {Array.from({ length: daysInMonth }, (_, i) => {
+              const day = i + 1;
+              const attendance = getAttendanceForDate(day);
+              const isToday = new Date().getDate() === day && 
+                             new Date().getMonth() === month - 1 && 
+                             new Date().getFullYear() === year;
+              const isSunday = new Date(year, month - 1, day).getDay() === 0;
+              
+              return (
+                <div 
+                  key={day}
+                  className={`h-10 w-full border rounded-lg flex flex-col items-center justify-center text-xs transition-all duration-200 ${
+                    isToday ? 'border-amber-400 bg-amber-100 shadow-md' : 
+                    isSunday ? 'bg-red-50 border-red-200' : 
+                    attendance?.status ? getStatusColor(attendance.status) :
+                    'border-gray-200 bg-gray-50'
+                  }`}
+                  onClick={() => setMobileStatusPicker({show: true, day})}
+                >
+                  <span className={`font-semibold ${isToday ? 'text-amber-900' : isSunday ? 'text-red-700' : 'text-gray-800'}`}>
+                    {day}
+                  </span>
+                  {attendance?.status && (
+                    <span className="text-[8px] leading-none">
+                      {statusOptions.find(opt => opt.value === attendance.status)?.icon}
+                    </span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Mobile Quick Actions Panel */}
+        <div className="bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 p-4 border-t">
+          <div className="flex items-center justify-between mb-3">
+            <h4 className="font-semibold text-sm text-amber-800">Quick Actions</h4>
+            <div className="text-xs text-amber-600 bg-amber-100 px-2 py-1 rounded-full">
+              Tap days above to mark
+            </div>
+          </div>
+          
+          {/* Today's Quick Action */}
+          {(() => {
+            const today = new Date().getDate();
+            const currentMonth = new Date().getMonth() + 1;
+            const currentYear = new Date().getFullYear();
+            
+            if (currentMonth === month && currentYear === year) {
+              const todayAttendance = getAttendanceForDate(today);
+              return (
+                <div className="bg-white p-3 rounded-xl border border-amber-200 shadow-sm">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-gradient-to-br from-amber-400 to-orange-400 rounded-full flex items-center justify-center shadow-md">
+                        <span className="text-sm font-bold text-white">{today}</span>
+                      </div>
+                      <div>
+                        <div className="font-semibold text-amber-900">Today</div>
+                        <div className="text-xs text-amber-600">
+                          {new Date().toLocaleDateString('en-US', { weekday: 'long' })}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      {!todayAttendance?.status ? (
+                        <Button 
+                          size="sm" 
+                          className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white shadow-md"
+                          onClick={() => setMobileStatusPicker({show: true, day: today})}
+                        >
+                          ✓ Mark Now
+                        </Button>
+                      ) : (
+                        <div className={`px-3 py-1.5 rounded-full text-xs font-medium ${getStatusColor(todayAttendance.status)}`}>
+                          {statusOptions.find(opt => opt.value === todayAttendance.status)?.icon} {' '}
+                          {statusOptions.find(opt => opt.value === todayAttendance.status)?.label}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            }
+            return null;
+          })()}
+          
+          {/* Bulk Actions */}
+          <div className="mt-3 flex gap-2 overflow-x-auto pb-2">
+            <Button 
+              size="sm" 
+              variant="outline" 
+              className="flex-shrink-0 text-xs border-green-200 text-green-700 hover:bg-green-50"
+              onClick={() => {
+                // Bulk mark present for unmarked days
+                Array.from({ length: daysInMonth }, (_, i) => {
+                  const day = i + 1;
+                  const attendance = getAttendanceForDate(day);
+                  if (!attendance?.status) {
+                    handleStatusChange(day, 'present');
+                  }
+                });
+              }}
+            >
+              <span className="mr-1">✓</span>
+              All Present
+            </Button>
+            <Button 
+              size="sm" 
+              variant="outline" 
+              className="flex-shrink-0 text-xs border-blue-200 text-blue-700 hover:bg-blue-50"
+              onClick={() => {
+                // Mark all Sundays as off
+                Array.from({ length: daysInMonth }, (_, i) => {
+                  const day = i + 1;
+                  const isSunday = new Date(year, month - 1, day).getDay() === 0;
+                  if (isSunday) {
+                    handleStatusChange(day, 'on_leave');
+                  }
+                });
+              }}
+            >
+              <span className="mr-1">🏖️</span>
+              Sundays Off
+            </Button>
+          </div>
         </div>
       </div>
     );
@@ -263,6 +379,7 @@ export default function Attendance() {
   const [selectedStaffForAttendance, setSelectedStaffForAttendance] = useState<string>("");
   const [monthlyAttendanceData, setMonthlyAttendanceData] = useState<any[]>([]);
   const [isEditingMonthlyAttendance, setIsEditingMonthlyAttendance] = useState(false);
+  const [mobileStatusPicker, setMobileStatusPicker] = useState<{show: boolean, day: number} | null>(null);
 
   // Forms
   const addStaffForm = useForm<StaffFormData>({
@@ -1858,6 +1975,40 @@ export default function Attendance() {
               </div>
             </form>
           </Form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Mobile Status Picker Dialog */}
+      <Dialog open={mobileStatusPicker?.show || false} onOpenChange={(open) => !open && setMobileStatusPicker(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Mark Attendance - Day {mobileStatusPicker?.day}</DialogTitle>
+          </DialogHeader>
+          <div className="grid grid-cols-1 gap-3 py-4">
+            {statusOptions.map(option => (
+              <Button
+                key={option.value}
+                variant="outline"
+                className={`h-14 justify-start text-left ${getStatusColor(option.value)} hover:shadow-md transition-all`}
+                onClick={() => {
+                  if (mobileStatusPicker?.day) {
+                    handleStatusChange(mobileStatusPicker.day, option.value);
+                    setMobileStatusPicker(null);
+                  }
+                }}
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">{option.icon}</span>
+                  <div>
+                    <div className="font-semibold">{option.label}</div>
+                    <div className="text-xs text-gray-500 capitalize">
+                      {option.value.replace('_', ' ')}
+                    </div>
+                  </div>
+                </div>
+              </Button>
+            ))}
+          </div>
         </DialogContent>
       </Dialog>
     </div>

@@ -237,7 +237,9 @@ export const priceComparisons = pgTable("price_comparisons", {
 });
 
 // Insert schemas
-export const insertUserSchema = createInsertSchema(users).omit({
+export const insertUserSchema = createInsertSchema(users, {
+  joiningDate: z.string().optional().transform((val) => val ? new Date(val) : undefined),
+}).omit({
   id: true,
   createdAt: true,
 });
