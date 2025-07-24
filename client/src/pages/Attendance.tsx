@@ -150,7 +150,13 @@ const MonthlyAttendanceCalendar = ({
                     attendance?.status ? getStatusColor(attendance.status) :
                     'border-gray-200 bg-gray-50'
                   }`}
-                  onClick={() => {}} // Disabled for calendar component
+                  onClick={() => {
+                    const attendance = getAttendanceForDate(day);
+                    const currentStatus = attendance?.status || 'absent';
+                    const statusIndex = statusOptions.findIndex(opt => opt.value === currentStatus);
+                    const nextStatus = statusOptions[(statusIndex + 1) % statusOptions.length].value;
+                    handleStatusChange(day, nextStatus);
+                  }}
                 >
                   <span className={`font-semibold ${isToday ? 'text-amber-900' : isSunday ? 'text-red-700' : 'text-gray-800'}`}>
                     {day}
@@ -1286,13 +1292,111 @@ export default function Attendance() {
             </Card>
           )}
 
-          {/* Regular attendance records table */}
+          {/* Compact Attendance Records Display */}
           <Card>
             <CardHeader>
               <CardTitle>Attendance Records</CardTitle>
               <p className="text-sm text-gray-600">
-                {user?.role === "admin" ? "View all staff attendance records" : "Your attendance history"}
+                Monthly attendance overview with status codes: P=Present, A=Absent, L=Late, HF=Half Day
               </p>
+            </CardHeader>
+            <CardContent>
+              {staff.length > 0 ? (
+                <div className="overflow-x-auto">
+                  <Table className="text-sm">
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-8">No</TableHead>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Post</TableHead>
+                        {Array.from({ length: new Date(selectedYear, selectedMonth, 0).getDate() }, (_, i) => (
+                          <TableHead key={i + 1} className="w-8 text-center p-1 text-xs">
+                            {i + 1}
+                          </TableHead>
+                        ))}
+                        <TableHead className="w-16">Total</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {staff.map((member: any, index: number) => {
+                        const memberAttendance = attendanceRecords.filter(
+                          (record: any) => record.userId === member.id
+                        );
+                        
+                        const attendanceMap = memberAttendance.reduce((acc: any, record: any) => {
+                          const day = new Date(record.date).getDate();
+                          acc[day] = record.status;
+                          return acc;
+                        }, {});
+
+                        const getStatusCode = (status: string) => {
+                          switch (status) {
+                            case 'present': return 'P';
+                            case 'absent': return 'A';
+                            case 'late': return 'L';
+                            case 'half_day': return 'HF';
+                            case 'on_leave': return 'L';
+                            default: return 'A';
+                          }
+                        };
+
+                        const getStatusColor = (status: string) => {
+                          switch (status) {
+                            case 'present': return 'text-green-700 bg-green-50';
+                            case 'absent': return 'text-red-700 bg-red-50';
+                            case 'late': return 'text-orange-700 bg-orange-50';
+                            case 'half_day': return 'text-yellow-700 bg-yellow-50';
+                            case 'on_leave': return 'text-blue-700 bg-blue-50';
+                            default: return 'text-gray-500 bg-gray-50';
+                          }
+                        };
+
+                        const totalPresent = Object.values(attendanceMap).filter(
+                          (status: any) => status === 'present' || status === 'late'
+                        ).length;
+                        
+                        const totalHalfDays = Object.values(attendanceMap).filter(
+                          (status: any) => status === 'half_day'
+                        ).length;
+
+                        return (
+                          <TableRow key={member.id}>
+                            <TableCell className="font-medium">{index + 1}</TableCell>
+                            <TableCell className="font-medium">{member.name}</TableCell>
+                            <TableCell className="text-gray-600">{member.designation || member.role}</TableCell>
+                            {Array.from({ length: new Date(selectedYear, selectedMonth, 0).getDate() }, (_, i) => {
+                              const day = i + 1;
+                              const status = attendanceMap[day];
+                              const statusCode = status ? getStatusCode(status) : 'A';
+                              const colorClass = status ? getStatusColor(status) : 'text-gray-400';
+                              
+                              return (
+                                <TableCell key={day} className="text-center p-1">
+                                  <span className={`inline-block w-6 h-6 rounded text-xs font-medium leading-6 ${colorClass}`}>
+                                    {statusCode}
+                                  </span>
+                                </TableCell>
+                              );
+                            })}
+                            <TableCell className="font-medium text-center">
+                              {totalPresent + (totalHalfDays * 0.5)}
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
+              ) : (
+                <p className="text-center text-gray-500 py-4">No staff members found</p>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Detailed Records Table (Optional - can be collapsed) */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Detailed Attendance Records</CardTitle>
             </CardHeader>
             <CardContent>
               {attendanceRecords.length > 0 ? (

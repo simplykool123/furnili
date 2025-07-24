@@ -11,7 +11,8 @@ import {
   DollarSign,
   CheckCircle,
   Calendar,
-  Quote
+  Quote,
+  Download
 } from "lucide-react";
 import { authService } from "@/lib/auth";
 import { useState, useEffect } from "react";
@@ -19,6 +20,8 @@ import StockWarnings from "@/components/Dashboard/StockWarnings";
 import MobileDashboard from "@/components/Mobile/MobileDashboard";
 import { useIsMobile } from "@/components/Mobile/MobileOptimizer";
 import { useLocation } from "wouter";
+import { Button } from "@/components/ui/button";
+import { apiRequest } from "@/lib/queryClient";
 
 interface DashboardStats {
   totalProducts: number;
@@ -121,6 +124,94 @@ export default function Dashboard() {
   const [dailyQuote, setDailyQuote] = useState<typeof motivationalQuotes[0] | null>(null);
   const { isMobile } = useIsMobile();
   const [, setLocation] = useLocation();
+  const [isExporting, setIsExporting] = useState(false);
+
+  // Export attendance report function
+  const exportAttendanceReport = async () => {
+    if (isExporting) return;
+    
+    setIsExporting(true);
+    try {
+      const currentMonth = new Date().getMonth() + 1;
+      const currentYear = new Date().getFullYear();
+      
+      // Fetch staff and attendance data
+      const [staffResponse, attendanceResponse] = await Promise.all([
+        apiRequest('GET', '/api/users'),
+        apiRequest('GET', `/api/attendance?month=${currentMonth}&year=${currentYear}`)
+      ]);
+      
+      const staffData = await staffResponse.json();
+      const attendanceData = await attendanceResponse.json();
+
+      // Create attendance report similar to the image format
+      const daysInMonth = new Date(currentYear, currentMonth, 0).getDate();
+      
+      let csvContent = `Attendance Report - ${new Date(0, currentMonth - 1).toLocaleString('default', { month: 'long' })} ${currentYear}\n\n`;
+      csvContent += `No,Name,Post,`;
+      
+      // Add day columns
+      for (let day = 1; day <= daysInMonth; day++) {
+        csvContent += `${day},`;
+      }
+      csvContent += `Total\n`;
+
+      // Add staff data
+      staffData.forEach((member: any, index: number) => {
+        const memberAttendance = attendanceData.filter((record: any) => record.userId === member.id);
+        
+        const attendanceMap = memberAttendance.reduce((acc: any, record: any) => {
+          const day = new Date(record.date).getDate();
+          acc[day] = record.status;
+          return acc;
+        }, {});
+
+        csvContent += `${index + 1},${member.name},${member.designation || member.role},`;
+        
+        let totalPresent = 0;
+        
+        // Add daily attendance
+        for (let day = 1; day <= daysInMonth; day++) {
+          const status = attendanceMap[day];
+          let statusCode = 'A';
+          
+          if (status === 'present') {
+            statusCode = 'P';
+            totalPresent += 1;
+          } else if (status === 'late') {
+            statusCode = 'L';
+            totalPresent += 1;
+          } else if (status === 'half_day') {
+            statusCode = 'HF';
+            totalPresent += 0.5;
+          } else if (status === 'on_leave') {
+            statusCode = 'L';
+          }
+          
+          csvContent += `${statusCode},`;
+        }
+        
+        csvContent += `${totalPresent}\n`;
+      });
+
+      // Create and download file
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', `Attendance_Report_${currentMonth}_${currentYear}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+    } catch (error) {
+      console.error('Export failed:', error);
+      alert('Failed to export attendance report. Please try again.');
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   // Select a random quote on component mount
   useEffect(() => {
@@ -276,7 +367,7 @@ export default function Dashboard() {
             <CardTitle className="text-base font-semibold text-foreground">Quick Actions</CardTitle>
           </CardHeader>
           <CardContent className="pt-0">
-            <div className="grid gap-2 grid-cols-3">
+            <div className="grid gap-2 grid-cols-2 lg:grid-cols-4">
               <div className="flex flex-col items-center p-2 rounded-lg border border-border hover:bg-muted/50 cursor-pointer transition-colors" onClick={() => setLocation('/products/new')}>
                 <Package className="h-5 w-5 text-primary mb-1" />
                 <span className="text-xs font-medium text-center">Add Product</span>
@@ -288,6 +379,12 @@ export default function Dashboard() {
               <div className="flex flex-col items-center p-2 rounded-lg border border-border hover:bg-muted/50 cursor-pointer transition-colors" onClick={() => setLocation('/attendance')}>
                 <Clock className="h-5 w-5 text-primary mb-1" />
                 <span className="text-xs font-medium text-center">Check In</span>
+              </div>
+              <div className="flex flex-col items-center p-2 rounded-lg border border-amber-200 hover:bg-amber-50 cursor-pointer transition-colors" onClick={exportAttendanceReport}>
+                <Download className={`h-5 w-5 text-amber-600 mb-1 ${isExporting ? 'animate-bounce' : ''}`} />
+                <span className="text-xs font-medium text-center text-amber-900">
+                  {isExporting ? 'Exporting...' : 'Attendance Report'}
+                </span>
               </div>
             </div>
           </CardContent>
