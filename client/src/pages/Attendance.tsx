@@ -349,7 +349,7 @@ const MonthlyAttendanceCalendar = ({
 // Form schemas
 const staffFormSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
-  email: z.string().email("Invalid email address"),
+  email: z.string().email("Invalid email address").optional().or(z.literal("")),
   phone: z.string().optional(),
   employeeId: z.string().optional(),
   department: z.string().optional(),
@@ -521,7 +521,29 @@ export default function Attendance() {
 
   const createStaffMutation = useMutation({
     mutationFn: async (data: StaffFormData) => {
-      return authenticatedApiRequest("POST", "/api/users", { ...data, username: data.email });
+      // Generate auto Employee ID if not provided
+      let employeeId = data.employeeId;
+      if (!employeeId) {
+        // Get the highest existing employee ID to determine next number
+        const existingIds = staff
+          .map((s: any) => s.employeeId)
+          .filter((id: string) => id && id.startsWith('FUN-'))
+          .map((id: string) => parseInt(id.replace('FUN-', '')))
+          .filter((num: number) => !isNaN(num))
+          .sort((a: number, b: number) => b - a);
+        
+        const nextId = existingIds.length > 0 ? existingIds[0] + 1 : 101;
+        employeeId = `FUN-${nextId}`;
+      }
+      
+      // Use name as username if email is not provided
+      const username = data.email || data.name.toLowerCase().replace(/\s+/g, '');
+      
+      return authenticatedApiRequest("POST", "/api/users", { 
+        ...data, 
+        employeeId,
+        username
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });
@@ -892,7 +914,7 @@ export default function Attendance() {
       basicSalary: staffMember.basicSalary || 0,
       aadharNumber: staffMember.aadharNumber || "",
       address: staffMember.address || "",
-      joiningDate: staffMember.joiningDate || "",
+      joiningDate: staffMember.joiningDate ? new Date(staffMember.joiningDate).toISOString().split('T')[0] : "",
       bankAccount: staffMember.bankAccount || "",
       ifscCode: staffMember.ifscCode || "",
       role: staffMember.role || "user",
@@ -1539,7 +1561,7 @@ export default function Attendance() {
 
       {/* Add Staff Dialog */}
       <Dialog open={isAddStaffOpen} onOpenChange={setIsAddStaffOpen}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <UserPlus className="w-5 h-5" />
@@ -1547,8 +1569,8 @@ export default function Attendance() {
             </DialogTitle>
           </DialogHeader>
           <Form {...addStaffForm}>
-            <form onSubmit={addStaffForm.handleSubmit(onAddStaffSubmit)} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <form onSubmit={addStaffForm.handleSubmit(onAddStaffSubmit)} className="space-y-3">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <FormField
                   control={addStaffForm.control}
                   name="name"
@@ -1568,7 +1590,7 @@ export default function Attendance() {
                   name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Email *</FormLabel>
+                      <FormLabel>Email</FormLabel>
                       <FormControl>
                         <Input type="email" placeholder="Enter email address" {...field} />
                       </FormControl>
@@ -1598,7 +1620,12 @@ export default function Attendance() {
                     <FormItem>
                       <FormLabel>Employee ID</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter employee ID" {...field} />
+                        <Input 
+                          placeholder="Auto-generated (FUN-101)" 
+                          {...field} 
+                          className="bg-gray-50" 
+                          readOnly 
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -1764,7 +1791,7 @@ export default function Attendance() {
 
       {/* Edit Staff Dialog */}
       <Dialog open={isEditStaffOpen} onOpenChange={setIsEditStaffOpen}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Edit className="w-5 h-5" />
@@ -1772,8 +1799,8 @@ export default function Attendance() {
             </DialogTitle>
           </DialogHeader>
           <Form {...editStaffForm}>
-            <form onSubmit={editStaffForm.handleSubmit(onEditStaffSubmit)} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <form onSubmit={editStaffForm.handleSubmit(onEditStaffSubmit)} className="space-y-3">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <FormField
                   control={editStaffForm.control}
                   name="name"
@@ -1793,7 +1820,7 @@ export default function Attendance() {
                   name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Email *</FormLabel>
+                      <FormLabel>Email</FormLabel>
                       <FormControl>
                         <Input type="email" placeholder="Enter email address" {...field} />
                       </FormControl>
