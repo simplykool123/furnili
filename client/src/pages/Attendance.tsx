@@ -159,7 +159,7 @@ const MonthlyAttendanceCalendar = ({
       <div className="grid grid-cols-7 gap-2 mb-4">
         {/* Empty cells for days before month starts */}
         {Array.from({ length: firstDayOfMonth }, (_, i) => (
-          <div key={`empty-${i}`} className="h-20"></div>
+          <div key={`empty-${i}`} className="h-12"></div>
         ))}
         
         {/* Calendar days */}
@@ -174,21 +174,21 @@ const MonthlyAttendanceCalendar = ({
           return (
             <div 
               key={day}
-              className={`h-20 border rounded p-1 transition-all duration-200 ${
+              className={`h-12 border rounded p-1 transition-all duration-200 ${
                 isToday ? 'border-amber-300 bg-amber-50 shadow-md' : 
                 isSunday ? 'bg-red-50 border-red-200' : 'border-gray-200 bg-white hover:bg-gray-50'
               }`}
             >
-              <div className={`font-medium text-sm mb-1 ${isToday ? 'text-amber-900' : isSunday ? 'text-red-600' : 'text-gray-800'}`}>
+              <div className={`font-medium text-xs mb-0.5 ${isToday ? 'text-amber-900' : isSunday ? 'text-red-600' : 'text-gray-800'}`}>
                 {day}
-                {isToday && <div className="text-xs text-amber-600">Today</div>}
-                {isSunday && <div className="text-xs text-red-500">Sun</div>}
+                {isToday && <div className="text-[10px] text-amber-600">Now</div>}
+                {isSunday && <div className="text-[10px] text-red-500">Sun</div>}
               </div>
               <Select
                 value={attendance?.status || ''}
                 onValueChange={(value) => handleStatusChange(day, value)}
               >
-                <SelectTrigger className={`h-8 text-xs border transition-colors ${getStatusColor(attendance?.status || '')}`}>
+                <SelectTrigger className={`h-6 text-[10px] border transition-colors ${getStatusColor(attendance?.status || '')}`}>
                   <SelectValue placeholder="Mark" />
                 </SelectTrigger>
                 <SelectContent>
@@ -207,24 +207,20 @@ const MonthlyAttendanceCalendar = ({
         })}
       </div>
       
-      {/* Enhanced Legend */}
-      <div className="mt-4 p-4 bg-gradient-to-r from-amber-50 to-orange-50 rounded-lg border border-amber-200">
-        <h4 className="font-semibold text-sm mb-3 text-amber-900">Status Legend:</h4>
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-2 text-xs">
+      {/* Compact Legend */}
+      <div className="mt-3 p-2 bg-gradient-to-r from-amber-50 to-orange-50 rounded border border-amber-200">
+        <div className="flex flex-wrap items-center justify-center gap-2 text-xs">
           {statusOptions.map(option => (
             <div 
               key={option.value} 
-              className={`px-3 py-2 rounded-md border font-medium text-center transition-all duration-200 ${getStatusColor(option.value)}`}
+              className={`px-2 py-1 rounded border font-medium transition-all duration-200 ${getStatusColor(option.value)}`}
             >
-              <div className="flex items-center justify-center gap-1">
+              <span className="flex items-center gap-1">
                 <span>{option.icon}</span>
-                <span>{option.label}</span>
-              </div>
+                <span className="hidden sm:inline">{option.label}</span>
+              </span>
             </div>
           ))}
-        </div>
-        <div className="mt-2 text-xs text-gray-600 text-center">
-          Click on any day to mark attendance • Sundays are highlighted in red
         </div>
       </div>
     </div>
@@ -370,7 +366,13 @@ export default function Attendance() {
       return authenticatedApiRequest("POST", "/api/payroll/generate", data);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/payroll"] });
+      // Invalidate with specific query parameters to ensure refresh
+      queryClient.invalidateQueries({ 
+        queryKey: ["/api/payroll", selectedMonth, selectedYear] 
+      });
+      queryClient.invalidateQueries({ 
+        queryKey: ["/api/payroll"] 
+      });
       toast({ title: "Payroll generated successfully" });
     },
   });
@@ -380,7 +382,13 @@ export default function Attendance() {
       return authenticatedApiRequest("POST", `/api/payroll/${payrollId}/process`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/payroll"] });
+      // Invalidate with specific query parameters to ensure refresh
+      queryClient.invalidateQueries({ 
+        queryKey: ["/api/payroll", selectedMonth, selectedYear] 
+      });
+      queryClient.invalidateQueries({ 
+        queryKey: ["/api/payroll"] 
+      });
       toast({ title: "Payroll processed successfully" });
     },
   });
