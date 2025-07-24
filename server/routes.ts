@@ -920,6 +920,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/attendance/bulk-update", authenticateToken, requireRole(["admin"]), async (req: AuthRequest, res) => {
+    try {
+      const { userId, month, year, attendanceData } = req.body;
+      
+      if (!userId || !month || !year || !attendanceData) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+      
+      const results = await storage.bulkUpdateMonthlyAttendance(userId, month, year, attendanceData);
+      res.json(results);
+    } catch (error) {
+      console.error("Bulk attendance update failed:", error);
+      res.status(500).json({ message: "Bulk attendance update failed", error: String(error) });
+    }
+  });
+
   // Payroll routes
   app.get("/api/payroll", authenticateToken, async (req: AuthRequest, res) => {
     try {

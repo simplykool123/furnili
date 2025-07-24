@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { authService } from "@/lib/auth";
 import { useIsMobile, MobileCard, MobileHeading, MobileText } from "@/components/Mobile/MobileOptimizer";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -41,6 +42,120 @@ import {
 // @ts-ignore
 import html2pdf from 'html2pdf.js';
 
+// Monthly Attendance Calendar Component
+const MonthlyAttendanceCalendar = ({ 
+  staffId, 
+  month, 
+  year, 
+  attendanceData, 
+  onUpdate 
+}: {
+  staffId: number;
+  month: number;
+  year: number;
+  attendanceData: any[];
+  onUpdate: (date: string, status: string) => void;
+}) => {
+  const daysInMonth = new Date(year, month, 0).getDate();
+  const firstDayOfMonth = new Date(year, month - 1, 1).getDay();
+  
+  const getAttendanceForDate = (day: number) => {
+    const dateStr = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+    return attendanceData.find(a => a.date.startsWith(dateStr));
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'present': return 'bg-green-100 text-green-800 border-green-200';
+      case 'absent': return 'bg-red-100 text-red-800 border-red-200';
+      case 'half_day': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'late': return 'bg-orange-100 text-orange-800 border-orange-200';
+      case 'on_leave': return 'bg-blue-100 text-blue-800 border-blue-200';
+      default: return 'bg-gray-100 text-gray-600 border-gray-200';
+    }
+  };
+
+  const statusOptions = [
+    { value: 'present', label: 'Present' },
+    { value: 'absent', label: 'Absent' },
+    { value: 'half_day', label: 'Half Day' },
+    { value: 'late', label: 'Late' },
+    { value: 'on_leave', label: 'On Leave' }
+  ];
+
+  const handleStatusChange = (day: number, newStatus: string) => {
+    const dateStr = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+    onUpdate(dateStr, newStatus);
+  };
+
+  return (
+    <div className="border rounded-lg p-4">
+      <div className="grid grid-cols-7 gap-2 mb-4">
+        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+          <div key={day} className="text-center font-medium text-gray-600 p-2">
+            {day}
+          </div>
+        ))}
+      </div>
+      
+      <div className="grid grid-cols-7 gap-2">
+        {/* Empty cells for days before month starts */}
+        {Array.from({ length: firstDayOfMonth }, (_, i) => (
+          <div key={`empty-${i}`} className="h-20"></div>
+        ))}
+        
+        {/* Calendar days */}
+        {Array.from({ length: daysInMonth }, (_, i) => {
+          const day = i + 1;
+          const attendance = getAttendanceForDate(day);
+          const isToday = new Date().getDate() === day && 
+                         new Date().getMonth() === month - 1 && 
+                         new Date().getFullYear() === year;
+          
+          return (
+            <div 
+              key={day}
+              className={`h-20 border rounded p-1 ${isToday ? 'border-amber-300 bg-amber-50' : 'border-gray-200'}`}
+            >
+              <div className="font-medium text-sm mb-1">{day}</div>
+              <Select
+                value={attendance?.status || ''}
+                onValueChange={(value) => handleStatusChange(day, value)}
+              >
+                <SelectTrigger className={`h-6 text-xs ${getStatusColor(attendance?.status || '')}`}>
+                  <SelectValue placeholder="Mark" />
+                </SelectTrigger>
+                <SelectContent>
+                  {statusOptions.map(option => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          );
+        })}
+      </div>
+      
+      {/* Legend */}
+      <div className="mt-4 p-3 bg-gray-50 rounded">
+        <h4 className="font-medium text-sm mb-2">Status Legend:</h4>
+        <div className="flex flex-wrap gap-2 text-xs">
+          {statusOptions.map(option => (
+            <span 
+              key={option.value} 
+              className={`px-2 py-1 rounded border ${getStatusColor(option.value)}`}
+            >
+              {option.label}
+            </span>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // Form schemas
 const staffFormSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -62,6 +177,8 @@ type StaffFormData = z.infer<typeof staffFormSchema>;
 
 export default function Attendance() {
   const { toast } = useToast();
+  const user = authService.getUser();
+  const isMobile = useIsMobile();
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   
@@ -72,6 +189,9 @@ export default function Attendance() {
   const [isAddStaffOpen, setIsAddStaffOpen] = useState(false);
   const [isEditStaffOpen, setIsEditStaffOpen] = useState(false);
   const [editingStaff, setEditingStaff] = useState<any>(null);
+  const [selectedStaffForAttendance, setSelectedStaffForAttendance] = useState<string>("");
+  const [monthlyAttendanceData, setMonthlyAttendanceData] = useState<any[]>([]);
+  const [isEditingMonthlyAttendance, setIsEditingMonthlyAttendance] = useState(false);
 
   // Forms
   const addStaffForm = useForm<StaffFormData>({
@@ -228,6 +348,66 @@ export default function Attendance() {
       });
     },
   });
+
+  const bulkUpdateAttendanceMutation = useMutation({
+    mutationFn: async (data: { 
+      userId: number; 
+      month: number; 
+      year: number; 
+      attendanceData: any[] 
+    }) => {
+      return authenticatedApiRequest("POST", "/api/attendance/bulk-update", data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/attendance"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/attendance/stats"] });
+      setIsEditingMonthlyAttendance(false);
+      toast({ title: "Monthly attendance updated successfully" });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to update attendance",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Number to words conversion function
+  const numberToWords = (num: number): string => {
+    const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine'];
+    const teens = ['Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
+    const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+    
+    if (num === 0) return 'Zero';
+    
+    const convertBelow1000 = (n: number): string => {
+      let result = '';
+      if (n >= 100) {
+        result += ones[Math.floor(n / 100)] + ' Hundred ';
+        n %= 100;
+      }
+      if (n >= 20) {
+        result += tens[Math.floor(n / 10)] + ' ';
+        n %= 10;
+      } else if (n >= 10) {
+        result += teens[n - 10] + ' ';
+        return result;
+      }
+      if (n > 0) {
+        result += ones[n] + ' ';
+      }
+      return result;
+    };
+
+    if (num < 1000) {
+      return convertBelow1000(num).trim();
+    } else if (num < 100000) {
+      return (convertBelow1000(Math.floor(num / 1000)) + 'Thousand ' + convertBelow1000(num % 1000)).trim();
+    } else {
+      return (convertBelow1000(Math.floor(num / 100000)) + 'Lakh ' + convertBelow1000((num % 100000) / 1000) + 'Thousand ' + convertBelow1000(num % 1000)).trim();
+    }
+  };
 
   // Pay slip generation function
   const generatePaySlip = (payroll: any, staffMember: any) => {
@@ -425,47 +605,6 @@ export default function Attendance() {
       </body>
       </html>
     `;
-
-    // Number to words conversion function
-    const numberToWords = (num: number): string => {
-      const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine'];
-      const teens = ['Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
-      const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
-      
-      if (num === 0) return 'Zero';
-      
-      const convertBelow1000 = (n: number): string => {
-        let result = '';
-        if (n >= 100) {
-          result += ones[Math.floor(n / 100)] + ' Hundred ';
-          n %= 100;
-        }
-        if (n >= 20) {
-          result += tens[Math.floor(n / 10)] + ' ';
-          n %= 10;
-        } else if (n >= 10) {
-          result += teens[n - 10] + ' ';
-          n = 0;
-        }
-        if (n > 0) {
-          result += ones[n] + ' ';
-        }
-        return result;
-      };
-      
-      let result = '';
-      const crores = Math.floor(num / 10000000);
-      const lakhs = Math.floor((num % 10000000) / 100000);
-      const thousands = Math.floor((num % 100000) / 1000);
-      const remaining = num % 1000;
-      
-      if (crores > 0) result += convertBelow1000(crores) + 'Crore ';
-      if (lakhs > 0) result += convertBelow1000(lakhs) + 'Lakh ';
-      if (thousands > 0) result += convertBelow1000(thousands) + 'Thousand ';
-      if (remaining > 0) result += convertBelow1000(remaining);
-      
-      return result.trim();
-    };
 
     // Generate PDF with optimized settings for better formatting
     const options = {
@@ -840,37 +979,147 @@ export default function Attendance() {
 
         {/* Attendance Tab */}
         <TabsContent value="attendance" className="space-y-4">
+          {user?.role === "admin" && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Calendar className="w-5 h-5" />
+                  Monthly Attendance Management (Admin Only)
+                </CardTitle>
+                <p className="text-sm text-gray-600">Edit full month attendance for any staff member</p>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex flex-wrap gap-4 items-center">
+                  <div className="flex items-center gap-2">
+                    <Label>Staff Member:</Label>
+                    <Select 
+                      value={selectedStaffForAttendance} 
+                      onValueChange={setSelectedStaffForAttendance}
+                    >
+                      <SelectTrigger className="w-48">
+                        <SelectValue placeholder="Select staff member" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {staff.map((member: any) => (
+                          <SelectItem key={member.id} value={member.id.toString()}>
+                            {member.name} - {member.role}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {selectedStaffForAttendance && (
+                    <Button 
+                      onClick={() => setIsEditingMonthlyAttendance(true)}
+                      variant="outline"
+                      className="bg-amber-50 hover:bg-amber-100 border-amber-200"
+                    >
+                      <Edit className="w-4 h-4 mr-2" />
+                      Edit Monthly Attendance
+                    </Button>
+                  )}
+                </div>
+
+                {selectedStaffForAttendance && (
+                  <div className="mt-6">
+                    <h3 className="text-lg font-semibold mb-4 text-amber-900">
+                      Attendance Calendar - {staff.find((s: any) => s.id == selectedStaffForAttendance)?.name}
+                      <span className="text-sm font-normal text-gray-600 ml-2">
+                        ({new Date(0, selectedMonth - 1).toLocaleString('default', { month: 'long' })} {selectedYear})
+                      </span>
+                    </h3>
+                    <MonthlyAttendanceCalendar 
+                      staffId={parseInt(selectedStaffForAttendance)}
+                      month={selectedMonth}
+                      year={selectedYear}
+                      attendanceData={attendanceRecords.filter((a: any) => a.userId == selectedStaffForAttendance)}
+                      onUpdate={(date: string, status: string) => {
+                        if (user?.role === "admin") {
+                          const attendanceData = [{
+                            date,
+                            status,
+                            userId: parseInt(selectedStaffForAttendance)
+                          }];
+                          bulkUpdateAttendanceMutation.mutate({
+                            userId: parseInt(selectedStaffForAttendance),
+                            month: selectedMonth,
+                            year: selectedYear,
+                            attendanceData
+                          });
+                        }
+                      }}
+                    />
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Regular attendance records table */}
           <Card>
             <CardHeader>
               <CardTitle>Attendance Records</CardTitle>
+              <p className="text-sm text-gray-600">
+                {user?.role === "admin" ? "View all staff attendance records" : "Your attendance history"}
+              </p>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Staff Member</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Check In</TableHead>
-                    <TableHead>Check Out</TableHead>
-                    <TableHead>Hours</TableHead>
-                    <TableHead>Overtime</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {attendanceRecords.map((record: any) => (
-                    <TableRow key={record.id}>
-                      <TableCell>{new Date(record.date).toLocaleDateString("en-IN")}</TableCell>
-                      <TableCell>{record.user?.name}</TableCell>
-                      <TableCell>{getStatusBadge(record.status)}</TableCell>
-                      <TableCell>{formatTime(record.checkInTime)}</TableCell>
-                      <TableCell>{formatTime(record.checkOutTime)}</TableCell>
-                      <TableCell>{record.workingHours?.toFixed(1) || "0.0"}h</TableCell>
-                      <TableCell>{record.overtimeHours?.toFixed(1) || "0.0"}h</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+              {attendanceRecords.length > 0 ? (
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Date</TableHead>
+                        <TableHead>Staff Member</TableHead>
+                        <TableHead>Check In</TableHead>
+                        <TableHead>Check Out</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Hours</TableHead>
+                        <TableHead>Notes</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {attendanceRecords.map((record: any) => (
+                        <TableRow key={record.id}>
+                          <TableCell>
+                            {new Date(record.date).toLocaleDateString("en-IN")}
+                          </TableCell>
+                          <TableCell>{record.user?.name}</TableCell>
+                          <TableCell>
+                            {record.checkInTime ? 
+                              new Date(record.checkInTime).toLocaleTimeString("en-IN", {
+                                hour: "2-digit",
+                                minute: "2-digit"
+                              }) : "-"}
+                          </TableCell>
+                          <TableCell>
+                            {record.checkOutTime ? 
+                              new Date(record.checkOutTime).toLocaleTimeString("en-IN", {
+                                hour: "2-digit",
+                                minute: "2-digit"
+                              }) : "-"}
+                          </TableCell>
+                          <TableCell>
+                            {getStatusBadge(record.status)}
+                          </TableCell>
+                          <TableCell>
+                            {record.hoursWorked ? `${record.hoursWorked.toFixed(1)}h` : "-"}
+                          </TableCell>
+                          <TableCell>
+                            <span className="text-sm text-gray-600 max-w-xs truncate">
+                              {record.notes || "-"}
+                            </span>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  No attendance records found for the selected period.
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

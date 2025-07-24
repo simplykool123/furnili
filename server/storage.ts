@@ -87,6 +87,8 @@ export interface IStorage {
     totalHours: number;
     overtimeHours: number;
   }>;
+  bulkUpdateMonthlyAttendance(userId: number, month: number, year: number, attendanceData: any[]): Promise<Attendance[]>;
+  getStaffUsers(): Promise<User[]>;
 
   // Payroll operations
   getPayroll(id: number): Promise<Payroll | undefined>;
@@ -1773,12 +1775,215 @@ class DatabaseStorage implements IStorage {
   async createClient(client: InsertClient): Promise<Client> { throw new Error("Not implemented"); }
   async updateClient(id: number, updates: Partial<InsertClient>): Promise<Client | undefined> { return undefined; }
   async deleteClient(id: number): Promise<boolean> { return false; }
-  async checkIn(userId: number, checkInBy?: number, location?: string, notes?: string): Promise<Attendance> { throw new Error("Not implemented"); }
-  async checkOut(attendanceId: number, checkOutBy?: number): Promise<Attendance | undefined> { return undefined; }
-  async markAttendance(attendance: InsertAttendance): Promise<Attendance> { throw new Error("Not implemented"); }
-  async updateAttendance(id: number, updates: Partial<InsertAttendance>): Promise<Attendance | undefined> { return undefined; }
-  async getUserAttendance(userId: number, month?: number, year?: number): Promise<Attendance[]> { return []; }
-  async getAllAttendance(month?: number, year?: number): Promise<Attendance[]> { return []; }
+  // Enhanced Attendance operations
+  async checkIn(userId: number, checkInBy?: number, location?: string, notes?: string): Promise<Attendance> {
+    const now = new Date();
+    const attendanceData: InsertAttendance = {
+      userId,
+      date: now,
+      checkInTime: now,
+      checkOutTime: null,
+      workingHours: 0,
+      overtimeHours: 0,
+      status: "present",
+      leaveType: null,
+      checkInBy: checkInBy || null,
+      checkOutBy: null,
+      location: location || null,
+      notes: notes || null,
+      isManualEntry: !!checkInBy,
+    };
+    
+    const result = await db.insert(attendance).values(attendanceData).returning();
+    return result[0];
+  }
+
+  async checkOut(attendanceId: number, checkOutBy?: number): Promise<Attendance | undefined> {
+    const attendanceRecord = await db.select().from(attendance).where(eq(attendance.id, attendanceId)).limit(1);
+    if (!attendanceRecord[0]) return undefined;
+    
+    const checkOutTime = new Date();
+    const checkInTime = new Date(attendanceRecord[0].checkInTime!);
+    const workingHours = (checkOutTime.getTime() - checkInTime.getTime()) / (1000 * 60 * 60);
+    const overtimeHours = workingHours > 8 ? workingHours - 8 : 0;
+    
+    const result = await db.update(attendance)
+      .set({
+        checkOutTime,
+        workingHours,
+        overtimeHours,
+        checkOutBy: checkOutBy || null,
+        updatedAt: new Date(),
+      })
+      .where(eq(attendance.id, attendanceId))
+      .returning();
+    
+    return result[0];
+  }
+
+  async markAttendance(attendanceData: InsertAttendance): Promise<Attendance> {
+    const result = await db.insert(attendance).values(attendanceData).returning();
+    return result[0];
+  }
+
+  async updateAttendance(id: number, updates: Partial<InsertAttendance>): Promise<Attendance | undefined> {
+    const result = await db.update(attendance)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(attendance.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async getUserAttendance(userId: number, month?: number, year?: number): Promise<Attendance[]> {
+    let query = db.select().from(attendance).where(eq(attendance.userId, userId));
+    
+    if (month && year) {
+      const startDate = new Date(year, month - 1, 1);
+      const endDate = new Date(year, month, 0, 23, 59, 59);
+      query = query.where(and(
+        eq(attendance.userId, userId),
+        gte(attendance.date, startDate),
+        lte(attendance.date, endDate)
+      )) as any;
+    }
+    
+    return query.orderBy(desc(attendance.date));
+  }
+
+  async getAllAttendance(filters?: { userId?: number; date?: string; month?: number; year?: number }): Promise<Attendance[]> {
+    let query = db.select().from(attendance);
+    
+    if (filters?.userId) {
+      query = query.where(eq(attendance.userId, filters.userId));
+    }
+    
+    if (filters?.month && filters?.year) {
+      const startDate = new Date(filters.year, filters.month - 1, 1);
+      const endDate = new Date(filters.year, filters.month, 0, 23, 59, 59);
+      query = query.where(and(
+        gte(attendance.date, startDate),
+        lte(attendance.date, endDate)
+      )) as any;
+    }
+    
+    return query.orderBy(desc(attendance.date));
+  }
+
+  async getTodayAttendance(): Promise<Attendance[]> {
+    const today = new Date();
+    const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59);
+    
+    return db.select().from(attendance)
+      .where(and(
+        gte(attendance.date, startOfDay),
+        lte(attendance.date, endOfDay)
+      ))
+      .orderBy(desc(attendance.checkInTime));
+  }
+
+  async getAttendanceStats(userId?: number, month?: number, year?: number): Promise<{
+    totalDays: number;
+    presentDays: number;
+    absentDays: number;
+    totalHours: number;
+    overtimeHours: number;
+  }> {
+    const currentMonth = month || new Date().getMonth() + 1;
+    const currentYear = year || new Date().getFullYear();
+    
+    let query = db.select().from(attendance);
+    
+    if (userId) {
+      query = query.where(eq(attendance.userId, userId));
+    }
+    
+    const startDate = new Date(currentYear, currentMonth - 1, 1);
+    const endDate = new Date(currentYear, currentMonth, 0, 23, 59, 59);
+    
+    query = query.where(and(
+      gte(attendance.date, startDate),
+      lte(attendance.date, endDate)
+    )) as any;
+    
+    const records = await query;
+    
+    const totalDays = new Date(currentYear, currentMonth, 0).getDate();
+    const presentDays = records.filter(r => r.status === 'present').length;
+    const absentDays = totalDays - presentDays;
+    const totalHours = records.reduce((sum, r) => sum + (r.workingHours || 0), 0);
+    const overtimeHours = records.reduce((sum, r) => sum + (r.overtimeHours || 0), 0);
+    
+    return {
+      totalDays,
+      presentDays,
+      absentDays,
+      totalHours,
+      overtimeHours,
+    };
+  }
+
+  async bulkUpdateMonthlyAttendance(userId: number, month: number, year: number, attendanceData: any[]): Promise<Attendance[]> {
+    const results: Attendance[] = [];
+    
+    for (const dayData of attendanceData) {
+      const date = new Date(year, month - 1, dayData.day);
+      
+      // Check if attendance record exists for this date
+      const existing = await db.select().from(attendance)
+        .where(and(
+          eq(attendance.userId, userId),
+          gte(attendance.date, date),
+          lte(attendance.date, new Date(date.getTime() + 24 * 60 * 60 * 1000))
+        ))
+        .limit(1);
+      
+      if (existing[0]) {
+        // Update existing record
+        const updated = await db.update(attendance)
+          .set({
+            status: dayData.status,
+            workingHours: dayData.workingHours || 0,
+            overtimeHours: dayData.overtimeHours || 0,
+            notes: dayData.notes || null,
+            isManualEntry: true,
+            updatedAt: new Date(),
+          })
+          .where(eq(attendance.id, existing[0].id))
+          .returning();
+        
+        if (updated[0]) results.push(updated[0]);
+      } else {
+        // Create new record
+        const newRecord = await db.insert(attendance).values({
+          userId,
+          date,
+          checkInTime: dayData.status === 'present' ? new Date(date.getTime() + 9 * 60 * 60 * 1000) : null, // 9 AM
+          checkOutTime: dayData.status === 'present' ? new Date(date.getTime() + 18 * 60 * 60 * 1000) : null, // 6 PM
+          workingHours: dayData.workingHours || (dayData.status === 'present' ? 8 : 0),
+          overtimeHours: dayData.overtimeHours || 0,
+          status: dayData.status,
+          leaveType: null,
+          checkInBy: null,
+          checkOutBy: null,
+          location: null,
+          notes: dayData.notes || null,
+          isManualEntry: true,
+        }).returning();
+        
+        if (newRecord[0]) results.push(newRecord[0]);
+      }
+    }
+    
+    return results;
+  }
+
+  async getStaffUsers(): Promise<User[]> {
+    return db.select().from(users).where(and(
+      eq(users.isActive, true),
+      sql`${users.role} != 'admin'`
+    ));
+  }
   async getPettyCashExpense(id: number): Promise<PettyCashExpense | undefined> { return undefined; }
   async getAllPettyCashExpenses(month?: number, year?: number): Promise<PettyCashExpense[]> { return []; }
   async createPettyCashExpense(expense: InsertPettyCashExpense): Promise<PettyCashExpense> { throw new Error("Not implemented"); }
