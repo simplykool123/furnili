@@ -75,36 +75,41 @@ export default function StockWarnings() {
 
   return (
     <Card className="border-l-4 border-l-amber-500 bg-amber-50/30">
-      <CardHeader className="pb-1">
-        <CardTitle className="flex items-center gap-2 text-amber-900 text-sm">
-          <AlertTriangle className="h-4 w-4 text-amber-600" />
-          Stock Warnings ({stockWarnings.length})
+      <CardHeader className="pb-2">
+        <CardTitle className="flex items-center gap-2 text-amber-900">
+          <AlertTriangle className="h-5 w-5 text-amber-600" />
+          Stock Availability Warnings
         </CardTitle>
       </CardHeader>
-      <CardContent className="pt-0">
-        <div className="space-y-2">
-          {stockWarnings.slice(0, 2).map((warning, index) => (
-            <div key={index} className="flex items-center justify-between p-2 bg-white rounded border border-amber-200">
-              <div className="flex items-center gap-2">
-                <Package className="h-3 w-3 text-amber-600" />
+      <CardContent>
+        <div className="space-y-3">
+          {stockWarnings.slice(0, 3).map((warning, index) => (
+            <div key={`${warning.requestId}-${warning.productId}`} className="flex items-center justify-between p-3 bg-white rounded-lg border border-amber-200">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center">
+                  <Package className="h-5 w-5 text-amber-600" />
+                </div>
                 <div>
-                  <div className="font-medium text-xs text-gray-900">{warning.productName}</div>
-                  <div className="text-xs text-gray-600">
-                    #{warning.orderNumber} • {warning.clientName}
+                  <div className="font-medium text-gray-900">{warning.productName}</div>
+                  <div className="text-sm text-gray-600">
+                    Request #{warning.orderNumber} • {warning.clientName}
                   </div>
                 </div>
               </div>
               <div className="text-right">
-                <div className="text-xs text-red-600 font-medium">
-                  Need: {warning.requestedQuantity} | Have: {warning.availableStock}
+                <Badge variant="destructive" className="mb-1">
+                  Insufficient Stock
+                </Badge>
+                <div className="text-sm text-gray-600">
+                  Need: {warning.requestedQuantity} • Available: {warning.availableStock}
                 </div>
               </div>
             </div>
           ))}
-          {stockWarnings.length > 2 && (
-            <div className="text-center pt-1">
-              <Badge variant="outline" className="text-amber-700 border-amber-300 text-xs">
-                +{stockWarnings.length - 2} more
+          {stockWarnings.length > 3 && (
+            <div className="text-center pt-2">
+              <Badge variant="outline" className="text-amber-700 border-amber-300">
+                +{stockWarnings.length - 3} more warnings
               </Badge>
             </div>
           )}
