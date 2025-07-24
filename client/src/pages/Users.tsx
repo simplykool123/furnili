@@ -12,7 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Trash2, UserPlus, Shield } from "lucide-react";
+import { Trash2, UserPlus, Shield, Edit3 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -94,13 +94,35 @@ export default function Users() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/users'] });
       toast({
-        title: "User deleted",
-        description: "User has been deleted successfully.",
+        title: "Staff member deleted",
+        description: "The staff member has been permanently removed from the system.",
       });
     },
     onError: (error) => {
       toast({
-        title: "Failed to delete user",
+        title: "Failed to delete staff member",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const toggleUserStatusMutation = useMutation({
+    mutationFn: async ({ id, isActive }: { id: number; isActive: boolean }) => {
+      return await authenticatedApiRequest('PATCH', `/api/users/${id}`, { isActive });
+    },
+    onSuccess: (_, { isActive }) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/users'] });
+      toast({
+        title: isActive ? "Staff member activated" : "Staff member deactivated",
+        description: isActive 
+          ? "The staff member has been reactivated and can now access the system."
+          : "The staff member has been deactivated and cannot access the system.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Failed to update staff status",
         description: error.message,
         variant: "destructive",
       });
@@ -168,6 +190,7 @@ export default function Users() {
                     <TableHead>Email</TableHead>
                     <TableHead>Role</TableHead>
                     <TableHead>Created</TableHead>
+                    <TableHead>Status</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -193,27 +216,93 @@ export default function Users() {
                         {new Date(user.createdAt).toLocaleDateString()}
                       </TableCell>
                       <TableCell>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            if (user.id === currentUser.id) {
+                        <Badge variant={user.isActive ? "default" : "secondary"}>
+                          {user.isActive ? "Active" : "Inactive"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center space-x-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              // Future: Open edit user dialog
                               toast({
-                                title: "Cannot delete yourself",
-                                description: "You cannot delete your own account.",
-                                variant: "destructive",
+                                title: "Edit functionality",
+                                description: "Edit user functionality will be available soon.",
                               });
-                              return;
-                            }
-                            
-                            if (confirm(`Are you sure you want to delete ${user.name}?`)) {
-                              deleteUserMutation.mutate(user.id);
-                            }
-                          }}
-                          disabled={user.id === currentUser.id}
-                        >
-                          <Trash2 className="w-4 h-4 text-red-600" />
-                        </Button>
+                            }}
+                          >
+                            Edit
+                          </Button>
+                          
+                          {/* Toggle Active/Inactive Status */}
+                          <Button
+                            variant={user.isActive ? "outline" : "default"}
+                            size="sm"
+                            onClick={() => {
+                              if (user.id === currentUser?.id) {
+                                toast({
+                                  title: "Cannot deactivate yourself",
+                                  description: "You cannot deactivate your own account.",
+                                  variant: "destructive",
+                                });
+                                return;
+                              }
+                              
+                              const action = user.isActive ? "deactivate" : "activate";
+                              if (confirm(`${action === "deactivate" ? "⚠️ Deactivate" : "✅ Activate"} Staff Member\n\nAre you sure you want to ${action} "${user.name}"?\n\n${action === "deactivate" 
+                                ? "They will lose access to the system but their data will be preserved." 
+                                : "They will regain access to the system with their existing role and permissions."}`)) {
+                                toggleUserStatusMutation.mutate({ 
+                                  id: user.id, 
+                                  isActive: !user.isActive 
+                                });
+                              }
+                            }}
+                            disabled={user.id === currentUser?.id || toggleUserStatusMutation.isPending}
+                          >
+                            {user.isActive ? "Deactivate" : "Activate"}
+                          </Button>
+                          
+                          {/* Permanent Delete - Only for truly removing users */}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              if (user.id === currentUser?.id) {
+                                toast({
+                                  title: "Cannot delete yourself",
+                                  description: "You cannot delete your own account.",
+                                  variant: "destructive",
+                                });
+                                return;
+                              }
+                              
+                              const confirmDelete = confirm(
+                                `🚨 PERMANENT DELETE\n\nAre you sure you want to PERMANENTLY delete "${user.name}"?\n\n⚠️ THIS ACTION CANNOT BE UNDONE!\n\nThis will completely remove:\n• User account and login access\n• All associated data and records\n• Staff information and documents\n• Attendance history and payroll data\n\nConsider using "Deactivate" instead to preserve data.\n\nClick OK only if you want to permanently delete this user.`
+                              );
+                              
+                              if (confirmDelete) {
+                                // Additional confirmation for critical users
+                                if (user.role === 'admin' && !confirm(`🚨 ADMIN USER WARNING!\n\n"${user.name}" has ADMIN privileges!\n\nDeleting this account may affect system administration capabilities.\n\nThis is your FINAL warning. Click OK to proceed with permanent deletion.`)) {
+                                  return;
+                                }
+                                
+                                toast({
+                                  title: "Permanently deleting staff member...",
+                                  description: `Removing ${user.name} from the system forever.`,
+                                });
+                                
+                                deleteUserMutation.mutate(user.id);
+                              }
+                            }}
+                            disabled={user.id === currentUser?.id || deleteUserMutation.isPending}
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
