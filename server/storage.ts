@@ -1630,35 +1630,197 @@ export class MemStorage {
   }
 }
 
-export const storage = new MemStorage();
+import { db } from "./db";
+import { eq, desc, and, gte, lte, sql, count } from "drizzle-orm";
 
-// Initialize with some default clients
-storage.createClient({
-  name: "ABC Construction Ltd.",
-  contactPerson: "John Smith",
-  email: "john@abcconstruction.com",
-  phone: "+91 9876543210",
-  address: "123 Industrial Area, Mumbai",
-  gstNumber: "27ABCDE1234F1Z5",
-  isActive: true,
-});
+class DatabaseStorage implements IStorage {
+  // User operations
+  async getUser(id: number): Promise<User | undefined> {
+    const result = await db.select().from(users).where(eq(users.id, id)).limit(1);
+    return result[0];
+  }
 
-storage.createClient({
-  name: "XYZ Builders Pvt Ltd",
-  contactPerson: "Sarah Johnson", 
-  email: "sarah@xyzbuilders.com",
-  phone: "+91 9876543211",
-  address: "456 Business Park, Pune",
-  gstNumber: "27XYZAB5678G2H3",
-  isActive: true,
-});
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const result = await db.select().from(users).where(eq(users.email, email)).limit(1);
+    return result[0];
+  }
 
-storage.createClient({
-  name: "Furnili Projects",
-  contactPerson: "Rajesh Kumar",
-  email: "rajesh@furniliprojects.com", 
-  phone: "+91 9876543212",
-  address: "789 Commercial Complex, Delhi",
-  gstNumber: "07FURNI9012J3K4",
-  isActive: true,
-});
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const result = await db.select().from(users).where(eq(users.username, username)).limit(1);
+    return result[0];
+  }
+
+  async createUser(user: InsertUser): Promise<User> {
+    const result = await db.insert(users).values(user).returning();
+    return result[0];
+  }
+
+  async updateUser(id: number, updates: Partial<InsertUser>): Promise<User | undefined> {
+    const result = await db.update(users).set(updates).where(eq(users.id, id)).returning();
+    return result[0];
+  }
+
+  async getAllUsers(): Promise<User[]> {
+    return db.select().from(users);
+  }
+
+  async deleteUser(id: number): Promise<boolean> {
+    const result = await db.delete(users).where(eq(users.id, id));
+    return true;
+  }
+
+  // Category operations
+  async getCategory(id: number): Promise<Category | undefined> {
+    const result = await db.select().from(categories).where(eq(categories.id, id)).limit(1);
+    return result[0];
+  }
+
+  async getAllCategories(): Promise<Category[]> {
+    return db.select().from(categories).where(eq(categories.isActive, true));
+  }
+
+  async createCategory(category: InsertCategory): Promise<Category> {
+    const result = await db.insert(categories).values(category).returning();
+    return result[0];
+  }
+
+  async updateCategory(id: number, updates: Partial<InsertCategory>): Promise<Category | undefined> {
+    const result = await db.update(categories).set(updates).where(eq(categories.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteCategory(id: number): Promise<boolean> {
+    await db.delete(categories).where(eq(categories.id, id));
+    return true;
+  }
+
+  // Product operations
+  async getProduct(id: number): Promise<Product | undefined> {
+    const result = await db.select().from(products).where(eq(products.id, id)).limit(1);
+    return result[0];
+  }
+
+  async getAllProducts(): Promise<Product[]> {
+    return db.select().from(products).where(eq(products.isActive, true));
+  }
+
+  async createProduct(product: InsertProduct): Promise<Product> {
+    const result = await db.insert(products).values(product).returning();
+    return result[0];
+  }
+
+  async updateProduct(id: number, updates: Partial<InsertProduct>): Promise<Product | undefined> {
+    const result = await db.update(products).set(updates).where(eq(products.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteProduct(id: number): Promise<boolean> {
+    await db.delete(products).where(eq(products.id, id));
+    return true;
+  }
+
+  async getDashboardStats(): Promise<{
+    totalProducts: number;
+    pendingRequests: number;
+    lowStockItems: number;
+    totalValue: number;
+    recentRequests: MaterialRequestWithItems[];
+    lowStockProducts: ProductWithStock[];
+  }> {
+    const allProducts = await this.getAllProducts();
+    const allRequests = await this.getAllMaterialRequests();
+    
+    const lowStockProducts = allProducts.filter(p => p.currentStock <= p.minStock);
+    const pendingRequests = allRequests.filter(r => r.status === 'pending');
+    const totalValue = allProducts.reduce((sum, p) => sum + (p.pricePerUnit * p.currentStock), 0);
+
+    return {
+      totalProducts: allProducts.length,
+      pendingRequests: pendingRequests.length,
+      lowStockItems: lowStockProducts.length,
+      totalValue,
+      recentRequests: allRequests.slice(0, 5),
+      lowStockProducts: lowStockProducts.slice(0, 5).map(product => ({
+        id: product.id,
+        name: product.name,
+        category: product.category,
+        currentStock: product.currentStock,
+        minStock: product.minStock,
+        stockStatus: product.currentStock <= product.minStock ? 'low-stock' : 'in-stock'
+      })),
+    };
+  }
+
+  // Material Request operations
+  async getAllMaterialRequests(): Promise<MaterialRequestWithItems[]> {
+    const requests = await db.select().from(materialRequests);
+    const requestsWithItems = await Promise.all(requests.map(async (request) => {
+      const items = await db.select().from(requestItems).where(eq(requestItems.requestId, request.id));
+      return { ...request, items };
+    }));
+    return requestsWithItems;
+  }
+
+  async createMaterialRequest(request: InsertMaterialRequest): Promise<MaterialRequest> {
+    const result = await db.insert(materialRequests).values(request).returning();
+    return result[0];
+  }
+
+  // Stub implementations for other methods (can be implemented as needed)
+  async getClient(id: number): Promise<Client | undefined> { return undefined; }
+  async getAllClients(): Promise<Client[]> { return []; }
+  async getClientByName(name: string): Promise<Client | undefined> { return undefined; }
+  async createClient(client: InsertClient): Promise<Client> { throw new Error("Not implemented"); }
+  async updateClient(id: number, updates: Partial<InsertClient>): Promise<Client | undefined> { return undefined; }
+  async deleteClient(id: number): Promise<boolean> { return false; }
+  async checkIn(userId: number, checkInBy?: number, location?: string, notes?: string): Promise<Attendance> { throw new Error("Not implemented"); }
+  async checkOut(attendanceId: number, checkOutBy?: number): Promise<Attendance | undefined> { return undefined; }
+  async markAttendance(attendance: InsertAttendance): Promise<Attendance> { throw new Error("Not implemented"); }
+  async updateAttendance(id: number, updates: Partial<InsertAttendance>): Promise<Attendance | undefined> { return undefined; }
+  async getUserAttendance(userId: number, month?: number, year?: number): Promise<Attendance[]> { return []; }
+  async getAllAttendance(month?: number, year?: number): Promise<Attendance[]> { return []; }
+  async getPettyCashExpense(id: number): Promise<PettyCashExpense | undefined> { return undefined; }
+  async getAllPettyCashExpenses(month?: number, year?: number): Promise<PettyCashExpense[]> { return []; }
+  async createPettyCashExpense(expense: InsertPettyCashExpense): Promise<PettyCashExpense> { throw new Error("Not implemented"); }
+  async updatePettyCashExpense(id: number, updates: Partial<InsertPettyCashExpense>): Promise<PettyCashExpense | undefined> { return undefined; }
+  async deletePettyCashExpense(id: number): Promise<boolean> { return false; }
+  async getStaffBalance(userId: number): Promise<{ received: number; spent: number; balance: number }> { return { received: 0, spent: 0, balance: 0 }; }
+  async getAllStaffBalances(): Promise<Array<{ userId: number; userName: string; received: number; spent: number; balance: number }>> { return []; }
+  async getTask(id: number): Promise<Task | undefined> { return undefined; }
+  async getAllTasks(assignedTo?: number): Promise<Task[]> { return []; }
+  async createTask(task: InsertTask): Promise<Task> { throw new Error("Not implemented"); }
+  async updateTask(id: number, updates: Partial<InsertTask>): Promise<Task | undefined> { return undefined; }
+  async deleteTask(id: number): Promise<boolean> { return false; }
+  async getPriceComparison(id: number): Promise<PriceComparison | undefined> { return undefined; }
+  async getAllPriceComparisons(): Promise<PriceComparison[]> { return []; }
+  async createPriceComparison(comparison: InsertPriceComparison): Promise<PriceComparison> { throw new Error("Not implemented"); }
+  async updatePriceComparison(id: number, updates: Partial<InsertPriceComparison>): Promise<PriceComparison | undefined> { return undefined; }
+  async deletePriceComparison(id: number): Promise<boolean> { return false; }
+  async getPayroll(id: number): Promise<Payroll | undefined> { return undefined; }
+  async getUserPayroll(userId: number, month?: number, year?: number): Promise<Payroll[]> { return []; }
+  async getAllPayroll(month?: number, year?: number): Promise<Payroll[]> { return []; }
+  async createPayroll(payroll: InsertPayroll): Promise<Payroll> { throw new Error("Not implemented"); }
+  async updatePayroll(id: number, updates: Partial<InsertPayroll>): Promise<Payroll | undefined> { return undefined; }
+  async deletePayroll(id: number): Promise<boolean> { return false; }
+  async getLeave(id: number): Promise<Leave | undefined> { return undefined; }
+  async getUserLeaves(userId: number): Promise<Leave[]> { return []; }
+  async getAllLeaves(): Promise<Leave[]> { return []; }
+  async createLeave(leave: InsertLeave): Promise<Leave> { throw new Error("Not implemented"); }
+  async updateLeave(id: number, updates: Partial<InsertLeave>): Promise<Leave | undefined> { return undefined; }
+  async deleteLeave(id: number): Promise<boolean> { return false; }
+  async getMaterialRequest(id: number): Promise<MaterialRequestWithItems | undefined> { return undefined; }
+  async createRequestItem(item: InsertRequestItem): Promise<RequestItem> { throw new Error("Not implemented"); }
+  async updateMaterialRequest(id: number, updates: Partial<InsertMaterialRequest>): Promise<MaterialRequest | undefined> { return undefined; }
+  async deleteMaterialRequest(id: number): Promise<boolean> { return false; }
+  async getBOQUpload(id: number): Promise<BOQUpload | undefined> { return undefined; }
+  async getBOQsByClient(clientId: number): Promise<BOQUpload[]> { return []; }
+  async getAllBOQUploads(): Promise<BOQUpload[]> { return []; }
+  async createBOQUpload(boq: InsertBOQUpload): Promise<BOQUpload> { throw new Error("Not implemented"); }
+  async updateBOQUpload(id: number, updates: Partial<InsertBOQUpload>): Promise<BOQUpload | undefined> { return undefined; }
+  async deleteBOQUpload(id: number): Promise<boolean> { return false; }
+  async getStockMovements(productId: number): Promise<StockMovement[]> { return []; }
+  async createStockMovement(movement: InsertStockMovement): Promise<StockMovement> { throw new Error("Not implemented"); }
+  async updateStock(productId: number, quantity: number, type: 'in' | 'out', reason: string): Promise<void> {}
+}
+
+export const storage = new DatabaseStorage();
