@@ -42,6 +42,26 @@ import {
 // @ts-ignore
 import html2pdf from 'html2pdf.js';
 
+// Status options and colors - moved to global scope
+const statusOptions = [
+  { value: 'present', label: 'Present', icon: '✓' },
+  { value: 'absent', label: 'Absent', icon: '✗' },
+  { value: 'half_day', label: 'Half Day', icon: '½' },
+  { value: 'late', label: 'Late', icon: '⏰' },
+  { value: 'on_leave', label: 'On Leave', icon: '🏖️' },
+];
+
+const getStatusColor = (status: string) => {
+  switch (status) {
+    case 'present': return 'bg-green-100 text-green-800 border-green-200 hover:bg-green-200';
+    case 'absent': return 'bg-red-100 text-red-800 border-red-200 hover:bg-red-200';
+    case 'half_day': return 'bg-yellow-100 text-yellow-800 border-yellow-200 hover:bg-yellow-200';
+    case 'late': return 'bg-orange-100 text-orange-800 border-orange-200 hover:bg-orange-200';
+    case 'on_leave': return 'bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-200';
+    default: return 'bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-200';
+  }
+};
+
 // Monthly Attendance Calendar Component - Mobile Compatible
 const MonthlyAttendanceCalendar = ({ 
   staffId, 
@@ -68,24 +88,7 @@ const MonthlyAttendanceCalendar = ({
     });
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'present': return 'bg-green-100 text-green-800 border-green-200 hover:bg-green-200';
-      case 'absent': return 'bg-red-100 text-red-800 border-red-200 hover:bg-red-200';
-      case 'half_day': return 'bg-yellow-100 text-yellow-800 border-yellow-200 hover:bg-yellow-200';
-      case 'late': return 'bg-orange-100 text-orange-800 border-orange-200 hover:bg-orange-200';
-      case 'on_leave': return 'bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-200';
-      default: return 'bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-200';
-    }
-  };
 
-  const statusOptions = [
-    { value: 'present', label: 'Present', icon: '✓' },
-    { value: 'absent', label: 'Absent', icon: '✗' },
-    { value: 'half_day', label: 'Half Day', icon: '½' },
-    { value: 'late', label: 'Late', icon: '⏰' },
-    { value: 'on_leave', label: 'On Leave', icon: '🏖️' }
-  ];
 
   const handleStatusChange = (day: number, newStatus: string) => {
     const dateStr = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
@@ -147,7 +150,7 @@ const MonthlyAttendanceCalendar = ({
                     attendance?.status ? getStatusColor(attendance.status) :
                     'border-gray-200 bg-gray-50'
                   }`}
-                  onClick={() => setMobileStatusPicker({show: true, day})}
+                  onClick={() => {}} // Disabled for calendar component
                 >
                   <span className={`font-semibold ${isToday ? 'text-amber-900' : isSunday ? 'text-red-700' : 'text-gray-800'}`}>
                     {day}
@@ -199,7 +202,7 @@ const MonthlyAttendanceCalendar = ({
                         <Button 
                           size="sm" 
                           className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white shadow-md"
-                          onClick={() => setMobileStatusPicker({show: true, day: today})}
+                          onClick={() => {}} // Disabled for calendar component
                         >
                           ✓ Mark Now
                         </Button>
@@ -379,7 +382,7 @@ export default function Attendance() {
   const [selectedStaffForAttendance, setSelectedStaffForAttendance] = useState<string>("");
   const [monthlyAttendanceData, setMonthlyAttendanceData] = useState<any[]>([]);
   const [isEditingMonthlyAttendance, setIsEditingMonthlyAttendance] = useState(false);
-  const [mobileStatusPicker, setMobileStatusPicker] = useState<{show: boolean, day: number} | null>(null);
+
 
   // Forms
   const addStaffForm = useForm<StaffFormData>({
@@ -1978,39 +1981,7 @@ export default function Attendance() {
         </DialogContent>
       </Dialog>
 
-      {/* Mobile Status Picker Dialog */}
-      <Dialog open={mobileStatusPicker?.show || false} onOpenChange={(open) => !open && setMobileStatusPicker(null)}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Mark Attendance - Day {mobileStatusPicker?.day}</DialogTitle>
-          </DialogHeader>
-          <div className="grid grid-cols-1 gap-3 py-4">
-            {statusOptions.map(option => (
-              <Button
-                key={option.value}
-                variant="outline"
-                className={`h-14 justify-start text-left ${getStatusColor(option.value)} hover:shadow-md transition-all`}
-                onClick={() => {
-                  if (mobileStatusPicker?.day) {
-                    handleStatusChange(mobileStatusPicker.day, option.value);
-                    setMobileStatusPicker(null);
-                  }
-                }}
-              >
-                <div className="flex items-center gap-3">
-                  <span className="text-2xl">{option.icon}</span>
-                  <div>
-                    <div className="font-semibold">{option.label}</div>
-                    <div className="text-xs text-gray-500 capitalize">
-                      {option.value.replace('_', ' ')}
-                    </div>
-                  </div>
-                </div>
-              </Button>
-            ))}
-          </div>
-        </DialogContent>
-      </Dialog>
+
     </div>
   );
 }

@@ -175,6 +175,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch("/api/users/:id", authenticateToken, requireRole(["admin"]), async (req, res) => {
     try {
       const id = parseInt(req.params.id);
+      
+      // Handle joiningDate conversion before validation
+      if (req.body.joiningDate && typeof req.body.joiningDate === 'string') {
+        req.body.joiningDate = new Date(req.body.joiningDate);
+      }
+      
       const updates = insertUserSchema.partial().parse(req.body);
       
       // If password is being updated, hash it
