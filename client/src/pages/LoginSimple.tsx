@@ -7,17 +7,17 @@ import { setToken } from "@/lib/auth";
 import { Eye, EyeOff, Lock, User, Package } from "lucide-react";
 
 export default function LoginSimple() {
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
   const handleLogin = async () => {
-    if (!email || !password) {
+    if (!username || !password) {
       toast({
         title: "Error",
-        description: "Please enter both email and password",
+        description: "Please enter both username and password",
         variant: "destructive",
       });
       return;
@@ -31,7 +31,7 @@ export default function LoginSimple() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          username: email,
+          username: username,
           password: password,
         }),
       });
@@ -83,13 +83,13 @@ export default function LoginSimple() {
         <CardContent className="space-y-6">
           <div className="space-y-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Email Address</label>
+              <label className="text-sm font-medium text-gray-700">Username</label>
               <div className="relative">
                 <User className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
                 <Input
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="admin@demo.com"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  placeholder="admin"
                   className="pl-10 border-gray-300 focus:border-blue-500"
                   disabled={isLoading}
                 />
@@ -104,7 +104,7 @@ export default function LoginSimple() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   type={showPassword ? "text" : "password"}
-                  placeholder="admin123"
+                  placeholder="demo123"
                   className="pl-10 pr-10 border-gray-300 focus:border-blue-500"
                   disabled={isLoading}
                 />
@@ -137,8 +137,16 @@ export default function LoginSimple() {
             <p className="text-sm font-medium text-gray-700 mb-3">Demo Accounts:</p>
             <div className="space-y-2 text-sm">
               <div className="bg-white p-2 rounded border">
-                <p className="font-medium text-blue-700">Admin: admin@demo.com</p>
-                <p className="text-gray-600">Password: admin123</p>
+                <p className="font-medium text-blue-700">Admin: admin</p>
+                <p className="text-gray-600">Password: demo123</p>
+              </div>
+              <div className="bg-white p-2 rounded border">
+                <p className="font-medium text-green-700">Manager: manager</p>
+                <p className="text-gray-600">Password: demo123</p>
+              </div>
+              <div className="bg-white p-2 rounded border">
+                <p className="font-medium text-orange-700">Store Keeper: keeper</p>
+                <p className="text-gray-600">Password: demo123</p>
               </div>
             </div>
           </div>
