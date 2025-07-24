@@ -18,6 +18,7 @@ import { useState, useEffect } from "react";
 import StockWarnings from "@/components/Dashboard/StockWarnings";
 import MobileDashboard from "@/components/Mobile/MobileDashboard";
 import { useIsMobile } from "@/components/Mobile/MobileOptimizer";
+import { useLocation } from "wouter";
 
 interface DashboardStats {
   totalProducts: number;
@@ -119,6 +120,7 @@ export default function Dashboard() {
   const admin = authService.hasRole(['admin']);
   const [dailyQuote, setDailyQuote] = useState<typeof motivationalQuotes[0] | null>(null);
   const { isMobile } = useIsMobile();
+  const [, setLocation] = useLocation();
 
   // Select a random quote on component mount
   useEffect(() => {
@@ -196,7 +198,7 @@ export default function Dashboard() {
 
       {/* Stats Grid */}
       <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-        <Card className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-blue-500 bg-gradient-to-br from-card to-blue-50/20">
+        <Card className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-blue-500 bg-gradient-to-br from-card to-blue-50/20 cursor-pointer" onClick={() => setLocation('/products')}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-semibold text-card-foreground">Products</CardTitle>
             <Package className="h-4 w-4 text-blue-600" />
@@ -207,7 +209,7 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        <Card className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-red-500 bg-gradient-to-br from-card to-red-50/20">
+        <Card className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-red-500 bg-gradient-to-br from-card to-red-50/20 cursor-pointer" onClick={() => setLocation('/products?filter=low-stock')}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-semibold text-card-foreground">Low Stock</CardTitle>
             <AlertTriangle className="h-4 w-4 text-red-600" />
@@ -220,7 +222,7 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        <Card className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-orange-500 bg-gradient-to-br from-card to-orange-50/20">
+        <Card className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-orange-500 bg-gradient-to-br from-card to-orange-50/20 cursor-pointer" onClick={() => setLocation('/attendance')}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-semibold text-card-foreground">Attendance</CardTitle>
             <Clock className="h-4 w-4 text-orange-600" />
@@ -231,7 +233,7 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        <Card className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-purple-500 bg-gradient-to-br from-card to-purple-50/20">
+        <Card className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-purple-500 bg-gradient-to-br from-card to-purple-50/20 cursor-pointer" onClick={() => setLocation('/tasks')}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-semibold text-card-foreground">Tasks</CardTitle>
             <CheckCircle className="h-4 w-4 text-purple-600" />
@@ -242,7 +244,7 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        <Card className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-indigo-500 bg-gradient-to-br from-card to-indigo-50/20">
+        <Card className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-indigo-500 bg-gradient-to-br from-card to-indigo-50/20 cursor-pointer" onClick={() => setLocation('/requests')}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-semibold text-card-foreground">Requests</CardTitle>
             <TrendingUp className="h-4 w-4 text-indigo-600" />
@@ -253,7 +255,7 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        <Card className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-yellow-500 bg-gradient-to-br from-card to-yellow-50/20">
+        <Card className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-yellow-500 bg-gradient-to-br from-card to-yellow-50/20 cursor-pointer" onClick={() => setLocation('/petty-cash')}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-semibold text-card-foreground">Expenses</CardTitle>
             <DollarSign className="h-4 w-4 text-yellow-600" />
@@ -267,58 +269,50 @@ export default function Dashboard() {
         </Card>
       </div>
 
-      {/* Quick Actions & Recent Activity */}
-      <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
-        <Card className="hover:shadow-lg transition-all duration-300">
-          <CardHeader>
-            <CardTitle className="text-lg font-semibold text-foreground">Quick Actions</CardTitle>
-            <CardDescription className="text-muted-foreground">Common tasks and shortcuts</CardDescription>
+      {/* Compact Quick Actions & Recent Activity */}
+      <div className="grid gap-4 grid-cols-1 lg:grid-cols-2">
+        <Card className="hover:shadow-md transition-all duration-200">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base font-semibold text-foreground">Quick Actions</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="grid gap-3">
-              <div className="flex items-center p-3 rounded-lg border border-border hover:bg-muted/50 cursor-pointer transition-colors">
-                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mr-3">
-                  <Package className="h-5 w-5 text-primary" />
-                </div>
-                <span className="font-medium text-foreground">Add New Product</span>
+          <CardContent className="pt-0">
+            <div className="grid gap-2 grid-cols-3">
+              <div className="flex flex-col items-center p-2 rounded-lg border border-border hover:bg-muted/50 cursor-pointer transition-colors" onClick={() => setLocation('/products/new')}>
+                <Package className="h-5 w-5 text-primary mb-1" />
+                <span className="text-xs font-medium text-center">Add Product</span>
               </div>
-              <div className="flex items-center p-3 rounded-lg border border-border hover:bg-muted/50 cursor-pointer transition-colors">
-                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mr-3">
-                  <TrendingUp className="h-5 w-5 text-primary" />
-                </div>
-                <span className="font-medium text-foreground">Stock Movement</span>
+              <div className="flex flex-col items-center p-2 rounded-lg border border-border hover:bg-muted/50 cursor-pointer transition-colors" onClick={() => setLocation('/inventory-movement')}>
+                <TrendingUp className="h-5 w-5 text-primary mb-1" />
+                <span className="text-xs font-medium text-center">Stock Move</span>
               </div>
-              <div className="flex items-center p-3 rounded-lg border border-border hover:bg-muted/50 cursor-pointer transition-colors">
-                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mr-3">
-                  <Clock className="h-5 w-5 text-primary" />
-                </div>
-                <span className="font-medium text-foreground">Check In/Out</span>
+              <div className="flex flex-col items-center p-2 rounded-lg border border-border hover:bg-muted/50 cursor-pointer transition-colors" onClick={() => setLocation('/attendance')}>
+                <Clock className="h-5 w-5 text-primary mb-1" />
+                <span className="text-xs font-medium text-center">Check In</span>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="hover:shadow-lg transition-all duration-300">
-          <CardHeader>
-            <CardTitle className="text-lg font-semibold text-foreground">Recent Activity</CardTitle>
-            <CardDescription className="text-muted-foreground">Latest system updates</CardDescription>
+        <Card className="hover:shadow-md transition-all duration-200">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base font-semibold text-foreground">Recent Activity</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
+          <CardContent className="pt-0">
+            <div className="space-y-2 max-h-32 overflow-y-auto">
               {Array.isArray(recentActivity) && recentActivity.length > 0 ? (
-                recentActivity.slice(0, 4).map((activity: any, index: number) => (
-                  <div key={index} className="flex items-start space-x-3 p-3 rounded-lg hover:bg-muted/50 transition-colors">
-                    <div className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0"></div>
+                recentActivity.slice(0, 6).map((activity: any, index: number) => (
+                  <div key={index} className="flex items-start space-x-2 py-1">
+                    <div className="w-1.5 h-1.5 bg-primary rounded-full mt-1.5 flex-shrink-0"></div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-foreground text-sm">{String(activity.description || 'Activity')}</p>
-                      <p className="text-muted-foreground text-xs mt-1">{String(activity.time || 'Recently')}</p>
+                      <p className="text-xs text-foreground leading-tight">{String(activity.description || 'Activity')}</p>
+                      <p className="text-xs text-muted-foreground">{String(activity.time || 'Recently')}</p>
                     </div>
                   </div>
                 ))
               ) : (
-                <div className="text-center py-6">
-                  <Calendar className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-                  <p className="text-muted-foreground text-sm">No recent activity</p>
+                <div className="text-center py-4">
+                  <Calendar className="h-6 w-6 text-muted-foreground mx-auto mb-1" />
+                  <p className="text-muted-foreground text-xs">No recent activity</p>
                 </div>
               )}
             </div>
