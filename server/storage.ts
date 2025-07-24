@@ -1927,55 +1927,80 @@ class DatabaseStorage implements IStorage {
     const results: Attendance[] = [];
     
     for (const dayData of attendanceData) {
-      const date = new Date(year, month - 1, dayData.day);
-      
-      // Check if attendance record exists for this date
-      const existing = await db.select().from(attendance)
-        .where(and(
-          eq(attendance.userId, userId),
-          gte(attendance.date, date),
-          lte(attendance.date, new Date(date.getTime() + 24 * 60 * 60 * 1000))
-        ))
-        .limit(1);
-      
-      if (existing[0]) {
-        // Update existing record
-        const updated = await db.update(attendance)
-          .set({
+      try {
+        // Parse the date string properly
+        const dateStr = dayData.date; // Expected format: "2025-07-24"
+        const parsedDate = new Date(dateStr + 'T00:00:00.000Z');
+        
+        if (isNaN(parsedDate.getTime())) {
+          console.error(`Invalid date format: ${dateStr}`);
+          continue;
+        }
+        
+        // Check if attendance record exists for this date
+        const existing = await db.select().from(attendance)
+          .where(and(
+            eq(attendance.userId, userId),
+            sql`DATE(${attendance.date}) = DATE(${parsedDate.toISOString()})`
+          ))
+          .limit(1);
+        
+        if (existing[0]) {
+          // Update existing record
+          const updated = await db.update(attendance)
+            .set({
+              status: dayData.status,
+              hoursWorked: this.getHoursForStatus(dayData.status),
+              notes: dayData.notes || null,
+              isManualEntry: true,
+              updatedAt: new Date(),
+            })
+            .where(eq(attendance.id, existing[0].id))
+            .returning();
+          
+          if (updated[0]) results.push(updated[0]);
+        } else {
+          // Create new record with proper date handling
+          const checkInTime = dayData.status === 'present' || dayData.status === 'late' ? 
+            new Date(parsedDate.getFullYear(), parsedDate.getMonth(), parsedDate.getDate(), 9, 0, 0) : null;
+          const checkOutTime = dayData.status === 'present' || dayData.status === 'late' || dayData.status === 'half_day' ? 
+            new Date(parsedDate.getFullYear(), parsedDate.getMonth(), parsedDate.getDate(), 18, 0, 0) : null;
+          
+          const newRecord = await db.insert(attendance).values({
+            userId,
+            date: parsedDate,
+            checkInTime,
+            checkOutTime,
+            hoursWorked: this.getHoursForStatus(dayData.status),
+            overtimeHours: 0,
             status: dayData.status,
-            workingHours: dayData.workingHours || 0,
-            overtimeHours: dayData.overtimeHours || 0,
+            leaveType: dayData.status === 'on_leave' ? 'sick' : null,
+            checkInBy: null,
+            checkOutBy: null,
+            location: null,
             notes: dayData.notes || null,
             isManualEntry: true,
-            updatedAt: new Date(),
-          })
-          .where(eq(attendance.id, existing[0].id))
-          .returning();
-        
-        if (updated[0]) results.push(updated[0]);
-      } else {
-        // Create new record
-        const newRecord = await db.insert(attendance).values({
-          userId,
-          date,
-          checkInTime: dayData.status === 'present' ? new Date(date.getTime() + 9 * 60 * 60 * 1000) : null, // 9 AM
-          checkOutTime: dayData.status === 'present' ? new Date(date.getTime() + 18 * 60 * 60 * 1000) : null, // 6 PM
-          workingHours: dayData.workingHours || (dayData.status === 'present' ? 8 : 0),
-          overtimeHours: dayData.overtimeHours || 0,
-          status: dayData.status,
-          leaveType: null,
-          checkInBy: null,
-          checkOutBy: null,
-          location: null,
-          notes: dayData.notes || null,
-          isManualEntry: true,
-        }).returning();
-        
-        if (newRecord[0]) results.push(newRecord[0]);
+          }).returning();
+          
+          if (newRecord[0]) results.push(newRecord[0]);
+        }
+      } catch (error) {
+        console.error(`Error processing attendance for date ${dayData.date}:`, error);
       }
     }
     
     return results;
+  }
+
+  private getHoursForStatus(status: string): number {
+    switch (status) {
+      case 'present': return 8;
+      case 'half_day': return 4;
+      case 'late': return 7.5;
+      case 'absent': return 0;
+      case 'on_leave': return 0;
+      default: return 0;
+    }
   }
 
   async getStaffUsers(): Promise<User[]> {

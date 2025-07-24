@@ -42,7 +42,7 @@ import {
 // @ts-ignore
 import html2pdf from 'html2pdf.js';
 
-// Monthly Attendance Calendar Component
+// Monthly Attendance Calendar Component - Mobile Compatible
 const MonthlyAttendanceCalendar = ({ 
   staffId, 
   month, 
@@ -56,31 +56,35 @@ const MonthlyAttendanceCalendar = ({
   attendanceData: any[];
   onUpdate: (date: string, status: string) => void;
 }) => {
+  const isMobile = useIsMobile();
   const daysInMonth = new Date(year, month, 0).getDate();
   const firstDayOfMonth = new Date(year, month - 1, 1).getDay();
   
   const getAttendanceForDate = (day: number) => {
     const dateStr = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
-    return attendanceData.find(a => a.date.startsWith(dateStr));
+    return attendanceData.find(a => {
+      const recordDate = new Date(a.date).toISOString().split('T')[0];
+      return recordDate === dateStr;
+    });
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'present': return 'bg-green-100 text-green-800 border-green-200';
-      case 'absent': return 'bg-red-100 text-red-800 border-red-200';
-      case 'half_day': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'late': return 'bg-orange-100 text-orange-800 border-orange-200';
-      case 'on_leave': return 'bg-blue-100 text-blue-800 border-blue-200';
-      default: return 'bg-gray-100 text-gray-600 border-gray-200';
+      case 'present': return 'bg-green-100 text-green-800 border-green-200 hover:bg-green-200';
+      case 'absent': return 'bg-red-100 text-red-800 border-red-200 hover:bg-red-200';
+      case 'half_day': return 'bg-yellow-100 text-yellow-800 border-yellow-200 hover:bg-yellow-200';
+      case 'late': return 'bg-orange-100 text-orange-800 border-orange-200 hover:bg-orange-200';
+      case 'on_leave': return 'bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-200';
+      default: return 'bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-200';
     }
   };
 
   const statusOptions = [
-    { value: 'present', label: 'Present' },
-    { value: 'absent', label: 'Absent' },
-    { value: 'half_day', label: 'Half Day' },
-    { value: 'late', label: 'Late' },
-    { value: 'on_leave', label: 'On Leave' }
+    { value: 'present', label: 'Present', icon: '✓' },
+    { value: 'absent', label: 'Absent', icon: '✗' },
+    { value: 'half_day', label: 'Half Day', icon: '½' },
+    { value: 'late', label: 'Late', icon: '⏰' },
+    { value: 'on_leave', label: 'On Leave', icon: '🏖️' }
   ];
 
   const handleStatusChange = (day: number, newStatus: string) => {
@@ -88,17 +92,71 @@ const MonthlyAttendanceCalendar = ({
     onUpdate(dateStr, newStatus);
   };
 
+  if (isMobile) {
+    // Mobile list view
+    return (
+      <div className="space-y-3">
+        <div className="grid grid-cols-2 gap-2 text-xs mb-4">
+          {statusOptions.map(option => (
+            <div key={option.value} className={`p-2 rounded border text-center ${getStatusColor(option.value)}`}>
+              <div className="font-medium">{option.icon} {option.label}</div>
+            </div>
+          ))}
+        </div>
+        
+        <div className="space-y-2 max-h-96 overflow-y-auto">
+          {Array.from({ length: daysInMonth }, (_, i) => {
+            const day = i + 1;
+            const attendance = getAttendanceForDate(day);
+            const dayName = new Date(year, month - 1, day).toLocaleDateString('en-US', { weekday: 'short' });
+            const isToday = new Date().getDate() === day && 
+                           new Date().getMonth() === month - 1 && 
+                           new Date().getFullYear() === year;
+            
+            return (
+              <div key={day} className={`p-3 border rounded-lg ${isToday ? 'border-amber-300 bg-amber-50' : 'border-gray-200'}`}>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium text-lg">{day}</span>
+                    <span className="text-sm text-gray-600">{dayName}</span>
+                    {isToday && <Badge variant="outline" className="text-xs">Today</Badge>}
+                  </div>
+                  <Select
+                    value={attendance?.status || ''}
+                    onValueChange={(value) => handleStatusChange(day, value)}
+                  >
+                    <SelectTrigger className={`w-28 h-8 text-xs ${getStatusColor(attendance?.status || '')}`}>
+                      <SelectValue placeholder="Mark" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {statusOptions.map(option => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.icon} {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
+  // Desktop calendar view
   return (
-    <div className="border rounded-lg p-4">
+    <div className="border rounded-lg p-4 bg-white">
       <div className="grid grid-cols-7 gap-2 mb-4">
         {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-          <div key={day} className="text-center font-medium text-gray-600 p-2">
+          <div key={day} className="text-center font-medium text-amber-900 p-2 bg-amber-50 rounded">
             {day}
           </div>
         ))}
       </div>
       
-      <div className="grid grid-cols-7 gap-2">
+      <div className="grid grid-cols-7 gap-2 mb-4">
         {/* Empty cells for days before month starts */}
         {Array.from({ length: firstDayOfMonth }, (_, i) => (
           <div key={`empty-${i}`} className="h-20"></div>
@@ -111,24 +169,35 @@ const MonthlyAttendanceCalendar = ({
           const isToday = new Date().getDate() === day && 
                          new Date().getMonth() === month - 1 && 
                          new Date().getFullYear() === year;
+          const isSunday = new Date(year, month - 1, day).getDay() === 0;
           
           return (
             <div 
               key={day}
-              className={`h-20 border rounded p-1 ${isToday ? 'border-amber-300 bg-amber-50' : 'border-gray-200'}`}
+              className={`h-20 border rounded p-1 transition-all duration-200 ${
+                isToday ? 'border-amber-300 bg-amber-50 shadow-md' : 
+                isSunday ? 'bg-red-50 border-red-200' : 'border-gray-200 bg-white hover:bg-gray-50'
+              }`}
             >
-              <div className="font-medium text-sm mb-1">{day}</div>
+              <div className={`font-medium text-sm mb-1 ${isToday ? 'text-amber-900' : isSunday ? 'text-red-600' : 'text-gray-800'}`}>
+                {day}
+                {isToday && <div className="text-xs text-amber-600">Today</div>}
+                {isSunday && <div className="text-xs text-red-500">Sun</div>}
+              </div>
               <Select
                 value={attendance?.status || ''}
                 onValueChange={(value) => handleStatusChange(day, value)}
               >
-                <SelectTrigger className={`h-6 text-xs ${getStatusColor(attendance?.status || '')}`}>
+                <SelectTrigger className={`h-8 text-xs border transition-colors ${getStatusColor(attendance?.status || '')}`}>
                   <SelectValue placeholder="Mark" />
                 </SelectTrigger>
                 <SelectContent>
                   {statusOptions.map(option => (
                     <SelectItem key={option.value} value={option.value}>
-                      {option.label}
+                      <span className="flex items-center gap-1">
+                        <span>{option.icon}</span>
+                        <span>{option.label}</span>
+                      </span>
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -138,18 +207,24 @@ const MonthlyAttendanceCalendar = ({
         })}
       </div>
       
-      {/* Legend */}
-      <div className="mt-4 p-3 bg-gray-50 rounded">
-        <h4 className="font-medium text-sm mb-2">Status Legend:</h4>
-        <div className="flex flex-wrap gap-2 text-xs">
+      {/* Enhanced Legend */}
+      <div className="mt-4 p-4 bg-gradient-to-r from-amber-50 to-orange-50 rounded-lg border border-amber-200">
+        <h4 className="font-semibold text-sm mb-3 text-amber-900">Status Legend:</h4>
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-2 text-xs">
           {statusOptions.map(option => (
-            <span 
+            <div 
               key={option.value} 
-              className={`px-2 py-1 rounded border ${getStatusColor(option.value)}`}
+              className={`px-3 py-2 rounded-md border font-medium text-center transition-all duration-200 ${getStatusColor(option.value)}`}
             >
-              {option.label}
-            </span>
+              <div className="flex items-center justify-center gap-1">
+                <span>{option.icon}</span>
+                <span>{option.label}</span>
+              </div>
+            </div>
           ))}
+        </div>
+        <div className="mt-2 text-xs text-gray-600 text-center">
+          Click on any day to mark attendance • Sundays are highlighted in red
         </div>
       </div>
     </div>
