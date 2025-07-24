@@ -63,6 +63,85 @@ const getStatusColor = (status: string) => {
   }
 };
 
+// Payroll Edit Form Component
+const PayrollEditForm = ({ staff, payroll, onSave }: {
+  staff: any;
+  payroll: any;
+  onSave: (data: any) => void;
+}) => {
+  const [allowances, setAllowances] = useState(payroll?.allowances || 0);
+  const [advance, setAdvance] = useState(payroll?.advance || 0);
+  const [bonus, setBonus] = useState(payroll?.bonus || 0);
+  
+  const basicSalary = payroll?.basicSalary || staff?.basicSalary || 0;
+  const netSalary = basicSalary + allowances + bonus - advance;
+
+  const handleSave = () => {
+    onSave({
+      allowances,
+      advance,
+      bonus,
+      netSalary
+    });
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label>Basic Salary</Label>
+          <div className="text-lg font-semibold text-gray-700">₹{basicSalary.toLocaleString()}</div>
+        </div>
+        <div>
+          <Label>Net Salary</Label>
+          <div className="text-lg font-semibold text-green-600">₹{netSalary.toLocaleString()}</div>
+        </div>
+      </div>
+      
+      <div className="space-y-3">
+        <div>
+          <Label htmlFor="allowances">Allowances (Bonus, Travel, Incentives)</Label>
+          <Input
+            id="allowances"
+            type="number"
+            value={allowances}
+            onChange={(e) => setAllowances(parseInt(e.target.value) || 0)}
+            placeholder="Enter allowances"
+          />
+        </div>
+        
+        <div>
+          <Label htmlFor="advance">Advance Deduction</Label>
+          <Input
+            id="advance"
+            type="number"
+            value={advance}
+            onChange={(e) => setAdvance(parseInt(e.target.value) || 0)}
+            placeholder="Enter advance amount"
+          />
+        </div>
+        
+        <div>
+          <Label htmlFor="bonus">Additional Bonus</Label>
+          <Input
+            id="bonus"
+            type="number"
+            value={bonus}
+            onChange={(e) => setBonus(parseInt(e.target.value) || 0)}
+            placeholder="Enter bonus amount"
+          />
+        </div>
+      </div>
+      
+      <div className="flex justify-end gap-2 pt-4">
+        <Button onClick={handleSave} className="bg-green-600 hover:bg-green-700">
+          Save Changes
+        </Button>
+      </div>
+    </div>
+  );
+};
+
 // Monthly Attendance Calendar Component - Mobile Compatible
 const MonthlyAttendanceCalendar = ({ 
   staffId, 
@@ -383,6 +462,8 @@ export default function Attendance() {
   // Generate year options from 2024 to 2030
   const yearOptions = Array.from({ length: 7 }, (_, i) => 2024 + i);
   const [selectedStaff, setSelectedStaff] = useState<string>("");
+  const [editingPayroll, setEditingPayroll] = useState<any>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isProcessingPayroll, setIsProcessingPayroll] = useState(false);
   const [isAddStaffOpen, setIsAddStaffOpen] = useState(false);
   const [isEditStaffOpen, setIsEditStaffOpen] = useState(false);
@@ -391,6 +472,7 @@ export default function Attendance() {
   const [monthlyAttendanceData, setMonthlyAttendanceData] = useState<any[]>([]);
   const [isEditingMonthlyAttendance, setIsEditingMonthlyAttendance] = useState(false);
   const [showDetailedRecords, setShowDetailedRecords] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
 
 
   // Forms
@@ -589,6 +671,38 @@ export default function Attendance() {
     },
   });
 
+  const updatePayrollMutation = useMutation({
+    mutationFn: async (data: { payrollId: number; updates: any }) => {
+      return authenticatedApiRequest("PATCH", `/api/payroll/${data.payrollId}`, data.updates);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/payroll"] });
+      toast({ title: "Payroll updated successfully" });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to update payroll",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handlePayrollEdit = (payroll: any) => {
+    const staffMember = staffData?.find(s => s.id === payroll.userId);
+    setEditingPayroll({ ...payroll, staff: staffMember });
+    setIsEditDialogOpen(true);
+  };
+
+  const handlePayrollSave = (payrollData: any) => {
+    updatePayrollMutation.mutate({
+      payrollId: editingPayroll.id,
+      updates: payrollData
+    });
+    setIsEditDialogOpen(false);
+    setEditingPayroll(null);
+  };
+
   // Debounced bulk update with optimistic updates
   const [pendingUpdates, setPendingUpdates] = useState<Map<string, any>>(new Map());
   
@@ -761,6 +875,10 @@ export default function Attendance() {
                   <span>Bonus</span>
                   <span>₹${payroll.bonus?.toFixed(2) || '0.00'}</span>
                 </div>
+                <div class="item">
+                  <span>Incentives</span>
+                  <span>₹${((payroll.allowances || 0) * 0.1).toFixed(2)}</span>
+                </div>
                 <div class="item" style="border-top: 2px solid #D4B896; font-weight: bold; color: #D4B896;">
                   <span>Total Earnings</span>
                   <span>₹${((payroll.basicSalary || 0) + (payroll.overtimePay || 0) + (payroll.allowances || 0) + (payroll.bonus || 0)).toFixed(2)}</span>
@@ -784,8 +902,12 @@ export default function Attendance() {
                   <span>₹${(payroll.deductions * 0.2)?.toFixed(2) || '0.00'}</span>
                 </div>
                 <div class="item">
+                  <span>Advance</span>
+                  <span>₹${payroll.advance?.toFixed(2) || '0.00'}</span>
+                </div>
+                <div class="item">
                   <span>Other Deductions</span>
-                  <span>₹${(payroll.deductions * 0.1)?.toFixed(2) || '0.00'}</span>
+                  <span>₹${((payroll.deductions || 0) * 0.1).toFixed(2)}</span>
                 </div>
                 <div class="item" style="border-top: 2px solid #dc3545; font-weight: bold; color: #dc3545;">
                   <span>Total Deductions</span>
@@ -885,11 +1007,13 @@ export default function Attendance() {
   // Helper functions
   const getStatusBadge = (status: string) => {
     const statusConfig = {
-      present: { variant: "default" as const, icon: CheckCircle, color: "text-green-600" },
-      absent: { variant: "destructive" as const, icon: XCircle, color: "text-red-600" },
-      half_day: { variant: "secondary" as const, icon: Timer, color: "text-yellow-600" },
-      late: { variant: "outline" as const, icon: Clock, color: "text-orange-600" },
-      on_leave: { variant: "secondary" as const, icon: Calendar, color: "text-blue-600" },
+      present: { variant: "default" as const, icon: CheckCircle, color: "text-green-600", label: "P" },
+      absent: { variant: "destructive" as const, icon: XCircle, color: "text-red-600", label: "A" },
+      half_day: { variant: "secondary" as const, icon: Timer, color: "text-yellow-600", label: "H" },
+      'half-day': { variant: "secondary" as const, icon: Timer, color: "text-yellow-600", label: "H" },
+      late: { variant: "outline" as const, icon: Clock, color: "text-orange-600", label: "L" },
+      on_leave: { variant: "secondary" as const, icon: Calendar, color: "text-blue-600", label: "LV" },
+      'on-leave': { variant: "secondary" as const, icon: Calendar, color: "text-blue-600", label: "LV" },
     };
     
     const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.present;
@@ -898,7 +1022,7 @@ export default function Attendance() {
     return (
       <Badge variant={config.variant} className="flex items-center gap-1">
         <Icon className="w-3 h-3" />
-        {status.replace('_', ' ').toUpperCase()}
+        {config.label}
       </Badge>
     );
   };
@@ -995,8 +1119,8 @@ export default function Attendance() {
         </div>
       </div>
 
-      {/* Quick Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
+      {/* Enhanced Quick Stats */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Present Today</CardTitle>
@@ -1017,9 +1141,48 @@ export default function Attendance() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-red-600">
-              {staff.length - todayAttendance.filter((a: any) => a.status === "present").length}
+              {todayAttendance.filter((a: any) => a.status === "absent").length}
             </div>
             <p className="text-xs text-gray-600">staff members</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Half Day</CardTitle>
+            <Clock className="h-4 w-4 text-yellow-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-yellow-600">
+              {todayAttendance.filter((a: any) => a.status === "half_day").length}
+            </div>
+            <p className="text-xs text-gray-600">staff members</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Late Entries</CardTitle>
+            <Timer className="h-4 w-4 text-orange-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-orange-600">
+              {todayAttendance.filter((a: any) => a.status === "late").length}
+            </div>
+            <p className="text-xs text-gray-600">staff members</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Attendance %</CardTitle>
+            <Users className="h-4 w-4 text-blue-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-blue-600">
+              {staff.length > 0 ? Math.round((todayAttendance.filter((a: any) => a.status === "present" || a.status === "late").length / staff.length) * 100) : 0}%
+            </div>
+            <p className="text-xs text-gray-600">today</p>
           </CardContent>
         </Card>
 
@@ -1305,10 +1468,22 @@ export default function Attendance() {
           {/* Compact Attendance Records Display */}
           <Card>
             <CardHeader>
-              <CardTitle>Attendance Records</CardTitle>
-              <p className="text-sm text-gray-600">
-                Monthly attendance overview with status codes: P=Present, A=Absent, L=Late, HF=Half Day
-              </p>
+              <CardTitle className="flex items-center justify-between">
+                <div>
+                  <div>Attendance Records</div>
+                  <p className="text-sm text-gray-600 font-normal mt-1">
+                    Monthly attendance overview with status codes: P=Present, A=Absent, L=Late, HF=Half Day
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Input
+                    placeholder="Search staff name..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-48"
+                  />
+                </div>
+              </CardTitle>
             </CardHeader>
             <CardContent>
               {staff.length > 0 ? (
@@ -1328,7 +1503,9 @@ export default function Attendance() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {staff.map((member: any, index: number) => {
+                      {staff.filter((member: any) => 
+                        member.name.toLowerCase().includes(searchTerm.toLowerCase())
+                      ).map((member: any, index: number) => {
                         const memberAttendance = attendanceRecords.filter(
                           (record: any) => record.userId === member.id
                         );
@@ -1673,11 +1850,21 @@ export default function Attendance() {
                                   <FileText className="w-3 h-3 mr-1" />
                                   Pay Slip
                                 </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handlePayrollEdit({ ...payroll, staff: member })}
+                                  className="border-blue-500 text-blue-600 hover:bg-blue-50"
+                                >
+                                  <Edit className="w-3 h-3 mr-1" />
+                                  Edit
+                                </Button>
                                 {payroll.status !== "paid" && (
                                   <Button
                                     size="sm"
                                     onClick={() => processPayrollMutation.mutate(payroll.id)}
                                     disabled={processPayrollMutation.isPending}
+                                    className="bg-green-600 hover:bg-green-700"
                                   >
                                     <CreditCard className="w-3 h-3 mr-1" />
                                     Process
@@ -2152,7 +2339,24 @@ export default function Attendance() {
         </DialogContent>
       </Dialog>
 
-
+      {/* Payroll Edit Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Edit className="w-5 h-5" />
+              Edit Payroll - {editingPayroll?.staff?.name}
+            </DialogTitle>
+          </DialogHeader>
+          {editingPayroll && (
+            <PayrollEditForm
+              staff={editingPayroll.staff}
+              payroll={editingPayroll}
+              onSave={handlePayrollSave}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

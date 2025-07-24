@@ -992,6 +992,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update payroll with manual adjustments
+  app.patch("/api/payroll/:id", authenticateToken, requireRole(["admin", "manager"]), async (req: AuthRequest, res) => {
+    try {
+      const payrollId = parseInt(req.params.id);
+      const updates = req.body;
+      
+      if (!payrollId) {
+        return res.status(400).json({ message: "Payroll ID is required" });
+      }
+      
+      const updatedPayroll = await storage.updatePayroll(payrollId, updates);
+      
+      if (!updatedPayroll) {
+        return res.status(404).json({ message: "Payroll not found" });
+      }
+      
+      res.json(updatedPayroll);
+    } catch (error) {
+      console.error("Failed to update payroll:", error);
+      res.status(500).json({ message: "Failed to update payroll", error: String(error) });
+    }
+  });
+
   // Petty Cash routes
   app.get("/api/petty-cash", authenticateToken, async (req: AuthRequest, res) => {
     try {

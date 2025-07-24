@@ -2342,6 +2342,18 @@ class DatabaseStorage implements IStorage {
     await db.delete(payroll).where(eq(payroll.id, id));
     return true;
   }
+
+  async processPayroll(id: number, processedBy: number): Promise<Payroll | undefined> {
+    const result = await db.update(payroll)
+      .set({ 
+        status: 'paid' as const,
+        processedBy,
+        processedAt: new Date()
+      })
+      .where(eq(payroll.id, id))
+      .returning();
+    return result[0];
+  }
   async getLeave(id: number): Promise<Leave | undefined> { return undefined; }
   async getUserLeaves(userId: number): Promise<Leave[]> { return []; }
   async getAllLeaves(): Promise<Leave[]> { return []; }
