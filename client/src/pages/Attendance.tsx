@@ -689,7 +689,7 @@ export default function Attendance() {
   });
 
   const handlePayrollEdit = (payroll: any) => {
-    const staffMember = staffData?.find(s => s.id === payroll.userId);
+    const staffMember = staff?.find(s => s.id === payroll.userId);
     setEditingPayroll({ ...payroll, staff: staffMember });
     setIsEditDialogOpen(true);
   };
