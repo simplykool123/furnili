@@ -120,7 +120,7 @@ const MonthlyAttendanceCalendar = ({
         <div className="p-4">
           <div className="grid grid-cols-7 gap-1 mb-3">
             {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, index) => (
-              <div key={day} className="text-center text-xs font-semibold text-amber-800 py-2">
+              <div key={`weekday-${index}`} className="text-center text-xs font-semibold text-amber-800 py-2">
                 {day}
               </div>
             ))}
@@ -268,8 +268,8 @@ const MonthlyAttendanceCalendar = ({
   return (
     <div className="border rounded-lg p-4 bg-white">
       <div className="grid grid-cols-7 gap-2 mb-4">
-        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-          <div key={day} className="text-center font-medium text-amber-900 p-2 bg-amber-50 rounded">
+        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, index) => (
+          <div key={`desktop-weekday-${index}`} className="text-center font-medium text-amber-900 p-2 bg-amber-50 rounded">
             {day}
           </div>
         ))}
@@ -486,13 +486,19 @@ export default function Attendance() {
       return authenticatedApiRequest("POST", "/api/payroll/generate", data);
     },
     onSuccess: () => {
-      // Invalidate with specific query parameters to ensure refresh
+      // Force complete refresh of payroll data with correct query key structure
       queryClient.invalidateQueries({ 
         queryKey: ["/api/payroll", selectedMonth, selectedYear] 
       });
       queryClient.invalidateQueries({ 
         queryKey: ["/api/payroll"] 
       });
+      
+      // Force immediate refetch with exact same parameters
+      queryClient.refetchQueries({ 
+        queryKey: ["/api/payroll", selectedMonth, selectedYear]
+      });
+      
       toast({ title: "Payroll generated successfully" });
     },
   });

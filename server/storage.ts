@@ -45,6 +45,8 @@ import {
   type ProductWithStock,
   type BOQExtractedItem,
 } from "@shared/schema";
+import { db } from "./db";
+import { eq, and, desc } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 
 export interface IStorage {
@@ -94,6 +96,7 @@ export interface IStorage {
   getPayroll(id: number): Promise<Payroll | undefined>;
   getUserPayroll(userId: number, month?: number, year?: number): Promise<Payroll[]>;
   getAllPayroll(filters?: { month?: number; year?: number; status?: string }): Promise<Payroll[]>;
+  getAllPayrolls(month?: number, year?: number, userId?: number): Promise<Payroll[]>;
   createPayroll(payroll: InsertPayroll): Promise<Payroll>;
   updatePayroll(id: number, updates: Partial<InsertPayroll>): Promise<Payroll | undefined>;
   generatePayroll(userId: number, month: number, year: number): Promise<Payroll>;
@@ -1497,6 +1500,50 @@ export class MemStorage {
   }
 
   // Payroll operations
+  async getAllPayrolls(month?: number, year?: number, userId?: number): Promise<Payroll[]> {
+    try {
+      console.error("=== PAYROLL DEBUG ===");
+      console.error("Fetching payroll with filters:", { month, year, userId });
+      
+      // First try without any filters to see if we get any data
+      const allRecords = await db.select().from(payroll);
+      console.error("Total payroll records in DB:", allRecords.length);
+      
+      if (allRecords.length > 0) {
+        console.error("Sample record:", allRecords[0]);
+      }
+      
+      let query = db.select().from(payroll);
+      
+      if (month !== undefined || year !== undefined || userId !== undefined) {
+        const conditions = [];
+        if (month !== undefined) conditions.push(eq(payroll.month, month));
+        if (year !== undefined) conditions.push(eq(payroll.year, year));
+        if (userId !== undefined) conditions.push(eq(payroll.userId, userId));
+        
+        if (conditions.length > 0) {
+          query = query.where(and(...conditions));
+        }
+      }
+      
+      const results = await query;
+      console.error("Filtered payroll query results:", results.length, "records found");
+      console.error("=== END PAYROLL DEBUG ===");
+      return results;
+    } catch (error) {
+      console.error("Error fetching payroll records:", error);
+      // Fall back to in-memory storage if database fails
+      const allPayroll = Array.from(this.payroll.values());
+      
+      return allPayroll.filter(payroll => {
+        if (month !== undefined && payroll.month !== month) return false;
+        if (year !== undefined && payroll.year !== year) return false;
+        if (userId !== undefined && payroll.userId !== userId) return false;
+        return true;
+      });
+    }
+  }
+
   async getAllPayroll(filters?: { month?: number; year?: number; status?: string }): Promise<Payroll[]> {
     const allPayroll = Array.from(this.payroll.values());
     
@@ -2226,12 +2273,75 @@ class DatabaseStorage implements IStorage {
   async createPriceComparison(comparison: InsertPriceComparison): Promise<PriceComparison> { throw new Error("Not implemented"); }
   async updatePriceComparison(id: number, updates: Partial<InsertPriceComparison>): Promise<PriceComparison | undefined> { return undefined; }
   async deletePriceComparison(id: number): Promise<boolean> { return false; }
-  async getPayroll(id: number): Promise<Payroll | undefined> { return undefined; }
-  async getUserPayroll(userId: number, month?: number, year?: number): Promise<Payroll[]> { return []; }
-  async getAllPayroll(month?: number, year?: number): Promise<Payroll[]> { return []; }
-  async createPayroll(payroll: InsertPayroll): Promise<Payroll> { throw new Error("Not implemented"); }
-  async updatePayroll(id: number, updates: Partial<InsertPayroll>): Promise<Payroll | undefined> { return undefined; }
-  async deletePayroll(id: number): Promise<boolean> { return false; }
+  // Payroll operations - Database implementations
+  async getAllPayrolls(month?: number, year?: number, userId?: number): Promise<Payroll[]> {
+    try {
+      let query = db.select().from(payroll);
+      
+      if (month !== undefined || year !== undefined || userId !== undefined) {
+        const conditions = [];
+        if (month !== undefined) conditions.push(eq(payroll.month, month));
+        if (year !== undefined) conditions.push(eq(payroll.year, year));
+        if (userId !== undefined) conditions.push(eq(payroll.userId, userId));
+        
+        if (conditions.length > 0) {
+          query = query.where(and(...conditions));
+        }
+      }
+      
+      const results = await query.orderBy(desc(payroll.createdAt));
+      return results;
+    } catch (error) {
+      console.error("Error fetching payroll records from database:", error);
+      return [];
+    }
+  }
+
+  async getPayroll(id: number): Promise<Payroll | undefined> {
+    const result = await db.select().from(payroll).where(eq(payroll.id, id)).limit(1);
+    return result[0];
+  }
+  
+  async getUserPayroll(userId: number, month?: number, year?: number): Promise<Payroll[]> {
+    let query = db.select().from(payroll).where(eq(payroll.userId, userId));
+    
+    if (month !== undefined) {
+      query = query.where(and(eq(payroll.userId, userId), eq(payroll.month, month)));
+    }
+    
+    if (year !== undefined) {
+      const conditions = [eq(payroll.userId, userId), eq(payroll.year, year)];
+      if (month !== undefined) {
+        conditions.push(eq(payroll.month, month));
+      }
+      query = query.where(and(...conditions));
+    }
+    
+    return await query.orderBy(desc(payroll.createdAt));
+  }
+  
+  async getAllPayroll(month?: number, year?: number): Promise<Payroll[]> {
+    // For backward compatibility, delegate to getAllPayrolls
+    return this.getAllPayrolls(month, year);
+  }
+  
+  async createPayroll(payrollData: InsertPayroll): Promise<Payroll> {
+    const result = await db.insert(payroll).values(payrollData).returning();
+    return result[0];
+  }
+  
+  async updatePayroll(id: number, updates: Partial<InsertPayroll>): Promise<Payroll | undefined> {
+    const result = await db.update(payroll)
+      .set(updates)
+      .where(eq(payroll.id, id))
+      .returning();
+    return result[0];
+  }
+  
+  async deletePayroll(id: number): Promise<boolean> {
+    await db.delete(payroll).where(eq(payroll.id, id));
+    return true;
+  }
   async getLeave(id: number): Promise<Leave | undefined> { return undefined; }
   async getUserLeaves(userId: number): Promise<Leave[]> { return []; }
   async getAllLeaves(): Promise<Leave[]> { return []; }

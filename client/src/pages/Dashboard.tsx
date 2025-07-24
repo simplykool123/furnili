@@ -233,14 +233,14 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        <Card className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-purple-500 bg-gradient-to-br from-card to-purple-50/20 cursor-pointer" onClick={() => setLocation('/tasks')}>
+        <Card className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-purple-500 bg-gradient-to-br from-card to-purple-50/20 cursor-pointer" onClick={() => setLocation('/attendance')}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-semibold text-card-foreground">Tasks</CardTitle>
+            <CardTitle className="text-sm font-semibold text-card-foreground">Staff & Payroll</CardTitle>
             <CheckCircle className="h-4 w-4 text-purple-600" />
           </CardHeader>
           <CardContent className="pb-3">
             <div className="text-2xl font-bold text-foreground">{stats?.activeTasks || 0}</div>
-            <p className="text-xs text-muted-foreground mt-1">In progress</p>
+            <p className="text-xs text-muted-foreground mt-1">Manage staff</p>
           </CardContent>
         </Card>
 

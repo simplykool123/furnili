@@ -942,20 +942,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Payroll routes
+  // Payroll routes - Get payroll records
   app.get("/api/payroll", authenticateToken, async (req: AuthRequest, res) => {
     try {
-      const { month, year } = req.query;
-      const filters = {
-        month: month ? parseInt(month as string) : undefined,
-        year: year ? parseInt(year as string) : undefined,
-      };
+      const { month, year, userId } = req.query;
       
-      const payrollRecords = await storage.getAllPayroll(filters);
-      res.json(payrollRecords);
+      const monthNum = month && typeof month === 'string' ? parseInt(month) : undefined;
+      const yearNum = year && typeof year === 'string' ? parseInt(year) : undefined;
+      const userIdNum = userId && typeof userId === 'string' ? parseInt(userId) : undefined;
+      
+      const payrolls = await storage.getAllPayrolls(monthNum, yearNum, userIdNum);
+      res.json(payrolls);
     } catch (error) {
-      console.error("Failed to fetch payroll:", error);
-      res.status(500).json({ message: "Failed to fetch payroll", error: String(error) });
+      console.error("Failed to fetch payroll records:", error);
+      res.status(500).json({ message: "Failed to fetch payroll records", error: String(error) });
     }
   });
 
