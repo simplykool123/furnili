@@ -2003,19 +2003,219 @@ class DatabaseStorage implements IStorage {
     }
   }
 
+  async generatePayroll(userId: number, month: number, year: number): Promise<Payroll> {
+    // Check if payroll already exists
+    const existingPayroll = await db.select().from(payroll)
+      .where(and(
+        eq(payroll.userId, userId),
+        eq(payroll.month, month),
+        eq(payroll.year, year)
+      )).limit(1);
+    
+    if (existingPayroll[0]) {
+      return existingPayroll[0];
+    }
+
+    // Get user details
+    const user = await this.getUser(userId);
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    // Get attendance data for the month
+    const startDate = new Date(year, month - 1, 1);
+    const endDate = new Date(year, month, 0);
+    
+    const attendanceRecords = await db.select().from(attendance)
+      .where(and(
+        eq(attendance.userId, userId),
+        gte(attendance.date, startDate),
+        lte(attendance.date, endDate)
+      ));
+    
+    const presentDays = attendanceRecords.filter(a => a.status === 'present').length;
+    const halfDays = attendanceRecords.filter(a => a.status === 'half_day').length;
+    const totalHours = attendanceRecords.reduce((sum, a) => sum + (a.hoursWorked || 0), 0);
+    const overtimeHours = attendanceRecords.reduce((sum, a) => sum + (a.overtimeHours || 0), 0);
+    const absentDays = attendanceRecords.filter(a => a.status === 'absent').length;
+    
+    // Calculate working days in month (excluding Sundays)
+    const daysInMonth = new Date(year, month, 0).getDate();
+    let totalWorkingDays = 0;
+    for (let day = 1; day <= daysInMonth; day++) {
+      const currentDay = new Date(year, month - 1, day);
+      if (currentDay.getDay() !== 0) { // Not Sunday
+        totalWorkingDays++;
+      }
+    }
+    
+    // Basic salary calculation
+    const basicSalary = 25000; // Default basic salary
+    const allowances = 2000; // Default allowances
+    const dailySalary = basicSalary / totalWorkingDays;
+    const earnedSalary = (presentDays * dailySalary) + (halfDays * dailySalary * 0.5);
+    
+    // Overtime calculation
+    const overtimePayAmount = overtimeHours * 50; // ₹50 per hour
+    
+    // Deductions (PF, ESI, etc.)
+    const pfDeduction = earnedSalary * 0.12;
+    const totalDeductions = pfDeduction;
+    
+    const netSalary = earnedSalary + allowances + overtimePayAmount - totalDeductions;
+
+    const payrollData: InsertPayroll = {
+      userId,
+      month,
+      year,
+      basicSalary,
+      allowances,
+      overtimePay: overtimePayAmount,
+      bonus: 0,
+      deductions: totalDeductions,
+      netSalary,
+      totalWorkingDays,
+      actualWorkingDays: presentDays + (halfDays * 0.5),
+      totalHours,
+      overtimeHours,
+      leaveDays: absentDays,
+      status: "generated",
+    };
+
+    const result = await db.insert(payroll).values(payrollData).returning();
+    return result[0];
+  }
+
+  async getPettyCashStats(): Promise<{
+    totalExpenses: number;
+    totalIncome: number;
+    balance: number;
+    currentMonthExpenses: number;
+  }> {
+    const allExpenses = await db.select().from(pettyCashExpenses);
+    
+    const totalExpenses = allExpenses
+      .filter(e => e.status === 'expense')
+      .reduce((sum, e) => sum + e.amount, 0);
+    
+    const totalIncome = allExpenses
+      .filter(e => e.status === 'income')
+      .reduce((sum, e) => sum + e.amount, 0);
+    
+    const currentMonth = new Date().getMonth();
+    const currentYear = new Date().getFullYear();
+    
+    const currentMonthExpenses = allExpenses
+      .filter(e => {
+        const expenseDate = new Date(e.expenseDate);
+        return expenseDate.getMonth() === currentMonth && 
+               expenseDate.getFullYear() === currentYear &&
+               e.status === 'expense';
+      })
+      .reduce((sum, e) => sum + e.amount, 0);
+    
+    return {
+      totalExpenses,
+      totalIncome,
+      balance: totalIncome - totalExpenses,
+      currentMonthExpenses,
+    };
+  }
+
   async getStaffUsers(): Promise<User[]> {
     return db.select().from(users).where(and(
       eq(users.isActive, true),
       sql`${users.role} != 'admin'`
     ));
   }
-  async getPettyCashExpense(id: number): Promise<PettyCashExpense | undefined> { return undefined; }
-  async getAllPettyCashExpenses(month?: number, year?: number): Promise<PettyCashExpense[]> { return []; }
-  async createPettyCashExpense(expense: InsertPettyCashExpense): Promise<PettyCashExpense> { throw new Error("Not implemented"); }
-  async updatePettyCashExpense(id: number, updates: Partial<InsertPettyCashExpense>): Promise<PettyCashExpense | undefined> { return undefined; }
-  async deletePettyCashExpense(id: number): Promise<boolean> { return false; }
-  async getStaffBalance(userId: number): Promise<{ received: number; spent: number; balance: number }> { return { received: 0, spent: 0, balance: 0 }; }
-  async getAllStaffBalances(): Promise<Array<{ userId: number; userName: string; received: number; spent: number; balance: number }>> { return []; }
+  async getPettyCashExpense(id: number): Promise<PettyCashExpense | undefined> {
+    const result = await db.select().from(pettyCashExpenses).where(eq(pettyCashExpenses.id, id)).limit(1);
+    return result[0];
+  }
+
+  async getAllPettyCashExpenses(filters?: { status?: string; category?: string; addedBy?: number }): Promise<PettyCashExpense[]> {
+    let query = db.select().from(pettyCashExpenses);
+    
+    if (filters?.status) {
+      query = query.where(eq(pettyCashExpenses.status, filters.status as 'expense' | 'income'));
+    }
+    
+    if (filters?.category) {
+      query = query.where(eq(pettyCashExpenses.category, filters.category));
+    }
+    
+    if (filters?.addedBy) {
+      query = query.where(eq(pettyCashExpenses.addedBy, filters.addedBy));
+    }
+    
+    const expenses = await query.orderBy(desc(pettyCashExpenses.createdAt));
+    
+    // Add user information
+    const expensesWithUsers = await Promise.all(
+      expenses.map(async (expense) => {
+        const user = await this.getUser(expense.addedBy);
+        return {
+          ...expense,
+          user: user ? { id: user.id, name: user.name, email: user.email } : null,
+        };
+      })
+    );
+    
+    return expensesWithUsers;
+  }
+
+  async createPettyCashExpense(expense: InsertPettyCashExpense): Promise<PettyCashExpense> {
+    const result = await db.insert(pettyCashExpenses).values(expense).returning();
+    return result[0];
+  }
+
+  async updatePettyCashExpense(id: number, updates: Partial<InsertPettyCashExpense>): Promise<PettyCashExpense | undefined> {
+    const result = await db.update(pettyCashExpenses)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(pettyCashExpenses.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deletePettyCashExpense(id: number): Promise<boolean> {
+    const result = await db.delete(pettyCashExpenses).where(eq(pettyCashExpenses.id, id));
+    return true;
+  }
+
+  async getStaffBalance(userId: number): Promise<{ received: number; spent: number; balance: number }> {
+    const expenses = await db.select().from(pettyCashExpenses)
+      .where(eq(pettyCashExpenses.addedBy, userId));
+    
+    const received = expenses
+      .filter(e => e.status === 'income')
+      .reduce((sum, e) => sum + e.amount, 0);
+    
+    const spent = expenses
+      .filter(e => e.status === 'expense')
+      .reduce((sum, e) => sum + e.amount, 0);
+    
+    return {
+      received,
+      spent,
+      balance: received - spent,
+    };
+  }
+
+  async getAllStaffBalances(): Promise<Array<{ userId: number; userName: string; received: number; spent: number; balance: number }>> {
+    const allUsers = await this.getAllUsers();
+    const balances = await Promise.all(
+      allUsers.map(async (user) => {
+        const balance = await this.getStaffBalance(user.id);
+        return {
+          userId: user.id,
+          userName: user.name,
+          ...balance,
+        };
+      })
+    );
+    
+    return balances;
+  }
   async getTask(id: number): Promise<Task | undefined> { return undefined; }
   async getAllTasks(assignedTo?: number): Promise<Task[]> { return []; }
   async createTask(task: InsertTask): Promise<Task> { throw new Error("Not implemented"); }

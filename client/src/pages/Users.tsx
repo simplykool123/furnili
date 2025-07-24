@@ -30,6 +30,7 @@ type UserFormData = z.infer<typeof userSchema>;
 
 export default function Users() {
   const [showAddUser, setShowAddUser] = useState(false);
+  const [activeFilter, setActiveFilter] = useState<'all' | 'active' | 'inactive'>('active');
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const currentUser = authService.getUser();
@@ -89,18 +90,19 @@ export default function Users() {
 
   const deleteUserMutation = useMutation({
     mutationFn: async (id: number) => {
-      return await authenticatedApiRequest('DELETE', `/api/users/${id}`);
+      // Soft delete by setting isActive to false
+      return await authenticatedApiRequest('PATCH', `/api/users/${id}`, { isActive: false });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/users'] });
       toast({
-        title: "Staff member deleted",
-        description: "The staff member has been permanently removed from the system.",
+        title: "Staff member moved to inactive",
+        description: "The staff member has been moved to inactive list. Their data and history are preserved.",
       });
     },
     onError: (error) => {
       toast({
-        title: "Failed to delete staff member",
+        title: "Failed to deactivate staff member",
         description: error.message,
         variant: "destructive",
       });
@@ -132,6 +134,13 @@ export default function Users() {
   const onSubmit = (data: UserFormData) => {
     createUserMutation.mutate(data);
   };
+
+  // Filter users based on active status
+  const filteredUsers = users?.filter((user: any) => {
+    if (activeFilter === 'active') return user.isActive;
+    if (activeFilter === 'inactive') return !user.isActive;
+    return true; // 'all'
+  }) || [];
 
   const getRoleBadge = (role: string) => {
     const roleInfo = {
@@ -168,10 +177,46 @@ export default function Users() {
     <>
       <div className="space-y-6">
         {/* Add User Button */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h2 className="text-lg font-semibold">System Users ({users?.length || 0})</h2>
+            <h2 className="text-lg font-semibold">System Users ({filteredUsers?.length || 0})</h2>
             <p className="text-sm text-muted-foreground">Manage user accounts and roles</p>
+          </div>
+          
+          {/* Filter Tabs */}
+          <div className="flex items-center gap-2">
+            <div className="flex border rounded-lg p-1 bg-gray-50">
+              <button
+                onClick={() => setActiveFilter('active')}
+                className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
+                  activeFilter === 'active' 
+                    ? 'bg-white text-green-700 shadow-sm' 
+                    : 'text-gray-600 hover:text-green-700'
+                }`}
+              >
+                Active Staff
+              </button>
+              <button
+                onClick={() => setActiveFilter('inactive')}
+                className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
+                  activeFilter === 'inactive' 
+                    ? 'bg-white text-red-700 shadow-sm' 
+                    : 'text-gray-600 hover:text-red-700'
+                }`}
+              >
+                Inactive Staff
+              </button>
+              <button
+                onClick={() => setActiveFilter('all')}
+                className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
+                  activeFilter === 'all' 
+                    ? 'bg-white text-blue-700 shadow-sm' 
+                    : 'text-gray-600 hover:text-blue-700'
+                }`}
+              >
+                All Staff
+              </button>
+            </div>
           </div>
           <Button onClick={() => setShowAddUser(true)}>
             <UserPlus className="w-4 h-4 mr-2" />
@@ -195,7 +240,16 @@ export default function Users() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {users?.map((user: any) => (
+                  {filteredUsers.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                        {activeFilter === 'active' && 'No active staff members found'}
+                        {activeFilter === 'inactive' && 'No inactive staff members found'}
+                        {activeFilter === 'all' && 'No staff members found'}
+                      </TableCell>
+                    </TableRow>
+                  )}
+                  {filteredUsers.map((user: any) => (
                     <TableRow key={user.id}>
                       <TableCell>
                         <div className="flex items-center space-x-3">

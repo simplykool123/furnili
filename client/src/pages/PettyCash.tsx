@@ -428,11 +428,52 @@ export default function PettyCash() {
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      setFormData(prev => ({ ...prev, receiptImage: file }));
-      
-      // Auto-process with OCR if it's an image
-      if (file.type.startsWith('image/')) {
-        processImageWithOCR(file);
+      processFile(file);
+    }
+  };
+
+  const processFile = (file: File) => {
+    setFormData(prev => ({ ...prev, receiptImage: file }));
+    
+    // Auto-process with OCR if it's an image
+    if (file.type.startsWith('image/')) {
+      processImageWithOCR(file);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const files = Array.from(e.dataTransfer.files);
+    const imageFile = files.find(file => file.type.startsWith('image/'));
+    
+    if (imageFile) {
+      processFile(imageFile);
+    } else {
+      toast({ title: "Invalid file", description: "Please upload an image file", variant: "destructive" });
+    }
+  };
+
+  const handlePaste = (e: React.ClipboardEvent) => {
+    const items = Array.from(e.clipboardData.items);
+    const imageItem = items.find(item => item.type.startsWith('image/'));
+    
+    if (imageItem) {
+      const file = imageItem.getAsFile();
+      if (file) {
+        processFile(file);
+        toast({ title: "Image pasted", description: "Processing with OCR...", });
       }
     }
   };
@@ -892,23 +933,66 @@ export default function PettyCash() {
               </div>
             </div>
 
-            {/* Proof Attachment with OCR */}
+            {/* Enhanced Proof Attachment with Drag & Drop and Paste */}
             <div>
               <Label htmlFor="receipt">Proof Attachment (GPay, CRED, Invoice, etc.)</Label>
-              <div className="flex items-center gap-2">
-                <Input
+              <div 
+                className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
+                  isProcessingOCR ? 'border-blue-300 bg-blue-50' : 'border-gray-300 hover:border-gray-400'
+                }`}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+                onPaste={handlePaste}
+                tabIndex={0}
+              >
+                {formData.receiptImage ? (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-center gap-2">
+                      <Upload className="h-5 w-5 text-green-600" />
+                      <span className="text-sm font-medium text-green-600">
+                        {formData.receiptImage.name}
+                      </span>
+                    </div>
+                    {isProcessingOCR && (
+                      <Badge variant="secondary" className="animate-pulse">
+                        Processing OCR...
+                      </Badge>
+                    )}
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-center gap-2">
+                      <Upload className="h-8 w-8 text-gray-400" />
+                      <Camera className="h-8 w-8 text-gray-400" />
+                    </div>
+                    <div className="text-sm text-gray-600">
+                      <strong>Drag & drop</strong> an image here, or{" "}
+                      <label htmlFor="receipt" className="text-amber-600 cursor-pointer hover:underline">
+                        choose file
+                      </label>
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      Or press <kbd className="px-1 bg-gray-100 rounded">Ctrl+V</kbd> to paste screenshot
+                    </div>
+                  </div>
+                )}
+                <input
                   id="receipt"
                   type="file"
                   accept="image/*"
                   onChange={handleImageUpload}
+                  className="hidden"
                 />
-                {isProcessingOCR && (
-                  <Badge variant="secondary">Processing OCR...</Badge>
-                )}
               </div>
-              <p className="text-sm text-gray-500 mt-1">
-                📱 Upload UPI payment screenshot for automatic data extraction (GPay, PhonePe, CRED)
-              </p>
+              <div className="flex items-center gap-2 mt-2">
+                <div className="h-4 w-4 rounded-full bg-green-100 flex items-center justify-center">
+                  <Camera className="h-2.5 w-2.5 text-green-600" />
+                </div>
+                <p className="text-xs text-gray-600">
+                  Upload UPI payment screenshot for automatic data extraction (GPay, PhonePe, CRED)
+                </p>
+              </div>
             </div>
 
             <div className="flex justify-end gap-2 pt-4">
