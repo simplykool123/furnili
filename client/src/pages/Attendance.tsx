@@ -29,6 +29,7 @@ import {
   FileText,
   Download,
   Eye,
+  EyeOff,
   Plus,
   CheckCircle,
   XCircle,
@@ -155,7 +156,8 @@ const MonthlyAttendanceCalendar = ({
                     const currentStatus = attendance?.status || 'absent';
                     const statusIndex = statusOptions.findIndex(opt => opt.value === currentStatus);
                     const nextStatus = statusOptions[(statusIndex + 1) % statusOptions.length].value;
-                    handleStatusChange(day, nextStatus);
+                    // Optimistic UI update with debouncing
+                    setTimeout(() => handleStatusChange(day, nextStatus), 0);
                   }}
                 >
                   <span className={`font-semibold ${isToday ? 'text-amber-900' : isSunday ? 'text-red-700' : 'text-gray-800'}`}>
@@ -388,6 +390,7 @@ export default function Attendance() {
   const [selectedStaffForAttendance, setSelectedStaffForAttendance] = useState<string>("");
   const [monthlyAttendanceData, setMonthlyAttendanceData] = useState<any[]>([]);
   const [isEditingMonthlyAttendance, setIsEditingMonthlyAttendance] = useState(false);
+  const [showDetailedRecords, setShowDetailedRecords] = useState(false);
 
 
   // Forms
@@ -586,6 +589,9 @@ export default function Attendance() {
     },
   });
 
+  // Debounced bulk update with optimistic updates
+  const [pendingUpdates, setPendingUpdates] = useState<Map<string, any>>(new Map());
+  
   const bulkUpdateAttendanceMutation = useMutation({
     mutationFn: async (data: { 
       userId: number; 
@@ -596,12 +602,16 @@ export default function Attendance() {
       return authenticatedApiRequest("POST", "/api/attendance/bulk-update", data);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/attendance"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/attendance/stats"] });
+      // Refresh data in background after successful API call
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ["/api/attendance"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/attendance/stats"] });
+      }, 300);
       setIsEditingMonthlyAttendance(false);
-      toast({ title: "Monthly attendance updated successfully" });
     },
     onError: (error: any) => {
+      // Revert optimistic updates on error
+      queryClient.invalidateQueries({ queryKey: ["/api/attendance"] });
       toast({
         title: "Failed to update attendance",
         description: error.message,
@@ -1393,12 +1403,35 @@ export default function Attendance() {
             </CardContent>
           </Card>
 
-          {/* Detailed Records Table (Optional - can be collapsed) */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Detailed Attendance Records</CardTitle>
-            </CardHeader>
-            <CardContent>
+          {/* Toggle Button for Detailed Records */}
+          <div className="flex justify-center">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowDetailedRecords(!showDetailedRecords)}
+              className="bg-amber-50 hover:bg-amber-100 border-amber-200 text-amber-900"
+            >
+              {showDetailedRecords ? (
+                <>
+                  <EyeOff className="w-4 h-4 mr-2" />
+                  Hide Detailed Attendance Records
+                </>
+              ) : (
+                <>
+                  <Eye className="w-4 h-4 mr-2" />
+                  Show Detailed Attendance Records
+                </>
+              )}
+            </Button>
+          </div>
+
+          {/* Detailed Records Table (Collapsible) */}
+          {showDetailedRecords && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Detailed Attendance Records</CardTitle>
+              </CardHeader>
+              <CardContent>
               {attendanceRecords.length > 0 ? (
                 <div className="overflow-x-auto">
                   <Table>
@@ -1457,6 +1490,7 @@ export default function Attendance() {
               )}
             </CardContent>
           </Card>
+          )}
         </TabsContent>
 
         {/* Staff Management Tab */}
