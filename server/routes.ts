@@ -126,15 +126,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(409).json({ message: "User already exists" });
       }
 
-      const user = await storage.createUser(userData);
+      // Check if username already exists
+      const existingUsername = await storage.getUserByUsername(userData.username);
+      if (existingUsername) {
+        return res.status(409).json({ message: "Username already exists" });
+      }
+
+      // Hash the password before storing
+      const hashedPassword = await bcrypt.hash(userData.password, 10);
+      const userDataWithHashedPassword = {
+        ...userData,
+        password: hashedPassword
+      };
+
+      const user = await storage.createUser(userDataWithHashedPassword);
       res.status(201).json({
         id: user.id,
         name: user.name,
         email: user.email,
+        username: user.username,
         role: user.role,
         createdAt: user.createdAt,
       });
     } catch (error) {
+      console.error("Registration error:", error);
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Validation failed", errors: error.errors });
       }
@@ -162,6 +177,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const id = parseInt(req.params.id);
       const updates = insertUserSchema.partial().parse(req.body);
       
+      // If password is being updated, hash it
+      if (updates.password) {
+        updates.password = await bcrypt.hash(updates.password, 10);
+      }
+      
       const updatedUser = await storage.updateUser(id, updates);
       
       if (!updatedUser) {
@@ -172,6 +192,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { password, ...sanitizedUser } = updatedUser;
       res.json(sanitizedUser);
     } catch (error) {
+      console.error("Update user error:", error);
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: "Validation failed", errors: error.errors });
       }
