@@ -74,46 +74,41 @@ export default function StockWarnings() {
   }
 
   return (
-    <Card className="border-orange-200 bg-orange-50">
-      <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-orange-800">
-          <AlertTriangle className="w-5 h-5" />
+    <Card className="border-l-4 border-l-amber-500 bg-amber-50/30">
+      <CardHeader className="pb-1">
+        <CardTitle className="flex items-center gap-2 text-amber-900 text-sm">
+          <AlertTriangle className="h-4 w-4 text-amber-600" />
           Stock Warnings ({stockWarnings.length})
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-3">
-        {stockWarnings.slice(0, 5).map((warning, index) => (
-          <div key={index} className="flex items-center justify-between p-3 bg-white rounded-lg border border-orange-200">
-            <div className="flex items-start gap-3">
-              <Package className="w-4 h-4 text-orange-600 mt-0.5" />
-              <div>
-                <p className="font-medium text-sm text-gray-900">{warning.productName}</p>
-                <p className="text-xs text-gray-600">
-                  Request: {warning.orderNumber} - {warning.clientName}
-                </p>
-                <div className="flex items-center gap-2 mt-1">
-                  <Badge variant="destructive" className="text-xs">
-                    Need: {warning.requestedQuantity}
-                  </Badge>
-                  <Badge variant="secondary" className="text-xs">
-                    Stock: {warning.availableStock}
-                  </Badge>
+      <CardContent className="pt-0">
+        <div className="space-y-2">
+          {stockWarnings.slice(0, 2).map((warning, index) => (
+            <div key={index} className="flex items-center justify-between p-2 bg-white rounded border border-amber-200">
+              <div className="flex items-center gap-2">
+                <Package className="h-3 w-3 text-amber-600" />
+                <div>
+                  <div className="font-medium text-xs text-gray-900">{warning.productName}</div>
+                  <div className="text-xs text-gray-600">
+                    #{warning.orderNumber} • {warning.clientName}
+                  </div>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-xs text-red-600 font-medium">
+                  Need: {warning.requestedQuantity} | Have: {warning.availableStock}
                 </div>
               </div>
             </div>
-            <div className="text-right">
-              <p className="text-sm font-medium text-red-600">
-                -{warning.requestedQuantity - warning.availableStock}
-              </p>
-              <p className="text-xs text-gray-500">Short</p>
+          ))}
+          {stockWarnings.length > 2 && (
+            <div className="text-center pt-1">
+              <Badge variant="outline" className="text-amber-700 border-amber-300 text-xs">
+                +{stockWarnings.length - 2} more
+              </Badge>
             </div>
-          </div>
-        ))}
-        {stockWarnings.length > 5 && (
-          <p className="text-xs text-gray-600 text-center pt-2">
-            And {stockWarnings.length - 5} more warnings...
-          </p>
-        )}
+          )}
+        </div>
       </CardContent>
     </Card>
   );
