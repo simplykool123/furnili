@@ -33,15 +33,20 @@ export function AnimatedNotificationBell() {
   const [previousTaskCount, setPreviousTaskCount] = useState(0);
   const [showGlow, setShowGlow] = useState(false);
   
-  const { data: tasks = [] } = useQuery<Task[]>({
+  const { data: tasks = [], error, isLoading } = useQuery<Task[]>({
     queryKey: ["/api/dashboard/tasks"],
     refetchInterval: 30000, // Refetch every 30 seconds
   });
+
+  // Debug logging
+  console.log('AnimatedNotificationBell - Tasks:', tasks, 'Count:', tasks.length, 'Error:', error);
 
   // Count pending and in-progress tasks (using lowercase status values)
   const taskCount = tasks.filter(task => 
     task.status === 'pending' || task.status === 'in_progress'
   ).length;
+
+  console.log('AnimatedNotificationBell - Filtered task count:', taskCount, 'Tasks with status:', tasks.map(t => t.status));
 
   // Trigger animation when new tasks are added
   useEffect(() => {
