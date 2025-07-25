@@ -735,7 +735,8 @@ export default function Attendance() {
 
   const saveCellEdit = async (staffId: number, day: number, newStatus: string) => {
     try {
-      const date = new Date(selectedYear, selectedMonth - 1, day);
+      // Fix date calculation - use UTC to avoid timezone issues
+      const date = new Date(Date.UTC(selectedYear, selectedMonth - 1, day));
       const dateString = date.toISOString().split('T')[0];
       
       console.log('Updating attendance:', { staffId, day, newStatus, dateString });
@@ -1505,11 +1506,16 @@ export default function Attendance() {
                         <TableHead className="w-8">No</TableHead>
                         <TableHead>Name</TableHead>
                         <TableHead>Post</TableHead>
-                        {Array.from({ length: new Date(selectedYear, selectedMonth, 0).getDate() }, (_, i) => (
-                          <TableHead key={i + 1} className="w-8 text-center p-1 text-xs">
-                            {i + 1}
-                          </TableHead>
-                        ))}
+                        {Array.from({ length: new Date(selectedYear, selectedMonth, 0).getDate() }, (_, i) => {
+                          const day = i + 1;
+                          const isEvenDay = day % 2 === 0;
+                          const headerBgClass = isEvenDay ? 'bg-amber-50' : 'bg-gray-50';
+                          return (
+                            <TableHead key={day} className={`w-8 text-center p-1 text-xs ${headerBgClass}`}>
+                              {day}
+                            </TableHead>
+                          );
+                        })}
                         <TableHead className="w-16">Total</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -1569,9 +1575,11 @@ export default function Attendance() {
                               const colorClass = status ? getStatusColor(status) : 'text-gray-400';
                               
                               const isEditing = editingCell?.staffId === member.id && editingCell?.day === day;
+                              const isEvenDay = day % 2 === 0;
+                              const columnBgClass = isEvenDay ? 'bg-amber-50/30' : 'bg-white';
                               
                               return (
-                                <TableCell key={day} className="text-center p-1">
+                                <TableCell key={day} className={`text-center p-1 ${columnBgClass}`}>
                                   {isEditing ? (
                                     <div className="flex flex-col items-center gap-1">
                                       <Select 
