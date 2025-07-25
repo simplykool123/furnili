@@ -38,9 +38,9 @@ export function AnimatedNotificationBell() {
     refetchInterval: 30000, // Refetch every 30 seconds
   });
 
-  // Count pending and in-progress tasks
+  // Count pending and in-progress tasks (using lowercase status values)
   const taskCount = tasks.filter(task => 
-    task.status === 'Pending' || task.status === 'In Progress'
+    task.status === 'pending' || task.status === 'in_progress'
   ).length;
 
   // Trigger animation when new tasks are added
