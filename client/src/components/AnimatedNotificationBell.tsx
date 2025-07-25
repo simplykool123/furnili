@@ -39,7 +39,7 @@ export function AnimatedNotificationBell() {
     refetchInterval: 30000, // Refetch every 30 seconds
   });
 
-  // Debug logging
+  // Debug logging - remove after testing
   console.log('AnimatedNotificationBell - Rendered! Tasks:', tasks, 'Count:', tasks.length, 'Error:', error, 'Loading:', isLoading);
 
   // Count pending and in-progress tasks (using lowercase status values)
