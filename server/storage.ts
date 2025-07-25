@@ -46,7 +46,7 @@ import {
   type BOQExtractedItem,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, gte, lte, sql } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 
 export interface IStorage {
@@ -2034,6 +2034,15 @@ class DatabaseStorage implements IStorage {
       } catch (error) {
         console.error(`Error processing attendance for date ${dayData.date}:`, error);
       }
+    }
+    
+    // After updating attendance, automatically regenerate payroll for the affected month
+    try {
+      console.log(`Auto-regenerating payroll for user ${userId}, month ${month}, year ${year}`);
+      await this.generatePayroll(userId, month, year);
+    } catch (payrollError) {
+      console.error('Error auto-regenerating payroll:', payrollError);
+      // Don't fail the attendance update if payroll generation fails
     }
     
     return results;

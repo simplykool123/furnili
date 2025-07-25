@@ -708,13 +708,13 @@ export default function Attendance() {
 
   const saveAttendanceEdit = async (recordId: number, newStatus: string) => {
     try {
-      await apiRequest(`/api/attendance/${recordId}`, {
-        method: 'PATCH',
-        body: { status: newStatus }
+      await authenticatedApiRequest('PATCH', `/api/attendance/${recordId}`, {
+        status: newStatus
       });
       
       queryClient.invalidateQueries({ queryKey: ['/api/attendance'] });
       queryClient.invalidateQueries({ queryKey: ['/api/attendance/stats'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/payroll'] }); // Also refresh payroll
       setEditingAttendance(null);
       setEditingStatus("");
     } catch (error) {
@@ -738,26 +738,40 @@ export default function Attendance() {
       const date = new Date(selectedYear, selectedMonth - 1, day);
       const dateString = date.toISOString().split('T')[0];
       
-      await apiRequest('/api/attendance/bulk-update', {
-        method: 'POST',
-        body: {
-          userId: staffId,
-          month: selectedMonth,
-          year: selectedYear,
-          attendanceData: [{
-            date: dateString,
-            status: newStatus,
-            userId: staffId
-          }]
-        }
+      console.log('Updating attendance:', { staffId, day, newStatus, dateString });
+      
+      const response = await authenticatedApiRequest('POST', '/api/attendance/bulk-update', {
+        userId: staffId,
+        month: selectedMonth,
+        year: selectedYear,
+        attendanceData: [{
+          date: dateString,
+          status: newStatus,
+          userId: staffId
+        }]
       });
       
+      console.log('Attendance update response:', response);
+      
+      // Invalidate all related queries to refresh data
       queryClient.invalidateQueries({ queryKey: ['/api/attendance'] });
       queryClient.invalidateQueries({ queryKey: ['/api/attendance/stats'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/payroll'] }); // Also refresh payroll
+      
       setEditingCell(null);
       setEditingCellStatus("");
+      
+      toast({
+        title: "Attendance Updated",
+        description: `Successfully updated attendance for ${new Date(dateString).toLocaleDateString()}`,
+      });
     } catch (error) {
       console.error('Error updating attendance:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update attendance. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
