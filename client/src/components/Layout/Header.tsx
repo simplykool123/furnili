@@ -10,6 +10,7 @@ import {
 import { authService } from "@/lib/auth";
 import { useQuery } from "@tanstack/react-query";
 import { authenticatedApiRequest } from "@/lib/auth";
+import NotificationBadge from "@/components/NotificationBadge";
 
 interface HeaderProps {
   title: string;
@@ -55,6 +56,9 @@ export default function Header({ title, subtitle, showAddButton = false, onAddCl
         </div>
         
         <div className="flex items-center space-x-3 sm:space-x-4">
+          {/* Task Notifications for Staff */}
+          <NotificationBadge />
+          
           {/* Low Stock Notification */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

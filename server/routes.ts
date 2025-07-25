@@ -1375,6 +1375,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get notification tasks (pending/in-progress for current user)
+  app.get("/api/tasks/notifications", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const user = req.user!;
+      
+      // Only fetch for staff members, not admins
+      if (user.role === 'admin') {
+        return res.json([]);
+      }
+      
+      const allTasks = await storage.getAllTasks({ assignedTo: user.id });
+      
+      // Filter only pending and in-progress tasks
+      const pendingTasks = allTasks.filter(task => 
+        task.status === 'pending' || task.status === 'in_progress'
+      );
+      
+      // Include assigned user information for better display
+      const tasksWithUsers = await Promise.all(
+        pendingTasks.map(async (task) => {
+          const assignedByUser = await storage.getUser(task.assignedBy);
+          return {
+            ...task,
+            assignedUser: { id: user.id, name: user.name, username: user.username },
+            assignedByUser: assignedByUser ? { id: assignedByUser.id, name: assignedByUser.name, username: assignedByUser.username } : null,
+          };
+        })
+      );
+      
+      res.json(tasksWithUsers);
+    } catch (error) {
+      console.error("Failed to fetch notification tasks:", error);
+      res.status(500).json({ message: "Failed to fetch notification tasks", error: String(error) });
+    }
+  });
+
   app.post("/api/tasks", authenticateToken, async (req: AuthRequest, res) => {
     try {
       const taskData = insertTaskSchema.parse({

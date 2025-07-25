@@ -19,6 +19,7 @@ import Attendance from "@/pages/Attendance";
 import PettyCash from "@/pages/PettyCash";
 import OCRWizard from "@/pages/OCRWizard";
 import TaskManagement from "@/pages/TaskManagement";
+import TaskDetail from "@/pages/TaskDetail";
 import PriceComparison from "@/pages/PriceComparison";
 import ProductComparison from "@/pages/ProductComparison";
 import WhatsAppExport from "@/pages/WhatsAppExport";
@@ -198,6 +199,14 @@ function Router() {
         <ProtectedRoute>
           <Layout>
             <TaskManagement />
+          </Layout>
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/tasks/:id">
+        <ProtectedRoute>
+          <Layout>
+            <TaskDetail />
           </Layout>
         </ProtectedRoute>
       </Route>
