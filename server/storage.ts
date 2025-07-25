@@ -208,6 +208,8 @@ export interface IStorage {
   updateAttendance(id: number, updates: Partial<InsertAttendance>): Promise<Attendance | undefined>;
   getUserAttendance(userId: number, month?: number, year?: number): Promise<Attendance[]>;
   getAllAttendance(month?: number, year?: number): Promise<Attendance[]>;
+  getAttendanceByDate(date: string): Promise<Attendance[]>;
+  getMonthlyExpenses(month: number, year: number): Promise<number>;
 
   // Petty Cash Operations  
   getPettyCashExpense(id: number): Promise<PettyCashExpense | undefined>;
@@ -2426,6 +2428,53 @@ class DatabaseStorage implements IStorage {
   async getStockMovements(productId: number): Promise<StockMovement[]> { return []; }
   async createStockMovement(movement: InsertStockMovement): Promise<StockMovement> { throw new Error("Not implemented"); }
   async updateStock(productId: number, quantity: number, type: 'in' | 'out', reason: string): Promise<void> {}
+
+  // Dashboard specific methods
+  async getAttendanceByDate(date: string): Promise<Attendance[]> {
+    const targetDate = new Date(date);
+    const startOfDay = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate());
+    const endOfDay = new Date(targetDate.getFullYear(), targetDate.getMonth(), targetDate.getDate(), 23, 59, 59);
+    
+    const result = await db.select({
+      id: attendance.id,
+      userId: attendance.userId,
+      date: attendance.date,
+      checkInTime: attendance.checkInTime,
+      checkOutTime: attendance.checkOutTime,
+      workingHours: attendance.workingHours,
+      overtimeHours: attendance.overtimeHours,
+      status: attendance.status,
+      leaveType: attendance.leaveType,
+      checkInBy: attendance.checkInBy,
+      checkOutBy: attendance.checkOutBy,
+      location: attendance.location,
+      notes: attendance.notes,
+      isManualEntry: attendance.isManualEntry,
+      createdAt: attendance.createdAt,
+      updatedAt: attendance.updatedAt,
+    }).from(attendance)
+      .where(and(
+        gte(attendance.date, startOfDay),
+        lte(attendance.date, endOfDay)
+      ));
+    
+    return result;
+  }
+
+  async getMonthlyExpenses(month: number, year: number): Promise<number> {
+    const startDate = new Date(year, month - 1, 1);
+    const endDate = new Date(year, month, 0, 23, 59, 59);
+    
+    const result = await db.select({
+      totalExpenses: sql<number>`COALESCE(SUM(CASE WHEN ${pettyCashExpenses.type} = 'expense' THEN ${pettyCashExpenses.amount} ELSE 0 END), 0)`
+    }).from(pettyCashExpenses)
+      .where(and(
+        gte(pettyCashExpenses.date, startDate),
+        lte(pettyCashExpenses.date, endDate)
+      ));
+    
+    return result[0]?.totalExpenses || 0;
+  }
 }
 
 export const storage = new DatabaseStorage();

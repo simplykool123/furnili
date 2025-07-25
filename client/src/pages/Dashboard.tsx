@@ -33,6 +33,8 @@ interface DashboardStats {
   todayAttendance: number;
   monthlyExpenses: number;
   activeTasks: number;
+  totalValue: number;
+  recentRequests: any[];
 }
 
 const motivationalQuotes = [

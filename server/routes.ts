@@ -88,7 +88,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Dashboard stats
   app.get("/api/dashboard/stats", authenticateToken, async (req: AuthRequest, res) => {
     try {
-      const stats = await storage.getDashboardStats();
+      // Get basic dashboard stats
+      const basicStats = await storage.getDashboardStats();
+      
+      // Get today's attendance count
+      const today = new Date();
+      const todayStr = today.toISOString().split('T')[0];
+      const todayAttendance = await storage.getAttendanceByDate(todayStr);
+      const todayAttendanceCount = todayAttendance.filter(att => att.status === 'present').length;
+      
+      // Get total active users count for Staff & Payroll
+      const allUsers = await storage.getAllUsers();
+      const activeUsersCount = allUsers.filter(user => user.isActive).length;
+      
+      // Get current month expenses
+      const currentMonth = today.getMonth() + 1;
+      const currentYear = today.getFullYear();
+      const monthlyExpenses = await storage.getMonthlyExpenses(currentMonth, currentYear);
+      
+      const stats = {
+        ...basicStats,
+        todayAttendance: todayAttendanceCount,
+        activeTasks: activeUsersCount, // Using active users count for Staff & Payroll
+        monthlyExpenses: monthlyExpenses,
+        totalUsers: allUsers.length,
+        activeUsers: activeUsersCount
+      };
+      
       res.json(stats);
     } catch (error) {
       console.error("Dashboard stats error:", error);
