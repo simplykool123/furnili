@@ -478,10 +478,13 @@ export default function Attendance() {
       console.log('Starting export for month:', selectedMonth, 'year:', selectedYear);
       
       // Fetch staff and attendance data
-      const [staffData, attendanceData] = await Promise.all([
+      const [staffResponse, attendanceResponse] = await Promise.all([
         apiRequest('GET', '/api/users'),
         apiRequest('GET', `/api/attendance?month=${selectedMonth}&year=${selectedYear}`)
       ]);
+      
+      const staffData = await staffResponse.json();
+      const attendanceData = await attendanceResponse.json();
       
       console.log('Staff data:', staffData);
       console.log('Attendance data:', attendanceData);
