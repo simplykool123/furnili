@@ -159,7 +159,7 @@ export const payroll = pgTable("payroll", {
   deductions: real("deductions").default(0), // PF, ESI, tax, etc.
   netSalary: real("net_salary").notNull(),
   totalWorkingDays: integer("total_working_days").default(30),
-  actualWorkingDays: integer("actual_working_days").notNull(),
+  actualWorkingDays: real("actual_working_days").notNull(),
   totalHours: real("total_hours").default(0),
   overtimeHours: real("overtime_hours").default(0),
   leaveDays: integer("leave_days").default(0),
