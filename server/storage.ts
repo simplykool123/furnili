@@ -2132,7 +2132,7 @@ class DatabaseStorage implements IStorage {
     const totalDaysInMonth = this.calculateWorkingDaysInMonth(month, year);
     
     // User's basic salary from profile (fallback to default)
-    const basicSalary = user.salary || 25000;
+    const basicSalary = user.basicSalary || 25000;
     
     // Formula: Basic salary ÷ total days × working days
     // Sundays are paid holidays by default (no deduction for Sundays)
