@@ -62,17 +62,16 @@ export function AnimatedNotificationBell() {
     setPreviousTaskCount(taskCount);
   }, [taskCount, previousTaskCount]);
 
-  // Continuous gentle animation for existing tasks
-  useEffect(() => {
-    if (taskCount > 0 && !isAnimating) {
-      const interval = setInterval(() => {
-        setIsAnimating(true);
-        setTimeout(() => setIsAnimating(false), 800);
-      }, 4000); // Gentle swing every 4 seconds
-
-      return () => clearInterval(interval);
-    }
-  }, [taskCount, isAnimating]);
+  // Removed continuous animation - only animate on new tasks
+  // useEffect(() => {
+  //   if (taskCount > 0 && !isAnimating) {
+  //     const interval = setInterval(() => {
+  //       setIsAnimating(true);
+  //       setTimeout(() => setIsAnimating(false), 800);
+  //     }, 4000);
+  //     return () => clearInterval(interval);
+  //   }
+  // }, [taskCount, isAnimating]);
 
   // Priority tasks pulse effect
   const hasHighPriorityTasks = tasks.some(task => task.priority === 'high');
@@ -97,20 +96,12 @@ export function AnimatedNotificationBell() {
               {/* Bell Icon with dynamic animations */}
               <Bell 
                 className={cn(
-                  "h-5 w-5 transition-all duration-300 transform-gpu",
-                  isAnimating && "animate-bell-swing",
-                  hasHighPriorityTasks ? "text-red-500" : "text-amber-600",
-                  hasNewTasks && "drop-shadow-lg scale-110"
+                  "h-5 w-5 transition-all duration-300",
+                  hasHighPriorityTasks ? "text-red-500" : "text-amber-600"
                 )} 
               />
               
-              {/* Animated ripple effect for new tasks */}
-              {hasNewTasks && (
-                <>
-                  <div className="absolute inset-0 rounded-full bg-amber-400 opacity-30 animate-ping scale-150"></div>
-                  <div className="absolute inset-0 rounded-full bg-red-400 opacity-20 animate-ping scale-200 delay-100"></div>
-                </>
-              )}
+              {/* Removed animated ripple effects */}
               
               {/* Task count badge with animations */}
               {taskCount > 0 && (
@@ -118,9 +109,7 @@ export function AnimatedNotificationBell() {
                   variant="destructive" 
                   className={cn(
                     "absolute -top-1 -right-1 h-5 w-5 p-0 text-xs flex items-center justify-center font-bold border-2 border-white",
-                    hasHighPriorityTasks && "animate-badge-pulse bg-red-600",
-                    hasNewTasks && "scale-125 animate-bounce",
-                    "transition-all duration-300"
+                    hasHighPriorityTasks ? "bg-red-600" : "bg-red-500"
                   )}
                 >
                   {taskCount > 9 ? '9+' : taskCount}

@@ -159,10 +159,10 @@ export default function Dashboard() {
     queryKey: ["/api/dashboard/activity"],
   });
 
-  // Fetch pending tasks assigned to current user
+  // Fetch pending tasks assigned to current user (disabled to avoid duplication)
   const { data: pendingTasks } = useQuery<DashboardTask[]>({
     queryKey: ["/api/dashboard/tasks"],
-    enabled: !!currentUser && !admin, // Only fetch for staff members
+    enabled: false, // Disabled - tasks will be shown via AnimatedNotificationBell only
   });
 
   const { toast } = useToast();
