@@ -123,6 +123,21 @@ Preferred communication style: Simple, everyday language.
   - WhatsApp integration with template-based messaging (data issue fixed)
   - Mobile-responsive design optimized for all device sizes
   - **DEPLOYMENT READY**: System verified and ready for production deployment
+- ✅ **USER-SPECIFIC NOTIFICATION SYSTEM**: Complete task notification implementation
+  - NotificationBadge component with bell icon and real-time task count
+  - Notification API endpoint for pending/in-progress tasks assigned to current user
+  - Role-based filtering (staff see their tasks, admins see none)
+  - Dropdown showing task details with title, due date, priority, and status
+  - Clickable tasks navigating to dedicated Task Detail view page
+  - Real-time updates every 30 seconds with proper cache invalidation
+  - TaskDetail page with status update functionality and comprehensive task information
+- ✅ **SIDEBAR REORGANIZATION**: Updated navigation structure per user requirements
+  - Removed BOQ Upload from sidebar navigation
+  - Added BOQ Upload button to Material Requests page (next to New Request button)
+  - Moved Master section to bottom of sidebar (below Reports, above Logout)
+  - Moved OCR Wizard and Price Comparison into Master section as sub-items
+  - Maintained all routing functionality and icon consistency
+  - Preserved role-based access control for all menu items
 - ✅ **PHP/MySQL VERSION COMPLETE**: Full conversion for Hostinger shared hosting
   - Complete PHP/MySQL version maintaining all React system features
   - Optimized for app.furnili.in deployment on Hostinger
