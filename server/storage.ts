@@ -2462,18 +2462,17 @@ class DatabaseStorage implements IStorage {
   }
 
   async getMonthlyExpenses(month: number, year: number): Promise<number> {
-    const startDate = new Date(year, month - 1, 1);
-    const endDate = new Date(year, month, 0, 23, 59, 59);
-    
-    const result = await db.select({
-      totalExpenses: sql<number>`COALESCE(SUM(CASE WHEN type = 'expense' THEN amount ELSE 0 END), 0)`
-    }).from(pettyCashExpenses)
-      .where(and(
-        gte(pettyCashExpenses.date, startDate),
-        lte(pettyCashExpenses.date, endDate)
-      ));
-    
-    return result[0]?.totalExpenses || 0;
+    try {
+      const result = await db.select({
+        totalExpenses: sql<number>`COALESCE(SUM(amount), 0)`
+      }).from(pettyCashExpenses)
+        .where(sql`EXTRACT(MONTH FROM expense_date) = ${month} AND EXTRACT(YEAR FROM expense_date) = ${year}`);
+      
+      return Number(result[0]?.totalExpenses) || 0;
+    } catch (error) {
+      console.error('Error in getMonthlyExpenses:', error);
+      return 0;
+    }
   }
 }
 
