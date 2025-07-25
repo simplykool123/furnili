@@ -11,7 +11,7 @@ export const users = pgTable("users", {
   role: text("role").notNull().default("staff"), // admin, staff, store_incharge
   phone: text("phone"),
   // Staff Management Fields
-  aadharNumber: text("aadhar_number").unique(),
+  aadharNumber: text("aadhar_number"),
   employeeId: text("employee_id").unique(),
   department: text("department"),
   designation: text("designation"),
