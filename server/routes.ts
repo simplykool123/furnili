@@ -830,22 +830,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get dashboard tasks for current user (pending tasks assigned to them)
+  // Get dashboard tasks for current user (pending and in_progress tasks assigned to them)
   app.get("/api/dashboard/tasks", authenticateToken, async (req: AuthRequest, res) => {
     try {
       const user = req.user!;
       
-      // Fetch pending tasks assigned to the current user
-      const filters = { 
-        assignedTo: user.id,
-        status: 'pending'  // Use lowercase to match database
-      };
+      // Fetch all tasks assigned to the current user, then filter for pending and in_progress
+      const allTasks = await storage.getAllTasks({ assignedTo: user.id });
       
-      const tasks = await storage.getAllTasks(filters);
+      // Filter for pending and in_progress tasks only
+      const activeTasks = allTasks.filter(task => 
+        task.status === 'pending' || task.status === 'in_progress'
+      );
       
       // Include assigned by user information
       const tasksWithUsers = await Promise.all(
-        tasks.map(async (task) => {
+        activeTasks.map(async (task) => {
           const assignedByUser = await storage.getUser(task.assignedBy);
           return {
             ...task,
