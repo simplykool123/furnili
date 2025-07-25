@@ -838,7 +838,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Fetch pending tasks assigned to the current user
       const filters = { 
         assignedTo: user.id,
-        status: 'pending'
+        status: 'Pending'
       };
       
       const tasks = await storage.getAllTasks(filters);

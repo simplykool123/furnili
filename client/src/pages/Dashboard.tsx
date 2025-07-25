@@ -219,6 +219,91 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6 animate-fade-in max-w-7xl mx-auto">
+      {/* Pending Tasks/Messages for All Users - TOP PRIORITY */}
+      {pendingTasks && pendingTasks.length > 0 && (
+        <Card className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-red-500 bg-gradient-to-br from-red-50 to-orange-50 shadow-lg animate-pulse">
+          <CardHeader className="pb-4 bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-t-lg">
+            <CardTitle className="text-xl font-bold text-white flex items-center gap-3">
+              <div className="relative">
+                <AlertCircle className="h-6 w-6 text-white" />
+                <div className="absolute -top-1 -right-1 h-3 w-3 bg-yellow-400 rounded-full animate-ping"></div>
+              </div>
+              🔔 New Messages ({pendingTasks.length})
+            </CardTitle>
+            <CardDescription className="text-red-100">
+              Important tasks and notifications require your attention
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="pt-4">
+            <div className="space-y-3 max-h-96 overflow-y-auto">
+              {pendingTasks.map((task) => (
+                <div 
+                  key={task.id} 
+                  className="flex items-start gap-3 p-4 rounded-lg bg-gradient-to-r from-white to-red-50 border-l-4 border-l-red-400 border border-red-200 hover:shadow-lg transition-all duration-200 cursor-pointer hover:scale-[1.02]"
+                  onClick={() => setLocation(`/tasks/${task.id}`)}
+                >
+                  <div className="flex-shrink-0 mt-1">
+                    <div className="relative">
+                      <AlertCircle className="h-5 w-5 text-red-600" />
+                      <div className="absolute -top-1 -right-1 h-2 w-2 bg-red-500 rounded-full animate-pulse"></div>
+                    </div>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-base font-bold text-red-900 truncate flex items-center gap-2">
+                      📋 {task.title}
+                    </h4>
+                    {task.description && (
+                      <p className="text-sm text-gray-700 mt-1 line-clamp-2">
+                        {task.description}
+                      </p>
+                    )}
+                    <div className="flex items-center gap-2 mt-2">
+                      <Badge 
+                        variant="outline" 
+                        className="bg-red-100 text-red-800 border-red-300"
+                      >
+                        📢 URGENT
+                      </Badge>
+                      <Badge 
+                        variant={task.priority === 'high' ? 'destructive' : 
+                                task.priority === 'medium' ? 'default' : 'secondary'}
+                        className="text-xs"
+                      >
+                        {task.priority} priority
+                      </Badge>
+                      {task.dueDate && (
+                        <span className="text-xs text-gray-600 flex items-center gap-1">
+                          <Calendar className="h-3 w-3" />
+                          Due: {new Date(task.dueDate).toLocaleDateString()}
+                        </span>
+                      )}
+                    </div>
+                    {task.assignedByUser && (
+                      <p className="text-xs text-gray-600 mt-1">
+                        From: {task.assignedByUser.name}
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <Button
+                      size="sm"
+                      className="text-xs h-8 bg-red-600 hover:bg-red-700 text-white"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setLocation(`/tasks/${task.id}`);
+                      }}
+                    >
+                      <ArrowRight className="h-3 w-3 mr-1" />
+                      Open
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Welcome Header */}
       <div className="text-center sm:text-left">
         <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-amber-900">
@@ -326,16 +411,19 @@ export default function Dashboard() {
         </Card>
       </div>
 
-      {/* Pending Tasks for Staff */}
-      {!admin && pendingTasks && pendingTasks.length > 0 && (
-        <Card className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-yellow-500 bg-gradient-to-br from-card to-yellow-50/20">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-lg font-semibold text-foreground flex items-center gap-2">
-              <AlertCircle className="h-5 w-5 text-yellow-600" />
-              Pending Tasks ({pendingTasks.length})
+      {/* Pending Tasks/Messages for All Users */}
+      {pendingTasks && pendingTasks.length > 0 && (
+        <Card className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-red-500 bg-gradient-to-br from-red-50 to-orange-50 shadow-lg animate-pulse">
+          <CardHeader className="pb-4 bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-t-lg">
+            <CardTitle className="text-xl font-bold text-white flex items-center gap-3">
+              <div className="relative">
+                <AlertCircle className="h-6 w-6 text-white" />
+                <div className="absolute -top-1 -right-1 h-3 w-3 bg-yellow-400 rounded-full animate-ping"></div>
+              </div>
+              🔔 New Messages ({pendingTasks.length})
             </CardTitle>
-            <CardDescription>
-              Tasks assigned to you that need attention
+            <CardDescription className="text-red-100">
+              Important tasks and notifications require your attention
             </CardDescription>
           </CardHeader>
           <CardContent className="pt-0">
@@ -343,15 +431,18 @@ export default function Dashboard() {
               {pendingTasks.map((task) => (
                 <div 
                   key={task.id} 
-                  className="flex items-start gap-3 p-4 rounded-lg bg-white border border-yellow-200 hover:shadow-md transition-all duration-200 cursor-pointer"
+                  className="flex items-start gap-3 p-4 rounded-lg bg-gradient-to-r from-white to-red-50 border-l-4 border-l-red-400 border border-red-200 hover:shadow-lg transition-all duration-200 cursor-pointer hover:scale-[1.02]"
                   onClick={() => setLocation(`/tasks/${task.id}`)}
                 >
                   <div className="flex-shrink-0 mt-1">
-                    <AlertCircle className="h-4 w-4 text-yellow-600" />
+                    <div className="relative">
+                      <AlertCircle className="h-5 w-5 text-red-600" />
+                      <div className="absolute -top-1 -right-1 h-2 w-2 bg-red-500 rounded-full animate-pulse"></div>
+                    </div>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h4 className="text-sm font-medium text-gray-900 truncate">
-                      {task.title}
+                    <h4 className="text-base font-bold text-red-900 truncate flex items-center gap-2">
+                      📋 {task.title}
                     </h4>
                     {task.description && (
                       <p className="text-xs text-gray-600 mt-1 line-clamp-2">
