@@ -462,11 +462,97 @@ export default function Attendance() {
   const isMobile = useIsMobile();
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [isExporting, setIsExporting] = useState(false);
   
   // Generate year options from 2024 to 2030
   const yearOptions = Array.from({ length: 7 }, (_, i) => 2024 + i);
   const [selectedStaff, setSelectedStaff] = useState<string>("");
   const [editingPayroll, setEditingPayroll] = useState<any>(null);
+
+  // Export attendance report function
+  const exportAttendanceReport = async () => {
+    if (isExporting) return;
+    
+    setIsExporting(true);
+    try {
+      // Fetch staff and attendance data
+      const [staff, attendance] = await Promise.all([
+        apiRequest('GET', '/api/users'),
+        apiRequest('GET', `/api/attendance?month=${selectedMonth}&year=${selectedYear}`)
+      ]);
+      
+      const staffData = staff || [];
+      const attendanceData = attendance || [];
+      
+      // Calculate attendance summary for each staff member
+      const reportData = staffData.map((member: any) => {
+        const memberAttendance = attendanceData.filter((att: any) => att.userId === member.id);
+        const totalPresent = memberAttendance.filter((att: any) => att.status === 'present').length;
+        const totalAbsent = memberAttendance.filter((att: any) => att.status === 'absent').length;
+        const totalHalfDay = memberAttendance.filter((att: any) => att.status === 'half-day').length;
+        const totalLeave = memberAttendance.filter((att: any) => att.status === 'leave').length;
+        
+        return {
+          'Employee ID': member.employeeId || 'Not Set',
+          'Employee Name': member.name,
+          'Department': member.department || 'General',
+          'Role': member.role,
+          'Present Days': totalPresent,
+          'Half Days': totalHalfDay,
+          'Leave Days': totalLeave,
+          'Absent Days': totalAbsent,
+          'Total Working Days': totalPresent + totalHalfDay + totalLeave + totalAbsent,
+          'Attendance Percentage': totalPresent + totalAbsent + totalHalfDay + totalLeave > 0 
+            ? Math.round(((totalPresent + totalHalfDay * 0.5 + totalLeave) / (totalPresent + totalAbsent + totalHalfDay + totalLeave)) * 100) + '%'
+            : '0%'
+        };
+      });
+      
+      // Convert to CSV
+      if (reportData.length === 0) {
+        toast({
+          title: "No Data",
+          description: "No attendance data found for the selected period.",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      const headers = Object.keys(reportData[0]);
+      const csvContent = [
+        headers.join(','),
+        ...reportData.map((row: any) => 
+          headers.map(header => `"${row[header]}"`).join(',')
+        )
+      ].join('\n');
+      
+      // Download CSV
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', `attendance_report_${selectedMonth}_${selectedYear}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      toast({
+        title: "Export Successful",
+        description: `Attendance report exported for ${selectedMonth}/${selectedYear}`
+      });
+      
+    } catch (error) {
+      console.error('Export failed:', error);
+      toast({
+        title: "Export Failed", 
+        description: "Failed to export attendance report. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsExporting(false);
+    }
+  };
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingAttendance, setEditingAttendance] = useState<number | null>(null);
   const [editingStatus, setEditingStatus] = useState<string>("");
@@ -1387,9 +1473,14 @@ export default function Attendance() {
                   Generate Monthly Payroll
                 </Button>
                 
-                <Button className="w-full justify-start" variant="outline">
-                  <Download className="w-4 h-4 mr-2" />
-                  Export Attendance Report
+                <Button 
+                  className="w-full justify-start" 
+                  variant="outline"
+                  onClick={exportAttendanceReport}
+                  disabled={isExporting}
+                >
+                  <Download className={`w-4 h-4 mr-2 ${isExporting ? 'animate-spin' : ''}`} />
+                  {isExporting ? 'Exporting...' : 'Export Attendance Report'}
                 </Button>
                 
                 <Button className="w-full justify-start" variant="outline">
