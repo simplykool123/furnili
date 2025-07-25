@@ -26,10 +26,23 @@ const userSchema = z.object({
   role: z.enum(["admin", "staff", "store_incharge"]),
 });
 
+const editUserSchema = z.object({
+  username: z.string().min(3, "Username must be at least 3 characters"),
+  email: z.string().email("Invalid email address"),
+  password: z.string().optional(), // Password is optional for editing
+  name: z.string().min(1, "Name is required"),
+  role: z.enum(["admin", "staff", "store_incharge"]),
+  resetPassword: z.boolean().optional(),
+});
+
+type EditUserFormData = z.infer<typeof editUserSchema>;
+
 type UserFormData = z.infer<typeof userSchema>;
 
 export default function Users() {
   const [showAddUser, setShowAddUser] = useState(false);
+  const [showEditUser, setShowEditUser] = useState(false);
+  const [editingUser, setEditingUser] = useState<any>(null);
   const [activeFilter, setActiveFilter] = useState<'all' | 'active' | 'inactive'>('active');
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -63,6 +76,62 @@ export default function Users() {
       password: "",
       name: "",
       role: "staff",
+    },
+  });
+
+  const {
+    register: editRegister,
+    handleSubmit: editHandleSubmit,
+    formState: { errors: editErrors },
+    reset: editReset,
+    setValue: editSetValue,
+    watch: editWatch,
+  } = useForm<EditUserFormData>({
+    resolver: zodResolver(editUserSchema),
+    defaultValues: {
+      username: "",
+      email: "",
+      password: "",
+      name: "",
+      role: "staff",
+      resetPassword: false,
+    },
+  });
+
+  const editUserMutation = useMutation({
+    mutationFn: async (userData: EditUserFormData & { id: number }) => {
+      const { id, resetPassword, ...data } = userData;
+      
+      // If resetPassword is true, generate a new password
+      if (resetPassword) {
+        data.password = 'temp123456'; // Temporary password - user should change it
+      }
+      
+      // Remove password field if it's empty and resetPassword is false
+      if (!resetPassword && !data.password) {
+        delete data.password;
+      }
+      
+      return await authenticatedApiRequest('PATCH', `/api/users/${id}`, data);
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/users'] });
+      toast({
+        title: "User updated",
+        description: variables.resetPassword 
+          ? "User has been updated and password reset to 'temp123456'. Please ask them to change it." 
+          : "User has been updated successfully.",
+      });
+      setShowEditUser(false);
+      setEditingUser(null);
+      editReset();
+    },
+    onError: (error) => {
+      toast({
+        title: "Failed to update user",
+        description: error.message,
+        variant: "destructive",
+      });
     },
   });
 
@@ -133,6 +202,23 @@ export default function Users() {
 
   const onSubmit = (data: UserFormData) => {
     createUserMutation.mutate(data);
+  };
+
+  const onEditSubmit = (data: EditUserFormData) => {
+    if (editingUser) {
+      editUserMutation.mutate({ ...data, id: editingUser.id });
+    }
+  };
+
+  const handleEditUser = (user: any) => {
+    setEditingUser(user);
+    editSetValue('username', user.username);
+    editSetValue('email', user.email);
+    editSetValue('name', user.name);
+    editSetValue('role', user.role);
+    editSetValue('password', '');
+    editSetValue('resetPassword', false);
+    setShowEditUser(true);
   };
 
   // Filter users based on active status
@@ -279,13 +365,7 @@ export default function Users() {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => {
-                              // Future: Open edit user dialog
-                              toast({
-                                title: "Edit functionality",
-                                description: "Edit user functionality will be available soon.",
-                              });
-                            }}
+                            onClick={() => handleEditUser(user)}
                           >
                             Edit
                           </Button>
@@ -462,6 +542,100 @@ export default function Users() {
                 </Button>
                 <Button type="submit" disabled={createUserMutation.isPending}>
                   {createUserMutation.isPending ? "Creating..." : "Create User"}
+                </Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
+
+        {/* Edit User Dialog */}
+        <Dialog open={showEditUser} onOpenChange={setShowEditUser}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Edit User</DialogTitle>
+            </DialogHeader>
+            <form onSubmit={editHandleSubmit(onEditSubmit)} className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="edit-username">Username</Label>
+                <Input
+                  id="edit-username"
+                  {...editRegister("username")}
+                  placeholder="Enter username"
+                />
+                {editErrors.username && (
+                  <p className="text-sm text-red-600 mt-1">{editErrors.username.message}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="edit-email">Email</Label>
+                <Input
+                  id="edit-email"
+                  type="email"
+                  {...editRegister("email")}
+                  placeholder="Enter email address"
+                />
+                {editErrors.email && (
+                  <p className="text-sm text-red-600 mt-1">{editErrors.email.message}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="edit-name">Full Name</Label>
+                <Input
+                  id="edit-name"
+                  {...editRegister("name")}
+                  placeholder="Enter full name"
+                />
+                {editErrors.name && (
+                  <p className="text-sm text-red-600 mt-1">{editErrors.name.message}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="edit-role">Role</Label>
+                <Select onValueChange={(value) => editSetValue("role", value as any)} value={editWatch("role")}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="admin">🔑 Admin (Full Access)</SelectItem>
+                    <SelectItem value="staff">👷 Staff (Daily Operations)</SelectItem>
+                    <SelectItem value="store_incharge">🧰 Store Incharge (Inventory Manager)</SelectItem>
+                  </SelectContent>
+                </Select>
+                {editErrors.role && (
+                  <p className="text-sm text-red-600 mt-1">{editErrors.role.message}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="reset-password"
+                    {...editRegister("resetPassword")}
+                    className="rounded border-gray-300"
+                  />
+                  <Label htmlFor="reset-password" className="text-sm font-medium">
+                    Reset password to 'temp123456'
+                  </Label>
+                </div>
+                <p className="text-xs text-gray-500">
+                  Check this to reset the user's password. They will need to change it after login.
+                </p>
+              </div>
+
+              <div className="flex items-center justify-end space-x-4 pt-4">
+                <Button type="button" variant="outline" onClick={() => {
+                  setShowEditUser(false);
+                  setEditingUser(null);
+                  editReset();
+                }}>
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={editUserMutation.isPending}>
+                  {editUserMutation.isPending ? "Updating..." : "Update User"}
                 </Button>
               </div>
             </form>
