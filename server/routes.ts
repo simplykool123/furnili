@@ -942,6 +942,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update single attendance record
+  app.patch("/api/attendance/:id", authenticateToken, requireRole(["admin", "manager"]), async (req: AuthRequest, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { status, notes } = req.body;
+      
+      const updateData: any = {};
+      if (status) updateData.status = status;
+      if (notes !== undefined) updateData.notes = notes;
+      
+      const result = await storage.updateAttendance(id, updateData);
+      if (!result) {
+        return res.status(404).json({ error: "Attendance record not found" });
+      }
+      
+      res.json(result);
+    } catch (error) {
+      console.error("Error updating attendance:", error);
+      res.status(500).json({ error: "Failed to update attendance" });
+    }
+  });
+
   // Payroll routes - Get payroll records
   app.get("/api/payroll", authenticateToken, async (req: AuthRequest, res) => {
     try {

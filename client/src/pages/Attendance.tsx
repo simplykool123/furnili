@@ -17,7 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
-import { queryClient } from "@/lib/queryClient";
+import { queryClient, apiRequest } from "@/lib/queryClient";
 import { authenticatedApiRequest } from "@/lib/auth";
 import { 
   Clock, 
@@ -38,7 +38,9 @@ import {
   Calculator,
   CreditCard,
   Edit,
-  UserPlus
+  UserPlus,
+  Check,
+  X
 } from "lucide-react";
 // @ts-ignore
 import html2pdf from 'html2pdf.js';
@@ -464,6 +466,8 @@ export default function Attendance() {
   const [selectedStaff, setSelectedStaff] = useState<string>("");
   const [editingPayroll, setEditingPayroll] = useState<any>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editingAttendance, setEditingAttendance] = useState<number | null>(null);
+  const [editingStatus, setEditingStatus] = useState<string>("");
   const [isProcessingPayroll, setIsProcessingPayroll] = useState(false);
   const [isAddStaffOpen, setIsAddStaffOpen] = useState(false);
   const [isEditStaffOpen, setIsEditStaffOpen] = useState(false);
@@ -689,9 +693,36 @@ export default function Attendance() {
   });
 
   const handlePayrollEdit = (payroll: any) => {
-    const staffMember = staff?.find(s => s.id === payroll.userId);
+    const staffMember = staff?.find((s: any) => s.id === payroll.userId);
     setEditingPayroll({ ...payroll, staff: staffMember });
     setIsEditDialogOpen(true);
+  };
+
+  // Inline attendance editing handlers
+  const handleAttendanceEdit = (recordId: number, currentStatus: string) => {
+    setEditingAttendance(recordId);
+    setEditingStatus(currentStatus);
+  };
+
+  const saveAttendanceEdit = async (recordId: number, newStatus: string) => {
+    try {
+      await apiRequest(`/api/attendance/${recordId}`, {
+        method: 'PATCH',
+        body: { status: newStatus }
+      });
+      
+      queryClient.invalidateQueries({ queryKey: ['/api/attendance'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/attendance/stats'] });
+      setEditingAttendance(null);
+      setEditingStatus("");
+    } catch (error) {
+      console.error('Error updating attendance:', error);
+    }
+  };
+
+  const cancelAttendanceEdit = () => {
+    setEditingAttendance(null);
+    setEditingStatus("");
   };
 
   const handlePayrollSave = (payrollData: any) => {
@@ -1621,6 +1652,7 @@ export default function Attendance() {
                         <TableHead>Status</TableHead>
                         <TableHead>Hours</TableHead>
                         <TableHead>Notes</TableHead>
+                        <TableHead>Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -1645,7 +1677,39 @@ export default function Attendance() {
                               }) : "-"}
                           </TableCell>
                           <TableCell>
-                            {getStatusBadge(record.status)}
+                            {editingAttendance === record.id ? (
+                              <div className="flex items-center gap-2">
+                                <Select value={editingStatus} onValueChange={setEditingStatus}>
+                                  <SelectTrigger className="w-32">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="present">Present</SelectItem>
+                                    <SelectItem value="absent">Absent</SelectItem>
+                                    <SelectItem value="half-day">Half Day</SelectItem>
+                                    <SelectItem value="late">Late</SelectItem>
+                                    <SelectItem value="on-leave">On Leave</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                                <Button 
+                                  size="sm" 
+                                  onClick={() => saveAttendanceEdit(record.id, editingStatus)}
+                                  className="h-8 px-2"
+                                >
+                                  <Check className="w-3 h-3" />
+                                </Button>
+                                <Button 
+                                  size="sm" 
+                                  variant="outline"
+                                  onClick={cancelAttendanceEdit}
+                                  className="h-8 px-2"
+                                >
+                                  <X className="w-3 h-3" />
+                                </Button>
+                              </div>
+                            ) : (
+                              getStatusBadge(record.status)
+                            )}
                           </TableCell>
                           <TableCell>
                             {record.hoursWorked ? `${record.hoursWorked.toFixed(1)}h` : "-"}
@@ -1654,6 +1718,18 @@ export default function Attendance() {
                             <span className="text-sm text-gray-600 max-w-xs truncate">
                               {record.notes || "-"}
                             </span>
+                          </TableCell>
+                          <TableCell>
+                            {editingAttendance === record.id ? null : (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleAttendanceEdit(record.id, record.status)}
+                                className="h-8 px-2"
+                              >
+                                <Edit className="w-3 h-3" />
+                              </Button>
+                            )}
                           </TableCell>
                         </TableRow>
                       ))}
