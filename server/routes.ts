@@ -91,27 +91,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get basic dashboard stats
       const basicStats = await storage.getDashboardStats();
       
-      // Get today's attendance count
-      const today = new Date();
-      const todayStr = today.toISOString().split('T')[0];
-      const todayAttendance = await storage.getAttendanceByDate(todayStr);
-      const todayAttendanceCount = todayAttendance.filter(att => att.status === 'present').length;
+      // Initialize default values
+      let todayAttendanceCount = 0;
+      let activeUsersCount = 0;
+      let monthlyExpenses = 0;
       
-      // Get total active users count for Staff & Payroll
-      const allUsers = await storage.getAllUsers();
-      const activeUsersCount = allUsers.filter(user => user.isActive).length;
+      try {
+        // Get today's attendance count
+        const today = new Date();
+        const todayStr = today.toISOString().split('T')[0];
+        const todayAttendance = await storage.getAttendanceByDate(todayStr);
+        todayAttendanceCount = todayAttendance.filter(att => att.status === 'present').length;
+      } catch (attendanceError) {
+        console.error('Error fetching today attendance:', attendanceError);
+      }
       
-      // Get current month expenses
-      const currentMonth = today.getMonth() + 1;
-      const currentYear = today.getFullYear();
-      const monthlyExpenses = await storage.getMonthlyExpenses(currentMonth, currentYear);
+      try {
+        // Get total active users count for Staff & Payroll
+        const allUsers = await storage.getAllUsers();
+        activeUsersCount = allUsers.filter(user => user.isActive).length;
+      } catch (usersError) {
+        console.error('Error fetching users:', usersError);
+      }
+      
+      try {
+        // Get current month expenses
+        const today = new Date();
+        const currentMonth = today.getMonth() + 1;
+        const currentYear = today.getFullYear();
+        monthlyExpenses = await storage.getMonthlyExpenses(currentMonth, currentYear);
+      } catch (expensesError) {
+        console.error('Error fetching monthly expenses:', expensesError);
+      }
       
       const stats = {
         ...basicStats,
         todayAttendance: todayAttendanceCount,
         activeTasks: activeUsersCount, // Using active users count for Staff & Payroll
         monthlyExpenses: monthlyExpenses,
-        totalUsers: allUsers.length,
+        totalUsers: activeUsersCount,
         activeUsers: activeUsersCount
       };
       

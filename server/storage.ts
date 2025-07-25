@@ -2466,7 +2466,7 @@ class DatabaseStorage implements IStorage {
     const endDate = new Date(year, month, 0, 23, 59, 59);
     
     const result = await db.select({
-      totalExpenses: sql<number>`COALESCE(SUM(CASE WHEN ${pettyCashExpenses.type} = 'expense' THEN ${pettyCashExpenses.amount} ELSE 0 END), 0)`
+      totalExpenses: sql<number>`COALESCE(SUM(CASE WHEN type = 'expense' THEN amount ELSE 0 END), 0)`
     }).from(pettyCashExpenses)
       .where(and(
         gte(pettyCashExpenses.date, startDate),
