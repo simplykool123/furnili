@@ -429,18 +429,7 @@ export default function Dashboard() {
         </Card>
       )}
 
-      {/* No Pending Tasks Message for Staff */}
-      {!admin && pendingTasks && pendingTasks.length === 0 && (
-        <Card className="bg-green-50/50 border-green-200">
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <CheckCircle2 className="h-12 w-12 text-green-600 mx-auto mb-3" />
-              <h3 className="text-lg font-medium text-green-900 mb-2">All caught up!</h3>
-              <p className="text-green-700">You have no pending tasks at the moment.</p>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      {/* Removed "All caught up!" section - tasks now only show in notification bell */}
 
       {/* Recent Activity Section */}
       {recentActivity && Array.isArray(recentActivity) && recentActivity.length > 0 && (

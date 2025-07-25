@@ -39,15 +39,10 @@ export function AnimatedNotificationBell() {
     refetchInterval: 30000, // Refetch every 30 seconds
   });
 
-  // Debug logging - remove after testing
-  console.log('AnimatedNotificationBell - Rendered! Tasks:', tasks, 'Count:', tasks.length, 'Error:', error, 'Loading:', isLoading);
-
   // Count pending and in-progress tasks (using lowercase status values)
   const taskCount = tasks.filter(task => 
     task.status === 'pending' || task.status === 'in_progress'
   ).length;
-
-  console.log('AnimatedNotificationBell - Filtered task count:', taskCount, 'Tasks with status:', tasks.map(t => t.status));
 
   // Trigger animation when new tasks are added
   useEffect(() => {
@@ -82,8 +77,10 @@ export function AnimatedNotificationBell() {
   // Priority tasks pulse effect
   const hasHighPriorityTasks = tasks.some(task => task.priority === 'high');
 
-  // Always render the bell, even with 0 tasks for debugging
-  console.log('AnimatedNotificationBell - About to render with taskCount:', taskCount);
+  // Only show the bell if there are tasks to avoid clutter
+  if (taskCount === 0) {
+    return null;
+  }
 
   return (
     <DropdownMenu>
