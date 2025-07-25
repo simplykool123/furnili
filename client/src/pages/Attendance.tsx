@@ -76,7 +76,9 @@ const PayrollEditForm = ({ staff, payroll, onSave }: {
   const [bonus, setBonus] = useState(payroll?.bonus || 0);
   
   const basicSalary = payroll?.basicSalary || staff?.basicSalary || 0;
-  const netSalary = basicSalary + allowances + bonus - advance;
+  // Use the calculated net salary from payroll record, or calculate if editing
+  const baseNetSalary = payroll?.netSalary || basicSalary;
+  const netSalary = baseNetSalary + allowances + bonus - advance;
 
   const handleSave = () => {
     onSave({
