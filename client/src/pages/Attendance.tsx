@@ -475,7 +475,7 @@ export default function Attendance() {
   const [selectedStaffForAttendance, setSelectedStaffForAttendance] = useState<string>("");
   const [monthlyAttendanceData, setMonthlyAttendanceData] = useState<any[]>([]);
   const [isEditingMonthlyAttendance, setIsEditingMonthlyAttendance] = useState(false);
-  const [showDetailedRecords, setShowDetailedRecords] = useState(false);
+  const [showDetailedRecords, setShowDetailedRecords] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
 
 
@@ -1622,12 +1622,12 @@ export default function Attendance() {
               {showDetailedRecords ? (
                 <>
                   <EyeOff className="w-4 h-4 mr-2" />
-                  Hide Detailed Attendance Records
+                  Hide Detailed Records (with Inline Editing)
                 </>
               ) : (
                 <>
                   <Eye className="w-4 h-4 mr-2" />
-                  Show Detailed Attendance Records
+                  Show Detailed Records (with Inline Editing)
                 </>
               )}
             </Button>
@@ -1637,7 +1637,11 @@ export default function Attendance() {
           {showDetailedRecords && (
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">Detailed Attendance Records</CardTitle>
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Edit className="w-5 h-5" />
+                  Attendance Records with Inline Editing
+                  <Badge variant="secondary" className="ml-2">Click Edit to modify status</Badge>
+                </CardTitle>
               </CardHeader>
               <CardContent>
               {attendanceRecords.length > 0 ? (
