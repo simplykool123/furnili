@@ -1640,8 +1640,14 @@ export default function Attendance() {
                 <CardTitle className="text-base flex items-center gap-2">
                   <Edit className="w-5 h-5" />
                   Attendance Records with Inline Editing
-                  <Badge variant="secondary" className="ml-2">Click Edit to modify status</Badge>
+                  <Badge variant="default" className="ml-2 bg-green-500">Click Edit button in Actions column →</Badge>
                 </CardTitle>
+                <div className="mt-2 p-3 bg-yellow-50 border border-yellow-200 rounded">
+                  <p className="text-sm text-yellow-800 font-medium">📝 How to edit attendance:</p>
+                  <p className="text-sm text-yellow-700">1. Find the record you want to edit below</p>
+                  <p className="text-sm text-yellow-700">2. Click the "Edit" button in the Actions column</p>
+                  <p className="text-sm text-yellow-700">3. Select new status from dropdown → Click ✓ to save</p>
+                </div>
               </CardHeader>
               <CardContent>
               {attendanceRecords.length > 0 ? (
@@ -1729,9 +1735,10 @@ export default function Attendance() {
                                 size="sm"
                                 variant="outline"
                                 onClick={() => handleAttendanceEdit(record.id, record.status)}
-                                className="h-8 px-2"
+                                className="h-8 px-3 bg-blue-50 hover:bg-blue-100 border-blue-200 text-blue-700"
                               >
-                                <Edit className="w-3 h-3" />
+                                <Edit className="w-3 h-3 mr-1" />
+                                Edit
                               </Button>
                             )}
                           </TableCell>
