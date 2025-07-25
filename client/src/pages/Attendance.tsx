@@ -475,14 +475,20 @@ export default function Attendance() {
     
     setIsExporting(true);
     try {
+      console.log('Starting export for month:', selectedMonth, 'year:', selectedYear);
+      
       // Fetch staff and attendance data
-      const [staff, attendance] = await Promise.all([
+      const [staffData, attendanceData] = await Promise.all([
         apiRequest('GET', '/api/users'),
         apiRequest('GET', `/api/attendance?month=${selectedMonth}&year=${selectedYear}`)
       ]);
       
-      const staffData = staff || [];
-      const attendanceData = attendance || [];
+      console.log('Staff data:', staffData);
+      console.log('Attendance data:', attendanceData);
+      
+      if (!Array.isArray(staffData) || !Array.isArray(attendanceData)) {
+        throw new Error('Invalid data format received from API');
+      }
       
       // Calculate attendance summary for each staff member
       const reportData = staffData.map((member: any) => {
@@ -508,11 +514,13 @@ export default function Attendance() {
         };
       });
       
+      console.log('Report data prepared:', reportData);
+      
       // Convert to CSV
       if (reportData.length === 0) {
         toast({
           title: "No Data",
-          description: "No attendance data found for the selected period.",
+          description: "No staff data found to export.",
           variant: "destructive"
         });
         return;
@@ -526,6 +534,8 @@ export default function Attendance() {
         )
       ].join('\n');
       
+      console.log('CSV content generated:', csvContent.substring(0, 200) + '...');
+      
       // Download CSV
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       const link = document.createElement('a');
@@ -536,6 +546,7 @@ export default function Attendance() {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+      URL.revokeObjectURL(url);
       
       toast({
         title: "Export Successful",
@@ -543,10 +554,10 @@ export default function Attendance() {
       });
       
     } catch (error) {
-      console.error('Export failed:', error);
+      console.error('Export failed with error:', error);
       toast({
         title: "Export Failed", 
-        description: "Failed to export attendance report. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to export attendance report. Please try again.",
         variant: "destructive"
       });
     } finally {
