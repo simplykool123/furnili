@@ -1823,7 +1823,11 @@ export default function Attendance() {
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell>{member.employeeId || "Not Set"}</TableCell>
+                      <TableCell>
+                        <span className="font-mono text-sm bg-blue-50 text-blue-700 px-2 py-1 rounded">
+                          {member.employeeId || 'FUN-XXX'}
+                        </span>
+                      </TableCell>
                       <TableCell>{member.department || "General"}</TableCell>
                       <TableCell>{formatCurrency(member.basicSalary || 0)}</TableCell>
                       <TableCell>
@@ -2288,7 +2292,12 @@ export default function Attendance() {
                     <FormItem>
                       <FormLabel>Employee ID</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter employee ID" {...field} />
+                        <Input 
+                          placeholder="Auto-generated (FUN-XXX)" 
+                          {...field} 
+                          className="bg-gray-50" 
+                          readOnly 
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

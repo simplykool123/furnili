@@ -1727,6 +1727,14 @@ class DatabaseStorage implements IStorage {
   }
 
   async createUser(user: InsertUser): Promise<User> {
+    // Auto-generate employee ID if not provided
+    if (!user.employeeId) {
+      // Get the next available employee number
+      const lastUser = await db.select({ id: users.id }).from(users).orderBy(desc(users.id)).limit(1);
+      const nextId = lastUser[0] ? lastUser[0].id + 1 : 1;
+      user.employeeId = `FUN-${nextId.toString().padStart(3, '0')}`;
+    }
+    
     const result = await db.insert(users).values(user).returning();
     return result[0];
   }
