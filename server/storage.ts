@@ -642,18 +642,19 @@ export class MemStorage {
     return this.tasks.delete(id);
   }
 
+  async updateTask(id: number, updates: Partial<InsertTask>): Promise<Task | undefined> {
+    const result = await db.update(tasks).set(updates).where(eq(tasks.id, id)).returning();
+    return result[0];
+  }
+
   async updateTaskStatus(id: number, status: string): Promise<Task | undefined> {
-    const task = this.tasks.get(id);
-    if (!task) return undefined;
-    
-    const updatedTask: Task = {
-      ...task,
-      status,
-      updatedAt: new Date(),
-    };
-    
-    this.tasks.set(id, updatedTask);
-    return updatedTask;
+    const result = await db.update(tasks).set({ status, updatedAt: new Date() }).where(eq(tasks.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteTask(id: number): Promise<boolean> {
+    const result = await db.delete(tasks).where(eq(tasks.id, id));
+    return result.rowCount > 0;
   }
 
   // WhatsApp message generation
@@ -2318,11 +2319,43 @@ class DatabaseStorage implements IStorage {
     
     return balances;
   }
-  async getTask(id: number): Promise<Task | undefined> { return undefined; }
-  async getAllTasks(assignedTo?: number): Promise<Task[]> { return []; }
-  async createTask(task: InsertTask): Promise<Task> { throw new Error("Not implemented"); }
-  async updateTask(id: number, updates: Partial<InsertTask>): Promise<Task | undefined> { return undefined; }
-  async deleteTask(id: number): Promise<boolean> { return false; }
+
+  async getTask(id: number): Promise<Task | undefined> {
+    const result = await db.select().from(tasks).where(eq(tasks.id, id)).limit(1);
+    return result[0];
+  }
+
+  async getAllTasks(filters?: { assignedTo?: number; status?: string; assignedBy?: number }): Promise<Task[]> {
+    let query = db.select().from(tasks);
+    
+    if (filters?.assignedTo) {
+      query = query.where(eq(tasks.assignedTo, filters.assignedTo));
+    }
+    
+    if (filters?.status) {
+      query = query.where(eq(tasks.status, filters.status));
+    }
+    
+    if (filters?.assignedBy) {
+      query = query.where(eq(tasks.assignedBy, filters.assignedBy));
+    }
+    
+    const result = await query.orderBy(desc(tasks.createdAt));
+    return result;
+  }
+  async createTask(task: InsertTask): Promise<Task> {
+    const result = await db.insert(tasks).values(task).returning();
+    return result[0];
+  }
+  async updateTask(id: number, updates: Partial<InsertTask>): Promise<Task | undefined> {
+    const result = await db.update(tasks).set({...updates, updatedAt: new Date()}).where(eq(tasks.id, id)).returning();
+    return result[0];
+  }
+  
+  async deleteTask(id: number): Promise<boolean> {
+    const result = await db.delete(tasks).where(eq(tasks.id, id));
+    return result.rowCount > 0;
+  }
   async getPriceComparison(id: number): Promise<PriceComparison | undefined> { return undefined; }
   async getAllPriceComparisons(): Promise<PriceComparison[]> { return []; }
   async createPriceComparison(comparison: InsertPriceComparison): Promise<PriceComparison> { throw new Error("Not implemented"); }

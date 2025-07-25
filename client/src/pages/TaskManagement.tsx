@@ -11,19 +11,25 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
-import { authenticatedApiRequest } from "@/lib/auth";
-import { Plus, CheckCircle2, Clock, AlertCircle, User, Calendar } from "lucide-react";
+import { authenticatedApiRequest, authService } from "@/lib/auth";
+import { Plus, CheckCircle2, Clock, AlertCircle, User, Calendar, Search, Filter } from "lucide-react";
 
 export default function TaskManagement() {
   const { toast } = useToast();
   const [isAddingTask, setIsAddingTask] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [assignedToFilter, setAssignedToFilter] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState("");
   const [taskForm, setTaskForm] = useState({
     title: "",
     description: "",
     assignedTo: "",
-    priority: "",
+    priority: "medium",
     dueDate: "",
   });
+
+  const currentUser = authService.getUser();
+  const isAdmin = currentUser?.role === 'admin';
 
   const { data: tasks, isLoading } = useQuery({
     queryKey: ["/api/tasks"],
@@ -33,20 +39,41 @@ export default function TaskManagement() {
     queryKey: ["/api/users"],
   });
 
+  // Filter staff users for assignment dropdown
+  const staffUsers = users?.filter((user: any) => user.isActive) || [];
+
+  // Filter and search tasks
+  const filteredTasks = tasks?.filter((task: any) => {
+    const matchesStatus = statusFilter === "all" || task.status === statusFilter;
+    const matchesAssignedTo = assignedToFilter === "all" || task.assignedTo.toString() === assignedToFilter;
+    const matchesSearch = searchQuery === "" || 
+      task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      task.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      task.assignedUser?.name.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    return matchesStatus && matchesAssignedTo && matchesSearch;
+  }) || [];
+
   const addTaskMutation = useMutation({
-    mutationFn: async (taskData: typeof taskForm) => {
-      return authenticatedApiRequest("POST", "/api/tasks", taskData);
+    mutationFn: async (taskData: any) => {
+      return await authenticatedApiRequest('POST', '/api/tasks', taskData);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/tasks"] });
-      setIsAddingTask(false);
-      setTaskForm({ title: "", description: "", assignedTo: "", priority: "", dueDate: "" });
+      queryClient.invalidateQueries({ queryKey: ['/api/tasks'] });
       toast({
         title: "Task created",
-        description: "The task has been assigned successfully.",
+        description: "Task has been created successfully.",
+      });
+      setIsAddingTask(false);
+      setTaskForm({
+        title: "",
+        description: "",
+        assignedTo: "",
+        priority: "medium",
+        dueDate: "",
       });
     },
-    onError: (error: any) => {
+    onError: (error) => {
       toast({
         title: "Failed to create task",
         description: error.message,
@@ -57,16 +84,16 @@ export default function TaskManagement() {
 
   const updateTaskStatusMutation = useMutation({
     mutationFn: async ({ taskId, status }: { taskId: number; status: string }) => {
-      return authenticatedApiRequest("PATCH", `/api/tasks/${taskId}/status`, { status });
+      return await authenticatedApiRequest('PATCH', `/api/tasks/${taskId}/status`, { status });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/tasks"] });
+      queryClient.invalidateQueries({ queryKey: ['/api/tasks'] });
       toast({
         title: "Task updated",
         description: "Task status has been updated successfully.",
       });
     },
-    onError: (error: any) => {
+    onError: (error) => {
       toast({
         title: "Failed to update task",
         description: error.message,
@@ -77,163 +104,177 @@ export default function TaskManagement() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (!taskForm.title || !taskForm.assignedTo || !taskForm.priority) {
       toast({
-        title: "Missing information",
+        title: "Missing required fields",
         description: "Please fill in all required fields.",
         variant: "destructive",
       });
       return;
     }
-
     addTaskMutation.mutate(taskForm);
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusBadge = (status: string) => {
     switch (status) {
       case "pending":
-        return "bg-yellow-100 text-yellow-800";
-      case "in-progress":
-        return "bg-blue-100 text-blue-800";
+        return <Badge className="bg-yellow-100 text-yellow-800 border-yellow-300">Pending</Badge>;
+      case "in_progress":
+        return <Badge className="bg-blue-100 text-blue-800 border-blue-300">In Progress</Badge>;
       case "done":
-        return "bg-green-100 text-green-800";
+        return <Badge className="bg-green-100 text-green-800 border-green-300">Done</Badge>;
       default:
-        return "bg-gray-100 text-gray-800";
+        return <Badge variant="secondary">{status}</Badge>;
     }
   };
 
-  const getPriorityColor = (priority: string) => {
+  const getPriorityBadge = (priority: string) => {
     switch (priority) {
       case "high":
-        return "bg-red-100 text-red-800";
+        return <Badge className="bg-red-100 text-red-800 border-red-300">High</Badge>;
       case "medium":
-        return "bg-yellow-100 text-yellow-800";
+        return <Badge className="bg-orange-100 text-orange-800 border-orange-300">Medium</Badge>;
       case "low":
-        return "bg-green-100 text-green-800";
+        return <Badge className="bg-gray-100 text-gray-800 border-gray-300">Low</Badge>;
       default:
-        return "bg-gray-100 text-gray-800";
+        return <Badge variant="secondary">{priority}</Badge>;
     }
+  };
+
+  const handleStatusChange = (taskId: number, newStatus: string) => {
+    updateTaskStatusMutation.mutate({ taskId, status: newStatus });
+  };
+
+  const formatDate = (dateString: string) => {
+    if (!dateString) return "No due date";
+    return new Date(dateString).toLocaleDateString();
+  };
+
+  const taskStats = {
+    total: tasks?.length || 0,
+    pending: tasks?.filter((t: any) => t.status === "pending").length || 0,
+    inProgress: tasks?.filter((t: any) => t.status === "in_progress").length || 0,
+    completed: tasks?.filter((t: any) => t.status === "done").length || 0,
   };
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-96">
+      <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-600"></div>
       </div>
     );
   }
 
-  const taskStats = {
-    total: tasks?.length || 0,
-    pending: tasks?.filter((t: any) => t.status === "pending").length || 0,
-    inProgress: tasks?.filter((t: any) => t.status === "in-progress").length || 0,
-    completed: tasks?.filter((t: any) => t.status === "done").length || 0,
-  };
-
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-gray-900">Task Management</h1>
-        <Dialog open={isAddingTask} onOpenChange={setIsAddingTask}>
-          <DialogTrigger asChild>
-            <Button className="bg-amber-600 hover:bg-amber-700">
-              <Plus className="mr-2 h-4 w-4" />
-              Create Task
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[500px]">
-            <DialogHeader>
-              <DialogTitle>Create New Task</DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <Label htmlFor="title">Task Title *</Label>
-                <Input
-                  id="title"
-                  value={taskForm.title}
-                  onChange={(e) => setTaskForm(prev => ({ ...prev, title: e.target.value }))}
-                  placeholder="Enter task title"
-                  required
-                />
-              </div>
+        <div>
+          <h1 className="text-3xl font-bold text-amber-900">Task Management</h1>
+          <p className="text-amber-700/70 mt-1">
+            {isAdmin ? "Manage all tasks" : "Your assigned tasks"}
+          </p>
+        </div>
+        {isAdmin && (
+          <Dialog open={isAddingTask} onOpenChange={setIsAddingTask}>
+            <DialogTrigger asChild>
+              <Button className="bg-amber-600 hover:bg-amber-700">
+                <Plus className="mr-2 h-4 w-4" />
+                Create Task
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[500px]">
+              <DialogHeader>
+                <DialogTitle>Create New Task</DialogTitle>
+              </DialogHeader>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                  <Label htmlFor="title">Task Title *</Label>
+                  <Input
+                    id="title"
+                    value={taskForm.title}
+                    onChange={(e) => setTaskForm(prev => ({ ...prev, title: e.target.value }))}
+                    placeholder="Enter task title"
+                    required
+                  />
+                </div>
 
-              <div>
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  value={taskForm.description}
-                  onChange={(e) => setTaskForm(prev => ({ ...prev, description: e.target.value }))}
-                  placeholder="Enter task description"
-                  rows={3}
-                />
-              </div>
+                <div>
+                  <Label htmlFor="description">Description</Label>
+                  <Textarea
+                    id="description"
+                    value={taskForm.description}
+                    onChange={(e) => setTaskForm(prev => ({ ...prev, description: e.target.value }))}
+                    placeholder="Enter task details..."
+                    rows={3}
+                  />
+                </div>
 
-              <div>
-                <Label htmlFor="assignedTo">Assign To *</Label>
-                <Select 
-                  value={taskForm.assignedTo}
-                  onValueChange={(value) => setTaskForm(prev => ({ ...prev, assignedTo: value }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select team member" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {users?.filter((user: any) => user.role === "staff").map((user: any) => (
-                      <SelectItem key={user.id} value={user.id.toString()}>
-                        {user.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+                <div>
+                  <Label htmlFor="assignedTo">Assign To *</Label>
+                  <Select 
+                    value={taskForm.assignedTo}
+                    onValueChange={(value) => setTaskForm(prev => ({ ...prev, assignedTo: value }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select staff..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {staffUsers.map((user: any) => (
+                        <SelectItem key={user.id} value={user.id.toString()}>
+                          {user.name} ({user.username})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
 
-              <div>
-                <Label htmlFor="priority">Priority *</Label>
-                <Select 
-                  value={taskForm.priority}
-                  onValueChange={(value) => setTaskForm(prev => ({ ...prev, priority: value }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select priority" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="high">High</SelectItem>
-                    <SelectItem value="medium">Medium</SelectItem>
-                    <SelectItem value="low">Low</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+                <div>
+                  <Label htmlFor="priority">Priority *</Label>
+                  <Select 
+                    value={taskForm.priority}
+                    onValueChange={(value) => setTaskForm(prev => ({ ...prev, priority: value }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select priority" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="high">High</SelectItem>
+                      <SelectItem value="medium">Medium</SelectItem>
+                      <SelectItem value="low">Low</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
-              <div>
-                <Label htmlFor="dueDate">Due Date</Label>
-                <Input
-                  id="dueDate"
-                  type="date"
-                  value={taskForm.dueDate}
-                  onChange={(e) => setTaskForm(prev => ({ ...prev, dueDate: e.target.value }))}
-                />
-              </div>
+                <div>
+                  <Label htmlFor="dueDate">Due Date</Label>
+                  <Input
+                    id="dueDate"
+                    type="date"
+                    value={taskForm.dueDate}
+                    onChange={(e) => setTaskForm(prev => ({ ...prev, dueDate: e.target.value }))}
+                  />
+                </div>
 
-              <div className="flex justify-end space-x-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setIsAddingTask(false)}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={addTaskMutation.isPending}
-                  className="bg-amber-600 hover:bg-amber-700"
-                >
-                  {addTaskMutation.isPending ? "Creating..." : "Create Task"}
-                </Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
+                <div className="flex justify-end space-x-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setIsAddingTask(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={addTaskMutation.isPending}
+                    className="bg-amber-600 hover:bg-amber-700"
+                  >
+                    {addTaskMutation.isPending ? "Creating..." : "Create Task"}
+                  </Button>
+                </div>
+              </form>
+            </DialogContent>
+          </Dialog>
+        )}
       </div>
 
       {/* Task Statistics */}
@@ -264,7 +305,7 @@ export default function TaskManagement() {
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-orange-500">
+        <Card className="border-l-4 border-l-blue-500">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">In Progress</CardTitle>
             <AlertCircle className="h-4 w-4 text-muted-foreground" />
@@ -285,96 +326,150 @@ export default function TaskManagement() {
           <CardContent>
             <div className="text-2xl font-bold">{taskStats.completed}</div>
             <p className="text-xs text-muted-foreground">
-              Successfully done
+              Successfully finished
             </p>
           </CardContent>
         </Card>
       </div>
 
+      {/* Filters and Search */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Filter className="h-5 w-5" />
+            Filters & Search
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+              <Label htmlFor="search">Search Tasks</Label>
+              <div className="relative">
+                <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Input
+                  id="search"
+                  placeholder="Search by title, description..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="status-filter">Status</Label>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="in_progress">In Progress</SelectItem>
+                  <SelectItem value="done">Done</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {isAdmin && (
+              <div>
+                <Label htmlFor="assigned-filter">Assigned To</Label>
+                <Select value={assignedToFilter} onValueChange={setAssignedToFilter}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Staff</SelectItem>
+                    {staffUsers.map((user: any) => (
+                      <SelectItem key={user.id} value={user.id.toString()}>
+                        {user.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            <div className="flex items-end">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setSearchQuery("");
+                  setStatusFilter("all");
+                  setAssignedToFilter("all");
+                }}
+                className="w-full"
+              >
+                Clear Filters
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Tasks Table */}
       <Card>
         <CardHeader>
-          <CardTitle>All Tasks</CardTitle>
+          <CardTitle>Tasks ({filteredTasks.length})</CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Task</TableHead>
+                <TableHead>Task Title</TableHead>
+                <TableHead>Description</TableHead>
                 <TableHead>Assigned To</TableHead>
-                <TableHead>Priority</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>Priority</TableHead>
                 <TableHead>Due Date</TableHead>
-                <TableHead>Created</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {tasks?.map((task: any) => (
+              {filteredTasks.map((task: any) => (
                 <TableRow key={task.id}>
+                  <TableCell className="font-medium">{task.title}</TableCell>
+                  <TableCell className="max-w-xs truncate" title={task.description}>
+                    {task.description || "No description"}
+                  </TableCell>
                   <TableCell>
-                    <div>
-                      <div className="font-medium">{task.title}</div>
-                      {task.description && (
-                        <div className="text-sm text-gray-500 truncate max-w-xs">
-                          {task.description}
-                        </div>
-                      )}
+                    <div className="flex items-center gap-2">
+                      <User className="h-4 w-4" />
+                      {task.assignedUser?.name || "Unknown"}
+                    </div>
+                  </TableCell>
+                  <TableCell>{getStatusBadge(task.status)}</TableCell>
+                  <TableCell>{getPriorityBadge(task.priority)}</TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4" />
+                      {formatDate(task.dueDate)}
                     </div>
                   </TableCell>
                   <TableCell>
-                    <div className="flex items-center">
-                      <User className="h-4 w-4 mr-2 text-gray-400" />
-                      {task.assignedToName || `User ${task.assignedTo}`}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge className={getPriorityColor(task.priority)}>
-                      {task.priority}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Badge className={getStatusColor(task.status)}>
-                      {task.status.replace("-", " ")}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    {task.dueDate ? (
-                      <div className="flex items-center">
-                        <Calendar className="h-4 w-4 mr-2 text-gray-400" />
-                        {new Date(task.dueDate).toLocaleDateString()}
-                      </div>
-                    ) : (
-                      "No due date"
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {new Date(task.createdAt).toLocaleDateString()}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex space-x-1">
-                      {task.status === "pending" && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => updateTaskStatusMutation.mutate({
-                            taskId: task.id,
-                            status: "in-progress"
-                          })}
+                    <div className="flex items-center gap-2">
+                      {task.status !== "done" && (
+                        <Select
+                          value={task.status}
+                          onValueChange={(value) => handleStatusChange(task.id, value)}
                         >
-                          Start
-                        </Button>
+                          <SelectTrigger className="w-32">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="pending">Pending</SelectItem>
+                            <SelectItem value="in_progress">In Progress</SelectItem>
+                            <SelectItem value="done">Done</SelectItem>
+                          </SelectContent>
+                        </Select>
                       )}
-                      {task.status === "in-progress" && (
+                      {task.status === "done" && (
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => updateTaskStatusMutation.mutate({
-                            taskId: task.id,
-                            status: "done"
-                          })}
+                          onClick={() => handleStatusChange(task.id, "in_progress")}
                         >
-                          Complete
+                          Reopen
                         </Button>
                       )}
                     </div>
@@ -383,6 +478,12 @@ export default function TaskManagement() {
               ))}
             </TableBody>
           </Table>
+          
+          {filteredTasks.length === 0 && (
+            <div className="text-center py-8 text-gray-500">
+              No tasks found matching your criteria.
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

@@ -141,6 +141,18 @@ export default function Dashboard() {
     queryKey: ["/api/dashboard/activity"],
   });
 
+  // Fetch user's tasks for staff members
+  const { data: myTasks } = useQuery({
+    queryKey: ["/api/tasks/my"],
+    enabled: !admin, // Only fetch for staff members
+  });
+
+  // Fetch today's tasks
+  const { data: todayTasks } = useQuery({
+    queryKey: ["/api/tasks/today"],
+    enabled: !admin, // Only fetch for staff members
+  });
+
   if (isLoading) {
     return (
       <div className="space-y-8 animate-fade-in">
@@ -273,6 +285,123 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Task Dashboard for Staff */}
+      {!admin && (myTasks?.length > 0 || todayTasks?.length > 0) && (
+        <div className="grid gap-4 grid-cols-1 lg:grid-cols-2">
+          {/* My Tasks */}
+          <Card className="hover:shadow-md transition-all duration-200">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base font-semibold text-foreground flex items-center gap-2">
+                <CheckCircle className="h-4 w-4" />
+                My Tasks ({myTasks?.length || 0})
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="space-y-2 max-h-32 overflow-y-auto">
+                {myTasks?.slice(0, 3).map((task: any) => (
+                  <div key={task.id} className="flex items-start gap-2 p-2 rounded-lg bg-blue-50/50 border border-blue-100/50">
+                    <div className="flex-shrink-0 mt-1">
+                      {task.status === 'done' ? (
+                        <CheckCircle className="h-3 w-3 text-green-600" />
+                      ) : task.status === 'in_progress' ? (
+                        <Clock className="h-3 w-3 text-blue-600" />
+                      ) : (
+                        <AlertTriangle className="h-3 w-3 text-yellow-600" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-medium text-gray-900 truncate">
+                        {task.title}
+                      </p>
+                      <div className="flex items-center gap-1 mt-1">
+                        <span className={`inline-flex items-center px-1 py-0.5 rounded text-xs font-medium ${
+                          task.status === 'done' ? 'bg-green-100 text-green-800' :
+                          task.status === 'in_progress' ? 'bg-blue-100 text-blue-800' :
+                          'bg-yellow-100 text-yellow-800'
+                        }`}>
+                          {task.status === 'in_progress' ? 'In Progress' : task.status}
+                        </span>
+                        {task.priority === 'high' && (
+                          <span className="inline-flex items-center px-1 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
+                            High
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                {(!myTasks || myTasks.length === 0) && (
+                  <div className="text-center py-4">
+                    <CheckCircle className="h-6 w-6 text-muted-foreground mx-auto mb-1" />
+                    <p className="text-muted-foreground text-xs">No tasks assigned</p>
+                  </div>
+                )}
+              </div>
+              <Button 
+                onClick={() => setLocation('/tasks')}
+                variant="outline" 
+                size="sm"
+                className="w-full mt-2 text-xs"
+              >
+                View All Tasks
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Today's Tasks */}
+          <Card className="hover:shadow-md transition-all duration-200">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base font-semibold text-foreground flex items-center gap-2">
+                <Calendar className="h-4 w-4" />
+                Due Today ({todayTasks?.length || 0})
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="space-y-2 max-h-32 overflow-y-auto">
+                {todayTasks?.slice(0, 3).map((task: any) => (
+                  <div key={task.id} className="flex items-start gap-2 p-2 rounded-lg bg-yellow-50/50 border border-yellow-100/50">
+                    <div className="flex-shrink-0 mt-1">
+                      {task.status === 'done' ? (
+                        <CheckCircle className="h-3 w-3 text-green-600" />
+                      ) : task.status === 'in_progress' ? (
+                        <Clock className="h-3 w-3 text-blue-600" />
+                      ) : (
+                        <AlertTriangle className="h-3 w-3 text-yellow-600" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-medium text-gray-900 truncate">
+                        {task.title}
+                      </p>
+                      <div className="flex items-center gap-1 mt-1">
+                        <span className={`inline-flex items-center px-1 py-0.5 rounded text-xs font-medium ${
+                          task.status === 'done' ? 'bg-green-100 text-green-800' :
+                          task.status === 'in_progress' ? 'bg-blue-100 text-blue-800' :
+                          'bg-yellow-100 text-yellow-800'
+                        }`}>
+                          {task.status === 'in_progress' ? 'In Progress' : task.status}
+                        </span>
+                        {task.priority === 'high' && (
+                          <span className="inline-flex items-center px-1 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
+                            High
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                {(!todayTasks || todayTasks.length === 0) && (
+                  <div className="text-center py-4">
+                    <Calendar className="h-6 w-6 text-muted-foreground mx-auto mb-1" />
+                    <p className="text-muted-foreground text-xs">No tasks due today</p>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       {/* Compact Quick Actions & Recent Activity */}
       <div className="grid gap-4 grid-cols-1 lg:grid-cols-2">

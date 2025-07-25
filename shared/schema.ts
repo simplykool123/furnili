@@ -210,7 +210,7 @@ export const tasks = pgTable("tasks", {
   id: serial("id").primaryKey(),
   title: text("title").notNull(),
   description: text("description"),
-  status: text("status").notNull().default("todo"), // todo, in_progress, done
+  status: text("status").notNull().default("pending"), // pending, in_progress, done
   priority: text("priority").notNull().default("medium"), // low, medium, high
   dueDate: timestamp("due_date"),
   assignedTo: integer("assigned_to").references(() => users.id).notNull(),

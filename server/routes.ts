@@ -1277,25 +1277,121 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Task Management routes
   app.get("/api/tasks", authenticateToken, async (req: AuthRequest, res) => {
     try {
-      const tasks = await storage.getAllTasks();
-      res.json(tasks);
+      const user = req.user!;
+      const filters: any = {};
+      
+      // Role-based filtering: Staff only sees their own tasks, Admin sees all
+      if (user.role === 'staff') {
+        filters.assignedTo = user.id;
+      }
+      
+      // Optional filters from query params
+      if (req.query.status) {
+        filters.status = req.query.status as string;
+      }
+      if (req.query.assignedTo) {
+        filters.assignedTo = parseInt(req.query.assignedTo as string);
+      }
+      
+      const tasks = await storage.getAllTasks(filters);
+      
+      // Include assigned user information for better display
+      const tasksWithUsers = await Promise.all(
+        tasks.map(async (task) => {
+          const assignedUser = await storage.getUser(task.assignedTo);
+          const assignedByUser = await storage.getUser(task.assignedBy);
+          return {
+            ...task,
+            assignedUser: assignedUser ? { id: assignedUser.id, name: assignedUser.name, username: assignedUser.username } : null,
+            assignedByUser: assignedByUser ? { id: assignedByUser.id, name: assignedByUser.name, username: assignedByUser.username } : null,
+          };
+        })
+      );
+      
+      res.json(tasksWithUsers);
     } catch (error) {
-      res.status(500).json({ message: "Failed to fetch tasks", error });
+      console.error("Failed to fetch tasks:", error);
+      res.status(500).json({ message: "Failed to fetch tasks", error: String(error) });
+    }
+  });
+
+  app.get("/api/tasks/my", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const user = req.user!;
+      const tasks = await storage.getAllTasks({ assignedTo: user.id });
+      
+      // Include assigned user information
+      const tasksWithUsers = await Promise.all(
+        tasks.map(async (task) => {
+          const assignedByUser = await storage.getUser(task.assignedBy);
+          return {
+            ...task,
+            assignedUser: { id: user.id, name: user.name, username: user.username },
+            assignedByUser: assignedByUser ? { id: assignedByUser.id, name: assignedByUser.name, username: assignedByUser.username } : null,
+          };
+        })
+      );
+      
+      res.json(tasksWithUsers);
+    } catch (error) {
+      console.error("Failed to fetch my tasks:", error);
+      res.status(500).json({ message: "Failed to fetch tasks", error: String(error) });
+    }
+  });
+
+  app.get("/api/tasks/today", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const user = req.user!;
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      
+      const allTasks = await storage.getAllTasks({ assignedTo: user.id });
+      
+      // Filter tasks due today
+      const todayTasks = allTasks.filter(task => {
+        if (!task.dueDate) return false;
+        const dueDate = new Date(task.dueDate);
+        return dueDate >= today && dueDate < tomorrow;
+      });
+      
+      // Include user information
+      const tasksWithUsers = await Promise.all(
+        todayTasks.map(async (task) => {
+          const assignedByUser = await storage.getUser(task.assignedBy);
+          return {
+            ...task,
+            assignedUser: { id: user.id, name: user.name, username: user.username },
+            assignedByUser: assignedByUser ? { id: assignedByUser.id, name: assignedByUser.name, username: assignedByUser.username } : null,
+          };
+        })
+      );
+      
+      res.json(tasksWithUsers);
+    } catch (error) {
+      console.error("Failed to fetch today's tasks:", error);
+      res.status(500).json({ message: "Failed to fetch today's tasks", error: String(error) });
     }
   });
 
   app.post("/api/tasks", authenticateToken, async (req: AuthRequest, res) => {
     try {
-      const taskData = {
+      const taskData = insertTaskSchema.parse({
         ...req.body,
         assignedTo: parseInt(req.body.assignedTo),
-        createdBy: req.user!.id,
+        assignedBy: req.user!.id,
         dueDate: req.body.dueDate ? new Date(req.body.dueDate) : null,
-      };
+      });
+      
       const task = await storage.createTask(taskData);
       res.json(task);
     } catch (error) {
-      res.status(500).json({ message: "Failed to create task", error });
+      console.error("Failed to create task:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Validation failed", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create task", error: String(error) });
     }
   });
 
@@ -1303,10 +1399,87 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const taskId = parseInt(req.params.id);
       const { status } = req.body;
-      const task = await storage.updateTaskStatus(taskId, status);
+      const user = req.user!;
+      
+      // Validate status
+      if (!['pending', 'in_progress', 'done'].includes(status)) {
+        return res.status(400).json({ message: "Invalid status value" });
+      }
+      
+      // Get the task to check permissions
+      const existingTask = await storage.getTask(taskId);
+      if (!existingTask) {
+        return res.status(404).json({ message: "Task not found" });
+      }
+      
+      // Permission check: Only assigned user or admin can update status
+      if (user.role !== 'admin' && existingTask.assignedTo !== user.id) {
+        return res.status(403).json({ message: "You can only update tasks assigned to you" });
+      }
+      
+      const updateData: any = { status };
+      
+      // Set completedAt when marking as done
+      if (status === 'done' && existingTask.status !== 'done') {
+        updateData.completedAt = new Date();
+      } else if (status !== 'done') {
+        updateData.completedAt = null;
+      }
+      
+      const task = await storage.updateTask(taskId, updateData);
       res.json(task);
     } catch (error) {
-      res.status(500).json({ message: "Failed to update task", error });
+      console.error("Failed to update task status:", error);
+      res.status(500).json({ message: "Failed to update task", error: String(error) });
+    }
+  });
+
+  app.patch("/api/tasks/:id", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const taskId = parseInt(req.params.id);
+      const user = req.user!;
+      
+      // Get the task to check permissions
+      const existingTask = await storage.getTask(taskId);
+      if (!existingTask) {
+        return res.status(404).json({ message: "Task not found" });
+      }
+      
+      // Permission check: Only admin or task creator can update full task details
+      if (user.role !== 'admin' && existingTask.assignedBy !== user.id) {
+        return res.status(403).json({ message: "You can only update tasks you created" });
+      }
+      
+      const updates = insertTaskSchema.partial().parse({
+        ...req.body,
+        assignedTo: req.body.assignedTo ? parseInt(req.body.assignedTo) : undefined,
+        dueDate: req.body.dueDate ? new Date(req.body.dueDate) : undefined,
+      });
+      
+      const task = await storage.updateTask(taskId, updates);
+      res.json(task);
+    } catch (error) {
+      console.error("Failed to update task:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Validation failed", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to update task", error: String(error) });
+    }
+  });
+
+  app.delete("/api/tasks/:id", authenticateToken, requireRole(["admin"]), async (req: AuthRequest, res) => {
+    try {
+      const taskId = parseInt(req.params.id);
+      const deleted = await storage.deleteTask(taskId);
+      
+      if (!deleted) {
+        return res.status(404).json({ message: "Task not found" });
+      }
+      
+      res.json({ message: "Task deleted successfully" });
+    } catch (error) {
+      console.error("Failed to delete task:", error);
+      res.status(500).json({ message: "Failed to delete task", error: String(error) });
     }
   });
 
