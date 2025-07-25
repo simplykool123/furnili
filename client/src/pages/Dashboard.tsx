@@ -170,11 +170,7 @@ export default function Dashboard() {
   // Mark task as done mutation
   const markTaskDoneMutation = useMutation({
     mutationFn: async (taskId: number) => {
-      return apiRequest(`/api/tasks/${taskId}`, {
-        method: "PATCH",
-        body: JSON.stringify({ status: "done" }),
-        headers: { "Content-Type": "application/json" },
-      });
+      return apiRequest(`/api/tasks/${taskId}/status`, "PATCH", { status: "done" });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/tasks"] });
@@ -549,7 +545,10 @@ export default function Dashboard() {
                       {activity.description}
                     </p>
                     <p className="text-xs text-gray-500 mt-1">
-                      {new Date(activity.createdAt).toLocaleString()}
+                      {activity.createdAt && !isNaN(new Date(activity.createdAt).getTime()) 
+                        ? new Date(activity.createdAt).toLocaleString()
+                        : 'Recently'
+                      }
                     </p>
                   </div>
                 </div>
