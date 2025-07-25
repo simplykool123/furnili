@@ -133,23 +133,7 @@ export default function LoginSimple() {
             </Button>
           </div>
 
-          <div className="bg-gray-50 rounded-lg p-4">
-            <p className="text-sm font-medium text-gray-700 mb-3">Demo Accounts:</p>
-            <div className="space-y-2 text-sm">
-              <div className="bg-white p-2 rounded border">
-                <p className="font-medium text-blue-700">Admin: admin</p>
-                <p className="text-gray-600">Password: demo123</p>
-              </div>
-              <div className="bg-white p-2 rounded border">
-                <p className="font-medium text-green-700">Manager: manager</p>
-                <p className="text-gray-600">Password: demo123</p>
-              </div>
-              <div className="bg-white p-2 rounded border">
-                <p className="font-medium text-orange-700">Store Keeper: keeper</p>
-                <p className="text-gray-600">Password: demo123</p>
-              </div>
-            </div>
-          </div>
+          
         </CardContent>
       </Card>
     </div>
