@@ -77,10 +77,7 @@ export function AnimatedNotificationBell() {
   // Priority tasks pulse effect
   const hasHighPriorityTasks = tasks.some(task => task.priority === 'high');
 
-  // Only show the bell if there are tasks to avoid clutter
-  if (taskCount === 0) {
-    return null;
-  }
+  // Always show the bell for consistency
 
   return (
     <DropdownMenu>
@@ -105,16 +102,18 @@ export function AnimatedNotificationBell() {
               
               {/* Removed animated ripple effects */}
               
-              {/* Task count badge - always show for debugging */}
-              <Badge 
-                variant="destructive" 
-                className={cn(
-                  "absolute -top-1 -right-1 h-5 w-5 p-0 text-xs flex items-center justify-center font-bold border-2 border-white",
-                  hasHighPriorityTasks ? "bg-red-600" : "bg-red-500"
-                )}
-              >
-                {taskCount > 9 ? '9+' : taskCount}
-              </Badge>
+              {/* Task count badge */}
+              {taskCount > 0 && (
+                <Badge 
+                  variant="destructive" 
+                  className={cn(
+                    "absolute -top-1 -right-1 h-5 w-5 p-0 text-xs flex items-center justify-center font-bold border-2 border-white",
+                    hasHighPriorityTasks ? "bg-red-600" : "bg-red-500"
+                  )}
+                >
+                  {taskCount > 9 ? '9+' : taskCount}
+                </Badge>
+              )}
               
               {/* Priority indicator with different animations */}
               {hasHighPriorityTasks && (

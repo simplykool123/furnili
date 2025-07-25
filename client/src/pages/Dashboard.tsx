@@ -429,7 +429,83 @@ export default function Dashboard() {
         </Card>
       )}
 
-      {/* Removed "All caught up!" section - tasks now only show in notification bell */}
+      {/* Pending Tasks Section - Similar to Recent Activity */}
+      {pendingTasks && pendingTasks.length > 0 && (
+        <Card className="hover:shadow-md transition-all duration-200">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base font-semibold text-foreground flex items-center gap-2">
+              <AlertCircle className="h-4 w-4 text-red-500" />
+              Pending Tasks ({pendingTasks.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <div className="space-y-2 max-h-64 overflow-y-auto">
+              {pendingTasks.slice(0, 5).map((task) => (
+                <div 
+                  key={task.id} 
+                  className="flex items-start gap-2 p-3 rounded-lg bg-red-50/50 border border-red-200/50 hover:bg-red-50 cursor-pointer transition-colors"
+                  onClick={() => setLocation(`/tasks/${task.id}`)}
+                >
+                  <div className="flex-shrink-0 mt-1">
+                    <AlertCircle className="h-3 w-3 text-red-500" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-900 truncate">
+                      {task.title}
+                    </p>
+                    {task.description && (
+                      <p className="text-xs text-gray-600 mt-1 line-clamp-2">
+                        {task.description}
+                      </p>
+                    )}
+                    <div className="flex items-center gap-2 mt-1">
+                      <Badge 
+                        variant={task.priority === 'high' ? 'destructive' : 
+                                task.priority === 'medium' ? 'default' : 'secondary'}
+                        className="text-xs"
+                      >
+                        {task.priority}
+                      </Badge>
+                      {task.dueDate && (
+                        <span className="text-xs text-gray-500">
+                          Due: {new Date(task.dueDate).toLocaleDateString()}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            {pendingTasks.length > 5 && (
+              <div className="mt-3 pt-2 border-t border-gray-200">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full text-xs"
+                  onClick={() => setLocation('/tasks')}
+                >
+                  View All {pendingTasks.length} Tasks
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* No Tasks Message */}
+      {pendingTasks && pendingTasks.length === 0 && (
+        <Card className="bg-green-50/50 border-green-200">
+          <CardContent className="pt-4 pb-4">
+            <div className="flex items-center gap-3">
+              <CheckCircle2 className="h-5 w-5 text-green-600" />
+              <div>
+                <p className="text-sm font-medium text-green-900">All caught up!</p>
+                <p className="text-xs text-green-700">You have no pending tasks at the moment.</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Recent Activity Section */}
       {recentActivity && Array.isArray(recentActivity) && recentActivity.length > 0 && (
