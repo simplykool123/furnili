@@ -15,7 +15,7 @@ import { toast } from "@/hooks/use-toast";
 import { authenticatedApiRequest, authService } from "@/lib/auth";
 import { queryClient } from "@/lib/queryClient";
 import { format } from "date-fns";
-import { Plus, Search, Filter, Download, Upload, Camera, Eye, Share2, Pencil, Trash2 } from "lucide-react";
+import { Plus, Search, Filter, Download, Upload, Camera, Eye, Share2, Pencil, Trash2, ChevronDown, ChevronUp } from "lucide-react";
 import Tesseract from 'tesseract.js';
 
 interface PettyCashExpense {
@@ -56,6 +56,7 @@ export default function PettyCash() {
   const [editingExpense, setEditingExpense] = useState<PettyCashExpense | null>(null);
   const [showImageDialog, setShowImageDialog] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string>("");
+  const [showStaffBalances, setShowStaffBalances] = useState(false);
   
   // Get current user
   const user = authService.getUser();
@@ -608,12 +609,35 @@ export default function PettyCash() {
       {staffBalances.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>Individual Staff Balances</CardTitle>
-            <p className="text-sm text-gray-600">Track funds received vs spent by each staff member</p>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Individual Staff Balances</CardTitle>
+                <p className="text-sm text-gray-600">Track funds received vs spent by each staff member</p>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowStaffBalances(!showStaffBalances)}
+                className="flex items-center gap-2"
+              >
+                {showStaffBalances ? (
+                  <>
+                    <ChevronUp className="h-4 w-4" />
+                    Hide
+                  </>
+                ) : (
+                  <>
+                    <ChevronDown className="h-4 w-4" />
+                    Show
+                  </>
+                )}
+              </Button>
+            </div>
           </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {staffBalances.map((staff: any) => (
+          {showStaffBalances && (
+            <CardContent>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {staffBalances.map((staff: any) => (
                 <div key={staff.userId} className="p-4 border rounded-lg bg-gray-50">
                   <div className="font-medium text-sm mb-2">{staff.userName}</div>
                   <div className="space-y-1 text-xs">
@@ -634,9 +658,10 @@ export default function PettyCash() {
                     </div>
                   </div>
                 </div>
-              ))}
-            </div>
-          </CardContent>
+                ))}
+              </div>
+            </CardContent>
+          )}
         </Card>
       )}
 
