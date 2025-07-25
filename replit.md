@@ -138,6 +138,14 @@ Preferred communication style: Simple, everyday language.
   - Moved OCR Wizard and Price Comparison into Master section as sub-items
   - Maintained all routing functionality and icon consistency
   - Preserved role-based access control for all menu items
+- ✅ **DASHBOARD TASK VISIBILITY**: Fixed user dashboard to show pending tasks
+  - Added `/api/dashboard/tasks` endpoint to fetch pending tasks for logged-in user
+  - Dashboard displays pending tasks with title, description, priority, and due date
+  - "Mark as Done" functionality to complete tasks directly from dashboard
+  - "View Details" button navigating to TaskDetail page
+  - Role-based visibility (staff see their tasks, admins see none)
+  - Clean "All caught up!" message when no pending tasks
+  - Integrated with existing notification system for consistent task management
 - ✅ **PHP/MySQL VERSION COMPLETE**: Full conversion for Hostinger shared hosting
   - Complete PHP/MySQL version maintaining all React system features
   - Optimized for app.furnili.in deployment on Hostinger

@@ -830,6 +830,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get dashboard tasks for current user (pending tasks assigned to them)
+  app.get("/api/dashboard/tasks", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const user = req.user!;
+      
+      // Fetch pending tasks assigned to the current user
+      const filters = { 
+        assignedTo: user.id,
+        status: 'pending'
+      };
+      
+      const tasks = await storage.getAllTasks(filters);
+      
+      // Include assigned by user information
+      const tasksWithUsers = await Promise.all(
+        tasks.map(async (task) => {
+          const assignedByUser = await storage.getUser(task.assignedBy);
+          return {
+            ...task,
+            assignedUser: { id: user.id, name: user.name, username: user.username },
+            assignedByUser: assignedByUser ? { id: assignedByUser.id, name: assignedByUser.name, username: assignedByUser.username } : null,
+          };
+        })
+      );
+      
+      res.json(tasksWithUsers);
+    } catch (error) {
+      console.error("Failed to fetch dashboard tasks:", error);
+      res.status(500).json({ message: "Failed to fetch dashboard tasks", error: String(error) });
+    }
+  });
+
   app.get("/api/dashboard/low-stock", authenticateToken, async (req, res) => {
     try {
       const lowStockProducts = await storage.getLowStockProducts();

@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -12,7 +12,10 @@ import {
   CheckCircle,
   Calendar,
   Quote,
-  Download
+  Download,
+  CheckCircle2,
+  AlertCircle,
+  ArrowRight
 } from "lucide-react";
 import { authService } from "@/lib/auth";
 import { useState, useEffect } from "react";
@@ -21,7 +24,8 @@ import MobileDashboard from "@/components/Mobile/MobileDashboard";
 import { useIsMobile } from "@/components/Mobile/MobileOptimizer";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 interface DashboardStats {
   totalProducts: number;
@@ -35,6 +39,20 @@ interface DashboardStats {
   activeTasks: number;
   totalValue: number;
   recentRequests: any[];
+}
+
+interface DashboardTask {
+  id: number;
+  title: string;
+  description?: string;
+  status: string;
+  priority: string;
+  dueDate?: string;
+  assignedTo: number;
+  assignedBy: number;
+  assignedUser?: { id: number; name: string; username: string };
+  assignedByUser?: { id: number; name: string; username: string };
+  createdAt: string;
 }
 
 const motivationalQuotes = [
@@ -141,16 +159,38 @@ export default function Dashboard() {
     queryKey: ["/api/dashboard/activity"],
   });
 
-  // Fetch user's tasks for staff members
-  const { data: myTasks } = useQuery({
-    queryKey: ["/api/tasks/my"],
-    enabled: !admin, // Only fetch for staff members
+  // Fetch pending tasks assigned to current user
+  const { data: pendingTasks } = useQuery<DashboardTask[]>({
+    queryKey: ["/api/dashboard/tasks"],
+    enabled: !!currentUser && !admin, // Only fetch for staff members
   });
 
-  // Fetch today's tasks
-  const { data: todayTasks } = useQuery({
-    queryKey: ["/api/tasks/today"],
-    enabled: !admin, // Only fetch for staff members
+  const { toast } = useToast();
+
+  // Mark task as done mutation
+  const markTaskDoneMutation = useMutation({
+    mutationFn: async (taskId: number) => {
+      return apiRequest(`/api/tasks/${taskId}`, {
+        method: "PATCH",
+        body: JSON.stringify({ status: "done" }),
+        headers: { "Content-Type": "application/json" },
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/tasks/notifications"] });
+      toast({
+        title: "Task completed",
+        description: "Task has been marked as done",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update task status",
+        variant: "destructive",
+      });
+    },
   });
 
   if (isLoading) {
@@ -286,174 +326,147 @@ export default function Dashboard() {
         </Card>
       </div>
 
-      {/* Task Dashboard for Staff */}
-      {!admin && (myTasks?.length > 0 || todayTasks?.length > 0) && (
-        <div className="grid gap-4 grid-cols-1 lg:grid-cols-2">
-          {/* My Tasks */}
-          <Card className="hover:shadow-md transition-all duration-200">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base font-semibold text-foreground flex items-center gap-2">
-                <CheckCircle className="h-4 w-4" />
-                My Tasks ({myTasks?.length || 0})
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <div className="space-y-2 max-h-32 overflow-y-auto">
-                {myTasks?.slice(0, 3).map((task: any) => (
-                  <div key={task.id} className="flex items-start gap-2 p-2 rounded-lg bg-blue-50/50 border border-blue-100/50">
-                    <div className="flex-shrink-0 mt-1">
-                      {task.status === 'done' ? (
-                        <CheckCircle className="h-3 w-3 text-green-600" />
-                      ) : task.status === 'in_progress' ? (
-                        <Clock className="h-3 w-3 text-blue-600" />
-                      ) : (
-                        <AlertTriangle className="h-3 w-3 text-yellow-600" />
+      {/* Pending Tasks for Staff */}
+      {!admin && pendingTasks && pendingTasks.length > 0 && (
+        <Card className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-yellow-500 bg-gradient-to-br from-card to-yellow-50/20">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-lg font-semibold text-foreground flex items-center gap-2">
+              <AlertCircle className="h-5 w-5 text-yellow-600" />
+              Pending Tasks ({pendingTasks.length})
+            </CardTitle>
+            <CardDescription>
+              Tasks assigned to you that need attention
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <div className="space-y-3 max-h-96 overflow-y-auto">
+              {pendingTasks.map((task) => (
+                <div 
+                  key={task.id} 
+                  className="flex items-start gap-3 p-4 rounded-lg bg-white border border-yellow-200 hover:shadow-md transition-all duration-200 cursor-pointer"
+                  onClick={() => setLocation(`/tasks/${task.id}`)}
+                >
+                  <div className="flex-shrink-0 mt-1">
+                    <AlertCircle className="h-4 w-4 text-yellow-600" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-sm font-medium text-gray-900 truncate">
+                      {task.title}
+                    </h4>
+                    {task.description && (
+                      <p className="text-xs text-gray-600 mt-1 line-clamp-2">
+                        {task.description}
+                      </p>
+                    )}
+                    <div className="flex items-center gap-2 mt-2">
+                      <Badge 
+                        variant="outline" 
+                        className="bg-yellow-100 text-yellow-800 border-yellow-300"
+                      >
+                        Pending
+                      </Badge>
+                      <Badge 
+                        variant={task.priority === 'high' ? 'destructive' : 
+                                task.priority === 'medium' ? 'default' : 'secondary'}
+                        className="text-xs"
+                      >
+                        {task.priority} priority
+                      </Badge>
+                      {task.dueDate && (
+                        <span className="text-xs text-gray-500 flex items-center gap-1">
+                          <Calendar className="h-3 w-3" />
+                          Due: {new Date(task.dueDate).toLocaleDateString()}
+                        </span>
                       )}
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-medium text-gray-900 truncate">
-                        {task.title}
+                    {task.assignedByUser && (
+                      <p className="text-xs text-gray-500 mt-1">
+                        Assigned by: {task.assignedByUser.name}
                       </p>
-                      <div className="flex items-center gap-1 mt-1">
-                        <span className={`inline-flex items-center px-1 py-0.5 rounded text-xs font-medium ${
-                          task.status === 'done' ? 'bg-green-100 text-green-800' :
-                          task.status === 'in_progress' ? 'bg-blue-100 text-blue-800' :
-                          'bg-yellow-100 text-yellow-800'
-                        }`}>
-                          {task.status === 'in_progress' ? 'In Progress' : task.status}
-                        </span>
-                        {task.priority === 'high' && (
-                          <span className="inline-flex items-center px-1 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
-                            High
-                          </span>
-                        )}
-                      </div>
-                    </div>
+                    )}
                   </div>
-                ))}
-                {(!myTasks || myTasks.length === 0) && (
-                  <div className="text-center py-4">
-                    <CheckCircle className="h-6 w-6 text-muted-foreground mx-auto mb-1" />
-                    <p className="text-muted-foreground text-xs">No tasks assigned</p>
+                  <div className="flex flex-col gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="text-xs h-8 border-gray-300 hover:bg-gray-50"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setLocation(`/tasks/${task.id}`);
+                      }}
+                    >
+                      <ArrowRight className="h-3 w-3 mr-1" />
+                      View
+                    </Button>
+                    <Button
+                      size="sm"
+                      className="text-xs h-8 bg-green-600 hover:bg-green-700"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        markTaskDoneMutation.mutate(task.id);
+                      }}
+                      disabled={markTaskDoneMutation.isPending}
+                    >
+                      <CheckCircle2 className="h-3 w-3 mr-1" />
+                      Done
+                    </Button>
                   </div>
-                )}
-              </div>
-              <Button 
+                </div>
+              ))}
+            </div>
+            <div className="mt-4 pt-3 border-t border-gray-200">
+              <Button
+                variant="outline"
+                className="w-full text-sm"
                 onClick={() => setLocation('/tasks')}
-                variant="outline" 
-                size="sm"
-                className="w-full mt-2 text-xs"
               >
                 View All Tasks
               </Button>
-            </CardContent>
-          </Card>
-
-          {/* Today's Tasks */}
-          <Card className="hover:shadow-md transition-all duration-200">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base font-semibold text-foreground flex items-center gap-2">
-                <Calendar className="h-4 w-4" />
-                Due Today ({todayTasks?.length || 0})
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <div className="space-y-2 max-h-32 overflow-y-auto">
-                {todayTasks?.slice(0, 3).map((task: any) => (
-                  <div key={task.id} className="flex items-start gap-2 p-2 rounded-lg bg-yellow-50/50 border border-yellow-100/50">
-                    <div className="flex-shrink-0 mt-1">
-                      {task.status === 'done' ? (
-                        <CheckCircle className="h-3 w-3 text-green-600" />
-                      ) : task.status === 'in_progress' ? (
-                        <Clock className="h-3 w-3 text-blue-600" />
-                      ) : (
-                        <AlertTriangle className="h-3 w-3 text-yellow-600" />
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-medium text-gray-900 truncate">
-                        {task.title}
-                      </p>
-                      <div className="flex items-center gap-1 mt-1">
-                        <span className={`inline-flex items-center px-1 py-0.5 rounded text-xs font-medium ${
-                          task.status === 'done' ? 'bg-green-100 text-green-800' :
-                          task.status === 'in_progress' ? 'bg-blue-100 text-blue-800' :
-                          'bg-yellow-100 text-yellow-800'
-                        }`}>
-                          {task.status === 'in_progress' ? 'In Progress' : task.status}
-                        </span>
-                        {task.priority === 'high' && (
-                          <span className="inline-flex items-center px-1 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
-                            High
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-                {(!todayTasks || todayTasks.length === 0) && (
-                  <div className="text-center py-4">
-                    <Calendar className="h-6 w-6 text-muted-foreground mx-auto mb-1" />
-                    <p className="text-muted-foreground text-xs">No tasks due today</p>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-      {/* Compact Quick Actions & Recent Activity */}
-      <div className="grid gap-4 grid-cols-1 lg:grid-cols-2">
-        <Card className="hover:shadow-md transition-all duration-200">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base font-semibold text-foreground">Quick Actions</CardTitle>
-          </CardHeader>
-          <CardContent className="pt-0">
-            <div className="grid gap-2 grid-cols-2 lg:grid-cols-4">
-              <div className="flex flex-col items-center p-2 rounded-lg border border-border hover:bg-muted/50 cursor-pointer transition-colors" onClick={() => setLocation('/products/new')}>
-                <Package className="h-5 w-5 text-primary mb-1" />
-                <span className="text-xs font-medium text-center">Add Product</span>
-              </div>
-              <div className="flex flex-col items-center p-2 rounded-lg border border-border hover:bg-muted/50 cursor-pointer transition-colors" onClick={() => setLocation('/inventory-movement')}>
-                <TrendingUp className="h-5 w-5 text-primary mb-1" />
-                <span className="text-xs font-medium text-center">Stock Move</span>
-              </div>
-              <div className="flex flex-col items-center p-2 rounded-lg border border-border hover:bg-muted/50 cursor-pointer transition-colors" onClick={() => setLocation('/attendance')}>
-                <Clock className="h-5 w-5 text-primary mb-1" />
-                <span className="text-xs font-medium text-center">Check In</span>
-              </div>
-
             </div>
           </CardContent>
         </Card>
+      )}
 
+      {/* No Pending Tasks Message for Staff */}
+      {!admin && pendingTasks && pendingTasks.length === 0 && (
+        <Card className="bg-green-50/50 border-green-200">
+          <CardContent className="pt-6">
+            <div className="text-center">
+              <CheckCircle2 className="h-12 w-12 text-green-600 mx-auto mb-3" />
+              <h3 className="text-lg font-medium text-green-900 mb-2">All caught up!</h3>
+              <p className="text-green-700">You have no pending tasks at the moment.</p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Recent Activity Section */}
+      {recentActivity && Array.isArray(recentActivity) && recentActivity.length > 0 && (
         <Card className="hover:shadow-md transition-all duration-200">
           <CardHeader className="pb-2">
-            <CardTitle className="text-base font-semibold text-foreground">Recent Activity</CardTitle>
+            <CardTitle className="text-base font-semibold text-foreground flex items-center gap-2">
+              <Clock className="h-4 w-4" />
+              Recent Activity
+            </CardTitle>
           </CardHeader>
           <CardContent className="pt-0">
             <div className="space-y-2 max-h-32 overflow-y-auto">
-              {Array.isArray(recentActivity) && recentActivity.length > 0 ? (
-                recentActivity.slice(0, 6).map((activity: any, index: number) => (
-                  <div key={index} className="flex items-start space-x-2 py-1">
-                    <div className="w-1.5 h-1.5 bg-primary rounded-full mt-1.5 flex-shrink-0"></div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs text-foreground leading-tight">{String(activity.description || 'Activity')}</p>
-                      <p className="text-xs text-muted-foreground">{String(activity.time || 'Recently')}</p>
-                    </div>
+              {recentActivity.slice(0, 5).map((activity: any, index: number) => (
+                <div key={index} className="flex items-start gap-2 p-2 rounded-lg bg-gray-50/50 border border-gray-100/50">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-medium text-gray-900">
+                      {activity.description}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {new Date(activity.createdAt).toLocaleString()}
+                    </p>
                   </div>
-                ))
-              ) : (
-                <div className="text-center py-4">
-                  <Calendar className="h-6 w-6 text-muted-foreground mx-auto mb-1" />
-                  <p className="text-muted-foreground text-xs">No recent activity</p>
                 </div>
-              )}
+              ))}
             </div>
           </CardContent>
         </Card>
-      </div>
+      )}
     </div>
   );
 }
