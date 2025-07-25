@@ -1956,6 +1956,21 @@ class DatabaseStorage implements IStorage {
       .orderBy(desc(attendance.checkInTime));
   }
 
+  // Helper function to calculate working days (excluding Sundays)
+  private calculateWorkingDaysInMonth(month: number, year: number): number {
+    const daysInMonth = new Date(year, month, 0).getDate();
+    let workingDays = 0;
+    
+    for (let day = 1; day <= daysInMonth; day++) {
+      const currentDay = new Date(year, month - 1, day);
+      if (currentDay.getDay() !== 0) { // Not Sunday (0 = Sunday)
+        workingDays++;
+      }
+    }
+    
+    return workingDays;
+  }
+
   async getAttendanceStats(userId?: number, month?: number, year?: number): Promise<{
     totalDays: number;
     presentDays: number;
@@ -1982,10 +1997,11 @@ class DatabaseStorage implements IStorage {
     
     const records = await query;
     
-    const totalDays = new Date(currentYear, currentMonth, 0).getDate();
-    const presentDays = records.filter(r => r.status === 'present').length;
+    // Calculate working days (excluding Sundays) instead of total calendar days
+    const totalDays = this.calculateWorkingDaysInMonth(currentMonth, currentYear);
+    const presentDays = records.filter(r => r.status === 'present' || r.status === 'late').length;
     const absentDays = totalDays - presentDays;
-    const totalHours = records.reduce((sum, r) => sum + (r.workingHours || 0), 0);
+    const totalHours = records.reduce((sum, r) => sum + (r.hoursWorked || 0), 0);
     const overtimeHours = records.reduce((sum, r) => sum + (r.overtimeHours || 0), 0);
     
     return {
@@ -2112,8 +2128,8 @@ class DatabaseStorage implements IStorage {
     // Calculate working days: present + (half days × 0.5)
     const actualWorkingDays = presentDays + (halfDays * 0.5);
     
-    // Total calendar days in month
-    const totalDaysInMonth = new Date(year, month, 0).getDate();
+    // Calculate working days in month (excluding Sundays)
+    const totalDaysInMonth = this.calculateWorkingDaysInMonth(month, year);
     
     // User's basic salary from profile (fallback to default)
     const basicSalary = user.salary || 25000;
