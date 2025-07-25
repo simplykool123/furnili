@@ -32,6 +32,7 @@ export function AnimatedNotificationBell() {
   const [hasNewTasks, setHasNewTasks] = useState(false);
   const [previousTaskCount, setPreviousTaskCount] = useState(0);
   const [showGlow, setShowGlow] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
   
   const { data: tasks = [], error, isLoading } = useQuery<Task[]>({
     queryKey: ["/api/dashboard/tasks"],
@@ -39,7 +40,7 @@ export function AnimatedNotificationBell() {
   });
 
   // Debug logging
-  console.log('AnimatedNotificationBell - Tasks:', tasks, 'Count:', tasks.length, 'Error:', error);
+  console.log('AnimatedNotificationBell - Rendered! Tasks:', tasks, 'Count:', tasks.length, 'Error:', error, 'Loading:', isLoading);
 
   // Count pending and in-progress tasks (using lowercase status values)
   const taskCount = tasks.filter(task => 
@@ -81,9 +82,8 @@ export function AnimatedNotificationBell() {
   // Priority tasks pulse effect
   const hasHighPriorityTasks = tasks.some(task => task.priority === 'high');
 
-  if (taskCount === 0) {
-    return null; // Don't show bell if no tasks
-  }
+  // Always render the bell, even with 0 tasks for debugging
+  console.log('AnimatedNotificationBell - About to render with taskCount:', taskCount);
 
   return (
     <DropdownMenu>
@@ -108,18 +108,16 @@ export function AnimatedNotificationBell() {
               
               {/* Removed animated ripple effects */}
               
-              {/* Task count badge with animations */}
-              {taskCount > 0 && (
-                <Badge 
-                  variant="destructive" 
-                  className={cn(
-                    "absolute -top-1 -right-1 h-5 w-5 p-0 text-xs flex items-center justify-center font-bold border-2 border-white",
-                    hasHighPriorityTasks ? "bg-red-600" : "bg-red-500"
-                  )}
-                >
-                  {taskCount > 9 ? '9+' : taskCount}
-                </Badge>
-              )}
+              {/* Task count badge - always show for debugging */}
+              <Badge 
+                variant="destructive" 
+                className={cn(
+                  "absolute -top-1 -right-1 h-5 w-5 p-0 text-xs flex items-center justify-center font-bold border-2 border-white",
+                  hasHighPriorityTasks ? "bg-red-600" : "bg-red-500"
+                )}
+              >
+                {taskCount > 9 ? '9+' : taskCount}
+              </Badge>
               
               {/* Priority indicator with different animations */}
               {hasHighPriorityTasks && (
