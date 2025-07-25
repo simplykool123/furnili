@@ -2452,11 +2452,22 @@ class DatabaseStorage implements IStorage {
   async createRequestItem(item: InsertRequestItem): Promise<RequestItem> { throw new Error("Not implemented"); }
   async updateMaterialRequest(id: number, updates: Partial<InsertMaterialRequest>): Promise<MaterialRequest | undefined> { return undefined; }
   async deleteMaterialRequest(id: number): Promise<boolean> { return false; }
-  async getBOQUpload(id: number): Promise<BOQUpload | undefined> { return undefined; }
+  async getBOQUpload(id: number): Promise<BOQUpload | undefined> {
+    const result = await db.select().from(boqUploads).where(eq(boqUploads.id, id));
+    return result[0];
+  }
   async getBOQsByClient(clientId: number): Promise<BOQUpload[]> { return []; }
-  async getAllBOQUploads(): Promise<BOQUpload[]> { return []; }
-  async createBOQUpload(boq: InsertBOQUpload): Promise<BOQUpload> { throw new Error("Not implemented"); }
-  async updateBOQUpload(id: number, updates: Partial<InsertBOQUpload>): Promise<BOQUpload | undefined> { return undefined; }
+  async getAllBOQUploads(): Promise<BOQUpload[]> {
+    return await db.select().from(boqUploads).orderBy(desc(boqUploads.createdAt));
+  }
+  async createBOQUpload(boq: InsertBOQUpload): Promise<BOQUpload> {
+    const result = await db.insert(boqUploads).values(boq).returning();
+    return result[0];
+  }
+  async updateBOQUpload(id: number, updates: Partial<InsertBOQUpload>): Promise<BOQUpload | undefined> {
+    const result = await db.update(boqUploads).set(updates).where(eq(boqUploads.id, id)).returning();
+    return result[0];
+  }
   async deleteBOQUpload(id: number): Promise<boolean> { return false; }
   async getStockMovements(productId: number): Promise<StockMovement[]> { return []; }
   async createStockMovement(movement: InsertStockMovement): Promise<StockMovement> { throw new Error("Not implemented"); }

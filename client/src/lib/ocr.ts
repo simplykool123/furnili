@@ -96,10 +96,10 @@ class OCRService {
 
     return {
       items: extractedItems,
-      projectName: `${projectDetails.projectName} (WO#${projectDetails.workOrderNumber})`,
       totalValue,
       // Add extracted metadata
-      ...projectDetails
+      ...projectDetails,
+      projectName: `${projectDetails.projectName} (WO#${projectDetails.workOrderNumber})`,
     };
   }
 
