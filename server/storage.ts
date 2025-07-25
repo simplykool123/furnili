@@ -1586,12 +1586,39 @@ export class MemStorage {
   }
 
   async updatePayroll(id: number, updates: Partial<InsertPayroll>): Promise<Payroll | undefined> {
-    const payroll = this.payroll.get(id);
-    if (!payroll) return undefined;
+    try {
+      // Get existing payroll from database
+      const existingPayroll = await db.select().from(payroll).where(eq(payroll.id, id)).limit(1);
+      if (!existingPayroll[0]) return undefined;
 
-    const updatedPayroll = { ...payroll, ...updates };
-    this.payroll.set(id, updatedPayroll);
-    return updatedPayroll;
+      const current = existingPayroll[0];
+      
+      // If basic salary is being updated, recalculate net salary
+      if (updates.basicSalary !== undefined && updates.basicSalary !== current.basicSalary) {
+        const totalDaysInMonth = current.totalWorkingDays || 31; // Use stored total days or default
+        const actualWorkingDays = current.actualWorkingDays || 0;
+        
+        // Recalculate net salary: Basic salary ÷ total days × working days  
+        updates.netSalary = Math.round((updates.basicSalary / totalDaysInMonth) * actualWorkingDays);
+      }
+
+      // Update in database
+      const updated = await db.update(payroll)
+        .set(updates)
+        .where(eq(payroll.id, id))
+        .returning();
+      
+      return updated[0];
+    } catch (error) {
+      console.error("Error updating payroll:", error);
+      // Fallback to in-memory storage
+      const payrollRecord = this.payroll.get(id);
+      if (!payrollRecord) return undefined;
+
+      const updatedPayroll = { ...payrollRecord, ...updates };
+      this.payroll.set(id, updatedPayroll);
+      return updatedPayroll;
+    }
   }
 
   async generatePayroll(userId: number, month: number, year: number): Promise<Payroll> {
@@ -2060,19 +2087,7 @@ class DatabaseStorage implements IStorage {
   }
 
   async generatePayroll(userId: number, month: number, year: number): Promise<Payroll> {
-    // Check if payroll already exists
-    const existingPayroll = await db.select().from(payroll)
-      .where(and(
-        eq(payroll.userId, userId),
-        eq(payroll.month, month),
-        eq(payroll.year, year)
-      )).limit(1);
-    
-    if (existingPayroll[0]) {
-      return existingPayroll[0];
-    }
-
-    // Get user details
+    // Get user details first to access salary
     const user = await this.getUser(userId);
     if (!user) {
       throw new Error("User not found");
@@ -2089,57 +2104,62 @@ class DatabaseStorage implements IStorage {
         lte(attendance.date, endDate)
       ));
     
-    const presentDays = attendanceRecords.filter(a => a.status === 'present').length;
+    // Calculate attendance details
+    const presentDays = attendanceRecords.filter(a => a.status === 'present' || a.status === 'late').length;
     const halfDays = attendanceRecords.filter(a => a.status === 'half_day').length;
-    const totalHours = attendanceRecords.reduce((sum, a) => sum + (a.hoursWorked || 0), 0);
-    const overtimeHours = attendanceRecords.reduce((sum, a) => sum + (a.overtimeHours || 0), 0);
     const absentDays = attendanceRecords.filter(a => a.status === 'absent').length;
     
-    // Calculate working days in month (excluding Sundays)
-    const daysInMonth = new Date(year, month, 0).getDate();
-    let totalWorkingDays = 0;
-    for (let day = 1; day <= daysInMonth; day++) {
-      const currentDay = new Date(year, month - 1, day);
-      if (currentDay.getDay() !== 0) { // Not Sunday
-        totalWorkingDays++;
-      }
-    }
+    // Calculate working days: present + (half days × 0.5)
+    const actualWorkingDays = presentDays + (halfDays * 0.5);
     
-    // Basic salary calculation
-    const basicSalary = 25000; // Default basic salary
-    const allowances = 2000; // Default allowances
-    const dailySalary = basicSalary / totalWorkingDays;
-    const earnedSalary = (presentDays * dailySalary) + (halfDays * dailySalary * 0.5);
+    // Total calendar days in month
+    const totalDaysInMonth = new Date(year, month, 0).getDate();
     
-    // Overtime calculation
-    const overtimePayAmount = overtimeHours * 50; // ₹50 per hour
+    // User's basic salary from profile (fallback to default)
+    const basicSalary = user.salary || 25000;
     
-    // Deductions (PF, ESI, etc.)
-    const pfDeduction = earnedSalary * 0.12;
-    const totalDeductions = pfDeduction;
-    
-    const netSalary = earnedSalary + allowances + overtimePayAmount - totalDeductions;
+    // Formula: Basic salary ÷ total days × working days
+    // Sundays are paid holidays by default (no deduction for Sundays)
+    const netSalary = Math.round((basicSalary / totalDaysInMonth) * actualWorkingDays);
 
     const payrollData: InsertPayroll = {
       userId,
       month,
       year,
       basicSalary,
-      allowances,
-      overtimePay: overtimePayAmount,
+      allowances: 0, // No additional allowances
+      overtimePay: 0, // Remove overtime as requested
       bonus: 0,
-      deductions: totalDeductions,
+      deductions: 0, // No deductions for now
       netSalary,
-      totalWorkingDays,
-      actualWorkingDays: presentDays + (halfDays * 0.5),
-      totalHours,
-      overtimeHours,
+      totalWorkingDays: totalDaysInMonth, // Total calendar days
+      actualWorkingDays, // Actual working days (including 0.5 for half days)
+      totalHours: presentDays * 8 + halfDays * 4, // Calculate total hours
+      overtimeHours: 0, // Remove overtime
       leaveDays: absentDays,
       status: "generated",
     };
 
-    const result = await db.insert(payroll).values(payrollData).returning();
-    return result[0];
+    // Check if payroll already exists and update, otherwise create new
+    const existingPayroll = await db.select().from(payroll)
+      .where(and(
+        eq(payroll.userId, userId),
+        eq(payroll.month, month),
+        eq(payroll.year, year)
+      )).limit(1);
+    
+    if (existingPayroll[0]) {
+      // Update existing payroll with new calculations
+      const updated = await db.update(payroll)
+        .set(payrollData)
+        .where(eq(payroll.id, existingPayroll[0].id))
+        .returning();
+      return updated[0];
+    } else {
+      // Create new payroll record
+      const result = await db.insert(payroll).values(payrollData).returning();
+      return result[0];
+    }
   }
 
   async getPettyCashStats(): Promise<{
