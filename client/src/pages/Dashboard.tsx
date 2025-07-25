@@ -159,8 +159,10 @@ export default function Dashboard() {
     queryKey: ["/api/dashboard/activity"],
   });
 
-  // Remove task display from dashboard completely to prevent duplication
-  const pendingTasks: DashboardTask[] = []; // Always empty - tasks only shown in notification bell
+  // Fetch pending tasks for dashboard display
+  const { data: pendingTasks = [] } = useQuery<DashboardTask[]>({
+    queryKey: ["/api/dashboard/tasks"],
+  });
 
   const { toast } = useToast();
 
