@@ -468,6 +468,8 @@ export default function Attendance() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingAttendance, setEditingAttendance] = useState<number | null>(null);
   const [editingStatus, setEditingStatus] = useState<string>("");
+  const [editingCell, setEditingCell] = useState<{staffId: number, day: number} | null>(null);
+  const [editingCellStatus, setEditingCellStatus] = useState<string>("");
   const [isProcessingPayroll, setIsProcessingPayroll] = useState(false);
   const [isAddStaffOpen, setIsAddStaffOpen] = useState(false);
   const [isEditStaffOpen, setIsEditStaffOpen] = useState(false);
@@ -723,6 +725,45 @@ export default function Attendance() {
   const cancelAttendanceEdit = () => {
     setEditingAttendance(null);
     setEditingStatus("");
+  };
+
+  // Monthly calendar cell editing handlers
+  const handleCellEdit = (staffId: number, day: number, currentStatus: string) => {
+    setEditingCell({ staffId, day });
+    setEditingCellStatus(currentStatus || 'absent');
+  };
+
+  const saveCellEdit = async (staffId: number, day: number, newStatus: string) => {
+    try {
+      const date = new Date(selectedYear, selectedMonth - 1, day);
+      const dateString = date.toISOString().split('T')[0];
+      
+      await apiRequest('/api/attendance/bulk-update', {
+        method: 'POST',
+        body: {
+          userId: staffId,
+          month: selectedMonth,
+          year: selectedYear,
+          attendanceData: [{
+            date: dateString,
+            status: newStatus,
+            userId: staffId
+          }]
+        }
+      });
+      
+      queryClient.invalidateQueries({ queryKey: ['/api/attendance'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/attendance/stats'] });
+      setEditingCell(null);
+      setEditingCellStatus("");
+    } catch (error) {
+      console.error('Error updating attendance:', error);
+    }
+  };
+
+  const cancelCellEdit = () => {
+    setEditingCell(null);
+    setEditingCellStatus("");
   };
 
   const handlePayrollSave = (payrollData: any) => {
@@ -1513,11 +1554,54 @@ export default function Attendance() {
                               const statusCode = status ? getStatusCode(status) : 'A';
                               const colorClass = status ? getStatusColor(status) : 'text-gray-400';
                               
+                              const isEditing = editingCell?.staffId === member.id && editingCell?.day === day;
+                              
                               return (
                                 <TableCell key={day} className="text-center p-1">
-                                  <span className={`inline-block w-6 h-6 rounded text-xs font-medium leading-6 ${colorClass}`}>
-                                    {statusCode}
-                                  </span>
+                                  {isEditing ? (
+                                    <div className="flex flex-col items-center gap-1">
+                                      <Select 
+                                        value={editingCellStatus} 
+                                        onValueChange={setEditingCellStatus}
+                                      >
+                                        <SelectTrigger className="w-16 h-6 text-xs">
+                                          <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          <SelectItem value="present">P</SelectItem>
+                                          <SelectItem value="absent">A</SelectItem>
+                                          <SelectItem value="half-day">HF</SelectItem>
+                                          <SelectItem value="late">L</SelectItem>
+                                          <SelectItem value="on-leave">LV</SelectItem>
+                                        </SelectContent>
+                                      </Select>
+                                      <div className="flex gap-1">
+                                        <Button 
+                                          size="sm" 
+                                          onClick={() => saveCellEdit(member.id, day, editingCellStatus)}
+                                          className="h-4 w-4 p-0"
+                                        >
+                                          <Check className="w-2 h-2" />
+                                        </Button>
+                                        <Button 
+                                          size="sm" 
+                                          variant="outline"
+                                          onClick={cancelCellEdit}
+                                          className="h-4 w-4 p-0"
+                                        >
+                                          <X className="w-2 h-2" />
+                                        </Button>
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    <span 
+                                      className={`inline-block w-6 h-6 rounded text-xs font-medium leading-6 cursor-pointer hover:bg-gray-100 ${colorClass}`}
+                                      onClick={() => handleCellEdit(member.id, day, status)}
+                                      title="Click to edit attendance"
+                                    >
+                                      {statusCode}
+                                    </span>
+                                  )}
                                 </TableCell>
                               );
                             })}
