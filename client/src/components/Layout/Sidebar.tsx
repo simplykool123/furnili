@@ -2,6 +2,7 @@ import { Link, useLocation } from "wouter";
 import { cn } from "@/lib/utils";
 import { authService } from "@/lib/auth";
 import { useState, useEffect } from "react";
+import ChangePassword from "@/components/ChangePassword";
 import { 
   LayoutDashboard, 
   Package, 
@@ -218,8 +219,14 @@ export default function Sidebar({ onItemClick }: SidebarProps = {}) {
         </div>
       </nav>
 
-      {/* Logout */}
-      <div className="p-3 border-t border-primary-foreground/20">
+      {/* User Actions */}
+      <div className="p-3 border-t border-primary-foreground/20 space-y-2">
+        {/* Change Password */}
+        <div className="w-full">
+          <ChangePassword />
+        </div>
+        
+        {/* Logout */}
         <button 
           onClick={handleLogout}
           className="flex items-center space-x-3 px-3 py-2 text-amber-900/90 hover:bg-white/15 hover:text-amber-800 rounded-lg transition-all duration-200 w-full text-sm font-medium group"

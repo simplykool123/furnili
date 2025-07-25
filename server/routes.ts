@@ -205,6 +205,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(req.user);
   });
 
+  // Change password endpoint for users
+  app.post("/api/auth/change-password", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const { currentPassword, newPassword } = req.body;
+      
+      if (!currentPassword || !newPassword) {
+        return res.status(400).json({ message: "Current password and new password are required" });
+      }
+      
+      if (newPassword.length < 6) {
+        return res.status(400).json({ message: "New password must be at least 6 characters long" });
+      }
+      
+      // Get the current user from database to verify current password
+      const user = await storage.getUser(req.user!.id);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Verify current password
+      const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.password);
+      if (!isCurrentPasswordValid) {
+        return res.status(400).json({ message: "Current password is incorrect" });
+      }
+      
+      // Hash new password
+      const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+      
+      // Update password in database
+      await storage.updateUser(req.user!.id, { password: hashedNewPassword });
+      
+      res.json({ message: "Password changed successfully" });
+    } catch (error) {
+      console.error("Change password error:", error);
+      res.status(500).json({ message: "Failed to change password", error: String(error) });
+    }
+  });
+
   // User management routes
   app.get("/api/users", authenticateToken, requireRole(["admin"]), async (req, res) => {
     try {
