@@ -1894,7 +1894,7 @@ export default function Attendance() {
           </Card>
         </TabsContent>
 
-        {/* Staff Management Tab */}
+        {/* Staff Management Tab - Admin Only */}
         <TabsContent value="staff" className="space-y-4">
           <Card>
             <CardHeader>
@@ -1914,8 +1914,6 @@ export default function Attendance() {
                     <TableHead>Employee ID</TableHead>
                     <TableHead>Department</TableHead>
                     <TableHead>Salary</TableHead>
-                    <TableHead>Aadhar</TableHead>
-                    <TableHead>Documents</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -1933,37 +1931,16 @@ export default function Attendance() {
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell>
-                        <div className="bg-gray-100 px-2 py-1 rounded text-xs font-mono">
-                          {member.employeeId}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <span className="text-sm font-medium">{member.department}</span>
-                      </TableCell>
-                      <TableCell>
-                        <span className="text-sm font-semibold text-green-700">
-                          ₹{member.salary?.toLocaleString()}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        <span className="text-xs font-mono text-gray-600">
-                          {member.aadhar?.slice(0, 4)} XXXX XXXX
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-1">
-                          {member.documents && Object.keys(member.documents).map((docType) => (
-                            <span key={docType} className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">
-                              {docType}
-                            </span>
-                          ))}
-                        </div>
-                      </TableCell>
+                      <TableCell className="font-mono text-sm">{member.employeeId}</TableCell>
+                      <TableCell>{member.department}</TableCell>
+                      <TableCell className="font-semibold">₹{member.salary?.toLocaleString() || "N/A"}</TableCell>
                       <TableCell>
                         <div className="flex gap-1">
                           <Button size="sm" variant="outline" onClick={() => handleEditStaff(member)}>
                             <Edit className="w-3 h-3" />
+                          </Button>
+                          <Button size="sm" variant="outline" className="text-red-600 hover:text-red-700" onClick={() => handleDeleteStaff(member.id)}>
+                            <Trash2 className="w-3 h-3" />
                           </Button>
                         </div>
                       </TableCell>
@@ -1975,16 +1952,20 @@ export default function Attendance() {
           </Card>
         </TabsContent>
 
-        {/* Payroll Tab */}
+        {/* Payroll Tab - Admin Only */}
         <TabsContent value="payroll" className="space-y-4">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
                 Payroll Management
                 <div className="flex gap-2">
-                  <Button size="sm" onClick={() => setIsAddPayrollOpen(true)} className="bg-green-600 hover:bg-green-700">
-                    <Plus className="w-4 h-4 mr-2" />
-                    Generate Payroll
+                  <Button size="sm" onClick={handleGenerateAllPayslips} className="bg-blue-600 hover:bg-blue-700">
+                    <FileText className="w-4 h-4 mr-2" />
+                    Generate All Payslips
+                  </Button>
+                  <Button size="sm" onClick={handleProcessAllPayrolls} className="bg-green-600 hover:bg-green-700">
+                    <CreditCard className="w-4 h-4 mr-2" />
+                    Process All
                   </Button>
                 </div>
               </CardTitle>
@@ -1993,11 +1974,9 @@ export default function Attendance() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Staff Details</TableHead>
+                    <TableHead>Employee</TableHead>
                     <TableHead>Period</TableHead>
-                    <TableHead>Working Days</TableHead>
-                    <TableHead>Basic Salary</TableHead>
-                    <TableHead>Total Deductions</TableHead>
+                    <TableHead>Salary</TableHead>
                     <TableHead>Net Pay</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Actions</TableHead>
@@ -2005,83 +1984,33 @@ export default function Attendance() {
                 </TableHeader>
                 <TableBody>
                   {payrollData.map((payroll: any) => {
-                    const staffMember = staff.find((s: any) => s.id === payroll.staffId);
+                    const netPay = payroll.salary + (payroll.overtime || 0) - (payroll.deductions || 0);
                     return (
                       <TableRow key={payroll.id}>
                         <TableCell>
-                          <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-blue-600 rounded-full flex items-center justify-center text-white font-semibold text-xs">
-                              {staffMember?.name?.charAt(0) || 'U'}
-                            </div>
-                            <div>
-                              <div className="font-medium text-gray-900">{staffMember?.name || 'Unknown'}</div>
-                              <div className="text-xs text-gray-500">{staffMember?.employeeId}</div>
-                            </div>
-                          </div>
+                          <div className="font-semibold">{payroll.staffName}</div>
+                          <div className="text-sm text-gray-600">{payroll.employeeId}</div>
                         </TableCell>
+                        <TableCell>{payroll.month} {payroll.year}</TableCell>
+                        <TableCell className="font-semibold">₹{payroll.salary.toLocaleString()}</TableCell>
+                        <TableCell className="font-semibold text-green-600">₹{netPay.toLocaleString()}</TableCell>
                         <TableCell>
-                          <div className="text-sm">
-                            <div className="font-medium">{new Date(payroll.month + '/1/2025').toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</div>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="text-center">
-                            <div className="text-lg font-semibold text-blue-600">{payroll.workingDays}</div>
-                            <div className="text-xs text-gray-500">days</div>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <span className="text-sm font-semibold text-green-700">
-                            ₹{payroll.basicSalary?.toLocaleString()}
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          <span className="text-sm font-semibold text-red-600">
-                            ₹{payroll.totalDeductions?.toLocaleString()}
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          <span className="text-sm font-bold text-green-800">
-                            ₹{payroll.netPay?.toLocaleString()}
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            payroll.status === 'paid' 
-                              ? 'bg-green-100 text-green-800' 
-                              : payroll.status === 'pending'
-                              ? 'bg-yellow-100 text-yellow-800'
-                              : 'bg-gray-100 text-gray-800'
-                          }`}>
+                          <Badge variant={payroll.status === "paid" ? "default" : "secondary"}>
                             {payroll.status}
-                          </span>
+                          </Badge>
                         </TableCell>
                         <TableCell>
                           <div className="flex gap-1">
-                            {payroll.status === "generated" && (
-                              <>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => downloadPayslipMutation.mutate(payroll.id)}
-                                  disabled={downloadPayslipMutation.isPending}
-                                  className="text-blue-600 hover:text-blue-700"
-                                >
-                                  <Download className="w-3 h-3 mr-1" />
-                                  PDF
-                                </Button>
-                                {payroll.status !== "paid" && (
-                                  <Button
-                                    size="sm"
-                                    onClick={() => processPayrollMutation.mutate(payroll.id)}
-                                    disabled={processPayrollMutation.isPending}
-                                    className="bg-green-600 hover:bg-green-700"
-                                  >
-                                    <CreditCard className="w-3 h-3 mr-1" />
-                                    Process
-                                  </Button>
-                                )}
-                              </>
+                            {payroll.status === "paid" && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => downloadPayslip(payroll.id)}
+                                className="text-blue-600 hover:text-blue-700"
+                              >
+                                <Download className="w-3 h-3 mr-1" />
+                                PDF
+                              </Button>
                             )}
                           </div>
                         </TableCell>
@@ -2128,7 +2057,7 @@ export default function Attendance() {
                   name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Email</FormLabel>
+                      <FormLabel>Email Address *</FormLabel>
                       <FormControl>
                         <Input type="email" placeholder="Enter email address" {...field} />
                       </FormControl>
@@ -2136,87 +2065,49 @@ export default function Attendance() {
                     </FormItem>
                   )}
                 />
-                
-                <FormField
-                  control={addStaffForm.control}
-                  name="phone"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Phone Number *</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter phone number" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
+
                 <FormField
                   control={addStaffForm.control}
                   name="employeeId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Employee ID</FormLabel>
+                      <FormLabel>Employee ID *</FormLabel>
                       <FormControl>
-                        <Input 
-                          placeholder="Auto-generated (FUN-101)" 
-                          {...field} 
-                          className="bg-gray-50" 
-                          readOnly 
-                        />
+                        <Input placeholder="EMP001" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-                
+
                 <FormField
                   control={addStaffForm.control}
                   name="department"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Department</FormLabel>
+                      <FormLabel>Department *</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter department" {...field} />
+                        <Input placeholder="HR, IT, Sales, etc." {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-                
+
                 <FormField
                   control={addStaffForm.control}
-                  name="designation"
+                  name="salary"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Designation</FormLabel>
+                      <FormLabel>Monthly Salary (₹) *</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter designation" {...field} />
+                        <Input type="number" placeholder="50000" {...field} onChange={(e) => field.onChange(Number(e.target.value))} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-                
-                <FormField
-                  control={addStaffForm.control}
-                  name="basicSalary"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Basic Salary *</FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="number" 
-                          placeholder="Enter basic salary"
-                          {...field}
-                          onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
+
                 <FormField
                   control={addStaffForm.control}
                   name="aadharNumber"
@@ -2224,89 +2115,7 @@ export default function Attendance() {
                     <FormItem>
                       <FormLabel>Aadhar Number</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter Aadhar number" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={addStaffForm.control}
-                  name="joiningDate"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Joining Date</FormLabel>
-                      <FormControl>
-                        <Input type="date" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={addStaffForm.control}
-                  name="role"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Role *</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select role" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="user">User</SelectItem>
-                          <SelectItem value="storekeeper">Storekeeper</SelectItem>
-                          <SelectItem value="manager">Manager</SelectItem>
-                          <SelectItem value="admin">Admin</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              
-              <FormField
-                control={addStaffForm.control}
-                name="address"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Address</FormLabel>
-                    <FormControl>
-                      <Textarea placeholder="Enter full address" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                  control={addStaffForm.control}
-                  name="bankAccount"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Bank Account Number</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter bank account number" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={addStaffForm.control}
-                  name="ifscCode"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>IFSC Code</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter IFSC code" {...field} />
+                        <Input placeholder="1234 5678 9012" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -2314,12 +2123,42 @@ export default function Attendance() {
                 />
               </div>
               
-              <div className="flex justify-end gap-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <FormField
+                  control={addStaffForm.control}
+                  name="phone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Phone Number</FormLabel>
+                      <FormControl>
+                        <Input placeholder="+91 98765 43210" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={addStaffForm.control}
+                  name="address"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Address</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Complete address" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-4">
                 <Button type="button" variant="outline" onClick={() => setIsAddStaffOpen(false)}>
                   Cancel
                 </Button>
-                <Button type="submit" disabled={createStaffMutation.isPending}>
-                  {createStaffMutation.isPending ? "Adding..." : "Add Staff Member"}
+                <Button type="submit" disabled={addStaffMutation.isPending}>
+                  {addStaffMutation.isPending ? "Adding..." : "Add Staff"}
                 </Button>
               </div>
             </form>
@@ -2358,7 +2197,7 @@ export default function Attendance() {
                   name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Email</FormLabel>
+                      <FormLabel>Email Address *</FormLabel>
                       <FormControl>
                         <Input type="email" placeholder="Enter email address" {...field} />
                       </FormControl>
@@ -2366,87 +2205,49 @@ export default function Attendance() {
                     </FormItem>
                   )}
                 />
-                
-                <FormField
-                  control={editStaffForm.control}
-                  name="phone"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Phone Number *</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter phone number" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
+
                 <FormField
                   control={editStaffForm.control}
                   name="employeeId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Employee ID</FormLabel>
+                      <FormLabel>Employee ID *</FormLabel>
                       <FormControl>
-                        <Input 
-                          placeholder="Auto-generated (FUN-XXX)" 
-                          {...field} 
-                          className="bg-gray-50" 
-                          readOnly 
-                        />
+                        <Input placeholder="EMP001" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-                
+
                 <FormField
                   control={editStaffForm.control}
                   name="department"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Department</FormLabel>
+                      <FormLabel>Department *</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter department" {...field} />
+                        <Input placeholder="HR, IT, Sales, etc." {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-                
+
                 <FormField
                   control={editStaffForm.control}
-                  name="designation"
+                  name="salary"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Designation</FormLabel>
+                      <FormLabel>Monthly Salary (₹) *</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter designation" {...field} />
+                        <Input type="number" placeholder="50000" {...field} onChange={(e) => field.onChange(Number(e.target.value))} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-                
-                <FormField
-                  control={editStaffForm.control}
-                  name="basicSalary"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Basic Salary *</FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="number" 
-                          placeholder="Enter basic salary"
-                          {...field}
-                          onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
+
                 <FormField
                   control={editStaffForm.control}
                   name="aadharNumber"
@@ -2454,89 +2255,7 @@ export default function Attendance() {
                     <FormItem>
                       <FormLabel>Aadhar Number</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter Aadhar number" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={editStaffForm.control}
-                  name="joiningDate"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Joining Date</FormLabel>
-                      <FormControl>
-                        <Input type="date" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={editStaffForm.control}
-                  name="role"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Role *</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select role" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="user">User</SelectItem>
-                          <SelectItem value="storekeeper">Storekeeper</SelectItem>
-                          <SelectItem value="manager">Manager</SelectItem>
-                          <SelectItem value="admin">Admin</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              
-              <FormField
-                control={editStaffForm.control}
-                name="address"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Address</FormLabel>
-                    <FormControl>
-                      <Textarea placeholder="Enter full address" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                  control={editStaffForm.control}
-                  name="bankAccount"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Bank Account Number</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter bank account number" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={editStaffForm.control}
-                  name="ifscCode"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>IFSC Code</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter IFSC code" {...field} />
+                        <Input placeholder="1234 5678 9012" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -2544,38 +2263,48 @@ export default function Attendance() {
                 />
               </div>
               
-              <div className="flex justify-end gap-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <FormField
+                  control={editStaffForm.control}
+                  name="phone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Phone Number</FormLabel>
+                      <FormControl>
+                        <Input placeholder="+91 98765 43210" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={editStaffForm.control}
+                  name="address"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Address</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Complete address" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-4">
                 <Button type="button" variant="outline" onClick={() => setIsEditStaffOpen(false)}>
                   Cancel
                 </Button>
-                <Button type="submit" disabled={updateStaffMutation.isPending}>
-                  {updateStaffMutation.isPending ? "Updating..." : "Update Staff Member"}
+                <Button type="submit" disabled={editStaffMutation.isPending}>
+                  {editStaffMutation.isPending ? "Updating..." : "Update Staff"}
                 </Button>
               </div>
             </form>
           </Form>
         </DialogContent>
       </Dialog>
-
-      {/* Payroll Edit Dialog */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Edit className="w-5 h-5" />
-              Edit Payroll - {editingPayroll?.staff?.name}
-            </DialogTitle>
-          </DialogHeader>
-          {editingPayroll && (
-            <PayrollEditForm
-              staff={editingPayroll.staff}
-              payroll={editingPayroll}
-              onSave={handlePayrollSave}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
     </div>
-    </>
   );
-}
+};
