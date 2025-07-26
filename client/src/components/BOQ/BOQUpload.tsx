@@ -214,6 +214,20 @@ export default function BOQUpload() {
       setExtractedData(result);
       setShowExtractedData(true);
       
+      // Immediately auto-match the extracted items
+      console.log("BOQ Processing - Extracted result:", result);
+      console.log("BOQ Processing - Products available:", products?.length || 0);
+      
+      if (products && products.length > 0) {
+        const matchedData = autoMatchBOQItems(result.items, products as Product[]);
+        console.log("BOQ Processing - Matched data:", matchedData);
+        setMatchedItems(matchedData);
+      } else {
+        // If products not loaded yet, set items without matches
+        console.log("BOQ Processing - Setting items without matches:", result.items);
+        setMatchedItems(result.items);
+      }
+      
       toast({
         title: "OCR processing completed",
         description: `Extracted ${result.items.length} items from the BOQ.`,
@@ -259,9 +273,19 @@ export default function BOQUpload() {
   };
 
   const createMaterialRequest = () => {
-    if (!matchedItems || matchedItems.length === 0) return;
+    console.log("Create Material Request - matchedItems:", matchedItems);
+    
+    if (!matchedItems || matchedItems.length === 0) {
+      toast({
+        title: "No items to process",
+        description: "No BOQ items found to create material request.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     const validItems = matchedItems.filter(item => item.matchedProductId);
+    console.log("Create Material Request - validItems:", validItems);
     
     if (validItems.length === 0) {
       toast({
@@ -273,6 +297,7 @@ export default function BOQUpload() {
     }
 
     // Open the material request modal with pre-filled data
+    console.log("Opening material request modal");
     setShowRequestModal(true);
   };
 
@@ -443,6 +468,7 @@ export default function BOQUpload() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
+                  {console.log("Rendering table - matchedItems:", matchedItems)}
                   {matchedItems.map((item, index) => {
                     const matchedProduct = products?.find((p: Product) => p.id === item.matchedProductId);
                     const availableMatches = products ? findProductMatches(item, products as Product[]).slice(0, 5) : [];
