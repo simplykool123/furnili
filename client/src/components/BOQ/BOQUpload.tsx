@@ -215,16 +215,11 @@ export default function BOQUpload() {
       setShowExtractedData(true);
       
       // Immediately auto-match the extracted items
-      console.log("BOQ Processing - Extracted result:", result);
-      console.log("BOQ Processing - Products available:", products?.length || 0);
-      
       if (products && products.length > 0) {
         const matchedData = autoMatchBOQItems(result.items, products as Product[]);
-        console.log("BOQ Processing - Matched data:", matchedData);
         setMatchedItems(matchedData);
       } else {
         // If products not loaded yet, set items without matches
-        console.log("BOQ Processing - Setting items without matches:", result.items);
         setMatchedItems(result.items);
       }
       
@@ -273,8 +268,6 @@ export default function BOQUpload() {
   };
 
   const createMaterialRequest = () => {
-    console.log("Create Material Request - matchedItems:", matchedItems);
-    
     if (!matchedItems || matchedItems.length === 0) {
       toast({
         title: "No items to process",
@@ -285,7 +278,6 @@ export default function BOQUpload() {
     }
 
     const validItems = matchedItems.filter(item => item.matchedProductId);
-    console.log("Create Material Request - validItems:", validItems);
     
     if (validItems.length === 0) {
       toast({
@@ -297,7 +289,6 @@ export default function BOQUpload() {
     }
 
     // Open the material request modal with pre-filled data
-    console.log("Opening material request modal");
     setShowRequestModal(true);
   };
 
@@ -468,7 +459,6 @@ export default function BOQUpload() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {console.log("Rendering table - matchedItems:", matchedItems)}
                   {matchedItems.map((item, index) => {
                     const matchedProduct = products?.find((p: Product) => p.id === item.matchedProductId);
                     const availableMatches = products ? findProductMatches(item, products as Product[]).slice(0, 5) : [];
@@ -529,7 +519,7 @@ export default function BOQUpload() {
                         </TableCell>
                         <TableCell>
                           <Select 
-                            value={item.matchedProductId?.toString() || "none"}
+                            value={item.matchedProductId?.toString() || ""}
                             onValueChange={(value) => handleProductMatch(index, value === 'none' ? null : parseInt(value))}
                           >
                             <SelectTrigger className="w-64">
