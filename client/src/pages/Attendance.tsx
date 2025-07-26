@@ -40,7 +40,8 @@ import {
   Edit,
   UserPlus,
   Check,
-  X
+  X,
+  Trash2
 } from "lucide-react";
 // @ts-ignore
 import html2pdf from 'html2pdf.js';
@@ -1251,6 +1252,77 @@ export default function Attendance() {
     setIsEditStaffOpen(true);
   };
 
+  const handleDeleteStaff = async (staffId: number) => {
+    if (confirm("Are you sure you want to delete this staff member?")) {
+      try {
+        await authenticatedApiRequest("DELETE", `/api/users/${staffId}`);
+        queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+        toast({ title: "Staff member deleted successfully" });
+      } catch (error: any) {
+        toast({
+          title: "Failed to delete staff member",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
+    }
+  };
+
+  const handleGenerateAllPayslips = async () => {
+    try {
+      toast({ title: "Generating payslips for all staff..." });
+      for (const staffMember of staff) {
+        await generatePayrollMutation.mutateAsync({
+          userId: staffMember.id,
+          month: selectedMonth,
+          year: selectedYear,
+        });
+      }
+      toast({ title: "All payslips generated successfully" });
+    } catch (error: any) {
+      toast({
+        title: "Failed to generate payslips",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleProcessAllPayrolls = async () => {
+    try {
+      toast({ title: "Processing all payrolls..." });
+      for (const payroll of payrollRecords) {
+        await processPayrollMutation.mutateAsync(payroll.id);
+      }
+      toast({ title: "All payrolls processed successfully" });
+    } catch (error: any) {
+      toast({
+        title: "Failed to process payrolls",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const downloadPayslip = (payrollId: number) => {
+    const payroll = payrollRecords.find((p: any) => p.id === payrollId);
+    const staffMember = staff.find((s: any) => s.id === payroll?.userId);
+    if (!staffMember || !payroll) return;
+    
+    // Generate and download payslip HTML content
+    const payslipHTML = generatePaySlip(payroll, staffMember);
+    
+    const opt = {
+      margin: 1,
+      filename: `payslip_${staffMember.name}_${payroll.month}_${payroll.year}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2 },
+      jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+    };
+
+    html2pdf().from(payslipHTML).set(opt).save();
+  };
+
   const onAddStaffSubmit = (data: StaffFormData) => {
     createStaffMutation.mutate(data);
   };
@@ -1589,7 +1661,7 @@ export default function Attendance() {
         {/* Admin-only tabs: Attendance, Staff Management, Payroll */}
         {user?.role !== 'staff' && (
           <>
-          <TabsContent value="attendance" className="space-y-4">
+            <TabsContent value="attendance" className="space-y-4">
 
           {/* Compact Attendance Records Display */}
           <Card>
@@ -1892,10 +1964,10 @@ export default function Attendance() {
               )}
             </CardContent>
           </Card>
-        </TabsContent>
+            </TabsContent>
 
-        {/* Staff Management Tab - Admin Only */}
-        <TabsContent value="staff" className="space-y-4">
+            {/* Staff Management Tab - Admin Only */}
+            <TabsContent value="staff" className="space-y-4">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
@@ -1933,7 +2005,7 @@ export default function Attendance() {
                       </TableCell>
                       <TableCell className="font-mono text-sm">{member.employeeId}</TableCell>
                       <TableCell>{member.department}</TableCell>
-                      <TableCell className="font-semibold">₹{member.salary?.toLocaleString() || "N/A"}</TableCell>
+                      <TableCell className="font-semibold">₹{member.basicSalary?.toLocaleString() || "N/A"}</TableCell>
                       <TableCell>
                         <div className="flex gap-1">
                           <Button size="sm" variant="outline" onClick={() => handleEditStaff(member)}>
@@ -1950,10 +2022,10 @@ export default function Attendance() {
               </Table>
             </CardContent>
           </Card>
-        </TabsContent>
+            </TabsContent>
 
-        {/* Payroll Tab - Admin Only */}
-        <TabsContent value="payroll" className="space-y-4">
+            {/* Payroll Tab - Admin Only */}
+            <TabsContent value="payroll" className="space-y-4">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
@@ -1983,7 +2055,7 @@ export default function Attendance() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {payrollData.map((payroll: any) => {
+                  {payrollRecords.map((payroll: any) => {
                     const netPay = payroll.salary + (payroll.overtime || 0) - (payroll.deductions || 0);
                     return (
                       <TableRow key={payroll.id}>
@@ -2021,8 +2093,8 @@ export default function Attendance() {
               </Table>
             </CardContent>
           </Card>
-        </TabsContent>
-        </>
+          </TabsContent>
+          </>
         )}
       </Tabs>
 
@@ -2096,7 +2168,7 @@ export default function Attendance() {
 
                 <FormField
                   control={addStaffForm.control}
-                  name="salary"
+                  name="basicSalary"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Monthly Salary (₹) *</FormLabel>
@@ -2157,8 +2229,8 @@ export default function Attendance() {
                 <Button type="button" variant="outline" onClick={() => setIsAddStaffOpen(false)}>
                   Cancel
                 </Button>
-                <Button type="submit" disabled={addStaffMutation.isPending}>
-                  {addStaffMutation.isPending ? "Adding..." : "Add Staff"}
+                <Button type="submit" disabled={createStaffMutation.isPending}>
+                  {createStaffMutation.isPending ? "Adding..." : "Add Staff"}
                 </Button>
               </div>
             </form>
@@ -2236,7 +2308,7 @@ export default function Attendance() {
 
                 <FormField
                   control={editStaffForm.control}
-                  name="salary"
+                  name="basicSalary"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Monthly Salary (₹) *</FormLabel>
@@ -2297,8 +2369,8 @@ export default function Attendance() {
                 <Button type="button" variant="outline" onClick={() => setIsEditStaffOpen(false)}>
                   Cancel
                 </Button>
-                <Button type="submit" disabled={editStaffMutation.isPending}>
-                  {editStaffMutation.isPending ? "Updating..." : "Update Staff"}
+                <Button type="submit" disabled={updateStaffMutation.isPending}>
+                  {updateStaffMutation.isPending ? "Updating..." : "Update Staff"}
                 </Button>
               </div>
             </form>
@@ -2306,5 +2378,6 @@ export default function Attendance() {
         </DialogContent>
       </Dialog>
     </div>
+    </>
   );
 };
