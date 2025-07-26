@@ -49,7 +49,7 @@ export default function TaskDetail() {
 
   const updateStatusMutation = useMutation({
     mutationFn: async ({ status }: { status: string }) => {
-      return apiRequest('PATCH', `/api/tasks/${id}/status`, { status });
+      return apiRequest(`/api/tasks/${id}/status`, 'PATCH', { status });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/tasks"] });

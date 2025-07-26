@@ -1463,6 +1463,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get single task by ID
+  app.get("/api/tasks/:id", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const taskId = parseInt(req.params.id);
+      const user = req.user!;
+      
+      const task = await storage.getTask(taskId);
+      if (!task) {
+        return res.status(404).json({ message: "Task not found" });
+      }
+      
+      // Permission check: Only admin, assigned user, or task creator can view task details
+      if (user.role !== 'admin' && task.assignedTo !== user.id && task.assignedBy !== user.id) {
+        return res.status(403).json({ message: "You don't have permission to view this task" });
+      }
+      
+      // Include user information
+      const assignedUser = await storage.getUser(task.assignedTo);
+      const assignedByUser = await storage.getUser(task.assignedBy);
+      
+      const taskWithUsers = {
+        ...task,
+        assignedUser: assignedUser ? { id: assignedUser.id, name: assignedUser.name, username: assignedUser.username } : null,
+        assignedByUser: assignedByUser ? { id: assignedByUser.id, name: assignedByUser.name, username: assignedByUser.username } : null,
+      };
+      
+      res.json(taskWithUsers);
+    } catch (error) {
+      console.error("Failed to fetch task:", error);
+      res.status(500).json({ message: "Failed to fetch task", error: String(error) });
+    }
+  });
+
   app.patch("/api/tasks/:id/status", authenticateToken, async (req: AuthRequest, res) => {
     try {
       const taskId = parseInt(req.params.id);
