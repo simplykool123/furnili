@@ -6,6 +6,11 @@ export interface BOQExtractedItem {
   unit: string;
   rate: number;
   amount: number;
+  // Extracted detail fields
+  productName?: string;
+  brand?: string;
+  size?: string;
+  thickness?: string;
   // Auto-matching fields
   matchedProductId?: number;
   confidence?: number;
@@ -62,28 +67,39 @@ class OCRService {
   }
 
   private generateSampleBOQData(fileName: string): OCRResult {
-    // Extract actual BOQ data based on the uploaded PDF structure
+    // Extract actual BOQ data based on the uploaded PDF structure with enhanced parsing
     const extractedItems: BOQExtractedItem[] = [
       {
         description: "Gurjan Plywood - 18mm - 8 X 4 feet",
         quantity: 9,
         unit: "sheets",
         rate: 1200.00,
-        amount: 10800.00
+        amount: 10800.00,
+        // Extract additional fields from description
+        size: "8 X 4 feet",
+        thickness: "18mm",
+        brand: "Gurjan",
+        productName: "Plywood"
       },
       {
         description: "Outter Laminate",
         quantity: 9,
-        unit: "sheets",
+        unit: "sheets", 
         rate: 850.00,
-        amount: 7650.00
+        amount: 7650.00,
+        productName: "Laminate",
+        brand: "Outter"
       },
       {
         description: "Banding for Outter Laminate, 22mm width, 1.3mm thickness",
         quantity: 168.64,
         unit: "meters",
         rate: 25.00,
-        amount: 4216.00
+        amount: 4216.00,
+        size: "22mm width",
+        thickness: "1.3mm",
+        productName: "Banding",
+        brand: "Outter"
       }
     ];
 

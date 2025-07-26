@@ -627,7 +627,7 @@ export default function BOQUpload() {
                   description: "Request has been created from BOQ data.",
                 });
               }}
-              onCancel={() => setShowRequestModal(false)}
+              onClose={() => setShowRequestModal(false)}
             />
           </div>
         </DialogContent>

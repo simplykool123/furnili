@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -62,9 +62,21 @@ interface Client {
 interface RequestFormSimplifiedProps {
   onClose: () => void;
   onSuccess?: () => void;
+  initialData?: {
+    clientName?: string;
+    orderNumber?: string;
+    boqReference?: string;
+    remarks?: string;
+    priority?: "high" | "medium" | "low";
+    prefilledItems?: Array<{
+      productId: number;
+      requestedQuantity: number;
+      unitPrice: number;
+    }>;
+  };
 }
 
-export default function RequestFormSimplified({ onClose, onSuccess }: RequestFormSimplifiedProps) {
+export default function RequestFormSimplified({ onClose, onSuccess, initialData }: RequestFormSimplifiedProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isClientDropdownOpen, setIsClientDropdownOpen] = useState(false);
@@ -86,27 +98,68 @@ export default function RequestFormSimplified({ onClose, onSuccess }: RequestFor
   const form = useForm<RequestFormData>({
     resolver: zodResolver(requestFormSchema),
     defaultValues: {
-      clientName: "",
-      orderNumber: "",
-      priority: "medium",
-      remarks: "",
-      items: [{ 
-        description: "", 
-        brand: "", 
-        category: "",
-        size: "", 
-        thickness: "", 
-        quantity: 1, 
-        unit: "pcs" 
-      }]
+      clientName: initialData?.clientName || "",
+      orderNumber: initialData?.orderNumber || "",
+      priority: initialData?.priority || "medium",
+      remarks: initialData?.remarks || "",
+      items: initialData?.prefilledItems?.length ? 
+        initialData.prefilledItems.map(item => {
+          const product = products.find(p => p.id === item.productId);
+          return {
+            productId: item.productId,
+            description: product?.name || "",
+            brand: product?.brand || "",
+            category: product?.category || "",
+            size: product?.size || "",
+            thickness: product?.thickness || "",
+            quantity: item.requestedQuantity,
+            unit: product?.unit || "pcs"
+          };
+        }) : 
+        [{ 
+          description: "", 
+          brand: "", 
+          category: "",
+          size: "", 
+          thickness: "", 
+          quantity: 1, 
+          unit: "pcs" 
+        }]
     }
   });
 
-  const { register, control, handleSubmit, setValue, watch, formState: { errors } } = form;
+  const { register, control, handleSubmit, setValue, watch, formState: { errors }, reset } = form;
   const { fields, append, remove } = useFieldArray({
     control,
     name: "items"
   });
+
+  // Update form when products are loaded and we have initial data
+  useEffect(() => {
+    if (initialData?.prefilledItems?.length && products.length > 0) {
+      const prefilledItems = initialData.prefilledItems.map(item => {
+        const product = products.find(p => p.id === item.productId);
+        return {
+          productId: item.productId,
+          description: product?.name || "",
+          brand: product?.brand || "",
+          category: product?.category || "",
+          size: product?.size || "",
+          thickness: product?.thickness || "",
+          quantity: item.requestedQuantity,
+          unit: product?.unit || "pcs"
+        };
+      });
+
+      reset({
+        clientName: initialData.clientName || "",
+        orderNumber: initialData.orderNumber || "",
+        priority: initialData.priority || "medium",
+        remarks: initialData.remarks || "",
+        items: prefilledItems
+      });
+    }
+  }, [products, initialData, reset]);
 
   // Create client mutation
   const createClientMutation = useMutation({
