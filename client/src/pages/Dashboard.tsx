@@ -15,7 +15,9 @@ import {
   Download,
   CheckCircle2,
   AlertCircle,
-  ArrowRight
+  ArrowRight,
+  LogIn,
+  LogOut
 } from "lucide-react";
 import { authService } from "@/lib/auth";
 import { useState, useEffect } from "react";
@@ -26,6 +28,7 @@ import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { authenticatedApiRequest } from "@/lib/auth";
 
 interface DashboardStats {
   totalProducts: number;
@@ -166,6 +169,13 @@ export default function Dashboard() {
 
   const { toast } = useToast();
 
+  // Attendance queries for staff check-in functionality
+  const { data: todayAttendance = [] } = useQuery({
+    queryKey: ["/api/attendance/today"],
+    queryFn: () => authenticatedApiRequest('GET', "/api/attendance/today"),
+    enabled: currentUser?.role === 'staff',
+  });
+
   // Mark task as done mutation
   const markTaskDoneMutation = useMutation({
     mutationFn: async (taskId: number) => {
@@ -185,6 +195,35 @@ export default function Dashboard() {
         description: "Failed to update task status",
         variant: "destructive",
       });
+    },
+  });
+
+  // Self check-in/out mutations for staff users
+  const selfCheckInMutation = useMutation({
+    mutationFn: async (data: { location?: string; notes?: string }) => {
+      return authenticatedApiRequest("POST", "/api/attendance/checkin", data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/attendance/today"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
+      toast({ title: "Checked in successfully" });
+    },
+    onError: (error) => {
+      toast({ title: "Check-in failed", description: String(error), variant: "destructive" });
+    },
+  });
+
+  const selfCheckOutMutation = useMutation({
+    mutationFn: async () => {
+      return authenticatedApiRequest("POST", "/api/attendance/checkout", {});
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/attendance/today"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] });
+      toast({ title: "Checked out successfully" });
+    },
+    onError: (error) => {
+      toast({ title: "Check-out failed", description: String(error), variant: "destructive" });
     },
   });
 
@@ -244,6 +283,112 @@ export default function Dashboard() {
                 </cite>
               </div>
             </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Staff Check-In/Out Widget - Only for staff users */}
+      {currentUser?.role === 'staff' && (
+        <Card className="shadow-lg border border-green-200 bg-gradient-to-r from-green-50 to-emerald-50">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-green-800">
+              <Clock className="w-5 h-5" />
+              My Attendance
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {(() => {
+              const myTodayRecord = todayAttendance.find((a: any) => a.userId === currentUser.id);
+              const formatTime = (timeString: string | null) => {
+                if (!timeString) return "-";
+                return new Date(timeString).toLocaleTimeString("en-IN", {
+                  hour: "2-digit",
+                  minute: "2-digit"
+                });
+              };
+              
+              return (
+                <div className="space-y-4">
+                  {/* Today's Status Display */}
+                  <div className="bg-white/60 rounded-lg p-4 border border-green-200">
+                    <div className="flex items-center justify-between mb-3">
+                      <div>
+                        <h3 className="font-semibold text-green-800">Today's Status</h3>
+                        <p className="text-sm text-green-600">
+                          {new Date().toLocaleDateString("en-IN", { 
+                            weekday: 'long',
+                            day: 'numeric',
+                            month: 'long'
+                          })}
+                        </p>
+                      </div>
+                      <div>
+                        {myTodayRecord ? (
+                          <Badge className="bg-green-100 text-green-800 border-green-300">
+                            {myTodayRecord.status === 'present' ? 'Present' : 
+                             myTodayRecord.status === 'late' ? 'Late' : 
+                             myTodayRecord.status === 'half_day' ? 'Half Day' : 'Checked In'}
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className="bg-gray-100 border-gray-300">
+                            Not Checked In
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                    
+                    {myTodayRecord && (
+                      <div className="grid grid-cols-2 gap-3 text-sm">
+                        <div>
+                          <span className="text-green-600 font-medium">Check In:</span>
+                          <p className="font-semibold">{formatTime(myTodayRecord.checkInTime)}</p>
+                        </div>
+                        {myTodayRecord.checkOutTime && (
+                          <div>
+                            <span className="text-green-600 font-medium">Check Out:</span>
+                            <p className="font-semibold">{formatTime(myTodayRecord.checkOutTime)}</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex gap-3 justify-center">
+                    {!myTodayRecord ? (
+                      <Button
+                        size="lg"
+                        className="px-6 py-3 bg-green-600 hover:bg-green-700 text-white shadow-md"
+                        onClick={() => selfCheckInMutation.mutate({})}
+                        disabled={selfCheckInMutation.isPending}
+                      >
+                        <LogIn className="w-5 h-5 mr-2" />
+                        {selfCheckInMutation.isPending ? 'Checking In...' : 'Check In'}
+                      </Button>
+                    ) : !myTodayRecord.checkOutTime ? (
+                      <Button
+                        size="lg"
+                        variant="outline"
+                        className="px-6 py-3 border-red-600 text-red-600 hover:bg-red-50 shadow-md"
+                        onClick={() => selfCheckOutMutation.mutate()}
+                        disabled={selfCheckOutMutation.isPending}
+                      >
+                        <LogOut className="w-5 h-5 mr-2" />
+                        {selfCheckOutMutation.isPending ? 'Checking Out...' : 'Check Out'}
+                      </Button>
+                    ) : (
+                      <div className="text-center">
+                        <div className="flex items-center justify-center gap-2 text-green-600 mb-1">
+                          <CheckCircle2 className="w-5 h-5" />
+                          <span className="font-semibold">Attendance Complete</span>
+                        </div>
+                        <p className="text-sm text-green-700">You've successfully completed today's attendance</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
           </CardContent>
         </Card>
       )}
