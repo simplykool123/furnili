@@ -1964,6 +1964,7 @@ export default function Attendance() {
               )}
             </CardContent>
           </Card>
+          )}
             </TabsContent>
 
             {/* Staff Management Tab - Admin Only */}
