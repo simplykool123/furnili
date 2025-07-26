@@ -6,6 +6,10 @@ export interface BOQExtractedItem {
   unit: string;
   rate: number;
   amount: number;
+  // Auto-matching fields
+  matchedProductId?: number;
+  confidence?: number;
+  matchedFields?: string[];
 }
 
 export interface OCRResult {

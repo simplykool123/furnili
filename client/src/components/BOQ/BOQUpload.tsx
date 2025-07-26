@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useDropzone } from "react-dropzone";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { authenticatedApiRequest } from "@/lib/auth";
@@ -9,9 +9,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { FileText, Upload, CheckCircle, AlertCircle, Download, Eye } from "lucide-react";
+import { FileText, Upload, CheckCircle, AlertCircle, Download, Eye, Zap, Target } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { autoMatchBOQItems, findProductMatches, Product } from "@/lib/fuzzyMatch";
+import RequestFormSimplified from "@/components/Requests/RequestFormSimplified";
 
 interface BOQExtractedItem {
   description: string;
@@ -20,6 +22,8 @@ interface BOQExtractedItem {
   rate: number;
   amount: number;
   matchedProductId?: number;
+  confidence?: number;
+  matchedFields?: string[];
 }
 
 interface OCRResult {
@@ -37,6 +41,8 @@ export default function BOQUpload() {
   const [ocrProgress, setOCRProgress] = useState(0);
   const [extractedData, setExtractedData] = useState<OCRResult | null>(null);
   const [showExtractedData, setShowExtractedData] = useState(false);
+  const [showRequestModal, setShowRequestModal] = useState(false);
+  const [matchedItems, setMatchedItems] = useState<BOQExtractedItem[]>([]);
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -117,6 +123,59 @@ export default function BOQUpload() {
       });
     },
   });
+
+  // Auto-match BOQ items when products are loaded and extracted data changes
+  useEffect(() => {
+    if (extractedData && products && products.length > 0) {
+      const matchedData = autoMatchBOQItems(extractedData.items, products as Product[]);
+      setMatchedItems(matchedData);
+    }
+  }, [extractedData, products]);
+
+  // Handle product selection change
+  const handleProductMatch = (itemIndex: number, productId: number | null) => {
+    const updatedItems = [...matchedItems];
+    if (productId) {
+      updatedItems[itemIndex].matchedProductId = productId;
+      // Find match details if needed
+      const product = products?.find((p: Product) => p.id === productId);
+      if (product) {
+        const matches = findProductMatches(updatedItems[itemIndex], [product]);
+        if (matches.length > 0) {
+          updatedItems[itemIndex].confidence = matches[0].confidence;
+          updatedItems[itemIndex].matchedFields = matches[0].matchedFields;
+        }
+      }
+    } else {
+      delete updatedItems[itemIndex].matchedProductId;
+      delete updatedItems[itemIndex].confidence;
+      delete updatedItems[itemIndex].matchedFields;
+    }
+    setMatchedItems(updatedItems);
+  };
+
+  // Auto-match all unmatched items
+  const autoMatchAll = () => {
+    if (!products) return;
+    
+    const autoMatchedData = autoMatchBOQItems(matchedItems, products as Product[]);
+    setMatchedItems(autoMatchedData);
+    
+    const matchedCount = autoMatchedData.filter(item => item.matchedProductId).length;
+    toast({
+      title: "Auto-matching completed",
+      description: `Found matches for ${matchedCount} out of ${autoMatchedData.length} items`,
+    });
+  };
+
+  // Clear all matches
+  const clearAllMatches = () => {
+    const clearedItems = matchedItems.map(item => {
+      const { matchedProductId, confidence, matchedFields, ...rest } = item;
+      return rest;
+    });
+    setMatchedItems(clearedItems);
+  };
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     const file = acceptedFiles[0];
@@ -200,36 +259,21 @@ export default function BOQUpload() {
   };
 
   const createMaterialRequest = () => {
-    if (!extractedData) return;
+    if (!matchedItems || matchedItems.length === 0) return;
 
-    const validItems = extractedData.items.filter(item => item.matchedProductId);
+    const validItems = matchedItems.filter(item => item.matchedProductId);
     
     if (validItems.length === 0) {
       toast({
         title: "No products matched",
-        description: "Please match at least one item to a product.",
+        description: "Please match at least one item to a product before creating a request.",
         variant: "destructive",
       });
       return;
     }
 
-    const requestData = {
-      request: {
-        clientName: extractedData.client || extractedData.projectName || 'BOQ Project',
-        orderNumber: extractedData.workOrderNumber || `BOQ-${Date.now()}`,
-        boqReference: `${extractedData.projectName || 'BOQ'}-${extractedData.workOrderNumber || Date.now()}`,
-        remarks: `Created from BOQ: ${extractedData.projectName} (${validItems.length} items)${extractedData.description ? ` - ${extractedData.description}` : ''}`,
-        priority: 'medium'
-      },
-      items: validItems.map(item => ({
-        productId: item.matchedProductId,
-        requestedQuantity: item.quantity,
-        unitPrice: 0, // Will be fetched from product data
-        totalPrice: 0 // Will be calculated by backend
-      }))
-    };
-
-    createRequestMutation.mutate(requestData);
+    // Open the material request modal with pre-filled data
+    setShowRequestModal(true);
   };
 
   const getStatusBadge = (status: string) => {
@@ -361,96 +405,175 @@ export default function BOQUpload() {
               </div>
             </div>
 
+            {/* Matching Controls */}
+            <div className="mb-4 flex gap-3">
+              <Button 
+                onClick={autoMatchAll} 
+                variant="outline" 
+                className="flex items-center gap-2"
+                disabled={!products || products.length === 0}
+              >
+                <Zap className="w-4 h-4" />
+                Auto-Match All
+              </Button>
+              <Button 
+                onClick={clearAllMatches} 
+                variant="outline" 
+                className="flex items-center gap-2"
+              >
+                <Target className="w-4 h-4" />
+                Clear Matches
+              </Button>
+              <div className="text-sm text-gray-600 flex items-center">
+                {matchedItems.filter(item => item.matchedProductId).length} of {matchedItems.length} items matched
+              </div>
+            </div>
+
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Product Name</TableHead>
-                    <TableHead>Thickness</TableHead>
-                    <TableHead>Size</TableHead>
-                    <TableHead>Quantity</TableHead>
+                    <TableHead>Description</TableHead>
+                    <TableHead>Qty</TableHead>
                     <TableHead>Unit</TableHead>
+                    <TableHead>Rate</TableHead>
+                    <TableHead>Amount</TableHead>
                     <TableHead>Match Product</TableHead>
+                    <TableHead>Confidence</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {extractedData.items.map((item, index) => {
-                    // Parse product name, thickness, and size from description
-                    const parseDescription = (desc: string) => {
-                      // Example: "Gurjan Plywood - 18mm - 8 X 4 feet"
-                      const parts = desc.split(' - ');
-                      const productName = parts[0] || desc;
-                      const thickness = parts.find(p => p.includes('mm')) || '';
-                      const size = parts.find(p => p.includes('X') || p.includes('x') || p.includes('feet') || p.includes('ft')) || '';
-                      return { productName, thickness, size };
-                    };
-                    
-                    const parsed = parseDescription(item.description);
+                  {matchedItems.map((item, index) => {
+                    const matchedProduct = products?.find((p: Product) => p.id === item.matchedProductId);
+                    const availableMatches = products ? findProductMatches(item, products as Product[]).slice(0, 5) : [];
                     
                     return (
                       <TableRow key={index}>
-                      <TableCell>
-                        <input
-                          type="text"
-                          value={(item as any).productName || parsed.productName}
-                          onChange={(e) => updateExtractedItem(index, 'productName', e.target.value)}
-                          className="w-full p-2 border border-gray-300 rounded"
-                          placeholder="Product Name"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <input
-                          type="text"
-                          value={(item as any).thickness || parsed.thickness}
-                          onChange={(e) => updateExtractedItem(index, 'thickness', e.target.value)}
-                          className="w-20 p-2 border border-gray-300 rounded"
-                          placeholder="18mm"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <input
-                          type="text"
-                          value={(item as any).size || parsed.size}
-                          onChange={(e) => updateExtractedItem(index, 'size', e.target.value)}
-                          className="w-24 p-2 border border-gray-300 rounded"
-                          placeholder="8x4 ft"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <input
-                          type="number"
-                          value={item.quantity}
-                          onChange={(e) => updateExtractedItem(index, 'quantity', parseFloat(e.target.value) || 0)}
-                          className="w-20 p-2 border border-gray-300 rounded"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <input
-                          type="text"
-                          value={item.unit}
-                          onChange={(e) => updateExtractedItem(index, 'unit', e.target.value)}
-                          className="w-20 p-2 border border-gray-300 rounded"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Select 
-                          value={item.matchedProductId?.toString() || "none"}
-                          onValueChange={(value) => updateExtractedItem(index, 'matchedProductId', (value && value !== 'none') ? parseInt(value) : undefined)}
-                        >
-                          <SelectTrigger className="w-48">
-                            <SelectValue placeholder="Select product" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="none">No match</SelectItem>
-                            {products?.map((product: any) => (
-                              <SelectItem key={product.id} value={product.id.toString()}>
-                                {product.name} ({product.sku})
+                        <TableCell>
+                          <div className="max-w-xs">
+                            <p className="text-sm font-medium">{item.description}</p>
+                            {item.matchedFields && item.matchedFields.length > 0 && (
+                              <p className="text-xs text-gray-500 mt-1">
+                                Matched: {item.matchedFields.join(', ')}
+                              </p>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <input
+                            type="number"
+                            value={item.quantity}
+                            onChange={(e) => {
+                              const updatedItems = [...matchedItems];
+                              updatedItems[index].quantity = parseFloat(e.target.value) || 0;
+                              updatedItems[index].amount = updatedItems[index].quantity * updatedItems[index].rate;
+                              setMatchedItems(updatedItems);
+                            }}
+                            className="w-20 p-2 border border-gray-300 rounded text-sm"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <input
+                            type="text"
+                            value={item.unit}
+                            onChange={(e) => {
+                              const updatedItems = [...matchedItems];
+                              updatedItems[index].unit = e.target.value;
+                              setMatchedItems(updatedItems);
+                            }}
+                            className="w-20 p-2 border border-gray-300 rounded text-sm"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <input
+                            type="number"
+                            step="0.01"
+                            value={item.rate}
+                            onChange={(e) => {
+                              const updatedItems = [...matchedItems];
+                              updatedItems[index].rate = parseFloat(e.target.value) || 0;
+                              updatedItems[index].amount = updatedItems[index].quantity * updatedItems[index].rate;
+                              setMatchedItems(updatedItems);
+                            }}
+                            className="w-24 p-2 border border-gray-300 rounded text-sm"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <span className="font-medium">₹{item.amount.toFixed(2)}</span>
+                        </TableCell>
+                        <TableCell>
+                          <Select 
+                            value={item.matchedProductId?.toString() || "none"}
+                            onValueChange={(value) => handleProductMatch(index, value === 'none' ? null : parseInt(value))}
+                          >
+                            <SelectTrigger className="w-64">
+                              <SelectValue placeholder="Select product">
+                                {matchedProduct ? (
+                                  <div className="flex items-center gap-2">
+                                    <span className="truncate">{matchedProduct.name}</span>
+                                    {item.confidence && (
+                                      <Badge 
+                                        variant={item.confidence > 80 ? "default" : item.confidence > 60 ? "secondary" : "outline"}
+                                        className="text-xs"
+                                      >
+                                        {item.confidence.toFixed(0)}%
+                                      </Badge>
+                                    )}
+                                  </div>
+                                ) : (
+                                  "Select product"
+                                )}
+                              </SelectValue>
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="none">
+                                <span className="text-gray-500">No match</span>
                               </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
-                    </TableRow>
+                              {availableMatches.map((match) => {
+                                const product = products?.find((p: Product) => p.id === match.productId);
+                                if (!product) return null;
+                                return (
+                                  <SelectItem key={product.id} value={product.id.toString()}>
+                                    <div className="flex items-center justify-between w-full">
+                                      <span className="truncate">{product.name}</span>
+                                      <div className="flex items-center gap-2 ml-2">
+                                        <Badge 
+                                          variant={match.confidence > 80 ? "default" : match.confidence > 60 ? "secondary" : "outline"}
+                                          className="text-xs"
+                                        >
+                                          {match.confidence.toFixed(0)}%
+                                        </Badge>
+                                      </div>
+                                    </div>
+                                  </SelectItem>
+                                );
+                              })}
+                              {products && products.length > 0 && (
+                                <>
+                                  <div className="px-2 py-1 text-xs text-gray-500 border-t">All Products:</div>
+                                  {products.map((product: Product) => (
+                                    <SelectItem key={`all-${product.id}`} value={product.id.toString()}>
+                                      <span className="truncate">{product.name} - {product.brand} ({product.unit})</span>
+                                    </SelectItem>
+                                  ))}
+                                </>
+                              )}
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                        <TableCell>
+                          {item.confidence ? (
+                            <Badge 
+                              variant={item.confidence > 80 ? "default" : item.confidence > 60 ? "secondary" : "outline"}
+                              className="text-xs"
+                            >
+                              {item.confidence.toFixed(0)}%
+                            </Badge>
+                          ) : (
+                            <span className="text-gray-400 text-xs">No match</span>
+                          )}
+                        </TableCell>
+                      </TableRow>
                     );
                   })}
                 </TableBody>
@@ -459,15 +582,56 @@ export default function BOQUpload() {
 
             <div className="mt-6 p-4 bg-gray-50 rounded-lg">
               <div className="flex justify-between items-center">
-                <span className="text-lg font-medium">Total BOQ Value:</span>
+                <div>
+                  <span className="text-lg font-medium">Total BOQ Value:</span>
+                  <div className="text-sm text-gray-600 mt-1">
+                    {matchedItems.filter(item => item.matchedProductId).length} of {matchedItems.length} items matched
+                  </div>
+                </div>
                 <span className="text-2xl font-bold text-primary">
-                  ₹{extractedData.totalValue.toFixed(2)}
+                  ₹{matchedItems.reduce((sum, item) => sum + item.amount, 0).toFixed(2)}
                 </span>
               </div>
             </div>
           </CardContent>
         </Card>
       )}
+
+      {/* Material Request Modal */}
+      <Dialog open={showRequestModal} onOpenChange={setShowRequestModal}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Create Material Request from BOQ</DialogTitle>
+          </DialogHeader>
+          <div className="mt-4">
+            <RequestFormSimplified
+              initialData={{
+                clientName: extractedData?.client || extractedData?.projectName || 'BOQ Project',
+                orderNumber: extractedData?.workOrderNumber || `BOQ-${Date.now()}`,
+                boqReference: `${extractedData?.projectName || 'BOQ'}-${extractedData?.workOrderNumber || Date.now()}`,
+                remarks: `Created from BOQ: ${extractedData?.projectName || 'Imported BOQ'} (${matchedItems.filter(item => item.matchedProductId).length} items)${extractedData?.description ? ` - ${extractedData.description}` : ''}`,
+                priority: 'medium',
+                prefilledItems: matchedItems.filter(item => item.matchedProductId).map(item => ({
+                  productId: item.matchedProductId!,
+                  requestedQuantity: item.quantity,
+                  unitPrice: item.rate,
+                }))
+              }}
+              onSuccess={() => {
+                setShowRequestModal(false);
+                setShowExtractedData(false);
+                setExtractedData(null);
+                setMatchedItems([]);
+                toast({
+                  title: "Material request created",
+                  description: "Request has been created from BOQ data.",
+                });
+              }}
+              onCancel={() => setShowRequestModal(false)}
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Recent Uploads */}
       <Card>
