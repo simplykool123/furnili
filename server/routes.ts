@@ -767,10 +767,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // BOQ routes
-  app.get("/api/boq", authenticateToken, requireRole(["manager", "admin"]), async (req, res) => {
+  app.get("/api/boq", authenticateToken, requireRole(["manager", "admin", "staff"]), async (req, res) => {
     try {
       const user = (req as AuthRequest).user!;
-      const uploadedBy = user.role === "manager" ? user.id : undefined;
+      const uploadedBy = (user.role === "manager" || user.role === "staff") ? user.id : undefined;
       
       const boqUploads = await storage.getAllBOQUploads(uploadedBy);
       res.json(boqUploads);
@@ -779,7 +779,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/boq/upload", authenticateToken, requireRole(["manager", "admin"]), boqFileUpload.single("boqFile"), async (req, res) => {
+  app.post("/api/boq/upload", authenticateToken, requireRole(["manager", "admin", "staff"]), boqFileUpload.single("boqFile"), async (req, res) => {
     try {
       if (!req.file) {
         return res.status(400).json({ message: "No file uploaded" });
@@ -802,7 +802,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/boq/:id", authenticateToken, requireRole(["manager", "admin"]), async (req, res) => {
+  app.patch("/api/boq/:id", authenticateToken, requireRole(["manager", "admin", "staff"]), async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const updates = req.body;

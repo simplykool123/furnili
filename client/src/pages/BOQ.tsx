@@ -7,12 +7,12 @@ export default function BOQ() {
   const user = authService.getUser();
 
   useEffect(() => {
-    if (user && !['admin', 'manager'].includes(user.role)) {
+    if (user && !['admin', 'manager', 'staff'].includes(user.role)) {
       window.location.href = '/';
     }
   }, [user]);
 
-  if (!user || !['admin', 'manager'].includes(user.role)) {
+  if (!user || !['admin', 'manager', 'staff'].includes(user.role)) {
     return null;
   }
 

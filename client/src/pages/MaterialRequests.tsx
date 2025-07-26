@@ -15,7 +15,7 @@ export default function MaterialRequests() {
   const { isMobile } = useIsMobile();
   
   const canCreateRequests = user && ['user', 'manager', 'admin', 'staff'].includes(user.role);
-  const canUploadBOQ = user && ['manager', 'admin'].includes(user.role);
+  const canUploadBOQ = user && ['manager', 'admin', 'staff'].includes(user.role);
 
   return (
     <div className="space-y-6">
