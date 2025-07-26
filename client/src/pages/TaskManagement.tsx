@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +17,7 @@ import { Plus, CheckCircle2, Clock, AlertCircle, User, Calendar, Search, Filter 
 
 export default function TaskManagement() {
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
   const [isAddingTask, setIsAddingTask] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [assignedToFilter, setAssignedToFilter] = useState<string>("all");
@@ -427,7 +429,11 @@ export default function TaskManagement() {
             </TableHeader>
             <TableBody>
               {filteredTasks.map((task: any) => (
-                <TableRow key={task.id}>
+                <TableRow 
+                  key={task.id} 
+                  className="cursor-pointer hover:bg-muted/50 transition-colors"
+                  onClick={() => setLocation(`/tasks/${task.id}`)}
+                >
                   <TableCell className="font-medium">{task.title}</TableCell>
                   <TableCell className="max-w-xs truncate" title={task.description}>
                     {task.description || "No description"}
@@ -447,7 +453,7 @@ export default function TaskManagement() {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                       {task.status !== "done" && (
                         <Select
                           value={task.status}
@@ -467,7 +473,10 @@ export default function TaskManagement() {
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => handleStatusChange(task.id, "in_progress")}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleStatusChange(task.id, "in_progress");
+                          }}
                         >
                           Reopen
                         </Button>
