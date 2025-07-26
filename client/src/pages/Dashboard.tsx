@@ -287,16 +287,16 @@ export default function Dashboard() {
         </Card>
       )}
 
-      {/* Staff Check-In/Out Widget - Only for staff users */}
+      {/* Staff Check-In/Out Widget - Compact Version for staff users */}
       {currentUser?.role === 'staff' && (
-        <Card className="shadow-lg border border-green-200 bg-gradient-to-r from-green-50 to-emerald-50">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-green-800">
-              <Clock className="w-5 h-5" />
+        <Card className="shadow-md border border-green-200 bg-gradient-to-r from-green-50 to-emerald-50">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-green-800 text-base">
+              <Clock className="w-4 h-4" />
               My Attendance
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-0">
             {(() => {
               const myTodayRecord = todayAttendance.find((a: any) => a.userId === currentUser.id);
               const formatTime = (timeString: string | null) => {
@@ -308,86 +308,84 @@ export default function Dashboard() {
               };
               
               return (
-                <div className="space-y-4">
-                  {/* Today's Status Display */}
-                  <div className="bg-white/60 rounded-lg p-4 border border-green-200">
-                    <div className="flex items-center justify-between mb-3">
+                <div className="space-y-3">
+                  {/* Compact Status Display */}
+                  <div className="bg-white/60 rounded-lg p-3 border border-green-200">
+                    <div className="flex items-center justify-between mb-2">
                       <div>
-                        <h3 className="font-semibold text-green-800">Today's Status</h3>
-                        <p className="text-sm text-green-600">
+                        <h4 className="font-medium text-green-800 text-sm">Today's Status</h4>
+                        <p className="text-xs text-green-600">
                           {new Date().toLocaleDateString("en-IN", { 
-                            weekday: 'long',
+                            weekday: 'short',
                             day: 'numeric',
-                            month: 'long'
+                            month: 'short'
                           })}
                         </p>
                       </div>
                       <div>
                         {myTodayRecord ? (
-                          <Badge className="bg-green-100 text-green-800 border-green-300">
-                            {myTodayRecord.status === 'present' ? 'Present' : 
-                             myTodayRecord.status === 'late' ? 'Late' : 
-                             myTodayRecord.status === 'half_day' ? 'Half Day' : 'Checked In'}
+                          <Badge className="bg-green-100 text-green-800 border-green-300 text-xs">
+                            Present
                           </Badge>
                         ) : (
-                          <Badge variant="outline" className="bg-gray-100 border-gray-300">
+                          <Badge variant="outline" className="bg-gray-100 border-gray-300 text-xs">
                             Not Checked In
                           </Badge>
                         )}
                       </div>
                     </div>
                     
+                    {/* Compact Time Display */}
                     {myTodayRecord && (
-                      <div className="grid grid-cols-2 gap-3 text-sm">
-                        <div>
-                          <span className="text-green-600 font-medium">Check In:</span>
-                          <p className="font-semibold">{formatTime(myTodayRecord.checkInTime)}</p>
+                      <div className="flex items-center gap-4 text-xs">
+                        <div className="flex items-center gap-1">
+                          <span className="text-green-600">Check In:</span>
+                          <span className="font-semibold">{formatTime(myTodayRecord.checkInTime)}</span>
                         </div>
                         {myTodayRecord.checkOutTime && (
-                          <div>
-                            <span className="text-green-600 font-medium">Check Out:</span>
-                            <p className="font-semibold">{formatTime(myTodayRecord.checkOutTime)}</p>
+                          <div className="flex items-center gap-1">
+                            <span className="text-green-600">Check Out:</span>
+                            <span className="font-semibold">{formatTime(myTodayRecord.checkOutTime)}</span>
                           </div>
                         )}
                       </div>
                     )}
                   </div>
 
-                  {/* Action Buttons */}
-                  <div className="flex gap-3 justify-center">
+                  {/* Compact Action Button */}
+                  <div className="flex justify-center">
                     {!myTodayRecord ? (
                       <Button
-                        size="lg"
-                        className="px-6 py-3 bg-green-600 hover:bg-green-700 text-white shadow-md"
+                        size="sm"
+                        className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white"
                         onClick={() => selfCheckInMutation.mutate({})}
                         disabled={selfCheckInMutation.isPending}
                       >
-                        <LogIn className="w-5 h-5 mr-2" />
+                        <LogIn className="w-4 h-4 mr-1" />
                         {selfCheckInMutation.isPending ? 'Checking In...' : 'Check In'}
                       </Button>
                     ) : !myTodayRecord.checkOutTime ? (
                       <Button
-                        size="lg"
+                        size="sm"
                         variant="outline"
-                        className="px-6 py-3 border-red-600 text-red-600 hover:bg-red-50 shadow-md"
+                        className="px-4 py-2 border-red-600 text-red-600 hover:bg-red-50"
                         onClick={() => selfCheckOutMutation.mutate()}
                         disabled={selfCheckOutMutation.isPending}
                       >
-                        <LogOut className="w-5 h-5 mr-2" />
+                        <LogOut className="w-4 h-4 mr-1" />
                         {selfCheckOutMutation.isPending ? 'Checking Out...' : 'Check Out'}
                       </Button>
                     ) : (
                       <div className="text-center">
-                        <div className="flex items-center justify-center gap-2 text-green-600 mb-1">
-                          <CheckCircle2 className="w-5 h-5" />
-                          <span className="font-semibold">Attendance Complete</span>
+                        <div className="flex items-center justify-center gap-1 text-green-600 text-sm">
+                          <CheckCircle2 className="w-4 h-4" />
+                          <span className="font-medium">Attendance Complete</span>
                         </div>
-                        <p className="text-sm text-green-700">You've successfully completed today's attendance</p>
                       </div>
                     )}
                   </div>
                 </div>
-              );
+              ) as React.ReactElement;
             })()}
           </CardContent>
         </Card>
