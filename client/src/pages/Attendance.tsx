@@ -41,7 +41,9 @@ import {
   UserPlus,
   Check,
   X,
-  Trash2
+  Trash2,
+  LogIn,
+  LogOut
 } from "lucide-react";
 // @ts-ignore
 import html2pdf from 'html2pdf.js';
@@ -659,6 +661,37 @@ export default function Attendance() {
       queryClient.invalidateQueries({ queryKey: ["/api/attendance/today"] });
       queryClient.invalidateQueries({ queryKey: ["/api/attendance/stats"] });
       toast({ title: "Staff checked out successfully" });
+    },
+  });
+
+  // Self check-in/out mutations for staff users
+  const selfCheckInMutation = useMutation({
+    mutationFn: async (data: { location?: string; notes?: string }) => {
+      return authenticatedApiRequest("POST", "/api/attendance/checkin", data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/attendance"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/attendance/today"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/attendance/stats"] });
+      toast({ title: "Checked in successfully" });
+    },
+    onError: (error) => {
+      toast({ title: "Check-in failed", description: String(error), variant: "destructive" });
+    },
+  });
+
+  const selfCheckOutMutation = useMutation({
+    mutationFn: async () => {
+      return authenticatedApiRequest("POST", "/api/attendance/checkout", {});
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/attendance"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/attendance/today"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/attendance/stats"] });
+      toast({ title: "Checked out successfully" });
+    },
+    onError: (error) => {
+      toast({ title: "Check-out failed", description: String(error), variant: "destructive" });
     },
   });
 
@@ -1585,77 +1618,168 @@ export default function Attendance() {
 
         {/* Check In/Out Tab */}
         <TabsContent value="checkin" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Admin Check In/Out Management</CardTitle>
-              <p className="text-sm text-gray-600">Manage staff check-in and check-out as admin</p>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Staff Member</TableHead>
-                    <TableHead>Today's Status</TableHead>
-                    <TableHead>Check In Time</TableHead>
-                    <TableHead>Check Out Time</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {staff.map((member: any) => {
-                    const todayRecord = todayAttendance.find((a: any) => a.userId === member.id);
-                    
-                    return (
-                      <TableRow key={member.id}>
-                        <TableCell>
-                          <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                              <Users className="w-4 h-4 text-blue-600" />
-                            </div>
-                            <div>
-                              <p className="font-medium">{member.name}</p>
-                              <p className="text-sm text-gray-600">{member.designation || "Staff"}</p>
-                            </div>
+          {user?.role === 'staff' ? (
+            /* Staff Self Check-In/Out */
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Clock className="w-5 h-5" />
+                  My Attendance
+                </CardTitle>
+                <p className="text-sm text-gray-600">Check yourself in and out for today</p>
+              </CardHeader>
+              <CardContent>
+                {(() => {
+                  const myTodayRecord = todayAttendance.find((a: any) => a.userId === user.id);
+                  return (
+                    <div className="space-y-6">
+                      {/* Today's Status Card */}
+                      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-lg border">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h3 className="text-lg font-semibold text-gray-900">Today's Status</h3>
+                            <p className="text-sm text-gray-600">{new Date().toLocaleDateString("en-IN", { 
+                              weekday: 'long',
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric'
+                            })}</p>
                           </div>
-                        </TableCell>
-                        <TableCell>
-                          {todayRecord ? getStatusBadge(todayRecord.status) : (
-                            <Badge variant="outline">Not Marked</Badge>
-                          )}
-                        </TableCell>
-                        <TableCell>{formatTime(todayRecord?.checkInTime)}</TableCell>
-                        <TableCell>{formatTime(todayRecord?.checkOutTime)}</TableCell>
-                        <TableCell>
-                          <div className="flex gap-2">
-                            {!todayRecord ? (
-                              <Button
-                                size="sm"
-                                onClick={() => adminCheckInMutation.mutate({ userId: member.id })}
-                                disabled={adminCheckInMutation.isPending}
-                              >
-                                Check In
-                              </Button>
-                            ) : !todayRecord.checkOutTime ? (
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => adminCheckOutMutation.mutate({ attendanceId: todayRecord.id })}
-                                disabled={adminCheckOutMutation.isPending}
-                              >
-                                Check Out
-                              </Button>
-                            ) : (
-                              <span className="text-sm text-gray-500">Completed</span>
+                          <div className="text-right">
+                            {myTodayRecord ? getStatusBadge(myTodayRecord.status) : (
+                              <Badge variant="outline" className="bg-gray-100">Not Checked In</Badge>
                             )}
                           </div>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+                        </div>
+                        
+                        {myTodayRecord && (
+                          <div className="mt-4 grid grid-cols-2 gap-4">
+                            <div>
+                              <p className="text-sm text-gray-600">Check In Time</p>
+                              <p className="font-medium">{formatTime(myTodayRecord.checkInTime)}</p>
+                            </div>
+                            {myTodayRecord.checkOutTime && (
+                              <div>
+                                <p className="text-sm text-gray-600">Check Out Time</p>
+                                <p className="font-medium">{formatTime(myTodayRecord.checkOutTime)}</p>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Action Buttons */}
+                      <div className="flex gap-4 justify-center">
+                        {!myTodayRecord ? (
+                          <Button
+                            size="lg"
+                            className="px-8 py-3 bg-green-600 hover:bg-green-700"
+                            onClick={() => selfCheckInMutation.mutate({})}
+                            disabled={selfCheckInMutation.isPending}
+                          >
+                            <LogIn className="w-5 h-5 mr-2" />
+                            {selfCheckInMutation.isPending ? 'Checking In...' : 'Check In'}
+                          </Button>
+                        ) : !myTodayRecord.checkOutTime ? (
+                          <Button
+                            size="lg"
+                            variant="outline"
+                            className="px-8 py-3 border-red-600 text-red-600 hover:bg-red-50"
+                            onClick={() => selfCheckOutMutation.mutate()}
+                            disabled={selfCheckOutMutation.isPending}
+                          >
+                            <LogOut className="w-5 h-5 mr-2" />
+                            {selfCheckOutMutation.isPending ? 'Checking Out...' : 'Check Out'}
+                          </Button>
+                        ) : (
+                          <div className="text-center">
+                            <div className="flex items-center justify-center gap-2 text-green-600 mb-2">
+                              <CheckCircle className="w-5 h-5" />
+                              <span className="font-medium">Attendance Complete</span>
+                            </div>
+                            <p className="text-sm text-gray-600">You've successfully checked in and out for today</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })()}
+              </CardContent>
+            </Card>
+          ) : (
+            /* Admin Check In/Out Management */
+            <Card>
+              <CardHeader>
+                <CardTitle>Admin Check In/Out Management</CardTitle>
+                <p className="text-sm text-gray-600">Manage staff check-in and check-out as admin</p>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Staff Member</TableHead>
+                      <TableHead>Today's Status</TableHead>
+                      <TableHead>Check In Time</TableHead>
+                      <TableHead>Check Out Time</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {staff.map((member: any) => {
+                      const todayRecord = todayAttendance.find((a: any) => a.userId === member.id);
+                      
+                      return (
+                        <TableRow key={member.id}>
+                          <TableCell>
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                                <Users className="w-4 h-4 text-blue-600" />
+                              </div>
+                              <div>
+                                <p className="font-medium">{member.name}</p>
+                                <p className="text-sm text-gray-600">{member.designation || "Staff"}</p>
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            {todayRecord ? getStatusBadge(todayRecord.status) : (
+                              <Badge variant="outline">Not Marked</Badge>
+                            )}
+                          </TableCell>
+                          <TableCell>{formatTime(todayRecord?.checkInTime)}</TableCell>
+                          <TableCell>{formatTime(todayRecord?.checkOutTime)}</TableCell>
+                          <TableCell>
+                            <div className="flex gap-2">
+                              {!todayRecord ? (
+                                <Button
+                                  size="sm"
+                                  onClick={() => adminCheckInMutation.mutate({ userId: member.id })}
+                                  disabled={adminCheckInMutation.isPending}
+                                >
+                                  Check In
+                                </Button>
+                              ) : !todayRecord.checkOutTime ? (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => adminCheckOutMutation.mutate({ attendanceId: todayRecord.id })}
+                                  disabled={adminCheckOutMutation.isPending}
+                                >
+                                  Check Out
+                                </Button>
+                              ) : (
+                                <span className="text-sm text-gray-500">Completed</span>
+                              )}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         {/* Admin-only tabs: Attendance, Staff Management, Payroll */}
