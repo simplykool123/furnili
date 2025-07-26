@@ -7,8 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, Clock, User, Calendar, AlertTriangle, CheckCircle, Calendar as CalendarIcon } from "lucide-react";
 import { useState } from "react";
-import { authService } from "@/lib/auth";
-import { apiRequest } from "@/lib/queryClient";
+import { authService, authenticatedApiRequest } from "@/lib/auth";
 
 interface Task {
   id: number;
@@ -49,7 +48,7 @@ export default function TaskDetail() {
 
   const updateStatusMutation = useMutation({
     mutationFn: async ({ status }: { status: string }) => {
-      return apiRequest(`/api/tasks/${id}/status`, 'PATCH', { status });
+      return authenticatedApiRequest('PATCH', `/api/tasks/${id}/status`, { status });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/tasks"] });

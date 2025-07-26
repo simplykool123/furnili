@@ -138,11 +138,12 @@ Preferred communication style: Simple, everyday language.
   - Moved OCR Wizard and Price Comparison into Master section as sub-items
   - Maintained all routing functionality and icon consistency
   - Preserved role-based access control for all menu items
-- ✅ **STRICT ROLE-BASED PERMISSIONS**: Comprehensive staff user access limitations implemented
+- ✅ **ROLE-BASED PERMISSIONS WITH BOQ ACCESS**: Comprehensive user access control implemented
   - **Sidebar Navigation**: Staff users can't access Master section (Inventory Movement, Categories, Price Comparison), Product Comparison completely disabled
   - **Attendance Module**: Staff restricted to Dashboard and Check-In/Out tabs only (Staff Management and Payroll hidden)
   - **Petty Cash System**: Staff users see only their own expenses, Add Funds and staff balances sections hidden
-  - **Backend API**: Automatic filtering for staff users to show only their own data
+  - **BOQ Upload Access**: Staff users granted full BOQ upload, OCR processing, and auto-matching capabilities
+  - **Backend API**: Automatic filtering for staff users to show only their own data (except BOQ access)
   - **UI Components**: Conditional rendering based on user role for enhanced security
   - **Fixed JSX Structure**: Resolved React fragment syntax errors for proper component rendering
 - ✅ **DASHBOARD TASK VISIBILITY**: Fixed user dashboard to show pending tasks
