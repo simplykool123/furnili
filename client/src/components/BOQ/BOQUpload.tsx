@@ -451,9 +451,6 @@ export default function BOQUpload() {
                   <TableRow>
                     <TableHead>Description</TableHead>
                     <TableHead>Qty</TableHead>
-                    <TableHead>Unit</TableHead>
-                    <TableHead>Rate</TableHead>
-                    <TableHead>Amount</TableHead>
                     <TableHead>Match Product</TableHead>
                     <TableHead>Confidence</TableHead>
                   </TableRow>
@@ -482,40 +479,10 @@ export default function BOQUpload() {
                             onChange={(e) => {
                               const updatedItems = [...matchedItems];
                               updatedItems[index].quantity = parseFloat(e.target.value) || 0;
-                              updatedItems[index].amount = updatedItems[index].quantity * updatedItems[index].rate;
                               setMatchedItems(updatedItems);
                             }}
                             className="w-20 p-2 border border-gray-300 rounded text-sm"
                           />
-                        </TableCell>
-                        <TableCell>
-                          <input
-                            type="text"
-                            value={item.unit}
-                            onChange={(e) => {
-                              const updatedItems = [...matchedItems];
-                              updatedItems[index].unit = e.target.value;
-                              setMatchedItems(updatedItems);
-                            }}
-                            className="w-20 p-2 border border-gray-300 rounded text-sm"
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <input
-                            type="number"
-                            step="0.01"
-                            value={item.rate}
-                            onChange={(e) => {
-                              const updatedItems = [...matchedItems];
-                              updatedItems[index].rate = parseFloat(e.target.value) || 0;
-                              updatedItems[index].amount = updatedItems[index].quantity * updatedItems[index].rate;
-                              setMatchedItems(updatedItems);
-                            }}
-                            className="w-24 p-2 border border-gray-300 rounded text-sm"
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <span className="font-medium">₹{item.amount.toFixed(2)}</span>
                         </TableCell>
                         <TableCell>
                           <Select 
@@ -545,35 +512,35 @@ export default function BOQUpload() {
                               <SelectItem value="none">
                                 <span className="text-gray-500">No match</span>
                               </SelectItem>
-                              {availableMatches.map((match) => {
-                                const product = products?.find((p: Product) => p.id === match.productId);
-                                if (!product) return null;
-                                return (
-                                  <SelectItem key={product.id} value={product.id.toString()}>
-                                    <div className="flex items-center justify-between w-full">
-                                      <span className="truncate">{product.name}</span>
-                                      <div className="flex items-center gap-2 ml-2">
-                                        <Badge 
-                                          variant={match.confidence > 80 ? "default" : match.confidence > 60 ? "secondary" : "outline"}
-                                          className="text-xs"
-                                        >
-                                          {match.confidence.toFixed(0)}%
-                                        </Badge>
-                                      </div>
-                                    </div>
-                                  </SelectItem>
-                                );
-                              })}
-                              {products && products.length > 0 && (
+                              {/* Show matched products first if any */}
+                              {availableMatches.length > 0 && (
                                 <>
+                                  {availableMatches.map((match) => {
+                                    const product = products?.find((p: Product) => p.id === match.productId);
+                                    if (!product) return null;
+                                    return (
+                                      <SelectItem key={product.id} value={product.id.toString()}>
+                                        <div className="flex items-center justify-between w-full">
+                                          <span className="truncate">{product.name} - {product.brand}</span>
+                                          <Badge 
+                                            variant={match.confidence > 80 ? "default" : match.confidence > 60 ? "secondary" : "outline"}
+                                            className="text-xs ml-2"
+                                          >
+                                            {match.confidence.toFixed(0)}%
+                                          </Badge>
+                                        </div>
+                                      </SelectItem>
+                                    );
+                                  })}
                                   <div className="px-2 py-1 text-xs text-gray-500 border-t">All Products:</div>
-                                  {products.map((product: Product) => (
-                                    <SelectItem key={`all-${product.id}`} value={product.id.toString()}>
-                                      <span className="truncate">{product.name} - {product.brand} ({product.unit})</span>
-                                    </SelectItem>
-                                  ))}
                                 </>
                               )}
+                              {/* Show all products */}
+                              {products && products.length > 0 && products.map((product: Product) => (
+                                <SelectItem key={`all-${product.id}`} value={product.id.toString()}>
+                                  <span className="truncate">{product.name} - {product.brand} - {product.size || product.thickness || product.unit}</span>
+                                </SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
                         </TableCell>
@@ -596,17 +563,10 @@ export default function BOQUpload() {
               </Table>
             </div>
 
-            <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-              <div className="flex justify-between items-center">
-                <div>
-                  <span className="text-lg font-medium">Total BOQ Value:</span>
-                  <div className="text-sm text-gray-600 mt-1">
-                    {matchedItems.filter(item => item.matchedProductId).length} of {matchedItems.length} items matched
-                  </div>
-                </div>
-                <span className="text-2xl font-bold text-primary">
-                  ₹{matchedItems.reduce((sum, item) => sum + item.amount, 0).toFixed(2)}
-                </span>
+            {/* Matching Summary */}
+            <div className="pt-4 border-t">
+              <div className="text-sm text-gray-600">
+                {matchedItems.filter(item => item.matchedProductId).length} of {matchedItems.length} items matched
               </div>
             </div>
           </CardContent>
