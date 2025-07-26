@@ -153,10 +153,13 @@ export default function PettyCash() {
     }
   };
 
-  // Fetch expenses and stats
+  // Fetch expenses and stats - filter by user for staff role
   const { data: expenses = [] } = useQuery({
-    queryKey: ["/api/petty-cash"],
-    queryFn: () => authenticatedApiRequest("GET", "/api/petty-cash"),
+    queryKey: user?.role === 'staff' ? ["/api/petty-cash", { userId: user.id }] : ["/api/petty-cash"],
+    queryFn: () => {
+      const url = user?.role === 'staff' ? `/api/petty-cash?userId=${user.id}` : "/api/petty-cash";
+      return authenticatedApiRequest("GET", url);
+    },
   });
 
   const { data: stats } = useQuery({
@@ -553,11 +556,13 @@ export default function PettyCash() {
             <span className="sm:hidden">Add Expense</span>
             <span className="hidden sm:inline">Add Expense</span>
           </Button>
-          <Button onClick={() => setShowAddFundsDialog(true)} variant="outline" className="flex-1 sm:flex-none bg-green-50 border-green-200 hover:bg-green-100 text-green-700">
-            <Plus className="mr-2 h-4 w-4" />
-            <span className="sm:hidden">Add Funds</span>
-            <span className="hidden sm:inline">Add Funds</span>
-          </Button>
+          {user?.role !== 'staff' && (
+            <Button onClick={() => setShowAddFundsDialog(true)} variant="outline" className="flex-1 sm:flex-none bg-green-50 border-green-200 hover:bg-green-100 text-green-700">
+              <Plus className="mr-2 h-4 w-4" />
+              <span className="sm:hidden">Add Funds</span>
+              <span className="hidden sm:inline">Add Funds</span>
+            </Button>
+          )}
         </div>
       </div>
       {/* Stats Cards */}
@@ -605,8 +610,8 @@ export default function PettyCash() {
         </div>
       )}
 
-      {/* Staff Balances */}
-      {staffBalances.length > 0 && (
+      {/* Staff Balances - Hide for staff users */}
+      {user?.role !== 'staff' && staffBalances.length > 0 && (
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -698,6 +703,7 @@ export default function PettyCash() {
                 </SelectContent>
               </Select>
             </div>
+{user?.role !== 'staff' && (
             <div>
               <Label htmlFor="paid-by-filter">Paid By</Label>
               <Select value={selectedPaidBy} onValueChange={setSelectedPaidBy}>
@@ -714,6 +720,7 @@ export default function PettyCash() {
                 </SelectContent>
               </Select>
             </div>
+            )}
             <div>
               <Label htmlFor="date-filter">Date</Label>
               <Input

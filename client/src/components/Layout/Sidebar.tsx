@@ -35,20 +35,20 @@ const navigation = [
   { name: 'Staff Attendance', href: '/attendance', icon: Clock, roles: ['admin', 'staff'] },
   { name: 'Petty Cash', href: '/petty-cash', icon: Wallet, roles: ['admin', 'staff'] },
   { name: 'Task Management', href: '/tasks', icon: CheckSquare, roles: ['admin', 'staff'] },
-  { name: 'Product Comparison', href: '/product-comparison', icon: GitCompare, roles: ['admin', 'staff'] },
+  { name: 'Product Comparison', href: '/product-comparison', icon: GitCompare, roles: ['admin'] }, // Staff disabled
   { name: 'WhatsApp Export', href: '/whatsapp', icon: MessageCircle, roles: ['admin', 'staff'] },
   { name: 'Reports', href: '/reports', icon: BarChart3, roles: ['admin', 'staff'] },
   { 
     name: 'Master', 
     icon: Database, 
-    roles: ['admin', 'staff'],
+    roles: ['admin', 'staff'], // Show Master section for staff but with limited items
     isCollapsible: true,
     subItems: [
-      { name: 'Inventory Movement', href: '/inventory-movement', icon: ArrowUpDown, roles: ['admin', 'staff'] },
-      { name: 'Categories', href: '/categories', icon: Tag, roles: ['admin', 'staff'] },
+      { name: 'Inventory Movement', href: '/inventory-movement', icon: ArrowUpDown, roles: ['admin'] }, // Staff disabled
+      { name: 'Categories', href: '/categories', icon: Tag, roles: ['admin'] }, // Staff disabled
       { name: 'Users', href: '/users', icon: Users, roles: ['admin'] },
       { name: 'OCR Wizard', href: '/ocr-wizard', icon: Brain, roles: ['admin', 'staff'] },
-      { name: 'Price Comparison', href: '/price-comparison', icon: TrendingUp, roles: ['admin', 'staff'] },
+      { name: 'Price Comparison', href: '/price-comparison', icon: TrendingUp, roles: ['admin'] }, // Staff disabled
       { name: 'Display Settings', href: '/display-settings', icon: Settings, roles: ['admin', 'staff'] },
       { name: 'Backups', href: '/backups', icon: Download, roles: ['admin'] },
     ]

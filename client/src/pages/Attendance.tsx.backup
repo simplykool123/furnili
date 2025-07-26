@@ -1586,7 +1586,7 @@ export default function Attendance() {
           </Card>
         </TabsContent>
 
-        {/* Admin-only tabs: Attendance, Staff Management, Payroll */}
+        {/* Attendance Tab */}
         {user?.role !== 'staff' && (
           <>
           <TabsContent value="attendance" className="space-y-4">
@@ -1928,6 +1928,223 @@ export default function Attendance() {
                             {member.name.charAt(0)}
                           </div>
                           <div>
+                            <p className="font-medium">{member.name}</p>
+                            <p className="text-sm text-gray-600">{member.email}</p>
+                            <p className="text-sm text-gray-600">{member.phone}</p>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <span className="font-mono text-sm bg-blue-50 text-blue-700 px-2 py-1 rounded">
+                          {member.employeeId || 'FUN-XXX'}
+                        </span>
+                      </TableCell>
+                      <TableCell>{member.department || "General"}</TableCell>
+                      <TableCell>{formatCurrency(member.basicSalary || 0)}</TableCell>
+                      <TableCell>
+                        {member.aadharNumber ? (
+                          <div>
+                            <p className="text-sm">{member.aadharNumber}</p>
+                            {member.aadharCardUrl && (
+                              <Button size="sm" variant="ghost" className="h-6 px-2">
+                                <Eye className="w-3 h-3 mr-1" />
+                                View
+                              </Button>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-gray-500">Not Provided</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex gap-1">
+                          {member.profilePhotoUrl && (
+                            <Badge variant="outline">Photo</Badge>
+                          )}
+                          {member.documentsUrls?.length > 0 && (
+                            <Badge variant="outline">{member.documentsUrls.length} Docs</Badge>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => handleEditStaff(member)}
+                        >
+                          <Edit className="w-3 h-3 mr-1" />
+                          Edit
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Payroll Tab */}
+        <TabsContent value="payroll" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                Payroll Management
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      staff.forEach((member: any) => {
+                        generatePayrollMutation.mutate({
+                          userId: member.id,
+                          month: selectedMonth,
+                          year: selectedYear,
+                        });
+                      });
+                    }}
+                    disabled={generatePayrollMutation.isPending}
+                  >
+                    <Calculator className="w-4 h-4 mr-2" />
+                    Generate All
+                  </Button>
+                </div>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Staff Member</TableHead>
+                    <TableHead>Basic Salary</TableHead>
+                    <TableHead>Working Days</TableHead>
+                    <TableHead>Total Hours</TableHead>
+                    <TableHead>Overtime</TableHead>
+                    <TableHead>Net Salary</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {staff.map((member: any) => {
+                    const payroll = payrollRecords.find((p: any) => p.userId === member.id);
+                    
+                    return (
+                      <TableRow key={member.id}>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+                              <Users className="w-4 h-4 text-purple-600" />
+                            </div>
+                            {member.name}
+                          </div>
+                        </TableCell>
+                        <TableCell>{formatCurrency(member.basicSalary || 0)}</TableCell>
+                        <TableCell>{payroll?.actualWorkingDays || "-"}</TableCell>
+                        <TableCell>{payroll?.totalHours?.toFixed(1) || "0.0"}h</TableCell>
+                        <TableCell>{payroll?.overtimeHours?.toFixed(1) || "0.0"}h</TableCell>
+                        <TableCell className="font-semibold">
+                          {payroll ? formatCurrency(payroll.netSalary) : "-"}
+                        </TableCell>
+                        <TableCell>
+                          {payroll ? (
+                            <Badge variant={payroll.status === "paid" ? "default" : "secondary"}>
+                              {payroll.status.toUpperCase()}
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline">Not Generated</Badge>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex gap-1">
+                            {!payroll ? (
+                              <Button
+                                size="sm"
+                                onClick={() => generatePayrollMutation.mutate({
+                                  userId: member.id,
+                                  month: selectedMonth,
+                                  year: selectedYear,
+                                })}
+                                disabled={generatePayrollMutation.isPending}
+                              >
+                                Generate
+                              </Button>
+                            ) : (
+                              <>
+                                <Button 
+                                  size="sm" 
+                                  variant="outline"
+                                  onClick={() => generatePaySlip(payroll, member)}
+                                >
+                                  <FileText className="w-3 h-3 mr-1" />
+                                  Pay Slip
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handlePayrollEdit({ ...payroll, staff: member })}
+                                  className="border-blue-500 text-blue-600 hover:bg-blue-50"
+                                >
+                                  <Edit className="w-3 h-3 mr-1" />
+                                  Edit
+                                </Button>
+                                {payroll.status !== "paid" && (
+                                  <Button
+                                    size="sm"
+                                    onClick={() => processPayrollMutation.mutate(payroll.id)}
+                                    disabled={processPayrollMutation.isPending}
+                                    className="bg-green-600 hover:bg-green-700"
+                                  >
+                                    <CreditCard className="w-3 h-3 mr-1" />
+                                    Process
+                                  </Button>
+                                )}
+                              </>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Staff Management Tab */}
+        <TabsContent value="staff" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                Staff Management
+                <Button size="sm" onClick={() => setIsAddStaffOpen(true)}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Staff
+                </Button>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Staff Details</TableHead>
+                    <TableHead>Employee ID</TableHead>
+                    <TableHead>Department</TableHead>
+                    <TableHead>Salary</TableHead>
+                    <TableHead>Aadhar</TableHead>
+                    <TableHead>Documents</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {staff.map((member: any) => (
+                    <TableRow key={member.id}>
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold">
+                            {member.name.charAt(0)}
+                          </div>
+                          <div>
                             <div className="font-semibold text-gray-900">{member.name}</div>
                             <div className="text-sm text-gray-600">{member.email}</div>
                           </div>
@@ -1964,6 +2181,9 @@ export default function Attendance() {
                         <div className="flex gap-1">
                           <Button size="sm" variant="outline" onClick={() => handleEditStaff(member)}>
                             <Edit className="w-3 h-3" />
+                          </Button>
+                          <Button size="sm" variant="outline" onClick={() => handleDeleteStaff(member.id)}>
+                            <Trash2 className="w-3 h-3" />
                           </Button>
                         </div>
                       </TableCell>
