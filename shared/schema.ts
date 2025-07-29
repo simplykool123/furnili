@@ -42,32 +42,34 @@ export const categories = pgTable("categories", {
 export const clients = pgTable("clients", {
   id: serial("id").primaryKey(),
   name: text("name").notNull().unique(),
-  contactPerson: text("contact_person"),
-  email: text("email"),
-  phone: text("phone"),
+  email: text("email").notNull(),
+  mobile: text("mobile").notNull(),
+  city: text("city").notNull(),
   address: text("address"),
+  contactPerson: text("contact_person"),
+  phone: text("phone"),
   gstNumber: text("gst_number"),
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// Project Management Tables
+// Project Management Tables - Updated for User Requirements
 export const projects = pgTable("projects", {
   id: serial("id").primaryKey(),
+  code: text("code").notNull().unique(), // Auto-generated: P-181, P-182, etc.
   name: text("name").notNull(),
   description: text("description"),
-  clientId: integer("client_id").references(() => clients.id),
-  projectManager: text("project_manager"), // Staff assigned
-  status: text("status").notNull().default("planning"), // planning, active, on-hold, completed, cancelled
-  stage: text("stage").default("initiation"), // initiation, planning, execution, monitoring, closure
-  priority: text("priority").default("medium"), // low, medium, high, critical
-  startDate: timestamp("start_date"),
-  endDate: timestamp("end_date"),
-  expectedBudget: real("expected_budget").default(0),
-  actualCost: real("actual_cost").default(0),
-  completionPercentage: integer("completion_percentage").default(0),
+  clientId: integer("client_id").references(() => clients.id).notNull(),
+  stage: text("stage").notNull().default("prospect"), // prospect, execution, design-presentation, boq-shared, won, completed
+  budget: real("budget").default(0),
+  addressLine1: text("address_line_1"),
+  addressLine2: text("address_line_2"),
+  state: text("state"),
+  city: text("city"),
   location: text("location"),
+  pincode: text("pincode"),
+  completionPercentage: integer("completion_percentage").default(0),
   notes: text("notes"),
   files: text("files").array().default([]), // File URLs/paths
   isActive: boolean("is_active").notNull().default(true),
@@ -481,6 +483,7 @@ export const insertClientSchema = createInsertSchema(clients).omit({
 
 export const insertProjectSchema = createInsertSchema(projects).omit({
   id: true,
+  code: true, // Auto-generated
   createdAt: true,
   updatedAt: true,
 });

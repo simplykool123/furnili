@@ -805,7 +805,15 @@ export class MemStorage {
   }
 
   async createProject(project: InsertProject): Promise<Project> {
-    const result = await db.insert(projects).values(project).returning();
+    // Auto-generate project code
+    const maxProject = await db.select({ maxId: sql<number>`MAX(id)` }).from(projects);
+    const nextId = (maxProject[0]?.maxId || 0) + 1;
+    const projectCode = `P-${nextId}`;
+    
+    const result = await db.insert(projects).values({
+      ...project,
+      code: projectCode,
+    }).returning();
     return result[0];
   }
 
@@ -2623,6 +2631,8 @@ class DatabaseStorage implements IStorage {
       .returning();
     return result[0];
   }
+
+
   
   async deletePayroll(id: number): Promise<boolean> {
     await db.delete(payroll).where(eq(payroll.id, id));
