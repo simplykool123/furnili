@@ -6,7 +6,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogDescription,
+  DialogHeader, 
+  DialogTitle, 
+  DialogTrigger 
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -342,6 +349,9 @@ export default function CRM() {
               <DialogContent>
                 <DialogHeader>
                   <DialogTitle>{editingItem ? 'Edit' : 'Add'} Customer</DialogTitle>
+                  <DialogDescription>
+                    {editingItem ? 'Update customer information and contact details.' : 'Create a new customer record with contact information and details.'}
+                  </DialogDescription>
                 </DialogHeader>
                 <form onSubmit={customerForm.handleSubmit((data) => customerMutation.mutate(data))} className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
