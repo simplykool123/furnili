@@ -200,19 +200,37 @@ export default function Projects() {
   }
 
   if (projectsError || clientsError) {
+    const errorMessage = projectsError?.message || clientsError?.message || "Failed to load project data";
+    const isAuthError = errorMessage.includes('401') || errorMessage.includes('Invalid token') || errorMessage.includes('Access token required');
+    
     return (
       <div className="p-8">
         <div className="text-center py-8">
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Error Loading Data</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            {isAuthError ? "Authentication Required" : "Error Loading Data"}
+          </h3>
           <p className="text-gray-500 mb-4">
-            {projectsError?.message || clientsError?.message || "Failed to load project data"}
+            {isAuthError 
+              ? "Your session has expired. Please log in again to access project management features."
+              : errorMessage
+            }
           </p>
-          <Button onClick={() => {
-            queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
-            queryClient.invalidateQueries({ queryKey: ['/api/clients'] });
-          }}>
-            Retry
-          </Button>
+          {isAuthError ? (
+            <Button onClick={() => {
+              localStorage.removeItem('token');
+              localStorage.removeItem('user');
+              window.location.href = '/login';
+            }}>
+              Go to Login
+            </Button>
+          ) : (
+            <Button onClick={() => {
+              queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
+              queryClient.invalidateQueries({ queryKey: ['/api/clients'] });
+            }}>
+              Retry
+            </Button>
+          )}
         </div>
       </div>
     );
