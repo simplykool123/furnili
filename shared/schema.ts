@@ -52,6 +52,41 @@ export const clients = pgTable("clients", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Project Management Tables
+export const projects = pgTable("projects", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  clientId: integer("client_id").references(() => clients.id),
+  projectManager: text("project_manager"), // Staff assigned
+  status: text("status").notNull().default("planning"), // planning, active, on-hold, completed, cancelled
+  stage: text("stage").default("initiation"), // initiation, planning, execution, monitoring, closure
+  priority: text("priority").default("medium"), // low, medium, high, critical
+  startDate: timestamp("start_date"),
+  endDate: timestamp("end_date"),
+  expectedBudget: real("expected_budget").default(0),
+  actualCost: real("actual_cost").default(0),
+  completionPercentage: integer("completion_percentage").default(0),
+  location: text("location"),
+  notes: text("notes"),
+  files: text("files").array().default([]), // File URLs/paths
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const projectLogs = pgTable("project_logs", {
+  id: serial("id").primaryKey(),
+  projectId: integer("project_id").references(() => projects.id),
+  logType: text("log_type").notNull(), // activity, note, milestone, issue, update
+  title: text("title").notNull(),
+  description: text("description"),
+  createdBy: integer("created_by").references(() => users.id),
+  attachments: text("attachments").array().default([]),
+  isImportant: boolean("is_important").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // CRM Tables
 export const crmCustomers = pgTable("crm_customers", {
   id: serial("id").primaryKey(),
@@ -323,16 +358,25 @@ export const pettyCashExpenses = pgTable("petty_cash_expenses", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-// Task Management Table
+// Task Management Table - Enhanced for Phase 1
 export const tasks = pgTable("tasks", {
   id: serial("id").primaryKey(),
   title: text("title").notNull(),
   description: text("description"),
-  status: text("status").notNull().default("pending"), // pending, in_progress, done
-  priority: text("priority").notNull().default("medium"), // low, medium, high
+  projectId: integer("project_id").references(() => projects.id), // Link to project
+  status: text("status").notNull().default("pending"), // pending, in_progress, completed, cancelled
+  priority: text("priority").notNull().default("medium"), // low, medium, high, critical
   dueDate: timestamp("due_date"),
+  startDate: timestamp("start_date"),
+  completedDate: timestamp("completed_date"),
+  estimatedHours: integer("estimated_hours").default(0),
+  actualHours: integer("actual_hours").default(0),
+  tags: text("tags").array().default([]), // For categorization
+  attachments: text("attachments").array().default([]), // File attachments
+  comments: text("comments"), // Latest comment/note
   assignedTo: integer("assigned_to").references(() => users.id).notNull(),
   assignedBy: integer("assigned_by").references(() => users.id).notNull(),
+  updatedBy: integer("updated_by").references(() => users.id), // Track who last updated
   completedAt: timestamp("completed_at"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
@@ -435,6 +479,17 @@ export const insertClientSchema = createInsertSchema(clients).omit({
   updatedAt: true,
 });
 
+export const insertProjectSchema = createInsertSchema(projects).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertProjectLogSchema = createInsertSchema(projectLogs).omit({
+  id: true,
+  createdAt: true,
+});
+
 // CRM Insert Schemas
 export const insertCrmCustomerSchema = createInsertSchema(crmCustomers).omit({
   id: true,
@@ -494,6 +549,10 @@ export type PriceComparison = typeof priceComparisons.$inferSelect;
 export type InsertPriceComparison = z.infer<typeof insertPriceComparisonSchema>;
 export type Client = typeof clients.$inferSelect;
 export type InsertClient = z.infer<typeof insertClientSchema>;
+export type Project = typeof projects.$inferSelect;
+export type InsertProject = z.infer<typeof insertProjectSchema>;
+export type ProjectLog = typeof projectLogs.$inferSelect;
+export type InsertProjectLog = z.infer<typeof insertProjectLogSchema>;
 export type Payroll = typeof payroll.$inferSelect;
 export type InsertPayroll = z.infer<typeof insertPayrollSchema>;
 export type Leave = typeof leaves.$inferSelect;

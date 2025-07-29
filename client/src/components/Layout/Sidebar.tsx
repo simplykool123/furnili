@@ -25,7 +25,8 @@ import {
   GitCompare,
   Brain,
   Settings,
-  Download
+  Download,
+  FolderOpen
 } from "lucide-react";
 
 const navigation = [
@@ -34,6 +35,7 @@ const navigation = [
   { name: 'Material Requests', href: '/requests', icon: ClipboardList, roles: ['admin', 'staff'] },
   { name: 'Staff Attendance', href: '/attendance', icon: Clock, roles: ['admin', 'staff'] },
   { name: 'Petty Cash', href: '/petty-cash', icon: Wallet, roles: ['admin', 'staff'] },
+  { name: 'Project Management', href: '/projects', icon: FolderOpen, roles: ['admin', 'staff'] },
   { name: 'Task Management', href: '/tasks', icon: CheckSquare, roles: ['admin', 'staff'] },
   { name: 'Product Comparison', href: '/product-comparison', icon: GitCompare, roles: ['admin'] }, // Staff disabled
   { name: 'WhatsApp Export', href: '/whatsapp', icon: MessageCircle, roles: ['admin', 'staff'] },

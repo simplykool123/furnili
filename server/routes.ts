@@ -12,6 +12,8 @@ import {
   insertProductSchema,
   insertCategorySchema,
   insertClientSchema,
+  insertProjectSchema,
+  insertProjectLogSchema,
   insertMaterialRequestSchema,
   insertRequestItemSchema,
   insertBOQUploadSchema,
@@ -1597,6 +1599,122 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Failed to delete task:", error);
       res.status(500).json({ message: "Failed to delete task", error: String(error) });
+    }
+  });
+
+  // Project Management Routes - Phase 1
+  app.get("/api/projects", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const { status, clientId, projectManager } = req.query;
+      const filters: any = {};
+      
+      if (status) filters.status = status as string;
+      if (clientId) filters.clientId = parseInt(clientId as string);
+      if (projectManager) filters.projectManager = projectManager as string;
+      
+      const projects = await storage.getAllProjects(filters);
+      res.json(projects);
+    } catch (error) {
+      console.error("Failed to fetch projects:", error);
+      res.status(500).json({ message: "Failed to fetch projects", error: String(error) });
+    }
+  });
+
+  app.post("/api/projects", authenticateToken, requireRole(["admin", "manager"]), async (req: AuthRequest, res) => {
+    try {
+      const projectData = insertProjectSchema.parse(req.body);
+      const project = await storage.createProject(projectData);
+      res.json(project);
+    } catch (error) {
+      console.error("Failed to create project:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Validation failed", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create project", error: String(error) });
+    }
+  });
+
+  app.get("/api/projects/:id", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const projectId = parseInt(req.params.id);
+      const project = await storage.getProject(projectId);
+      
+      if (!project) {
+        return res.status(404).json({ message: "Project not found" });
+      }
+      
+      res.json(project);
+    } catch (error) {
+      console.error("Failed to fetch project:", error);
+      res.status(500).json({ message: "Failed to fetch project", error: String(error) });
+    }
+  });
+
+  app.patch("/api/projects/:id", authenticateToken, requireRole(["admin", "manager"]), async (req: AuthRequest, res) => {
+    try {
+      const projectId = parseInt(req.params.id);
+      const updates = insertProjectSchema.partial().parse(req.body);
+      
+      const project = await storage.updateProject(projectId, updates);
+      if (!project) {
+        return res.status(404).json({ message: "Project not found" });
+      }
+      
+      res.json(project);
+    } catch (error) {
+      console.error("Failed to update project:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Validation failed", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to update project", error: String(error) });
+    }
+  });
+
+  app.delete("/api/projects/:id", authenticateToken, requireRole(["admin"]), async (req: AuthRequest, res) => {
+    try {
+      const projectId = parseInt(req.params.id);
+      const deleted = await storage.deleteProject(projectId);
+      
+      if (!deleted) {
+        return res.status(404).json({ message: "Project not found" });
+      }
+      
+      res.json({ message: "Project deleted successfully" });
+    } catch (error) {
+      console.error("Failed to delete project:", error);
+      res.status(500).json({ message: "Failed to delete project", error: String(error) });
+    }
+  });
+
+  // Project Log Routes
+  app.get("/api/projects/:id/logs", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const projectId = parseInt(req.params.id);
+      const logs = await storage.getProjectLogs(projectId);
+      res.json(logs);
+    } catch (error) {
+      console.error("Failed to fetch project logs:", error);
+      res.status(500).json({ message: "Failed to fetch project logs", error: String(error) });
+    }
+  });
+
+  app.post("/api/projects/:id/logs", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const projectId = parseInt(req.params.id);
+      const logData = insertProjectLogSchema.parse({
+        ...req.body,
+        projectId,
+        createdBy: req.user!.id,
+      });
+      
+      const log = await storage.createProjectLog(logData);
+      res.json(log);
+    } catch (error) {
+      console.error("Failed to create project log:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Validation failed", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create project log", error: String(error) });
     }
   });
 

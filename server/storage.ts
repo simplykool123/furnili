@@ -13,6 +13,8 @@ import {
   payroll,
   leaves,
   clients,
+  projects,
+  projectLogs,
   crmCustomers,
   crmLeads,
   crmDeals,
@@ -48,6 +50,10 @@ import {
   type InsertLeave,
   type Client,
   type InsertClient,
+  type Project,
+  type InsertProject,
+  type ProjectLog,
+  type InsertProjectLog,
   type CrmCustomer,
   type InsertCrmCustomer,
   type CrmLead,
@@ -139,12 +145,25 @@ export interface IStorage {
   updatePettyCashExpense(id: number, updates: Partial<InsertPettyCashExpense>): Promise<PettyCashExpense | undefined>;
   approvePettyCashExpense(id: number, approvedBy: number): Promise<PettyCashExpense | undefined>;
 
-  // Task operations
+  // Project operations
+  getProject(id: number): Promise<Project | undefined>;
+  getAllProjects(filters?: { status?: string; clientId?: number; projectManager?: string }): Promise<Project[]>;
+  createProject(project: InsertProject): Promise<Project>;
+  updateProject(id: number, updates: Partial<InsertProject>): Promise<Project | undefined>;
+  deleteProject(id: number): Promise<boolean>;
+
+  // Project Log operations
+  getProjectLogs(projectId: number): Promise<ProjectLog[]>;
+  createProjectLog(log: InsertProjectLog): Promise<ProjectLog>;
+  deleteProjectLog(id: number): Promise<boolean>;
+
+  // Task operations - Enhanced for Phase 1
   getTask(id: number): Promise<Task | undefined>;
-  getAllTasks(filters?: { assignedTo?: number; status?: string; assignedBy?: number }): Promise<Task[]>;
+  getAllTasks(filters?: { assignedTo?: number; status?: string; assignedBy?: number; projectId?: number }): Promise<Task[]>;
   createTask(task: InsertTask): Promise<Task>;
   updateTask(id: number, updates: Partial<InsertTask>): Promise<Task | undefined>;
   deleteTask(id: number): Promise<boolean>;
+  updateTaskStatus(id: number, status: string, updatedBy: number): Promise<Task | undefined>;
 
   // Price Comparison operations
   getAllPriceComparisons(productName?: string): Promise<PriceComparison[]>;
@@ -736,35 +755,103 @@ export class MemStorage {
   }
 
   async updateTask(id: number, updates: Partial<InsertTask>): Promise<Task | undefined> {
-    const task = this.tasks.get(id);
-    if (!task) return undefined;
-    
-    const updatedTask: Task = {
-      ...task,
-      ...updates,
-      updatedAt: new Date(),
-    };
-    
-    this.tasks.set(id, updatedTask);
-    return updatedTask;
-  }
-
-  async deleteTask(id: number): Promise<boolean> {
-    return this.tasks.delete(id);
-  }
-
-  async updateTask(id: number, updates: Partial<InsertTask>): Promise<Task | undefined> {
     const result = await db.update(tasks).set(updates).where(eq(tasks.id, id)).returning();
     return result[0];
   }
 
-  async updateTaskStatus(id: number, status: string): Promise<Task | undefined> {
-    const result = await db.update(tasks).set({ status, updatedAt: new Date() }).where(eq(tasks.id, id)).returning();
+  async updateTaskStatus(id: number, status: string, updatedBy: number): Promise<Task | undefined> {
+    const updates: any = { 
+      status, 
+      updatedAt: new Date(),
+      updatedBy
+    };
+    
+    // Set completion date if status is completed
+    if (status === 'completed') {
+      updates.completedAt = new Date();
+    }
+    
+    const result = await db.update(tasks).set(updates).where(eq(tasks.id, id)).returning();
     return result[0];
   }
 
   async deleteTask(id: number): Promise<boolean> {
     const result = await db.delete(tasks).where(eq(tasks.id, id));
+    return result.rowCount > 0;
+  }
+
+  // Project Management Operations - Phase 1
+  async getProject(id: number): Promise<Project | undefined> {
+    const result = await db.select().from(projects).where(eq(projects.id, id)).limit(1);
+    return result[0];
+  }
+
+  async getAllProjects(filters?: { status?: string; clientId?: number; projectManager?: string }): Promise<Project[]> {
+    let query = db.select().from(projects);
+    
+    if (filters?.status) {
+      query = query.where(eq(projects.status, filters.status));
+    }
+    
+    if (filters?.clientId) {
+      query = query.where(eq(projects.clientId, filters.clientId));
+    }
+    
+    if (filters?.projectManager) {
+      query = query.where(eq(projects.projectManager, filters.projectManager));
+    }
+    
+    return query.where(eq(projects.isActive, true)).orderBy(desc(projects.createdAt));
+  }
+
+  async createProject(project: InsertProject): Promise<Project> {
+    const result = await db.insert(projects).values(project).returning();
+    return result[0];
+  }
+
+  async updateProject(id: number, updates: Partial<InsertProject>): Promise<Project | undefined> {
+    const result = await db.update(projects)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(projects.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteProject(id: number): Promise<boolean> {
+    // Soft delete by setting isActive to false
+    const result = await db.update(projects)
+      .set({ isActive: false })
+      .where(eq(projects.id, id));
+    return result.rowCount > 0;
+  }
+
+  // Project Log Operations
+  async getProjectLogs(projectId: number): Promise<ProjectLog[]> {
+    const logs = await db.select().from(projectLogs)
+      .where(eq(projectLogs.projectId, projectId))
+      .orderBy(desc(projectLogs.createdAt));
+    
+    // Add user information for each log
+    const logsWithUsers = await Promise.all(
+      logs.map(async (log) => {
+        const user = log.createdBy ? await this.getUser(log.createdBy) : null;
+        return {
+          ...log,
+          user: user ? { id: user.id, name: user.name, email: user.email } : null,
+        };
+      })
+    );
+    
+    return logsWithUsers;
+  }
+
+  async createProjectLog(log: InsertProjectLog): Promise<ProjectLog> {
+    const result = await db.insert(projectLogs).values(log).returning();
+    return result[0];
+  }
+
+  async deleteProjectLog(id: number): Promise<boolean> {
+    const result = await db.delete(projectLogs).where(eq(projectLogs.id, id));
     return result.rowCount > 0;
   }
 

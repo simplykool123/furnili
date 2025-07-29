@@ -33,6 +33,7 @@ import Quotations from "@/pages/CRM/Quotations";
 import FollowUps from "@/pages/CRM/FollowUps";
 import SiteVisits from "@/pages/CRM/SiteVisits";
 import CRMReports from "@/pages/CRM/CRMReports";
+import Projects from "@/pages/Projects";
 import NotFound from "@/pages/not-found";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -198,6 +199,17 @@ function Router() {
             subtitle="Advanced OCR processing with AI-powered field extraction"
           >
             <OCRWizard />
+          </Layout>
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/projects">
+        <ProtectedRoute>
+          <Layout 
+            title="Project Management" 
+            subtitle="Manage projects and track progress"
+          >
+            <Projects />
           </Layout>
         </ProtectedRoute>
       </Route>
