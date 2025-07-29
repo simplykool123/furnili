@@ -2059,13 +2059,35 @@ class DatabaseStorage implements IStorage {
     return result[0];
   }
 
-  // Stub implementations for other methods (can be implemented as needed)
-  async getClient(id: number): Promise<Client | undefined> { return undefined; }
-  async getAllClients(): Promise<Client[]> { return []; }
-  async getClientByName(name: string): Promise<Client | undefined> { return undefined; }
-  async createClient(client: InsertClient): Promise<Client> { throw new Error("Not implemented"); }
-  async updateClient(id: number, updates: Partial<InsertClient>): Promise<Client | undefined> { return undefined; }
-  async deleteClient(id: number): Promise<boolean> { return false; }
+  // Client operations - Database implementations
+  async getClient(id: number): Promise<Client | undefined> {
+    const result = await db.select().from(clients).where(eq(clients.id, id)).limit(1);
+    return result[0];
+  }
+
+  async getAllClients(): Promise<Client[]> {
+    return db.select().from(clients).where(eq(clients.isActive, true));
+  }
+
+  async getClientByName(name: string): Promise<Client | undefined> {
+    const result = await db.select().from(clients).where(eq(clients.name, name)).limit(1);
+    return result[0];
+  }
+
+  async createClient(client: InsertClient): Promise<Client> {
+    const result = await db.insert(clients).values(client).returning();
+    return result[0];
+  }
+
+  async updateClient(id: number, updates: Partial<InsertClient>): Promise<Client | undefined> {
+    const result = await db.update(clients).set(updates).where(eq(clients.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteClient(id: number): Promise<boolean> {
+    const result = await db.update(clients).set({ isActive: false }).where(eq(clients.id, id));
+    return result.rowCount > 0;
+  }
   // Enhanced Attendance operations
   async checkIn(userId: number, checkInBy?: number, location?: string, notes?: string): Promise<Attendance> {
     const now = new Date();
