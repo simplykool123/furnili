@@ -17,6 +17,7 @@ import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import type { Project, Client } from "@shared/schema";
+import { insertClientSchema } from "@shared/schema";
 
 const createProjectSchema = z.object({
   name: z.string().min(1, "Project name is required"),
@@ -32,13 +33,7 @@ const createProjectSchema = z.object({
   pincode: z.string().optional(),
 });
 
-const createClientSchema = z.object({
-  name: z.string().min(1, "Client name is required"),
-  email: z.string().email("Valid email is required"),
-  mobile: z.string().min(10, "Mobile number is required"),
-  city: z.string().min(1, "City is required"),
-  address: z.string().optional(),
-});
+// Use the same schema as the server for client creation
 
 export default function Projects() {
   const { toast } = useToast();
@@ -89,7 +84,7 @@ export default function Projects() {
 
   const createProjectMutation = useMutation({
     mutationFn: (data: z.infer<typeof createProjectSchema>) =>
-      apiRequest('/api/projects', 'POST', data),
+      apiRequest('POST', '/api/projects', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
       setIsCreateDialogOpen(false);
@@ -108,8 +103,8 @@ export default function Projects() {
   });
 
   const createClientMutation = useMutation({
-    mutationFn: (data: z.infer<typeof createClientSchema>) =>
-      apiRequest('/api/clients', 'POST', data),
+    mutationFn: (data: z.infer<typeof insertClientSchema>) =>
+      apiRequest('POST', '/api/clients', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/clients'] });
       setIsCreateClientDialogOpen(false);
@@ -144,8 +139,8 @@ export default function Projects() {
     },
   });
 
-  const clientForm = useForm<z.infer<typeof createClientSchema>>({
-    resolver: zodResolver(createClientSchema),
+  const clientForm = useForm<z.infer<typeof insertClientSchema>>({
+    resolver: zodResolver(insertClientSchema),
     defaultValues: {
       name: "",
       email: "",
@@ -159,7 +154,7 @@ export default function Projects() {
     createProjectMutation.mutate(data);
   };
 
-  const onSubmitClient = (data: z.infer<typeof createClientSchema>) => {
+  const onSubmitClient = (data: z.infer<typeof insertClientSchema>) => {
     createClientMutation.mutate(data);
   };
 
