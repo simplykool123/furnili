@@ -13,6 +13,10 @@ import {
   payroll,
   leaves,
   clients,
+  crmCustomers,
+  crmLeads,
+  crmDeals,
+  crmActivities,
   type User,
   type InsertUser,
   type Category,
@@ -41,6 +45,14 @@ import {
   type InsertLeave,
   type Client,
   type InsertClient,
+  type CrmCustomer,
+  type InsertCrmCustomer,
+  type CrmLead,
+  type InsertCrmLead,
+  type CrmDeal,
+  type InsertCrmDeal,
+  type CrmActivity,
+  type InsertCrmActivity,
   type MaterialRequestWithItems,
   type ProductWithStock,
   type BOQExtractedItem,
@@ -233,6 +245,43 @@ export interface IStorage {
   createPriceComparison(comparison: InsertPriceComparison): Promise<PriceComparison>;
   updatePriceComparison(id: number, updates: Partial<InsertPriceComparison>): Promise<PriceComparison | undefined>;
   deletePriceComparison(id: number): Promise<boolean>;
+
+  // CRM Operations
+  // Customer operations
+  getCrmCustomer(id: number): Promise<CrmCustomer | undefined>;
+  getAllCrmCustomers(): Promise<CrmCustomer[]>;
+  createCrmCustomer(customer: InsertCrmCustomer): Promise<CrmCustomer>;
+  updateCrmCustomer(id: number, updates: Partial<InsertCrmCustomer>): Promise<CrmCustomer | undefined>;
+  deleteCrmCustomer(id: number): Promise<boolean>;
+
+  // Lead operations
+  getCrmLead(id: number): Promise<CrmLead | undefined>;
+  getAllCrmLeads(): Promise<CrmLead[]>;
+  createCrmLead(lead: InsertCrmLead): Promise<CrmLead>;
+  updateCrmLead(id: number, updates: Partial<InsertCrmLead>): Promise<CrmLead | undefined>;
+  deleteCrmLead(id: number): Promise<boolean>;
+
+  // Deal operations
+  getCrmDeal(id: number): Promise<CrmDeal | undefined>;
+  getAllCrmDeals(): Promise<CrmDeal[]>;
+  createCrmDeal(deal: InsertCrmDeal): Promise<CrmDeal>;
+  updateCrmDeal(id: number, updates: Partial<InsertCrmDeal>): Promise<CrmDeal | undefined>;
+  deleteCrmDeal(id: number): Promise<boolean>;
+
+  // Activity operations
+  getCrmActivity(id: number): Promise<CrmActivity | undefined>;
+  getAllCrmActivities(relatedTo?: string, relatedId?: number): Promise<CrmActivity[]>;
+  createCrmActivity(activity: InsertCrmActivity): Promise<CrmActivity>;
+  updateCrmActivity(id: number, updates: Partial<InsertCrmActivity>): Promise<CrmActivity | undefined>;
+  deleteCrmActivity(id: number): Promise<boolean>;
+
+  // CRM Stats
+  getCrmStats(): Promise<{
+    totalCustomers: number;
+    activeLeads: number;
+    pipelineValue: number;
+    conversionRate: number;
+  }>;
 }
 
 export class MemStorage {

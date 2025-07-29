@@ -19,6 +19,10 @@ import {
   insertPettyCashExpenseSchema,
   insertTaskSchema,
   insertPriceComparisonSchema,
+  insertCrmCustomerSchema,
+  insertCrmLeadSchema,
+  insertCrmDealSchema,
+  insertCrmActivitySchema,
 } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -1731,6 +1735,97 @@ export async function registerRoutes(app: Express): Promise<Server> {
         message: "Failed to generate backup", 
         error: error instanceof Error ? error.message : 'Unknown error'
       });
+    }
+  });
+
+  // CRM API Routes - Basic Implementation
+  // CRM Customers
+  app.get("/api/crm/customers", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      res.json([]);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch customers", error });
+    }
+  });
+
+  app.post("/api/crm/customers", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const mockCustomer = { id: Date.now(), ...req.body, createdAt: new Date().toISOString() };
+      res.json(mockCustomer);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to create customer", error });
+    }
+  });
+
+  app.patch("/api/crm/customers/:id", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const mockCustomer = { id: parseInt(req.params.id), ...req.body, updatedAt: new Date().toISOString() };
+      res.json(mockCustomer);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update customer", error });
+    }
+  });
+
+  // CRM Leads
+  app.get("/api/crm/leads", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      res.json([]);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch leads", error });
+    }
+  });
+
+  app.post("/api/crm/leads", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const mockLead = { id: Date.now(), ...req.body, createdAt: new Date().toISOString() };
+      res.json(mockLead);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to create lead", error });
+    }
+  });
+
+  app.patch("/api/crm/leads/:id", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const mockLead = { id: parseInt(req.params.id), ...req.body, updatedAt: new Date().toISOString() };
+      res.json(mockLead);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update lead", error });
+    }
+  });
+
+  // CRM Deals
+  app.get("/api/crm/deals", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      res.json([]);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch deals", error });
+    }
+  });
+
+  app.post("/api/crm/deals", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const mockDeal = { id: Date.now(), ...req.body, createdAt: new Date().toISOString() };
+      res.json(mockDeal);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to create deal", error });
+    }
+  });
+
+  app.patch("/api/crm/deals/:id", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const mockDeal = { id: parseInt(req.params.id), ...req.body, updatedAt: new Date().toISOString() };
+      res.json(mockDeal);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update deal", error });
+    }
+  });
+
+  // CRM Stats
+  app.get("/api/crm/stats", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      res.json({ totalCustomers: 0, activeLeads: 0, pipelineValue: 0, conversionRate: 0 });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch CRM stats", error });
     }
   });
 

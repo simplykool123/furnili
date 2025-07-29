@@ -52,6 +52,71 @@ export const clients = pgTable("clients", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// CRM Tables
+export const crmCustomers = pgTable("crm_customers", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  email: text("email"),
+  phone: text("phone"),
+  company: text("company"),
+  address: text("address"),
+  status: text("status").default("prospect"), // active, inactive, prospect
+  totalOrders: integer("total_orders").default(0),
+  totalValue: real("total_value").default(0),
+  lastContact: timestamp("last_contact"),
+  source: text("source"), // website, referral, cold call, etc.
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const crmLeads = pgTable("crm_leads", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  email: text("email"),
+  phone: text("phone"),
+  company: text("company"),
+  status: text("status").default("new"), // new, contacted, qualified, proposal, won, lost
+  source: text("source"), // website, referral, advertisement, etc.
+  value: real("value").default(0), // potential deal value
+  assignedTo: text("assigned_to"), // staff member
+  notes: text("notes"),
+  followUpDate: timestamp("follow_up_date"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const crmDeals = pgTable("crm_deals", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  customerId: integer("customer_id").references(() => crmCustomers.id),
+  customerName: text("customer_name"), // denormalized for easier queries
+  value: real("value").notNull(),
+  stage: text("stage").default("prospecting"), // prospecting, qualification, proposal, negotiation, closed-won, closed-lost
+  probability: integer("probability").default(50), // 0-100%
+  expectedCloseDate: timestamp("expected_close_date"),
+  actualCloseDate: timestamp("actual_close_date"),
+  assignedTo: text("assigned_to"), // staff member
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const crmActivities = pgTable("crm_activities", {
+  id: serial("id").primaryKey(),
+  type: text("type").notNull(), // call, email, meeting, note, task
+  subject: text("subject").notNull(),
+  description: text("description"),
+  relatedTo: text("related_to"), // customer, lead, deal
+  relatedId: integer("related_id"),
+  assignedTo: text("assigned_to"),
+  status: text("status").default("pending"), // pending, completed, cancelled
+  dueDate: timestamp("due_date"),
+  completedAt: timestamp("completed_at"),
+  createdBy: integer("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const products = pgTable("products", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
@@ -317,6 +382,30 @@ export const insertClientSchema = createInsertSchema(clients).omit({
   updatedAt: true,
 });
 
+// CRM Insert Schemas
+export const insertCrmCustomerSchema = createInsertSchema(crmCustomers).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertCrmLeadSchema = createInsertSchema(crmLeads).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertCrmDealSchema = createInsertSchema(crmDeals).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertCrmActivitySchema = createInsertSchema(crmActivities).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -346,6 +435,16 @@ export type BOQUpload = typeof boqUploads.$inferSelect;
 export type InsertBOQUpload = z.infer<typeof insertBOQUploadSchema>;
 export type StockMovement = typeof stockMovements.$inferSelect;
 export type InsertStockMovement = z.infer<typeof insertStockMovementSchema>;
+
+// CRM Types
+export type CrmCustomer = typeof crmCustomers.$inferSelect;
+export type InsertCrmCustomer = z.infer<typeof insertCrmCustomerSchema>;
+export type CrmLead = typeof crmLeads.$inferSelect;
+export type InsertCrmLead = z.infer<typeof insertCrmLeadSchema>;
+export type CrmDeal = typeof crmDeals.$inferSelect;
+export type InsertCrmDeal = z.infer<typeof insertCrmDealSchema>;
+export type CrmActivity = typeof crmActivities.$inferSelect;  
+export type InsertCrmActivity = z.infer<typeof insertCrmActivitySchema>;
 
 // Extended types for API responses
 export type MaterialRequestWithItems = MaterialRequest & {

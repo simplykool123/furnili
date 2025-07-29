@@ -37,6 +37,7 @@ const navigation = [
   { name: 'Task Management', href: '/tasks', icon: CheckSquare, roles: ['admin', 'staff'] },
   { name: 'Product Comparison', href: '/product-comparison', icon: GitCompare, roles: ['admin'] }, // Staff disabled
   { name: 'WhatsApp Export', href: '/whatsapp', icon: MessageCircle, roles: ['admin', 'staff'] },
+  { name: 'CRM', href: '/crm', icon: Users, roles: ['admin', 'staff'] },
   { name: 'Reports', href: '/reports', icon: BarChart3, roles: ['admin', 'staff'] },
   { 
     name: 'Master', 

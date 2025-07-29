@@ -26,6 +26,7 @@ import WhatsAppExport from "@/pages/WhatsAppExport";
 import InventoryMovement from "@/pages/InventoryMovement";
 import DisplaySettings from "@/pages/DisplaySettings";
 import Backups from "@/pages/Backups";
+import CRM from "@/pages/CRM";
 import NotFound from "@/pages/not-found";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -250,6 +251,17 @@ function Router() {
         <ProtectedRoute>
           <Layout>
             <Backups />
+          </Layout>
+        </ProtectedRoute>
+      </Route>
+
+      <Route path="/crm">
+        <ProtectedRoute>
+          <Layout 
+            title="Customer Relationship Management" 
+            subtitle="Manage customers, leads, deals and activities"
+          >
+            <CRM />
           </Layout>
         </ProtectedRoute>
       </Route>
