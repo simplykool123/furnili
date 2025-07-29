@@ -51,14 +51,40 @@ export default function Projects() {
   const [clientFilter, setClientFilter] = useState("all");
   const [activeTab, setActiveTab] = useState("client");
 
-  const { data: projects = [], isLoading } = useQuery({
+  const { data: projects = [], isLoading, error: projectsError } = useQuery({
     queryKey: ['/api/projects'],
-    queryFn: () => fetch('/api/projects').then(res => res.json())
+    queryFn: async () => {
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/projects', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      if (!response.ok) {
+        throw new Error(`Failed to fetch projects: ${response.status}`);
+      }
+      const data = await response.json();
+      return Array.isArray(data) ? data : [];
+    }
   });
 
-  const { data: clients = [] } = useQuery({
+  const { data: clients = [], error: clientsError } = useQuery({
     queryKey: ['/api/clients'],
-    queryFn: () => fetch('/api/clients').then(res => res.json())
+    queryFn: async () => {
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/clients', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      if (!response.ok) {
+        throw new Error(`Failed to fetch clients: ${response.status}`);
+      }
+      const data = await response.json();
+      return Array.isArray(data) ? data : [];
+    }
   });
 
   const createProjectMutation = useMutation({
@@ -137,13 +163,13 @@ export default function Projects() {
     createClientMutation.mutate(data);
   };
 
-  const filteredProjects = projects.filter((project: Project) => {
-    const matchesSearch = project.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  const filteredProjects = Array.isArray(projects) ? projects.filter((project: Project) => {
+    const matchesSearch = project.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          project.code?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStage = stageFilter === "all" || project.stage === stageFilter;
-    const matchesClient = clientFilter === "all" || project.clientId.toString() === clientFilter;
+    const matchesClient = clientFilter === "all" || project.clientId?.toString() === clientFilter;
     return matchesSearch && matchesStage && matchesClient;
-  });
+  }) : [];
 
   const getStageBadge = (stage: string) => {
     const stageColors = {
@@ -168,6 +194,25 @@ export default function Projects() {
         <div className="animate-pulse space-y-4">
           <div className="h-8 bg-gray-200 rounded w-1/4"></div>
           <div className="h-64 bg-gray-200 rounded"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (projectsError || clientsError) {
+    return (
+      <div className="p-8">
+        <div className="text-center py-8">
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">Error Loading Data</h3>
+          <p className="text-gray-500 mb-4">
+            {projectsError?.message || clientsError?.message || "Failed to load project data"}
+          </p>
+          <Button onClick={() => {
+            queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
+            queryClient.invalidateQueries({ queryKey: ['/api/clients'] });
+          }}>
+            Retry
+          </Button>
         </div>
       </div>
     );
