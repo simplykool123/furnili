@@ -27,6 +27,12 @@ import InventoryMovement from "@/pages/InventoryMovement";
 import DisplaySettings from "@/pages/DisplaySettings";
 import Backups from "@/pages/Backups";
 import CRM from "@/pages/CRM";
+import Leads from "@/pages/CRM/Leads";
+import Customers from "@/pages/CRM/Customers";
+import Quotations from "@/pages/CRM/Quotations";
+import FollowUps from "@/pages/CRM/FollowUps";
+import SiteVisits from "@/pages/CRM/SiteVisits";
+import CRMReports from "@/pages/CRM/CRMReports";
 import NotFound from "@/pages/not-found";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -262,6 +268,54 @@ function Router() {
             subtitle="Manage customers, leads, deals and activities"
           >
             <CRM />
+          </Layout>
+        </ProtectedRoute>
+      </Route>
+
+      <Route path="/crm/leads">
+        <ProtectedRoute>
+          <Layout>
+            <Leads />
+          </Layout>
+        </ProtectedRoute>
+      </Route>
+
+      <Route path="/crm/customers">
+        <ProtectedRoute>
+          <Layout>
+            <Customers />
+          </Layout>
+        </ProtectedRoute>
+      </Route>
+
+      <Route path="/crm/quotations">
+        <ProtectedRoute>
+          <Layout>
+            <Quotations />
+          </Layout>
+        </ProtectedRoute>
+      </Route>
+
+      <Route path="/crm/followups">
+        <ProtectedRoute>
+          <Layout>
+            <FollowUps />
+          </Layout>
+        </ProtectedRoute>
+      </Route>
+
+      <Route path="/crm/visits">
+        <ProtectedRoute>
+          <Layout>
+            <SiteVisits />
+          </Layout>
+        </ProtectedRoute>
+      </Route>
+
+      <Route path="/crm/reports">
+        <ProtectedRoute>
+          <Layout>
+            <CRMReports />
           </Layout>
         </ProtectedRoute>
       </Route>

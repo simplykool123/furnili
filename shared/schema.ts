@@ -117,6 +117,59 @@ export const crmActivities = pgTable("crm_activities", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const crmQuotations = pgTable("crm_quotations", {
+  id: serial("id").primaryKey(),
+  quotationNumber: text("quotation_number").notNull().unique(),
+  customerName: text("customer_name").notNull(),
+  customerPhone: text("customer_phone"),
+  customerEmail: text("customer_email"),
+  items: jsonb("items").default([]),
+  subtotal: real("subtotal").default(0),
+  discount: real("discount").default(0),
+  gst: real("gst").default(18),
+  totalAmount: real("total_amount").default(0),
+  status: text("status").default("draft"), // draft, sent, accepted, rejected
+  validUntil: timestamp("valid_until"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const crmFollowUps = pgTable("crm_followups", {
+  id: serial("id").primaryKey(),
+  leadCustomerName: text("lead_customer_name").notNull(),
+  leadCustomerPhone: text("lead_customer_phone"),
+  followUpDate: timestamp("follow_up_date").notNull(),
+  followUpTime: text("follow_up_time"),
+  method: text("method").default("call"), // call, visit, whatsapp, email
+  staffAssigned: text("staff_assigned"),
+  notes: text("notes"),
+  status: text("status").default("pending"), // pending, completed, missed
+  outcome: text("outcome"),
+  nextFollowUp: timestamp("next_follow_up"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const crmSiteVisits = pgTable("crm_site_visits", {
+  id: serial("id").primaryKey(),
+  clientName: text("client_name").notNull(),
+  clientPhone: text("client_phone"),
+  address: text("address").notNull(),
+  locationLink: text("location_link"),
+  assignedTo: text("assigned_to"),
+  visitDate: timestamp("visit_date").notNull(),
+  visitTime: text("visit_time"),
+  purpose: text("purpose"),
+  status: text("status").default("scheduled"), // scheduled, in-progress, completed, cancelled
+  outcome: text("outcome"),
+  notes: text("notes"),
+  followUpRequired: boolean("follow_up_required").default(false),
+  nextVisitDate: timestamp("next_visit_date"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 export const products = pgTable("products", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
@@ -406,6 +459,24 @@ export const insertCrmActivitySchema = createInsertSchema(crmActivities).omit({
   createdAt: true,
 });
 
+export const insertCrmQuotationSchema = createInsertSchema(crmQuotations).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertCrmFollowUpSchema = createInsertSchema(crmFollowUps).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertCrmSiteVisitSchema = createInsertSchema(crmSiteVisits).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -445,6 +516,12 @@ export type CrmDeal = typeof crmDeals.$inferSelect;
 export type InsertCrmDeal = z.infer<typeof insertCrmDealSchema>;
 export type CrmActivity = typeof crmActivities.$inferSelect;  
 export type InsertCrmActivity = z.infer<typeof insertCrmActivitySchema>;
+export type CrmQuotation = typeof crmQuotations.$inferSelect;
+export type InsertCrmQuotation = z.infer<typeof insertCrmQuotationSchema>;
+export type CrmFollowUp = typeof crmFollowUps.$inferSelect;
+export type InsertCrmFollowUp = z.infer<typeof insertCrmFollowUpSchema>;
+export type CrmSiteVisit = typeof crmSiteVisits.$inferSelect;
+export type InsertCrmSiteVisit = z.infer<typeof insertCrmSiteVisitSchema>;
 
 // Extended types for API responses
 export type MaterialRequestWithItems = MaterialRequest & {

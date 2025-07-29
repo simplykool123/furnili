@@ -23,6 +23,9 @@ import {
   insertCrmLeadSchema,
   insertCrmDealSchema,
   insertCrmActivitySchema,
+  insertCrmQuotationSchema,
+  insertCrmFollowUpSchema,
+  insertCrmSiteVisitSchema,
 } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -1856,6 +1859,168 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Failed to update deal:", error);
       res.status(500).json({ message: "Failed to update deal", error: String(error) });
+    }
+  });
+
+  // CRM Quotations Routes
+  app.get("/api/crm/quotations", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const quotations = await storage.getAllCrmQuotations();
+      res.json(quotations);
+    } catch (error) {
+      console.error("Failed to fetch quotations:", error);
+      res.status(500).json({ message: "Failed to fetch quotations", error });
+    }
+  });
+
+  app.post("/api/crm/quotations", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const quotationData = insertCrmQuotationSchema.parse(req.body);
+      const quotation = await storage.createCrmQuotation(quotationData);
+      res.json(quotation);
+    } catch (error) {
+      console.error("Failed to create quotation:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Validation failed", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create quotation", error: String(error) });
+    }
+  });
+
+  app.patch("/api/crm/quotations/:id", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const quotationId = parseInt(req.params.id);
+      const updates = req.body;
+      const quotation = await storage.updateCrmQuotation(quotationId, updates);
+      if (!quotation) {
+        return res.status(404).json({ message: "Quotation not found" });
+      }
+      res.json(quotation);
+    } catch (error) {
+      console.error("Failed to update quotation:", error);
+      res.status(500).json({ message: "Failed to update quotation", error: String(error) });
+    }
+  });
+
+  app.delete("/api/crm/quotations/:id", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const quotationId = parseInt(req.params.id);
+      const success = await storage.deleteCrmQuotation(quotationId);
+      if (!success) {
+        return res.status(404).json({ message: "Quotation not found" });
+      }
+      res.json({ message: "Quotation deleted successfully" });
+    } catch (error) {
+      console.error("Failed to delete quotation:", error);
+      res.status(500).json({ message: "Failed to delete quotation", error: String(error) });
+    }
+  });
+
+  // CRM Follow-ups Routes
+  app.get("/api/crm/followups", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const followUps = await storage.getAllCrmFollowUps();
+      res.json(followUps);
+    } catch (error) {
+      console.error("Failed to fetch follow-ups:", error);
+      res.status(500).json({ message: "Failed to fetch follow-ups", error });
+    }
+  });
+
+  app.post("/api/crm/followups", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const followUpData = insertCrmFollowUpSchema.parse(req.body);
+      const followUp = await storage.createCrmFollowUp(followUpData);
+      res.json(followUp);
+    } catch (error) {
+      console.error("Failed to create follow-up:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Validation failed", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create follow-up", error: String(error) });
+    }
+  });
+
+  app.patch("/api/crm/followups/:id", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const followUpId = parseInt(req.params.id);
+      const updates = req.body;
+      const followUp = await storage.updateCrmFollowUp(followUpId, updates);
+      if (!followUp) {
+        return res.status(404).json({ message: "Follow-up not found" });
+      }
+      res.json(followUp);
+    } catch (error) {
+      console.error("Failed to update follow-up:", error);
+      res.status(500).json({ message: "Failed to update follow-up", error: String(error) });
+    }
+  });
+
+  app.delete("/api/crm/followups/:id", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const followUpId = parseInt(req.params.id);
+      const success = await storage.deleteCrmFollowUp(followUpId);
+      if (!success) {
+        return res.status(404).json({ message: "Follow-up not found" });
+      }
+      res.json({ message: "Follow-up deleted successfully" });
+    } catch (error) {
+      console.error("Failed to delete follow-up:", error);
+      res.status(500).json({ message: "Failed to delete follow-up", error: String(error) });
+    }
+  });
+
+  // CRM Site Visits Routes
+  app.get("/api/crm/visits", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const visits = await storage.getAllCrmSiteVisits();
+      res.json(visits);
+    } catch (error) {
+      console.error("Failed to fetch site visits:", error);
+      res.status(500).json({ message: "Failed to fetch site visits", error });
+    }
+  });
+
+  app.post("/api/crm/visits", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const visitData = insertCrmSiteVisitSchema.parse(req.body);
+      const visit = await storage.createCrmSiteVisit(visitData);
+      res.json(visit);
+    } catch (error) {
+      console.error("Failed to create site visit:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Validation failed", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create site visit", error: String(error) });
+    }
+  });
+
+  app.patch("/api/crm/visits/:id", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const visitId = parseInt(req.params.id);
+      const updates = req.body;
+      const visit = await storage.updateCrmSiteVisit(visitId, updates);
+      if (!visit) {
+        return res.status(404).json({ message: "Site visit not found" });
+      }
+      res.json(visit);
+    } catch (error) {
+      console.error("Failed to update site visit:", error);
+      res.status(500).json({ message: "Failed to update site visit", error: String(error) });
+    }
+  });
+
+  app.delete("/api/crm/visits/:id", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const visitId = parseInt(req.params.id);
+      const success = await storage.deleteCrmSiteVisit(visitId);
+      if (!success) {
+        return res.status(404).json({ message: "Site visit not found" });
+      }
+      res.json({ message: "Site visit deleted successfully" });
+    } catch (error) {
+      console.error("Failed to delete site visit:", error);
+      res.status(500).json({ message: "Failed to delete site visit", error: String(error) });
     }
   });
 

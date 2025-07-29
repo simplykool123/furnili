@@ -17,6 +17,9 @@ import {
   crmLeads,
   crmDeals,
   crmActivities,
+  crmQuotations,
+  crmFollowUps,
+  crmSiteVisits,
   type User,
   type InsertUser,
   type Category,
@@ -53,6 +56,12 @@ import {
   type InsertCrmDeal,
   type CrmActivity,
   type InsertCrmActivity,
+  type CrmQuotation,
+  type InsertCrmQuotation,
+  type CrmFollowUp,
+  type InsertCrmFollowUp,
+  type CrmSiteVisit,
+  type InsertCrmSiteVisit,
   type MaterialRequestWithItems,
   type ProductWithStock,
   type BOQExtractedItem,
@@ -247,6 +256,27 @@ export interface IStorage {
   createCrmActivity(activity: InsertCrmActivity): Promise<CrmActivity>;
   updateCrmActivity(id: number, updates: Partial<InsertCrmActivity>): Promise<CrmActivity | undefined>;
   deleteCrmActivity(id: number): Promise<boolean>;
+
+  // CRM Quotations
+  getCrmQuotation(id: number): Promise<CrmQuotation | undefined>;
+  getAllCrmQuotations(): Promise<CrmQuotation[]>;
+  createCrmQuotation(quotation: InsertCrmQuotation): Promise<CrmQuotation>;
+  updateCrmQuotation(id: number, updates: Partial<InsertCrmQuotation>): Promise<CrmQuotation | undefined>;
+  deleteCrmQuotation(id: number): Promise<boolean>;
+
+  // CRM Follow-ups
+  getCrmFollowUp(id: number): Promise<CrmFollowUp | undefined>;
+  getAllCrmFollowUps(): Promise<CrmFollowUp[]>;
+  createCrmFollowUp(followUp: InsertCrmFollowUp): Promise<CrmFollowUp>;
+  updateCrmFollowUp(id: number, updates: Partial<InsertCrmFollowUp>): Promise<CrmFollowUp | undefined>;
+  deleteCrmFollowUp(id: number): Promise<boolean>;
+
+  // CRM Site Visits
+  getCrmSiteVisit(id: number): Promise<CrmSiteVisit | undefined>;
+  getAllCrmSiteVisits(): Promise<CrmSiteVisit[]>;
+  createCrmSiteVisit(visit: InsertCrmSiteVisit): Promise<CrmSiteVisit>;
+  updateCrmSiteVisit(id: number, updates: Partial<InsertCrmSiteVisit>): Promise<CrmSiteVisit | undefined>;
+  deleteCrmSiteVisit(id: number): Promise<boolean>;
 
   getCrmStats(): Promise<{
     totalCustomers: number;
@@ -2817,6 +2847,165 @@ class DatabaseStorage implements IStorage {
       return result.rowCount !== null && result.rowCount > 0;
     } catch (error) {
       console.error('Error deleting CRM activity:', error);
+      return false;
+    }
+  }
+
+  // CRM Quotations Operations
+  async getCrmQuotation(id: number): Promise<CrmQuotation | undefined> {
+    try {
+      const result = await db.select().from(crmQuotations).where(eq(crmQuotations.id, id));
+      return result[0];
+    } catch (error) {
+      console.error('Error getting CRM quotation:', error);
+      return undefined;
+    }
+  }
+
+  async getAllCrmQuotations(): Promise<CrmQuotation[]> {
+    try {
+      return await db.select().from(crmQuotations).orderBy(desc(crmQuotations.createdAt));
+    } catch (error) {
+      console.error('Error getting all CRM quotations:', error);
+      return [];
+    }
+  }
+
+  async createCrmQuotation(quotation: InsertCrmQuotation): Promise<CrmQuotation> {
+    try {
+      const result = await db.insert(crmQuotations).values(quotation).returning();
+      return result[0];
+    } catch (error) {
+      console.error('Error creating CRM quotation:', error);
+      throw error;
+    }
+  }
+
+  async updateCrmQuotation(id: number, updates: Partial<InsertCrmQuotation>): Promise<CrmQuotation | undefined> {
+    try {
+      const result = await db.update(crmQuotations)
+        .set({ ...updates, updatedAt: new Date() })
+        .where(eq(crmQuotations.id, id))
+        .returning();
+      return result[0];
+    } catch (error) {
+      console.error('Error updating CRM quotation:', error);
+      return undefined;
+    }
+  }
+
+  async deleteCrmQuotation(id: number): Promise<boolean> {
+    try {
+      const result = await db.delete(crmQuotations).where(eq(crmQuotations.id, id));
+      return result.rowCount !== null && result.rowCount > 0;
+    } catch (error) {
+      console.error('Error deleting CRM quotation:', error);
+      return false;
+    }
+  }
+
+  // CRM Follow-ups Operations
+  async getCrmFollowUp(id: number): Promise<CrmFollowUp | undefined> {
+    try {
+      const result = await db.select().from(crmFollowUps).where(eq(crmFollowUps.id, id));
+      return result[0];
+    } catch (error) {
+      console.error('Error getting CRM follow-up:', error);
+      return undefined;
+    }
+  }
+
+  async getAllCrmFollowUps(): Promise<CrmFollowUp[]> {
+    try {
+      return await db.select().from(crmFollowUps).orderBy(crmFollowUps.followUpDate);
+    } catch (error) {
+      console.error('Error getting all CRM follow-ups:', error);
+      return [];
+    }
+  }
+
+  async createCrmFollowUp(followUp: InsertCrmFollowUp): Promise<CrmFollowUp> {
+    try {
+      const result = await db.insert(crmFollowUps).values(followUp).returning();
+      return result[0];
+    } catch (error) {
+      console.error('Error creating CRM follow-up:', error);
+      throw error;
+    }
+  }
+
+  async updateCrmFollowUp(id: number, updates: Partial<InsertCrmFollowUp>): Promise<CrmFollowUp | undefined> {
+    try {
+      const result = await db.update(crmFollowUps)
+        .set({ ...updates, updatedAt: new Date() })
+        .where(eq(crmFollowUps.id, id))
+        .returning();
+      return result[0];
+    } catch (error) {
+      console.error('Error updating CRM follow-up:', error);
+      return undefined;
+    }
+  }
+
+  async deleteCrmFollowUp(id: number): Promise<boolean> {
+    try {
+      const result = await db.delete(crmFollowUps).where(eq(crmFollowUps.id, id));
+      return result.rowCount !== null && result.rowCount > 0;
+    } catch (error) {
+      console.error('Error deleting CRM follow-up:', error);
+      return false;
+    }
+  }
+
+  // CRM Site Visits Operations
+  async getCrmSiteVisit(id: number): Promise<CrmSiteVisit | undefined> {
+    try {
+      const result = await db.select().from(crmSiteVisits).where(eq(crmSiteVisits.id, id));
+      return result[0];
+    } catch (error) {
+      console.error('Error getting CRM site visit:', error);
+      return undefined;
+    }
+  }
+
+  async getAllCrmSiteVisits(): Promise<CrmSiteVisit[]> {
+    try {
+      return await db.select().from(crmSiteVisits).orderBy(crmSiteVisits.visitDate);
+    } catch (error) {
+      console.error('Error getting all CRM site visits:', error);
+      return [];
+    }
+  }
+
+  async createCrmSiteVisit(visit: InsertCrmSiteVisit): Promise<CrmSiteVisit> {
+    try {
+      const result = await db.insert(crmSiteVisits).values(visit).returning();
+      return result[0];
+    } catch (error) {
+      console.error('Error creating CRM site visit:', error);
+      throw error;
+    }
+  }
+
+  async updateCrmSiteVisit(id: number, updates: Partial<InsertCrmSiteVisit>): Promise<CrmSiteVisit | undefined> {
+    try {
+      const result = await db.update(crmSiteVisits)
+        .set({ ...updates, updatedAt: new Date() })
+        .where(eq(crmSiteVisits.id, id))
+        .returning();
+      return result[0];
+    } catch (error) {
+      console.error('Error updating CRM site visit:', error);
+      return undefined;
+    }
+  }
+
+  async deleteCrmSiteVisit(id: number): Promise<boolean> {
+    try {
+      const result = await db.delete(crmSiteVisits).where(eq(crmSiteVisits.id, id));
+      return result.rowCount !== null && result.rowCount > 0;
+    } catch (error) {
+      console.error('Error deleting CRM site visit:', error);
       return false;
     }
   }
