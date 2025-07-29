@@ -54,7 +54,7 @@ export default function Projects() {
   const { data: projects = [], isLoading, error: projectsError } = useQuery({
     queryKey: ['/api/projects'],
     queryFn: async () => {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('authToken') || localStorage.getItem('token');
       const response = await fetch('/api/projects', {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -72,7 +72,7 @@ export default function Projects() {
   const { data: clients = [], error: clientsError } = useQuery({
     queryKey: ['/api/clients'],
     queryFn: async () => {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('authToken') || localStorage.getItem('token');
       const response = await fetch('/api/clients', {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -218,7 +218,9 @@ export default function Projects() {
           {isAuthError ? (
             <Button onClick={() => {
               localStorage.removeItem('token');
+              localStorage.removeItem('authToken');
               localStorage.removeItem('user');
+              localStorage.removeItem('authUser');
               window.location.replace('/login');
             }}>
               Go to Login
