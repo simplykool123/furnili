@@ -47,20 +47,15 @@ export default function Leads() {
   // Fetch leads
   const { data: leads = [], isLoading } = useQuery({
     queryKey: ['/api/crm/leads'],
-    queryFn: async () => {
-      const response = await authenticatedApiRequest('GET', '/api/crm/leads');
-      return response.json();
-    }
+    queryFn: () => authenticatedApiRequest('GET', '/api/crm/leads')
   });
 
   // Mutation for creating/updating leads
   const leadMutation = useMutation({
-    mutationFn: async (data: any) => {
+    mutationFn: (data: any) => {
       const url = editingLead ? `/api/crm/leads/${editingLead.id}` : '/api/crm/leads';
       const method = editingLead ? 'PATCH' : 'POST';
-      
-      const response = await authenticatedApiRequest(method, url, data);
-      return response.json();
+      return authenticatedApiRequest(method, url, data);
     },
     onSuccess: () => {
       toast({

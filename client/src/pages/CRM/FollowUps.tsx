@@ -51,20 +51,15 @@ export default function FollowUps() {
   // Fetch follow-ups
   const { data: followUps = [], isLoading } = useQuery({
     queryKey: ['/api/crm/followups'],
-    queryFn: async () => {
-      const response = await authenticatedApiRequest('GET', '/api/crm/followups');
-      return response.json();
-    }
+    queryFn: () => authenticatedApiRequest('GET', '/api/crm/followups')
   });
 
   // Mutation for creating/updating follow-ups
   const followUpMutation = useMutation({
-    mutationFn: async (data: any) => {
+    mutationFn: (data: any) => {
       const url = editingFollowUp ? `/api/crm/followups/${editingFollowUp.id}` : '/api/crm/followups';
       const method = editingFollowUp ? 'PATCH' : 'POST';
-      
-      const response = await authenticatedApiRequest(method, url, data);
-      return response.json();
+      return authenticatedApiRequest(method, url, data);
     },
     onSuccess: () => {
       toast({

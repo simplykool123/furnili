@@ -50,20 +50,15 @@ export default function SiteVisits() {
   // Fetch site visits
   const { data: siteVisits = [], isLoading } = useQuery({
     queryKey: ['/api/crm/visits'],
-    queryFn: async () => {
-      const response = await authenticatedApiRequest('GET', '/api/crm/visits');
-      return response.json();
-    }
+    queryFn: () => authenticatedApiRequest('GET', '/api/crm/visits')
   });
 
   // Mutation for creating/updating site visits
   const visitMutation = useMutation({
-    mutationFn: async (data: any) => {
+    mutationFn: (data: any) => {
       const url = editingVisit ? `/api/crm/visits/${editingVisit.id}` : '/api/crm/visits';
       const method = editingVisit ? 'PATCH' : 'POST';
-      
-      const response = await authenticatedApiRequest(method, url, data);
-      return response.json();
+      return authenticatedApiRequest(method, url, data);
     },
     onSuccess: () => {
       toast({

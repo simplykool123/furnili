@@ -18,34 +18,22 @@ export default function CRMReports() {
   // Fetch CRM statistics and data
   const { data: crmStats } = useQuery({
     queryKey: ['/api/crm/stats'],
-    queryFn: async () => {
-      const response = await authenticatedApiRequest('GET', '/api/crm/stats');
-      return response.json();
-    }
+    queryFn: () => authenticatedApiRequest('GET', '/api/crm/stats')
   });
 
   const { data: leadsData } = useQuery({
     queryKey: ['/api/crm/leads'],
-    queryFn: async () => {
-      const response = await authenticatedApiRequest('GET', '/api/crm/leads');
-      return response.json();
-    }
+    queryFn: () => authenticatedApiRequest('GET', '/api/crm/leads')
   });
 
   const { data: customersData } = useQuery({
     queryKey: ['/api/crm/customers'],
-    queryFn: async () => {
-      const response = await authenticatedApiRequest('GET', '/api/crm/customers');
-      return response.json();
-    }
+    queryFn: () => authenticatedApiRequest('GET', '/api/crm/customers')
   });
 
   const { data: dealsData } = useQuery({
     queryKey: ['/api/crm/deals'],
-    queryFn: async () => {
-      const response = await authenticatedApiRequest('GET', '/api/crm/deals');
-      return response.json();
-    }
+    queryFn: () => authenticatedApiRequest('GET', '/api/crm/deals')
   });
 
   // Process data for charts

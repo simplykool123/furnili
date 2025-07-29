@@ -50,20 +50,15 @@ export default function Customers() {
   // Fetch customers
   const { data: customers = [], isLoading } = useQuery({
     queryKey: ['/api/crm/customers'],
-    queryFn: async () => {
-      const response = await authenticatedApiRequest('GET', '/api/crm/customers');
-      return response.json();
-    }
+    queryFn: () => authenticatedApiRequest('GET', '/api/crm/customers')
   });
 
   // Mutation for creating/updating customers
   const customerMutation = useMutation({
-    mutationFn: async (data: any) => {
+    mutationFn: (data: any) => {
       const url = editingCustomer ? `/api/crm/customers/${editingCustomer.id}` : '/api/crm/customers';
       const method = editingCustomer ? 'PATCH' : 'POST';
-      
-      const response = await authenticatedApiRequest(method, url, data);
-      return response.json();
+      return authenticatedApiRequest(method, url, data);
     },
     onSuccess: () => {
       toast({

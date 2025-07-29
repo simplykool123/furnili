@@ -59,25 +59,21 @@ export default function Quotations() {
   // Fetch quotations
   const { data: quotations = [], isLoading } = useQuery({
     queryKey: ['/api/crm/quotations'],
-    queryFn: async () => {
-      const response = await authenticatedApiRequest('GET', '/api/crm/quotations');
-      return response.json();
-    }
+    queryFn: () => authenticatedApiRequest('GET', '/api/crm/quotations')
   });
 
   // Mutation for creating/updating quotations
   const quotationMutation = useMutation({
-    mutationFn: async (data: any) => {
+    mutationFn: (data: any) => {
       const url = editingQuotation ? `/api/crm/quotations/${editingQuotation.id}` : '/api/crm/quotations';
       const method = editingQuotation ? 'PATCH' : 'POST';
       
-      const response = await authenticatedApiRequest(method, url, {
+      return authenticatedApiRequest(method, url, {
         ...data,
         items: quotationItems,
         subtotal: calculateSubtotal(),
         totalAmount: calculateTotal()
       });
-      return response.json();
     },
     onSuccess: () => {
       toast({
