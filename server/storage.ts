@@ -2650,6 +2650,59 @@ class DatabaseStorage implements IStorage {
       .returning();
     return result[0];
   }
+
+  // Project Management Operations - Phase 1 Implementation
+  async getProject(id: number): Promise<Project | undefined> {
+    const result = await db.select().from(projects).where(eq(projects.id, id)).limit(1);
+    return result[0];
+  }
+
+  async getAllProjects(filters?: { status?: string; clientId?: number; projectManager?: string }): Promise<Project[]> {
+    let query = db.select().from(projects);
+    
+    if (filters?.status) {
+      query = query.where(eq(projects.status, filters.status));
+    }
+    
+    if (filters?.clientId) {
+      query = query.where(eq(projects.clientId, filters.clientId));
+    }
+    
+    if (filters?.projectManager) {
+      query = query.where(eq(projects.projectManager, filters.projectManager));
+    }
+    
+    return query.where(eq(projects.isActive, true)).orderBy(desc(projects.createdAt));
+  }
+
+  async createProject(project: InsertProject): Promise<Project> {
+    // Auto-generate project code
+    const maxProject = await db.select({ maxId: sql<number>`MAX(id)` }).from(projects);
+    const nextId = (maxProject[0]?.maxId || 0) + 1;
+    const projectCode = `P-${nextId}`;
+    
+    const result = await db.insert(projects).values({
+      ...project,
+      code: projectCode,
+    }).returning();
+    return result[0];
+  }
+
+  async updateProject(id: number, updates: Partial<InsertProject>): Promise<Project | undefined> {
+    const result = await db.update(projects)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(projects.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteProject(id: number): Promise<boolean> {
+    // Soft delete by setting isActive to false
+    const result = await db.update(projects)
+      .set({ isActive: false })
+      .where(eq(projects.id, id));
+    return result.rowCount > 0;
+  }
   async getLeave(id: number): Promise<Leave | undefined> { return undefined; }
   async getUserLeaves(userId: number): Promise<Leave[]> { return []; }
   async getAllLeaves(): Promise<Leave[]> { return []; }
