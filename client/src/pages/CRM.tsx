@@ -456,18 +456,89 @@ export default function CRM() {
           </Card>
         </TabsContent>
 
-        {/* Similar tabs for Leads and Deals would continue here... */}
+        {/* Leads Tab */}
         <TabsContent value="leads" className="space-y-4">
           <div className="flex justify-between items-center">
             <h2 className="text-xl font-semibold">Leads</h2>
-            <Button onClick={() => {
-              setEditingItem(null);
-              leadForm.reset();
-              setIsLeadDialogOpen(true);
-            }}>
-              <Plus className="w-4 h-4 mr-2" />
-              Add Lead
-            </Button>
+            <Dialog open={isLeadDialogOpen} onOpenChange={setIsLeadDialogOpen}>
+              <DialogTrigger asChild>
+                <Button onClick={() => {
+                  setEditingItem(null);
+                  leadForm.reset();
+                }}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Lead
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>{editingItem ? 'Edit' : 'Add'} Lead</DialogTitle>
+                  <DialogDescription>
+                    {editingItem ? 'Update lead information and status.' : 'Create a new lead with contact information and value.'}
+                  </DialogDescription>
+                </DialogHeader>
+                <form onSubmit={leadForm.handleSubmit((data) => leadMutation.mutate(data))} className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="name">Name</Label>
+                      <Input {...leadForm.register('name', { required: true })} placeholder="Lead name" />
+                    </div>
+                    <div>
+                      <Label htmlFor="email">Email</Label>
+                      <Input {...leadForm.register('email')} type="email" placeholder="Email address" />
+                    </div>
+                    <div>
+                      <Label htmlFor="phone">Phone</Label>
+                      <Input {...leadForm.register('phone')} placeholder="Phone number" />
+                    </div>
+                    <div>
+                      <Label htmlFor="company">Company</Label>
+                      <Input {...leadForm.register('company')} placeholder="Company name" />
+                    </div>
+                    <div>
+                      <Label htmlFor="value">Value</Label>
+                      <Input {...leadForm.register('value')} type="number" placeholder="Lead value" />
+                    </div>
+                    <div>
+                      <Label htmlFor="status">Status</Label>
+                      <Select onValueChange={(value) => leadForm.setValue('status', value)}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="new">New</SelectItem>
+                          <SelectItem value="contacted">Contacted</SelectItem>
+                          <SelectItem value="qualified">Qualified</SelectItem>
+                          <SelectItem value="proposal">Proposal</SelectItem>
+                          <SelectItem value="won">Won</SelectItem>
+                          <SelectItem value="lost">Lost</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="source">Source</Label>
+                      <Input {...leadForm.register('source')} placeholder="e.g., Website, Referral" />
+                    </div>
+                    <div>
+                      <Label htmlFor="assignedTo">Assigned To</Label>
+                      <Input {...leadForm.register('assignedTo')} placeholder="Assigned person" />
+                    </div>
+                  </div>
+                  <div>
+                    <Label htmlFor="notes">Notes</Label>
+                    <Textarea {...leadForm.register('notes')} placeholder="Additional notes" />
+                  </div>
+                  <div className="flex justify-end space-x-2">
+                    <Button type="button" variant="outline" onClick={() => setIsLeadDialogOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button type="submit" disabled={leadMutation.isPending}>
+                      {leadMutation.isPending ? 'Saving...' : 'Save'}
+                    </Button>
+                  </div>
+                </form>
+              </DialogContent>
+            </Dialog>
           </div>
           
           <Card>
@@ -512,14 +583,81 @@ export default function CRM() {
         <TabsContent value="deals" className="space-y-4">
           <div className="flex justify-between items-center">
             <h2 className="text-xl font-semibold">Deals</h2>
-            <Button onClick={() => {
-              setEditingItem(null);
-              dealForm.reset();
-              setIsDealDialogOpen(true);
-            }}>
-              <Plus className="w-4 h-4 mr-2" />
-              Add Deal
-            </Button>
+            <Dialog open={isDealDialogOpen} onOpenChange={setIsDealDialogOpen}>
+              <DialogTrigger asChild>
+                <Button onClick={() => {
+                  setEditingItem(null);
+                  dealForm.reset();
+                }}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Deal
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>{editingItem ? 'Edit' : 'Add'} Deal</DialogTitle>
+                  <DialogDescription>
+                    {editingItem ? 'Update deal information and stage.' : 'Create a new deal with title, value, and stage.'}
+                  </DialogDescription>
+                </DialogHeader>
+                <form onSubmit={dealForm.handleSubmit((data) => dealMutation.mutate(data))} className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="title">Title</Label>
+                      <Input {...dealForm.register('title', { required: true })} placeholder="Deal title" />
+                    </div>
+                    <div>
+                      <Label htmlFor="customerName">Customer Name</Label>
+                      <Input {...dealForm.register('customerName')} placeholder="Customer name" />
+                    </div>
+                    <div>
+                      <Label htmlFor="value">Value</Label>
+                      <Input {...dealForm.register('value')} type="number" placeholder="Deal value" />
+                    </div>
+                    <div>
+                      <Label htmlFor="probability">Probability (%)</Label>
+                      <Input {...dealForm.register('probability')} type="number" min="0" max="100" placeholder="Success probability" />
+                    </div>
+                    <div>
+                      <Label htmlFor="stage">Stage</Label>
+                      <Select onValueChange={(value) => dealForm.setValue('stage', value)}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select stage" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="prospecting">Prospecting</SelectItem>
+                          <SelectItem value="qualification">Qualification</SelectItem>
+                          <SelectItem value="proposal">Proposal</SelectItem>
+                          <SelectItem value="negotiation">Negotiation</SelectItem>
+                          <SelectItem value="closed-won">Closed Won</SelectItem>
+                          <SelectItem value="closed-lost">Closed Lost</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="assignedTo">Assigned To</Label>
+                      <Input {...dealForm.register('assignedTo')} placeholder="Assigned person" />
+                    </div>
+                    <div>
+                      <Label htmlFor="expectedCloseDate">Expected Close Date</Label>
+                      <Input {...dealForm.register('expectedCloseDate')} type="date" />
+                    </div>
+                  </div>
+                  <div>
+                    <Label htmlFor="notes">Notes</Label>
+                    <Textarea {...dealForm.register('notes')} placeholder="Additional notes" />
+                  </div>
+                  <div className="flex justify-end space-x-2">
+                    <Button type="button" variant="outline" onClick={() => setIsDealDialogOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button type="submit" disabled={dealMutation.isPending}>
+                      {dealMutation.isPending ? 'Saving...' : 'Save'}
+                    </Button>
+                  </div>
+                </form>
+              </DialogContent>
+            </Dialog>
           </div>
           
           <Card>
