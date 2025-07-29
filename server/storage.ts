@@ -73,7 +73,7 @@ import {
   type BOQExtractedItem,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, desc, gte, lte, sql } from "drizzle-orm";
+import { eq, and, desc, gte, lte, sql, count } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 
 export interface IStorage {
@@ -1915,8 +1915,7 @@ export class MemStorage {
   }
 }
 
-import { db } from "./db";
-import { eq, desc, and, gte, lte, sql, count } from "drizzle-orm";
+// Database imports moved to top to avoid duplicates
 
 class DatabaseStorage implements IStorage {
   // User operations
