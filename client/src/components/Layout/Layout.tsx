@@ -3,6 +3,7 @@ import Sidebar from "./Sidebar";
 import Header from "./Header";
 import { authService } from "@/lib/auth";
 import MobileOptimizer from "@/components/Mobile/MobileOptimizer";
+import { cn } from "@/lib/utils";
 
 interface LayoutProps {
   children: ReactNode;
@@ -21,6 +22,10 @@ export default function Layout({
 }: LayoutProps) {
   const user = authService.getUser();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    // Load collapsed state from localStorage
+    return localStorage.getItem('sidebarCollapsed') === 'true';
+  });
 
   // Listen for mobile sidebar toggle events
   useEffect(() => {
@@ -43,7 +48,14 @@ export default function Layout({
       <div className="min-h-screen flex" data-testid="main-layout" style={{backgroundColor: '#F5F0E8'}}>
         {/* Desktop Sidebar */}
         <div className="hidden lg:block">
-          <Sidebar />
+          <Sidebar 
+            collapsed={sidebarCollapsed} 
+            onToggleCollapse={() => {
+              const newCollapsed = !sidebarCollapsed;
+              setSidebarCollapsed(newCollapsed);
+              localStorage.setItem('sidebarCollapsed', newCollapsed.toString());
+            }} 
+          />
         </div>
         
         {/* Mobile Sidebar Overlay */}
@@ -59,7 +71,9 @@ export default function Layout({
           </div>
         )}
         
-        <main className="flex-1 flex flex-col overflow-hidden">
+        <main className={cn("flex-1 flex flex-col overflow-hidden transition-all duration-300", 
+          sidebarCollapsed ? "lg:ml-16" : "lg:ml-64"
+        )}>
           {title && (
             <Header 
               title={title}

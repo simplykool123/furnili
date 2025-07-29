@@ -26,7 +26,9 @@ import {
   Brain,
   Settings,
   Download,
-  FolderOpen
+  FolderOpen,
+  PanelLeftClose,
+  PanelLeftOpen
 } from "lucide-react";
 
 const navigation = [
@@ -73,9 +75,11 @@ const navigation = [
 
 interface SidebarProps {
   onItemClick?: () => void;
+  collapsed?: boolean;
+  onToggleCollapse?: () => void;
 }
 
-export default function Sidebar({ onItemClick }: SidebarProps = {}) {
+export default function Sidebar({ onItemClick, collapsed = false, onToggleCollapse }: SidebarProps = {}) {
   const [location] = useLocation();
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
   const user = authService.getUser();
@@ -121,29 +125,45 @@ export default function Sidebar({ onItemClick }: SidebarProps = {}) {
   });
 
   return (
-    <aside className="w-56 lg:w-60 shadow-xl border-r border-primary-foreground/20 h-full flex flex-col transition-all duration-300" style={{backgroundColor: '#D4B896'}} data-testid="main-sidebar">
-      {/* Logo/Brand */}
+    <aside className={cn(
+      "shadow-xl border-r border-primary-foreground/20 h-full flex flex-col transition-all duration-300 fixed left-0 top-0 z-40",
+      collapsed ? "w-16" : "w-56 lg:w-60"
+    )} style={{backgroundColor: '#D4B896'}} data-testid="main-sidebar">
+      {/* Logo/Brand & Toggle */}
       <div className="p-4 border-b border-primary-foreground/20">
-        <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 rounded-xl overflow-hidden bg-white/10 backdrop-blur-sm flex items-center justify-center shadow-lg">
-            <img 
-              src="/furnili-logo-small.png" 
-              alt="Furnili Logo" 
-              className="w-8 h-8 object-contain"
-              onError={(e) => {
-                const target = e.target as HTMLImageElement;
-                target.style.display = 'none';
-                const parent = target.parentElement;
-                if (parent) {
-                  parent.innerHTML = '<span class="text-white font-bold text-lg">F</span>';
-                }
-              }}
-            />
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 rounded-xl overflow-hidden bg-white/10 backdrop-blur-sm flex items-center justify-center shadow-lg">
+              <img 
+                src="/furnili-logo-small.png" 
+                alt="Furnili Logo" 
+                className="w-8 h-8 object-contain"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.style.display = 'none';
+                  const parent = target.parentElement;
+                  if (parent) {
+                    parent.innerHTML = '<span class="text-white font-bold text-lg">F</span>';
+                  }
+                }}
+              />
+            </div>
+            {!collapsed && (
+              <div className="flex-1">
+                <h2 className="font-bold text-amber-900 text-lg tracking-wide">Furnili MS</h2>
+                <p className="text-xs text-amber-800 capitalize font-medium">{user.role}</p>
+              </div>
+            )}
           </div>
-          <div className="flex-1">
-            <h2 className="font-bold text-amber-900 text-lg tracking-wide">Furnili MS</h2>
-            <p className="text-xs text-amber-800 capitalize font-medium">{user.role}</p>
-          </div>
+          {onToggleCollapse && (
+            <button
+              onClick={onToggleCollapse}
+              className="p-1 rounded-md hover:bg-white/20 text-amber-900 transition-colors"
+              title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            >
+              {collapsed ? <PanelLeftOpen size={20} /> : <PanelLeftClose size={20} />}
+            </button>
+          )}
         </div>
       </div>
 
@@ -163,27 +183,29 @@ export default function Sidebar({ onItemClick }: SidebarProps = {}) {
                 <div key={item.name} className="space-y-1">
                   {/* Parent Menu Item */}
                   <button
-                    onClick={() => toggleExpanded(item.name)}
+                    onClick={() => collapsed ? null : toggleExpanded(item.name)}
                     className={cn(
-                      "flex items-center justify-between w-full px-3 py-2 rounded-lg font-medium transition-all duration-200 text-sm group hover:shadow-md",
+                      "flex items-center w-full rounded-lg font-medium transition-all duration-200 text-sm group hover:shadow-md",
+                      collapsed ? "justify-center p-3" : "justify-between px-3 py-2",
                       hasActiveSubItem || isExpanded
                         ? "text-amber-900 bg-white/30 shadow-lg backdrop-blur-sm"
                         : "text-amber-900 hover:bg-white/20 hover:text-amber-800"
                     )}
+                    title={collapsed ? item.name : undefined}
                   >
-                    <div className="flex items-center space-x-3">
+                    <div className={cn("flex items-center", collapsed ? "justify-center" : "space-x-3")}>
                       <item.icon className="w-5 h-5 flex-shrink-0" />
-                      <span className="truncate font-semibold">{item.name}</span>
+                      {!collapsed && <span className="truncate font-semibold">{item.name}</span>}
                     </div>
-                    {isExpanded ? (
+                    {!collapsed && (isExpanded ? (
                       <ChevronDown className="w-4 h-4 flex-shrink-0 transition-transform" />
                     ) : (
                       <ChevronRight className="w-4 h-4 flex-shrink-0 transition-transform" />
-                    )}
+                    ))}
                   </button>
                   
                   {/* Sub Menu Items */}
-                  {isExpanded && (
+                  {isExpanded && !collapsed && (
                     <div className="ml-8 space-y-1 animate-fade-in">
                       {item.subItems.map((subItem) => {
                         const isActive = subItem.href && (location === subItem.href || (subItem.href !== '/' && location.startsWith(subItem.href)));
@@ -218,15 +240,17 @@ export default function Sidebar({ onItemClick }: SidebarProps = {}) {
                   key={item.name}
                   href={item.href}
                   className={cn(
-                    "flex items-center space-x-3 px-3 py-2 rounded-lg font-medium transition-all duration-200 text-sm group hover:shadow-md",
+                    "flex items-center rounded-lg font-medium transition-all duration-200 text-sm group hover:shadow-md",
+                    collapsed ? "justify-center p-3" : "space-x-3 px-3 py-2",
                     isActive
                       ? "text-amber-900 bg-white/30 shadow-lg backdrop-blur-sm"
                       : "text-amber-900/90 hover:bg-white/15 hover:text-amber-800"
                   )}
                   onClick={onItemClick}
+                  title={collapsed ? item.name : undefined}
                 >
                   <item.icon className="w-5 h-5 flex-shrink-0" />
-                  <span className="truncate font-semibold">{item.name}</span>
+                  {!collapsed && <span className="truncate font-semibold">{item.name}</span>}
                 </Link>
               ) : null;
             }
@@ -237,17 +261,23 @@ export default function Sidebar({ onItemClick }: SidebarProps = {}) {
       {/* User Actions */}
       <div className="p-3 border-t border-primary-foreground/20 space-y-2">
         {/* Change Password */}
-        <div className="w-full">
-          <ChangePassword />
-        </div>
+        {!collapsed && (
+          <div className="w-full">
+            <ChangePassword />
+          </div>
+        )}
         
         {/* Logout */}
         <button 
           onClick={handleLogout}
-          className="flex items-center space-x-3 px-3 py-2 text-amber-900/90 hover:bg-white/15 hover:text-amber-800 rounded-lg transition-all duration-200 w-full text-sm font-medium group"
+          className={cn(
+            "flex items-center rounded-lg font-medium transition-all duration-200 text-sm text-amber-900/90 hover:bg-white/15 hover:text-amber-800 group w-full",
+            collapsed ? "justify-center p-3" : "space-x-3 px-3 py-2"
+          )}
+          title={collapsed ? "Logout" : undefined}
         >
           <LogOut className="w-5 h-5 flex-shrink-0" />
-          <span className="font-semibold">Logout</span>
+          {!collapsed && <span className="font-semibold">Logout</span>}
         </button>
       </div>
     </aside>
