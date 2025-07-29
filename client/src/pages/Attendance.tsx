@@ -2189,7 +2189,7 @@ export default function Attendance() {
                           <div className="text-sm text-gray-600">{payroll.employeeId}</div>
                         </TableCell>
                         <TableCell>{payroll.month} {payroll.year}</TableCell>
-                        <TableCell className="font-semibold">₹{payroll.salary.toLocaleString()}</TableCell>
+                        <TableCell className="font-semibold">₹{(payroll.salary || 0).toLocaleString()}</TableCell>
                         <TableCell className="font-semibold text-green-600">₹{netPay.toLocaleString()}</TableCell>
                         <TableCell>
                           <Badge variant={payroll.status === "paid" ? "default" : "secondary"}>
