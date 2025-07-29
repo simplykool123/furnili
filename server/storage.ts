@@ -223,6 +223,38 @@ export interface IStorage {
   getAttendanceByDate(date: string): Promise<Attendance[]>;
   getMonthlyExpenses(month: number, year: number): Promise<number>;
 
+  // CRM Operations
+  getCrmCustomer(id: number): Promise<CrmCustomer | undefined>;
+  getAllCrmCustomers(): Promise<CrmCustomer[]>;
+  createCrmCustomer(customer: InsertCrmCustomer): Promise<CrmCustomer>;
+  updateCrmCustomer(id: number, updates: Partial<InsertCrmCustomer>): Promise<CrmCustomer | undefined>;
+  deleteCrmCustomer(id: number): Promise<boolean>;
+
+  getCrmLead(id: number): Promise<CrmLead | undefined>;
+  getAllCrmLeads(): Promise<CrmLead[]>;
+  createCrmLead(lead: InsertCrmLead): Promise<CrmLead>;
+  updateCrmLead(id: number, updates: Partial<InsertCrmLead>): Promise<CrmLead | undefined>;
+  deleteCrmLead(id: number): Promise<boolean>;
+
+  getCrmDeal(id: number): Promise<CrmDeal | undefined>;
+  getAllCrmDeals(): Promise<CrmDeal[]>;
+  createCrmDeal(deal: InsertCrmDeal): Promise<CrmDeal>;
+  updateCrmDeal(id: number, updates: Partial<InsertCrmDeal>): Promise<CrmDeal | undefined>;
+  deleteCrmDeal(id: number): Promise<boolean>;
+
+  getCrmActivity(id: number): Promise<CrmActivity | undefined>;
+  getAllCrmActivities(relatedTo?: string, relatedId?: number): Promise<CrmActivity[]>;
+  createCrmActivity(activity: InsertCrmActivity): Promise<CrmActivity>;
+  updateCrmActivity(id: number, updates: Partial<InsertCrmActivity>): Promise<CrmActivity | undefined>;
+  deleteCrmActivity(id: number): Promise<boolean>;
+
+  getCrmStats(): Promise<{
+    totalCustomers: number;
+    activeLeads: number;
+    pipelineValue: number;
+    conversionRate: number;
+  }>;
+
   // Petty Cash Operations  
   getPettyCashExpense(id: number): Promise<PettyCashExpense | undefined>;
   getAllPettyCashExpenses(month?: number, year?: number): Promise<PettyCashExpense[]>;
@@ -2565,6 +2597,268 @@ class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('Error in getMonthlyExpenses:', error);
       return 0;
+    }
+  }
+
+  // CRM Customer Operations
+  async getCrmCustomer(id: number): Promise<CrmCustomer | undefined> {
+    try {
+      const result = await db.select().from(crmCustomers).where(eq(crmCustomers.id, id));
+      return result[0];
+    } catch (error) {
+      console.error('Error getting CRM customer:', error);
+      return undefined;
+    }
+  }
+
+  async getAllCrmCustomers(): Promise<CrmCustomer[]> {
+    try {
+      return await db.select().from(crmCustomers).orderBy(desc(crmCustomers.createdAt));
+    } catch (error) {
+      console.error('Error getting all CRM customers:', error);
+      return [];
+    }
+  }
+
+  async createCrmCustomer(customer: InsertCrmCustomer): Promise<CrmCustomer> {
+    try {
+      const result = await db.insert(crmCustomers).values(customer).returning();
+      return result[0];
+    } catch (error) {
+      console.error('Error creating CRM customer:', error);
+      throw error;
+    }
+  }
+
+  async updateCrmCustomer(id: number, updates: Partial<InsertCrmCustomer>): Promise<CrmCustomer | undefined> {
+    try {
+      const result = await db.update(crmCustomers)
+        .set({ ...updates, updatedAt: new Date() })
+        .where(eq(crmCustomers.id, id))
+        .returning();
+      return result[0];
+    } catch (error) {
+      console.error('Error updating CRM customer:', error);
+      return undefined;
+    }
+  }
+
+  async deleteCrmCustomer(id: number): Promise<boolean> {
+    try {
+      const result = await db.delete(crmCustomers).where(eq(crmCustomers.id, id));
+      return result.rowCount !== null && result.rowCount > 0;
+    } catch (error) {
+      console.error('Error deleting CRM customer:', error);
+      return false;
+    }
+  }
+
+  // CRM Lead Operations
+  async getCrmLead(id: number): Promise<CrmLead | undefined> {
+    try {
+      const result = await db.select().from(crmLeads).where(eq(crmLeads.id, id));
+      return result[0];
+    } catch (error) {
+      console.error('Error getting CRM lead:', error);
+      return undefined;
+    }
+  }
+
+  async getAllCrmLeads(): Promise<CrmLead[]> {
+    try {
+      return await db.select().from(crmLeads).orderBy(desc(crmLeads.createdAt));
+    } catch (error) {
+      console.error('Error getting all CRM leads:', error);
+      return [];
+    }
+  }
+
+  async createCrmLead(lead: InsertCrmLead): Promise<CrmLead> {
+    try {
+      const result = await db.insert(crmLeads).values(lead).returning();
+      return result[0];
+    } catch (error) {
+      console.error('Error creating CRM lead:', error);
+      throw error;
+    }
+  }
+
+  async updateCrmLead(id: number, updates: Partial<InsertCrmLead>): Promise<CrmLead | undefined> {
+    try {
+      const result = await db.update(crmLeads)
+        .set({ ...updates, updatedAt: new Date() })
+        .where(eq(crmLeads.id, id))
+        .returning();
+      return result[0];
+    } catch (error) {
+      console.error('Error updating CRM lead:', error);
+      return undefined;
+    }
+  }
+
+  async deleteCrmLead(id: number): Promise<boolean> {
+    try {
+      const result = await db.delete(crmLeads).where(eq(crmLeads.id, id));
+      return result.rowCount !== null && result.rowCount > 0;
+    } catch (error) {
+      console.error('Error deleting CRM lead:', error);
+      return false;
+    }
+  }
+
+  // CRM Deal Operations
+  async getCrmDeal(id: number): Promise<CrmDeal | undefined> {
+    try {
+      const result = await db.select().from(crmDeals).where(eq(crmDeals.id, id));
+      return result[0];
+    } catch (error) {
+      console.error('Error getting CRM deal:', error);
+      return undefined;
+    }
+  }
+
+  async getAllCrmDeals(): Promise<CrmDeal[]> {
+    try {
+      return await db.select().from(crmDeals).orderBy(desc(crmDeals.createdAt));
+    } catch (error) {
+      console.error('Error getting all CRM deals:', error);
+      return [];
+    }
+  }
+
+  async createCrmDeal(deal: InsertCrmDeal): Promise<CrmDeal> {
+    try {
+      const result = await db.insert(crmDeals).values(deal).returning();
+      return result[0];
+    } catch (error) {
+      console.error('Error creating CRM deal:', error);
+      throw error;
+    }
+  }
+
+  async updateCrmDeal(id: number, updates: Partial<InsertCrmDeal>): Promise<CrmDeal | undefined> {
+    try {
+      const result = await db.update(crmDeals)
+        .set({ ...updates, updatedAt: new Date() })
+        .where(eq(crmDeals.id, id))
+        .returning();
+      return result[0];
+    } catch (error) {
+      console.error('Error updating CRM deal:', error);
+      return undefined;
+    }
+  }
+
+  async deleteCrmDeal(id: number): Promise<boolean> {
+    try {
+      const result = await db.delete(crmDeals).where(eq(crmDeals.id, id));
+      return result.rowCount !== null && result.rowCount > 0;
+    } catch (error) {
+      console.error('Error deleting CRM deal:', error);
+      return false;
+    }
+  }
+
+  // CRM Activity Operations
+  async getCrmActivity(id: number): Promise<CrmActivity | undefined> {
+    try {
+      const result = await db.select().from(crmActivities).where(eq(crmActivities.id, id));
+      return result[0];
+    } catch (error) {
+      console.error('Error getting CRM activity:', error);
+      return undefined;
+    }
+  }
+
+  async getAllCrmActivities(relatedTo?: string, relatedId?: number): Promise<CrmActivity[]> {
+    try {
+      let query = db.select().from(crmActivities);
+      
+      if (relatedTo && relatedId) {
+        query = query.where(and(
+          eq(crmActivities.relatedTo, relatedTo),
+          eq(crmActivities.relatedId, relatedId)
+        ));
+      }
+      
+      return await query.orderBy(desc(crmActivities.createdAt));
+    } catch (error) {
+      console.error('Error getting all CRM activities:', error);
+      return [];
+    }
+  }
+
+  async createCrmActivity(activity: InsertCrmActivity): Promise<CrmActivity> {
+    try {
+      const result = await db.insert(crmActivities).values(activity).returning();
+      return result[0];
+    } catch (error) {
+      console.error('Error creating CRM activity:', error);
+      throw error;
+    }
+  }
+
+  async updateCrmActivity(id: number, updates: Partial<InsertCrmActivity>): Promise<CrmActivity | undefined> {
+    try {
+      const result = await db.update(crmActivities)
+        .set(updates)
+        .where(eq(crmActivities.id, id))
+        .returning();
+      return result[0];
+    } catch (error) {
+      console.error('Error updating CRM activity:', error);
+      return undefined;
+    }
+  }
+
+  async deleteCrmActivity(id: number): Promise<boolean> {
+    try {
+      const result = await db.delete(crmActivities).where(eq(crmActivities.id, id));
+      return result.rowCount !== null && result.rowCount > 0;
+    } catch (error) {
+      console.error('Error deleting CRM activity:', error);
+      return false;
+    }
+  }
+
+  // CRM Stats
+  async getCrmStats(): Promise<{
+    totalCustomers: number;
+    activeLeads: number;
+    pipelineValue: number;
+    conversionRate: number;
+  }> {
+    try {
+      const [customers, leads, deals] = await Promise.all([
+        db.select().from(crmCustomers),
+        db.select().from(crmLeads),
+        db.select().from(crmDeals)
+      ]);
+
+      const totalCustomers = customers.length;
+      const activeLeads = leads.filter(l => !['won', 'lost'].includes(l.status || '')).length;
+      const pipelineValue = deals
+        .filter(d => !['closed-won', 'closed-lost'].includes(d.stage || ''))
+        .reduce((sum, deal) => sum + (deal.value || 0), 0);
+      
+      const totalLeads = leads.length;
+      const wonLeads = leads.filter(l => l.status === 'won').length;
+      const conversionRate = totalLeads > 0 ? Math.round((wonLeads / totalLeads) * 100) : 0;
+
+      return {
+        totalCustomers,
+        activeLeads,
+        pipelineValue,
+        conversionRate
+      };
+    } catch (error) {
+      console.error('Error getting CRM stats:', error);
+      return {
+        totalCustomers: 0,
+        activeLeads: 0,
+        pipelineValue: 0,
+        conversionRate: 0
+      };
     }
   }
 }

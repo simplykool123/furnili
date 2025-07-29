@@ -1738,93 +1738,134 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // CRM API Routes - Basic Implementation
+  // CRM API Routes - Database Implementation
   // CRM Customers
   app.get("/api/crm/customers", authenticateToken, async (req: AuthRequest, res) => {
     try {
-      res.json([]);
+      const customers = await storage.getAllCrmCustomers();
+      res.json(customers);
     } catch (error) {
+      console.error("Failed to fetch customers:", error);
       res.status(500).json({ message: "Failed to fetch customers", error });
     }
   });
 
   app.post("/api/crm/customers", authenticateToken, async (req: AuthRequest, res) => {
     try {
-      const mockCustomer = { id: Date.now(), ...req.body, createdAt: new Date().toISOString() };
-      res.json(mockCustomer);
+      const customerData = insertCrmCustomerSchema.parse(req.body);
+      const customer = await storage.createCrmCustomer(customerData);
+      res.json(customer);
     } catch (error) {
-      res.status(500).json({ message: "Failed to create customer", error });
+      console.error("Failed to create customer:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Validation failed", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create customer", error: String(error) });
     }
   });
 
   app.patch("/api/crm/customers/:id", authenticateToken, async (req: AuthRequest, res) => {
     try {
-      const mockCustomer = { id: parseInt(req.params.id), ...req.body, updatedAt: new Date().toISOString() };
-      res.json(mockCustomer);
+      const customerId = parseInt(req.params.id);
+      const updates = req.body;
+      const customer = await storage.updateCrmCustomer(customerId, updates);
+      if (!customer) {
+        return res.status(404).json({ message: "Customer not found" });
+      }
+      res.json(customer);
     } catch (error) {
-      res.status(500).json({ message: "Failed to update customer", error });
+      console.error("Failed to update customer:", error);
+      res.status(500).json({ message: "Failed to update customer", error: String(error) });
     }
   });
 
   // CRM Leads
   app.get("/api/crm/leads", authenticateToken, async (req: AuthRequest, res) => {
     try {
-      res.json([]);
+      const leads = await storage.getAllCrmLeads();
+      res.json(leads);
     } catch (error) {
+      console.error("Failed to fetch leads:", error);
       res.status(500).json({ message: "Failed to fetch leads", error });
     }
   });
 
   app.post("/api/crm/leads", authenticateToken, async (req: AuthRequest, res) => {
     try {
-      const mockLead = { id: Date.now(), ...req.body, createdAt: new Date().toISOString() };
-      res.json(mockLead);
+      const leadData = insertCrmLeadSchema.parse(req.body);
+      const lead = await storage.createCrmLead(leadData);
+      res.json(lead);
     } catch (error) {
-      res.status(500).json({ message: "Failed to create lead", error });
+      console.error("Failed to create lead:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Validation failed", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create lead", error: String(error) });
     }
   });
 
   app.patch("/api/crm/leads/:id", authenticateToken, async (req: AuthRequest, res) => {
     try {
-      const mockLead = { id: parseInt(req.params.id), ...req.body, updatedAt: new Date().toISOString() };
-      res.json(mockLead);
+      const leadId = parseInt(req.params.id);
+      const updates = req.body;
+      const lead = await storage.updateCrmLead(leadId, updates);
+      if (!lead) {
+        return res.status(404).json({ message: "Lead not found" });
+      }
+      res.json(lead);
     } catch (error) {
-      res.status(500).json({ message: "Failed to update lead", error });
+      console.error("Failed to update lead:", error);
+      res.status(500).json({ message: "Failed to update lead", error: String(error) });
     }
   });
 
   // CRM Deals
   app.get("/api/crm/deals", authenticateToken, async (req: AuthRequest, res) => {
     try {
-      res.json([]);
+      const deals = await storage.getAllCrmDeals();
+      res.json(deals);
     } catch (error) {
+      console.error("Failed to fetch deals:", error);
       res.status(500).json({ message: "Failed to fetch deals", error });
     }
   });
 
   app.post("/api/crm/deals", authenticateToken, async (req: AuthRequest, res) => {
     try {
-      const mockDeal = { id: Date.now(), ...req.body, createdAt: new Date().toISOString() };
-      res.json(mockDeal);
+      const dealData = insertCrmDealSchema.parse(req.body);
+      const deal = await storage.createCrmDeal(dealData);
+      res.json(deal);
     } catch (error) {
-      res.status(500).json({ message: "Failed to create deal", error });
+      console.error("Failed to create deal:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Validation failed", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create deal", error: String(error) });
     }
   });
 
   app.patch("/api/crm/deals/:id", authenticateToken, async (req: AuthRequest, res) => {
     try {
-      const mockDeal = { id: parseInt(req.params.id), ...req.body, updatedAt: new Date().toISOString() };
-      res.json(mockDeal);
+      const dealId = parseInt(req.params.id);
+      const updates = req.body;
+      const deal = await storage.updateCrmDeal(dealId, updates);
+      if (!deal) {
+        return res.status(404).json({ message: "Deal not found" });
+      }
+      res.json(deal);
     } catch (error) {
-      res.status(500).json({ message: "Failed to update deal", error });
+      console.error("Failed to update deal:", error);
+      res.status(500).json({ message: "Failed to update deal", error: String(error) });
     }
   });
 
   // CRM Stats
   app.get("/api/crm/stats", authenticateToken, async (req: AuthRequest, res) => {
     try {
-      res.json({ totalCustomers: 0, activeLeads: 0, pipelineValue: 0, conversionRate: 0 });
+      const stats = await storage.getCrmStats();
+      res.json(stats);
     } catch (error) {
+      console.error("Failed to fetch CRM stats:", error);
       res.status(500).json({ message: "Failed to fetch CRM stats", error });
     }
   });
