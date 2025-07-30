@@ -149,21 +149,51 @@ export default function ProjectDetail() {
       const randomSeed = Math.floor(Math.random() * 1000);
       
       if (formData.inspirationType === 'ai') {
-        // AI-generated style images with room type context
-        images = [
-          `https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=300&fit=crop&auto=format`,
-          `https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=400&h=300&fit=crop&auto=format`,
-          `https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=300&fit=crop&auto=format&blur=2`,
-          `https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=400&h=300&fit=crop&auto=format&blur=2`
-        ];
+        // AI-style interior design images focused on walls, cupboards, furniture
+        const roomTypeImages = {
+          'living-room': [
+            `https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=300&fit=crop&auto=format`, // Modern living room
+            `https://images.unsplash.com/photo-1567767292278-a4f21aa2d36e?w=400&h=300&fit=crop&auto=format`, // Wall design
+            `https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=300&fit=crop&auto=format&blur=1`, // Blurred effect
+            `https://images.unsplash.com/photo-1567767292278-a4f21aa2d36e?w=400&h=300&fit=crop&auto=format&blur=1`
+          ],
+          'bedroom': [
+            `https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=400&h=300&fit=crop&auto=format`, // Bedroom design
+            `https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=300&fit=crop&auto=format`, // Wall treatments
+            `https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=400&h=300&fit=crop&auto=format&blur=1`,
+            `https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=300&fit=crop&auto=format&blur=1`
+          ],
+          'kitchen': [
+            `https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=400&h=300&fit=crop&auto=format`, // Kitchen cabinets
+            `https://images.unsplash.com/photo-1565538810643-b5bdb714032a?w=400&h=300&fit=crop&auto=format`, // Kitchen design
+            `https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=400&h=300&fit=crop&auto=format&blur=1`,
+            `https://images.unsplash.com/photo-1565538810643-b5bdb714032a?w=400&h=300&fit=crop&auto=format&blur=1`
+          ]
+        };
+        images = roomTypeImages[formData.roomType] || roomTypeImages['living-room'];
       } else {
-        // Real photo inspiration images
-        images = [
-          `https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=300&fit=crop&auto=format`,
-          `https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=400&h=300&fit=crop&auto=format`,
-          `https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&h=300&fit=crop&auto=format`,
-          `https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?w=400&h=300&fit=crop&auto=format`
-        ];
+        // Real photo inspiration images for interior design
+        const roomTypeImages = {
+          'living-room': [
+            `https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=300&fit=crop&auto=format`,
+            `https://images.unsplash.com/photo-1567767292278-a4f21aa2d36e?w=400&h=300&fit=crop&auto=format`,
+            `https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=400&h=300&fit=crop&auto=format`,
+            `https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&h=300&fit=crop&auto=format`
+          ],
+          'bedroom': [
+            `https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=400&h=300&fit=crop&auto=format`,
+            `https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=300&fit=crop&auto=format`,
+            `https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=400&h=300&fit=crop&auto=format`,
+            `https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&h=300&fit=crop&auto=format`
+          ],
+          'kitchen': [
+            `https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=400&h=300&fit=crop&auto=format`,
+            `https://images.unsplash.com/photo-1565538810643-b5bdb714032a?w=400&h=300&fit=crop&auto=format`,
+            `https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=400&h=300&fit=crop&auto=format`,
+            `https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&h=300&fit=crop&auto=format`
+          ]
+        };
+        images = roomTypeImages[formData.roomType] || roomTypeImages['living-room'];
       }
       
       setPreviewImages(images);
@@ -315,6 +345,17 @@ export default function ProjectDetail() {
     },
   });
 
+
+
+  // Form submission handlers
+  const handleNoteSubmit = (data: any) => {
+    createLogMutation.mutate({
+      content: data.content,
+      type: data.type,
+    });
+  };
+
+  // Note deletion mutation  
   const deleteLogMutation = useMutation({
     mutationFn: async (logId: number) => {
       return apiRequest(`/api/projects/${projectId}/logs/${logId}`, {
@@ -327,14 +368,6 @@ export default function ProjectDetail() {
     },
   });
 
-  // Form submission handlers
-  const handleNoteSubmit = (data: any) => {
-    createLogMutation.mutate({
-      content: data.content,
-      type: data.type,
-    });
-  };
-
   const handleMoodboardCreate = (data: any) => {
     console.log('Creating moodboard with data:', data);
     console.log('Form errors:', moodboardForm.formState.errors);
@@ -343,19 +376,51 @@ export default function ProjectDetail() {
     let finalImages = previewImages;
     if (!previewGenerated || previewImages.length === 0) {
       if (data.inspirationType === 'ai') {
-        finalImages = [
-          `https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=300&fit=crop&auto=format`,
-          `https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=400&h=300&fit=crop&auto=format`,
-          `https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=300&fit=crop&auto=format&blur=2`,
-          `https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=400&h=300&fit=crop&auto=format&blur=2`
-        ];
+        // AI-style interior design images focused on walls, cupboards, furniture
+        const roomTypeImages = {
+          'living-room': [
+            `https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=300&fit=crop&auto=format`, // Modern living room
+            `https://images.unsplash.com/photo-1567767292278-a4f21aa2d36e?w=400&h=300&fit=crop&auto=format`, // Wall design
+            `https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=300&fit=crop&auto=format&blur=1`, // Blurred effect
+            `https://images.unsplash.com/photo-1567767292278-a4f21aa2d36e?w=400&h=300&fit=crop&auto=format&blur=1`
+          ],
+          'bedroom': [
+            `https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=400&h=300&fit=crop&auto=format`, // Bedroom design
+            `https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=300&fit=crop&auto=format`, // Wall treatments
+            `https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=400&h=300&fit=crop&auto=format&blur=1`,
+            `https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=300&fit=crop&auto=format&blur=1`
+          ],
+          'kitchen': [
+            `https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=400&h=300&fit=crop&auto=format`, // Kitchen cabinets
+            `https://images.unsplash.com/photo-1565538810643-b5bdb714032a?w=400&h=300&fit=crop&auto=format`, // Kitchen design
+            `https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=400&h=300&fit=crop&auto=format&blur=1`,
+            `https://images.unsplash.com/photo-1565538810643-b5bdb714032a?w=400&h=300&fit=crop&auto=format&blur=1`
+          ]
+        };
+        finalImages = roomTypeImages[data.roomType] || roomTypeImages['living-room'];
       } else {
-        finalImages = [
-          `https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=300&fit=crop&auto=format`,
-          `https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=400&h=300&fit=crop&auto=format`,
-          `https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&h=300&fit=crop&auto=format`,
-          `https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?w=400&h=300&fit=crop&auto=format`
-        ];
+        // Real photo inspiration images for interior design
+        const roomTypeImages = {
+          'living-room': [
+            `https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=300&fit=crop&auto=format`,
+            `https://images.unsplash.com/photo-1567767292278-a4f21aa2d36e?w=400&h=300&fit=crop&auto=format`,
+            `https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=400&h=300&fit=crop&auto=format`,
+            `https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&h=300&fit=crop&auto=format`
+          ],
+          'bedroom': [
+            `https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=400&h=300&fit=crop&auto=format`,
+            `https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=300&fit=crop&auto=format`,
+            `https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=400&h=300&fit=crop&auto=format`,
+            `https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&h=300&fit=crop&auto=format`
+          ],
+          'kitchen': [
+            `https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=400&h=300&fit=crop&auto=format`,
+            `https://images.unsplash.com/photo-1565538810643-b5bdb714032a?w=400&h=300&fit=crop&auto=format`,
+            `https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=400&h=300&fit=crop&auto=format`,
+            `https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&h=300&fit=crop&auto=format`
+          ]
+        };
+        finalImages = roomTypeImages[data.roomType] || roomTypeImages['living-room'];
       }
     }
     
@@ -369,7 +434,18 @@ export default function ProjectDetail() {
     delete moodboardData.inspirationType;
     console.log('Final moodboard data:', moodboardData);
     createMoodboardMutation.mutate(moodboardData);
-  };;
+  };
+
+  // Note creation handler
+  const handleNoteCreate = (data: any) => {
+    console.log('Creating note with data:', data);
+    const noteData = {
+      content: data.content,
+      type: data.type,
+      projectId: parseInt(projectId),
+    };
+    createNoteMutation.mutate(noteData);
+  };
 
   const mockTasks = [
     { id: 1, title: "Site Survey Completion", assignedTo: "John Doe", dueDate: "2025-02-05", priority: "high", status: "in-progress" },
@@ -439,6 +515,36 @@ export default function ProjectDetail() {
       default: return 'bg-gray-100 text-gray-800';
     }
   };
+
+  // Moodboard deletion mutation
+  const deleteMoodboardMutation = useMutation({
+    mutationFn: async (moodboardId: number) => {
+      const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+      const response = await fetch(`/api/moodboards/${moodboardId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      if (!response.ok) throw new Error('Failed to delete moodboard');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/projects', projectId, 'moodboards'] });
+      toast({
+        title: "Success",
+        description: "Moodboard deleted successfully",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to delete moodboard",
+        variant: "destructive",
+      });
+    },
+  });
 
   // Moodboard creation mutation
   const createMoodboardMutation = useMutation({
@@ -510,6 +616,41 @@ export default function ProjectDetail() {
   const handleStageChange = (newStage: string) => {
     stageUpdateMutation.mutate(newStage);
   };
+
+  // Note creation mutation
+  const createNoteMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+      const response = await fetch(`/api/projects/${projectId}/logs`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) throw new Error('Failed to create note');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/projects', projectId, 'logs'] });
+      setIsNoteDialogOpen(false);
+      noteForm.reset();
+      toast({
+        title: "Success",
+        description: "Note added successfully",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to create note. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+
 
   // File upload mutation
   const fileUploadMutation = useMutation({
@@ -992,8 +1133,19 @@ export default function ProjectDetail() {
                       <span className="capitalize">{moodboard.roomType?.replace('-', ' ')}</span>
                       <span>{moodboard.sourceType === 'ai_generated' || moodboard.sourceType === 'ai' ? '🤖 AI Generated' : '📷 Real Photos'}</span>
                     </div>
-                    <div className="mt-3 text-xs text-gray-400">
-                      Created {new Date(moodboard.createdAt).toLocaleDateString()}
+                    <div className="flex items-center justify-between mt-3">
+                      <div className="text-xs text-gray-400">
+                        Created {new Date(moodboard.createdAt).toLocaleDateString()}
+                      </div>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
+                        onClick={() => deleteMoodboardMutation.mutate(moodboard.id)}
+                        disabled={deleteMoodboardMutation.isPending}
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
                     </div>
                   </div>
                 </div>
@@ -1567,7 +1719,7 @@ export default function ProjectDetail() {
             <DialogDescription>Add a note or log entry for this project</DialogDescription>
           </DialogHeader>
           <Form {...noteForm}>
-            <form className="space-y-4">
+            <form onSubmit={noteForm.handleSubmit(handleNoteCreate)} className="space-y-4">
               <FormField
                 control={noteForm.control}
                 name="content"
