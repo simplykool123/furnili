@@ -7,6 +7,7 @@ import { authenticateToken, requireRole, generateToken, comparePassword, type Au
 import { productImageUpload, boqFileUpload, receiptImageUpload, csvFileUpload } from "./utils/fileUpload";
 import { exportProductsCSV, exportRequestsCSV, exportLowStockCSV } from "./utils/csvExport";
 import { createBackupZip } from "./utils/backupExport";
+import { canOrderMaterials, getMaterialRequestEligibleProjects, getStageDisplayName } from "./utils/projectStageValidation";
 import {
   insertUserSchema,
   insertProductSchema,
@@ -737,6 +738,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { request: requestData, items } = req.body;
       
+      // Validate project stage before creating request
+      if (requestData.projectId) {
+        const project = await storage.getProject(requestData.projectId);
+        if (!project) {
+          return res.status(400).json({ message: "Project not found" });
+        }
+        
+        if (!canOrderMaterials(project.stage)) {
+          return res.status(400).json({ 
+            message: `Material requests can only be created for projects in stages: Client Approved, Production, Installation, or Handover. Current stage: ${getStageDisplayName(project.stage)}` 
+          });
+        }
+      }
+      
       const validatedRequest = insertMaterialRequestSchema.parse({
         ...requestData,
         requestedBy: (req as AuthRequest).user?.id,
@@ -773,6 +788,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(request);
     } catch (error) {
       res.status(500).json({ message: "Failed to update request status", error });
+    }
+  });
+
+  // Get projects eligible for material requests
+  app.get("/api/requests/eligible-projects", authenticateToken, async (req, res) => {
+    try {
+      const allProjects = await storage.getAllProjects();
+      const eligibleProjects = getMaterialRequestEligibleProjects(allProjects);
+      res.json(eligibleProjects);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch eligible projects", error });
     }
   });
 

@@ -16,6 +16,7 @@ import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
 
 const requestFormSchema = z.object({
+  projectId: z.number().min(1, "Project selection is required"),
   clientName: z.string().min(1, "Client name is required"),
   orderNumber: z.string().min(1, "Order number is required"),
   priority: z.enum(["high", "medium", "low"]).default("medium"),
@@ -59,10 +60,20 @@ interface Client {
   phone?: string;
 }
 
+interface Project {
+  id: number;
+  projectCode: string;
+  name: string;
+  stage: string;
+  clientName: string;
+  clientId: number;
+}
+
 interface RequestFormSimplifiedProps {
   onClose: () => void;
   onSuccess?: () => void;
   initialData?: {
+    projectId?: number;
     clientName?: string;
     orderNumber?: string;
     boqReference?: string;
@@ -95,9 +106,14 @@ export default function RequestFormSimplified({ onClose, onSuccess, initialData 
     queryKey: ["/api/clients"],
   });
 
+  const { data: eligibleProjects = [] } = useQuery<Project[]>({
+    queryKey: ["/api/requests/eligible-projects"],
+  });
+
   const form = useForm<RequestFormData>({
     resolver: zodResolver(requestFormSchema),
     defaultValues: {
+      projectId: initialData?.projectId || 0,
       clientName: initialData?.clientName || "",
       orderNumber: initialData?.orderNumber || "",
       priority: initialData?.priority || "medium",
@@ -218,6 +234,7 @@ export default function RequestFormSimplified({ onClose, onSuccess, initialData 
     
     const requestData = {
       request: {
+        projectId: data.projectId,
         clientName: data.clientName,
         orderNumber: data.orderNumber,
         priority: data.priority,
@@ -322,6 +339,48 @@ export default function RequestFormSimplified({ onClose, onSuccess, initialData 
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <Card>
         <CardContent className="space-y-4">
+          {/* Project Selection */}
+          <div className="mb-4">
+            <Label htmlFor="projectId" className="text-sm font-medium">Project *</Label>
+            <Select 
+              value={watch("projectId")?.toString() || ""}
+              onValueChange={(value) => {
+                const projectId = parseInt(value);
+                setValue("projectId", projectId);
+                
+                // Auto-fill client name based on selected project
+                const selectedProject = eligibleProjects.find(p => p.id === projectId);
+                if (selectedProject) {
+                  setValue("clientName", selectedProject.clientName);
+                }
+              }}
+            >
+              <SelectTrigger className="text-sm">
+                <SelectValue placeholder="Select project (only projects in eligible stages shown)" />
+              </SelectTrigger>
+              <SelectContent>
+                {eligibleProjects.length === 0 ? (
+                  <div className="px-2 py-2 text-sm text-amber-600">
+                    No projects available for material requests.
+                    Projects must be in Client Approved, Production, Installation, or Handover stages.
+                  </div>
+                ) : (
+                  eligibleProjects.map((project) => (
+                    <SelectItem key={project.id} value={project.id.toString()}>
+                      <div className="flex flex-col">
+                        <span className="font-medium">{project.projectCode} - {project.name}</span>
+                        <span className="text-xs text-gray-500">Client: {project.clientName} | Stage: {project.stage}</span>
+                      </div>
+                    </SelectItem>
+                  ))
+                )}
+              </SelectContent>
+            </Select>
+            {errors.projectId && (
+              <p className="text-sm text-red-600 mt-1">{errors.projectId.message}</p>
+            )}
+          </div>
+
           {/* Client Name, Order No, Priority in one row */}
           <div className="grid grid-cols-12 gap-3">
             <div className="col-span-5">
@@ -333,8 +392,9 @@ export default function RequestFormSimplified({ onClose, onSuccess, initialData 
                     role="combobox"
                     aria-expanded={isClientDropdownOpen}
                     className={`w-full justify-between ${errors.clientName ? "border-red-500" : ""}`}
+                    disabled={!watch("projectId")}
                   >
-                    {watch("clientName") || "Select or add client..."}
+                    {watch("clientName") || "Auto-filled from project"}
                     <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                   </Button>
                 </PopoverTrigger>

@@ -403,6 +403,7 @@ export const products = pgTable("products", {
 
 export const materialRequests = pgTable("material_requests", {
   id: serial("id").primaryKey(),
+  projectId: integer("project_id").references(() => projects.id).notNull(),
   clientName: text("client_name").notNull(),
   orderNumber: text("order_number").notNull(),
   requestedBy: integer("requested_by").references(() => users.id).notNull(),
