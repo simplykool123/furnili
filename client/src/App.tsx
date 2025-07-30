@@ -91,127 +91,73 @@ function Router() {
       
       <Route path="/">
         <ProtectedRoute>
-          <Layout>
-            <Dashboard />
-          </Layout>
+          <Dashboard />
         </ProtectedRoute>
       </Route>
       
       <Route path="/products">
         <ProtectedRoute>
-          <Layout 
-            title="Product Management" 
-            subtitle="Manage your inventory products and stock levels"
-            showAddButton={true}
-            onAddClick={() => {
-              // This will be handled by the Products component
-              const event = new CustomEvent('openAddProductModal');
-              window.dispatchEvent(event);
-            }}
-          >
-            <Products />
-          </Layout>
+          <Products />
         </ProtectedRoute>
       </Route>
       
       <Route path="/categories">
         <ProtectedRoute>
-          <Layout>
-            <Categories />
-          </Layout>
+          <Categories />
         </ProtectedRoute>
       </Route>
       
       <Route path="/boq">
         <ProtectedRoute>
-          <Layout 
-            title="BOQ Upload & Processing" 
-            subtitle="Upload PDF BOQ files and extract material data automatically"
-          >
-            <BOQ />
-          </Layout>
+          <BOQ />
         </ProtectedRoute>
       </Route>
       
       <Route path="/requests">
         <ProtectedRoute>
-          <Layout 
-            title="Material Requests" 
-            subtitle="Manage and track all material request workflows"
-          >
-            <MaterialRequests />
-          </Layout>
+          <MaterialRequests />
         </ProtectedRoute>
       </Route>
       
       <Route path="/inventory-movement">
         <ProtectedRoute>
-          <Layout 
-            title="Inventory Movement" 
-            subtitle="Track inward and outward inventory transactions"
-          >
-            <InventoryMovement />
-          </Layout>
+          <InventoryMovement />
         </ProtectedRoute>
       </Route>
       
       <Route path="/reports">
         <ProtectedRoute>
-          <Layout 
-            title="Reports & Analytics" 
-            subtitle="Generate reports and export data for analysis"
-          >
-            <Reports />
-          </Layout>
+          <Reports />
         </ProtectedRoute>
       </Route>
       
       <Route path="/users">
         <ProtectedRoute>
-          <Layout 
-            title="User Management" 
-            subtitle="Manage system users and their roles"
-          >
-            <Users />
-          </Layout>
+          <Users />
         </ProtectedRoute>
       </Route>
       
       <Route path="/attendance">
         <ProtectedRoute>
-          <Layout>
-            <Attendance />
-          </Layout>
+          <Attendance />
         </ProtectedRoute>
       </Route>
       
       <Route path="/petty-cash">
         <ProtectedRoute>
-          <Layout>
-            <PettyCash />
-          </Layout>
+          <PettyCash />
         </ProtectedRoute>
       </Route>
       
       <Route path="/ocr-wizard">
         <ProtectedRoute>
-          <Layout 
-            title="AI-Powered OCR Enhancement Wizard" 
-            subtitle="Advanced OCR processing with AI-powered field extraction"
-          >
-            <OCRWizard />
-          </Layout>
+          <OCRWizard />
         </ProtectedRoute>
       </Route>
       
       <Route path="/projects">
         <ProtectedRoute>
-          <Layout 
-            title="Project Management" 
-            subtitle="Manage projects and track progress"
-          >
-            <Projects />
-          </Layout>
+          <Projects />
         </ProtectedRoute>
       </Route>
       
@@ -223,119 +169,85 @@ function Router() {
       
       <Route path="/tasks">
         <ProtectedRoute>
-          <Layout>
-            <TaskManagement />
-          </Layout>
+          <TaskManagement />
         </ProtectedRoute>
       </Route>
       
       <Route path="/tasks/:id">
         <ProtectedRoute>
-          <Layout>
-            <TaskDetail />
-          </Layout>
+          <TaskDetail />
         </ProtectedRoute>
       </Route>
       
       <Route path="/price-comparison">
         <ProtectedRoute>
-          <Layout>
-            <PriceComparison />
-          </Layout>
+          <PriceComparison />
         </ProtectedRoute>
       </Route>
       
       <Route path="/product-comparison">
         <ProtectedRoute>
-          <Layout 
-            title="Product Comparison" 
-            subtitle="Compare products by category and find the best prices"
-          >
-            <ProductComparison />
-          </Layout>
+          <ProductComparison />
         </ProtectedRoute>
       </Route>
       
       <Route path="/whatsapp">
         <ProtectedRoute>
-          <Layout>
-            <WhatsAppExport />
-          </Layout>
+          <WhatsAppExport />
         </ProtectedRoute>
       </Route>
       
       <Route path="/display-settings">
         <ProtectedRoute>
-          <Layout>
-            <DisplaySettings />
-          </Layout>
+          <DisplaySettings />
         </ProtectedRoute>
       </Route>
       
       <Route path="/backups">
         <ProtectedRoute>
-          <Layout>
-            <Backups />
-          </Layout>
+          <Backups />
         </ProtectedRoute>
       </Route>
 
       <Route path="/crm">
         <ProtectedRoute>
-          <Layout 
-            title="Customer Relationship Management" 
-            subtitle="Manage customers, leads, deals and activities"
-          >
-            <CRM />
-          </Layout>
+          <CRM />
         </ProtectedRoute>
       </Route>
 
       <Route path="/crm/leads">
         <ProtectedRoute>
-          <Layout>
-            <Leads />
-          </Layout>
+          <Leads />
         </ProtectedRoute>
       </Route>
 
       <Route path="/crm/customers">
         <ProtectedRoute>
-          <Layout>
-            <Customers />
-          </Layout>
+          <Customers />
         </ProtectedRoute>
       </Route>
 
       <Route path="/crm/quotations">
         <ProtectedRoute>
-          <Layout>
-            <Quotations />
-          </Layout>
+          <Quotations />
         </ProtectedRoute>
       </Route>
 
       <Route path="/crm/followups">
         <ProtectedRoute>
-          <Layout>
-            <FollowUps />
-          </Layout>
+          <FollowUps />
         </ProtectedRoute>
       </Route>
 
       <Route path="/crm/visits">
         <ProtectedRoute>
-          <Layout>
-            <SiteVisits />
-          </Layout>
+          <SiteVisits />
         </ProtectedRoute>
       </Route>
 
       <Route path="/crm/reports">
         <ProtectedRoute>
-          <Layout>
-            <CRMReports />
-          </Layout>
+          <CRMReports />
         </ProtectedRoute>
       </Route>
       

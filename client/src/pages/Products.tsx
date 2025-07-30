@@ -45,26 +45,33 @@ export default function Products() {
   }, [canManageProducts]);
 
   return (
-    <>
+    <FurniliLayout
+      title="Product Management"
+      subtitle="Manage your inventory products and stock levels"
+      showAddButton={canManageProducts}
+      onAddClick={() => setShowAddProduct(true)}
+    >
       {/* Bulk Operations */}
-      <div className="flex flex-wrap gap-3 mb-8">
-        <BulkExportModal />
-        {canManageProducts && (
-          <BulkImportModal onSuccess={() => {
-            // Refresh the table
-            window.location.reload();
-          }} />
-        )}
-        {canManageProducts && (
-          <Button 
-            onClick={() => setShowAddProduct(true)} 
-            className="furnili-gradient hover:opacity-90 text-white font-medium shadow-md hover:shadow-lg transition-all duration-200"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Add New Product
-          </Button>
-        )}
-      </div>
+      <FurniliCard className="mb-6">
+        <div className="flex flex-wrap gap-3">
+          <BulkExportModal />
+          {canManageProducts && (
+            <BulkImportModal onSuccess={() => {
+              // Refresh the table
+              window.location.reload();
+            }} />
+          )}
+          {canManageProducts && (
+            <FurniliButton 
+              onClick={() => setShowAddProduct(true)}
+              className="flex items-center gap-2"
+            >
+              <Plus className="w-4 h-4" />
+              Add New Product
+            </FurniliButton>
+          )}
+        </div>
+      </FurniliCard>
 
       {isMobile ? (
         <MobileProductTable 
@@ -112,6 +119,6 @@ export default function Products() {
           </div>
         </DialogContent>
       </Dialog>
-    </>
+    </FurniliLayout>
   );
 }
