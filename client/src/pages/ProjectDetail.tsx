@@ -409,9 +409,23 @@ export default function ProjectDetail() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/projects', projectId, 'logs'] });
       setIsNoteDialogOpen(false);
-      noteForm.reset();
+      // Reset the form with default values
+      noteForm.reset({
+        title: "",
+        content: "",
+        type: "note",
+        taggedUsers: [],
+      });
       setNoteFiles(null);
       toast({ title: "Note added successfully!" });
+    },
+    onError: (error) => {
+      console.error('Error creating note:', error);
+      toast({ 
+        title: "Error creating note", 
+        description: "Please try again",
+        variant: "destructive" 
+      });
     },
   });
 
@@ -1474,7 +1488,10 @@ export default function ProjectDetail() {
                     <Label className="text-sm font-medium">Note Type</Label>
                     <Select 
                       value={noteForm.watch('type') || 'note'} 
-                      onValueChange={(value) => noteForm.setValue('type', value)}
+                      onValueChange={(value) => {
+                        console.log('Dropdown value changed to:', value);
+                        noteForm.setValue('type', value, { shouldValidate: true, shouldDirty: true });
+                      }}
                     >
                       <SelectTrigger className="w-full">
                         <SelectValue placeholder="Select note type" />
@@ -1574,10 +1591,23 @@ export default function ProjectDetail() {
                           <div className="flex-1 min-w-0">
                             <div className="flex items-start justify-between">
                               <div className="flex-1">
-                                <h4 className="text-base font-medium text-gray-900 mb-1">
-                                  {log.title || 'Meeting Note'}
-                                </h4>
-                                <p className="text-sm text-gray-700 mb-2">{log.content}</p>
+                                <div className="flex items-center gap-2 mb-1">
+                                  <h4 className="text-base font-medium text-gray-900">
+                                    {log.title || 'Meeting Note'}
+                                  </h4>
+                                  <span className={`px-2 py-1 text-xs font-medium rounded ${
+                                    log.logType === 'meeting' ? 'bg-blue-100 text-blue-800' :
+                                    log.logType === 'call' ? 'bg-green-100 text-green-800' :
+                                    log.logType === 'email' ? 'bg-purple-100 text-purple-800' :
+                                    'bg-gray-100 text-gray-800'
+                                  }`}>
+                                    {log.logType === 'meeting' ? 'Meeting' :
+                                     log.logType === 'call' ? 'Phone Call' :
+                                     log.logType === 'email' ? 'Email' :
+                                     'General Note'}
+                                  </span>
+                                </div>
+                                <p className="text-sm text-gray-700 mb-2">{log.description || log.content}</p>
                                 <div className="flex items-center space-x-4 text-xs text-gray-500">
                                   <span>{log.author || 'Test User'}</span>
                                   <span>
@@ -1619,6 +1649,18 @@ export default function ProjectDetail() {
                                   </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
+                                  <DropdownMenuItem onClick={() => {
+                                    // Set form values for editing
+                                    noteForm.setValue('title', log.title || '');
+                                    noteForm.setValue('content', log.description || log.content || '');
+                                    noteForm.setValue('type', log.logType || 'note');
+                                    // TODO: Implement edit functionality
+                                    toast({ title: "Edit functionality coming soon!" });
+                                  }}>
+                                    <Edit className="h-4 w-4 mr-2" />
+                                    Edit
+                                  </DropdownMenuItem>
+                                  <DropdownMenuSeparator />
                                   <DropdownMenuItem onClick={() => deleteLogMutation.mutate(log.id)}>
                                     <Trash2 className="h-4 w-4 mr-2" />
                                     Delete
