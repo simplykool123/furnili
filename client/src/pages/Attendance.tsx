@@ -2216,23 +2216,24 @@ export default function Attendance() {
                         </TableCell>
                         <TableCell>
                           <div className="flex gap-1">
-                            {/* Show Generate button if no payroll exists yet */}
-                            {!payroll.id || payroll.status === "pending" ? (
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => generatePayrollMutation.mutate({
-                                  userId: payroll.userId,
-                                  month: selectedMonth,
-                                  year: selectedYear
-                                })}
-                                className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-2 py-1"
-                                disabled={generatePayrollMutation.isPending}
-                              >
-                                <FileText className="w-3 h-3 mr-1" />
-                                Generate
-                              </Button>
-                            ) : payroll.status === "generated" ? (
+                            {/* Generate button - always available for regeneration */}
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => generatePayrollMutation.mutate({
+                                userId: payroll.userId,
+                                month: selectedMonth,
+                                year: selectedYear
+                              })}
+                              className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-2 py-1"
+                              disabled={generatePayrollMutation.isPending}
+                            >
+                              <FileText className="w-3 h-3 mr-1" />
+                              Generate
+                            </Button>
+                            
+                            {/* Status-specific buttons */}
+                            {payroll.status === "generated" && (
                               <Button
                                 size="sm"
                                 variant="outline"
@@ -2243,7 +2244,9 @@ export default function Attendance() {
                                 <CreditCard className="w-3 h-3 mr-1" />
                                 Paid
                               </Button>
-                            ) : payroll.status === "paid" ? (
+                            )}
+                            
+                            {payroll.status === "paid" && (
                               <Button
                                 size="sm"
                                 variant="outline"
@@ -2253,7 +2256,8 @@ export default function Attendance() {
                                 <Download className="w-3 h-3 mr-1" />
                                 PDF
                               </Button>
-                            ) : null}
+                            )}
+                            
                             <Button
                               size="sm"
                               variant="outline"
