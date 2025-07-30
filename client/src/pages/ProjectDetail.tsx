@@ -332,10 +332,7 @@ export default function ProjectDetail() {
   // Mutations for database operations
   const createLogMutation = useMutation({
     mutationFn: async (logData: any) => {
-      return apiRequest(`/api/projects/${projectId}/logs`, {
-        method: 'POST',
-        body: JSON.stringify(logData),
-      });
+      return apiRequest('POST', `/api/projects/${projectId}/logs`, logData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/projects', projectId, 'logs'] });
@@ -358,9 +355,7 @@ export default function ProjectDetail() {
   // Note deletion mutation  
   const deleteLogMutation = useMutation({
     mutationFn: async (logId: number) => {
-      return apiRequest(`/api/projects/${projectId}/logs/${logId}`, {
-        method: 'DELETE',
-      });
+      return apiRequest('DELETE', `/api/projects/${projectId}/logs/${logId}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/projects', projectId, 'logs'] });

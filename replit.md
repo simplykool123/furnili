@@ -10,6 +10,16 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes (January 2025)
 
+- ✅ **NOTES SYSTEM API ERROR FIXED**: Resolved "Invalid HTTP method provided" error in notes functionality
+  - **API Request Fix**: Corrected parameter order in apiRequest function calls for note creation/deletion
+  - **Parameter Order**: Fixed createLogMutation and deleteLogMutation to use proper (method, url, data) format
+  - **Error Resolution**: Eliminated HTTP method validation errors when adding/deleting project notes
+  - **Functionality Restored**: Notes system now works without console errors for seamless project logging
+- ✅ **THUMBNAIL DISPLAY ISSUE RESOLVED**: Fixed image thumbnails showing green checkmarks instead of actual images
+  - **MIME Type Handling**: Enhanced static file serving to properly set Content-Type headers for uploaded images
+  - **File Extension Issue**: Resolved problem where files stored without extensions caused incorrect MIME type detection
+  - **Static Serving**: Updated Express static middleware with proper setHeaders configuration
+  - **Image Display**: All uploaded images now display correctly as thumbnails instead of fallback icons
 - ✅ **PROJECT LOGS/NOTES SYSTEM FULLY OPERATIONAL WITH REAL DATABASE**: Complete implementation of project activity tracking
   - **Database Storage**: All project logs stored in projectLogs table with full CRUD operations
   - **API Endpoints**: GET, POST, DELETE routes for project logs with proper authentication 
