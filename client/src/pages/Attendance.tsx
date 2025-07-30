@@ -2178,7 +2178,7 @@ export default function Attendance() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
-                Payroll Management
+                Payroll for {new Date(selectedYear, selectedMonth - 1).toLocaleDateString('en-US', { month: 'long' })} {selectedYear.toString().slice(-2)}
                 <div className="flex gap-2">
                   <Button size="sm" onClick={handleGenerateAllPayslips} className="bg-blue-600 hover:bg-blue-700">
                     <FileText className="w-4 h-4 mr-2" />
@@ -2196,7 +2196,7 @@ export default function Attendance() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Employee</TableHead>
-                    <TableHead>Period</TableHead>
+                    <TableHead>Working Days</TableHead>
                     <TableHead>Salary</TableHead>
                     <TableHead>Net Pay</TableHead>
                     <TableHead>Status</TableHead>
@@ -2224,7 +2224,10 @@ export default function Attendance() {
                           <div className="font-semibold">{staffName}</div>
                           <div className="text-sm text-gray-600">{employeeId}</div>
                         </TableCell>
-                        <TableCell>{payroll.month} {payroll.year}</TableCell>
+                        <TableCell>
+                          <div className="font-semibold">{payroll.actualWorkingDays || 0}</div>
+                          <div className="text-sm text-gray-600">of {payroll.totalWorkingDays || 30}</div>
+                        </TableCell>
                         <TableCell className="font-semibold">₹{basicSalary.toLocaleString()}</TableCell>
                         <TableCell className="font-semibold text-green-600">₹{netSalary.toLocaleString()}</TableCell>
                         <TableCell>

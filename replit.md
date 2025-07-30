@@ -22,6 +22,12 @@ Preferred communication style: Simple, everyday language.
   - **Holiday Counting**: Correctly calculates Sundays/holidays in monthly statistics
   - **Working Days**: Enhanced backend to properly calculate working days excluding Sundays
   - **Dashboard Stats**: All attendance metrics now display accurate real-time data
+- ✅ **PAYROLL MANAGEMENT ENHANCEMENTS**: Added salary editing and improved interface
+  - **Edit Payroll Feature**: Added Edit button with allowances, advances, and bonus calculations
+  - **Header Update**: Changed from "Payroll Management" to "Payroll for July 25" format
+  - **Working Days Column**: Replaced "Period" with "Working Days" showing "25 of 30" format
+  - **Real-time Calculation**: Net Salary = Basic + Allowances + Bonus - Advance
+  - **Dark Brown Styling**: Applied consistent brand colors to Edit buttons
 - ✅ **MATERIAL REQUEST FORM UPDATES**: Enhanced form labels and validation per user requirements
   - **Project Field**: Changed "Project" label to "Project Code" for better clarity
   - **Order Number**: Made Order No. field optional (removed required asterisk)
