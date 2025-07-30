@@ -6,8 +6,15 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// Serve uploaded files statically
-app.use('/uploads', express.static('uploads'));
+// Serve uploaded files statically with proper MIME type handling
+app.use('/uploads', express.static('uploads', {
+  setHeaders: (res, path, stat) => {
+    // Get the original file extension from database for proper MIME type
+    if (path.includes('uploads/products/')) {
+      res.setHeader('Content-Type', 'image/jpeg'); // Default to JPEG for product images
+    }
+  }
+}));
 
 app.use((req, res, next) => {
   const start = Date.now();

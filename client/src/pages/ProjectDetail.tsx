@@ -1013,8 +1013,12 @@ export default function ProjectDetail() {
                             alt={file.originalName || file.fileName}
                             className="h-full w-full object-cover"
                             onError={(e) => {
+                              console.error('Image failed to load:', e.target.src);
                               e.currentTarget.style.display = 'none';
                               e.currentTarget.nextElementSibling.style.display = 'flex';
+                            }}
+                            onLoad={() => {
+                              console.log('Image loaded successfully:', file.filePath || file.fileName);
                             }}
                           />
                         ) : null}
