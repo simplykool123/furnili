@@ -271,9 +271,31 @@ export default function ProjectDetail() {
   const handleMoodboardCreate = (data: any) => {
     console.log('Creating moodboard with data:', data);
     console.log('Form errors:', moodboardForm.formState.errors);
+    
+    // Generate sample images based on inspiration type
+    let sampleImages: string[] = [];
+    if (data.inspirationType === 'ai') {
+      // AI-generated style images (using placeholder service for demonstration)
+      sampleImages = [
+        `https://picsum.photos/400/300?random=1&blur=1`,
+        `https://picsum.photos/400/300?random=2&blur=1`,
+        `https://picsum.photos/400/300?random=3&blur=1`,
+        `https://picsum.photos/400/300?random=4&blur=1`
+      ];
+    } else {
+      // Real photo inspiration images
+      sampleImages = [
+        `https://picsum.photos/400/300?random=5`,
+        `https://picsum.photos/400/300?random=6`,
+        `https://picsum.photos/400/300?random=7`,
+        `https://picsum.photos/400/300?random=8`
+      ];
+    }
+    
     const moodboardData = {
       ...data,
       sourceType: data.inspirationType === 'ai' ? 'ai_generated' : 'real_photos',
+      imageUrls: sampleImages,
       linkedProjectId: parseInt(projectId),
     };
     // Remove the old field name
