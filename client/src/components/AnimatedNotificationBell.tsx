@@ -85,7 +85,7 @@ export function AnimatedNotificationBell() {
           <Button 
             variant="ghost" 
             size="sm" 
-            title={taskCount > 0 ? `${taskCount} pending tasks` : "No pending tasks"}
+
             className={cn(
               "relative group transition-all duration-300 hover:bg-amber-50 rounded-full p-2",
               showGlow && "animate-glow-ring",
@@ -125,17 +125,7 @@ export function AnimatedNotificationBell() {
               <div className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 animate-shimmer transition-opacity duration-300"></div>
             </div>
             
-            {/* Enhanced tooltip with animation */}
-            <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs px-3 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none whitespace-nowrap shadow-lg scale-95 group-hover:scale-100">
-              <div className="font-medium">
-                {taskCount} pending task{taskCount !== 1 ? 's' : ''}
-              </div>
-              {hasHighPriorityTasks && (
-                <div className="text-red-300 text-xs">High priority tasks!</div>
-              )}
-              {/* Tooltip arrow */}
-              <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
-            </div>
+
           </Button>
         </DropdownMenuTrigger>
         
