@@ -2488,19 +2488,35 @@ class DatabaseStorage implements IStorage {
     // User's basic salary from profile (fallback to default)
     const basicSalary = user.basicSalary || 25000;
     
-    // Formula: Basic salary ÷ total days × working days
-    // If no working days, net salary should be 0
-    const netSalary = actualWorkingDays > 0 ? 
+    // Check if payroll already exists to preserve allowances and advances
+    const existingPayroll = await db.select().from(payroll)
+      .where(and(
+        eq(payroll.userId, userId),
+        eq(payroll.month, month),
+        eq(payroll.year, year)
+      )).limit(1);
+    
+    // Preserve existing allowances, advances, and bonus if payroll exists
+    const preservedAllowances = existingPayroll[0]?.allowances || 0;
+    const preservedAdvance = existingPayroll[0]?.advance || 0;
+    const preservedBonus = existingPayroll[0]?.bonus || 0;
+    
+    // Calculate proportionate salary: Basic salary ÷ total days × working days
+    const proportionateSalary = actualWorkingDays > 0 ? 
       Math.round((basicSalary / totalDaysInMonth) * actualWorkingDays) : 0;
+    
+    // Calculate net salary: Proportionate + Allowances + Bonus - Advance
+    const netSalary = proportionateSalary + preservedAllowances + preservedBonus - preservedAdvance;
 
     const payrollData: InsertPayroll = {
       userId,
       month,
       year,
       basicSalary,
-      allowances: 0, // No additional allowances
+      allowances: preservedAllowances, // Preserve existing allowances
+      advance: preservedAdvance, // Preserve existing advance
+      bonus: preservedBonus, // Preserve existing bonus
       overtimePay: 0, // Remove overtime as requested
-      bonus: 0,
       deductions: 0, // No deductions for now
       netSalary,
       totalWorkingDays: totalDaysInMonth, // Total calendar days
@@ -2510,19 +2526,19 @@ class DatabaseStorage implements IStorage {
       leaveDays: absentDays,
       status: "generated",
     };
-
-    // Check if payroll already exists and update, otherwise create new
-    const existingPayroll = await db.select().from(payroll)
-      .where(and(
-        eq(payroll.userId, userId),
-        eq(payroll.month, month),
-        eq(payroll.year, year)
-      )).limit(1);
     
     if (existingPayroll[0]) {
-      // Update existing payroll with new calculations
+      // Update existing payroll preserving manual adjustments
       const updated = await db.update(payroll)
-        .set(payrollData)
+        .set({
+          ...payrollData,
+          // Only update attendance-related fields, preserve manual adjustments
+          actualWorkingDays: payrollData.actualWorkingDays,
+          totalHours: payrollData.totalHours,
+          leaveDays: payrollData.leaveDays,
+          netSalary: payrollData.netSalary,
+          status: "generated"
+        })
         .where(eq(payroll.id, existingPayroll[0].id))
         .returning();
       return updated[0];

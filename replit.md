@@ -10,6 +10,18 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes (January 2025)
 
+- ✅ **PAYROLL REGENERATION WITH DATA PRESERVATION**: Fixed Generate button to preserve manual adjustments
+  - **Preserve Allowances**: Existing allowances are maintained when regenerating payroll
+  - **Preserve Advances**: Advance amounts are not reset during regeneration
+  - **Preserve Bonus**: Bonus values are maintained across regenerations
+  - **Smart Recalculation**: Only attendance-related fields are recalculated (working days, hours, leave days)
+  - **Net Salary Update**: Automatically recalculates net salary with preserved manual adjustments
+  - **Status Reset**: Status returns to "generated" for approval workflow after regeneration
+- ✅ **COMPACT PAYROLL INTERFACE**: Enhanced UI with icon-only buttons and single-row dashboard
+  - **Icon-Only Buttons**: Generate, Paid, PDF, and Edit buttons show only icons with tooltips
+  - **Dashboard Layout**: All 6 attendance cards display in single horizontal row
+  - **Always Available Generate**: Generate button visible for all employees to allow regeneration
+  - **Status-Based Actions**: Paid and PDF buttons appear based on payroll status
 - ✅ **STAFF DELETION AND PAYROLL DISPLAY FIXES**: Resolved staff management and payroll display issues
   - **Staff Deletion**: Fixed to make staff inactive instead of permanent deletion
   - **Payroll Display**: Fixed missing employee names and ₹NaN net pay calculations
