@@ -996,30 +996,19 @@ export default function ProjectDetail() {
                       {/* Thumbnail area */}
                       <div className="h-32 bg-gray-50 overflow-hidden">
                         {file.mimeType?.includes('image') ? (
-                          <img
-                            key={`img-${file.id}`}
-                            src={`/uploads/products/${file.fileName}`}
-                            alt={file.originalName || file.fileName}
-                            style={{ 
+                          <div 
+                            className="w-full h-full"
+                            style={{
+                              backgroundImage: `url(/uploads/products/${file.fileName})`,
+                              backgroundSize: 'cover',
+                              backgroundPosition: 'center',
+                              backgroundRepeat: 'no-repeat',
+                              display: 'block',
                               width: '100%',
-                              height: '100%',
-                              objectFit: 'cover',
-                              display: 'block !important',
-                              visibility: 'visible !important',
-                              opacity: '1 !important',
-                              position: 'static !important',
-                              zIndex: '999 !important',
-                              backgroundColor: 'transparent'
+                              height: '100%'
                             }}
-                            onLoad={(e) => {
-                              console.log('Image loaded and displayed:', file.fileName);
-                              e.currentTarget.style.display = 'block';
-                              e.currentTarget.style.visibility = 'visible';
-                              e.currentTarget.style.opacity = '1';
-                            }}
-                            onError={(e) => {
-                              console.error('Image failed to load:', e.currentTarget.src);
-                              e.currentTarget.style.display = 'none';
+                            onLoad={() => {
+                              console.log('Background image loaded:', file.fileName);
                             }}
                           />
                         ) : (
