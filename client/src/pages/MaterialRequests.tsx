@@ -37,28 +37,26 @@ export default function MaterialRequests() {
       subtitle="Manage and track material request workflows"
     >
       {/* Action Buttons */}
-      <FurniliCard className="mb-6">
-        <div className="flex flex-col sm:flex-row gap-3">
-          {canCreateRequests && (
-            <FurniliButton
-              onClick={() => setShowNewRequest(true)}
-              variant="furnili-primary"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              New Request
-            </FurniliButton>
-          )}
-          {canUploadBOQ && (
-            <FurniliButton
-              onClick={() => setLocation('/boq')}
-              variant="outline"
-            >
-              <FileText className="w-4 h-4 mr-2" />
-              BOQ Upload
-            </FurniliButton>
-          )}
-        </div>
-      </FurniliCard>
+      <div className="flex flex-col sm:flex-row gap-3 mb-6">
+        {canCreateRequests && (
+          <FurniliButton
+            onClick={() => setShowNewRequest(true)}
+            variant="furnili-primary"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            New Request
+          </FurniliButton>
+        )}
+        {canUploadBOQ && (
+          <FurniliButton
+            onClick={() => setLocation('/boq')}
+            variant="outline"
+          >
+            <FileText className="w-4 h-4 mr-2" />
+            BOQ Upload
+          </FurniliButton>
+        )}
+      </div>
 
       <RequestTable />
       

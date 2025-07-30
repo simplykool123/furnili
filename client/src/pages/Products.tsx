@@ -52,26 +52,24 @@ export default function Products() {
       onAddClick={() => setShowAddProduct(true)}
     >
       {/* Bulk Operations */}
-      <FurniliCard className="mb-6">
-        <div className="flex flex-wrap gap-3">
-          <BulkExportModal />
-          {canManageProducts && (
-            <BulkImportModal onSuccess={() => {
-              // Refresh the table
-              window.location.reload();
-            }} />
-          )}
-          {canManageProducts && (
-            <FurniliButton 
-              onClick={() => setShowAddProduct(true)}
-              className="flex items-center gap-2"
-            >
-              <Plus className="w-4 h-4" />
-              Add New Product
-            </FurniliButton>
-          )}
-        </div>
-      </FurniliCard>
+      <div className="flex flex-wrap gap-3 mb-6">
+        <BulkExportModal />
+        {canManageProducts && (
+          <BulkImportModal onSuccess={() => {
+            // Refresh the table
+            window.location.reload();
+          }} />
+        )}
+        {canManageProducts && (
+          <FurniliButton 
+            onClick={() => setShowAddProduct(true)}
+            className="flex items-center gap-2"
+          >
+            <Plus className="w-4 h-4" />
+            Add New Product
+          </FurniliButton>
+        )}
+      </div>
 
       {isMobile ? (
         <MobileProductTable 
