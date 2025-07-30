@@ -561,11 +561,52 @@ export default function ProjectDetail() {
     { id: 2, type: "call", content: "Follow-up call regarding material selection", contactPerson: "Mrs. Sharma", status: "pending", followUpDate: "2025-02-02" },
   ];
 
+  // Project stages in order
+  const projectStages = [
+    'prospect', 'recce-done', 'design-in-progress', 'design-approved', 
+    'estimate-given', 'client-approved', 'production', 'installation', 
+    'handover', 'completed'
+  ];
+
   // Memoized calculations for better performance
   const projectProgress = useMemo(() => {
-    const completedTasks = mockTasks.filter(task => task.status === "completed").length;
-    return Math.round((completedTasks / mockTasks.length) * 100);
-  }, []);
+    if (!project?.stage) return 0;
+    
+    // Special handling for optional stages
+    if (project.stage === 'on-hold' || project.stage === 'lost') {
+      const lastMainStage = project.previousStage || 'prospect';
+      const stageIndex = projectStages.indexOf(lastMainStage);
+      return Math.round(((stageIndex + 1) / projectStages.length) * 100);
+    }
+    
+    const currentStageIndex = projectStages.indexOf(project.stage);
+    if (currentStageIndex === -1) return 0;
+    
+    // Calculate percentage: (completed stages + 1) / total stages * 100
+    return Math.round(((currentStageIndex + 1) / projectStages.length) * 100);
+  }, [project?.stage]);
+
+  const stageProgress = useMemo(() => {
+    if (!project?.stage) return { completed: 0, total: projectStages.length, current: 'prospect' };
+    
+    // Special handling for optional stages
+    if (project.stage === 'on-hold' || project.stage === 'lost') {
+      const lastMainStage = project.previousStage || 'prospect';
+      const stageIndex = projectStages.indexOf(lastMainStage);
+      return { 
+        completed: stageIndex + 1, 
+        total: projectStages.length, 
+        current: lastMainStage 
+      };
+    }
+    
+    const currentStageIndex = projectStages.indexOf(project.stage);
+    return { 
+      completed: currentStageIndex + 1, 
+      total: projectStages.length, 
+      current: project.stage 
+    };
+  }, [project?.stage]);
 
   const taskSummary = useMemo(() => ({
     pending: mockTasks.filter(t => t.status === 'pending').length,
@@ -1659,7 +1700,7 @@ export default function ProjectDetail() {
                     </div>
                     <ProgressBar value={projectProgress} className="mb-4" />
                     <p className="text-sm text-gray-500">
-                      {taskSummary.completed} of {mockTasks.length} tasks completed
+                      {stageProgress.completed} of {stageProgress.total} stages completed
                     </p>
                   </div>
                 </CardContent>

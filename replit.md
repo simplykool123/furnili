@@ -10,6 +10,16 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes (January 2025)
 
+- ✅ **PROJECT CODE FORMAT UPDATED**: Reset project codes to "Fur/25-26/XXX" format starting from 101
+  - **Database Update**: Changed existing projects to "Fur/25-26/101" and "Fur/25-26/102" 
+  - **Code Generation**: Modified createProject methods to use new format with fixed prefix "Fur/25-26/"
+  - **Sequential Numbering**: New projects will automatically continue from 103, 104, etc.
+  - **UI Display**: Material Request dropdown now shows "Project ID: Fur/25-26/101" format
+- ✅ **STAGE-BASED PROGRESS CALCULATION**: Overall Progress now calculated from Project Stages instead of tasks
+  - **Progress Logic**: Calculates percentage based on completed project stages (10 total stages)
+  - **Stage Tracking**: Progress shows "X of 10 stages completed" instead of task-based counting
+  - **Current Stage Support**: Handles all stages from Prospect to Completed, plus On Hold/Lost states
+  - **Visual Update**: Progress bar and percentage reflect actual project stage progression
 - ✅ **CLIENT AUTO-FILL FUNCTIONALITY FIXED**: Resolved Material Request form client auto-fill issue
   - **Backend Database Join**: Modified `getAllProjects` method to join with clients table and include `clientName` field
   - **Frontend Form Enhancement**: Enhanced setValue calls with shouldValidate and shouldDirty flags for immediate UI updates
