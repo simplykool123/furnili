@@ -107,9 +107,20 @@ export default function RequestFormSimplified({ onClose, onSuccess, preSelectedP
     queryKey: ["/api/clients"],
   });
 
-  const { data: eligibleProjects = [] } = useQuery<Project[]>({
+  const { data: eligibleProjects = [], error: projectsError } = useQuery<Project[]>({
     queryKey: ["/api/eligible-projects"],
+    retry: false
   });
+
+  // Debug projects loading
+  useEffect(() => {
+    if (projectsError) {
+      console.error("Failed to fetch eligible projects:", projectsError);
+    }
+    if (eligibleProjects.length > 0) {
+      console.log("Eligible projects loaded:", eligibleProjects);
+    }
+  }, [eligibleProjects, projectsError]);
 
   const form = useForm<RequestFormData>({
     resolver: zodResolver(requestFormSchema),
@@ -182,9 +193,11 @@ export default function RequestFormSimplified({ onClose, onSuccess, preSelectedP
   useEffect(() => {
     if (preSelectedProjectId && eligibleProjects.length > 0) {
       const selectedProject = eligibleProjects.find(p => p.id === preSelectedProjectId);
+      console.log("Pre-selected project:", preSelectedProjectId, "Found project:", selectedProject);
       if (selectedProject) {
         setValue('projectId', preSelectedProjectId);
         setValue('clientName', selectedProject.clientName);
+        console.log("Auto-filled client name:", selectedProject.clientName);
       }
     }
   }, [preSelectedProjectId, eligibleProjects, setValue]);
@@ -359,12 +372,15 @@ export default function RequestFormSimplified({ onClose, onSuccess, preSelectedP
                 value={watch("projectId")?.toString() || ""}
                 onValueChange={(value) => {
                   const projectId = parseInt(value);
+                  console.log("Project selected:", projectId);
                   setValue("projectId", projectId);
                   
                   // Auto-fill client name based on selected project
                   const selectedProject = eligibleProjects.find(p => p.id === projectId);
+                  console.log("Selected project data:", selectedProject);
                   if (selectedProject) {
                     setValue("clientName", selectedProject.clientName);
+                    console.log("Setting client name to:", selectedProject.clientName);
                   }
                 }}
               >
