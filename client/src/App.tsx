@@ -34,6 +34,7 @@ import FollowUps from "@/pages/CRM/FollowUps";
 import SiteVisits from "@/pages/CRM/SiteVisits";
 import CRMReports from "@/pages/CRM/CRMReports";
 import Projects from "@/pages/Projects";
+import ProjectDetail from "@/pages/ProjectDetail";
 import NotFound from "@/pages/not-found";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -211,6 +212,12 @@ function Router() {
           >
             <Projects />
           </Layout>
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/projects/:id">
+        <ProtectedRoute>
+          <ProjectDetail />
         </ProtectedRoute>
       </Route>
       

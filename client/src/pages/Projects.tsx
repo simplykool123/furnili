@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus, Search, Filter, Building2, Calendar, User, MapPin, Eye, Edit, FolderOpen } from "lucide-react";
+import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -36,6 +37,7 @@ const createProjectSchema = z.object({
 export default function Projects() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [location, setLocation] = useLocation();
 
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isCreateClientDialogOpen, setIsCreateClientDialogOpen] = useState(false);
@@ -353,7 +355,12 @@ export default function Projects() {
                       </Badge>
                     </TableCell>
                     <TableCell className="text-center">
-                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="h-8 w-8 p-0"
+                        onClick={() => setLocation(`/projects/${project.id}`)}
+                      >
                         <Eye className="h-4 w-4 text-gray-500" />
                       </Button>
                     </TableCell>
@@ -367,287 +374,388 @@ export default function Projects() {
 
       {/* Create Project Dialog */}
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-        <DialogContent className="max-w-4xl">
-          <DialogHeader>
-            <DialogTitle>Create New Project</DialogTitle>
-            <DialogDescription>
-              Create a comprehensive project with client details and address information
-            </DialogDescription>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader className="pb-4">
+            <DialogTitle className="text-xl font-semibold">New Project</DialogTitle>
           </DialogHeader>
 
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="client">Client Details</TabsTrigger>
-              <TabsTrigger value="project">Project Details</TabsTrigger>
-              <TabsTrigger value="address">Address Details</TabsTrigger>
-            </TabsList>
+          <Form {...projectForm}>
+            <form onSubmit={projectForm.handleSubmit(onSubmitProject)} className="space-y-8">
+              {/* Client Details Section */}
+              <div className="space-y-4">
+                <div className="flex items-center space-x-2">
+                  <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center text-white text-sm font-medium">
+                    1
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900">Client Details</h3>
+                </div>
 
-            <TabsContent value="client" className="space-y-4">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-semibold">Select or Add Client</h3>
-                <Dialog open={isCreateClientDialogOpen} onOpenChange={setIsCreateClientDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button variant="outline" size="sm">
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add New Client
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Add New Client</DialogTitle>
-                    </DialogHeader>
-                    <Form {...clientForm}>
-                      <form onSubmit={clientForm.handleSubmit(onSubmitClient)} className="space-y-4">
-                        <FormField
-                          control={clientForm.control}
-                          name="name"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Client Name</FormLabel>
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-4">
+                    <div className="flex-1">
+                      <FormField
+                        control={projectForm.control}
+                        name="clientId"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-sm font-medium text-gray-700">
+                              Client <span className="text-red-500">*</span>
+                            </FormLabel>
+                            <Select value={field.value.toString()} onValueChange={(value) => field.onChange(parseInt(value))}>
                               <FormControl>
-                                <Input placeholder="Enter client name" {...field} />
+                                <SelectTrigger className="h-12 bg-gray-100 border-gray-200">
+                                  <SelectValue placeholder="Select a client" />
+                                </SelectTrigger>
                               </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <div className="grid grid-cols-2 gap-4">
-                          <FormField
-                            control={clientForm.control}
-                            name="email"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Email</FormLabel>
-                                <FormControl>
-                                  <Input type="email" placeholder="Enter email" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          <FormField
-                            control={clientForm.control}
-                            name="mobile"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Mobile</FormLabel>
-                                <FormControl>
-                                  <Input placeholder="Enter mobile number" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                        </div>
-                        <FormField
-                          control={clientForm.control}
-                          name="city"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>City</FormLabel>
-                              <FormControl>
-                                <Input placeholder="Enter city" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <div className="flex justify-end space-x-2">
-                          <Button type="button" variant="outline" onClick={() => setIsCreateClientDialogOpen(false)}>
-                            Cancel
-                          </Button>
-                          <Button type="submit" disabled={createClientMutation.isPending}>
-                            {createClientMutation.isPending ? "Creating..." : "Create Client"}
-                          </Button>
-                        </div>
-                      </form>
-                    </Form>
-                  </DialogContent>
-                </Dialog>
+                              <SelectContent>
+                                {clients.map((client: Client) => (
+                                  <SelectItem key={client.id} value={client.id.toString()}>
+                                    {client.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
+                    <Dialog open={isCreateClientDialogOpen} onOpenChange={setIsCreateClientDialogOpen}>
+                      <DialogTrigger asChild>
+                        <Button 
+                          type="button"
+                          className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg mt-6"
+                        >
+                          <User className="h-4 w-4 mr-2" />
+                          Client
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Add New Client</DialogTitle>
+                        </DialogHeader>
+                        <Form {...clientForm}>
+                          <form onSubmit={clientForm.handleSubmit(onSubmitClient)} className="space-y-4">
+                            <FormField
+                              control={clientForm.control}
+                              name="name"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Client Name</FormLabel>
+                                  <FormControl>
+                                    <Input placeholder="Enter client name" {...field} />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            <div className="grid grid-cols-2 gap-4">
+                              <FormField
+                                control={clientForm.control}
+                                name="email"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>Email</FormLabel>
+                                    <FormControl>
+                                      <Input type="email" placeholder="Enter email" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                              <FormField
+                                control={clientForm.control}
+                                name="mobile"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>Mobile</FormLabel>
+                                    <FormControl>
+                                      <Input placeholder="Enter mobile number" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                            </div>
+                            <FormField
+                              control={clientForm.control}
+                              name="city"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>City</FormLabel>
+                                  <FormControl>
+                                    <Input placeholder="Enter city" {...field} />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            <div className="flex justify-end space-x-2">
+                              <Button type="button" variant="outline" onClick={() => setIsCreateClientDialogOpen(false)}>
+                                Cancel
+                              </Button>
+                              <Button type="submit" disabled={createClientMutation.isPending}>
+                                {createClientMutation.isPending ? "Creating..." : "Create Client"}
+                              </Button>
+                            </div>
+                          </form>
+                        </Form>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
+                </div>
               </div>
 
-              <Form {...projectForm}>
-                <FormField
-                  control={projectForm.control}
-                  name="clientId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Select Client</FormLabel>
-                      <Select value={field.value.toString()} onValueChange={(value) => field.onChange(parseInt(value))}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select a client" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {clients.map((client: Client) => (
-                            <SelectItem key={client.id} value={client.id.toString()}>
-                              {client.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </Form>
-            </TabsContent>
+              {/* Project Details Section */}
+              <div className="space-y-4">
+                <div className="flex items-center space-x-2">
+                  <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center text-white text-sm font-medium">
+                    2
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900">Project Details</h3>
+                </div>
 
-            <TabsContent value="project" className="space-y-4">
-              <Form {...projectForm}>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-4">
                   <FormField
                     control={projectForm.control}
                     name="name"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Project Name</FormLabel>
+                        <FormLabel className="text-sm font-medium text-gray-700">
+                          Project Name <span className="text-red-500">*</span>
+                        </FormLabel>
                         <FormControl>
-                          <Input placeholder="Enter project name" {...field} />
+                          <Input 
+                            className="h-12 bg-gray-100 border-gray-200" 
+                            placeholder="Enter project name" 
+                            {...field} 
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-                  <FormField
-                    control={projectForm.control}
-                    name="stage"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Stage</FormLabel>
-                        <Select value={field.value} onValueChange={field.onChange}>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="flex items-center space-x-4">
+                      <div className="flex-1">
+                        <FormField
+                          control={projectForm.control}
+                          name="stage"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-sm font-medium text-gray-700">
+                                Project Stage <span className="text-red-500">*</span>
+                              </FormLabel>
+                              <Select value={field.value} onValueChange={field.onChange}>
+                                <FormControl>
+                                  <SelectTrigger className="h-12 bg-gray-100 border-gray-200">
+                                    <SelectValue placeholder="Select stage" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  <SelectItem value="prospect">Prospect</SelectItem>
+                                  <SelectItem value="execution">Execution</SelectItem>
+                                  <SelectItem value="design-presentation">Design Presentation</SelectItem>
+                                  <SelectItem value="boq-shared">BOQ Shared</SelectItem>
+                                  <SelectItem value="won">Won</SelectItem>
+                                  <SelectItem value="completed">Completed</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      <Button 
+                        type="button"
+                        className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg mt-6"
+                      >
+                        <Building2 className="h-4 w-4 mr-2" />
+                        Stage
+                      </Button>
+                    </div>
+
+                    <FormField
+                      control={projectForm.control}
+                      name="budget"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-sm font-medium text-gray-700">
+                            Budget <span className="text-red-500">*</span>
+                          </FormLabel>
                           <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select stage" />
-                            </SelectTrigger>
+                            <Input 
+                              type="number" 
+                              className="h-12 bg-gray-100 border-gray-200" 
+                              placeholder="Enter budget" 
+                              {...field} 
+                              onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)} 
+                            />
                           </FormControl>
-                          <SelectContent>
-                            <SelectItem value="prospect">Prospect</SelectItem>
-                            <SelectItem value="execution">Execution</SelectItem>
-                            <SelectItem value="design-presentation">Design Presentation</SelectItem>
-                            <SelectItem value="boq-shared">BOQ Shared</SelectItem>
-                            <SelectItem value="won">Won</SelectItem>
-                            <SelectItem value="completed">Completed</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                <FormField
-                  control={projectForm.control}
-                  name="description"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Description</FormLabel>
-                      <FormControl>
-                        <Textarea placeholder="Enter project description" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={projectForm.control}
-                  name="budget"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Budget</FormLabel>
-                      <FormControl>
-                        <Input type="number" placeholder="Enter budget" {...field} onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </Form>
-            </TabsContent>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
 
-            <TabsContent value="address" className="space-y-4">
-              <Form {...projectForm}>
-                <div className="grid grid-cols-2 gap-4">
                   <FormField
                     control={projectForm.control}
-                    name="addressLine1"
+                    name="description"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Address Line 1</FormLabel>
+                        <FormLabel className="text-sm font-medium text-gray-700">Description</FormLabel>
                         <FormControl>
-                          <Input placeholder="Enter address line 1" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={projectForm.control}
-                    name="addressLine2"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Address Line 2</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter address line 2" {...field} />
+                          <Textarea 
+                            className="min-h-24 bg-gray-100 border-gray-200" 
+                            placeholder="Enter project description" 
+                            {...field} 
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
                 </div>
-                <div className="grid grid-cols-3 gap-4">
-                  <FormField
-                    control={projectForm.control}
-                    name="city"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>City</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter city" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={projectForm.control}
-                    name="state"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>State</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter state" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={projectForm.control}
-                    name="pincode"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Pincode</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Enter pincode" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </Form>
-            </TabsContent>
-          </Tabs>
+              </div>
 
-          <div className="flex justify-end space-x-2 pt-4">
-            <Button type="button" variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={projectForm.handleSubmit(onSubmitProject)} disabled={createProjectMutation.isPending}>
-              {createProjectMutation.isPending ? "Creating..." : "Create Project"}
-            </Button>
-          </div>
+              {/* Address Details Section */}
+              <div className="space-y-4">
+                <div className="flex items-center space-x-2">
+                  <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center text-white text-sm font-medium">
+                    3
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900">Address Details</h3>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={projectForm.control}
+                      name="addressLine1"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-sm font-medium text-gray-700">Address Line 1</FormLabel>
+                          <FormControl>
+                            <Input 
+                              className="h-12 bg-gray-100 border-gray-200" 
+                              placeholder="Enter address line 1" 
+                              {...field} 
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={projectForm.control}
+                      name="addressLine2"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-sm font-medium text-gray-700">Address Line 2</FormLabel>
+                          <FormControl>
+                            <Input 
+                              className="h-12 bg-gray-100 border-gray-200" 
+                              placeholder="Enter address line 2" 
+                              {...field} 
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-4 gap-4">
+                    <FormField
+                      control={projectForm.control}
+                      name="state"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-sm font-medium text-gray-700">
+                            State <span className="text-red-500">*</span>
+                          </FormLabel>
+                          <FormControl>
+                            <Input 
+                              className="h-12 bg-gray-100 border-gray-200" 
+                              placeholder="Enter state" 
+                              {...field} 
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={projectForm.control}
+                      name="city"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-sm font-medium text-gray-700">
+                            City <span className="text-red-500">*</span>
+                          </FormLabel>
+                          <FormControl>
+                            <Input 
+                              className="h-12 bg-gray-100 border-gray-200" 
+                              placeholder="Enter city" 
+                              {...field} 
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={projectForm.control}
+                      name="location"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-sm font-medium text-gray-700">Location</FormLabel>
+                          <FormControl>
+                            <Input 
+                              className="h-12 bg-gray-100 border-gray-200" 
+                              placeholder="Enter location" 
+                              {...field} 
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={projectForm.control}
+                      name="pincode"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-sm font-medium text-gray-700">Pincode</FormLabel>
+                          <FormControl>
+                            <Input 
+                              className="h-12 bg-gray-100 border-gray-200" 
+                              placeholder="Enter pincode" 
+                              {...field} 
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Submit Button */}
+              <div className="flex justify-end pt-6">
+                <Button 
+                  type="submit" 
+                  disabled={createProjectMutation.isPending}
+                  className="bg-blue-500 hover:bg-blue-600 text-white px-8 py-3 rounded-lg font-medium"
+                >
+                  {createProjectMutation.isPending ? "Creating..." : "Submit"}
+                </Button>
+              </div>
+            </form>
+          </Form>
         </DialogContent>
       </Dialog>
     </div>
