@@ -1127,15 +1127,21 @@ export default function ProjectDetail() {
           <DialogHeader>
             <DialogTitle className="text-lg font-semibold">Upload Files</DialogTitle>
             <DialogDescription>Upload files to organize in project categories</DialogDescription>
-            <button 
-              onClick={() => setIsUploadDialogOpen(false)}
-              className="absolute right-4 top-4 text-gray-400 hover:text-gray-600"
-            >
-              ✕
-            </button>
           </DialogHeader>
           <Form {...uploadForm}>
-            <form className="space-y-4">
+            <form 
+              className="space-y-4"
+              onSubmit={uploadForm.handleSubmit((data) => {
+                console.log('Upload form data:', data, selectedFiles);
+                toast({
+                  title: "Files uploaded successfully",
+                  description: `${selectedFiles?.length || 0} files uploaded`,
+                });
+                setIsUploadDialogOpen(false);
+                setSelectedFiles(null);
+                uploadForm.reset();
+              })}
+            >
               <FormField
                 control={uploadForm.control}
                 name="type"
@@ -1187,7 +1193,26 @@ export default function ProjectDetail() {
                 <label className="text-sm font-medium text-gray-700">
                   Select Files <span className="text-red-500">*</span>
                 </label>
-                <div className="border-2 border-dashed border-gray-200 rounded-lg p-6 text-center bg-gray-50">
+                <div 
+                  className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer"
+                  onClick={() => document.getElementById('file-upload')?.click()}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    e.currentTarget.classList.add('border-blue-400', 'bg-blue-50');
+                  }}
+                  onDragLeave={(e) => {
+                    e.preventDefault();
+                    e.currentTarget.classList.remove('border-blue-400', 'bg-blue-50');
+                  }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    e.currentTarget.classList.remove('border-blue-400', 'bg-blue-50');
+                    const files = e.dataTransfer.files;
+                    if (files.length > 0) {
+                      setSelectedFiles(files);
+                    }
+                  }}
+                >
                   <input
                     type="file"
                     multiple
@@ -1196,27 +1221,34 @@ export default function ProjectDetail() {
                     className="hidden"
                     id="file-upload"
                   />
-                  <label htmlFor="file-upload" className="cursor-pointer">
-                    <div className="space-y-2">
-                      <div className="text-gray-400">
-                        {selectedFiles && selectedFiles.length > 0 ? (
-                          <span className="text-gray-700">
+                  <div className="space-y-3">
+                    <Upload className="h-12 w-12 mx-auto text-gray-400" />
+                    <div>
+                      {selectedFiles && selectedFiles.length > 0 ? (
+                        <div className="space-y-2">
+                          <p className="text-sm font-medium text-green-700">
                             {selectedFiles.length} file(s) selected
-                          </span>
-                        ) : (
-                          <span>No files selected</span>
-                        )}
-                      </div>
-                      <Button 
-                        type="button" 
-                        variant="outline" 
-                        className="bg-blue-50 border-blue-200 text-blue-600 hover:bg-blue-100"
-                      >
-                        <Upload className="h-4 w-4 mr-2" />
-                        Upload
-                      </Button>
+                          </p>
+                          <div className="text-xs text-gray-500 max-h-20 overflow-y-auto">
+                            {Array.from(selectedFiles).map((file, index) => (
+                              <div key={index} className="truncate">
+                                {file.name} ({(file.size / 1024 / 1024).toFixed(2)} MB)
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ) : (
+                        <div>
+                          <p className="text-sm text-gray-600 mb-1">
+                            Drag and drop files here, or click to select
+                          </p>
+                          <p className="text-xs text-gray-400">
+                            Supports: Images, PDF, DOC, DOCX, DWG
+                          </p>
+                        </div>
+                      )}
                     </div>
-                  </label>
+                  </div>
                 </div>
               </div>
 
