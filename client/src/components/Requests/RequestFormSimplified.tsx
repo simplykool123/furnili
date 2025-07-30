@@ -178,11 +178,12 @@ export default function RequestFormSimplified({ onClose, onSuccess, preSelectedP
     }
   }, [products, initialData, reset]);
 
-  // Update client name when pre-selected project changes
+  // Update project ID and client name when pre-selected project changes
   useEffect(() => {
     if (preSelectedProjectId && eligibleProjects.length > 0) {
       const selectedProject = eligibleProjects.find(p => p.id === preSelectedProjectId);
       if (selectedProject) {
+        setValue('projectId', preSelectedProjectId);
         setValue('clientName', selectedProject.clientName);
       }
     }
@@ -353,7 +354,7 @@ export default function RequestFormSimplified({ onClose, onSuccess, preSelectedP
           {/* All fields in one compact row */}
           <div className="grid grid-cols-12 gap-3 items-end">
             <div className="col-span-4">
-              <Label htmlFor="projectId" className="text-sm font-medium">Project Code *</Label>
+              <Label htmlFor="projectId" className="text-sm font-medium">Project ID *</Label>
               <Select 
                 value={watch("projectId")?.toString() || ""}
                 onValueChange={(value) => {
