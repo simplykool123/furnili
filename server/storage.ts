@@ -1340,7 +1340,7 @@ export class MemStorage {
   }
 
   async getAllUsers(): Promise<User[]> {
-    return Array.from(this.users.values());
+    return Array.from(this.users.values()).filter(user => user.isActive);
   }
 
   async deleteUser(id: number): Promise<boolean> {
@@ -2021,7 +2021,7 @@ class DatabaseStorage implements IStorage {
   }
 
   async getAllUsers(): Promise<User[]> {
-    return db.select().from(users);
+    return db.select().from(users).where(eq(users.isActive, true));
   }
 
   async deleteUser(id: number): Promise<boolean> {

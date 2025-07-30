@@ -1286,14 +1286,14 @@ export default function Attendance() {
   };
 
   const handleDeleteStaff = async (staffId: number) => {
-    if (confirm("Are you sure you want to delete this staff member?")) {
+    if (confirm("Are you sure you want to deactivate this staff member? They will be marked as inactive but not permanently deleted.")) {
       try {
         await authenticatedApiRequest("DELETE", `/api/users/${staffId}`);
         queryClient.invalidateQueries({ queryKey: ["/api/users"] });
-        toast({ title: "Staff member deleted successfully" });
+        toast({ title: "Staff member deactivated successfully" });
       } catch (error: any) {
         toast({
-          title: "Failed to delete staff member",
+          title: "Failed to deactivate staff member",
           description: error.message,
           variant: "destructive",
         });

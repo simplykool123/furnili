@@ -302,15 +302,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete("/api/users/:id", authenticateToken, requireRole(["admin"]), async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      const deleted = await storage.deleteUser(id);
+      // Make user inactive instead of deleting
+      const updated = await storage.updateUser(id, { isActive: false });
       
-      if (!deleted) {
+      if (!updated) {
         return res.status(404).json({ message: "User not found" });
       }
       
-      res.json({ message: "User deleted successfully" });
+      res.json({ message: "Staff member deactivated successfully" });
     } catch (error) {
-      res.status(500).json({ message: "Failed to delete user", error });
+      res.status(500).json({ message: "Failed to deactivate user", error });
     }
   });
 
