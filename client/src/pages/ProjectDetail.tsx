@@ -221,6 +221,40 @@ export default function ProjectDetail() {
     }
   };
 
+  // Stage update mutation
+  const stageUpdateMutation = useMutation({
+    mutationFn: async (newStage: string) => {
+      const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+      const response = await apiRequest(`/api/projects/${projectId}`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ stage: newStage }),
+      });
+      return response;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/projects', projectId] });
+      toast({
+        title: "Success",
+        description: "Project stage updated successfully",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to update project stage",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleStageChange = (newStage: string) => {
+    stageUpdateMutation.mutate(newStage);
+  };
+
 
 
   if (projectLoading) {
@@ -288,7 +322,7 @@ export default function ProjectDetail() {
             <div className="flex items-center space-x-4">
               <div className="text-right">
                 <div className="text-sm font-medium text-gray-600 mb-1">Stage</div>
-                <Select defaultValue={project.stage}>
+                <Select value={project.stage} onValueChange={handleStageChange}>
                   <SelectTrigger className="w-32 bg-gray-100 border-gray-200">
                     <SelectValue />
                   </SelectTrigger>
