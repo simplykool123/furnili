@@ -3,6 +3,7 @@ import { useMemo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/ui/button";
 import { 
   Package, 
   Users, 
@@ -27,10 +28,13 @@ import MobileDashboard from "@/components/Mobile/MobileDashboard";
 import { useIsMobile } from "@/components/Mobile/MobileOptimizer";
 import { DashboardSkeleton } from "@/components/LoadingOptimizer";
 import { useLocation } from "wouter";
-import { Button } from "@/components/ui/button";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { authenticatedApiRequest } from "@/lib/auth";
+import FurniliLayout from "@/components/Layout/FurniliLayout";
+import FurniliCard from "@/components/UI/FurniliCard";
+import FurniliButton from "@/components/UI/FurniliButton";
+import FurniliStatsCard from "@/components/UI/FurniliStatsCard";
 
 interface DashboardStats {
   totalProducts: number;
@@ -251,39 +255,27 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="space-y-3 animate-fade-in max-w-7xl mx-auto">
-      {/* Tasks are now only shown in the notification bell to prevent duplication */}
-      {/* Completely removed all task display logic from dashboard */}
-
-      {/* Welcome Header */}
-      <div className="text-center sm:text-left">
-        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-amber-900">
-          Welcome back, {currentUser?.name || 'Admin'}!
-        </h1>
-        <p className="text-sm sm:text-base text-amber-800 mt-1">
-          Here's your business overview and key metrics for today.
-        </p>
-      </div>
-
-      {/* Motivational Quote */}
+    <FurniliLayout
+      title={`Welcome back, ${currentUser?.name || 'Admin'}!`}
+      subtitle="Here's your business overview and key metrics for today."
+    >
+      {/* Daily Motivation Quote */}
       {dailyQuote && (
-        <Card className="shadow-lg border border-amber-200 bg-white">
-          <CardContent className="pt-3 pb-3">
-            <div className="flex items-start space-x-3">
-              <div className="flex-shrink-0">
-                <Quote className="h-6 w-6 text-amber-600" />
-              </div>
-              <div className="flex-1">
-                <blockquote className="text-sm font-medium text-amber-900 leading-relaxed">
-                  "{dailyQuote.text}"
-                </blockquote>
-                <cite className="block text-right text-amber-700 font-semibold mt-2 text-xs">
-                  — {dailyQuote.author}
-                </cite>
-              </div>
+        <FurniliCard variant="gradient" className="border-l-4 border-l-primary">
+          <div className="flex items-start space-x-4">
+            <div className="furnili-gradient p-3 rounded-lg">
+              <Quote className="h-6 w-6 text-white" />
             </div>
-          </CardContent>
-        </Card>
+            <div className="flex-1">
+              <blockquote className="text-base font-medium text-foreground leading-relaxed">
+                "{dailyQuote.text}"
+              </blockquote>
+              <cite className="block text-right text-muted-foreground font-semibold mt-3 text-sm">
+                — {dailyQuote.author}
+              </cite>
+            </div>
+          </div>
+        </FurniliCard>
       )}
 
       {/* Staff Check-In/Out Widget - Compact Version for staff users */}
@@ -576,6 +568,6 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       )}
-    </div>
+    </FurniliLayout>
   );
 }

@@ -19,6 +19,9 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import type { Project, Client } from "@shared/schema";
 import { insertClientSchema } from "@shared/schema";
+import FurniliLayout from "@/components/Layout/FurniliLayout";
+import FurniliCard from "@/components/UI/FurniliCard";
+import FurniliButton from "@/components/UI/FurniliButton";
 
 const createProjectSchema = z.object({
   name: z.string().min(1, "Project name is required"),
@@ -250,23 +253,12 @@ export default function Projects() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4">
-        <div className="flex justify-between items-center">
-          <div className="flex items-center space-x-3">
-            <FolderOpen className="h-8 w-8 text-amber-900" />
-            <h1 className="text-2xl font-semibold text-gray-900">Project Studio</h1>
-          </div>
-          <Button 
-            onClick={() => setIsCreateDialogOpen(true)}
-            className="btn-primary"
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Project
-          </Button>
-        </div>
-      </div>
+    <FurniliLayout
+      title="Project Studio"
+      subtitle="Manage your projects, clients, and project details"
+      showAddButton={true}
+      onAddClick={() => setIsCreateDialogOpen(true)}
+    >
 
       {/* Main Content */}
       <div className="p-6">
@@ -776,6 +768,6 @@ export default function Projects() {
           </Form>
         </DialogContent>
       </Dialog>
-    </div>
+    </FurniliLayout>
   );
 }

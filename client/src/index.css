@@ -69,10 +69,126 @@
   animation: shimmer 2s infinite;
 }
 
+/* Furnili Professional Component Styles */
+.furnili-card {
+  @apply bg-white rounded-xl shadow-sm border hover:shadow-md transition-all duration-200;
+  border-color: hsl(var(--border));
+}
+
+.furnili-button-primary {
+  @apply px-6 py-3 rounded-lg font-medium transition-all duration-200 shadow-sm hover:shadow-md text-white;
+  background-color: hsl(var(--primary));
+}
+
+.furnili-button-primary:hover {
+  background-color: hsl(var(--primary) / 0.9);
+}
+
+.furnili-button-secondary {
+  @apply px-6 py-3 rounded-lg font-medium transition-all duration-200;
+  background-color: hsl(var(--secondary));
+  color: hsl(var(--secondary-foreground));
+}
+
+.furnili-button-secondary:hover {
+  background-color: hsl(var(--secondary) / 0.9);
+}
+
+.furnili-gradient {
+  background: var(--furnili-gradient);
+}
+
+.furnili-glass {
+  @apply backdrop-blur-sm border;
+  background-color: rgba(255, 255, 255, 0.8);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.furnili-sidebar {
+  background: linear-gradient(180deg, hsl(var(--background)) 0%, hsl(var(--muted)) 100%);
+}
+
+.furnili-header {
+  @apply backdrop-blur-sm border-b;
+  background-color: rgba(255, 255, 255, 0.95);
+  border-color: hsl(var(--border));
+}
+
+.furnili-page {
+  @apply min-h-screen;
+  background: linear-gradient(135deg, hsl(var(--background)) 0%, hsl(var(--muted) / 0.5) 50%, hsl(var(--background)) 100%);
+}
+
+.furnili-section {
+  @apply bg-white rounded-xl p-6 shadow-sm border;
+  border-color: hsl(var(--border));
+}
+
+.furnili-stats-card {
+  @apply rounded-xl p-6 shadow-sm border hover:shadow-md transition-all duration-200;
+  background: linear-gradient(135deg, white 0%, hsl(var(--muted) / 0.3) 100%);
+  border-color: hsl(var(--border));
+}
+
+.furnili-table {
+  @apply bg-white rounded-xl shadow-sm border overflow-hidden;
+  border-color: hsl(var(--border));
+}
+
+.furnili-input {
+  border-color: hsl(var(--border));
+}
+
+.furnili-input:focus {
+  border-color: hsl(var(--primary));
+  box-shadow: 0 0 0 3px hsl(var(--primary) / 0.2);
+}
+
+.furnili-nav-item {
+  @apply px-3 py-2.5 rounded-lg transition-all duration-200 font-medium;
+  color: hsl(var(--foreground) / 0.8);
+}
+
+.furnili-nav-item:hover {
+  color: hsl(var(--foreground));
+  background-color: hsl(var(--muted) / 0.5);
+}
+
+.furnili-nav-item-active {
+  @apply shadow-sm text-white;
+  background-color: hsl(var(--primary));
+}
+
 :root {
-  /* Furnili Brand Colors */
-  --furnili-primary: hsl(39, 47%, 68%); /* #D4B896 - Warm tan */
+  /* Furnili Brand Colors - Professional Palette */
+  --furnili-primary: hsl(28, 100%, 25%); /* Dark Brown Primary */
+  --furnili-secondary: hsl(39, 47%, 68%); /* #D4B896 - Warm tan */
   --furnili-cream: hsl(44, 52%, 95%); /* #F5F0E8 - Cream background */
+  --furnili-accent: hsl(25, 75%, 35%); /* Rich Brown Accent */
+  --furnili-light: hsl(40, 30%, 92%); /* Light Neutral */
+  --furnili-gradient: linear-gradient(135deg, hsl(28, 100%, 25%) 0%, hsl(25, 75%, 35%) 100%);
+  
+  /* Semantic Colors */
+  --background: hsl(44, 52%, 95%);
+  --foreground: hsl(28, 100%, 25%);
+  --card: hsl(0, 0%, 100%);
+  --card-foreground: hsl(28, 100%, 25%);
+  --popover: hsl(0, 0%, 100%);
+  --popover-foreground: hsl(28, 100%, 25%);
+  --primary: hsl(28, 100%, 25%);
+  --primary-foreground: hsl(0, 0%, 100%);
+  --secondary: hsl(39, 47%, 68%);
+  --secondary-foreground: hsl(28, 100%, 25%);
+  --muted: hsl(40, 30%, 92%);
+  --muted-foreground: hsl(25, 20%, 45%);
+  --accent: hsl(25, 75%, 35%);
+  --accent-foreground: hsl(0, 0%, 100%);
+  --destructive: hsl(0, 84%, 60%);
+  --destructive-foreground: hsl(0, 0%, 100%);
+  --border: hsl(40, 20%, 85%);
+  --input: hsl(40, 20%, 85%);
+  --ring: hsl(28, 100%, 25%);
+  --radius: 0.75rem;
   --furnili-dark: hsl(25, 25%, 15%); /* Dark brown */
   --furnili-accent: hsl(39, 60%, 55%); /* Darker tan for accents */
   

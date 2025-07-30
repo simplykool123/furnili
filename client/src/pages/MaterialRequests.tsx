@@ -7,6 +7,9 @@ import { authService } from "@/lib/auth";
 import { Plus, FileText } from "lucide-react";
 import { useLocation } from "wouter";
 import { useIsMobile, MobileCard, MobileHeading, MobileText } from "@/components/Mobile/MobileOptimizer";
+import FurniliLayout from "@/components/Layout/FurniliLayout";
+import FurniliCard from "@/components/UI/FurniliCard";
+import FurniliButton from "@/components/UI/FurniliButton";
 
 export default function MaterialRequests() {
   const [showNewRequest, setShowNewRequest] = useState(false);
@@ -29,37 +32,33 @@ export default function MaterialRequests() {
   const canUploadBOQ = user && ['manager', 'admin', 'staff'].includes(user.role);
 
   return (
-    <div className="space-y-6">
-      {/* Mobile-optimized Header */}
-      <MobileCard className="space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div className="space-y-1">
-            <MobileHeading>Material Requests</MobileHeading>
-            <MobileText>Manage and track material request workflows</MobileText>
-          </div>
-          <div className={`flex ${isMobile ? 'flex-col' : 'flex-row'} gap-2`}>
-            {canCreateRequests && (
-              <Button 
-                onClick={() => setShowNewRequest(true)}
-                className={`furnili-gradient hover:opacity-90 text-white font-medium shadow-md hover:shadow-lg transition-all duration-200 ${isMobile ? 'w-full' : ''}`}
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                New Request
-              </Button>
-            )}
-            {canUploadBOQ && (
-              <Button 
-                onClick={() => setLocation('/boq')}
-                variant="outline"
-                className={`border-amber-200 hover:bg-amber-50 text-amber-700 font-medium shadow-md hover:shadow-lg transition-all duration-200 ${isMobile ? 'w-full' : ''}`}
-              >
-                <FileText className="w-4 h-4 mr-2" />
-                BOQ Upload
-              </Button>
-            )}
-          </div>
+    <FurniliLayout
+      title="Material Requests"
+      subtitle="Manage and track material request workflows"
+    >
+      {/* Action Buttons */}
+      <FurniliCard className="mb-6">
+        <div className="flex flex-col sm:flex-row gap-3">
+          {canCreateRequests && (
+            <FurniliButton
+              onClick={() => setShowNewRequest(true)}
+              variant="furnili-primary"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              New Request
+            </FurniliButton>
+          )}
+          {canUploadBOQ && (
+            <FurniliButton
+              onClick={() => setLocation('/boq')}
+              variant="outline"
+            >
+              <FileText className="w-4 h-4 mr-2" />
+              BOQ Upload
+            </FurniliButton>
+          )}
         </div>
-      </MobileCard>
+      </FurniliCard>
 
       <RequestTable />
       
@@ -85,6 +84,6 @@ export default function MaterialRequests() {
           />
         </DialogContent>
       </Dialog>
-    </div>
+    </FurniliLayout>
   );
 }
