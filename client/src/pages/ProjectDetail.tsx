@@ -421,7 +421,7 @@ export default function ProjectDetail() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/projects', projectId, 'files'] });
       setEditingComment(null);
-      toast({ title: "Comment updated successfully!" });
+      // No toast notification for seamless inline editing
     },
   });
 
