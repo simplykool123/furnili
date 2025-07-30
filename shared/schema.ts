@@ -123,6 +123,96 @@ export const crmLeads = pgTable("crm_leads", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Phase 3 CRM Modules - New tables for project management
+
+export const projectQuotes = pgTable("project_quotes", {
+  id: serial("id").primaryKey(),
+  projectId: integer("project_id").references(() => projects.id).notNull(),
+  quoteNumber: text("quote_number").notNull().unique(),
+  title: text("title").notNull(),
+  description: text("description"),
+  items: jsonb("items").default([]), // BOQ items with quantities and prices
+  subtotal: real("subtotal").default(0),
+  taxAmount: real("tax_amount").default(0),
+  totalAmount: real("total_amount").default(0),
+  status: text("status").default("draft"), // draft, sent, approved, rejected
+  validUntil: timestamp("valid_until"),
+  sentDate: timestamp("sent_date"),
+  approvedDate: timestamp("approved_date"),
+  notes: text("notes"),
+  attachments: text("attachments").array().default([]),
+  createdBy: integer("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const projectOrders = pgTable("project_orders", {
+  id: serial("id").primaryKey(),
+  projectId: integer("project_id").references(() => projects.id).notNull(),
+  quoteId: integer("quote_id").references(() => projectQuotes.id),
+  orderNumber: text("order_number").notNull().unique(),
+  vendorName: text("vendor_name").notNull(),
+  vendorContact: text("vendor_contact"),
+  items: jsonb("items").default([]), // Ordered items
+  totalAmount: real("total_amount").default(0),
+  status: text("status").default("pending"), // pending, confirmed, in-transit, delivered, cancelled
+  orderDate: timestamp("order_date").defaultNow(),
+  expectedDelivery: timestamp("expected_delivery"),
+  actualDelivery: timestamp("actual_delivery"),
+  documents: text("documents").array().default([]), // PO documents, delivery notes
+  notes: text("notes"),
+  createdBy: integer("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const projectFinances = pgTable("project_finances", {
+  id: serial("id").primaryKey(),
+  projectId: integer("project_id").references(() => projects.id).notNull(),
+  type: text("type").notNull(), // income, expense, budget_allocation
+  category: text("category").notNull(), // materials, labor, overhead, payment_received, etc.
+  description: text("description").notNull(),
+  amount: real("amount").notNull(),
+  date: timestamp("date").defaultNow(),
+  paymentMethod: text("payment_method"), // cash, bank_transfer, cheque, upi
+  reference: text("reference"), // invoice number, receipt number, etc.
+  attachments: text("attachments").array().default([]),
+  approvedBy: integer("approved_by").references(() => users.id),
+  createdBy: integer("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const projectManpower = pgTable("project_manpower", {
+  id: serial("id").primaryKey(),
+  projectId: integer("project_id").references(() => projects.id).notNull(),
+  userId: integer("user_id").references(() => users.id),
+  workerName: text("worker_name").notNull(),
+  role: text("role").notNull(), // carpenter, painter, electrician, plumber, supervisor
+  dailyRate: real("daily_rate").default(0),
+  contactNumber: text("contact_number"),
+  assignedDate: timestamp("assigned_date").defaultNow(),
+  isActive: boolean("is_active").default(true),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const projectAttendance = pgTable("project_attendance", {
+  id: serial("id").primaryKey(),
+  projectId: integer("project_id").references(() => projects.id).notNull(),
+  manpowerId: integer("manpower_id").references(() => projectManpower.id).notNull(),
+  date: timestamp("date").defaultNow(),
+  checkIn: timestamp("check_in"),
+  checkOut: timestamp("check_out"),
+  hoursWorked: real("hours_worked").default(0),
+  overtimeHours: real("overtime_hours").default(0),
+  status: text("status").default("present"), // present, absent, half_day, overtime
+  notes: text("notes"),
+  createdBy: integer("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const crmDeals = pgTable("crm_deals", {
   id: serial("id").primaryKey(),
   title: text("title").notNull(),

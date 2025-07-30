@@ -304,79 +304,89 @@ export default function ProjectDetail() {
           </div>
         </div>
         
-        {/* Navigation Tabs matching mockup */}
-        <div className="px-6 border-b border-gray-100">
+        {/* Navigation Tabs with Enhanced UX */}
+        <div className="px-6 border-b border-gray-100 overflow-x-auto">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="h-auto bg-transparent p-0 space-x-8">
+            <TabsList className="h-auto bg-transparent p-0 space-x-6 min-w-max flex">
               <TabsTrigger 
                 value="files" 
-                className="flex items-center space-x-2 px-0 py-3 border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent bg-transparent hover:bg-transparent text-gray-600 data-[state=active]:text-blue-600 rounded-none"
+                className="flex items-center space-x-2 px-0 py-3 border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent bg-transparent hover:bg-gray-50 text-gray-600 data-[state=active]:text-blue-600 rounded-none transition-all duration-200"
               >
-                <FolderOpen className="h-4 w-4" />
-                <span className="font-medium">Files</span>
+                <span className="text-base">📂</span>
+                <FolderOpen className="hidden sm:block h-4 w-4" />
+                <span className="font-medium text-sm">Files</span>
               </TabsTrigger>
               <TabsTrigger 
                 value="moodboard" 
-                className="flex items-center space-x-2 px-0 py-3 border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent bg-transparent hover:bg-transparent text-gray-600 data-[state=active]:text-blue-600 rounded-none"
+                className="flex items-center space-x-2 px-0 py-3 border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent bg-transparent hover:bg-gray-50 text-gray-600 data-[state=active]:text-blue-600 rounded-none transition-all duration-200"
               >
-                <Image className="h-4 w-4" />
-                <span className="font-medium">Moodboard</span>
+                <span className="text-base">🎨</span>
+                <Image className="hidden sm:block h-4 w-4" />
+                <span className="font-medium text-sm">Moodboard</span>
               </TabsTrigger>
               <TabsTrigger 
                 value="notes" 
-                className="flex items-center space-x-2 px-0 py-3 border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent bg-transparent hover:bg-transparent text-gray-600 data-[state=active]:text-blue-600 rounded-none"
+                className="flex items-center space-x-2 px-0 py-3 border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent bg-transparent hover:bg-gray-50 text-gray-600 data-[state=active]:text-blue-600 rounded-none transition-all duration-200"
               >
-                <MessageSquare className="h-4 w-4" />
-                <span className="font-medium">Notes</span>
+                <span className="text-base">🗒️</span>
+                <MessageSquare className="hidden sm:block h-4 w-4" />
+                <span className="font-medium text-sm">Notes</span>
               </TabsTrigger>
               <TabsTrigger 
                 value="tasks" 
-                className="flex items-center space-x-2 px-0 py-3 border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent bg-transparent hover:bg-transparent text-gray-600 data-[state=active]:text-blue-600 rounded-none"
+                className="flex items-center space-x-2 px-0 py-3 border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent bg-transparent hover:bg-gray-50 text-gray-600 data-[state=active]:text-blue-600 rounded-none transition-all duration-200"
               >
-                <CheckCircle className="h-4 w-4" />
-                <span className="font-medium">Tasks</span>
+                <span className="text-base">✅</span>
+                <CheckCircle className="hidden sm:block h-4 w-4" />
+                <span className="font-medium text-sm">Tasks</span>
               </TabsTrigger>
               <TabsTrigger 
                 value="quotes" 
-                className="flex items-center space-x-2 px-0 py-3 border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent bg-transparent hover:bg-transparent text-gray-600 data-[state=active]:text-blue-600 rounded-none"
+                className="flex items-center space-x-2 px-0 py-3 border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent bg-transparent hover:bg-gray-50 text-gray-600 data-[state=active]:text-blue-600 rounded-none transition-all duration-200"
               >
-                <FileText className="h-4 w-4" />
-                <span className="font-medium">Quotes</span>
+                <span className="text-base">💸</span>
+                <FileText className="hidden sm:block h-4 w-4" />
+                <span className="font-medium text-sm">Quotes</span>
               </TabsTrigger>
               <TabsTrigger 
                 value="orders" 
-                className="flex items-center space-x-2 px-0 py-3 border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent bg-transparent hover:bg-transparent text-gray-600 data-[state=active]:text-blue-600 rounded-none"
+                className="flex items-center space-x-2 px-0 py-3 border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent bg-transparent hover:bg-gray-50 text-gray-600 data-[state=active]:text-blue-600 rounded-none transition-all duration-200"
               >
-                <Building2 className="h-4 w-4" />
-                <span className="font-medium">Orders</span>
+                <span className="text-base">📦</span>
+                <Building2 className="hidden sm:block h-4 w-4" />
+                <span className="font-medium text-sm">Orders</span>
               </TabsTrigger>
               <TabsTrigger 
                 value="activities" 
-                className="flex items-center space-x-2 px-0 py-3 border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent bg-transparent hover:bg-transparent text-gray-600 data-[state=active]:text-blue-600 rounded-none"
+                className="flex items-center space-x-2 px-0 py-3 border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent bg-transparent hover:bg-gray-50 text-gray-600 data-[state=active]:text-blue-600 rounded-none transition-all duration-200"
               >
-                <Calendar className="h-4 w-4" />
-                <span className="font-medium">Activities</span>
+                <span className="text-base">📅</span>
+                <Calendar className="hidden sm:block h-4 w-4" />
+                <span className="font-medium text-sm">Activities</span>
               </TabsTrigger>
               <TabsTrigger 
                 value="progress" 
-                className="flex items-center space-x-2 px-0 py-3 border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent bg-transparent hover:bg-transparent text-gray-600 data-[state=active]:text-blue-600 rounded-none"
+                className="flex items-center space-x-2 px-0 py-3 border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent bg-transparent hover:bg-gray-50 text-gray-600 data-[state=active]:text-blue-600 rounded-none transition-all duration-200"
               >
-                <BarChart3 className="h-4 w-4" />
-                <span className="font-medium">Client Progress</span>
+                <span className="text-base">📊</span>
+                <BarChart3 className="hidden sm:block h-4 w-4" />
+                <span className="font-medium text-sm">Progress</span>
               </TabsTrigger>
               <TabsTrigger 
                 value="manpower" 
-                className="flex items-center space-x-2 px-0 py-3 border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent bg-transparent hover:bg-transparent text-gray-600 data-[state=active]:text-blue-600 rounded-none"
+                className="flex items-center space-x-2 px-0 py-3 border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent bg-transparent hover:bg-gray-50 text-gray-600 data-[state=active]:text-blue-600 rounded-none transition-all duration-200"
               >
-                <Users className="h-4 w-4" />
-                <span className="font-medium">Manpower</span>
+                <span className="text-base">👷</span>
+                <Users className="hidden sm:block h-4 w-4" />
+                <span className="font-medium text-sm">Manpower</span>
               </TabsTrigger>
               <TabsTrigger 
                 value="financials" 
-                className="flex items-center space-x-2 px-0 py-3 border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent bg-transparent hover:bg-transparent text-gray-600 data-[state=active]:text-blue-600 rounded-none"
+                className="flex items-center space-x-2 px-0 py-3 border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent bg-transparent hover:bg-gray-50 text-gray-600 data-[state=active]:text-blue-600 rounded-none transition-all duration-200"
               >
-                <Target className="h-4 w-4" />
-                <span className="font-medium">Financials</span>
+                <span className="text-base">💰</span>
+                <Target className="hidden sm:block h-4 w-4" />
+                <span className="font-medium text-sm">Finances</span>
               </TabsTrigger>
               <TabsTrigger 
                 value="details" 
