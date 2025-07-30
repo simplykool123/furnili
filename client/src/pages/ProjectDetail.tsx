@@ -478,7 +478,7 @@ export default function ProjectDetail() {
         
         if (uploadResponse.ok) {
           const uploadResult = await uploadResponse.json();
-          attachmentUrls = uploadResult.files?.map((f: any) => f.fileName || f.path || f.originalName) || [];
+          attachmentUrls = uploadResult.files?.map((f: any) => f.fileName || f.originalName) || [];
           console.log('Attachment files uploaded:', attachmentUrls);
           console.log('Full upload result:', uploadResult);
         } else {

@@ -1855,6 +1855,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Alternative upload route for note attachments  
+  app.post("/api/projects/:projectId/upload", authenticateToken, productImageUpload.array('files', 10), async (req: AuthRequest, res) => {
+    try {
+      const projectId = parseInt(req.params.projectId);
+      const { category, title, clientVisible, type } = req.body;
+      const files = req.files as Express.Multer.File[];
+      
+      console.log('Upload request - files:', files?.length || 0);
+      console.log('Upload request - body:', req.body);
+      
+      if (!files || files.length === 0) {
+        console.log('No files uploaded, returning empty response');
+        return res.json({ message: "No files uploaded", files: [] });
+      }
+
+      const uploadedFiles = [];
+      for (const file of files) {
+        const fileData = {
+          projectId,
+          clientId: null,
+          fileName: file.filename,
+          originalName: file.originalname,
+          filePath: file.path,
+          fileSize: file.size,
+          mimeType: file.mimetype,
+          category: type === 'note-attachment' ? 'note-attachment' : (category || 'general'),
+          description: title || `Attachment from ${type || 'upload'}`,
+          uploadedBy: req.user!.id,
+          isPublic: clientVisible === 'true',
+        };
+
+        const uploadedFile = await storage.createProjectFile(fileData);
+        uploadedFiles.push(uploadedFile);
+      }
+
+      console.log('Uploaded files:', uploadedFiles);
+      res.json({ message: "Files uploaded successfully", files: uploadedFiles });
+    } catch (error) {
+      console.error("Failed to upload files:", error);
+      res.status(500).json({ message: "Failed to upload files", error: String(error) });
+    }
+  });
+
   // Delete project file
   app.delete("/api/projects/:projectId/files/:fileId", authenticateToken, async (req: AuthRequest, res) => {
     try {
