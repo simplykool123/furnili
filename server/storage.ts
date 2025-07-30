@@ -173,6 +173,7 @@ export interface IStorage {
   // Project Log operations
   getProjectLogs(projectId: number): Promise<ProjectLog[]>;
   createProjectLog(log: InsertProjectLog): Promise<ProjectLog>;
+  updateProjectLog(id: number, updates: Partial<ProjectLog>): Promise<ProjectLog | undefined>;
   deleteProjectLog(id: number): Promise<boolean>;
 
   // Project File operations
@@ -3556,10 +3557,22 @@ class DatabaseStorage implements IStorage {
     }
   }
 
-  async getProjectLogs(projectId: number): Promise<ProjectLog[]> {
+  async getProjectLogs(projectId: number): Promise<any[]> {
     try {
-      const result = await db.select()
+      const result = await db.select({
+        id: projectLogs.id,
+        projectId: projectLogs.projectId,
+        logType: projectLogs.logType,
+        title: projectLogs.title,
+        description: projectLogs.description,
+        createdBy: projectLogs.createdBy,
+        attachments: projectLogs.attachments,
+        isImportant: projectLogs.isImportant,
+        createdAt: projectLogs.createdAt,
+        author: users.name, // Join to get the user's name
+      })
         .from(projectLogs)
+        .leftJoin(users, eq(projectLogs.createdBy, users.id))
         .where(eq(projectLogs.projectId, projectId))
         .orderBy(desc(projectLogs.createdAt));
       return result;

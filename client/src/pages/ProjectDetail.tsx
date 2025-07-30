@@ -92,6 +92,7 @@ export default function ProjectDetail() {
   const [showImagePreview, setShowImagePreview] = useState(false);
   const [previewImage, setPreviewImage] = useState<{ src: string; name: string } | null>(null);
   const [noteFiles, setNoteFiles] = useState<FileList | null>(null);
+  const [editingNoteId, setEditingNoteId] = useState<number | null>(null);
   
   // New state for grouped images
   const [editingGroupTitle, setEditingGroupTitle] = useState<string | null>(null);
@@ -409,6 +410,7 @@ export default function ProjectDetail() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/projects', projectId, 'logs'] });
       setIsNoteDialogOpen(false);
+      setEditingNoteId(null);
       // Reset the form with default values
       noteForm.reset({
         title: "",
@@ -437,7 +439,7 @@ export default function ProjectDetail() {
     const content = data?.content || noteForm.watch('content');
     const type = data?.type || noteForm.watch('type');
     
-    console.log('Notes tab - Creating note with data:', { title, content, type });
+    console.log('Notes tab - Creating/Updating note with data:', { title, content, type, editingNoteId });
     
     if (!content) {
       toast({
@@ -455,9 +457,43 @@ export default function ProjectDetail() {
       projectId: parseInt(projectId),
     };
     
-    console.log('Notes tab - Sending to API:', noteData);
-    createLogMutation.mutate(noteData);
+    if (editingNoteId) {
+      // Update existing note
+      console.log('Updating note with ID:', editingNoteId);
+      updateLogMutation.mutate({ id: editingNoteId, ...noteData });
+    } else {
+      // Create new note
+      console.log('Creating new note:', noteData);
+      createLogMutation.mutate(noteData);
+    }
   };
+
+  // Note update mutation
+  const updateLogMutation = useMutation({
+    mutationFn: async ({ id, ...logData }: any) => {
+      return apiRequest('PUT', `/api/projects/${projectId}/logs/${id}`, logData);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/projects', projectId, 'logs'] });
+      setEditingNoteId(null);
+      noteForm.reset({
+        title: "",
+        content: "",
+        type: "note",
+        taggedUsers: [],
+      });
+      setNoteFiles(null);
+      toast({ title: "Note updated successfully!" });
+    },
+    onError: (error) => {
+      console.error('Error updating note:', error);
+      toast({ 
+        title: "Error updating note", 
+        description: "Please try again",
+        variant: "destructive" 
+      });
+    },
+  });
 
   // Note deletion mutation  
   const deleteLogMutation = useMutation({
@@ -1561,21 +1597,41 @@ export default function ProjectDetail() {
                     </div>
                     
                     <div className="flex justify-end">
-                      <Button 
-                        type="submit"
-                        disabled={!noteForm.watch('content') || createLogMutation.isPending}
-                        style={{ backgroundColor: 'hsl(28, 100%, 25%)', color: 'white' }}
-                        className="hover:opacity-90"
-                      >
-                        {createLogMutation.isPending ? (
-                          <>
-                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                            Adding...
-                          </>
-                        ) : (
-                          'Add Note'
+                      <div className="flex gap-2">
+                        {editingNoteId && (
+                          <Button 
+                            type="button"
+                            variant="outline"
+                            onClick={() => {
+                              setEditingNoteId(null);
+                              noteForm.reset({
+                                title: "",
+                                content: "",
+                                type: "note",
+                                taggedUsers: [],
+                              });
+                              setNoteFiles(null);
+                            }}
+                          >
+                            Cancel
+                          </Button>
                         )}
-                      </Button>
+                        <Button 
+                          type="submit"
+                          disabled={!noteForm.watch('content') || createLogMutation.isPending || updateLogMutation.isPending}
+                          style={{ backgroundColor: 'hsl(28, 100%, 25%)', color: 'white' }}
+                          className="hover:opacity-90"
+                        >
+                          {(createLogMutation.isPending || updateLogMutation.isPending) ? (
+                            <>
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                              {editingNoteId ? 'Updating...' : 'Adding...'}
+                            </>
+                          ) : (
+                            editingNoteId ? 'Update Note' : 'Add Note'
+                          )}
+                        </Button>
+                      </div>
                     </div>
                   </form>
                 </Form>
@@ -1625,8 +1681,19 @@ export default function ProjectDetail() {
                                   </span>
                                 </div>
                                 <p className="text-sm text-gray-700 mb-2">{log.description || log.content}</p>
+                                
+                                {/* Show attachment icons if attachments exist */}
+                                {log.attachments && log.attachments.length > 0 && (
+                                  <div className="flex items-center gap-1 mb-2">
+                                    <Paperclip className="h-4 w-4 text-gray-400" />
+                                    <span className="text-xs text-gray-500">
+                                      {log.attachments.length} attachment{log.attachments.length > 1 ? 's' : ''}
+                                    </span>
+                                  </div>
+                                )}
+                                
                                 <div className="flex items-center space-x-4 text-xs text-gray-500">
-                                  <span>{log.author || 'Test User'}</span>
+                                  <span>{log.author || 'System User'}</span>
                                   <span>
                                     {new Date(log.createdAt).toLocaleDateString('en-US', {
                                       month: 'short',
@@ -1668,11 +1735,16 @@ export default function ProjectDetail() {
                                 <DropdownMenuContent align="end">
                                   <DropdownMenuItem onClick={() => {
                                     // Set form values for editing
+                                    setEditingNoteId(log.id);
                                     noteForm.setValue('title', log.title || '');
                                     noteForm.setValue('content', log.description || log.content || '');
                                     noteForm.setValue('type', log.logType || 'note');
-                                    // TODO: Implement edit functionality
-                                    toast({ title: "Edit functionality coming soon!" });
+                                    // Scroll to form
+                                    const formElement = document.querySelector('.space-y-4 form');
+                                    if (formElement) {
+                                      formElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                    }
+                                    toast({ title: "Note loaded for editing", description: "Make your changes and click Update Note" });
                                   }}>
                                     <Edit className="h-4 w-4 mr-2" />
                                     Edit

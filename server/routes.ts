@@ -1941,6 +1941,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.put("/api/projects/:projectId/logs/:logId", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const logId = parseInt(req.params.logId);
+      const projectId = parseInt(req.params.projectId);
+      
+      const updatedLogData = insertProjectLogSchema.parse({
+        ...req.body,
+        projectId,
+        createdBy: req.user!.id
+      });
+      
+      const updatedLog = await storage.updateProjectLog(logId, updatedLogData);
+      
+      if (updatedLog) {
+        res.json(updatedLog);
+      } else {
+        res.status(404).json({ message: "Log not found" });
+      }
+    } catch (error) {
+      console.error("Failed to update project log:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Validation error", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to update project log", error: String(error) });
+    }
+  });
+
   app.delete("/api/projects/:projectId/logs/:logId", authenticateToken, async (req: AuthRequest, res) => {
     try {
       const logId = parseInt(req.params.logId);
