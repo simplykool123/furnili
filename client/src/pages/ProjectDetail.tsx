@@ -323,14 +323,16 @@ export default function ProjectDetail() {
               <div className="text-right">
                 <div className="text-sm font-medium text-gray-600 mb-1">Stage</div>
                 <Select value={project.stage} onValueChange={handleStageChange}>
-                  <SelectTrigger className="w-32 bg-gray-100 border-gray-200">
+                  <SelectTrigger className="w-40 bg-gray-100 border-gray-200">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="planning">Planning</SelectItem>
-                    <SelectItem value="design">Design</SelectItem>
+                    <SelectItem value="prospect">Prospect</SelectItem>
                     <SelectItem value="execution">Execution</SelectItem>
-                    <SelectItem value="completion">Completion</SelectItem>
+                    <SelectItem value="design-presentation">Design Presentation</SelectItem>
+                    <SelectItem value="boq-shared">BOQ Shared</SelectItem>
+                    <SelectItem value="won">Won</SelectItem>
+                    <SelectItem value="completed">Completed</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
