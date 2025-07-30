@@ -16,6 +16,12 @@ Preferred communication style: Simple, everyday language.
   - **Backend Updates**: Modified DELETE /api/users/:id to set isActive = false
   - **Frontend Fixes**: Enhanced payroll table to properly lookup staff names and calculate net pay
   - **Data Filtering**: Updated getAllUsers() to only show active staff members
+- ✅ **ATTENDANCE TRACKING SYSTEM FIXES**: Resolved attendance calculation and display issues
+  - **Absent Staff Counting**: Fixed logic to show actual staff who haven't checked in today
+  - **Total Hours Calculation**: Properly sums working hours from attendance records
+  - **Holiday Counting**: Correctly calculates Sundays/holidays in monthly statistics
+  - **Working Days**: Enhanced backend to properly calculate working days excluding Sundays
+  - **Dashboard Stats**: All attendance metrics now display accurate real-time data
 - ✅ **MATERIAL REQUEST FORM UPDATES**: Enhanced form labels and validation per user requirements
   - **Project Field**: Changed "Project" label to "Project Code" for better clarity
   - **Order Number**: Made Order No. field optional (removed required asterisk)
