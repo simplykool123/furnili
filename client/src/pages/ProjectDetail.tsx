@@ -1459,109 +1459,126 @@ export default function ProjectDetail() {
             {/* Add New Note Form */}
             <Card>
               <CardContent className="p-6 space-y-4">
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="note-title" className="text-sm font-medium">Title</Label>
-                    <Input
-                      id="note-title"
-                      placeholder="First Meeting MoM"
-                      className="w-full"
-                      value={noteForm.watch('title') || ''}
-                      onChange={(e) => noteForm.setValue('title', e.target.value)}
+                <Form {...noteForm}>
+                  <form onSubmit={noteForm.handleSubmit(handleNoteSubmit)} className="space-y-4">
+                    <FormField
+                      control={noteForm.control}
+                      name="title"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Title</FormLabel>
+                          <FormControl>
+                            <Input placeholder="First Meeting MoM" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="note-content" className="text-sm font-medium">
-                      Note <span className="text-red-500">*</span>
-                    </Label>
-                    <Textarea
-                      id="note-content"
-                      placeholder="Client wants bedroom to be in red and white them"
-                      className="min-h-[120px] resize-none"
-                      value={noteForm.watch('content') || ''}
-                      onChange={(e) => noteForm.setValue('content', e.target.value)}
+                    
+                    <FormField
+                      control={noteForm.control}
+                      name="content"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>
+                            Note <span className="text-red-500">*</span>
+                          </FormLabel>
+                          <FormControl>
+                            <Textarea 
+                              placeholder="Client wants bedroom to be in red and white them"
+                              className="min-h-[120px] resize-none"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
-                  </div>
 
-                  <div className="space-y-2">
-                    <Label className="text-sm font-medium">Note Type</Label>
-                    <Select 
-                      value={noteForm.watch('type') || 'note'} 
-                      onValueChange={(value) => {
-                        console.log('Dropdown value changed to:', value);
-                        noteForm.setValue('type', value, { shouldValidate: true, shouldDirty: true });
-                      }}
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select note type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="note">General Note</SelectItem>
-                        <SelectItem value="meeting">Meeting</SelectItem>
-                        <SelectItem value="call">Phone Call</SelectItem>
-                        <SelectItem value="email">Email</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label className="text-sm font-medium">Files</Label>
-                    <div className="flex items-center space-x-2">
-                      <input
-                        type="file"
-                        id="note-files"
-                        multiple
-                        accept="image/*,application/pdf,.doc,.docx"
-                        className="hidden"
-                        onChange={(e) => setNoteFiles(e.target.files)}
-                      />
-                      <Button
-                        variant="outline"
-                        onClick={() => document.getElementById('note-files')?.click()}
-                        className="text-sm"
-                      >
-                        Upload
-                      </Button>
-                      {noteFiles && noteFiles.length > 0 ? (
-                        <div className="flex items-center space-x-2">
-                          <Paperclip className="h-4 w-4 text-blue-500" />
-                          <span className="text-sm text-blue-600">
-                            {noteFiles.length} file{noteFiles.length > 1 ? 's' : ''} selected
-                          </span>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setNoteFiles(null)}
-                            className="h-auto p-1 text-gray-500 hover:text-gray-700"
-                          >
-                            ×
-                          </Button>
-                        </div>
-                      ) : (
-                        <span className="text-sm text-gray-500">No file selected</span>
+                    <FormField
+                      control={noteForm.control}
+                      name="type"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Note Type</FormLabel>
+                          <Select value={field.value} onValueChange={field.onChange}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select note type" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="note">General Note</SelectItem>
+                              <SelectItem value="meeting">Meeting</SelectItem>
+                              <SelectItem value="call">Phone Call</SelectItem>
+                              <SelectItem value="email">Email</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
                       )}
+                    />
+                    
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">Files</Label>
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="file"
+                          id="note-files"
+                          multiple
+                          accept="image/*,application/pdf,.doc,.docx"
+                          className="hidden"
+                          onChange={(e) => setNoteFiles(e.target.files)}
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => document.getElementById('note-files')?.click()}
+                          className="text-sm"
+                        >
+                          Upload
+                        </Button>
+                        {noteFiles && noteFiles.length > 0 ? (
+                          <div className="flex items-center space-x-2">
+                            <Paperclip className="h-4 w-4 text-blue-500" />
+                            <span className="text-sm text-blue-600">
+                              {noteFiles.length} file{noteFiles.length > 1 ? 's' : ''} selected
+                            </span>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setNoteFiles(null)}
+                              className="h-auto p-1 text-gray-500 hover:text-gray-700"
+                            >
+                              ×
+                            </Button>
+                          </div>
+                        ) : (
+                          <span className="text-sm text-gray-500">No file selected</span>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                  
-                  <div className="flex justify-end">
-                    <Button 
-                      onClick={handleNoteSubmit}
-                      disabled={!noteForm.watch('content') || createLogMutation.isPending}
-                      style={{ backgroundColor: 'hsl(28, 100%, 25%)', color: 'white' }}
-                      className="hover:opacity-90"
-                    >
-                      {createLogMutation.isPending ? (
-                        <>
-                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                          Adding...
-                        </>
-                      ) : (
-                        'Add Note'
-                      )}
-                    </Button>
-                  </div>
-                </div>
+                    
+                    <div className="flex justify-end">
+                      <Button 
+                        type="submit"
+                        disabled={!noteForm.watch('content') || createLogMutation.isPending}
+                        style={{ backgroundColor: 'hsl(28, 100%, 25%)', color: 'white' }}
+                        className="hover:opacity-90"
+                      >
+                        {createLogMutation.isPending ? (
+                          <>
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                            Adding...
+                          </>
+                        ) : (
+                          'Add Note'
+                        )}
+                      </Button>
+                    </div>
+                  </form>
+                </Form>
               </CardContent>
             </Card>
 
