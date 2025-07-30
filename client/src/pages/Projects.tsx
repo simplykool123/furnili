@@ -114,10 +114,10 @@ export default function Projects() {
   });
 
   const createProjectMutation = useMutation({
-    mutationFn: (projectData: any) => apiRequest('/api/projects', {
-      method: 'POST',
-      body: JSON.stringify(projectData),
-    }),
+    mutationFn: async (projectData: any) => {
+      const response = await apiRequest('POST', '/api/projects', projectData);
+      return response.json();
+    },
     onSuccess: () => {
       toast({ title: "Project created successfully" });
       setIsCreateDialogOpen(false);
@@ -134,10 +134,10 @@ export default function Projects() {
   });
 
   const createClientMutation = useMutation({
-    mutationFn: (clientData: any) => apiRequest('/api/clients', {
-      method: 'POST',
-      body: JSON.stringify(clientData),
-    }),
+    mutationFn: async (clientData: any) => {
+      const response = await apiRequest('POST', '/api/clients', clientData);
+      return response.json();
+    },
     onSuccess: (newClient: Client) => {
       toast({ title: "Client created successfully" });
       setIsCreateClientDialogOpen(false);
