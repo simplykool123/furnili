@@ -10,12 +10,6 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes (January 2025)
 
-- ✅ **FILE MANAGEMENT STREAMLINED**: Removed moodboard functionality from project management interface
-  - **Simplified Navigation**: File management now focuses on three core categories: Recce, Design, and Drawing
-  - **Clean Interface**: Removed moodboard tab and related UI components for cleaner user experience
-  - **Maintained Functionality**: All existing file upload, preview, and delete operations remain fully functional
-  - **Updated Filters**: File type filters now properly handle only the three active categories
-  - **Performance**: Eliminated unused moodboard-related API calls and state management
 - ✅ **NOTES SYSTEM API ERROR FIXED**: Resolved "Invalid HTTP method provided" error in notes functionality
   - **API Request Fix**: Corrected parameter order in apiRequest function calls for note creation/deletion
   - **Parameter Order**: Fixed createLogMutation and deleteLogMutation to use proper (method, url, data) format
