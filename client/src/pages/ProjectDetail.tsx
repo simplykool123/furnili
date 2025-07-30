@@ -220,10 +220,11 @@ export default function ProjectDetail() {
       const formData = new FormData();
       formData.append('audio', audioBlob, 'recording.wav');
       
+      const token = localStorage.getItem('authToken') || localStorage.getItem('token');
       const response = await fetch('/api/transcribe', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${token}`,
         },
         body: formData,
       });
@@ -3020,6 +3021,9 @@ export default function ProjectDetail() {
             <DialogTitle className="text-lg font-semibold">
               {previewImage?.name}
             </DialogTitle>
+            <DialogDescription>
+              Preview and download project file
+            </DialogDescription>
           </DialogHeader>
           <div className="flex-1 flex items-center justify-center p-6 pt-0">
             {previewImage && (

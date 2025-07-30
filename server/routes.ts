@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 import multer from "multer";
+import { promises as fs } from "fs";
 import { storage } from "./storage";
 import { authenticateToken, requireRole, generateToken, comparePassword, type AuthRequest } from "./middleware/auth";
 import { productImageUpload, boqFileUpload, receiptImageUpload, csvFileUpload } from "./utils/fileUpload";
@@ -2432,7 +2433,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const simulatedTranscription = "This is a simulated transcription. In a real implementation, this would be the actual transcribed text from the audio file.";
       
       // Cleanup uploaded file
-      const fs = require('fs').promises;
       try {
         await fs.unlink(req.file.path);
       } catch (error) {
