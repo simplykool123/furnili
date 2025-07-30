@@ -20,6 +20,10 @@ Preferred communication style: Simple, everyday language.
   - **Stage Tracking**: Progress shows "X of 10 stages completed" instead of task-based counting
   - **Current Stage Support**: Handles all stages from Prospect to Completed, plus On Hold/Lost states
   - **Visual Update**: Progress bar and percentage reflect actual project stage progression
+- ✅ **MANPOWER TAB REMOVED**: Removed unnecessary Manpower tab from ProjectDetail page per user requirements
+  - **Tab Navigation**: Cleaned up tabs navigation to remove Manpower/team management functionality
+  - **Simplified Interface**: Focus remains on core project management features without team assignment
+  - **User Request**: Removed as explicitly requested - "not required"
 - ✅ **CLIENT AUTO-FILL FUNCTIONALITY FIXED**: Resolved Material Request form client auto-fill issue
   - **Backend Database Join**: Modified `getAllProjects` method to join with clients table and include `clientName` field
   - **Frontend Form Enhancement**: Enhanced setValue calls with shouldValidate and shouldDirty flags for immediate UI updates

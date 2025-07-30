@@ -991,13 +991,7 @@ export default function ProjectDetail() {
                 <span className="text-base">📊</span>
                 <span className="font-medium text-sm">Progress</span>
               </TabsTrigger>
-              <TabsTrigger 
-                value="manpower" 
-                className="flex items-center space-x-2 px-0 py-3 border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent bg-transparent hover:bg-gray-50 text-gray-600 data-[state=active]:text-blue-600 rounded-none transition-all duration-200"
-              >
-                <span className="text-base">👷</span>
-                <span className="font-medium text-sm">Manpower</span>
-              </TabsTrigger>
+
               <TabsTrigger 
                 value="financials" 
                 className="flex items-center space-x-2 px-0 py-3 border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent bg-transparent hover:bg-gray-50 text-gray-600 data-[state=active]:text-blue-600 rounded-none transition-all duration-200"
@@ -1943,17 +1937,7 @@ export default function ProjectDetail() {
             </div>
           </TabsContent>
 
-          <TabsContent value="manpower" className="p-6 bg-gray-50">
-            <div className="text-center py-12">
-              <Users className="h-16 w-16 mx-auto text-gray-300 mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Manpower Management</h3>
-              <p className="text-gray-500 mb-6">Assign and manage project team members</p>
-              <Button className="bg-blue-600 hover:bg-blue-700 text-white">
-                <Plus className="h-4 w-4 mr-2" />
-                Assign Team
-              </Button>
-            </div>
-          </TabsContent>
+
 
           <TabsContent value="financials" className="p-6 bg-gray-50">
             <div className="text-center py-12">
