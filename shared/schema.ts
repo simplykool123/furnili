@@ -61,7 +61,7 @@ export const projects = pgTable("projects", {
   name: text("name").notNull(),
   description: text("description"),
   clientId: integer("client_id").references(() => clients.id).notNull(),
-  stage: text("stage").notNull().default("prospect"), // prospect, execution, design-presentation, boq-shared, won, completed
+  stage: text("stage").notNull().default("prospect"), // prospect, recce-done, design-in-progress, design-approved, estimate-given, client-approved, production, installation, handover, completed, on-hold, lost
   budget: real("budget").default(0),
   addressLine1: text("address_line_1"),
   addressLine2: text("address_line_2"),

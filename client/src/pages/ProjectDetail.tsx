@@ -831,11 +831,17 @@ export default function ProjectDetail() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="prospect">Prospect</SelectItem>
-                    <SelectItem value="execution">Execution</SelectItem>
-                    <SelectItem value="design-presentation">Design Presentation</SelectItem>
-                    <SelectItem value="boq-shared">BOQ Shared</SelectItem>
-                    <SelectItem value="won">Won</SelectItem>
+                    <SelectItem value="recce-done">Recce Done</SelectItem>
+                    <SelectItem value="design-in-progress">Design In Progress</SelectItem>
+                    <SelectItem value="design-approved">Design Approved</SelectItem>
+                    <SelectItem value="estimate-given">Estimate Given</SelectItem>
+                    <SelectItem value="client-approved">Client Approved</SelectItem>
+                    <SelectItem value="production">Production</SelectItem>
+                    <SelectItem value="installation">Installation</SelectItem>
+                    <SelectItem value="handover">Handover</SelectItem>
                     <SelectItem value="completed">Completed</SelectItem>
+                    <SelectItem value="on-hold">On Hold</SelectItem>
+                    <SelectItem value="lost">Lost</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -1499,16 +1505,16 @@ export default function ProjectDetail() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    {['prospect', 'execution', 'design-presentation', 'boq-shared', 'won', 'completed'].map((stage, index) => (
+                    {['prospect', 'recce-done', 'design-in-progress', 'design-approved', 'estimate-given', 'client-approved', 'production', 'installation', 'handover', 'completed'].map((stage, index) => (
                       <div key={stage} className="flex items-center space-x-3">
                         {project.stage === stage ? (
-                          <CheckCircle2 className="h-5 w-5 text-blue-600" />
-                        ) : index < ['prospect', 'execution', 'design-presentation', 'boq-shared', 'won', 'completed'].indexOf(project.stage) ? (
+                          <CheckCircle2 className="h-5 w-5 text-amber-900" />
+                        ) : index < ['prospect', 'recce-done', 'design-in-progress', 'design-approved', 'estimate-given', 'client-approved', 'production', 'installation', 'handover', 'completed'].indexOf(project.stage) ? (
                           <CheckCircle2 className="h-5 w-5 text-green-600" />
                         ) : (
                           <Circle className="h-5 w-5 text-gray-300" />
                         )}
-                        <span className={`text-sm ${project.stage === stage ? 'font-medium text-blue-600' : 'text-gray-600'}`}>
+                        <span className={`text-sm ${project.stage === stage ? 'font-medium text-amber-900' : 'text-gray-600'}`}>
                           {stage.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}
                         </span>
                       </div>

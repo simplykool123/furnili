@@ -10,6 +10,17 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes (January 2025)
 
+- ✅ **PROJECT STAGES UPDATED TO FINAL WORKFLOW**: Implemented complete project stage lifecycle per user requirements
+  - **New Stage Order**: Prospect → Recce Done → Design In Progress → Design Approved → Estimate Given → Client Approved → Production → Installation → Handover → Completed
+  - **Optional Status**: On Hold / Lost status available for projects that don't follow normal workflow
+  - **Database Schema**: Updated projects table stage field with all 12 possible stages
+  - **Frontend Updates**: All dropdowns, filters, and stage selectors use new stage list
+  - **Color Coding**: Each stage has unique color badges for visual distinction
+  - **Progress Tracking**: Stage progression visualization in ProjectDetail page
+  - **Consistent Implementation**: Updated both Projects.tsx and ProjectDetail.tsx components
+
+## Previous Recent Changes (January 2025)
+
 - ✅ **NOTES SYSTEM API ERROR FIXED**: Resolved "Invalid HTTP method provided" error in notes functionality
   - **API Request Fix**: Corrected parameter order in apiRequest function calls for note creation/deletion
   - **Parameter Order**: Fixed createLogMutation and deleteLogMutation to use proper (method, url, data) format

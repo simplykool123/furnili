@@ -24,7 +24,7 @@ const createProjectSchema = z.object({
   name: z.string().min(1, "Project name is required"),
   description: z.string().optional(),
   clientId: z.number().min(1, "Client is required"),
-  stage: z.enum(["prospect", "execution", "design-presentation", "boq-shared", "won", "completed"]).default("prospect"),
+  stage: z.enum(["prospect", "recce-done", "design-in-progress", "design-approved", "estimate-given", "client-approved", "production", "installation", "handover", "completed", "on-hold", "lost"]).default("prospect"),
   budget: z.number().min(0).default(0),
   addressLine1: z.string().optional(),
   addressLine2: z.string().optional(),
@@ -179,11 +179,17 @@ export default function Projects() {
   const getStageColor = (stage: string) => {
     const stageColors = {
       prospect: "bg-blue-100 text-blue-800",
-      execution: "bg-yellow-100 text-yellow-800",
-      "design-presentation": "bg-purple-100 text-purple-800",
-      "boq-shared": "bg-orange-100 text-orange-800",
-      won: "bg-emerald-100 text-emerald-800",
+      "recce-done": "bg-indigo-100 text-indigo-800",
+      "design-in-progress": "bg-purple-100 text-purple-800",
+      "design-approved": "bg-violet-100 text-violet-800",
+      "estimate-given": "bg-orange-100 text-orange-800",
+      "client-approved": "bg-green-100 text-green-800",
+      production: "bg-yellow-100 text-yellow-800",
+      installation: "bg-amber-100 text-amber-800",
+      handover: "bg-emerald-100 text-emerald-800",
       completed: "bg-gray-100 text-gray-800",
+      "on-hold": "bg-slate-100 text-slate-800",
+      lost: "bg-red-100 text-red-800",
     };
     return stageColors[stage as keyof typeof stageColors] || "bg-gray-100 text-gray-800";
   };
@@ -288,11 +294,17 @@ export default function Projects() {
                 <SelectContent>
                   <SelectItem value="all">All Stages</SelectItem>
                   <SelectItem value="prospect">Prospect</SelectItem>
-                  <SelectItem value="execution">Execution</SelectItem>
-                  <SelectItem value="design-presentation">Design Presentation</SelectItem>
-                  <SelectItem value="boq-shared">BOQ Shared</SelectItem>
-                  <SelectItem value="won">Won</SelectItem>
+                  <SelectItem value="recce-done">Recce Done</SelectItem>
+                  <SelectItem value="design-in-progress">Design In Progress</SelectItem>
+                  <SelectItem value="design-approved">Design Approved</SelectItem>
+                  <SelectItem value="estimate-given">Estimate Given</SelectItem>
+                  <SelectItem value="client-approved">Client Approved</SelectItem>
+                  <SelectItem value="production">Production</SelectItem>
+                  <SelectItem value="installation">Installation</SelectItem>
+                  <SelectItem value="handover">Handover</SelectItem>
                   <SelectItem value="completed">Completed</SelectItem>
+                  <SelectItem value="on-hold">On Hold</SelectItem>
+                  <SelectItem value="lost">Lost</SelectItem>
                 </SelectContent>
               </Select>
 
@@ -556,11 +568,17 @@ export default function Projects() {
                                 </FormControl>
                                 <SelectContent>
                                   <SelectItem value="prospect">Prospect</SelectItem>
-                                  <SelectItem value="execution">Execution</SelectItem>
-                                  <SelectItem value="design-presentation">Design Presentation</SelectItem>
-                                  <SelectItem value="boq-shared">BOQ Shared</SelectItem>
-                                  <SelectItem value="won">Won</SelectItem>
+                                  <SelectItem value="recce-done">Recce Done</SelectItem>
+                                  <SelectItem value="design-in-progress">Design In Progress</SelectItem>
+                                  <SelectItem value="design-approved">Design Approved</SelectItem>
+                                  <SelectItem value="estimate-given">Estimate Given</SelectItem>
+                                  <SelectItem value="client-approved">Client Approved</SelectItem>
+                                  <SelectItem value="production">Production</SelectItem>
+                                  <SelectItem value="installation">Installation</SelectItem>
+                                  <SelectItem value="handover">Handover</SelectItem>
                                   <SelectItem value="completed">Completed</SelectItem>
+                                  <SelectItem value="on-hold">On Hold</SelectItem>
+                                  <SelectItem value="lost">Lost</SelectItem>
                                 </SelectContent>
                               </Select>
                               <FormMessage />
