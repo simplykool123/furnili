@@ -1924,11 +1924,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/projects/:id/logs", authenticateToken, async (req: AuthRequest, res) => {
     try {
       const projectId = parseInt(req.params.id);
-      const logData = insertProjectLogSchema.parse({
+      const logData = {
         ...req.body,
         projectId,
         createdBy: req.user!.id,
-      });
+      };
       
       const log = await storage.createProjectLog(logData);
       res.json(log);
@@ -1946,11 +1946,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const logId = parseInt(req.params.logId);
       const projectId = parseInt(req.params.projectId);
       
-      const updatedLogData = insertProjectLogSchema.parse({
+      const updatedLogData = {
         ...req.body,
         projectId,
         createdBy: req.user!.id
-      });
+      };
       
       const updatedLog = await storage.updateProjectLog(logId, updatedLogData);
       

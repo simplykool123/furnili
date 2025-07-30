@@ -434,7 +434,7 @@ export default function ProjectDetail() {
 
 
   // Form submission handlers
-  const handleNoteSubmit = (data?: any) => {
+  const handleNoteSubmit = async (data?: any) => {
     const title = data?.title || noteForm.watch('title');
     const content = data?.content || noteForm.watch('content');
     const type = data?.type || noteForm.watch('type');
@@ -450,11 +450,55 @@ export default function ProjectDetail() {
       return;
     }
     
+    // Handle file attachments
+    let attachmentUrls: string[] = [];
+    if (noteFiles && noteFiles.length > 0) {
+      console.log('Uploading note files:', noteFiles);
+      const formData = new FormData();
+      
+      for (let i = 0; i < noteFiles.length; i++) {
+        formData.append('files', noteFiles[i]);
+      }
+      formData.append('projectId', projectId);
+      formData.append('type', 'note-attachment');
+      
+      try {
+        const uploadResponse = await fetch(`/api/projects/${projectId}/upload`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          },
+          body: formData,
+        });
+        
+        if (uploadResponse.ok) {
+          const uploadResult = await uploadResponse.json();
+          attachmentUrls = uploadResult.files?.map((f: any) => f.fileName || f.path || f.originalName) || [];
+          console.log('Attachment files uploaded:', attachmentUrls);
+        } else {
+          console.error('File upload failed');
+          toast({
+            title: "Warning",
+            description: "Note saved but file upload failed",
+            variant: "destructive",
+          });
+        }
+      } catch (error) {
+        console.error('File upload error:', error);
+        toast({
+          title: "Warning", 
+          description: "Note saved but file upload failed",
+          variant: "destructive",
+        });
+      }
+    }
+    
     const noteData = {
       logType: type || "note", // Map 'type' to 'logType' for database schema
       title: title || "Untitled Note",
       description: content,
       projectId: parseInt(projectId),
+      attachments: attachmentUrls,
     };
     
     if (editingNoteId) {
@@ -1683,12 +1727,22 @@ export default function ProjectDetail() {
                                 <p className="text-sm text-gray-700 mb-2">{log.description || log.content}</p>
                                 
                                 {/* Show attachment icons if attachments exist */}
-                                {log.attachments && log.attachments.length > 0 && (
+                                {log.attachments && Array.isArray(log.attachments) && log.attachments.length > 0 && (
                                   <div className="flex items-center gap-1 mb-2">
-                                    <Paperclip className="h-4 w-4 text-gray-400" />
-                                    <span className="text-xs text-gray-500">
+                                    <Paperclip className="h-4 w-4 text-blue-500" />
+                                    <span className="text-xs text-blue-600 font-medium">
                                       {log.attachments.length} attachment{log.attachments.length > 1 ? 's' : ''}
                                     </span>
+                                    <button
+                                      onClick={() => {
+                                        // Show attachment list or download
+                                        console.log('View attachments:', log.attachments);
+                                        toast({ title: "Attachments", description: `${log.attachments.length} files attached to this note` });
+                                      }}
+                                      className="text-xs text-blue-600 hover:text-blue-800 underline ml-1"
+                                    >
+                                      view
+                                    </button>
                                   </div>
                                 )}
                                 
