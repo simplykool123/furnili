@@ -2157,18 +2157,8 @@ export default function Attendance() {
             <TabsContent value="payroll" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center justify-between">
+              <CardTitle>
                 Payroll for {new Date(selectedYear, selectedMonth - 1).toLocaleDateString('en-US', { month: 'long' })} {selectedYear.toString().slice(-2)}
-                <div className="flex gap-2">
-                  <Button size="sm" onClick={handleGenerateAllPayslips} className="bg-blue-600 hover:bg-blue-700">
-                    <FileText className="w-4 h-4 mr-2" />
-                    Generate All Payslips
-                  </Button>
-                  <Button size="sm" onClick={handleProcessAllPayrolls} className="bg-green-600 hover:bg-green-700">
-                    <CreditCard className="w-4 h-4 mr-2" />
-                    Process All
-                  </Button>
-                </div>
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -2226,27 +2216,52 @@ export default function Attendance() {
                         </TableCell>
                         <TableCell>
                           <div className="flex gap-1">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleEditPayroll(payroll)}
-                              className="text-amber-600 hover:text-amber-700"
-                              style={{ backgroundColor: 'hsl(28, 100%, 25%)', color: 'white' }}
-                            >
-                              <Edit className="w-3 h-3 mr-1" />
-                              Edit
-                            </Button>
-                            {payroll.status === "paid" && (
+                            {payroll.status === "generated" ? (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => processPayrollMutation.mutate(payroll.id)}
+                                className="bg-green-600 hover:bg-green-700 text-white text-xs px-2 py-1"
+                                disabled={processPayrollMutation.isPending}
+                              >
+                                <CreditCard className="w-3 h-3 mr-1" />
+                                Process
+                              </Button>
+                            ) : payroll.status === "paid" ? (
                               <Button
                                 size="sm"
                                 variant="outline"
                                 onClick={() => downloadPayslip(payroll.id)}
-                                className="text-blue-600 hover:text-blue-700"
+                                className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-2 py-1"
                               >
                                 <Download className="w-3 h-3 mr-1" />
                                 PDF
                               </Button>
+                            ) : (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => generatePayrollMutation.mutate({
+                                  userId: payroll.userId,
+                                  month: selectedMonth,
+                                  year: selectedYear
+                                })}
+                                className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-2 py-1"
+                                disabled={generatePayrollMutation.isPending}
+                              >
+                                <FileText className="w-3 h-3 mr-1" />
+                                Generate
+                              </Button>
                             )}
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleEditPayroll(payroll)}
+                              style={{ backgroundColor: 'hsl(28, 100%, 25%)', color: 'white' }}
+                              className="text-xs px-2 py-1"
+                            >
+                              <Edit className="w-3 h-3" />
+                            </Button>
                           </div>
                         </TableCell>
                       </TableRow>
