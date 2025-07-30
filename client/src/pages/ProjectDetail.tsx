@@ -942,21 +942,21 @@ export default function ProjectDetail() {
                   <Button 
                     variant={selectedFileType === "recce" ? "default" : "outline"}
                     onClick={() => setSelectedFileType("recce")}
-                    className={`h-8 text-xs ${selectedFileType === "recce" ? "bg-blue-600 text-white" : "bg-white text-gray-700 border-gray-300"}`}
+                    className={`h-8 text-xs ${selectedFileType === "recce" ? "bg-amber-900 text-white" : "bg-white text-gray-700 border-gray-300"}`}
                   >
                     Recce
                   </Button>
                   <Button 
                     variant={selectedFileType === "design" ? "default" : "outline"}
                     onClick={() => setSelectedFileType("design")}
-                    className={`h-8 text-xs ${selectedFileType === "design" ? "bg-blue-600 text-white" : "bg-white text-gray-700 border-gray-300"}`}
+                    className={`h-8 text-xs ${selectedFileType === "design" ? "bg-amber-900 text-white" : "bg-white text-gray-700 border-gray-300"}`}
                   >
                     Design
                   </Button>
                   <Button 
                     variant={selectedFileType === "drawing" ? "default" : "outline"}
                     onClick={() => setSelectedFileType("drawing")}
-                    className={`h-8 text-xs ${selectedFileType === "drawing" ? "bg-blue-600 text-white" : "bg-white text-gray-700 border-gray-300"}`}
+                    className={`h-8 text-xs ${selectedFileType === "drawing" ? "bg-amber-900 text-white" : "bg-white text-gray-700 border-gray-300"}`}
                   >
                     Drawing
                   </Button>
@@ -967,15 +967,14 @@ export default function ProjectDetail() {
                     <div className="flex space-x-2">
                       <Button 
                         onClick={() => setIsMoodboardDialogOpen(true)}
-                        className="bg-purple-600 hover:bg-purple-700 text-white"
+                        className="btn-primary"
                       >
                         <Star className="h-4 w-4 mr-2" />
                         Create Moodboard
                       </Button>
                       <Button 
                         onClick={() => setIsUploadDialogOpen(true)}
-                        variant="outline"
-                        className="border-purple-200 text-purple-700 hover:bg-purple-50"
+                        className="btn-outline"
                       >
                         <Upload className="h-4 w-4 mr-2" />
                         Upload Images
@@ -1006,15 +1005,14 @@ export default function ProjectDetail() {
                     <div className="flex flex-col sm:flex-row gap-3 justify-center">
                       <Button 
                         onClick={() => setIsMoodboardDialogOpen(true)}
-                        className="bg-purple-600 hover:bg-purple-700 text-white"
+                        className="btn-primary"
                       >
                         <Star className="h-4 w-4 mr-2" />
                         Create Moodboard
                       </Button>
                       <Button 
                         onClick={() => setIsUploadDialogOpen(true)}
-                        variant="outline"
-                        className="border-purple-200 text-purple-700 hover:bg-purple-50"
+                        className="btn-outline"
                       >
                         <Upload className="h-4 w-4 mr-2" />
                         Upload Images
@@ -1838,10 +1836,10 @@ export default function ProjectDetail() {
                 />
               </div>
               <div className="flex justify-end space-x-2">
-                <Button type="button" variant="outline" onClick={() => setIsTaskDialogOpen(false)}>
+                <Button type="button" className="btn-outline" onClick={() => setIsTaskDialogOpen(false)}>
                   Cancel
                 </Button>
-                <Button type="submit">Add Task</Button>
+                <Button type="submit" className="btn-primary">Add Task</Button>
               </div>
             </form>
           </Form>
@@ -1897,7 +1895,7 @@ export default function ProjectDetail() {
                 <Button type="button" variant="outline" onClick={() => setIsNoteDialogOpen(false)}>
                   Cancel
                 </Button>
-                <Button type="submit">Add Note</Button>
+                <Button type="submit" className="btn-primary">Add Note</Button>
               </div>
             </form>
           </Form>
