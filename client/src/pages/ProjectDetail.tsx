@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -89,6 +90,7 @@ export default function ProjectDetail() {
   const [imageLoadStates, setImageLoadStates] = useState<{[key: string]: 'loading' | 'loaded' | 'error'}>({});
   const [showImagePreview, setShowImagePreview] = useState(false);
   const [previewImage, setPreviewImage] = useState<{ src: string; name: string } | null>(null);
+  const [noteFiles, setNoteFiles] = useState<FileList | null>(null);
   
   // New state for grouped images
   const [editingGroupTitle, setEditingGroupTitle] = useState<string | null>(null);
@@ -115,8 +117,11 @@ export default function ProjectDetail() {
   });
 
   const noteForm = useForm({
-    resolver: zodResolver(noteSchema),
+    resolver: zodResolver(noteSchema.extend({
+      title: z.string().optional(),
+    })),
     defaultValues: {
+      title: "",
       content: "",
       type: "note" as const,
       taggedUsers: [],
@@ -406,6 +411,7 @@ export default function ProjectDetail() {
       queryClient.invalidateQueries({ queryKey: ['/api/projects', projectId, 'logs'] });
       setIsNoteDialogOpen(false);
       noteForm.reset();
+      setNoteFiles(null);
       toast({ title: "Note added successfully!" });
     },
   });
@@ -413,10 +419,27 @@ export default function ProjectDetail() {
 
 
   // Form submission handlers
-  const handleNoteSubmit = (data: any) => {
+  const handleNoteSubmit = () => {
+    const title = noteForm.watch('title');
+    const content = noteForm.watch('content');
+    
+    if (!content) {
+      toast({
+        title: "Error",
+        description: "Note content is required",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     createLogMutation.mutate({
-      content: data.content,
-      type: data.type,
+      title: title || 'Meeting Note',
+      content: content,
+      type: noteForm.watch('type') || 'note',
+      attachments: noteFiles ? Array.from(noteFiles).map(file => ({
+        name: file.name,
+        url: URL.createObjectURL(file)
+      })) : []
     });
   };
 
@@ -1372,63 +1395,188 @@ export default function ProjectDetail() {
 
           {/* Project Notes Tab */}
           <TabsContent value="notes" className="space-y-6">
+            {/* Add New Note Form */}
             <Card>
-              <CardHeader>
-                <div className="flex justify-between items-center">
-                  <CardTitle className="flex items-center space-x-2">
-                    <MessageSquare className="h-5 w-5" />
-                    <span>Project Notes / Logs</span>
-                  </CardTitle>
-                  <Button 
-                    onClick={() => setIsNoteDialogOpen(true)}
-                    className="bg-blue-600 hover:bg-blue-700"
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Note
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent>
-                {projectLogsQuery.isLoading ? (
-                  <div className="text-center py-8">Loading notes...</div>
-                ) : (
-                  <div className="space-y-4">
-                    {(projectLogsQuery.data || []).map((log) => (
-                      <Card key={log.id} className="border-l-4 border-l-blue-500">
-                        <CardContent className="p-4">
-                          <div className="flex justify-between items-start">
-                            <div className="flex-1">
-                              <p className="text-sm text-gray-900">{log.content}</p>
-                              <div className="flex items-center space-x-4 mt-2">
-                                <Badge variant="outline" className="text-xs">
-                                  {log.type || 'note'}
-                                </Badge>
-                                <span className="text-xs text-gray-500">
-                                  {new Date(log.createdAt).toLocaleDateString()} at {new Date(log.createdAt).toLocaleTimeString()}
-                                </span>
-                              </div>
-                            </div>
-                            <Button 
-                              variant="ghost" 
-                              size="sm" 
-                              className="h-8 w-8 p-0"
-                              onClick={() => deleteLogMutation.mutate(log.id)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                    {(projectLogsQuery.data || []).length === 0 && (
-                      <div className="text-center py-8 text-gray-500">
-                        No notes added yet. Click "Add Note" to get started.
-                      </div>
-                    )}
+              <CardContent className="p-6 space-y-4">
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="note-title" className="text-sm font-medium">Title</Label>
+                    <Input
+                      id="note-title"
+                      placeholder="First Meeting MoM"
+                      className="w-full"
+                      value={noteForm.watch('title') || ''}
+                      onChange={(e) => noteForm.setValue('title', e.target.value)}
+                    />
                   </div>
-                )}
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="note-content" className="text-sm font-medium">
+                      Note <span className="text-red-500">*</span>
+                    </Label>
+                    <Textarea
+                      id="note-content"
+                      placeholder="Client wants bedroom to be in red and white them"
+                      className="min-h-[120px] resize-none"
+                      value={noteForm.watch('content') || ''}
+                      onChange={(e) => noteForm.setValue('content', e.target.value)}
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">Files</Label>
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="file"
+                        id="note-files"
+                        multiple
+                        accept="image/*,application/pdf,.doc,.docx"
+                        className="hidden"
+                        onChange={(e) => setNoteFiles(e.target.files)}
+                      />
+                      <Button
+                        variant="outline"
+                        onClick={() => document.getElementById('note-files')?.click()}
+                        className="text-sm"
+                      >
+                        Upload
+                      </Button>
+                      {noteFiles && noteFiles.length > 0 ? (
+                        <div className="flex items-center space-x-2">
+                          <Paperclip className="h-4 w-4 text-blue-500" />
+                          <span className="text-sm text-blue-600">
+                            {noteFiles.length} file{noteFiles.length > 1 ? 's' : ''} selected
+                          </span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setNoteFiles(null)}
+                            className="h-auto p-1 text-gray-500 hover:text-gray-700"
+                          >
+                            ×
+                          </Button>
+                        </div>
+                      ) : (
+                        <span className="text-sm text-gray-500">No file selected</span>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="flex justify-end">
+                    <Button 
+                      onClick={handleNoteSubmit}
+                      disabled={!noteForm.watch('content') || createLogMutation.isPending}
+                      style={{ backgroundColor: 'hsl(28, 100%, 25%)', color: 'white' }}
+                      className="hover:opacity-90"
+                    >
+                      {createLogMutation.isPending ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                          Adding...
+                        </>
+                      ) : (
+                        'Add Note'
+                      )}
+                    </Button>
+                  </div>
+                </div>
               </CardContent>
             </Card>
+
+            {/* All Notes Section */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-gray-900">All Notes</h3>
+              
+              {projectLogsQuery.isLoading ? (
+                <div className="text-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
+                  <p className="mt-2 text-gray-500">Loading notes...</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {(projectLogsQuery.data || []).map((log) => (
+                    <Card key={log.id} className="bg-white border border-gray-200">
+                      <CardContent className="p-4">
+                        <div className="flex items-start space-x-3">
+                          {/* User Avatar */}
+                          <div className="flex-shrink-0">
+                            <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-medium text-sm">
+                              {log.author ? log.author.split(' ').map(n => n[0]).join('').toUpperCase() : 'TU'}
+                            </div>
+                          </div>
+                          
+                          {/* Note Content */}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <h4 className="text-base font-medium text-gray-900 mb-1">
+                                  {log.title || 'Meeting Note'}
+                                </h4>
+                                <p className="text-sm text-gray-700 mb-2">{log.content}</p>
+                                <div className="flex items-center space-x-4 text-xs text-gray-500">
+                                  <span>{log.author || 'Test User'}</span>
+                                  <span>
+                                    {new Date(log.createdAt).toLocaleDateString('en-US', {
+                                      month: 'short',
+                                      day: '2-digit',
+                                      year: 'numeric'
+                                    })} {new Date(log.createdAt).toLocaleTimeString('en-US', {
+                                      hour: '2-digit',
+                                      minute: '2-digit'
+                                    })}
+                                  </span>
+                                </div>
+                                
+                                {/* File Attachments */}
+                                {log.attachments && log.attachments.length > 0 && (
+                                  <div className="mt-3 flex flex-wrap gap-2">
+                                    {log.attachments.map((attachment, index) => (
+                                      <div
+                                        key={index}
+                                        className="flex items-center space-x-1 bg-gray-100 px-2 py-1 rounded cursor-pointer hover:bg-gray-200"
+                                        onClick={() => setPreviewImage({ src: attachment.url, name: attachment.name })}
+                                      >
+                                        <Paperclip className="h-3 w-3 text-gray-500" />
+                                        <span className="text-xs text-gray-600 truncate max-w-[100px]">
+                                          {attachment.name}
+                                        </span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                              
+                              {/* Actions Menu */}
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                    <MoreVertical className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem onClick={() => deleteLogMutation.mutate(log.id)}>
+                                    <Trash2 className="h-4 w-4 mr-2" />
+                                    Delete
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                  
+                  {(projectLogsQuery.data || []).length === 0 && (
+                    <div className="text-center py-12 text-gray-500">
+                      <MessageSquare className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                      <p className="text-lg font-medium mb-2">No notes yet</p>
+                      <p className="text-sm">Add your first note using the form above</p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           </TabsContent>
 
           {/* Task Management Tab */}
