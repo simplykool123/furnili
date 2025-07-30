@@ -1400,13 +1400,13 @@ export default function Attendance() {
   }
 
   return (
-    <>
-    <div className="space-y-6">
+    <FurniliLayout
+      title="Staff Attendance & Payroll"
+      subtitle="Complete staff management system"
+    >
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-3xl font-bold">Staff Attendance & Payroll</h1>
-          <p className="text-gray-600">Complete staff management system</p>
         </div>
         
         {/* Month/Year Selector */}
@@ -2588,7 +2588,6 @@ export default function Attendance() {
           </div>
         </DialogContent>
       </Dialog>
-    </div>
-    </>
+    </FurniliLayout>
   );
 };
