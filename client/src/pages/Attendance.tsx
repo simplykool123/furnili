@@ -1437,7 +1437,7 @@ export default function Attendance() {
       </div>
 
       {/* Compact Quick Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+      <div className="grid grid-cols-3 md:grid-cols-6 gap-2 sm:gap-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Present Today</CardTitle>
@@ -2216,28 +2216,8 @@ export default function Attendance() {
                         </TableCell>
                         <TableCell>
                           <div className="flex gap-1">
-                            {payroll.status === "generated" ? (
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => processPayrollMutation.mutate(payroll.id)}
-                                className="bg-green-600 hover:bg-green-700 text-white text-xs px-2 py-1"
-                                disabled={processPayrollMutation.isPending}
-                              >
-                                <CreditCard className="w-3 h-3 mr-1" />
-                                Process
-                              </Button>
-                            ) : payroll.status === "paid" ? (
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => downloadPayslip(payroll.id)}
-                                className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-2 py-1"
-                              >
-                                <Download className="w-3 h-3 mr-1" />
-                                PDF
-                              </Button>
-                            ) : (
+                            {/* Show Generate button if no payroll exists yet */}
+                            {!payroll.id || payroll.status === "pending" ? (
                               <Button
                                 size="sm"
                                 variant="outline"
@@ -2252,7 +2232,28 @@ export default function Attendance() {
                                 <FileText className="w-3 h-3 mr-1" />
                                 Generate
                               </Button>
-                            )}
+                            ) : payroll.status === "generated" ? (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => processPayrollMutation.mutate(payroll.id)}
+                                className="bg-green-600 hover:bg-green-700 text-white text-xs px-2 py-1"
+                                disabled={processPayrollMutation.isPending}
+                              >
+                                <CreditCard className="w-3 h-3 mr-1" />
+                                Paid
+                              </Button>
+                            ) : payroll.status === "paid" ? (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => downloadPayslip(payroll.id)}
+                                className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-2 py-1"
+                              >
+                                <Download className="w-3 h-3 mr-1" />
+                                PDF
+                              </Button>
+                            ) : null}
                             <Button
                               size="sm"
                               variant="outline"
