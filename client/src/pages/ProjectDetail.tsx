@@ -994,24 +994,27 @@ export default function ProjectDetail() {
                     return (
                     <div key={file.id} className="bg-white rounded-lg border border-gray-200 hover:border-gray-300 transition-colors overflow-hidden">
                       {/* Thumbnail area */}
-                      <div className="h-32 bg-gray-50 relative overflow-hidden">
+                      <div className="h-32 bg-gray-50 overflow-hidden">
                         {file.mimeType?.includes('image') ? (
-                          <div className="w-full h-full">
-                            <img
-                              src={`/uploads/products/${file.fileName}`}
-                              alt={file.originalName || file.fileName}
-                              className="h-full w-full object-cover"
-                              style={{ display: 'block' }}
-                              onLoad={(e) => {
-                                console.log('Image loaded successfully:', file.fileName, 'URL:', e.currentTarget.src);
-                                console.log('Image dimensions:', e.currentTarget.naturalWidth, 'x', e.currentTarget.naturalHeight);
-                              }}
-                              onError={(e) => {
-                                console.error('Image failed to load:', e.currentTarget.src);
-                                console.log('File data:', file);
-                              }}
-                            />
-                          </div>
+                          <img
+                            src={`/uploads/products/${file.fileName}`}
+                            alt={file.originalName || file.fileName}
+                            className="w-full h-full object-cover"
+                            style={{ 
+                              display: 'block',
+                              maxWidth: '100%',
+                              maxHeight: '100%',
+                              zIndex: 10
+                            }}
+                            onLoad={(e) => {
+                              console.log('Image loaded successfully:', file.fileName, 'URL:', e.currentTarget.src);
+                              console.log('Image dimensions:', e.currentTarget.naturalWidth, 'x', e.currentTarget.naturalHeight);
+                            }}
+                            onError={(e) => {
+                              console.error('Image failed to load:', e.currentTarget.src);
+                              console.log('File data:', file);
+                            }}
+                          />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center">
                             {getFileIcon(file.mimeType, file.fileName)}
