@@ -70,6 +70,7 @@ export default function ProjectDetail() {
   const [isCommunicationDialogOpen, setIsCommunicationDialogOpen] = useState(false);
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [selectedFileType, setSelectedFileType] = useState("all");
+  const [activeFileTab, setActiveFileTab] = useState("recce");
   const [selectedFiles, setSelectedFiles] = useState<FileList | null>(null);
 
   // Forms
@@ -151,13 +152,23 @@ export default function ProjectDetail() {
     cacheTime: 10 * 60 * 1000,
   });
 
-  // Mock data for demonstration (in real app, these would come from API)
-  const mockFiles = [
-    { id: 1, name: "Layout_Plan_v2.pdf", type: "pdf", size: "2.4 MB", category: "Layouts", uploadedAt: "2025-01-29" },
-    { id: 2, name: "Site_Photo_1.jpg", type: "image", size: "1.8 MB", category: "Site Photos", uploadedAt: "2025-01-28" },
-    { id: 3, name: "BOQ_Estimate.xlsx", type: "excel", size: "156 KB", category: "BOQ", uploadedAt: "2025-01-27" },
-    { id: 4, name: "CAD_Drawing.dwg", type: "cad", size: "3.2 MB", category: "CAD", uploadedAt: "2025-01-26" },
-  ];
+  // Real project files from database
+  const { data: projectFiles = [], isLoading: filesLoading } = useQuery({
+    queryKey: ['/api/projects', projectId, 'files'],
+    queryFn: async () => {
+      const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+      const response = await fetch(`/api/projects/${projectId}/files`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      if (!response.ok) throw new Error('Failed to fetch project files');
+      return response.json();
+    },
+    enabled: !!projectId,
+    staleTime: 30 * 1000, // 30 seconds
+  });
 
   const mockTasks = [
     { id: 1, title: "Site Survey Completion", assignedTo: "John Doe", dueDate: "2025-02-05", priority: "high", status: "in-progress" },
@@ -188,19 +199,26 @@ export default function ProjectDetail() {
   }), []);
 
   const filteredFiles = useMemo(() => {
-    return selectedFileType === "all" 
-      ? mockFiles 
-      : mockFiles.filter(file => file.category.toLowerCase() === selectedFileType);
-  }, [selectedFileType]);
+    if (selectedFileType === "all") return projectFiles;
+    
+    const categoryMap = {
+      "recce": "recce",
+      "design": "design", 
+      "drawing": "drawing"
+    };
+    
+    const targetCategory = categoryMap[selectedFileType.toLowerCase()];
+    return projectFiles.filter(file => 
+      file.category?.toLowerCase() === targetCategory
+    );
+  }, [projectFiles, selectedFileType]);
 
-  const getFileIcon = (type: string) => {
-    switch (type) {
-      case 'pdf': return <FileText className="h-5 w-5 text-red-500" />;
-      case 'image': return <Image className="h-5 w-5 text-blue-500" />;
-      case 'excel': return <File className="h-5 w-5 text-green-500" />;
-      case 'cad': return <File className="h-5 w-5 text-purple-500" />;
-      default: return <File className="h-5 w-5 text-gray-500" />;
-    }
+  const getFileIcon = (mimeType: string, fileName: string) => {
+    if (mimeType?.includes('image')) return <Image className="h-5 w-5 text-blue-500" />;
+    if (mimeType?.includes('pdf')) return <FileText className="h-5 w-5 text-red-500" />;
+    if (mimeType?.includes('excel') || mimeType?.includes('spreadsheet') || fileName?.endsWith('.xlsx')) return <File className="h-5 w-5 text-green-500" />;
+    if (fileName?.endsWith('.dwg')) return <File className="h-5 w-5 text-purple-500" />;
+    return <File className="h-5 w-5 text-gray-500" />;
   };
 
   const getPriorityColor = (priority: string) => {
@@ -253,6 +271,62 @@ export default function ProjectDetail() {
 
   const handleStageChange = (newStage: string) => {
     stageUpdateMutation.mutate(newStage);
+  };
+
+  // File upload mutation
+  const fileUploadMutation = useMutation({
+    mutationFn: async (formData: FormData) => {
+      const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+      const response = await fetch(`/api/projects/${projectId}/files`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+        body: formData,
+      });
+      if (!response.ok) throw new Error('File upload failed');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/projects', projectId, 'files'] });
+      setIsUploadDialogOpen(false);
+      setSelectedFiles(null);
+      uploadForm.reset();
+      toast({
+        title: "Success",
+        description: "Files uploaded successfully",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Upload Failed",
+        description: "Failed to upload files. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleFileUpload = (data: any) => {
+    if (!selectedFiles || selectedFiles.length === 0) {
+      toast({
+        title: "No Files Selected",
+        description: "Please select files to upload",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('projectId', projectId);
+    formData.append('category', data.type);
+    formData.append('title', data.title);
+    formData.append('clientVisible', 'true');
+    
+    Array.from(selectedFiles).forEach((file) => {
+      formData.append('files', file);
+    });
+
+    fileUploadMutation.mutate(formData);
   };
 
 
@@ -493,10 +567,10 @@ export default function ProjectDetail() {
                   {filteredFiles.map((file) => (
                     <div key={file.id} className="flex items-center space-x-3 p-3 bg-white rounded-lg border border-gray-200 hover:border-gray-300 transition-colors">
                       <div className="flex-shrink-0">
-                        {getFileIcon(file.type)}
+                        {getFileIcon(file.mimeType, file.fileName)}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900 truncate">{file.name}</p>
+                        <p className="text-sm font-medium text-gray-900 truncate">{file.originalName || file.fileName}</p>
                         <p className="text-xs text-gray-500 capitalize">{file.category}</p>
                       </div>
                       <div className="flex-shrink-0">
@@ -1177,16 +1251,7 @@ export default function ProjectDetail() {
           <Form {...uploadForm}>
             <form 
               className="space-y-4"
-              onSubmit={uploadForm.handleSubmit((data) => {
-                console.log('Upload form data:', data, selectedFiles);
-                toast({
-                  title: "Files uploaded successfully",
-                  description: `${selectedFiles?.length || 0} files uploaded`,
-                });
-                setIsUploadDialogOpen(false);
-                setSelectedFiles(null);
-                uploadForm.reset();
-              })}
+              onSubmit={uploadForm.handleSubmit(handleFileUpload)}
             >
               <FormField
                 control={uploadForm.control}
@@ -1203,9 +1268,9 @@ export default function ProjectDetail() {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="rooms">Rooms</SelectItem>
-                        <SelectItem value="internal-areas">Internal Areas</SelectItem>
-                        <SelectItem value="drawings">Drawings</SelectItem>
+                        <SelectItem value="recce">Recce</SelectItem>
+                        <SelectItem value="design">Design</SelectItem>
+                        <SelectItem value="drawing">Drawing</SelectItem>
                         <SelectItem value="documents">Documents</SelectItem>
                         <SelectItem value="site-photos">Site Photos</SelectItem>
                       </SelectContent>
@@ -1310,9 +1375,9 @@ export default function ProjectDetail() {
                 <Button 
                   type="submit" 
                   className="bg-blue-600 hover:bg-blue-700 text-white px-6"
-                  disabled={!selectedFiles || selectedFiles.length === 0}
+                  disabled={!selectedFiles || selectedFiles.length === 0 || fileUploadMutation.isPending}
                 >
-                  Submit
+                  {fileUploadMutation.isPending ? 'Uploading...' : 'Upload Files'}
                 </Button>
               </div>
             </form>

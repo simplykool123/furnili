@@ -1686,6 +1686,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Project Files Routes
+  app.get("/api/projects/:id/files", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const projectId = parseInt(req.params.id);
+      const files = await storage.getProjectFiles(projectId);
+      res.json(files);
+    } catch (error) {
+      console.error("Failed to fetch project files:", error);
+      res.status(500).json({ message: "Failed to fetch project files", error: String(error) });
+    }
+  });
+
+  app.post("/api/projects/:id/files", authenticateToken, productImageUpload.array('files', 10), async (req: AuthRequest, res) => {
+    try {
+      const projectId = parseInt(req.params.id);
+      const { category, title, clientVisible } = req.body;
+      const files = req.files as Express.Multer.File[];
+      
+      if (!files || files.length === 0) {
+        return res.status(400).json({ message: "No files uploaded" });
+      }
+
+      const uploadedFiles = [];
+      for (const file of files) {
+        const fileData = {
+          projectId,
+          clientId: null, // Will be set based on project
+          fileName: file.filename,
+          originalName: file.originalname,
+          filePath: file.path,
+          fileSize: file.size,
+          mimeType: file.mimetype,
+          category: category || 'general',
+          description: title,
+          uploadedBy: req.user!.id,
+          isPublic: clientVisible === 'true',
+        };
+
+        const uploadedFile = await storage.createProjectFile(fileData);
+        uploadedFiles.push(uploadedFile);
+      }
+
+      res.json({ message: "Files uploaded successfully", files: uploadedFiles });
+    } catch (error) {
+      console.error("Failed to upload files:", error);
+      res.status(500).json({ message: "Failed to upload files", error: String(error) });
+    }
+  });
+
   // Project Log Routes
   app.get("/api/projects/:id/logs", authenticateToken, async (req: AuthRequest, res) => {
     try {

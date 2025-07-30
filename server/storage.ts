@@ -15,6 +15,7 @@ import {
   clients,
   projects,
   projectLogs,
+  projectFiles,
   crmCustomers,
   crmLeads,
   crmDeals,
@@ -170,6 +171,11 @@ export interface IStorage {
   getProjectLogs(projectId: number): Promise<ProjectLog[]>;
   createProjectLog(log: InsertProjectLog): Promise<ProjectLog>;
   deleteProjectLog(id: number): Promise<boolean>;
+
+  // Project File operations
+  getProjectFiles(projectId: number): Promise<ProjectFile[]>;
+  createProjectFile(file: InsertProjectFile): Promise<ProjectFile>;
+  deleteProjectFile(id: number): Promise<boolean>;
 
   // Task operations - Enhanced for Phase 1
   getTask(id: number): Promise<Task | undefined>;
@@ -875,6 +881,40 @@ export class MemStorage {
   async deleteProjectLog(id: number): Promise<boolean> {
     const result = await db.delete(projectLogs).where(eq(projectLogs.id, id));
     return result.rowCount > 0;
+  }
+
+  // Project File Operations
+  async getProjectFiles(projectId: number): Promise<ProjectFile[]> {
+    try {
+      const result = await db.select()
+        .from(projectFiles)
+        .where(eq(projectFiles.projectId, projectId))
+        .orderBy(desc(projectFiles.createdAt));
+      return result;
+    } catch (error) {
+      console.error('Error getting project files:', error);
+      return [];
+    }
+  }
+
+  async createProjectFile(file: InsertProjectFile): Promise<ProjectFile> {
+    try {
+      const result = await db.insert(projectFiles).values(file).returning();
+      return result[0];
+    } catch (error) {
+      console.error('Error creating project file:', error);
+      throw error;
+    }
+  }
+
+  async deleteProjectFile(id: number): Promise<boolean> {
+    try {
+      const result = await db.delete(projectFiles).where(eq(projectFiles.id, id));
+      return result.rowCount !== null && result.rowCount > 0;
+    } catch (error) {
+      console.error('Error deleting project file:', error);
+      return false;
+    }
   }
 
   // WhatsApp message generation
