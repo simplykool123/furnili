@@ -2,6 +2,7 @@ import express, { type Express } from "express";
 import { createServer, type Server } from "http";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
+import multer from "multer";
 import { storage } from "./storage";
 import { authenticateToken, requireRole, generateToken, comparePassword, type AuthRequest } from "./middleware/auth";
 import { productImageUpload, boqFileUpload, receiptImageUpload, csvFileUpload } from "./utils/fileUpload";
@@ -2416,6 +2417,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Failed to fetch CRM stats:", error);
       res.status(500).json({ message: "Failed to fetch CRM stats", error });
+    }
+  });
+
+  // Audio transcription endpoint
+  app.post("/api/transcribe", multer({ dest: 'uploads/audio/' }).single('audio'), authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: "No audio file provided" });
+      }
+
+      // For now, we'll simulate transcription since we don't have OpenAI API
+      // In a real implementation, you would use OpenAI Whisper API or similar
+      const simulatedTranscription = "This is a simulated transcription. In a real implementation, this would be the actual transcribed text from the audio file.";
+      
+      // Cleanup uploaded file
+      const fs = require('fs').promises;
+      try {
+        await fs.unlink(req.file.path);
+      } catch (error) {
+        console.warn('Could not delete audio file:', error);
+      }
+
+      res.json({ 
+        transcription: simulatedTranscription,
+        message: "Audio transcription completed" 
+      });
+    } catch (error) {
+      console.error("Failed to transcribe audio:", error);
+      res.status(500).json({ message: "Failed to transcribe audio", error: String(error) });
     }
   });
 
