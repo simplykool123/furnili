@@ -1436,7 +1436,15 @@ export default function Attendance() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-red-600">
-              {todayAttendance.filter((a: any) => a.status === "absent").length}
+              {(() => {
+                // Calculate actual absent staff: total staff - those who checked in today
+                const checkedInToday = todayAttendance.filter((a: any) => 
+                  a.status === "present" || a.status === "late" || a.status === "half_day"
+                ).length;
+                const explicitlyAbsent = todayAttendance.filter((a: any) => a.status === "absent").length;
+                const totalAbsent = Math.max(staff.length - checkedInToday, explicitlyAbsent);
+                return totalAbsent;
+              })()}
             </div>
             <p className="text-xs text-gray-600">staff members</p>
           </CardContent>
@@ -1514,7 +1522,14 @@ export default function Attendance() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-purple-600">
-              {attendanceStats?.totalHours?.toFixed(1) || "0.0"}
+              {(() => {
+                // Calculate total hours from attendance records properly
+                const totalHours = attendanceRecords.reduce((sum: number, record: any) => {
+                  const hours = record.hoursWorked || record.workingHours || 0;
+                  return sum + hours;
+                }, 0);
+                return totalHours.toFixed(1);
+              })()}
             </div>
             <p className="text-xs text-gray-600">this month</p>
           </CardContent>

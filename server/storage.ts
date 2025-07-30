@@ -2294,6 +2294,8 @@ class DatabaseStorage implements IStorage {
     absentDays: number;
     totalHours: number;
     overtimeHours: number;
+    holidays: number;
+    workingDays: number;
   }> {
     const currentMonth = month || new Date().getMonth() + 1;
     const currentYear = year || new Date().getFullYear();
@@ -2314,19 +2316,35 @@ class DatabaseStorage implements IStorage {
     
     const records = await query;
     
-    // Calculate working days (excluding Sundays) instead of total calendar days
-    const totalDays = this.calculateWorkingDaysInMonth(currentMonth, currentYear);
+    // Calculate working days and holidays in month
+    const daysInMonth = new Date(currentYear, currentMonth, 0).getDate();
+    let holidays = 0;
+    let workingDays = 0;
+    
+    for (let i = 1; i <= daysInMonth; i++) {
+      const date = new Date(currentYear, currentMonth - 1, i);
+      const dayOfWeek = date.getDay();
+      
+      if (dayOfWeek === 0) { // Sunday
+        holidays++;
+      } else {
+        workingDays++;
+      }
+    }
+    
     const presentDays = records.filter(r => r.status === 'present' || r.status === 'late').length;
-    const absentDays = totalDays - presentDays;
-    const totalHours = records.reduce((sum, r) => sum + (r.hoursWorked || 0), 0);
+    const absentDays = Math.max(0, workingDays - presentDays);
+    const totalHours = records.reduce((sum, r) => sum + (r.workingHours || r.hoursWorked || 0), 0);
     const overtimeHours = records.reduce((sum, r) => sum + (r.overtimeHours || 0), 0);
     
     return {
-      totalDays,
+      totalDays: daysInMonth,
       presentDays,
       absentDays,
       totalHours,
       overtimeHours,
+      holidays,
+      workingDays,
     };
   }
 
