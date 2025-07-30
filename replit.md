@@ -41,9 +41,12 @@ Preferred communication style: Simple, everyday language.
   - **Real-time Calculation**: Net Salary = Basic + Allowances + Bonus - Advance
   - **Dark Brown Styling**: Applied consistent brand colors to Edit buttons
 - ✅ **MATERIAL REQUEST FORM UPDATES**: Enhanced form labels and validation per user requirements
-  - **Project Field**: Changed "Project" label to "Project Code" for better clarity
+  - **Project Field**: Changed "Project Code" label to "Project ID" for better clarity
+  - **Auto-Selection**: When navigating from Project Management → View Details → Order, form automatically:
+    - Selects the correct Project ID from URL parameters
+    - Auto-fills Client field based on selected project
+    - Maintains project context for seamless workflow
   - **Order Number**: Made Order No. field optional (removed required asterisk)
-  - **Auto-Fill Client**: Client field auto-populates when project is selected
   - **Project Navigation**: Seamless navigation from project detail "New Order" button with pre-selected project
 - ✅ **ENHANCED NOTES SYSTEM**: Redesigned Notes tab to match user specifications
   - **Form Structure**: Added Title field, Note textarea, and file upload functionality
