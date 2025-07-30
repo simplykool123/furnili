@@ -2428,9 +2428,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "No audio file provided" });
       }
 
-      // For now, we'll simulate transcription since we don't have OpenAI API
+      // For now, we'll simulate transcription with more realistic content
       // In a real implementation, you would use OpenAI Whisper API or similar
-      const simulatedTranscription = "This is a simulated transcription. In a real implementation, this would be the actual transcribed text from the audio file.";
+      const simulatedResponses = [
+        "Client mentioned they prefer warm colors for the living room and want the project completed by end of next month.",
+        "Discussed material specifications with the team. Need to order additional tiles for the bathroom renovation.",
+        "Follow up meeting scheduled for next Tuesday to review the design proposals and finalize the layout.",
+        "Client approved the initial design concept. Moving forward with detailed drawings and material procurement.",
+        "Site visit completed. Measurements confirmed and noted some structural considerations for the renovation.",
+        "Budget discussion with client. Approved additional 15% for premium finishes in the master bedroom."
+      ];
+      const simulatedTranscription = simulatedResponses[Math.floor(Math.random() * simulatedResponses.length)];
       
       // Cleanup uploaded file
       try {

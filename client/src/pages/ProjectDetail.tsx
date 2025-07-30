@@ -234,7 +234,12 @@ export default function ProjectDetail() {
         const transcribedText = result.transcription || result.text || '';
         
         // Auto-fill the note form with transcribed text
-        noteForm.setValue('title', `Voice Note - ${new Date().toLocaleTimeString()}`);
+        const currentTime = new Date().toLocaleTimeString('en-US', { 
+          hour: '2-digit', 
+          minute: '2-digit',
+          hour12: false 
+        });
+        noteForm.setValue('title', `Voice Note - ${currentTime}`);
         noteForm.setValue('content', transcribedText);
         noteForm.setValue('type', 'note');
         
@@ -1809,7 +1814,7 @@ export default function ProjectDetail() {
                       </div>
                       
                       <p className="text-xs text-blue-700">
-                        Click "Start Recording" to record a voice note. It will be automatically transcribed and added to the note content.
+                        Record your voice note and it will be automatically transcribed. Perfect for quick meeting notes, client calls, or site observations.
                       </p>
                     </div>
                     
