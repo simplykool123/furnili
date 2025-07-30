@@ -1,4 +1,5 @@
 import ReportsView from "@/components/Reports/ReportsView";
+import FurniliLayout from "@/components/Layout/FurniliLayout";
 import { authService } from "@/lib/auth";
 import { useEffect } from "react";
 
@@ -15,5 +16,12 @@ export default function Reports() {
     return null;
   }
 
-  return <ReportsView />;
+  return (
+    <FurniliLayout
+      title="Reports & Analytics"
+      subtitle="Comprehensive reporting and business insights"
+    >
+      <ReportsView />
+    </FurniliLayout>
+  );
 }

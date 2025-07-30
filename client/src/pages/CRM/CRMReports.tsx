@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
 import { Download, TrendingUp, Users, Target, Calendar, DollarSign } from "lucide-react";
+import FurniliLayout from "@/components/Layout/FurniliLayout";
 
 export default function CRMReports() {
   const [dateRange, setDateRange] = useState('last30days');
@@ -127,11 +128,12 @@ export default function CRMReports() {
   const COLORS = ['#3B82F6', '#F59E0B', '#8B5CF6', '#10B981', '#EF4444'];
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <FurniliLayout
+      title="CRM Reports"
+      subtitle="Analytics and insights for your CRM performance"
+    >
+      <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">CRM Reports</h1>
-          <p className="text-gray-600">Analytics and insights for your CRM performance</p>
         </div>
         <div className="flex gap-2">
           <Select value={dateRange} onValueChange={setDateRange}>
@@ -370,6 +372,6 @@ export default function CRMReports() {
           </Card>
         </TabsContent>
       </Tabs>
-    </div>
+    </FurniliLayout>
   );
 }
