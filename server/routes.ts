@@ -792,7 +792,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get projects eligible for material requests
-  app.get("/api/requests/eligible-projects", authenticateToken, async (req, res) => {
+  app.get("/api/eligible-projects", authenticateToken, async (req, res) => {
     try {
       const allProjects = await storage.getAllProjects();
       const eligibleProjects = getMaterialRequestEligibleProjects(allProjects);
