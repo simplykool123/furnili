@@ -79,16 +79,23 @@ const PayrollEditForm = ({ staff, payroll, onSave }: {
   const [bonus, setBonus] = useState(payroll?.bonus || 0);
   
   const basicSalary = payroll?.basicSalary || staff?.basicSalary || 0;
-  // Use the calculated net salary from payroll record, or calculate if editing
-  const baseNetSalary = payroll?.netSalary || basicSalary;
-  const netSalary = baseNetSalary + allowances + bonus - advance;
+  const actualWorkingDays = payroll?.actualWorkingDays || 0;
+  const totalWorkingDays = payroll?.totalWorkingDays || 30;
+  
+  // Calculate proportionate salary based on working days (0 if no working days)
+  const proportionateSalary = actualWorkingDays > 0 ? 
+    Math.round((basicSalary / totalWorkingDays) * actualWorkingDays) : 0;
+  
+  // Net Salary = Proportionate Basic + Allowances + Bonus - Advance
+  const netSalary = proportionateSalary + allowances + bonus - advance;
 
   const handleSave = () => {
     onSave({
       allowances,
       advance,
       bonus,
-      netSalary
+      // Calculate final net salary to save
+      netSalary: proportionateSalary + allowances + bonus - advance
     });
   };
 
@@ -98,10 +105,14 @@ const PayrollEditForm = ({ staff, payroll, onSave }: {
         <div>
           <Label>Basic Salary</Label>
           <div className="text-lg font-semibold text-gray-700">₹{basicSalary.toLocaleString()}</div>
+          <div className="text-xs text-gray-500">Proportionate: ₹{proportionateSalary.toLocaleString()} ({actualWorkingDays}/{totalWorkingDays} days)</div>
         </div>
         <div>
           <Label>Net Salary</Label>
           <div className="text-lg font-semibold text-green-600">₹{netSalary.toLocaleString()}</div>
+          <div className="text-xs text-gray-500">
+            {proportionateSalary.toLocaleString()} + {allowances} + {bonus} - {advance}
+          </div>
         </div>
       </div>
       
