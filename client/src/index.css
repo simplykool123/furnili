@@ -86,7 +86,7 @@
   --card-foreground: hsl(25, 25%, 15%);
   --border: hsl(39, 20%, 85%);
   --input: hsl(39, 20%, 92%);
-  --primary: var(--furnili-primary);
+  --primary: hsl(217, 91%, 60%); /* Consistent blue primary */
   --primary-foreground: hsl(0, 0%, 100%);
   --secondary: hsl(39, 60%, 55%);
   --secondary-foreground: hsl(0, 0%, 100%);
@@ -95,7 +95,7 @@
   --destructive: hsl(0, 84.2%, 60.2%);
   --destructive-foreground: hsl(0, 0%, 100%);
   --ring: var(--furnili-primary);
-  --radius: 0.75rem;
+  --radius: 0.5rem; /* More compact radius */
   
   /* Surface colors */
   --surface: var(--furnili-cream);
@@ -107,6 +107,51 @@
   --success-foreground: hsl(0, 0%, 100%);
   --error: hsl(0, 84.2%, 60.2%);
   --error-foreground: hsl(0, 0%, 100%);
+}
+
+/* Consistent Button Styles */
+@layer components {
+  .btn-primary {
+    @apply bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-md transition-colors duration-200 flex items-center gap-2;
+  }
+  
+  .btn-secondary {
+    @apply bg-gray-100 hover:bg-gray-200 text-gray-900 font-medium px-4 py-2 rounded-md transition-colors duration-200 flex items-center gap-2;
+  }
+  
+  .btn-outline {
+    @apply border border-blue-600 text-blue-600 hover:bg-blue-50 font-medium px-4 py-2 rounded-md transition-colors duration-200 flex items-center gap-2;
+  }
+  
+  .btn-sm {
+    @apply px-3 py-1.5 text-sm;
+  }
+  
+  .btn-lg {
+    @apply px-6 py-3 text-base;
+  }
+  
+  /* Consistent Card Layout */
+  .card-compact {
+    @apply bg-white rounded-lg border shadow-sm p-4;
+  }
+  
+  .card-grid {
+    @apply grid gap-4;
+  }
+  
+  /* Consistent Spacing */
+  .section-padding {
+    @apply p-6;
+  }
+  
+  .content-spacing {
+    @apply space-y-4;
+  }
+  
+  .compact-spacing {
+    @apply space-y-2;
+  }
 }
 
 .dark {
@@ -121,8 +166,8 @@
   --card-foreground: hsl(39, 20%, 90%);
   --border: hsl(25, 15%, 20%);
   --input: hsl(25, 15%, 18%);
-  --primary: var(--furnili-primary);
-  --primary-foreground: hsl(25, 25%, 15%);
+  --primary: hsl(217, 91%, 60%);
+  --primary-foreground: hsl(0, 0%, 100%);
   --secondary: hsl(39, 60%, 55%);
   --secondary-foreground: hsl(25, 25%, 15%);
   --accent: hsl(25, 15%, 18%);

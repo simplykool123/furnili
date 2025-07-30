@@ -200,7 +200,7 @@ export default function ProjectDetail() {
       
       if (formData.inspirationType === 'ai') {
         // AI-style interior design images focused on walls, cupboards, furniture
-        const roomTypeImages = {
+        const roomTypeImages: Record<string, string[]> = {
           'living-room': [
             `https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=300&fit=crop&auto=format`, // Modern living room
             `https://images.unsplash.com/photo-1567767292278-a4f21aa2d36e?w=400&h=300&fit=crop&auto=format`, // Wall design
@@ -223,7 +223,7 @@ export default function ProjectDetail() {
         images = roomTypeImages[formData.roomType] || roomTypeImages['living-room'];
       } else {
         // Real photo inspiration images for interior design
-        const roomTypeImages = {
+        const roomTypeImages: Record<string, string[]> = {
           'living-room': [
             `https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=300&fit=crop&auto=format`,
             `https://images.unsplash.com/photo-1567767292278-a4f21aa2d36e?w=400&h=300&fit=crop&auto=format`,
@@ -535,14 +535,14 @@ export default function ProjectDetail() {
   const filteredFiles = useMemo(() => {
     if (selectedFileType === "all") return projectFiles;
     
-    const categoryMap = {
+    const categoryMap: Record<string, string> = {
       "recce": "recce",
       "design": "design", 
       "drawing": "drawing"
     };
     
     const targetCategory = categoryMap[selectedFileType.toLowerCase()];
-    return projectFiles.filter(file => 
+    return projectFiles.filter((file: any) => 
       file.category?.toLowerCase() === targetCategory
     );
   }, [projectFiles, selectedFileType]);
@@ -984,7 +984,7 @@ export default function ProjectDetail() {
                   ) : (
                     <Button 
                       onClick={() => setIsUploadDialogOpen(true)}
-                      className="bg-blue-600 hover:bg-blue-700 text-white h-8 text-xs"
+                      className="btn-primary btn-sm"
                     >
                       <Upload className="h-3 w-3 mr-1" />
                       Upload Files
@@ -1159,11 +1159,7 @@ export default function ProjectDetail() {
                                 value={editingComment?.fileId === file.id ? editingComment.comment : (file.comment || '')}
                                 placeholder="Nice"
                                 onChange={(e) => {
-                                  if (editingComment?.fileId === file.id) {
-                                    setEditingComment({ fileId: file.id, comment: e.target.value });
-                                  } else {
-                                    setEditingComment({ fileId: file.id, comment: e.target.value });
-                                  }
+                                  setEditingComment({ fileId: file.id, comment: e.target.value });
                                 }}
                                 onFocus={() => {
                                   if (!editingComment || editingComment.fileId !== file.id) {
@@ -1171,7 +1167,7 @@ export default function ProjectDetail() {
                                   }
                                 }}
                                 onBlur={() => {
-                                  if (editingComment?.fileId === file.id) {
+                                  if (editingComment?.fileId === file.id && editingComment) {
                                     // Auto-save when clicking elsewhere
                                     updateCommentMutation.mutate({
                                       fileId: file.id,
