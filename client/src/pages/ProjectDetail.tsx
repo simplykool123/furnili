@@ -27,6 +27,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import type { Project, Client } from "@shared/schema";
 import { useLocation } from "wouter";
+import { Link } from "wouter";
 
 // Schemas for various forms
 const taskSchema = z.object({
@@ -366,6 +367,23 @@ export default function ProjectDetail() {
         },
       });
       if (!response.ok) throw new Error('Failed to fetch project moodboards');
+      return response.json();
+    },
+    enabled: !!projectId,
+  });
+
+  // Query for project material requests (orders)
+  const { data: projectOrders = [], isLoading: ordersLoading } = useQuery({
+    queryKey: ['/api/requests', 'project', projectId],
+    queryFn: async () => {
+      const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+      const response = await fetch(`/api/requests?projectId=${projectId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      if (!response.ok) throw new Error('Failed to fetch project orders');
       return response.json();
     },
     enabled: !!projectId,
@@ -1625,15 +1643,103 @@ export default function ProjectDetail() {
           </TabsContent>
 
           <TabsContent value="orders" className="p-6 bg-gray-50">
-            <div className="text-center py-12">
-              <Building2 className="h-16 w-16 mx-auto text-gray-300 mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Orders Management</h3>
-              <p className="text-gray-500 mb-6">Track project orders and material procurement</p>
-              <Button className="bg-blue-600 hover:bg-blue-700 text-white">
-                <Plus className="h-4 w-4 mr-2" />
-                New Order
-              </Button>
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-lg font-semibold text-gray-900">Material Requests (Orders)</h3>
+              <Link href={`/requests?projectId=${projectId}`}>
+                <Button 
+                  className="bg-amber-900 hover:bg-amber-800 text-white"
+                  style={{ backgroundColor: 'hsl(28, 100%, 25%)', '&:hover': { backgroundColor: 'hsl(28, 100%, 20%)' } }}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  New Order
+                </Button>
+              </Link>
             </div>
+
+            {ordersLoading ? (
+              <div className="space-y-4">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className="bg-white rounded-lg p-4 animate-pulse">
+                    <div className="h-4 bg-gray-200 rounded w-1/4 mb-2"></div>
+                    <div className="h-3 bg-gray-200 rounded w-3/4 mb-1"></div>
+                    <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                  </div>
+                ))}
+              </div>
+            ) : projectOrders.length > 0 ? (
+              <div className="space-y-4">
+                {projectOrders.map((order: any) => (
+                  <Card key={order.id} className="bg-white">
+                    <CardContent className="p-4">
+                      <div className="flex justify-between items-start mb-3">
+                        <div>
+                          <h4 className="font-semibold text-gray-900 mb-1">
+                            Order #{order.orderNumber}
+                          </h4>
+                          <p className="text-sm text-gray-600 mb-2">
+                            Client: {order.clientName}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-sm font-medium text-gray-900 mb-1">
+                            ₹{order.totalValue?.toLocaleString() || '0'}
+                          </div>
+                          <Badge 
+                            variant={
+                              order.status === 'completed' ? 'default' :
+                              order.status === 'approved' ? 'secondary' :
+                              order.status === 'pending' ? 'outline' : 'destructive'
+                            }
+                            className={
+                              order.status === 'completed' ? 'bg-green-100 text-green-800' :
+                              order.status === 'approved' ? 'bg-blue-100 text-blue-800' :
+                              order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : ''
+                            }
+                          >
+                            {order.status}
+                          </Badge>
+                        </div>
+                      </div>
+                      
+                      <div className="flex justify-between items-center text-sm text-gray-500">
+                        <div className="flex items-center space-x-4">
+                          <span>Priority: {order.priority}</span>
+                          {order.items && (
+                            <span>{order.items.length} items</span>
+                          )}
+                        </div>
+                        <span>
+                          {new Date(order.createdAt).toLocaleDateString()}
+                        </span>
+                      </div>
+                      
+                      {order.remarks && (
+                        <div className="mt-3 pt-3 border-t border-gray-100">
+                          <p className="text-sm text-gray-600">
+                            <span className="font-medium">Remarks:</span> {order.remarks}
+                          </p>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <Building2 className="h-16 w-16 mx-auto text-gray-300 mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No Material Requests</h3>
+                <p className="text-gray-500 mb-6">Create your first material request for this project</p>
+                <Link href={`/requests?projectId=${projectId}`}>
+                  <Button 
+                    className="bg-amber-900 hover:bg-amber-800 text-white"
+                    style={{ backgroundColor: 'hsl(28, 100%, 25%)', '&:hover': { backgroundColor: 'hsl(28, 100%, 20%)' } }}
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    New Order
+                  </Button>
+                </Link>
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="activities" className="p-6 bg-gray-50">

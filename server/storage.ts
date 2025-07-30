@@ -234,6 +234,7 @@ export interface IStorage {
     clientName?: string;
     requestedBy?: number;
   }): Promise<MaterialRequestWithItems[]>;
+  getMaterialRequestsByProject(projectId: number): Promise<MaterialRequestWithItems[]>;
   createMaterialRequest(request: InsertMaterialRequest, items: InsertRequestItem[]): Promise<MaterialRequest>;
   updateMaterialRequestStatus(id: number, status: string, userId: number): Promise<MaterialRequest | undefined>;
   deleteMaterialRequest(id: number): Promise<boolean>;
@@ -2118,6 +2119,17 @@ class DatabaseStorage implements IStorage {
       return { ...request, items };
     }));
     return requestsWithItems;
+  }
+
+  async getMaterialRequestsByProject(projectId: number): Promise<MaterialRequestWithItems[]> {
+    const requests = await db.select().from(materialRequests).where(eq(materialRequests.projectId, projectId));
+    const requestsWithItems = await Promise.all(requests.map(async (request) => {
+      const items = await db.select().from(requestItems).where(eq(requestItems.requestId, request.id));
+      return { ...request, items };
+    }));
+    return requestsWithItems.sort((a, b) => 
+      new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime()
+    );
   }
 
   async createMaterialRequest(request: InsertMaterialRequest): Promise<MaterialRequest> {

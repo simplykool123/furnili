@@ -72,6 +72,7 @@ interface Project {
 interface RequestFormSimplifiedProps {
   onClose: () => void;
   onSuccess?: () => void;
+  preSelectedProjectId?: number;
   initialData?: {
     projectId?: number;
     clientName?: string;
@@ -87,7 +88,7 @@ interface RequestFormSimplifiedProps {
   };
 }
 
-export default function RequestFormSimplified({ onClose, onSuccess, initialData }: RequestFormSimplifiedProps) {
+export default function RequestFormSimplified({ onClose, onSuccess, preSelectedProjectId, initialData }: RequestFormSimplifiedProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isClientDropdownOpen, setIsClientDropdownOpen] = useState(false);
@@ -113,7 +114,7 @@ export default function RequestFormSimplified({ onClose, onSuccess, initialData 
   const form = useForm<RequestFormData>({
     resolver: zodResolver(requestFormSchema),
     defaultValues: {
-      projectId: initialData?.projectId || 0,
+      projectId: preSelectedProjectId || initialData?.projectId || 0,
       clientName: initialData?.clientName || "",
       orderNumber: initialData?.orderNumber || "",
       priority: initialData?.priority || "medium",
@@ -176,6 +177,16 @@ export default function RequestFormSimplified({ onClose, onSuccess, initialData 
       });
     }
   }, [products, initialData, reset]);
+
+  // Update client name when pre-selected project changes
+  useEffect(() => {
+    if (preSelectedProjectId && eligibleProjects.length > 0) {
+      const selectedProject = eligibleProjects.find(p => p.id === preSelectedProjectId);
+      if (selectedProject) {
+        setValue('clientName', selectedProject.clientName);
+      }
+    }
+  }, [preSelectedProjectId, eligibleProjects, setValue]);
 
   // Create client mutation
   const createClientMutation = useMutation({

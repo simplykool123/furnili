@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import RequestTable from "@/components/Requests/RequestTable";
 import RequestFormSimplified from "@/components/Requests/RequestFormSimplified";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -11,8 +11,19 @@ import { useIsMobile, MobileCard, MobileHeading, MobileText } from "@/components
 export default function MaterialRequests() {
   const [showNewRequest, setShowNewRequest] = useState(false);
   const [, setLocation] = useLocation();
+  const [selectedProjectId, setSelectedProjectId] = useState<number | undefined>();
   const user = authService.getUser();
   const { isMobile } = useIsMobile();
+
+  // Parse projectId from URL parameters
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const projectId = urlParams.get('projectId');
+    if (projectId) {
+      setSelectedProjectId(parseInt(projectId));
+      setShowNewRequest(true); // Auto-open form when projectId is provided
+    }
+  }, []);
   
   const canCreateRequests = user && ['user', 'manager', 'admin', 'staff'].includes(user.role);
   const canUploadBOQ = user && ['manager', 'admin', 'staff'].includes(user.role);
@@ -65,7 +76,13 @@ export default function MaterialRequests() {
               Form to create a new material request with client details and product items
             </p>
           </DialogHeader>
-          <RequestFormSimplified onClose={() => setShowNewRequest(false)} />
+          <RequestFormSimplified 
+            preSelectedProjectId={selectedProjectId}
+            onClose={() => {
+              setShowNewRequest(false);
+              setSelectedProjectId(undefined);
+            }} 
+          />
         </DialogContent>
       </Dialog>
     </div>

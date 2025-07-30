@@ -699,7 +699,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Material request routes
   app.get("/api/requests", authenticateToken, async (req, res) => {
     try {
-      const { status, clientName } = req.query;
+      const { status, clientName, projectId } = req.query;
       const user = (req as AuthRequest).user!;
       
       const filters: any = {
@@ -712,7 +712,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         filters.requestedBy = user.id;
       }
       
-      const requests = await storage.getAllMaterialRequests(filters);
+      let requests;
+      if (projectId) {
+        // Get requests for specific project
+        requests = await storage.getMaterialRequestsByProject(parseInt(projectId as string));
+      } else {
+        // Get all requests with filters
+        requests = await storage.getAllMaterialRequests(filters);
+      }
+      
       res.json(requests);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch requests", error });
