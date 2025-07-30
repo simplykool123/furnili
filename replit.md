@@ -10,6 +10,16 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes (January 2025)
 
+- ✅ **MATERIAL REQUEST FORM UPDATES**: Enhanced form labels and validation per user requirements
+  - **Project Field**: Changed "Project" label to "Project Code" for better clarity
+  - **Order Number**: Made Order No. field optional (removed required asterisk)
+  - **Auto-Fill Client**: Client field auto-populates when project is selected
+  - **Project Navigation**: Seamless navigation from project detail "New Order" button with pre-selected project
+- ✅ **ENHANCED NOTES SYSTEM**: Redesigned Notes tab to match user specifications
+  - **Form Structure**: Added Title field, Note textarea, and file upload functionality
+  - **File Attachments**: Upload support with small attachment icons that expand full-screen when clicked
+  - **Professional Display**: User avatars, timestamps, and improved note layout
+  - **Dark Brown Theme**: Applied consistent hsl(28, 100%, 25%) button color
 - ✅ **PROJECT STAGES UPDATED TO FINAL WORKFLOW**: Implemented complete project stage lifecycle per user requirements
   - **New Stage Order**: Prospect → Recce Done → Design In Progress → Design Approved → Estimate Given → Client Approved → Production → Installation → Handover → Completed
   - **Optional Status**: On Hold / Lost status available for projects that don't follow normal workflow

@@ -18,7 +18,7 @@ import { z } from "zod";
 const requestFormSchema = z.object({
   projectId: z.number().min(1, "Project selection is required"),
   clientName: z.string().min(1, "Client name is required"),
-  orderNumber: z.string().min(1, "Order number is required"),
+  orderNumber: z.string().optional(),
   priority: z.enum(["high", "medium", "low"]).default("medium"),
   remarks: z.string().optional(),
   items: z.array(z.object({
@@ -353,7 +353,7 @@ export default function RequestFormSimplified({ onClose, onSuccess, preSelectedP
           {/* All fields in one compact row */}
           <div className="grid grid-cols-12 gap-3 items-end">
             <div className="col-span-4">
-              <Label htmlFor="projectId" className="text-sm font-medium">Project *</Label>
+              <Label htmlFor="projectId" className="text-sm font-medium">Project Code *</Label>
               <Select 
                 value={watch("projectId")?.toString() || ""}
                 onValueChange={(value) => {
@@ -407,7 +407,7 @@ export default function RequestFormSimplified({ onClose, onSuccess, preSelectedP
             </div>
 
             <div className="col-span-3">
-              <Label htmlFor="orderNumber" className="text-sm font-medium">Order No *</Label>
+              <Label htmlFor="orderNumber" className="text-sm font-medium">Order No</Label>
               <Input
                 id="orderNumber"
                 {...register("orderNumber")}
