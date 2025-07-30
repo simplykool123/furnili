@@ -165,7 +165,7 @@ export interface IStorage {
 
   // Project operations
   getProject(id: number): Promise<Project | undefined>;
-  getAllProjects(filters?: { status?: string; clientId?: number; projectManager?: string }): Promise<Project[]>;
+  getAllProjects(filters?: { status?: string; clientId?: number; projectManager?: string }): Promise<(Project & { clientName: string })[]>;
   createProject(project: InsertProject): Promise<Project>;
   updateProject(id: number, updates: Partial<InsertProject>): Promise<Project | undefined>;
   deleteProject(id: number): Promise<boolean>;
@@ -2811,8 +2811,30 @@ class DatabaseStorage implements IStorage {
     return result[0];
   }
 
-  async getAllProjects(filters?: { status?: string; clientId?: number; projectManager?: string }): Promise<Project[]> {
-    let query = db.select().from(projects);
+  async getAllProjects(filters?: { status?: string; clientId?: number; projectManager?: string }): Promise<(Project & { clientName: string })[]> {
+    let query = db.select({
+      id: projects.id,
+      code: projects.code,
+      name: projects.name,
+      description: projects.description,
+      clientId: projects.clientId,
+      clientName: clients.name,
+      stage: projects.stage,
+      budget: projects.budget,
+      addressLine1: projects.addressLine1,
+      addressLine2: projects.addressLine2,
+      state: projects.state,
+      city: projects.city,
+      location: projects.location,
+      pincode: projects.pincode,
+      completionPercentage: projects.completionPercentage,
+      notes: projects.notes,
+      files: projects.files,
+      isActive: projects.isActive,
+      createdAt: projects.createdAt,
+      updatedAt: projects.updatedAt
+    }).from(projects)
+    .leftJoin(clients, eq(projects.clientId, clients.id));
     
     if (filters?.status) {
       query = query.where(eq(projects.status, filters.status));
