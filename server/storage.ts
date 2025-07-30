@@ -839,10 +839,27 @@ export class MemStorage {
   }
 
   async createProject(project: InsertProject): Promise<Project> {
-    // Auto-generate project code
-    const maxProject = await db.select({ maxId: sql<number>`MAX(id)` }).from(projects);
-    const nextId = (maxProject[0]?.maxId || 0) + 1;
-    const projectCode = `P-${nextId}`;
+    // Auto-generate project code in format Fur/25-26/XXX starting from 101
+    // Find the highest project number from existing Fur/25-26/ format codes
+    const existingProjects = await db.select({ code: projects.code }).from(projects)
+      .where(sql`${projects.code} LIKE 'Fur/25-26/%'`);
+    
+    let nextNumber = 101; // Default starting number
+    
+    if (existingProjects.length > 0) {
+      const projectNumbers = existingProjects
+        .map(p => {
+          const match = p.code.match(/Fur\/25-26\/(\d+)/);
+          return match ? parseInt(match[1]) : 0;
+        })
+        .filter(num => num > 0);
+      
+      if (projectNumbers.length > 0) {
+        nextNumber = Math.max(...projectNumbers) + 1;
+      }
+    }
+    
+    const projectCode = `Fur/25-26/${nextNumber}`;
     
     const result = await db.insert(projects).values({
       ...project,
@@ -2852,10 +2869,27 @@ class DatabaseStorage implements IStorage {
   }
 
   async createProject(project: InsertProject): Promise<Project> {
-    // Auto-generate project code
-    const maxProject = await db.select({ maxId: sql<number>`MAX(id)` }).from(projects);
-    const nextId = (maxProject[0]?.maxId || 0) + 1;
-    const projectCode = `P-${nextId}`;
+    // Auto-generate project code in format Fur/25-26/XXX starting from 101
+    // Find the highest project number from existing Fur/25-26/ format codes
+    const existingProjects = await db.select({ code: projects.code }).from(projects)
+      .where(sql`${projects.code} LIKE 'Fur/25-26/%'`);
+    
+    let nextNumber = 101; // Default starting number
+    
+    if (existingProjects.length > 0) {
+      const projectNumbers = existingProjects
+        .map(p => {
+          const match = p.code.match(/Fur\/25-26\/(\d+)/);
+          return match ? parseInt(match[1]) : 0;
+        })
+        .filter(num => num > 0);
+      
+      if (projectNumbers.length > 0) {
+        nextNumber = Math.max(...projectNumbers) + 1;
+      }
+    }
+    
+    const projectCode = `Fur/25-26/${nextNumber}`;
     
     const result = await db.insert(projects).values({
       ...project,
