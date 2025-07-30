@@ -3,7 +3,8 @@ import { createServer, type Server } from "http";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 import multer from "multer";
-import { promises as fs } from "fs";
+import { promises as fs, createReadStream } from "fs";
+import OpenAI from "openai";
 import { storage } from "./storage";
 import { authenticateToken, requireRole, generateToken, comparePassword, type AuthRequest } from "./middleware/auth";
 import { productImageUpload, boqFileUpload, receiptImageUpload, csvFileUpload } from "./utils/fileUpload";
@@ -33,6 +34,11 @@ import {
   insertCrmSiteVisitSchema,
   insertMoodboardSchema,
 } from "@shared/schema";
+
+// Initialize OpenAI client
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth routes
@@ -2428,17 +2434,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "No audio file provided" });
       }
 
-      // For now, we'll simulate transcription with more realistic content
-      // In a real implementation, you would use OpenAI Whisper API or similar
-      const simulatedResponses = [
-        "Client mentioned they prefer warm colors for the living room and want the project completed by end of next month.",
-        "Discussed material specifications with the team. Need to order additional tiles for the bathroom renovation.",
-        "Follow up meeting scheduled for next Tuesday to review the design proposals and finalize the layout.",
-        "Client approved the initial design concept. Moving forward with detailed drawings and material procurement.",
-        "Site visit completed. Measurements confirmed and noted some structural considerations for the renovation.",
-        "Budget discussion with client. Approved additional 15% for premium finishes in the master bedroom."
-      ];
-      const simulatedTranscription = simulatedResponses[Math.floor(Math.random() * simulatedResponses.length)];
+      // Use OpenAI Whisper API for real transcription
+      let transcribedText = '';
+      
+      try {
+        const transcription = await openai.audio.transcriptions.create({
+          file: createReadStream(req.file.path),
+          model: 'whisper-1',
+          language: 'en', // can be auto-detected by omitting this
+        });
+        
+        transcribedText = transcription.text;
+        
+        if (!transcribedText || transcribedText.trim().length === 0) {
+          transcribedText = "Unable to transcribe audio. Please speak clearly and try again.";
+        }
+      } catch (error) {
+        console.error('OpenAI Whisper transcription error:', error);
+        // Fallback to a helpful message
+        transcribedText = "Transcription service temporarily unavailable. Please type your note manually.";
+      }
       
       // Cleanup uploaded file
       try {
@@ -2448,7 +2463,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       res.json({ 
-        transcription: simulatedTranscription,
+        transcription: transcribedText,
         message: "Audio transcription completed" 
       });
     } catch (error) {
