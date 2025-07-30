@@ -1862,6 +1862,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { category, title, clientVisible, type } = req.body;
       const files = req.files as Express.Multer.File[];
       
+      console.log('Upload request - projectId:', projectId);
+      console.log('Upload request - user:', req.user?.id);
       console.log('Upload request - files:', files?.length || 0);
       console.log('Upload request - body:', req.body);
       

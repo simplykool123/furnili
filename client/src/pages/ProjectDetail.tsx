@@ -468,10 +468,13 @@ export default function ProjectDetail() {
       formData.append('type', 'note-attachment');
       
       try {
+        const token = localStorage.getItem('authToken');
+        console.log('Upload token check:', { tokenExists: !!token, tokenLength: token?.length });
+        
         const uploadResponse = await fetch(`/api/projects/${projectId}/upload`, {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            'Authorization': `Bearer ${token}`,
           },
           body: formData,
         });
