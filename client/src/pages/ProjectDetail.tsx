@@ -1549,12 +1549,17 @@ export default function ProjectDetail() {
           </TabsContent>
 
           {/* Project Notes Tab */}
-          <TabsContent value="notes" className="space-y-6">
-            {/* Add New Note Form */}
-            <Card>
-              <CardContent className="p-6 space-y-4">
-                <Form {...noteForm}>
-                  <form onSubmit={noteForm.handleSubmit(handleNoteSubmit)} className="space-y-4">
+          <TabsContent value="notes" className="p-6 bg-gray-50">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
+              {/* Left Column - Add Note Form */}
+              <div className="space-y-4">
+                <Card className="h-fit">
+                  <CardHeader>
+                    <CardTitle className="text-lg font-semibold text-gray-900">Add New Note</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <Form {...noteForm}>
+                      <form onSubmit={noteForm.handleSubmit(handleNoteSubmit)} className="space-y-4">
                     <FormField
                       control={noteForm.control}
                       name="title"
@@ -1691,25 +1696,27 @@ export default function ProjectDetail() {
                         </Button>
                       </div>
                     </div>
-                  </form>
-                </Form>
-              </CardContent>
-            </Card>
+                      </form>
+                    </Form>
+                  </CardContent>
+                </Card>
+              </div>
 
-            {/* All Notes Section */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-gray-900">All Notes</h3>
-              
-              {projectLogsQuery.isLoading ? (
-                <div className="text-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
-                  <p className="mt-2 text-gray-500">Loading notes...</p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {(projectLogsQuery.data || []).map((log) => (
-                    <Card key={log.id} className="bg-white border border-gray-200">
-                      <CardContent className="p-4">
+              {/* Right Column - All Notes */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-gray-900">All Notes</h3>
+                
+                <div className="max-h-[calc(100vh-200px)] overflow-y-auto pr-2">
+                  {projectLogsQuery.isLoading ? (
+                    <div className="text-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
+                      <p className="mt-2 text-gray-500">Loading notes...</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {(projectLogsQuery.data || []).map((log) => (
+                        <Card key={log.id} className="bg-white border border-gray-200">
+                          <CardContent className="p-4">
                         <div className="flex items-start space-x-3">
                           {/* User Avatar */}
                           <div className="flex-shrink-0">
@@ -1860,19 +1867,21 @@ export default function ProjectDetail() {
                             </div>
                           </div>
                         </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                  
-                  {(projectLogsQuery.data || []).length === 0 && (
-                    <div className="text-center py-12 text-gray-500">
-                      <MessageSquare className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                      <p className="text-lg font-medium mb-2">No notes yet</p>
-                      <p className="text-sm">Add your first note using the form above</p>
+                          </CardContent>
+                        </Card>
+                      ))}
+                      
+                      {(projectLogsQuery.data || []).length === 0 && (
+                        <div className="text-center py-12 text-gray-500">
+                          <MessageSquare className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                          <p className="text-lg font-medium mb-2">No notes yet</p>
+                          <p className="text-sm">Add your first note using the form above</p>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
-              )}
+              </div>
             </div>
           </TabsContent>
 
