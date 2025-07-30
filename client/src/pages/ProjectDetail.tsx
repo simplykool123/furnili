@@ -253,7 +253,13 @@ export default function ProjectDetail() {
 
   const handleMoodboardCreate = (data: any) => {
     console.log('Creating moodboard with data:', data);
-    createMoodboardMutation.mutate(data);
+    console.log('Form errors:', moodboardForm.formState.errors);
+    const moodboardData = {
+      ...data,
+      linkedProjectId: parseInt(projectId),
+    };
+    console.log('Final moodboard data:', moodboardData);
+    createMoodboardMutation.mutate(moodboardData);
   };
 
   const mockTasks = [
@@ -1783,9 +1789,11 @@ export default function ProjectDetail() {
                         className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
                           field.value === 'ai' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'
                         }`}
-                        onClick={() => {
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
                           field.onChange('ai');
-                          console.log('Selected AI inspiration');
+                          console.log('Selected AI inspiration, current value:', field.value);
                         }}
                       >
                         <div className="text-center">
@@ -1798,9 +1806,11 @@ export default function ProjectDetail() {
                         className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
                           field.value === 'real' ? 'border-green-500 bg-green-50' : 'border-gray-200 hover:border-gray-300'
                         }`}
-                        onClick={() => {
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
                           field.onChange('real');
-                          console.log('Selected Real Photos');
+                          console.log('Selected Real Photos, current value:', field.value);
                         }}
                       >
                         <div className="text-center">
