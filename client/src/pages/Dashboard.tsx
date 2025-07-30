@@ -1,4 +1,5 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { useMemo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -24,6 +25,7 @@ import { useState, useEffect } from "react";
 import StockWarnings from "@/components/Dashboard/StockWarnings";
 import MobileDashboard from "@/components/Mobile/MobileDashboard";
 import { useIsMobile } from "@/components/Mobile/MobileOptimizer";
+import { DashboardSkeleton } from "@/components/LoadingOptimizer";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -148,23 +150,32 @@ export default function Dashboard() {
   const { isMobile } = useIsMobile();
   const [, setLocation] = useLocation();
 
-  // Select a random quote on component mount
+  // Memoized daily quote to prevent re-calculation on each render
+  const dailyQuoteIndex = useMemo(() => Math.floor(Math.random() * motivationalQuotes.length), []);
+  
+  // Select a quote on component mount
   useEffect(() => {
-    const randomIndex = Math.floor(Math.random() * motivationalQuotes.length);
-    setDailyQuote(motivationalQuotes[randomIndex]);
-  }, []);
+    setDailyQuote(motivationalQuotes[dailyQuoteIndex]);
+  }, [dailyQuoteIndex]);
 
+  // Optimized queries with caching for better performance
   const { data: stats, isLoading } = useQuery<DashboardStats>({
     queryKey: ["/api/dashboard/stats"],
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    cacheTime: 5 * 60 * 1000, // 5 minutes
   });
 
   const { data: recentActivity } = useQuery({
     queryKey: ["/api/dashboard/activity"],
+    staleTime: 1 * 60 * 1000, // 1 minute
+    cacheTime: 3 * 60 * 1000, // 3 minutes
   });
 
   // Fetch pending tasks for dashboard display
   const { data: pendingTasks = [] } = useQuery<DashboardTask[]>({
     queryKey: ["/api/dashboard/tasks"],
+    staleTime: 30 * 1000, // 30 seconds
+    cacheTime: 2 * 60 * 1000, // 2 minutes
   });
 
   const { toast } = useToast();
@@ -228,19 +239,7 @@ export default function Dashboard() {
   });
 
   if (isLoading) {
-    return (
-      <div className="space-y-8 animate-fade-in">
-        <div className="animate-pulse">
-          <div className="h-10 bg-primary/20 rounded-lg w-1/2 mb-3"></div>
-          <div className="h-6 bg-muted rounded-md w-1/3 mb-8"></div>
-          <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {[...Array(8)].map((_, i) => (
-              <div key={i} className="h-32 bg-card rounded-xl shadow-md"></div>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
+    return <DashboardSkeleton />;
   }
 
   // Use mobile dashboard for mobile devices

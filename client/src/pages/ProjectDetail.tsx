@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { 
   ArrowLeft, Upload, Download, File, Image, FileText, Calendar, 
@@ -114,7 +114,7 @@ export default function ProjectDetail() {
     },
   });
 
-  // Queries
+  // Optimized Queries with caching
   const { data: project, isLoading: projectLoading } = useQuery({
     queryKey: ['/api/projects', projectId],
     queryFn: async () => {
@@ -127,7 +127,9 @@ export default function ProjectDetail() {
       });
       if (!response.ok) throw new Error('Failed to fetch project');
       return response.json();
-    }
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    cacheTime: 10 * 60 * 1000, // 10 minutes
   });
 
   const { data: client } = useQuery({
@@ -144,7 +146,9 @@ export default function ProjectDetail() {
       if (!response.ok) throw new Error('Failed to fetch client');
       return response.json();
     },
-    enabled: !!project?.clientId
+    enabled: !!project?.clientId,
+    staleTime: 5 * 60 * 1000,
+    cacheTime: 10 * 60 * 1000,
   });
 
   // Mock data for demonstration (in real app, these would come from API)
@@ -171,11 +175,23 @@ export default function ProjectDetail() {
     { id: 2, type: "call", content: "Follow-up call regarding material selection", contactPerson: "Mrs. Sharma", status: "pending", followUpDate: "2025-02-02" },
   ];
 
-  // Calculate project progress
-  const calculateProgress = () => {
+  // Memoized calculations for better performance
+  const projectProgress = useMemo(() => {
     const completedTasks = mockTasks.filter(task => task.status === "completed").length;
     return Math.round((completedTasks / mockTasks.length) * 100);
-  };
+  }, []);
+
+  const taskSummary = useMemo(() => ({
+    pending: mockTasks.filter(t => t.status === 'pending').length,
+    inProgress: mockTasks.filter(t => t.status === 'in-progress').length,
+    completed: mockTasks.filter(t => t.status === 'completed').length,
+  }), []);
+
+  const filteredFiles = useMemo(() => {
+    return selectedFileType === "all" 
+      ? mockFiles 
+      : mockFiles.filter(file => file.category.toLowerCase() === selectedFileType);
+  }, [selectedFileType]);
 
   const getFileIcon = (type: string) => {
     switch (type) {
@@ -205,9 +221,7 @@ export default function ProjectDetail() {
     }
   };
 
-  const filteredFiles = selectedFileType === "all" 
-    ? mockFiles 
-    : mockFiles.filter(file => file.category.toLowerCase() === selectedFileType);
+
 
   if (projectLoading) {
     return (
@@ -723,11 +737,11 @@ export default function ProjectDetail() {
                 <CardContent>
                   <div className="text-center">
                     <div className="text-4xl font-bold text-blue-600 mb-2">
-                      {calculateProgress()}%
+                      {projectProgress}%
                     </div>
-                    <ProgressBar value={calculateProgress()} className="mb-4" />
+                    <ProgressBar value={projectProgress} className="mb-4" />
                     <p className="text-sm text-gray-500">
-                      {mockTasks.filter(t => t.status === 'completed').length} of {mockTasks.length} tasks completed
+                      {taskSummary.completed} of {mockTasks.length} tasks completed
                     </p>
                   </div>
                 </CardContent>
@@ -971,6 +985,7 @@ export default function ProjectDetail() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Add New Task</DialogTitle>
+            <DialogDescription>Create a new task for this project</DialogDescription>
           </DialogHeader>
           <Form {...taskForm}>
             <form className="space-y-4">
@@ -1090,6 +1105,7 @@ export default function ProjectDetail() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Add Project Note</DialogTitle>
+            <DialogDescription>Add a note or log entry for this project</DialogDescription>
           </DialogHeader>
           <Form {...noteForm}>
             <form className="space-y-4">
@@ -1145,6 +1161,7 @@ export default function ProjectDetail() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Log Client Communication</DialogTitle>
+            <DialogDescription>Record communication with the client for this project</DialogDescription>
           </DialogHeader>
           <Form {...communicationForm}>
             <form className="space-y-4">
@@ -1228,6 +1245,7 @@ export default function ProjectDetail() {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="text-lg font-semibold">Upload Files</DialogTitle>
+            <DialogDescription>Upload files to organize in project categories</DialogDescription>
             <button 
               onClick={() => setIsUploadDialogOpen(false)}
               className="absolute right-4 top-4 text-gray-400 hover:text-gray-600"
