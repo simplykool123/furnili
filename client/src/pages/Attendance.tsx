@@ -124,10 +124,10 @@ const PayrollEditForm = ({ staff, payroll, onSave }: {
             type="number"
             value={advance}
             onChange={(e) => setAdvance(parseInt(e.target.value) || 0)}
-            placeholder="Enter advance amount"
+            placeholder="Enter advance deduction"
           />
         </div>
-        
+
         <div>
           <Label htmlFor="bonus">Additional Bonus</Label>
           <Input
@@ -135,14 +135,17 @@ const PayrollEditForm = ({ staff, payroll, onSave }: {
             type="number"
             value={bonus}
             onChange={(e) => setBonus(parseInt(e.target.value) || 0)}
-            placeholder="Enter bonus amount"
+            placeholder="Enter bonus"
           />
         </div>
       </div>
-      
-      <div className="flex justify-end gap-2 pt-4">
-        <Button onClick={handleSave} className="bg-green-600 hover:bg-green-700">
-          Save Changes
+
+      <div className="flex justify-end">
+        <Button 
+          onClick={handleSave}
+          style={{ backgroundColor: 'hsl(28, 100%, 25%)', color: 'white' }}
+        >
+          Update Payroll
         </Button>
       </div>
     </div>
@@ -829,6 +832,12 @@ export default function Attendance() {
       });
     },
   });
+
+  const handleEditPayroll = (payroll: any) => {
+    const staffMember = staff?.find((s: any) => s.id === payroll.userId);
+    setEditingPayroll({ ...payroll, staff: staffMember });
+    setIsEditDialogOpen(true);
+  };
 
   const handlePayrollEdit = (payroll: any) => {
     const staffMember = staff?.find((s: any) => s.id === payroll.userId);
@@ -2225,6 +2234,16 @@ export default function Attendance() {
                         </TableCell>
                         <TableCell>
                           <div className="flex gap-1">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleEditPayroll(payroll)}
+                              className="text-amber-600 hover:text-amber-700"
+                              style={{ backgroundColor: 'hsl(28, 100%, 25%)', color: 'white' }}
+                            >
+                              <Edit className="w-3 h-3 mr-1" />
+                              Edit
+                            </Button>
                             {payroll.status === "paid" && (
                               <Button
                                 size="sm"
@@ -2527,6 +2546,30 @@ export default function Attendance() {
               </div>
             </form>
           </Form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Payroll Edit Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Calculator className="w-5 h-5" />
+              Edit Payroll - {editingPayroll?.staff?.name || `User ${editingPayroll?.userId}`}
+            </DialogTitle>
+          </DialogHeader>
+          {editingPayroll && (
+            <PayrollEditForm
+              staff={editingPayroll.staff}
+              payroll={editingPayroll}
+              onSave={handlePayrollSave}
+            />
+          )}
+          <div className="flex justify-end gap-2 pt-4">
+            <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+              Cancel
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
