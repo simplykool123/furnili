@@ -396,8 +396,8 @@ export default function RequestFormSimplified({ onClose, onSuccess, preSelectedP
                     eligibleProjects.map((project) => (
                       <SelectItem key={project.id} value={project.id.toString()}>
                         <div className="flex flex-col">
-                          <span className="font-medium">{project.projectCode} - {project.name}</span>
-                          <span className="text-xs text-gray-500">{project.clientName} | {project.stage}</span>
+                          <span className="font-medium">Project ID: {project.code}</span>
+                          <span className="text-xs text-gray-500">{project.name} | {project.clientName} | {project.stage}</span>
                         </div>
                       </SelectItem>
                     ))
