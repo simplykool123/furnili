@@ -10,6 +10,12 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes (January 2025)
 
+- ✅ **STAFF DELETION AND PAYROLL DISPLAY FIXES**: Resolved staff management and payroll display issues
+  - **Staff Deletion**: Fixed to make staff inactive instead of permanent deletion
+  - **Payroll Display**: Fixed missing employee names and ₹NaN net pay calculations
+  - **Backend Updates**: Modified DELETE /api/users/:id to set isActive = false
+  - **Frontend Fixes**: Enhanced payroll table to properly lookup staff names and calculate net pay
+  - **Data Filtering**: Updated getAllUsers() to only show active staff members
 - ✅ **MATERIAL REQUEST FORM UPDATES**: Enhanced form labels and validation per user requirements
   - **Project Field**: Changed "Project" label to "Project Code" for better clarity
   - **Order Number**: Made Order No. field optional (removed required asterisk)

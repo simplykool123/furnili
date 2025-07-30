@@ -2181,16 +2181,28 @@ export default function Attendance() {
                 </TableHeader>
                 <TableBody>
                   {payrollRecords.map((payroll: any) => {
-                    const netPay = payroll.salary + (payroll.overtime || 0) - (payroll.deductions || 0);
+                    // Find the staff member from the staff array
+                    const staffMember = staff.find((s: any) => s.id === payroll.userId);
+                    const staffName = staffMember?.name || `User ${payroll.userId}`;
+                    const employeeId = staffMember?.employeeId || payroll.employeeId || 'N/A';
+                    
+                    // Calculate net pay properly - use basicSalary and other fields correctly
+                    const basicSalary = payroll.basicSalary || payroll.salary || staffMember?.basicSalary || 0;
+                    const allowances = payroll.allowances || 0;
+                    const bonus = payroll.bonus || 0;
+                    const overtimePay = payroll.overtimePay || 0;
+                    const deductions = payroll.deductions || payroll.advance || 0;
+                    const netSalary = payroll.netSalary || (basicSalary + allowances + bonus + overtimePay - deductions);
+                    
                     return (
                       <TableRow key={payroll.id}>
                         <TableCell>
-                          <div className="font-semibold">{payroll.staffName}</div>
-                          <div className="text-sm text-gray-600">{payroll.employeeId}</div>
+                          <div className="font-semibold">{staffName}</div>
+                          <div className="text-sm text-gray-600">{employeeId}</div>
                         </TableCell>
                         <TableCell>{payroll.month} {payroll.year}</TableCell>
-                        <TableCell className="font-semibold">₹{(payroll.salary || 0).toLocaleString()}</TableCell>
-                        <TableCell className="font-semibold text-green-600">₹{netPay.toLocaleString()}</TableCell>
+                        <TableCell className="font-semibold">₹{basicSalary.toLocaleString()}</TableCell>
+                        <TableCell className="font-semibold text-green-600">₹{netSalary.toLocaleString()}</TableCell>
                         <TableCell>
                           <Badge variant={payroll.status === "paid" ? "default" : "secondary"}>
                             {payroll.status}
