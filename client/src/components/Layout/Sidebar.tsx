@@ -126,7 +126,7 @@ export default function Sidebar({ onItemClick, collapsed = false, onToggleCollap
 
   return (
     <aside className={cn(
-      "shadow-xl border-r border-primary-foreground/20 h-full flex flex-col transition-all duration-300 fixed left-0 top-0 z-40",
+      "shadow-xl border-r border-primary-foreground/20 h-full flex flex-col fixed left-0 top-0 z-40",
       collapsed ? "w-16" : "w-56 lg:w-60"
     )} style={{backgroundColor: '#D4B896'}} data-testid="main-sidebar">
       {/* Logo/Brand & Toggle */}
@@ -158,7 +158,7 @@ export default function Sidebar({ onItemClick, collapsed = false, onToggleCollap
           {onToggleCollapse && (
             <button
               onClick={onToggleCollapse}
-              className="p-1 rounded-md hover:bg-white/20 text-amber-900 transition-colors"
+              className="p-1 rounded-md hover:bg-white/20 text-amber-900"
               title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
             >
               {collapsed ? <PanelLeftOpen size={20} /> : <PanelLeftClose size={20} />}
@@ -185,10 +185,10 @@ export default function Sidebar({ onItemClick, collapsed = false, onToggleCollap
                   <button
                     onClick={() => collapsed ? null : toggleExpanded(item.name)}
                     className={cn(
-                      "flex items-center w-full rounded-lg font-medium transition-all duration-200 text-xs group hover:shadow-md",
+                      "flex items-center w-full rounded-lg font-medium text-xs group",
                       collapsed ? "justify-center p-2" : "justify-between px-2 py-1.5",
                       hasActiveSubItem || isExpanded
-                        ? "text-amber-900 bg-white/30 shadow-lg backdrop-blur-sm"
+                        ? "text-amber-900 bg-white/30"
                         : "text-amber-900 hover:bg-white/20 hover:text-amber-800"
                     )}
                     title={collapsed ? item.name : undefined}
@@ -198,15 +198,15 @@ export default function Sidebar({ onItemClick, collapsed = false, onToggleCollap
                       {!collapsed && <span className="truncate font-semibold">{item.name}</span>}
                     </div>
                     {!collapsed && (isExpanded ? (
-                      <ChevronDown className="w-3 h-3 flex-shrink-0 transition-transform" />
+                      <ChevronDown className="w-3 h-3 flex-shrink-0" />
                     ) : (
-                      <ChevronRight className="w-3 h-3 flex-shrink-0 transition-transform" />
+                      <ChevronRight className="w-3 h-3 flex-shrink-0" />
                     ))}
                   </button>
                   
                   {/* Sub Menu Items */}
                   {isExpanded && !collapsed && (
-                    <div className="ml-6 space-y-0.5 animate-fade-in">
+                    <div className="ml-6 space-y-0.5">
                       {item.subItems.map((subItem) => {
                         const isActive = subItem.href && (location === subItem.href || (subItem.href !== '/' && location.startsWith(subItem.href)));
                         
@@ -215,9 +215,9 @@ export default function Sidebar({ onItemClick, collapsed = false, onToggleCollap
                             key={subItem.name}
                             href={subItem.href}
                             className={cn(
-                              "flex items-center space-x-2 w-full px-2 py-1 rounded-lg font-medium transition-all duration-200 text-xs group",
+                              "flex items-center space-x-2 w-full px-2 py-1 rounded-lg font-medium text-xs group",
                               isActive
-                                ? "text-amber-900 bg-white/25 shadow-md backdrop-blur-sm border border-white/20"
+                                ? "text-amber-900 bg-white/25"
                                 : "text-amber-900/80 hover:bg-white/15 hover:text-amber-800"
                             )}
                             onClick={onItemClick}
@@ -240,10 +240,10 @@ export default function Sidebar({ onItemClick, collapsed = false, onToggleCollap
                   key={item.name}
                   href={item.href}
                   className={cn(
-                    "flex items-center rounded-lg font-medium transition-all duration-200 text-xs group hover:shadow-md",
+                    "flex items-center rounded-lg font-medium text-xs group",
                     collapsed ? "justify-center p-2" : "space-x-2 px-2 py-1.5",
                     isActive
-                      ? "text-amber-900 bg-white/30 shadow-lg backdrop-blur-sm"
+                      ? "text-amber-900 bg-white/30"
                       : "text-amber-900/90 hover:bg-white/15 hover:text-amber-800"
                   )}
                   onClick={onItemClick}
@@ -271,7 +271,7 @@ export default function Sidebar({ onItemClick, collapsed = false, onToggleCollap
         <button 
           onClick={handleLogout}
           className={cn(
-            "flex items-center rounded-lg font-medium transition-all duration-200 text-xs text-amber-900/90 hover:bg-white/15 hover:text-amber-800 group w-full",
+            "flex items-center rounded-lg font-medium text-xs text-amber-900/90 hover:bg-white/15 hover:text-amber-800 group w-full",
             collapsed ? "justify-center p-2" : "space-x-2 px-2 py-1.5"
           )}
           title={collapsed ? "Logout" : undefined}
