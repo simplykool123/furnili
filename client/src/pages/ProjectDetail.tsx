@@ -419,6 +419,11 @@ export default function ProjectDetail() {
         taggedUsers: [],
       });
       setNoteFiles(null);
+      // Clear file input
+      const fileInput = document.querySelector('input[type="file"]#note-files') as HTMLInputElement;
+      if (fileInput) {
+        fileInput.value = '';
+      }
       toast({ title: "Note added successfully!" });
     },
     onError: (error) => {
@@ -475,6 +480,7 @@ export default function ProjectDetail() {
           const uploadResult = await uploadResponse.json();
           attachmentUrls = uploadResult.files?.map((f: any) => f.fileName || f.path || f.originalName) || [];
           console.log('Attachment files uploaded:', attachmentUrls);
+          console.log('Full upload result:', uploadResult);
         } else {
           console.error('File upload failed');
           toast({
@@ -527,6 +533,11 @@ export default function ProjectDetail() {
         taggedUsers: [],
       });
       setNoteFiles(null);
+      // Clear file input
+      const fileInput = document.querySelector('input[type="file"]#note-files') as HTMLInputElement;
+      if (fileInput) {
+        fileInput.value = '';
+      }
       toast({ title: "Note updated successfully!" });
     },
     onError: (error) => {
@@ -1726,23 +1737,74 @@ export default function ProjectDetail() {
                                 </div>
                                 <p className="text-sm text-gray-700 mb-2">{log.description || log.content}</p>
                                 
-                                {/* Show attachment icons if attachments exist */}
+                                {/* Show attachment icons and previews if attachments exist */}
                                 {log.attachments && Array.isArray(log.attachments) && log.attachments.length > 0 && (
-                                  <div className="flex items-center gap-1 mb-2">
-                                    <Paperclip className="h-4 w-4 text-blue-500" />
-                                    <span className="text-xs text-blue-600 font-medium">
-                                      {log.attachments.length} attachment{log.attachments.length > 1 ? 's' : ''}
-                                    </span>
-                                    <button
-                                      onClick={() => {
-                                        // Show attachment list or download
-                                        console.log('View attachments:', log.attachments);
-                                        toast({ title: "Attachments", description: `${log.attachments.length} files attached to this note` });
-                                      }}
-                                      className="text-xs text-blue-600 hover:text-blue-800 underline ml-1"
-                                    >
-                                      view
-                                    </button>
+                                  <div className="mb-3">
+                                    <div className="flex items-center gap-1 mb-2">
+                                      <Paperclip className="h-4 w-4 text-blue-500" />
+                                      <span className="text-xs text-blue-600 font-medium">
+                                        {log.attachments.length} attachment{log.attachments.length > 1 ? 's' : ''}
+                                      </span>
+                                    </div>
+                                    
+                                    {/* Display attachment previews */}
+                                    <div className="grid grid-cols-1 gap-2">
+                                      {log.attachments.map((attachment: string, index: number) => {
+                                        const isImage = /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(attachment);
+                                        const fileName = attachment.split('/').pop() || attachment;
+                                        
+                                        if (isImage) {
+                                          return (
+                                            <div key={index} className="relative group">
+                                              <img
+                                                src={`/uploads/products/${attachment}`}
+                                                alt={`Attachment ${index + 1}`}
+                                                className="max-w-xs max-h-40 rounded-md border border-gray-200 cursor-pointer hover:opacity-90 transition-opacity"
+                                                onClick={() => {
+                                                  // Open in new tab for full view
+                                                  window.open(`/uploads/products/${attachment}`, '_blank');
+                                                }}
+                                                onError={(e) => {
+                                                  // Fallback if image fails to load
+                                                  e.currentTarget.style.display = 'none';
+                                                }}
+                                              />
+                                              <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <button
+                                                  onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    window.open(`/uploads/products/${attachment}`, '_blank');
+                                                  }}
+                                                  className="bg-black bg-opacity-50 text-white p-1 rounded-full hover:bg-opacity-70"
+                                                  title="View full size"
+                                                >
+                                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                                                  </svg>
+                                                </button>
+                                              </div>
+                                            </div>
+                                          );
+                                        } else {
+                                          return (
+                                            <div key={index} className="flex items-center gap-2 p-2 bg-gray-50 rounded-md">
+                                              <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                              </svg>
+                                              <a
+                                                href={`/uploads/products/${attachment}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="text-sm text-blue-600 hover:text-blue-800 underline flex-1 truncate"
+                                                title={fileName}
+                                              >
+                                                {fileName}
+                                              </a>
+                                            </div>
+                                          );
+                                        }
+                                      })}
+                                    </div>
                                   </div>
                                 )}
                                 
