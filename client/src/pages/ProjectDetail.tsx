@@ -41,6 +41,7 @@ const taskSchema = z.object({
 });
 
 const noteSchema = z.object({
+  title: z.string().min(1, "Title is required"),
   content: z.string().min(1, "Note content is required"),
   type: z.enum(["note", "meeting", "call", "email"]).default("note"),
   taggedUsers: z.array(z.string()).optional(),
@@ -117,9 +118,7 @@ export default function ProjectDetail() {
   });
 
   const noteForm = useForm({
-    resolver: zodResolver(noteSchema.extend({
-      title: z.string().optional(),
-    })),
+    resolver: zodResolver(noteSchema),
     defaultValues: {
       title: "",
       content: "",
@@ -538,8 +537,9 @@ export default function ProjectDetail() {
   const handleNoteCreate = (data: any) => {
     console.log('Creating note with data:', data);
     const noteData = {
-      content: data.content,
-      type: data.type,
+      logType: data.type, // Map 'type' to 'logType' for database schema
+      title: data.title || "Untitled Note", // Use title field from form
+      description: data.content,
       projectId: parseInt(projectId),
     };
     createNoteMutation.mutate(noteData);
@@ -2142,10 +2142,23 @@ export default function ProjectDetail() {
             <form onSubmit={noteForm.handleSubmit(handleNoteCreate)} className="space-y-4">
               <FormField
                 control={noteForm.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Title</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter note title..." {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={noteForm.control}
                 name="content"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Note Content</FormLabel>
+                    <FormLabel>Note *</FormLabel>
                     <FormControl>
                       <Textarea placeholder="Enter your note..." {...field} />
                     </FormControl>
