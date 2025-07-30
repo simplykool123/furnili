@@ -942,13 +942,7 @@ export default function ProjectDetail() {
                   >
                     Drawing
                   </Button>
-                  <Button 
-                    variant={selectedFileType === "moodboard" ? "default" : "outline"}
-                    onClick={() => setSelectedFileType("moodboard")}
-                    className={selectedFileType === "moodboard" ? "bg-blue-600 text-white" : "bg-white text-gray-700 border-gray-300"}
-                  >
-                    Moodboard
-                  </Button>
+                  
                 </div>
                 <div className="flex space-x-2">
                   {selectedFileType === "moodboard" ? (
