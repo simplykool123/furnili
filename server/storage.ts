@@ -3235,6 +3235,40 @@ class DatabaseStorage implements IStorage {
     }
   }
 
+  // Project File Operations
+  async getProjectFiles(projectId: number): Promise<ProjectFile[]> {
+    try {
+      const result = await db.select()
+        .from(projectFiles)
+        .where(eq(projectFiles.projectId, projectId))
+        .orderBy(desc(projectFiles.createdAt));
+      return result;
+    } catch (error) {
+      console.error('Error getting project files:', error);
+      return [];
+    }
+  }
+
+  async createProjectFile(file: InsertProjectFile): Promise<ProjectFile> {
+    try {
+      const result = await db.insert(projectFiles).values(file).returning();
+      return result[0];
+    } catch (error) {
+      console.error('Error creating project file:', error);
+      throw error;
+    }
+  }
+
+  async deleteProjectFile(id: number): Promise<boolean> {
+    try {
+      const result = await db.delete(projectFiles).where(eq(projectFiles.id, id));
+      return result.rowCount !== null && result.rowCount > 0;
+    } catch (error) {
+      console.error('Error deleting project file:', error);
+      return false;
+    }
+  }
+
   // CRM Stats
   async getCrmStats(): Promise<{
     totalCustomers: number;
