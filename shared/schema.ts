@@ -89,41 +89,7 @@ export const projectLogs = pgTable("project_logs", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-// CRM Tables
-export const crmCustomers = pgTable("crm_customers", {
-  id: serial("id").primaryKey(),
-  name: text("name").notNull(),
-  email: text("email"),
-  phone: text("phone"),
-  company: text("company"),
-  address: text("address"),
-  status: text("status").default("prospect"), // active, inactive, prospect
-  totalOrders: integer("total_orders").default(0),
-  totalValue: real("total_value").default(0),
-  lastContact: timestamp("last_contact"),
-  source: text("source"), // website, referral, cold call, etc.
-  notes: text("notes"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-});
 
-export const crmLeads = pgTable("crm_leads", {
-  id: serial("id").primaryKey(),
-  name: text("name").notNull(),
-  email: text("email"),
-  phone: text("phone"),
-  company: text("company"),
-  status: text("status").default("new"), // new, contacted, qualified, proposal, won, lost
-  source: text("source"), // website, referral, advertisement, etc.
-  value: real("value").default(0), // potential deal value
-  assignedTo: text("assigned_to"), // staff member
-  notes: text("notes"),
-  followUpDate: timestamp("follow_up_date"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-});
-
-// Phase 3 CRM Modules - Robust Relational Schema
 export const projectQuotes = pgTable("project_quotes", {
   id: serial("id").primaryKey(),
   quoteNumber: text("quote_number").notNull().unique(), // QT-001, QT-002, etc.
@@ -299,89 +265,11 @@ export const moodboards = pgTable("moodboards", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-export const crmDeals = pgTable("crm_deals", {
-  id: serial("id").primaryKey(),
-  title: text("title").notNull(),
-  customerId: integer("customer_id").references(() => crmCustomers.id),
-  customerName: text("customer_name"), // denormalized for easier queries
-  value: real("value").notNull(),
-  stage: text("stage").default("prospecting"), // prospecting, qualification, proposal, negotiation, closed-won, closed-lost
-  probability: integer("probability").default(50), // 0-100%
-  expectedCloseDate: timestamp("expected_close_date"),
-  actualCloseDate: timestamp("actual_close_date"),
-  assignedTo: text("assigned_to"), // staff member
-  notes: text("notes"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-});
 
-export const crmActivities = pgTable("crm_activities", {
-  id: serial("id").primaryKey(),
-  type: text("type").notNull(), // call, email, meeting, note, task
-  subject: text("subject").notNull(),
-  description: text("description"),
-  relatedTo: text("related_to"), // customer, lead, deal
-  relatedId: integer("related_id"),
-  assignedTo: text("assigned_to"),
-  status: text("status").default("pending"), // pending, completed, cancelled
-  dueDate: timestamp("due_date"),
-  completedAt: timestamp("completed_at"),
-  createdBy: integer("created_by").references(() => users.id),
-  createdAt: timestamp("created_at").defaultNow(),
-});
 
-export const crmQuotations = pgTable("crm_quotations", {
-  id: serial("id").primaryKey(),
-  quotationNumber: text("quotation_number").notNull().unique(),
-  customerName: text("customer_name").notNull(),
-  customerPhone: text("customer_phone"),
-  customerEmail: text("customer_email"),
-  items: jsonb("items").default([]),
-  subtotal: real("subtotal").default(0),
-  discount: real("discount").default(0),
-  gst: real("gst").default(18),
-  totalAmount: real("total_amount").default(0),
-  status: text("status").default("draft"), // draft, sent, accepted, rejected
-  validUntil: timestamp("valid_until"),
-  notes: text("notes"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-});
 
-export const crmFollowUps = pgTable("crm_followups", {
-  id: serial("id").primaryKey(),
-  leadCustomerName: text("lead_customer_name").notNull(),
-  leadCustomerPhone: text("lead_customer_phone"),
-  followUpDate: timestamp("follow_up_date").notNull(),
-  followUpTime: text("follow_up_time"),
-  method: text("method").default("call"), // call, visit, whatsapp, email
-  staffAssigned: text("staff_assigned"),
-  notes: text("notes"),
-  status: text("status").default("pending"), // pending, completed, missed
-  outcome: text("outcome"),
-  nextFollowUp: timestamp("next_follow_up"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-});
 
-export const crmSiteVisits = pgTable("crm_site_visits", {
-  id: serial("id").primaryKey(),
-  clientName: text("client_name").notNull(),
-  clientPhone: text("client_phone"),
-  address: text("address").notNull(),
-  locationLink: text("location_link"),
-  assignedTo: text("assigned_to"),
-  visitDate: timestamp("visit_date").notNull(),
-  visitTime: text("visit_time"),
-  purpose: text("purpose"),
-  status: text("status").default("scheduled"), // scheduled, in-progress, completed, cancelled
-  outcome: text("outcome"),
-  notes: text("notes"),
-  followUpRequired: boolean("follow_up_required").default(false),
-  nextVisitDate: timestamp("next_visit_date"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-});
+
 
 export const products = pgTable("products", {
   id: serial("id").primaryKey(),
@@ -676,47 +564,7 @@ export const insertMoodboardSchema = createInsertSchema(moodboards).omit({
   updatedAt: true,
 });
 
-// CRM Insert Schemas
-export const insertCrmCustomerSchema = createInsertSchema(crmCustomers).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
 
-export const insertCrmLeadSchema = createInsertSchema(crmLeads).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-export const insertCrmDealSchema = createInsertSchema(crmDeals).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-export const insertCrmActivitySchema = createInsertSchema(crmActivities).omit({
-  id: true,
-  createdAt: true,
-});
-
-export const insertCrmQuotationSchema = createInsertSchema(crmQuotations).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-export const insertCrmFollowUpSchema = createInsertSchema(crmFollowUps).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-export const insertCrmSiteVisitSchema = createInsertSchema(crmSiteVisits).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
 
 // Phase 3 CRM Module Schemas
 export const insertProjectQuoteSchema = createInsertSchema(projectQuotes).omit({
@@ -795,21 +643,7 @@ export type InsertBOQUpload = z.infer<typeof insertBOQUploadSchema>;
 export type StockMovement = typeof stockMovements.$inferSelect;
 export type InsertStockMovement = z.infer<typeof insertStockMovementSchema>;
 
-// CRM Types
-export type CrmCustomer = typeof crmCustomers.$inferSelect;
-export type InsertCrmCustomer = z.infer<typeof insertCrmCustomerSchema>;
-export type CrmLead = typeof crmLeads.$inferSelect;
-export type InsertCrmLead = z.infer<typeof insertCrmLeadSchema>;
-export type CrmDeal = typeof crmDeals.$inferSelect;
-export type InsertCrmDeal = z.infer<typeof insertCrmDealSchema>;
-export type CrmActivity = typeof crmActivities.$inferSelect;  
-export type InsertCrmActivity = z.infer<typeof insertCrmActivitySchema>;
-export type CrmQuotation = typeof crmQuotations.$inferSelect;
-export type InsertCrmQuotation = z.infer<typeof insertCrmQuotationSchema>;
-export type CrmFollowUp = typeof crmFollowUps.$inferSelect;
-export type InsertCrmFollowUp = z.infer<typeof insertCrmFollowUpSchema>;
-export type CrmSiteVisit = typeof crmSiteVisits.$inferSelect;
-export type InsertCrmSiteVisit = z.infer<typeof insertCrmSiteVisitSchema>;
+
 
 // Phase 3 CRM Module Types
 export type ProjectQuote = typeof projectQuotes.$inferSelect;

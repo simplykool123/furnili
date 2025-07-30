@@ -26,13 +26,7 @@ import WhatsAppExport from "@/pages/WhatsAppExport";
 import InventoryMovement from "@/pages/InventoryMovement";
 import DisplaySettings from "@/pages/DisplaySettings";
 import Backups from "@/pages/Backups";
-import CRM from "@/pages/CRM";
-import Leads from "@/pages/CRM/Leads";
-import Customers from "@/pages/CRM/Customers";
-import Quotations from "@/pages/CRM/Quotations";
-import FollowUps from "@/pages/CRM/FollowUps";
-import SiteVisits from "@/pages/CRM/SiteVisits";
-import CRMReports from "@/pages/CRM/CRMReports";
+
 import Projects from "@/pages/Projects";
 import ProjectDetail from "@/pages/ProjectDetail";
 import NotFound from "@/pages/not-found";
@@ -209,47 +203,7 @@ function Router() {
         </ProtectedRoute>
       </Route>
 
-      <Route path="/crm">
-        <ProtectedRoute>
-          <CRM />
-        </ProtectedRoute>
-      </Route>
 
-      <Route path="/crm/leads">
-        <ProtectedRoute>
-          <Leads />
-        </ProtectedRoute>
-      </Route>
-
-      <Route path="/crm/customers">
-        <ProtectedRoute>
-          <Customers />
-        </ProtectedRoute>
-      </Route>
-
-      <Route path="/crm/quotations">
-        <ProtectedRoute>
-          <Quotations />
-        </ProtectedRoute>
-      </Route>
-
-      <Route path="/crm/followups">
-        <ProtectedRoute>
-          <FollowUps />
-        </ProtectedRoute>
-      </Route>
-
-      <Route path="/crm/visits">
-        <ProtectedRoute>
-          <SiteVisits />
-        </ProtectedRoute>
-      </Route>
-
-      <Route path="/crm/reports">
-        <ProtectedRoute>
-          <CRMReports />
-        </ProtectedRoute>
-      </Route>
       
       <Route component={NotFound} />
     </Switch>
