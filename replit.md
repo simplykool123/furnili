@@ -10,6 +10,12 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes (January 2025)
 
+- ✅ **CLIENT AUTO-FILL FUNCTIONALITY FIXED**: Resolved Material Request form client auto-fill issue
+  - **Backend Database Join**: Modified `getAllProjects` method to join with clients table and include `clientName` field
+  - **Frontend Form Enhancement**: Enhanced setValue calls with shouldValidate and shouldDirty flags for immediate UI updates
+  - **Project Selection**: When selecting a project from dropdown, Client field now automatically fills with correct client name
+  - **Seamless Integration**: Auto-fill works both for manual project selection and pre-selected project navigation from Project Details
+  - **Data Integrity**: Projects now properly include client names instead of just client IDs for better user experience
 - ✅ **PAYROLL REGENERATION WITH DATA PRESERVATION**: Fixed Generate button to preserve manual adjustments
   - **Preserve Allowances**: Existing allowances are maintained when regenerating payroll
   - **Preserve Advances**: Advance amounts are not reset during regeneration
