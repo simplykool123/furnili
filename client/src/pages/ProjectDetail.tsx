@@ -1120,32 +1120,38 @@ export default function ProjectDetail() {
                     )}
                   </div>
                   <div className="p-4">
-                    <h4 className="font-semibold text-gray-900 mb-2">{moodboard.name}</h4>
-                    <p className="text-sm text-gray-600 mb-3">{moodboard.keywords}</p>
-                    <div className="flex items-center justify-between text-xs text-gray-500">
-                      <span className="capitalize">{moodboard.roomType?.replace('-', ' ')}</span>
-                      <span>{moodboard.sourceType === 'ai_generated' || moodboard.sourceType === 'ai' ? '🤖 AI Generated' : '📷 Real Photos'}</span>
-                    </div>
-                    <div className="flex items-center justify-between mt-3">
-                      <div className="text-xs text-gray-400">
-                        Created {new Date(moodboard.createdAt).toLocaleDateString()}
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-semibold text-gray-900 truncate">{moodboard.name}</h4>
+                        <p className="text-sm text-gray-600 mt-1 line-clamp-2">{moodboard.keywords}</p>
                       </div>
                       <Button 
                         variant="ghost" 
                         size="sm" 
-                        className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
+                        className="h-6 w-6 p-0 text-red-500 hover:text-red-700 flex-shrink-0 ml-2"
                         onClick={() => deleteMoodboardMutation.mutate(moodboard.id)}
                         disabled={deleteMoodboardMutation.isPending}
                       >
                         <Trash2 className="h-3 w-3" />
                       </Button>
                     </div>
+                    <div className="flex items-center justify-between text-xs text-gray-500 mt-2">
+                      <span className="capitalize">{moodboard.roomType?.replace('-', ' ')}</span>
+                      <span>{moodboard.sourceType === 'ai_generated' || moodboard.sourceType === 'ai' ? '🤖 AI Generated' : '📷 Real Photos'}</span>
+                    </div>
+                    <div className="text-xs text-gray-400 mt-2">
+                      Created {new Date(moodboard.createdAt).toLocaleDateString()}
+                    </div>
                   </div>
                 </div>
               ))}
 
-              {/* Display Uploaded Moodboard Images */}
-              {moodboardImages.map((file: any) => (
+              {/* Display Uploaded Moodboard Images (only show if no duplicate in moodboards) */}
+              {moodboardImages.filter((file: any) => 
+                !projectMoodboards.some((mb: any) => 
+                  mb.imageUrls && mb.imageUrls.includes(`/uploads/products/${file.fileName}`)
+                )
+              ).map((file: any) => (
                 <div key={`upload-${file.id}`} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
                   {/* Image Display */}
                   <div className="h-48 bg-gray-100">
@@ -1159,14 +1165,18 @@ export default function ProjectDetail() {
                     />
                   </div>
                   <div className="p-4">
-                    <h4 className="font-semibold text-gray-900 mb-2">Uploaded Image</h4>
-                    <p className="text-sm text-gray-600 mb-3">{file.originalName}</p>
-                    <div className="flex items-center justify-between text-xs text-gray-500">
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-semibold text-gray-900 truncate">Uploaded Image</h4>
+                        <p className="text-sm text-gray-600 truncate mt-1">{file.originalName}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between text-xs text-gray-500 mt-2">
                       <span>Moodboard Image</span>
                       <span>📷 Uploaded</span>
                     </div>
-                    <div className="mt-3 text-xs text-gray-400">
-                      Uploaded {new Date(file.createdAt).toLocaleDateString()}
+                    <div className="text-xs text-gray-400 mt-2">
+                      Uploaded {new Date(file.createdAt || Date.now()).toLocaleDateString()}
                     </div>
                   </div>
                 </div>
