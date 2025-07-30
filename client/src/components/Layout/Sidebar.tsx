@@ -130,27 +130,27 @@ export default function Sidebar({ onItemClick, collapsed = false, onToggleCollap
       collapsed ? "w-16" : "w-56 lg:w-60"
     )} style={{backgroundColor: '#D4B896'}} data-testid="main-sidebar">
       {/* Logo/Brand & Toggle */}
-      <div className="p-4 border-b border-primary-foreground/20">
+      <div className="p-2 border-b border-primary-foreground/20">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-xl overflow-hidden bg-white/10 backdrop-blur-sm flex items-center justify-center shadow-lg">
+          <div className="flex items-center space-x-2">
+            <div className="w-8 h-8 rounded-lg overflow-hidden bg-white/10 backdrop-blur-sm flex items-center justify-center shadow-lg">
               <img 
                 src="/furnili-logo-small.png" 
                 alt="Furnili Logo" 
-                className="w-8 h-8 object-contain"
+                className="w-6 h-6 object-contain"
                 onError={(e) => {
                   const target = e.target as HTMLImageElement;
                   target.style.display = 'none';
                   const parent = target.parentElement;
                   if (parent) {
-                    parent.innerHTML = '<span class="text-white font-bold text-lg">F</span>';
+                    parent.innerHTML = '<span class="text-white font-bold text-sm">F</span>';
                   }
                 }}
               />
             </div>
             {!collapsed && (
               <div className="flex-1">
-                <h2 className="font-bold text-amber-900 text-lg tracking-wide">Furnili MS</h2>
+                <h2 className="font-bold text-amber-900 text-sm tracking-wide">Furnili MS</h2>
                 <p className="text-xs text-amber-800 capitalize font-medium">{user.role}</p>
               </div>
             )}
@@ -170,8 +170,8 @@ export default function Sidebar({ onItemClick, collapsed = false, onToggleCollap
       
 
       {/* Navigation */}
-      <nav className="flex-1 p-3">
-        <div className="space-y-1">
+      <nav className="flex-1 p-2">
+        <div className="space-y-0.5">
           {filteredNavigation.map((item) => {
             if (item.isCollapsible && item.subItems) {
               const isExpanded = expandedItems.includes(item.name);
@@ -185,28 +185,28 @@ export default function Sidebar({ onItemClick, collapsed = false, onToggleCollap
                   <button
                     onClick={() => collapsed ? null : toggleExpanded(item.name)}
                     className={cn(
-                      "flex items-center w-full rounded-lg font-medium transition-all duration-200 text-sm group hover:shadow-md",
-                      collapsed ? "justify-center p-3" : "justify-between px-3 py-2",
+                      "flex items-center w-full rounded-lg font-medium transition-all duration-200 text-xs group hover:shadow-md",
+                      collapsed ? "justify-center p-2" : "justify-between px-2 py-1.5",
                       hasActiveSubItem || isExpanded
                         ? "text-amber-900 bg-white/30 shadow-lg backdrop-blur-sm"
                         : "text-amber-900 hover:bg-white/20 hover:text-amber-800"
                     )}
                     title={collapsed ? item.name : undefined}
                   >
-                    <div className={cn("flex items-center", collapsed ? "justify-center" : "space-x-3")}>
-                      <item.icon className="w-5 h-5 flex-shrink-0" />
+                    <div className={cn("flex items-center", collapsed ? "justify-center" : "space-x-2")}>
+                      <item.icon className="w-4 h-4 flex-shrink-0" />
                       {!collapsed && <span className="truncate font-semibold">{item.name}</span>}
                     </div>
                     {!collapsed && (isExpanded ? (
-                      <ChevronDown className="w-4 h-4 flex-shrink-0 transition-transform" />
+                      <ChevronDown className="w-3 h-3 flex-shrink-0 transition-transform" />
                     ) : (
-                      <ChevronRight className="w-4 h-4 flex-shrink-0 transition-transform" />
+                      <ChevronRight className="w-3 h-3 flex-shrink-0 transition-transform" />
                     ))}
                   </button>
                   
                   {/* Sub Menu Items */}
                   {isExpanded && !collapsed && (
-                    <div className="ml-8 space-y-1 animate-fade-in">
+                    <div className="ml-6 space-y-0.5 animate-fade-in">
                       {item.subItems.map((subItem) => {
                         const isActive = subItem.href && (location === subItem.href || (subItem.href !== '/' && location.startsWith(subItem.href)));
                         
@@ -215,14 +215,14 @@ export default function Sidebar({ onItemClick, collapsed = false, onToggleCollap
                             key={subItem.name}
                             href={subItem.href}
                             className={cn(
-                              "flex items-center space-x-3 w-full px-3 py-2 rounded-lg font-medium transition-all duration-200 text-sm group",
+                              "flex items-center space-x-2 w-full px-2 py-1 rounded-lg font-medium transition-all duration-200 text-xs group",
                               isActive
                                 ? "text-amber-900 bg-white/25 shadow-md backdrop-blur-sm border border-white/20"
                                 : "text-amber-900/80 hover:bg-white/15 hover:text-amber-800"
                             )}
                             onClick={onItemClick}
                           >
-                            <subItem.icon className="w-4 h-4 flex-shrink-0" />
+                            <subItem.icon className="w-3 h-3 flex-shrink-0" />
                             <span className="truncate">{subItem.name}</span>
                           </Link>
                         ) : null;
@@ -240,8 +240,8 @@ export default function Sidebar({ onItemClick, collapsed = false, onToggleCollap
                   key={item.name}
                   href={item.href}
                   className={cn(
-                    "flex items-center rounded-lg font-medium transition-all duration-200 text-sm group hover:shadow-md",
-                    collapsed ? "justify-center p-3" : "space-x-3 px-3 py-2",
+                    "flex items-center rounded-lg font-medium transition-all duration-200 text-xs group hover:shadow-md",
+                    collapsed ? "justify-center p-2" : "space-x-2 px-2 py-1.5",
                     isActive
                       ? "text-amber-900 bg-white/30 shadow-lg backdrop-blur-sm"
                       : "text-amber-900/90 hover:bg-white/15 hover:text-amber-800"
@@ -249,7 +249,7 @@ export default function Sidebar({ onItemClick, collapsed = false, onToggleCollap
                   onClick={onItemClick}
                   title={collapsed ? item.name : undefined}
                 >
-                  <item.icon className="w-5 h-5 flex-shrink-0" />
+                  <item.icon className="w-4 h-4 flex-shrink-0" />
                   {!collapsed && <span className="truncate font-semibold">{item.name}</span>}
                 </Link>
               ) : null;
@@ -259,7 +259,7 @@ export default function Sidebar({ onItemClick, collapsed = false, onToggleCollap
       </nav>
 
       {/* User Actions */}
-      <div className="p-3 border-t border-primary-foreground/20 space-y-2">
+      <div className="p-2 border-t border-primary-foreground/20 space-y-1">
         {/* Change Password */}
         {!collapsed && (
           <div className="w-full">
@@ -271,12 +271,12 @@ export default function Sidebar({ onItemClick, collapsed = false, onToggleCollap
         <button 
           onClick={handleLogout}
           className={cn(
-            "flex items-center rounded-lg font-medium transition-all duration-200 text-sm text-amber-900/90 hover:bg-white/15 hover:text-amber-800 group w-full",
-            collapsed ? "justify-center p-3" : "space-x-3 px-3 py-2"
+            "flex items-center rounded-lg font-medium transition-all duration-200 text-xs text-amber-900/90 hover:bg-white/15 hover:text-amber-800 group w-full",
+            collapsed ? "justify-center p-2" : "space-x-2 px-2 py-1.5"
           )}
           title={collapsed ? "Logout" : undefined}
         >
-          <LogOut className="w-5 h-5 flex-shrink-0" />
+          <LogOut className="w-4 h-4 flex-shrink-0" />
           {!collapsed && <span className="font-semibold">Logout</span>}
         </button>
       </div>

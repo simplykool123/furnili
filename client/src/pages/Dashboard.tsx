@@ -251,16 +251,16 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="space-y-6 animate-fade-in max-w-7xl mx-auto">
+    <div className="space-y-3 animate-fade-in max-w-7xl mx-auto">
       {/* Tasks are now only shown in the notification bell to prevent duplication */}
       {/* Completely removed all task display logic from dashboard */}
 
       {/* Welcome Header */}
       <div className="text-center sm:text-left">
-        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-amber-900">
+        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-amber-900">
           Welcome back, {currentUser?.name || 'Admin'}!
         </h1>
-        <p className="text-base sm:text-lg text-amber-800 mt-2">
+        <p className="text-sm sm:text-base text-amber-800 mt-1">
           Here's your business overview and key metrics for today.
         </p>
       </div>
@@ -268,16 +268,16 @@ export default function Dashboard() {
       {/* Motivational Quote */}
       {dailyQuote && (
         <Card className="shadow-lg border border-amber-200 bg-white">
-          <CardContent className="pt-6">
-            <div className="flex items-start space-x-4">
+          <CardContent className="pt-3 pb-3">
+            <div className="flex items-start space-x-3">
               <div className="flex-shrink-0">
-                <Quote className="h-8 w-8 text-amber-600" />
+                <Quote className="h-6 w-6 text-amber-600" />
               </div>
               <div className="flex-1">
-                <blockquote className="text-lg font-medium text-amber-900 leading-relaxed">
+                <blockquote className="text-sm font-medium text-amber-900 leading-relaxed">
                   "{dailyQuote.text}"
                 </blockquote>
-                <cite className="block text-right text-amber-700 font-semibold mt-3">
+                <cite className="block text-right text-amber-700 font-semibold mt-2 text-xs">
                   — {dailyQuote.author}
                 </cite>
               </div>
@@ -394,74 +394,74 @@ export default function Dashboard() {
       <StockWarnings />
 
       {/* Stats Grid */}
-      <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+      <div className="grid gap-2 sm:gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         <Card className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-blue-500 bg-gradient-to-br from-card to-blue-50/20 cursor-pointer" onClick={() => setLocation('/products')}>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-semibold text-card-foreground">Products</CardTitle>
-            <Package className="h-4 w-4 text-blue-600" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
+            <CardTitle className="text-xs font-semibold text-card-foreground">Products</CardTitle>
+            <Package className="h-3 w-3 text-blue-600" />
           </CardHeader>
-          <CardContent className="pb-3">
-            <div className="text-2xl font-bold text-foreground">{stats?.totalProducts || 0}</div>
-            <p className="text-xs text-muted-foreground mt-1">Active items</p>
+          <CardContent className="pb-2 pt-1">
+            <div className="text-xl font-bold text-foreground">{stats?.totalProducts || 0}</div>
+            <p className="text-xs text-muted-foreground mt-0.5">Active items</p>
           </CardContent>
         </Card>
 
         <Card className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-red-500 bg-gradient-to-br from-card to-red-50/20 cursor-pointer" onClick={() => setLocation('/products?filter=low-stock')}>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-semibold text-card-foreground">Low Stock</CardTitle>
-            <AlertTriangle className="h-4 w-4 text-red-600" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
+            <CardTitle className="text-xs font-semibold text-card-foreground">Low Stock</CardTitle>
+            <AlertTriangle className="h-3 w-3 text-red-600" />
           </CardHeader>
-          <CardContent className="pb-3">
-            <div className="text-2xl font-bold text-red-600">
+          <CardContent className="pb-2 pt-1">
+            <div className="text-xl font-bold text-red-600">
               {Array.isArray(stats?.lowStockProducts) ? stats.lowStockProducts.length : 0}
             </div>
-            <p className="text-xs text-muted-foreground mt-1">Need restocking</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Need restocking</p>
           </CardContent>
         </Card>
 
         <Card className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-orange-500 bg-gradient-to-br from-card to-orange-50/20 cursor-pointer" onClick={() => setLocation('/attendance')}>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-semibold text-card-foreground">Attendance</CardTitle>
-            <Clock className="h-4 w-4 text-orange-600" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
+            <CardTitle className="text-xs font-semibold text-card-foreground">Attendance</CardTitle>
+            <Clock className="h-3 w-3 text-orange-600" />
           </CardHeader>
-          <CardContent className="pb-3">
-            <div className="text-2xl font-bold text-foreground">{stats?.todayAttendance || 0}</div>
-            <p className="text-xs text-muted-foreground mt-1">Staff today</p>
+          <CardContent className="pb-2 pt-1">
+            <div className="text-xl font-bold text-foreground">{stats?.todayAttendance || 0}</div>
+            <p className="text-xs text-muted-foreground mt-0.5">Staff today</p>
           </CardContent>
         </Card>
 
         <Card className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-purple-500 bg-gradient-to-br from-card to-purple-50/20 cursor-pointer" onClick={() => setLocation('/attendance')}>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-semibold text-card-foreground">Staff & Payroll</CardTitle>
-            <CheckCircle className="h-4 w-4 text-purple-600" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
+            <CardTitle className="text-xs font-semibold text-card-foreground">Staff & Payroll</CardTitle>
+            <CheckCircle className="h-3 w-3 text-purple-600" />
           </CardHeader>
-          <CardContent className="pb-3">
-            <div className="text-2xl font-bold text-foreground">{stats?.activeTasks || 0}</div>
-            <p className="text-xs text-muted-foreground mt-1">Manage staff</p>
+          <CardContent className="pb-2 pt-1">
+            <div className="text-xl font-bold text-foreground">{stats?.activeTasks || 0}</div>
+            <p className="text-xs text-muted-foreground mt-0.5">Manage staff</p>
           </CardContent>
         </Card>
 
         <Card className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-indigo-500 bg-gradient-to-br from-card to-indigo-50/20 cursor-pointer" onClick={() => setLocation('/requests')}>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-semibold text-card-foreground">Requests</CardTitle>
-            <TrendingUp className="h-4 w-4 text-indigo-600" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
+            <CardTitle className="text-xs font-semibold text-card-foreground">Requests</CardTitle>
+            <TrendingUp className="h-3 w-3 text-indigo-600" />
           </CardHeader>
-          <CardContent className="pb-3">
-            <div className="text-2xl font-bold text-foreground">{stats?.pendingRequests || 0}</div>
-            <p className="text-xs text-muted-foreground mt-1">Pending</p>
+          <CardContent className="pb-2 pt-1">
+            <div className="text-xl font-bold text-foreground">{stats?.pendingRequests || 0}</div>
+            <p className="text-xs text-muted-foreground mt-0.5">Pending</p>
           </CardContent>
         </Card>
 
         <Card className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-yellow-500 bg-gradient-to-br from-card to-yellow-50/20 cursor-pointer" onClick={() => setLocation('/petty-cash')}>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-semibold text-card-foreground">Expenses</CardTitle>
-            <DollarSign className="h-4 w-4 text-yellow-600" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
+            <CardTitle className="text-xs font-semibold text-card-foreground">Expenses</CardTitle>
+            <DollarSign className="h-3 w-3 text-yellow-600" />
           </CardHeader>
-          <CardContent className="pb-3">
-            <div className="text-2xl font-bold text-foreground">
+          <CardContent className="pb-2 pt-1">
+            <div className="text-xl font-bold text-foreground">
               ₹{stats?.monthlyExpenses?.toLocaleString() || 0}
             </div>
-            <p className="text-xs text-muted-foreground mt-1">This month</p>
+            <p className="text-xs text-muted-foreground mt-0.5">This month</p>
           </CardContent>
         </Card>
       </div>
