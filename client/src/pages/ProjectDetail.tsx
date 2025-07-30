@@ -50,6 +50,12 @@ const communicationSchema = z.object({
   status: z.enum(["pending", "completed"]).default("pending"),
 });
 
+const uploadSchema = z.object({
+  type: z.string().min(1, "Type is required"),
+  title: z.string().min(1, "Title is required"),
+  files: z.any().optional(),
+});
+
 export default function ProjectDetail() {
   const [location, setLocation] = useLocation();
   const { toast } = useToast();
@@ -62,7 +68,9 @@ export default function ProjectDetail() {
   const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
   const [isNoteDialogOpen, setIsNoteDialogOpen] = useState(false);
   const [isCommunicationDialogOpen, setIsCommunicationDialogOpen] = useState(false);
+  const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [selectedFileType, setSelectedFileType] = useState("all");
+  const [selectedFiles, setSelectedFiles] = useState<FileList | null>(null);
 
   // Forms
   const taskForm = useForm({
@@ -94,6 +102,15 @@ export default function ProjectDetail() {
       contactPerson: "",
       followUpDate: "",
       status: "pending" as const,
+    },
+  });
+
+  const uploadForm = useForm({
+    resolver: zodResolver(uploadSchema),
+    defaultValues: {
+      type: "",
+      title: "",
+      files: undefined,
     },
   });
 
@@ -413,7 +430,10 @@ export default function ProjectDetail() {
                     Drawing
                   </Button>
                 </div>
-                <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+                <Button 
+                  onClick={() => setIsUploadDialogOpen(true)}
+                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                >
                   <Upload className="h-4 w-4 mr-2" />
                   Upload Files
                 </Button>
@@ -1197,6 +1217,126 @@ export default function ProjectDetail() {
                   Cancel
                 </Button>
                 <Button type="submit">Log Communication</Button>
+              </div>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Upload Files Dialog - Matching Mockup Design */}
+      <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-semibold">Upload Files</DialogTitle>
+            <button 
+              onClick={() => setIsUploadDialogOpen(false)}
+              className="absolute right-4 top-4 text-gray-400 hover:text-gray-600"
+            >
+              ✕
+            </button>
+          </DialogHeader>
+          <Form {...uploadForm}>
+            <form className="space-y-4">
+              <FormField
+                control={uploadForm.control}
+                name="type"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm font-medium text-gray-700">
+                      Type <span className="text-red-500">*</span>
+                    </FormLabel>
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <FormControl>
+                        <SelectTrigger className="w-full bg-gray-50 border-gray-200">
+                          <SelectValue placeholder="Select file type" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="rooms">Rooms</SelectItem>
+                        <SelectItem value="internal-areas">Internal Areas</SelectItem>
+                        <SelectItem value="drawings">Drawings</SelectItem>
+                        <SelectItem value="documents">Documents</SelectItem>
+                        <SelectItem value="site-photos">Site Photos</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={uploadForm.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-sm font-medium text-gray-700">
+                      Title <span className="text-red-500">*</span>
+                    </FormLabel>
+                    <FormControl>
+                      <Input 
+                        placeholder="Enter file title" 
+                        className="w-full bg-gray-50 border-gray-200"
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700">
+                  Select Files <span className="text-red-500">*</span>
+                </label>
+                <div className="border-2 border-dashed border-gray-200 rounded-lg p-6 text-center bg-gray-50">
+                  <input
+                    type="file"
+                    multiple
+                    accept="image/*,.pdf,.doc,.docx,.dwg"
+                    onChange={(e) => setSelectedFiles(e.target.files)}
+                    className="hidden"
+                    id="file-upload"
+                  />
+                  <label htmlFor="file-upload" className="cursor-pointer">
+                    <div className="space-y-2">
+                      <div className="text-gray-400">
+                        {selectedFiles && selectedFiles.length > 0 ? (
+                          <span className="text-gray-700">
+                            {selectedFiles.length} file(s) selected
+                          </span>
+                        ) : (
+                          <span>No files selected</span>
+                        )}
+                      </div>
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        className="bg-blue-50 border-blue-200 text-blue-600 hover:bg-blue-100"
+                      >
+                        <Upload className="h-4 w-4 mr-2" />
+                        Upload
+                      </Button>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
+              <div className="flex justify-end space-x-3 pt-4">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => setIsUploadDialogOpen(false)}
+                  className="text-gray-600 border-gray-300"
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  type="submit" 
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-6"
+                  disabled={!selectedFiles || selectedFiles.length === 0}
+                >
+                  Submit
+                </Button>
               </div>
             </form>
           </Form>
