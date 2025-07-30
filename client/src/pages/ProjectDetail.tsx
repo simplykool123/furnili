@@ -5,7 +5,7 @@ import {
   User, MessageSquare, Phone, CheckCircle, Clock, AlertCircle,
   Plus, Edit, Trash2, Tag, Users, BarChart3, Target,
   MessageCircle, Mail, ExternalLink, Paperclip, FolderOpen,
-  Camera, Building2, MapPin, Star, Circle, CheckCircle2
+  Camera, Building2, MapPin, Star, Circle, CheckCircle2, Eye, RefreshCw
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -80,6 +80,9 @@ export default function ProjectDetail() {
   const [selectedFileType, setSelectedFileType] = useState("all");
   const [activeFileTab, setActiveFileTab] = useState("recce");
   const [selectedFiles, setSelectedFiles] = useState<FileList | null>(null);
+  const [previewImages, setPreviewImages] = useState<string[]>([]);
+  const [isGeneratingPreview, setIsGeneratingPreview] = useState(false);
+  const [previewGenerated, setPreviewGenerated] = useState(false);
 
   // Forms
   const taskForm = useForm({
@@ -123,6 +126,70 @@ export default function ProjectDetail() {
       inspirationType: "real" as const,
     },
   });
+
+  // Generate preview images based on form data
+  const generatePreview = async () => {
+    const formData = moodboardForm.getValues();
+    if (!formData.keywords || !formData.roomType || !formData.inspirationType) {
+      toast({
+        title: "Missing Information",
+        description: "Please fill in all required fields to generate preview",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsGeneratingPreview(true);
+    
+    try {
+      // Simulate AI generation delay
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      let images: string[] = [];
+      const randomSeed = Math.floor(Math.random() * 1000);
+      
+      if (formData.inspirationType === 'ai') {
+        // AI-generated style images with room type context
+        images = [
+          `https://picsum.photos/400/300?random=${randomSeed + 1}&blur=1`,
+          `https://picsum.photos/400/300?random=${randomSeed + 2}&blur=1`,
+          `https://picsum.photos/400/300?random=${randomSeed + 3}&blur=1`,
+          `https://picsum.photos/400/300?random=${randomSeed + 4}&blur=1`
+        ];
+      } else {
+        // Real photo inspiration images
+        images = [
+          `https://picsum.photos/400/300?random=${randomSeed + 5}`,
+          `https://picsum.photos/400/300?random=${randomSeed + 6}`,
+          `https://picsum.photos/400/300?random=${randomSeed + 7}`,
+          `https://picsum.photos/400/300?random=${randomSeed + 8}`
+        ];
+      }
+      
+      setPreviewImages(images);
+      setPreviewGenerated(true);
+      
+      toast({
+        title: "Preview Generated",
+        description: `${formData.inspirationType === 'ai' ? 'AI-generated' : 'Real photo'} moodboard preview ready`,
+      });
+    } catch (error) {
+      toast({
+        title: "Generation Failed",
+        description: "Failed to generate preview. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGeneratingPreview(false);
+    }
+  };
+
+  // Regenerate preview with different images
+  const regeneratePreview = () => {
+    setPreviewGenerated(false);
+    setPreviewImages([]);
+    generatePreview();
+  };
 
   const uploadForm = useForm({
     resolver: zodResolver(uploadSchema),
@@ -272,37 +339,38 @@ export default function ProjectDetail() {
     console.log('Creating moodboard with data:', data);
     console.log('Form errors:', moodboardForm.formState.errors);
     
-    // Generate sample images based on inspiration type
-    let sampleImages: string[] = [];
-    if (data.inspirationType === 'ai') {
-      // AI-generated style images (using placeholder service for demonstration)
-      sampleImages = [
-        `https://picsum.photos/400/300?random=1&blur=1`,
-        `https://picsum.photos/400/300?random=2&blur=1`,
-        `https://picsum.photos/400/300?random=3&blur=1`,
-        `https://picsum.photos/400/300?random=4&blur=1`
-      ];
-    } else {
-      // Real photo inspiration images
-      sampleImages = [
-        `https://picsum.photos/400/300?random=5`,
-        `https://picsum.photos/400/300?random=6`,
-        `https://picsum.photos/400/300?random=7`,
-        `https://picsum.photos/400/300?random=8`
-      ];
+    // Use preview images if available, otherwise generate new ones
+    let finalImages = previewImages;
+    if (!previewGenerated || previewImages.length === 0) {
+      const randomSeed = Math.floor(Math.random() * 1000);
+      if (data.inspirationType === 'ai') {
+        finalImages = [
+          `https://picsum.photos/400/300?random=${randomSeed + 1}&blur=1`,
+          `https://picsum.photos/400/300?random=${randomSeed + 2}&blur=1`,
+          `https://picsum.photos/400/300?random=${randomSeed + 3}&blur=1`,
+          `https://picsum.photos/400/300?random=${randomSeed + 4}&blur=1`
+        ];
+      } else {
+        finalImages = [
+          `https://picsum.photos/400/300?random=${randomSeed + 5}`,
+          `https://picsum.photos/400/300?random=${randomSeed + 6}`,
+          `https://picsum.photos/400/300?random=${randomSeed + 7}`,
+          `https://picsum.photos/400/300?random=${randomSeed + 8}`
+        ];
+      }
     }
     
     const moodboardData = {
       ...data,
       sourceType: data.inspirationType === 'ai' ? 'ai_generated' : 'real_photos',
-      imageUrls: sampleImages,
+      imageUrls: finalImages,
       linkedProjectId: parseInt(projectId),
     };
     // Remove the old field name
     delete moodboardData.inspirationType;
     console.log('Final moodboard data:', moodboardData);
     createMoodboardMutation.mutate(moodboardData);
-  };
+  };;
 
   const mockTasks = [
     { id: 1, title: "Site Survey Completion", assignedTo: "John Doe", dueDate: "2025-02-05", priority: "high", status: "in-progress" },
@@ -394,6 +462,8 @@ export default function ProjectDetail() {
     onSuccess: () => {
       setIsMoodboardDialogOpen(false);
       moodboardForm.reset();
+      setPreviewImages([]);
+      setPreviewGenerated(false);
       toast({
         title: "Success",
         description: "Moodboard created successfully",
@@ -1890,6 +1960,73 @@ export default function ProjectDetail() {
                   </FormItem>
                 )}
               />
+
+              {/* Preview Section */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-medium text-gray-900">Preview</label>
+                  <div className="flex space-x-2">
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="sm"
+                      onClick={generatePreview}
+                      disabled={isGeneratingPreview}
+                    >
+                      {isGeneratingPreview ? (
+                        <>
+                          <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-600 mr-2"></div>
+                          Generating...
+                        </>
+                      ) : (
+                        <>
+                          <Eye className="h-3 w-3 mr-2" />
+                          Generate Preview
+                        </>
+                      )}
+                    </Button>
+                    {previewGenerated && (
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        size="sm"
+                        onClick={regeneratePreview}
+                        disabled={isGeneratingPreview}
+                      >
+                        <RefreshCw className="h-3 w-3 mr-2" />
+                        Regenerate
+                      </Button>
+                    )}
+                  </div>
+                </div>
+                
+                {/* Preview Grid */}
+                <div className="border-2 border-dashed border-gray-200 rounded-lg p-4 min-h-[200px] flex items-center justify-center">
+                  {isGeneratingPreview ? (
+                    <div className="text-center">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-3"></div>
+                      <p className="text-sm text-gray-500">Generating preview images...</p>
+                    </div>
+                  ) : previewGenerated && previewImages.length > 0 ? (
+                    <div className="grid grid-cols-2 gap-2 w-full max-w-md">
+                      {previewImages.map((imageUrl, index) => (
+                        <img 
+                          key={index}
+                          src={imageUrl} 
+                          alt={`Preview ${index + 1}`}
+                          className="w-full h-24 object-cover rounded border"
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center">
+                      <Eye className="h-8 w-8 mx-auto text-gray-300 mb-2" />
+                      <p className="text-sm text-gray-500">Click "Generate Preview" to see sample images</p>
+                      <p className="text-xs text-gray-400 mt-1">Fill in all fields first</p>
+                    </div>
+                  )}
+                </div>
+              </div>
 
               <FormField
                 control={moodboardForm.control}
