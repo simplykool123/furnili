@@ -273,8 +273,11 @@ export default function ProjectDetail() {
     console.log('Form errors:', moodboardForm.formState.errors);
     const moodboardData = {
       ...data,
+      sourceType: data.inspirationType === 'ai' ? 'ai_generated' : 'real_photos',
       linkedProjectId: parseInt(projectId),
     };
+    // Remove the old field name
+    delete moodboardData.inspirationType;
     console.log('Final moodboard data:', moodboardData);
     createMoodboardMutation.mutate(moodboardData);
   };
@@ -889,7 +892,7 @@ export default function ProjectDetail() {
                     <p className="text-sm text-gray-600 mb-3">{moodboard.keywords}</p>
                     <div className="flex items-center justify-between text-xs text-gray-500">
                       <span className="capitalize">{moodboard.roomType?.replace('-', ' ')}</span>
-                      <span>{moodboard.sourceType === 'ai' ? '🤖 AI Generated' : '📷 Real Photos'}</span>
+                      <span>{moodboard.sourceType === 'ai_generated' || moodboard.sourceType === 'ai' ? '🤖 AI Generated' : '📷 Real Photos'}</span>
                     </div>
                     <div className="mt-3 text-xs text-gray-400">
                       Created {new Date(moodboard.createdAt).toLocaleDateString()}
