@@ -672,13 +672,23 @@ export default function ProjectDetail() {
                 </div>
                 <div className="flex space-x-2">
                   {selectedFileType === "moodboard" ? (
-                    <Button 
-                      onClick={() => setIsMoodboardDialogOpen(true)}
-                      className="bg-purple-600 hover:bg-purple-700 text-white"
-                    >
-                      <Star className="h-4 w-4 mr-2" />
-                      Create Moodboard
-                    </Button>
+                    <div className="flex space-x-2">
+                      <Button 
+                        onClick={() => setIsMoodboardDialogOpen(true)}
+                        className="bg-purple-600 hover:bg-purple-700 text-white"
+                      >
+                        <Star className="h-4 w-4 mr-2" />
+                        Create Moodboard
+                      </Button>
+                      <Button 
+                        onClick={() => setIsUploadDialogOpen(true)}
+                        variant="outline"
+                        className="border-purple-200 text-purple-700 hover:bg-purple-50"
+                      >
+                        <Upload className="h-4 w-4 mr-2" />
+                        Upload Images
+                      </Button>
+                    </div>
                   ) : (
                     <Button 
                       onClick={() => setIsUploadDialogOpen(true)}
@@ -701,13 +711,23 @@ export default function ProjectDetail() {
                     <div className="text-4xl mb-4">🎨</div>
                     <h4 className="text-lg font-medium mb-2">No moodboards created yet</h4>
                     <p className="text-sm text-gray-600 mb-4">Create beautiful moodboards with AI-generated images or real photos</p>
-                    <Button 
-                      onClick={() => setIsMoodboardDialogOpen(true)}
-                      className="bg-purple-600 hover:bg-purple-700 text-white"
-                    >
-                      <Star className="h-4 w-4 mr-2" />
-                      Create Your First Moodboard
-                    </Button>
+                    <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                      <Button 
+                        onClick={() => setIsMoodboardDialogOpen(true)}
+                        className="bg-purple-600 hover:bg-purple-700 text-white"
+                      >
+                        <Star className="h-4 w-4 mr-2" />
+                        Create Moodboard
+                      </Button>
+                      <Button 
+                        onClick={() => setIsUploadDialogOpen(true)}
+                        variant="outline"
+                        className="border-purple-200 text-purple-700 hover:bg-purple-50"
+                      >
+                        <Upload className="h-4 w-4 mr-2" />
+                        Upload Images
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -796,13 +816,23 @@ export default function ProjectDetail() {
           <TabsContent value="moodboard" className="p-6 bg-gray-50">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-lg font-semibold text-gray-900">Project Moodboards</h3>
-              <Button 
-                onClick={() => setIsMoodboardDialogOpen(true)}
-                className="bg-purple-600 hover:bg-purple-700 text-white"
-              >
-                <Star className="h-4 w-4 mr-2" />
-                Create Moodboard
-              </Button>
+              <div className="flex space-x-3">
+                <Button 
+                  onClick={() => setIsMoodboardDialogOpen(true)}
+                  className="bg-purple-600 hover:bg-purple-700 text-white"
+                >
+                  <Star className="h-4 w-4 mr-2" />
+                  Create Moodboard
+                </Button>
+                <Button 
+                  onClick={() => setIsUploadDialogOpen(true)}
+                  variant="outline"
+                  className="border-purple-200 text-purple-700 hover:bg-purple-50"
+                >
+                  <Upload className="h-4 w-4 mr-2" />
+                  Upload Images
+                </Button>
+              </div>
             </div>
 
             {/* Moodboards Grid - Will display created moodboards from database */}
@@ -811,15 +841,25 @@ export default function ProjectDetail() {
                 <div className="text-6xl mb-6">🎨</div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-3">No moodboards created yet</h3>
                 <p className="text-gray-600 mb-6 max-w-md mx-auto">
-                  Create beautiful moodboards with AI-generated inspiration or curated real photos from design platforms
+                  Create beautiful moodboards with AI-generated inspiration or curated real photos from design platforms, or upload your own images
                 </p>
-                <Button 
-                  onClick={() => setIsMoodboardDialogOpen(true)}
-                  className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3"
-                >
-                  <Star className="h-5 w-5 mr-2" />
-                  Create Your First Moodboard
-                </Button>
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                  <Button 
+                    onClick={() => setIsMoodboardDialogOpen(true)}
+                    className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3"
+                  >
+                    <Star className="h-5 w-5 mr-2" />
+                    Create Moodboard
+                  </Button>
+                  <Button 
+                    onClick={() => setIsUploadDialogOpen(true)}
+                    variant="outline"
+                    className="border-purple-200 text-purple-700 hover:bg-purple-50 px-8 py-3"
+                  >
+                    <Upload className="h-5 w-5 mr-2" />
+                    Upload Images
+                  </Button>
+                </div>
               </div>
             </div>
           </TabsContent>
@@ -1496,6 +1536,7 @@ export default function ProjectDetail() {
                         <SelectItem value="drawing">Drawing</SelectItem>
                         <SelectItem value="documents">Documents</SelectItem>
                         <SelectItem value="site-photos">Site Photos</SelectItem>
+                        <SelectItem value="moodboard">Moodboard Images</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
