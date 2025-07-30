@@ -1820,6 +1820,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Delete project file
+  app.delete("/api/projects/:projectId/files/:fileId", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const projectId = parseInt(req.params.projectId);
+      const fileId = parseInt(req.params.fileId);
+      
+      // Get file info first to delete from filesystem
+      const file = await storage.getProjectFile(fileId);
+      if (!file) {
+        return res.status(404).json({ message: "File not found" });
+      }
+
+      // Delete from filesystem
+      const fs = require('fs').promises;
+      const path = require('path');
+      const filePath = path.join('uploads/products', file.fileName);
+      
+      try {
+        await fs.unlink(filePath);
+      } catch (fsError) {
+        console.warn('File not found on filesystem:', filePath);
+      }
+
+      // Delete from database
+      const success = await storage.deleteProjectFile(fileId);
+      if (!success) {
+        return res.status(404).json({ message: "Failed to delete file from database" });
+      }
+      
+      res.json({ message: "File deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting file:", error);
+      res.status(500).json({ message: "Failed to delete file", error: String(error) });
+    }
+  });
+
   // Project Log Routes
   app.get("/api/projects/:id/logs", authenticateToken, async (req: AuthRequest, res) => {
     try {

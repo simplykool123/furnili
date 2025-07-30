@@ -5,7 +5,7 @@ import {
   User, MessageSquare, Phone, CheckCircle, Clock, AlertCircle,
   Plus, Edit, Trash2, Tag, Users, BarChart3, Target,
   MessageCircle, Mail, ExternalLink, Paperclip, FolderOpen,
-  Camera, Building2, MapPin, Star, Circle, CheckCircle2, Eye, RefreshCw
+  Camera, Building2, MapPin, Star, Circle, CheckCircle2, Eye, RefreshCw, X
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -84,6 +84,8 @@ export default function ProjectDetail() {
   const [isGeneratingPreview, setIsGeneratingPreview] = useState(false);
   const [previewGenerated, setPreviewGenerated] = useState(false);
   const [imageLoadStates, setImageLoadStates] = useState<{[key: string]: 'loading' | 'loaded' | 'error'}>({});
+  const [showImagePreview, setShowImagePreview] = useState(false);
+  const [previewImage, setPreviewImage] = useState<{ src: string; name: string } | null>(null);
 
   // Forms
   const taskForm = useForm({
@@ -127,6 +129,40 @@ export default function ProjectDetail() {
       inspirationType: "real" as const,
     },
   });
+
+  // Handle file deletion
+  const handleDeleteFile = async (fileId: number, fileName: string) => {
+    try {
+      const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+      const response = await fetch(`/api/projects/${projectId}/files/${fileId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Delete failed');
+      }
+
+      toast({
+        title: "Success",
+        description: "File deleted successfully",
+      });
+
+      // Refresh the files list
+      queryClient.invalidateQueries({ queryKey: ['/api/projects', projectId, 'files'] });
+      
+    } catch (error) {
+      console.error('Delete error:', error);
+      toast({
+        title: "Delete Failed",
+        description: "Failed to delete file. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
 
   // Generate preview images based on form data
   const generatePreview = async () => {
@@ -994,10 +1030,10 @@ export default function ProjectDetail() {
                     return (
                     <div key={file.id} className="bg-white rounded-lg border border-gray-200 hover:border-gray-300 transition-colors overflow-hidden">
                       {/* Thumbnail area */}
-                      <div className="h-32 bg-gray-50 overflow-hidden">
+                      <div className="h-32 bg-gray-50 overflow-hidden relative group">
                         {file.mimeType?.includes('image') ? (
                           <div 
-                            className="w-full h-full"
+                            className="w-full h-full cursor-pointer transition-transform group-hover:scale-105"
                             style={{
                               backgroundImage: `url(/uploads/products/${file.fileName})`,
                               backgroundSize: 'cover',
@@ -1006,6 +1042,13 @@ export default function ProjectDetail() {
                               display: 'block',
                               width: '100%',
                               height: '100%'
+                            }}
+                            onClick={() => {
+                              setPreviewImage({
+                                src: `/uploads/products/${file.fileName}`,
+                                name: file.originalName || file.fileName
+                              });
+                              setShowImagePreview(true);
                             }}
                             onLoad={() => {
                               console.log('Background image loaded:', file.fileName);
@@ -1016,6 +1059,19 @@ export default function ProjectDetail() {
                             {getFileIcon(file.mimeType, file.fileName)}
                           </div>
                         )}
+                        
+                        {/* Delete button overlay */}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (confirm(`Are you sure you want to delete ${file.originalName || file.fileName}?`)) {
+                              handleDeleteFile(file.id, file.fileName);
+                            }
+                          }}
+                          className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
                       </div>
                       
                       {/* File info */}
@@ -2249,6 +2305,48 @@ export default function ProjectDetail() {
               </div>
             </form>
           </Form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Image Preview Modal */}
+      <Dialog open={showImagePreview} onOpenChange={setShowImagePreview}>
+        <DialogContent className="max-w-4xl max-h-[90vh] p-0">
+          <DialogHeader className="p-6 pb-2">
+            <DialogTitle className="text-lg font-semibold">
+              {previewImage?.name}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="flex-1 flex items-center justify-center p-6 pt-0">
+            {previewImage && (
+              <img
+                src={previewImage.src}
+                alt={previewImage.name}
+                className="max-w-full max-h-[70vh] object-contain rounded-lg"
+                style={{ maxWidth: '100%', maxHeight: '70vh' }}
+              />
+            )}
+          </div>
+          <div className="flex justify-end gap-2 p-6 pt-2">
+            <Button
+              variant="outline"
+              onClick={() => setShowImagePreview(false)}
+            >
+              Close
+            </Button>
+            <Button
+              onClick={() => {
+                if (previewImage?.src) {
+                  const link = document.createElement('a');
+                  link.href = previewImage.src;
+                  link.download = previewImage.name || 'image';
+                  link.click();
+                }
+              }}
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Download
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
