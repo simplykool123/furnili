@@ -3309,6 +3309,65 @@ class DatabaseStorage implements IStorage {
       };
     }
   }
+  // Project Logs operations - for notes, communications, and project activity logs
+  async createProjectLog(logData: InsertProjectLog): Promise<ProjectLog> {
+    try {
+      const result = await db.insert(projectLogs).values(logData).returning();
+      return result[0];
+    } catch (error) {
+      console.error('Error creating project log:', error);
+      throw error;
+    }
+  }
+
+  async getProjectLogs(projectId: number): Promise<ProjectLog[]> {
+    try {
+      const result = await db.select()
+        .from(projectLogs)
+        .where(eq(projectLogs.projectId, projectId))
+        .orderBy(desc(projectLogs.createdAt));
+      return result;
+    } catch (error) {
+      console.error('Error getting project logs:', error);
+      return [];
+    }
+  }
+
+  async getProjectLog(id: number): Promise<ProjectLog | undefined> {
+    try {
+      const result = await db.select()
+        .from(projectLogs)
+        .where(eq(projectLogs.id, id))
+        .limit(1);
+      return result[0];
+    } catch (error) {
+      console.error('Error getting project log:', error);
+      return undefined;
+    }
+  }
+
+  async updateProjectLog(id: number, updates: Partial<ProjectLog>): Promise<ProjectLog> {
+    try {
+      const result = await db.update(projectLogs)
+        .set(updates)
+        .where(eq(projectLogs.id, id))
+        .returning();
+      return result[0];
+    } catch (error) {
+      console.error('Error updating project log:', error);
+      throw error;
+    }
+  }
+
+  async deleteProjectLog(id: number): Promise<boolean> {
+    try {
+      const result = await db.delete(projectLogs).where(eq(projectLogs.id, id));
+      return result.rowCount !== null && result.rowCount > 0;
+    } catch (error) {
+      console.error('Error deleting project log:', error);
+      return false;
+    }
+  }
 }
 
 export const storage = new DatabaseStorage();

@@ -69,6 +69,7 @@ export default function ProjectDetail() {
   const [isNoteDialogOpen, setIsNoteDialogOpen] = useState(false);
   const [isCommunicationDialogOpen, setIsCommunicationDialogOpen] = useState(false);
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
+  const [isMoodboardDialogOpen, setIsMoodboardDialogOpen] = useState(false);
   const [selectedFileType, setSelectedFileType] = useState("all");
   const [activeFileTab, setActiveFileTab] = useState("recce");
   const [selectedFiles, setSelectedFiles] = useState<FileList | null>(null);
@@ -112,6 +113,14 @@ export default function ProjectDetail() {
       type: "",
       title: "",
       files: undefined,
+    },
+  });
+
+  const moodboardForm = useForm({
+    resolver: zodResolver(uploadSchema),
+    defaultValues: {
+      type: "moodboard",
+      title: "Moodboard Image",
     },
   });
 
@@ -169,6 +178,103 @@ export default function ProjectDetail() {
     enabled: !!projectId,
     staleTime: 30 * 1000, // 30 seconds
   });
+
+  // Query for project logs/notes
+  const projectLogsQuery = useQuery({
+    queryKey: ['/api/projects', projectId, 'logs'],
+    queryFn: async () => {
+      const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+      const response = await fetch(`/api/projects/${projectId}/logs`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      if (!response.ok) throw new Error('Failed to fetch project logs');
+      return response.json();
+    },
+    enabled: !!projectId,
+  });
+
+  // Separate moodboard images from regular files
+  const moodboardImages = useMemo(() => {
+    return projectFiles.filter((file: any) => 
+      file.category === 'moodboard' && 
+      file.mimeType?.includes('image')
+    );
+  }, [projectFiles]);
+
+  // Mutations for database operations
+  const createLogMutation = useMutation({
+    mutationFn: async (logData: any) => {
+      return apiRequest(`/api/projects/${projectId}/logs`, {
+        method: 'POST',
+        body: JSON.stringify(logData),
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/projects', projectId, 'logs'] });
+      setIsNoteDialogOpen(false);
+      noteForm.reset();
+      toast({ title: "Note added successfully!" });
+    },
+  });
+
+  const deleteLogMutation = useMutation({
+    mutationFn: async (logId: number) => {
+      return apiRequest(`/api/projects/${projectId}/logs/${logId}`, {
+        method: 'DELETE',
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/projects', projectId, 'logs'] });
+      toast({ title: "Note deleted successfully!" });
+    },
+  });
+
+  // Form submission handlers
+  const handleNoteSubmit = (data: any) => {
+    createLogMutation.mutate({
+      content: data.content,
+      type: data.type,
+    });
+  };
+
+  const handleMoodboardUpload = async (data: any) => {
+    if (!selectedFiles || selectedFiles.length === 0) {
+      toast({ title: "Please select files to upload", variant: "destructive" });
+      return;
+    }
+
+    const formData = new FormData();
+    Array.from(selectedFiles).forEach((file) => {
+      formData.append('files', file);
+    });
+    formData.append('category', 'moodboard');
+    formData.append('title', data.title);
+    formData.append('clientVisible', 'false');
+
+    try {
+      const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+      const response = await fetch(`/api/projects/${projectId}/files`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      if (!response.ok) throw new Error('Upload failed');
+
+      queryClient.invalidateQueries({ queryKey: ['/api/projects', projectId, 'files'] });
+      setIsMoodboardDialogOpen(false);
+      moodboardForm.reset();
+      setSelectedFiles(null);
+      toast({ title: "Moodboard images uploaded successfully!" });
+    } catch (error) {
+      toast({ title: "Upload failed", variant: "destructive" });
+    }
+  };
 
   const mockTasks = [
     { id: 1, title: "Site Survey Completion", assignedTo: "John Doe", dueDate: "2025-02-05", priority: "high", status: "in-progress" },
@@ -633,15 +739,60 @@ export default function ProjectDetail() {
 
           {/* Moodboard Tab */}
           <TabsContent value="moodboard" className="p-6 bg-gray-50">
-            <div className="text-center py-12">
-              <Image className="h-16 w-16 mx-auto text-gray-300 mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Moodboard</h3>
-              <p className="text-gray-500 mb-6">Create a visual inspiration board for this project</p>
-              <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-lg font-semibold text-gray-900">Project Moodboard</h3>
+              <Button 
+                onClick={() => setIsMoodboardDialogOpen(true)}
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+              >
                 <Upload className="h-4 w-4 mr-2" />
                 Upload Images
               </Button>
             </div>
+
+            {/* Moodboard Images Grid */}
+            {moodboardImages.length > 0 ? (
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {moodboardImages.map((image) => (
+                  <div key={image.id} className="relative group">
+                    <img
+                      src={`/uploads/${image.fileName}`}
+                      alt={image.originalName}
+                      className="w-full h-32 object-cover rounded-lg shadow-md hover:shadow-lg transition-shadow"
+                    />
+                    <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-opacity rounded-lg flex items-center justify-center">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="opacity-0 group-hover:opacity-100 text-white"
+                        onClick={() => {
+                          const link = document.createElement('a');
+                          link.href = `/uploads/${image.fileName}`;
+                          link.download = image.originalName;
+                          link.click();
+                        }}
+                      >
+                        <Download className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <p className="text-xs text-gray-600 mt-1 truncate">{image.originalName}</p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <Image className="h-16 w-16 mx-auto text-gray-300 mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No images uploaded</h3>
+                <p className="text-gray-500 mb-6">Create a visual inspiration board for this project</p>
+                <Button 
+                  onClick={() => setIsMoodboardDialogOpen(true)}
+                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  <Upload className="h-4 w-4 mr-2" />
+                  Upload Images
+                </Button>
+              </div>
+            )}
           </TabsContent>
 
           {/* Project Notes Tab */}
@@ -663,38 +814,44 @@ export default function ProjectDetail() {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {mockNotes.map((note) => (
-                    <Card key={note.id} className="border-l-4 border-l-blue-500">
-                      <CardContent className="p-4">
-                        <div className="flex justify-between items-start">
-                          <div className="flex-1">
-                            <p className="text-sm text-gray-900">{note.content}</p>
-                            <div className="flex items-center space-x-4 mt-2">
-                              <Badge variant="outline" className="text-xs">
-                                {note.type}
-                              </Badge>
-                              <span className="text-xs text-gray-500">
-                                by {note.author} at {note.createdAt}
-                              </span>
-                              {note.taggedUsers.length > 0 && (
-                                <div className="flex items-center space-x-1">
-                                  <Users className="h-3 w-3 text-gray-400" />
-                                  <span className="text-xs text-gray-500">
-                                    @{note.taggedUsers.join(', @')}
-                                  </span>
-                                </div>
-                              )}
+                {projectLogsQuery.isLoading ? (
+                  <div className="text-center py-8">Loading notes...</div>
+                ) : (
+                  <div className="space-y-4">
+                    {(projectLogsQuery.data || []).map((log) => (
+                      <Card key={log.id} className="border-l-4 border-l-blue-500">
+                        <CardContent className="p-4">
+                          <div className="flex justify-between items-start">
+                            <div className="flex-1">
+                              <p className="text-sm text-gray-900">{log.content}</p>
+                              <div className="flex items-center space-x-4 mt-2">
+                                <Badge variant="outline" className="text-xs">
+                                  {log.type || 'note'}
+                                </Badge>
+                                <span className="text-xs text-gray-500">
+                                  {new Date(log.createdAt).toLocaleDateString()} at {new Date(log.createdAt).toLocaleTimeString()}
+                                </span>
+                              </div>
                             </div>
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="h-8 w-8 p-0"
+                              onClick={() => deleteLogMutation.mutate(log.id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
                           </div>
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                    {(projectLogsQuery.data || []).length === 0 && (
+                      <div className="text-center py-8 text-gray-500">
+                        No notes added yet. Click "Add Note" to get started.
+                      </div>
+                    )}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -1415,6 +1572,108 @@ export default function ProjectDetail() {
                   disabled={!selectedFiles || selectedFiles.length === 0 || fileUploadMutation.isPending}
                 >
                   {fileUploadMutation.isPending ? 'Uploading...' : 'Upload Files'}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Note Dialog */}
+      <Dialog open={isNoteDialogOpen} onOpenChange={setIsNoteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Project Note</DialogTitle>
+          </DialogHeader>
+          <Form {...noteForm}>
+            <form onSubmit={noteForm.handleSubmit(handleNoteSubmit)} className="space-y-4">
+              <FormField
+                control={noteForm.control}
+                name="content"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Note Content</FormLabel>
+                    <FormControl>
+                      <Textarea placeholder="Enter note content..." {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={noteForm.control}
+                name="type"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Note Type</FormLabel>
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select note type" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="note">Note</SelectItem>
+                        <SelectItem value="meeting">Meeting</SelectItem>
+                        <SelectItem value="call">Call</SelectItem>
+                        <SelectItem value="email">Email</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <div className="flex justify-end space-x-2">
+                <Button type="button" variant="outline" onClick={() => setIsNoteDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={createLogMutation.isPending}>
+                  {createLogMutation.isPending ? "Adding..." : "Add Note"}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Moodboard Upload Dialog */}
+      <Dialog open={isMoodboardDialogOpen} onOpenChange={setIsMoodboardDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Upload Moodboard Images</DialogTitle>
+            <DialogDescription>Upload images for your project moodboard</DialogDescription>
+          </DialogHeader>
+          <Form {...moodboardForm}>
+            <form onSubmit={moodboardForm.handleSubmit(handleMoodboardUpload)} className="space-y-4">
+              <FormField
+                control={moodboardForm.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Title</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter image title..." {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Select Images</label>
+                <input
+                  type="file"
+                  multiple
+                  accept="image/*"
+                  onChange={(e) => setSelectedFiles(e.target.files)}
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                />
+              </div>
+              <div className="flex justify-end space-x-2">
+                <Button type="button" variant="outline" onClick={() => setIsMoodboardDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit">
+                  Upload Images
                 </Button>
               </div>
             </form>

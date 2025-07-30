@@ -1767,6 +1767,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.delete("/api/projects/:projectId/logs/:logId", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const logId = parseInt(req.params.logId);
+      const success = await storage.deleteProjectLog(logId);
+      
+      if (success) {
+        res.json({ message: "Project log deleted successfully" });
+      } else {
+        res.status(404).json({ message: "Project log not found" });
+      }
+    } catch (error) {
+      console.error("Failed to delete project log:", error);
+      res.status(500).json({ message: "Failed to delete project log", error: String(error) });
+    }
+  });
+
   // Price Comparison routes
   app.get("/api/price-comparisons", authenticateToken, async (req: AuthRequest, res) => {
     try {
