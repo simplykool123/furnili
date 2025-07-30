@@ -618,16 +618,7 @@ export default function ProjectDetail() {
   // Stage update mutation
   const stageUpdateMutation = useMutation({
     mutationFn: async (newStage: string) => {
-      const token = localStorage.getItem('authToken') || localStorage.getItem('token');
-      const response = await apiRequest(`/api/projects/${projectId}`, {
-        method: 'PATCH',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ stage: newStage }),
-      });
-      return response;
+      return apiRequest('PATCH', `/api/projects/${projectId}`, { stage: newStage });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/projects', projectId] });
@@ -826,15 +817,15 @@ export default function ProjectDetail() {
         </div>
         
         {/* Navigation Tabs with Enhanced UX */}
-        <div className="px-6 border-b border-gray-100 overflow-x-auto">
+        <div className="px-4 border-b border-gray-100 overflow-x-auto">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="h-auto bg-transparent p-0 space-x-6 min-w-max flex">
+            <TabsList className="h-auto bg-transparent p-0 space-x-4 min-w-max flex">
               <TabsTrigger 
                 value="files" 
-                className="flex items-center space-x-2 px-0 py-3 border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent bg-transparent hover:bg-gray-50 text-gray-600 data-[state=active]:text-blue-600 rounded-none transition-all duration-200"
+                className="flex items-center space-x-1 px-0 py-2 border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent bg-transparent hover:bg-gray-50 text-gray-600 data-[state=active]:text-blue-600 rounded-none transition-all duration-200"
               >
-                <span className="text-base">📂</span>
-                <span className="font-medium text-sm">Files</span>
+                <span className="text-sm">📂</span>
+                <span className="font-medium text-xs">Files</span>
               </TabsTrigger>
               <TabsTrigger 
                 value="moodboard" 
@@ -912,33 +903,33 @@ export default function ProjectDetail() {
       </div>
 
       {/* Main Content */}
-      <div className="p-6">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+      <div className="p-3">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-3">
 
           {/* Files Tab - Modern Design with Image Thumbnails */}
-          <TabsContent value="files" className="p-6 bg-gray-50">
+          <TabsContent value="files" className="p-3 bg-gray-50">
             {/* File Categories Tabs */}
-            <div className="mb-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex space-x-4">
+            <div className="mb-3">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex space-x-2">
                   <Button 
                     variant={selectedFileType === "recce" ? "default" : "outline"}
                     onClick={() => setSelectedFileType("recce")}
-                    className={selectedFileType === "recce" ? "bg-blue-600 text-white" : "bg-white text-gray-700 border-gray-300"}
+                    className={`h-8 text-xs ${selectedFileType === "recce" ? "bg-blue-600 text-white" : "bg-white text-gray-700 border-gray-300"}`}
                   >
                     Recce
                   </Button>
                   <Button 
                     variant={selectedFileType === "design" ? "default" : "outline"}
                     onClick={() => setSelectedFileType("design")}
-                    className={selectedFileType === "design" ? "bg-blue-600 text-white" : "bg-white text-gray-700 border-gray-300"}
+                    className={`h-8 text-xs ${selectedFileType === "design" ? "bg-blue-600 text-white" : "bg-white text-gray-700 border-gray-300"}`}
                   >
                     Design
                   </Button>
                   <Button 
                     variant={selectedFileType === "drawing" ? "default" : "outline"}
                     onClick={() => setSelectedFileType("drawing")}
-                    className={selectedFileType === "drawing" ? "bg-blue-600 text-white" : "bg-white text-gray-700 border-gray-300"}
+                    className={`h-8 text-xs ${selectedFileType === "drawing" ? "bg-blue-600 text-white" : "bg-white text-gray-700 border-gray-300"}`}
                   >
                     Drawing
                   </Button>
@@ -966,9 +957,9 @@ export default function ProjectDetail() {
                   ) : (
                     <Button 
                       onClick={() => setIsUploadDialogOpen(true)}
-                      className="bg-blue-600 hover:bg-blue-700 text-white"
+                      className="bg-blue-600 hover:bg-blue-700 text-white h-8 text-xs"
                     >
-                      <Upload className="h-4 w-4 mr-2" />
+                      <Upload className="h-3 w-3 mr-1" />
                       Upload Files
                     </Button>
                   )}
@@ -1009,22 +1000,22 @@ export default function ProjectDetail() {
 
             {/* Uploaded Files Section - Only show when files exist and not moodboard tab */}
             {selectedFileType !== "moodboard" && filteredFiles.length > 0 && (
-              <div className="mb-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-gray-900">Uploaded Files</h3>
+              <div className="mb-3">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-base font-semibold text-gray-900">Uploaded Files</h3>
                   <Badge variant="secondary" className="text-xs">
                     {filteredFiles.length} files
                   </Badge>
                 </div>
                 
                 {/* File list with thumbnails */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                   {filteredFiles.map((file) => {
                     console.log('Rendering file:', file.fileName, 'MIME:', file.mimeType, 'isImage:', file.mimeType?.includes('image'));
                     return (
                     <div key={file.id} className="bg-white rounded-lg border border-gray-200 hover:border-gray-300 transition-colors overflow-hidden">
                       {/* Thumbnail area */}
-                      <div className="h-32 bg-gray-50 overflow-hidden relative group">
+                      <div className="h-24 bg-gray-50 overflow-hidden relative group">
                         {file.mimeType?.includes('image') ? (
                           <div 
                             className="w-full h-full cursor-pointer transition-transform group-hover:scale-105"
@@ -1069,7 +1060,7 @@ export default function ProjectDetail() {
                       </div>
                       
                       {/* File info */}
-                      <div className="p-3">
+                      <div className="p-2">
                         <div className="flex items-start justify-between">
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium text-gray-900 truncate" title={file.originalName || file.fileName}>
