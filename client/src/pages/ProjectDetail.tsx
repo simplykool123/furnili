@@ -151,18 +151,18 @@ export default function ProjectDetail() {
       if (formData.inspirationType === 'ai') {
         // AI-generated style images with room type context
         images = [
-          `https://picsum.photos/400/300?random=${randomSeed + 1}&blur=1`,
-          `https://picsum.photos/400/300?random=${randomSeed + 2}&blur=1`,
-          `https://picsum.photos/400/300?random=${randomSeed + 3}&blur=1`,
-          `https://picsum.photos/400/300?random=${randomSeed + 4}&blur=1`
+          `https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=300&fit=crop&auto=format`,
+          `https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=400&h=300&fit=crop&auto=format`,
+          `https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=300&fit=crop&auto=format&blur=2`,
+          `https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=400&h=300&fit=crop&auto=format&blur=2`
         ];
       } else {
         // Real photo inspiration images
         images = [
-          `https://picsum.photos/400/300?random=${randomSeed + 5}`,
-          `https://picsum.photos/400/300?random=${randomSeed + 6}`,
-          `https://picsum.photos/400/300?random=${randomSeed + 7}`,
-          `https://picsum.photos/400/300?random=${randomSeed + 8}`
+          `https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=300&fit=crop&auto=format`,
+          `https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=400&h=300&fit=crop&auto=format`,
+          `https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&h=300&fit=crop&auto=format`,
+          `https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?w=400&h=300&fit=crop&auto=format`
         ];
       }
       
@@ -342,20 +342,19 @@ export default function ProjectDetail() {
     // Use preview images if available, otherwise generate new ones
     let finalImages = previewImages;
     if (!previewGenerated || previewImages.length === 0) {
-      const randomSeed = Math.floor(Math.random() * 1000);
       if (data.inspirationType === 'ai') {
         finalImages = [
-          `https://picsum.photos/400/300?random=${randomSeed + 1}&blur=1`,
-          `https://picsum.photos/400/300?random=${randomSeed + 2}&blur=1`,
-          `https://picsum.photos/400/300?random=${randomSeed + 3}&blur=1`,
-          `https://picsum.photos/400/300?random=${randomSeed + 4}&blur=1`
+          `https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=300&fit=crop&auto=format`,
+          `https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=400&h=300&fit=crop&auto=format`,
+          `https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=300&fit=crop&auto=format&blur=2`,
+          `https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=400&h=300&fit=crop&auto=format&blur=2`
         ];
       } else {
         finalImages = [
-          `https://picsum.photos/400/300?random=${randomSeed + 5}`,
-          `https://picsum.photos/400/300?random=${randomSeed + 6}`,
-          `https://picsum.photos/400/300?random=${randomSeed + 7}`,
-          `https://picsum.photos/400/300?random=${randomSeed + 8}`
+          `https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=300&fit=crop&auto=format`,
+          `https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=400&h=300&fit=crop&auto=format`,
+          `https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&h=300&fit=crop&auto=format`,
+          `https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?w=400&h=300&fit=crop&auto=format`
         ];
       }
     }
@@ -968,6 +967,13 @@ export default function ProjectDetail() {
                             src={url} 
                             alt={`Moodboard ${index + 1}`}
                             className="w-full h-full object-cover rounded"
+                            onError={(e) => {
+                              console.log('Image failed to load:', url);
+                              e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjE1MCIgdmlld0JveD0iMCAwIDIwMCAxNTAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMTUwIiBmaWxsPSIjRjNGNEY2Ii8+Cjx0ZXh0IHg9IjEwMCIgeT0iNzUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxMiIgZmlsbD0iIzlDQTNBRiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSI+SW1hZ2UgTG9hZGluZy4uLjwvdGV4dD4KPHN2Zz4=';
+                            }}
+                            onLoad={() => {
+                              console.log('Image loaded successfully:', url);
+                            }}
                           />
                         ))}
                       </div>
