@@ -56,12 +56,7 @@ const uploadSchema = z.object({
   files: z.any().optional(),
 });
 
-const moodboardSchema = z.object({
-  name: z.string().min(1, "Moodboard name is required"),
-  keywords: z.string().min(1, "Keywords are required"),
-  roomType: z.string().min(1, "Room type is required"),
-  inspirationType: z.enum(["ai", "real"]),
-});
+
 
 export default function ProjectDetail() {
   const [location, setLocation] = useLocation();
@@ -76,13 +71,11 @@ export default function ProjectDetail() {
   const [isNoteDialogOpen, setIsNoteDialogOpen] = useState(false);
   const [isCommunicationDialogOpen, setIsCommunicationDialogOpen] = useState(false);
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
-  const [isMoodboardDialogOpen, setIsMoodboardDialogOpen] = useState(false);
+
   const [selectedFileType, setSelectedFileType] = useState("all");
   const [activeFileTab, setActiveFileTab] = useState("recce");
   const [selectedFiles, setSelectedFiles] = useState<FileList | null>(null);
-  const [previewImages, setPreviewImages] = useState<string[]>([]);
-  const [isGeneratingPreview, setIsGeneratingPreview] = useState(false);
-  const [previewGenerated, setPreviewGenerated] = useState(false);
+
   const [imageLoadStates, setImageLoadStates] = useState<{[key: string]: 'loading' | 'loaded' | 'error'}>({});
   const [showImagePreview, setShowImagePreview] = useState(false);
   const [previewImage, setPreviewImage] = useState<{ src: string; name: string } | null>(null);
@@ -120,15 +113,7 @@ export default function ProjectDetail() {
     },
   });
 
-  const moodboardForm = useForm({
-    resolver: zodResolver(moodboardSchema),
-    defaultValues: {
-      name: "",
-      keywords: "",
-      roomType: "",
-      inspirationType: "real" as const,
-    },
-  });
+
 
   // Handle file deletion
   const handleDeleteFile = async (fileId: number, fileName: string) => {
@@ -164,99 +149,8 @@ export default function ProjectDetail() {
     }
   };
 
-  // Generate preview images based on form data
-  const generatePreview = async () => {
-    const formData = moodboardForm.getValues();
-    if (!formData.keywords || !formData.roomType || !formData.inspirationType) {
-      toast({
-        title: "Missing Information",
-        description: "Please fill in all required fields to generate preview",
-        variant: "destructive",
-      });
-      return;
-    }
 
-    setIsGeneratingPreview(true);
-    
-    try {
-      // Simulate AI generation delay
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      let images: string[] = [];
-      const randomSeed = Math.floor(Math.random() * 1000);
-      
-      if (formData.inspirationType === 'ai') {
-        // AI-style interior design images focused on walls, cupboards, furniture
-        const roomTypeImages = {
-          'living-room': [
-            `https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=300&fit=crop&auto=format`, // Modern living room
-            `https://images.unsplash.com/photo-1567767292278-a4f21aa2d36e?w=400&h=300&fit=crop&auto=format`, // Wall design
-            `https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=300&fit=crop&auto=format&blur=1`, // Blurred effect
-            `https://images.unsplash.com/photo-1567767292278-a4f21aa2d36e?w=400&h=300&fit=crop&auto=format&blur=1`
-          ],
-          'bedroom': [
-            `https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=400&h=300&fit=crop&auto=format`, // Bedroom design
-            `https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=300&fit=crop&auto=format`, // Wall treatments
-            `https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=400&h=300&fit=crop&auto=format&blur=1`,
-            `https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=300&fit=crop&auto=format&blur=1`
-          ],
-          'kitchen': [
-            `https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=400&h=300&fit=crop&auto=format`, // Kitchen cabinets
-            `https://images.unsplash.com/photo-1565538810643-b5bdb714032a?w=400&h=300&fit=crop&auto=format`, // Kitchen design
-            `https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=400&h=300&fit=crop&auto=format&blur=1`,
-            `https://images.unsplash.com/photo-1565538810643-b5bdb714032a?w=400&h=300&fit=crop&auto=format&blur=1`
-          ]
-        };
-        images = roomTypeImages[formData.roomType] || roomTypeImages['living-room'];
-      } else {
-        // Real photo inspiration images for interior design
-        const roomTypeImages = {
-          'living-room': [
-            `https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=300&fit=crop&auto=format`,
-            `https://images.unsplash.com/photo-1567767292278-a4f21aa2d36e?w=400&h=300&fit=crop&auto=format`,
-            `https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=400&h=300&fit=crop&auto=format`,
-            `https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&h=300&fit=crop&auto=format`
-          ],
-          'bedroom': [
-            `https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=400&h=300&fit=crop&auto=format`,
-            `https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=300&fit=crop&auto=format`,
-            `https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=400&h=300&fit=crop&auto=format`,
-            `https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&h=300&fit=crop&auto=format`
-          ],
-          'kitchen': [
-            `https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=400&h=300&fit=crop&auto=format`,
-            `https://images.unsplash.com/photo-1565538810643-b5bdb714032a?w=400&h=300&fit=crop&auto=format`,
-            `https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=400&h=300&fit=crop&auto=format`,
-            `https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&h=300&fit=crop&auto=format`
-          ]
-        };
-        images = roomTypeImages[formData.roomType] || roomTypeImages['living-room'];
-      }
-      
-      setPreviewImages(images);
-      setPreviewGenerated(true);
-      
-      toast({
-        title: "Preview Generated",
-        description: `${formData.inspirationType === 'ai' ? 'AI-generated' : 'Real photo'} moodboard preview ready`,
-      });
-    } catch (error) {
-      toast({
-        title: "Generation Failed",
-        description: "Failed to generate preview. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsGeneratingPreview(false);
-    }
-  };
 
-  // Regenerate preview with different images
-  const regeneratePreview = () => {
-    setPreviewGenerated(false);
-    setPreviewImages([]);
-    generatePreview();
-  };
 
   const uploadForm = useForm({
     resolver: zodResolver(uploadSchema),
@@ -341,30 +235,7 @@ export default function ProjectDetail() {
     enabled: !!projectId,
   });
 
-  // Query for project moodboards
-  const { data: projectMoodboards = [] } = useQuery({
-    queryKey: ['/api/projects', projectId, 'moodboards'],
-    queryFn: async () => {
-      const token = localStorage.getItem('authToken') || localStorage.getItem('token');
-      const response = await fetch(`/api/projects/${projectId}/moodboards`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-      if (!response.ok) throw new Error('Failed to fetch project moodboards');
-      return response.json();
-    },
-    enabled: !!projectId,
-  });
 
-  // Separate moodboard images from regular files
-  const moodboardImages = useMemo(() => {
-    return projectFiles.filter((file: any) => 
-      file.category === 'moodboard' && 
-      file.mimeType?.includes('image')
-    );
-  }, [projectFiles]);
 
   // Mutations for database operations
   const createLogMutation = useMutation({
@@ -400,84 +271,9 @@ export default function ProjectDetail() {
     },
   });
 
-  const handleMoodboardCreate = (data: any) => {
-    console.log('Creating moodboard with data:', data);
-    console.log('Form errors:', moodboardForm.formState.errors);
-    
-    // Use preview images if available, otherwise generate new ones
-    let finalImages = previewImages;
-    if (!previewGenerated || previewImages.length === 0) {
-      if (data.inspirationType === 'ai') {
-        // AI-style interior design images focused on walls, cupboards, furniture
-        const roomTypeImages = {
-          'living-room': [
-            `https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=300&fit=crop&auto=format`, // Modern living room
-            `https://images.unsplash.com/photo-1567767292278-a4f21aa2d36e?w=400&h=300&fit=crop&auto=format`, // Wall design
-            `https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=300&fit=crop&auto=format&blur=1`, // Blurred effect
-            `https://images.unsplash.com/photo-1567767292278-a4f21aa2d36e?w=400&h=300&fit=crop&auto=format&blur=1`
-          ],
-          'bedroom': [
-            `https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=400&h=300&fit=crop&auto=format`, // Bedroom design
-            `https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=300&fit=crop&auto=format`, // Wall treatments
-            `https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=400&h=300&fit=crop&auto=format&blur=1`,
-            `https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=300&fit=crop&auto=format&blur=1`
-          ],
-          'kitchen': [
-            `https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=400&h=300&fit=crop&auto=format`, // Kitchen cabinets
-            `https://images.unsplash.com/photo-1565538810643-b5bdb714032a?w=400&h=300&fit=crop&auto=format`, // Kitchen design
-            `https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=400&h=300&fit=crop&auto=format&blur=1`,
-            `https://images.unsplash.com/photo-1565538810643-b5bdb714032a?w=400&h=300&fit=crop&auto=format&blur=1`
-          ]
-        };
-        finalImages = roomTypeImages[data.roomType] || roomTypeImages['living-room'];
-      } else {
-        // Real photo inspiration images for interior design
-        const roomTypeImages = {
-          'living-room': [
-            `https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=300&fit=crop&auto=format`,
-            `https://images.unsplash.com/photo-1567767292278-a4f21aa2d36e?w=400&h=300&fit=crop&auto=format`,
-            `https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=400&h=300&fit=crop&auto=format`,
-            `https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&h=300&fit=crop&auto=format`
-          ],
-          'bedroom': [
-            `https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=400&h=300&fit=crop&auto=format`,
-            `https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=300&fit=crop&auto=format`,
-            `https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=400&h=300&fit=crop&auto=format`,
-            `https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&h=300&fit=crop&auto=format`
-          ],
-          'kitchen': [
-            `https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=400&h=300&fit=crop&auto=format`,
-            `https://images.unsplash.com/photo-1565538810643-b5bdb714032a?w=400&h=300&fit=crop&auto=format`,
-            `https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=400&h=300&fit=crop&auto=format`,
-            `https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&h=300&fit=crop&auto=format`
-          ]
-        };
-        finalImages = roomTypeImages[data.roomType] || roomTypeImages['living-room'];
-      }
-    }
-    
-    const moodboardData = {
-      ...data,
-      sourceType: data.inspirationType === 'ai' ? 'ai_generated' : 'real_photos',
-      imageUrls: finalImages,
-      linkedProjectId: parseInt(projectId),
-    };
-    // Remove the old field name
-    delete moodboardData.inspirationType;
-    console.log('Final moodboard data:', moodboardData);
-    createMoodboardMutation.mutate(moodboardData);
-  };
 
-  // Note creation handler
-  const handleNoteCreate = (data: any) => {
-    console.log('Creating note with data:', data);
-    const noteData = {
-      content: data.content,
-      type: data.type,
-      projectId: parseInt(projectId),
-    };
-    createNoteMutation.mutate(noteData);
-  };
+
+
 
   const mockTasks = [
     { id: 1, title: "Site Survey Completion", assignedTo: "John Doe", dueDate: "2025-02-05", priority: "high", status: "in-progress" },
@@ -548,72 +344,7 @@ export default function ProjectDetail() {
     }
   };
 
-  // Moodboard deletion mutation
-  const deleteMoodboardMutation = useMutation({
-    mutationFn: async (moodboardId: number) => {
-      const token = localStorage.getItem('authToken') || localStorage.getItem('token');
-      const response = await fetch(`/api/moodboards/${moodboardId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-      if (!response.ok) throw new Error('Failed to delete moodboard');
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/projects', projectId, 'moodboards'] });
-      toast({
-        title: "Success",
-        description: "Moodboard deleted successfully",
-      });
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to delete moodboard",
-        variant: "destructive",
-      });
-    },
-  });
 
-  // Moodboard creation mutation
-  const createMoodboardMutation = useMutation({
-    mutationFn: async (data: any) => {
-      const token = localStorage.getItem('authToken') || localStorage.getItem('token');
-      const response = await fetch('/api/moodboards', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...data,
-          linkedProjectId: parseInt(projectId),
-        }),
-      });
-      if (!response.ok) throw new Error('Failed to create moodboard');
-      return response.json();
-    },
-    onSuccess: () => {
-      setIsMoodboardDialogOpen(false);
-      moodboardForm.reset();
-      setPreviewImages([]);
-      setPreviewGenerated(false);
-      toast({
-        title: "Success",
-        description: "Moodboard created successfully",
-      });
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to create moodboard",
-        variant: "destructive",
-      });
-    },
-  });
 
   // Stage update mutation
   const stageUpdateMutation = useMutation({
@@ -649,38 +380,7 @@ export default function ProjectDetail() {
     stageUpdateMutation.mutate(newStage);
   };
 
-  // Note creation mutation
-  const createNoteMutation = useMutation({
-    mutationFn: async (data: any) => {
-      const token = localStorage.getItem('authToken') || localStorage.getItem('token');
-      const response = await fetch(`/api/projects/${projectId}/logs`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      });
-      if (!response.ok) throw new Error('Failed to create note');
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/projects', projectId, 'logs'] });
-      setIsNoteDialogOpen(false);
-      noteForm.reset();
-      toast({
-        title: "Success",
-        description: "Note added successfully",
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: "Failed to create note. Please try again.",
-        variant: "destructive",
-      });
-    },
-  });
+
 
 
 
@@ -836,13 +536,7 @@ export default function ProjectDetail() {
                 <span className="text-base">📂</span>
                 <span className="font-medium text-sm">Files</span>
               </TabsTrigger>
-              <TabsTrigger 
-                value="moodboard" 
-                className="flex items-center space-x-2 px-0 py-3 border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent bg-transparent hover:bg-gray-50 text-gray-600 data-[state=active]:text-blue-600 rounded-none transition-all duration-200"
-              >
-                <span className="text-base">🎨</span>
-                <span className="font-medium text-sm">Moodboard</span>
-              </TabsTrigger>
+
               <TabsTrigger 
                 value="notes" 
                 className="flex items-center space-x-2 px-0 py-3 border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent bg-transparent hover:bg-gray-50 text-gray-600 data-[state=active]:text-blue-600 rounded-none transition-all duration-200"
@@ -942,79 +636,22 @@ export default function ProjectDetail() {
                   >
                     Drawing
                   </Button>
-                  <Button 
-                    variant={selectedFileType === "moodboard" ? "default" : "outline"}
-                    onClick={() => setSelectedFileType("moodboard")}
-                    className={selectedFileType === "moodboard" ? "bg-blue-600 text-white" : "bg-white text-gray-700 border-gray-300"}
-                  >
-                    Moodboard
-                  </Button>
+
                 </div>
                 <div className="flex space-x-2">
-                  {selectedFileType === "moodboard" ? (
-                    <div className="flex space-x-2">
-                      <Button 
-                        onClick={() => setIsMoodboardDialogOpen(true)}
-                        className="bg-purple-600 hover:bg-purple-700 text-white"
-                      >
-                        <Star className="h-4 w-4 mr-2" />
-                        Create Moodboard
-                      </Button>
-                      <Button 
-                        onClick={() => setIsUploadDialogOpen(true)}
-                        variant="outline"
-                        className="border-purple-200 text-purple-700 hover:bg-purple-50"
-                      >
-                        <Upload className="h-4 w-4 mr-2" />
-                        Upload Images
-                      </Button>
-                    </div>
-                  ) : (
-                    <Button 
-                      onClick={() => setIsUploadDialogOpen(true)}
-                      className="bg-blue-600 hover:bg-blue-700 text-white"
-                    >
-                      <Upload className="h-4 w-4 mr-2" />
-                      Upload Files
-                    </Button>
-                  )}
+                  <Button 
+                    onClick={() => setIsUploadDialogOpen(true)}
+                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                  >
+                    <Upload className="h-4 w-4 mr-2" />
+                    Upload Files
+                  </Button>
                 </div>
               </div>
             </div>
 
-            {/* Moodboard Section - Show when moodboard tab is selected */}
-            {selectedFileType === "moodboard" && (
-              <div className="mb-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Project Moodboards</h3>
-                <div className="text-gray-500 text-center py-8">
-                  <div className="bg-gray-100 rounded-lg p-8">
-                    <div className="text-4xl mb-4">🎨</div>
-                    <h4 className="text-lg font-medium mb-2">No moodboards created yet</h4>
-                    <p className="text-sm text-gray-600 mb-4">Create beautiful moodboards with AI-generated images or real photos</p>
-                    <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                      <Button 
-                        onClick={() => setIsMoodboardDialogOpen(true)}
-                        className="bg-purple-600 hover:bg-purple-700 text-white"
-                      >
-                        <Star className="h-4 w-4 mr-2" />
-                        Create Moodboard
-                      </Button>
-                      <Button 
-                        onClick={() => setIsUploadDialogOpen(true)}
-                        variant="outline"
-                        className="border-purple-200 text-purple-700 hover:bg-purple-50"
-                      >
-                        <Upload className="h-4 w-4 mr-2" />
-                        Upload Images
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Uploaded Files Section - Only show when files exist and not moodboard tab */}
-            {selectedFileType !== "moodboard" && filteredFiles.length > 0 && (
+            {/* Uploaded Files Section */}
+            {filteredFiles.length > 0 && (
               <div className="mb-6">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold text-gray-900">Uploaded Files</h3>
@@ -1122,224 +759,12 @@ export default function ProjectDetail() {
             )}
           </TabsContent>
 
-          {/* Moodboard Tab */}
-          <TabsContent value="moodboard" className="p-6 bg-gray-50">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-lg font-semibold text-gray-900">Project Moodboards</h3>
-              <div className="flex space-x-3">
-                <Button 
-                  onClick={() => setIsMoodboardDialogOpen(true)}
-                  className="bg-purple-600 hover:bg-purple-700 text-white"
-                >
-                  <Star className="h-4 w-4 mr-2" />
-                  Create Moodboard
-                </Button>
-                <Button 
-                  onClick={() => setIsUploadDialogOpen(true)}
-                  variant="outline"
-                  className="border-purple-200 text-purple-700 hover:bg-purple-50"
-                >
-                  <Upload className="h-4 w-4 mr-2" />
-                  Upload Images
-                </Button>
-              </div>
-            </div>
-
-            {/* Combined Moodboards and Uploaded Images Display */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {/* Display Database Moodboards */}
-              {projectMoodboards.map((moodboard: any) => (
-                <div key={`moodboard-${moodboard.id}`} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-                  {/* Image Display Area */}
-                  <div className="h-48 bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center">
-                    {moodboard.imageUrls && moodboard.imageUrls.length > 0 ? (
-                      <div className="grid grid-cols-2 gap-1 w-full h-full p-2">
-                        {moodboard.imageUrls.slice(0, 4).map((url: string, index: number) => (
-                          <img 
-                            key={index}
-                            src={url} 
-                            alt={`Moodboard ${index + 1}`}
-                            className="w-full h-full object-cover rounded"
-                            onError={(e) => {
-                              console.log('Image failed to load:', url);
-                              e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjE1MCIgdmlld0JveD0iMCAwIDIwMCAxNTAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMTUwIiBmaWxsPSIjRjNGNEY2Ii8+Cjx0ZXh0IHg9IjEwMCIgeT0iNzUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxMiIgZmlsbD0iIzlDQTNBRiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSI+SW1hZ2UgTG9hZGluZy4uLjwvdGV4dD4KPHN2Zz4=';
-                            }}
-                            onLoad={() => {
-                              console.log('Image loaded successfully:', url);
-                            }}
-                          />
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="text-center">
-                        <div className="text-4xl mb-2">🎨</div>
-                        <p className="text-sm text-gray-500">No images yet</p>
-                        <p className="text-xs text-gray-400 mt-1">Click to add images</p>
-                      </div>
-                    )}
-                  </div>
-                  <div className="p-4">
-                    <div className="flex items-start justify-between mb-2">
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-semibold text-gray-900 truncate">{moodboard.name}</h4>
-                        <p className="text-sm text-gray-600 mt-1 line-clamp-2">{moodboard.keywords}</p>
-                      </div>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="h-6 w-6 p-0 text-red-500 hover:text-red-700 flex-shrink-0 ml-2"
-                        onClick={() => deleteMoodboardMutation.mutate(moodboard.id)}
-                        disabled={deleteMoodboardMutation.isPending}
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
-                    </div>
-                    <div className="flex items-center justify-between text-xs text-gray-500 mt-2">
-                      <span className="capitalize">{moodboard.roomType?.replace('-', ' ')}</span>
-                      <span>{moodboard.sourceType === 'ai_generated' || moodboard.sourceType === 'ai' ? '🤖 AI Generated' : '📷 Real Photos'}</span>
-                    </div>
-                    <div className="text-xs text-gray-400 mt-2">
-                      Created {new Date(moodboard.createdAt).toLocaleDateString()}
-                    </div>
-                  </div>
-                </div>
-              ))}
-
-              {/* Display Uploaded Moodboard Images (only show if no duplicate in moodboards) */}
-              {moodboardImages.filter((file: any) => 
-                !projectMoodboards.some((mb: any) => 
-                  mb.imageUrls && mb.imageUrls.includes(`/uploads/products/${file.fileName}`)
-                )
-              ).map((file: any) => (
-                <div key={`upload-${file.id}`} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-                  {/* Image Display */}
-                  <div className="h-48 bg-gray-100">
-                    <img 
-                      src={`/uploads/products/${file.fileName}`}
-                      alt={file.originalName}
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik04NyA3NEg2M0M2MS4zNDMxIDc0IDYwIDc1LjM0MzEgNjAgNzdWMTIzQzYwIDEyNC42NTcgNjEuMzQzMSAxMjYgNjMgMTI2SDEzN0MxMzguNjU3IDEyNiAxNDAgMTI0LjY1NyAxNDAgMTIzVjc3QzE0MCA3NS4zNDMxIDEzOC42NTcgNzQgMTM3IDc0SDExM001IDkxSDE0MIIgc3Ryb2tlPSIjOTlBM0E0IiBzdHJva2Utd2lkdGg9IjIiLz4KPC9zdmc+';
-                      }}
-                    />
-                  </div>
-                  <div className="p-4">
-                    <div className="flex items-start justify-between mb-2">
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-semibold text-gray-900 truncate">Uploaded Image</h4>
-                        <p className="text-sm text-gray-600 truncate mt-1">{file.originalName}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between text-xs text-gray-500 mt-2">
-                      <span>Moodboard Image</span>
-                      <span>📷 Uploaded</span>
-                    </div>
-                    <div className="text-xs text-gray-400 mt-2">
-                      Uploaded {new Date(file.createdAt || Date.now()).toLocaleDateString()}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Show empty state only if no moodboards AND no uploaded images */}
-            {projectMoodboards.length === 0 && moodboardImages.length === 0 && (
-              <div className="text-center py-12">
-                <div className="bg-white rounded-lg p-12 shadow-sm border border-gray-200">
-                  <div className="text-6xl mb-6">🎨</div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-3">No moodboards created yet</h3>
-                  <p className="text-gray-600 mb-6 max-w-md mx-auto">
-                    Create beautiful moodboards with AI-generated inspiration or curated real photos from design platforms, or upload your own images
-                  </p>
-                  <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                    <Button 
-                      onClick={() => setIsMoodboardDialogOpen(true)}
-                      className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3"
-                    >
-                      <Star className="h-5 w-5 mr-2" />
-                      Create Moodboard
-                    </Button>
-                    <Button 
-                      onClick={() => setIsUploadDialogOpen(true)}
-                      variant="outline"
-                      className="border-purple-200 text-purple-700 hover:bg-purple-50 px-8 py-3"
-                    >
-                      <Upload className="h-5 w-5 mr-2" />
-                      Upload Images
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            )}
-          </TabsContent>
-
           {/* Project Notes Tab */}
           <TabsContent value="notes" className="space-y-6">
-            <Card>
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200">
               <CardHeader>
-                <div className="flex justify-between items-center">
-                  <CardTitle className="flex items-center space-x-2">
-                    <MessageSquare className="h-5 w-5" />
-                    <span>Project Notes / Logs</span>
-                  </CardTitle>
-                  <Button 
-                    onClick={() => setIsNoteDialogOpen(true)}
-                    className="bg-blue-600 hover:bg-blue-700"
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Note
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent>
-                {projectLogsQuery.isLoading ? (
-                  <div className="text-center py-8">Loading notes...</div>
-                ) : (
-                  <div className="space-y-4">
-                    {(projectLogsQuery.data || []).map((log) => (
-                      <Card key={log.id} className="border-l-4 border-l-blue-500">
-                        <CardContent className="p-4">
-                          <div className="flex justify-between items-start">
-                            <div className="flex-1">
-                              <p className="text-sm text-gray-900">{log.content}</p>
-                              <div className="flex items-center space-x-4 mt-2">
-                                <Badge variant="outline" className="text-xs">
-                                  {log.type || 'note'}
-                                </Badge>
-                                <span className="text-xs text-gray-500">
-                                  {new Date(log.createdAt).toLocaleDateString()} at {new Date(log.createdAt).toLocaleTimeString()}
-                                </span>
-                              </div>
-                            </div>
-                            <Button 
-                              variant="ghost" 
-                              size="sm" 
-                              className="h-8 w-8 p-0"
-                              onClick={() => deleteLogMutation.mutate(log.id)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                    {(projectLogsQuery.data || []).length === 0 && (
-                      <div className="text-center py-8 text-gray-500">
-                        No notes added yet. Click "Add Note" to get started.
-                      </div>
-                    )}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Task Management Tab */}
-          <TabsContent value="tasks" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <div className="flex justify-between items-center">
-                  <CardTitle className="flex items-center space-x-2">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-xl font-semibold flex items-center gap-2">
                     <CheckCircle className="h-5 w-5" />
                     <span>Task Management</span>
                   </CardTitle>
@@ -1397,7 +822,7 @@ export default function ProjectDetail() {
                   </Table>
                 </div>
               </CardContent>
-            </Card>
+            </div>
           </TabsContent>
 
           {/* Progress Tracker Tab */}
@@ -2108,199 +1533,6 @@ export default function ProjectDetail() {
                 </Button>
                 <Button type="submit" disabled={createLogMutation.isPending}>
                   {createLogMutation.isPending ? "Adding..." : "Add Note"}
-                </Button>
-              </div>
-            </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
-
-      {/* Create Moodboard Dialog */}
-      <Dialog open={isMoodboardDialogOpen} onOpenChange={setIsMoodboardDialogOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Create New Moodboard</DialogTitle>
-            <DialogDescription>Create a moodboard for your project with AI inspiration or real photos</DialogDescription>
-          </DialogHeader>
-          <Form {...moodboardForm}>
-            <form onSubmit={moodboardForm.handleSubmit(handleMoodboardCreate)} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                  control={moodboardForm.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Moodboard Name</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g., Living Room Concept" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={moodboardForm.control}
-                  name="roomType"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Room Type</FormLabel>
-                      <Select value={field.value} onValueChange={field.onChange}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select room type" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="living-room">Living Room</SelectItem>
-                          <SelectItem value="bedroom">Bedroom</SelectItem>
-                          <SelectItem value="kitchen">Kitchen</SelectItem>
-                          <SelectItem value="bathroom">Bathroom</SelectItem>
-                          <SelectItem value="office">Office</SelectItem>
-                          <SelectItem value="dining-room">Dining Room</SelectItem>
-                          <SelectItem value="outdoor">Outdoor</SelectItem>
-                          <SelectItem value="other">Other</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              
-              <FormField
-                control={moodboardForm.control}
-                name="keywords"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Keywords & Tags</FormLabel>
-                    <FormControl>
-                      <Input placeholder="e.g., modern, minimalist, warm colors, wood texture" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {/* Preview Section */}
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <label className="text-sm font-medium text-gray-900">Preview</label>
-                  <div className="flex space-x-2">
-                    <Button 
-                      type="button" 
-                      variant="outline" 
-                      size="sm"
-                      onClick={generatePreview}
-                      disabled={isGeneratingPreview}
-                    >
-                      {isGeneratingPreview ? (
-                        <>
-                          <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-600 mr-2"></div>
-                          Generating...
-                        </>
-                      ) : (
-                        <>
-                          <Eye className="h-3 w-3 mr-2" />
-                          Generate Preview
-                        </>
-                      )}
-                    </Button>
-                    {previewGenerated && (
-                      <Button 
-                        type="button" 
-                        variant="outline" 
-                        size="sm"
-                        onClick={regeneratePreview}
-                        disabled={isGeneratingPreview}
-                      >
-                        <RefreshCw className="h-3 w-3 mr-2" />
-                        Regenerate
-                      </Button>
-                    )}
-                  </div>
-                </div>
-                
-                {/* Preview Grid */}
-                <div className="border-2 border-dashed border-gray-200 rounded-lg p-4 min-h-[200px] flex items-center justify-center">
-                  {isGeneratingPreview ? (
-                    <div className="text-center">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-3"></div>
-                      <p className="text-sm text-gray-500">Generating preview images...</p>
-                    </div>
-                  ) : previewGenerated && previewImages.length > 0 ? (
-                    <div className="grid grid-cols-2 gap-2 w-full max-w-md">
-                      {previewImages.map((imageUrl, index) => (
-                        <img 
-                          key={index}
-                          src={imageUrl} 
-                          alt={`Preview ${index + 1}`}
-                          className="w-full h-24 object-cover rounded border"
-                        />
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center">
-                      <Eye className="h-8 w-8 mx-auto text-gray-300 mb-2" />
-                      <p className="text-sm text-gray-500">Click "Generate Preview" to see sample images</p>
-                      <p className="text-xs text-gray-400 mt-1">Fill in all fields first</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <FormField
-                control={moodboardForm.control}
-                name="inspirationType"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Inspiration Source</FormLabel>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div 
-                        className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
-                          field.value === 'ai' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'
-                        }`}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          field.onChange('ai');
-                          console.log('Selected AI inspiration, current value:', field.value);
-                        }}
-                      >
-                        <div className="text-center">
-                          <Star className="h-8 w-8 mx-auto mb-2 text-blue-600" />
-                          <h3 className="font-medium">AI Inspiration</h3>
-                          <p className="text-sm text-gray-600 mt-1">Generate unique design concepts with AI</p>
-                        </div>
-                      </div>
-                      <div 
-                        className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
-                          field.value === 'real' ? 'border-green-500 bg-green-50' : 'border-gray-200 hover:border-gray-300'
-                        }`}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          field.onChange('real');
-                          console.log('Selected Real Photos, current value:', field.value);
-                        }}
-                      >
-                        <div className="text-center">
-                          <Camera className="h-8 w-8 mx-auto mb-2 text-green-600" />
-                          <h3 className="font-medium">Real Photos</h3>
-                          <p className="text-sm text-gray-600 mt-1">Curated photos from design platforms</p>
-                        </div>
-                      </div>
-                    </div>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div className="flex justify-end space-x-2 pt-4">
-                <Button type="button" variant="outline" onClick={() => setIsMoodboardDialogOpen(false)}>
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={createMoodboardMutation.isPending}>
-                  {createMoodboardMutation.isPending ? "Creating..." : "Create Moodboard"}
                 </Button>
               </div>
             </form>
