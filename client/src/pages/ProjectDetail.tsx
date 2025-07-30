@@ -1010,7 +1010,7 @@ export default function ProjectDetail() {
                                 }}
                               />
                             )}
-                            {(imageLoadStates[file.id] === 'error' || imageLoadStates[file.id] === undefined) && (
+                            {imageLoadStates[file.id] === 'error' && (
                               <div className="absolute inset-0 flex items-center justify-center bg-gray-50">
                                 <FileText className="h-8 w-8 text-gray-400" />
                               </div>
