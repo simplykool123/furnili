@@ -85,6 +85,7 @@ export function AnimatedNotificationBell() {
           <Button 
             variant="ghost" 
             size="sm" 
+            title={taskCount > 0 ? `${taskCount} pending tasks` : "No pending tasks"}
             className={cn(
               "relative group transition-all duration-300 hover:bg-amber-50 rounded-full p-2",
               showGlow && "animate-glow-ring",
