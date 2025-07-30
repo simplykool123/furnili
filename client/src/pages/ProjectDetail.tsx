@@ -393,28 +393,6 @@ export default function ProjectDetail() {
       {/* Main Content */}
       <div className="p-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5 bg-white rounded-lg p-1 shadow-sm">
-            <TabsTrigger value="files" className="flex items-center space-x-2">
-              <FolderOpen className="h-4 w-4" />
-              <span>Files & Drawings</span>
-            </TabsTrigger>
-            <TabsTrigger value="notes" className="flex items-center space-x-2">
-              <MessageSquare className="h-4 w-4" />
-              <span>Project Notes</span>
-            </TabsTrigger>
-            <TabsTrigger value="tasks" className="flex items-center space-x-2">
-              <CheckCircle className="h-4 w-4" />
-              <span>Task Management</span>
-            </TabsTrigger>
-            <TabsTrigger value="progress" className="flex items-center space-x-2">
-              <BarChart3 className="h-4 w-4" />
-              <span>Progress Tracker</span>
-            </TabsTrigger>
-            <TabsTrigger value="communication" className="flex items-center space-x-2">
-              <MessageCircle className="h-4 w-4" />
-              <span>Client Communication</span>
-            </TabsTrigger>
-          </TabsList>
 
           {/* Files Tab - Modern Design with Image Thumbnails */}
           <TabsContent value="files" className="p-6 bg-gray-50">
@@ -454,143 +432,46 @@ export default function ProjectDetail() {
               </div>
             </div>
 
-            {/* Rooms Section */}
-            <div className="mb-8">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center space-x-2">
-                  <h3 className="text-lg font-semibold text-gray-900">Rooms</h3>
-                  <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                </div>
-                <Button variant="ghost" className="text-blue-600 hover:text-blue-700">
-                  <Plus className="h-4 w-4 mr-1" />
-                  Add More
-                </Button>
-              </div>
-              
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {/* Room Image Cards */}
-                <div className="relative group cursor-pointer">
-                  <div className="aspect-square bg-gray-200 rounded-lg overflow-hidden">
-                    <div className="w-full h-full bg-gradient-to-br from-amber-100 to-amber-200 flex items-center justify-center">
-                      <span className="text-amber-600 text-sm font-medium">Room 1</span>
-                    </div>
-                  </div>
-                  <div className="absolute bottom-2 right-2 bg-white rounded-full p-1 shadow-sm">
-                    <div className="w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center">
-                      <span className="text-white text-xs font-bold">i</span>
-                    </div>
-                  </div>
+            {/* Uploaded Files Section - Only show when files exist */}
+            {filteredFiles.length > 0 && (
+              <div className="mb-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-gray-900">Uploaded Files</h3>
+                  <Badge variant="secondary" className="text-xs">
+                    {filteredFiles.length} files
+                  </Badge>
                 </div>
                 
-                <div className="relative group cursor-pointer">
-                  <div className="aspect-square bg-gray-200 rounded-lg overflow-hidden">
-                    <div className="w-full h-full bg-gradient-to-br from-orange-100 to-orange-200 flex items-center justify-center">
-                      <span className="text-orange-600 text-sm font-medium">Room 2</span>
+                {/* Compact file list */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {filteredFiles.map((file) => (
+                    <div key={file.id} className="flex items-center space-x-3 p-3 bg-white rounded-lg border border-gray-200 hover:border-gray-300 transition-colors">
+                      <div className="flex-shrink-0">
+                        {getFileIcon(file.type)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-900 truncate">{file.name}</p>
+                        <p className="text-xs text-gray-500 capitalize">{file.category}</p>
+                      </div>
+                      <div className="flex-shrink-0">
+                        <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                          <Download className="h-3 w-3" />
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-                  <div className="absolute bottom-2 right-2 bg-white rounded-full p-1 shadow-sm">
-                    <div className="w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center">
-                      <span className="text-white text-xs font-bold">i</span>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="relative group cursor-pointer">
-                  <div className="aspect-square bg-gray-200 rounded-lg overflow-hidden">
-                    <div className="w-full h-full bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center">
-                      <span className="text-blue-600 text-sm font-medium">Room 3</span>
-                    </div>
-                  </div>
-                  <div className="absolute bottom-2 right-2 bg-white rounded-full p-1 shadow-sm">
-                    <div className="w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center">
-                      <span className="text-white text-xs font-bold">i</span>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="relative group cursor-pointer">
-                  <div className="aspect-square bg-gray-200 rounded-lg overflow-hidden">
-                    <div className="w-full h-full bg-gradient-to-br from-green-100 to-green-200 flex items-center justify-center">
-                      <span className="text-green-600 text-sm font-medium">Room 4</span>
-                    </div>
-                  </div>
-                  <div className="absolute bottom-2 right-2 bg-white rounded-full p-1 shadow-sm">
-                    <div className="w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center">
-                      <span className="text-white text-xs font-bold">i</span>
-                    </div>
-                  </div>
+                  ))}
                 </div>
               </div>
-            </div>
+            )}
 
-            {/* Internal Areas Section */}
-            <div className="mb-8">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center space-x-2">
-                  <h3 className="text-lg font-semibold text-gray-900">Internal Areas</h3>
-                  <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
-                </div>
-                <Button variant="ghost" className="text-blue-600 hover:text-blue-700">
-                  <Plus className="h-4 w-4 mr-1" />
-                  Add More
-                </Button>
+            {/* Empty state when no files */}
+            {filteredFiles.length === 0 && (
+              <div className="text-center py-12">
+                <FolderOpen className="h-16 w-16 mx-auto text-gray-300 mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No files uploaded</h3>
+                <p className="text-gray-500 mb-6">Upload your first file to get started</p>
               </div>
-              
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {/* Internal Area Image Cards */}
-                <div className="relative group cursor-pointer">
-                  <div className="aspect-square bg-gray-200 rounded-lg overflow-hidden">
-                    <div className="w-full h-full bg-gradient-to-br from-purple-100 to-purple-200 flex items-center justify-center">
-                      <span className="text-purple-600 text-sm font-medium">Kitchen</span>
-                    </div>
-                  </div>
-                  <div className="absolute bottom-2 right-2 bg-white rounded-full p-1 shadow-sm">
-                    <div className="w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center">
-                      <span className="text-white text-xs font-bold">i</span>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="relative group cursor-pointer">
-                  <div className="aspect-square bg-gray-200 rounded-lg overflow-hidden">
-                    <div className="w-full h-full bg-gradient-to-br from-teal-100 to-teal-200 flex items-center justify-center">
-                      <span className="text-teal-600 text-sm font-medium">Living</span>
-                    </div>
-                  </div>
-                  <div className="absolute bottom-2 right-2 bg-white rounded-full p-1 shadow-sm">
-                    <div className="w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center">
-                      <span className="text-white text-xs font-bold">i</span>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="relative group cursor-pointer">
-                  <div className="aspect-square bg-gray-200 rounded-lg overflow-hidden">
-                    <div className="w-full h-full bg-gradient-to-br from-indigo-100 to-indigo-200 flex items-center justify-center">
-                      <span className="text-indigo-600 text-sm font-medium">Bathroom</span>
-                    </div>
-                  </div>
-                  <div className="absolute bottom-2 right-2 bg-white rounded-full p-1 shadow-sm">
-                    <div className="w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center">
-                      <span className="text-white text-xs font-bold">i</span>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="relative group cursor-pointer">
-                  <div className="aspect-square bg-gray-200 rounded-lg overflow-hidden">
-                    <div className="w-full h-full bg-gradient-to-br from-pink-100 to-pink-200 flex items-center justify-center">
-                      <span className="text-pink-600 text-sm font-medium">Balcony</span>
-                    </div>
-                  </div>
-                  <div className="absolute bottom-2 right-2 bg-white rounded-full p-1 shadow-sm">
-                    <div className="w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center">
-                      <span className="text-white text-xs font-bold">i</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+            )}
           </TabsContent>
 
           {/* Moodboard Tab */}
