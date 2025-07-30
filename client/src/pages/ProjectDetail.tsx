@@ -1156,16 +1156,21 @@ export default function ProjectDetail() {
                             </div>
                           </div>
 
-                          {/* File Info and Comment */}
-                          <div className="mt-2 space-y-1">
-                            <p className="text-xs font-medium text-gray-900 truncate" title={file.originalName}>
-                              {file.originalName}
-                            </p>
-                            {file.comment && (
-                              <p className="text-xs text-gray-600 italic truncate" title={file.comment}>
-                                "{file.comment}"
-                              </p>
-                            )}
+                          {/* Comment Section Below Image */}
+                          <div className="mt-2">
+                            <div className="bg-gray-50 rounded p-2 min-h-[40px] flex items-center justify-between">
+                              {file.comment ? (
+                                <span className="text-xs text-gray-700 flex-1">{file.comment}</span>
+                              ) : (
+                                <span className="text-xs text-gray-400 flex-1">Add Comment</span>
+                              )}
+                              <button
+                                onClick={() => setEditingComment({ fileId: file.id, comment: file.comment || '' })}
+                                className="text-gray-400 hover:text-gray-600 ml-2"
+                              >
+                                <MoreVertical className="h-3 w-3" />
+                              </button>
+                            </div>
                           </div>
                         </div>
                       ))}
