@@ -219,42 +219,143 @@ export default function ProjectDetail() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <Button 
-              variant="ghost" 
-              onClick={() => setLocation('/projects')}
-              className="p-2"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <div>
-              <h1 className="text-2xl font-semibold text-gray-900">{project.name}</h1>
-              <div className="flex items-center space-x-4 mt-1">
-                <span className="text-sm text-gray-500">Code: {project.code}</span>
-                <Badge variant="secondary" className="text-xs">
-                  {project.stage.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                </Badge>
-                {client && (
-                  <span className="text-sm text-gray-500">Client: {client.name}</span>
-                )}
+      {/* Modern Header matching mockup */}
+      <div className="bg-white border-b border-gray-200">
+        <div className="px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <Button 
+                variant="ghost" 
+                onClick={() => setLocation('/projects')}
+                className="p-2 hover:bg-gray-100"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+              <div>
+                <div className="flex items-center space-x-3">
+                  <h1 className="text-2xl font-bold text-gray-900">{project.name} - {project.code}</h1>
+                  <div className="flex items-center space-x-2 text-sm text-gray-600">
+                    <Edit className="h-4 w-4" />
+                    <span>P-176</span>
+                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-4 mt-2 text-sm text-gray-600">
+                  <div className="flex items-center space-x-1">
+                    <User className="h-4 w-4" />
+                    <span>{client?.name || 'Loading...'}</span>
+                  </div>
+                  <div className="flex items-center space-x-1">
+                    <Phone className="h-4 w-4" />
+                    <span>{client?.phone || '9500638851'}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Stage Selector */}
+            <div className="flex items-center space-x-4">
+              <div className="text-right">
+                <div className="text-sm font-medium text-gray-600 mb-1">Stage</div>
+                <Select defaultValue={project.stage}>
+                  <SelectTrigger className="w-32 bg-gray-100 border-gray-200">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="planning">Planning</SelectItem>
+                    <SelectItem value="design">Design</SelectItem>
+                    <SelectItem value="execution">Execution</SelectItem>
+                    <SelectItem value="completion">Completion</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </div>
-          
-          {/* Progress Indicator */}
-          <div className="flex items-center space-x-4">
-            <div className="text-right">
-              <div className="text-sm font-medium text-gray-900">{calculateProgress()}% Complete</div>
-              <ProgressBar value={calculateProgress()} className="w-32 mt-1" />
-            </div>
-            <Button className="bg-blue-600 hover:bg-blue-700">
-              <Edit className="h-4 w-4 mr-2" />
-              Edit Project
-            </Button>
-          </div>
+        </div>
+        
+        {/* Navigation Tabs matching mockup */}
+        <div className="px-6 border-b border-gray-100">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="h-auto bg-transparent p-0 space-x-8">
+              <TabsTrigger 
+                value="files" 
+                className="flex items-center space-x-2 px-0 py-3 border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent bg-transparent hover:bg-transparent text-gray-600 data-[state=active]:text-blue-600 rounded-none"
+              >
+                <FolderOpen className="h-4 w-4" />
+                <span className="font-medium">Files</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="moodboard" 
+                className="flex items-center space-x-2 px-0 py-3 border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent bg-transparent hover:bg-transparent text-gray-600 data-[state=active]:text-blue-600 rounded-none"
+              >
+                <Image className="h-4 w-4" />
+                <span className="font-medium">Moodboard</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="notes" 
+                className="flex items-center space-x-2 px-0 py-3 border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent bg-transparent hover:bg-transparent text-gray-600 data-[state=active]:text-blue-600 rounded-none"
+              >
+                <MessageSquare className="h-4 w-4" />
+                <span className="font-medium">Notes</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="tasks" 
+                className="flex items-center space-x-2 px-0 py-3 border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent bg-transparent hover:bg-transparent text-gray-600 data-[state=active]:text-blue-600 rounded-none"
+              >
+                <CheckCircle className="h-4 w-4" />
+                <span className="font-medium">Tasks</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="quotes" 
+                className="flex items-center space-x-2 px-0 py-3 border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent bg-transparent hover:bg-transparent text-gray-600 data-[state=active]:text-blue-600 rounded-none"
+              >
+                <FileText className="h-4 w-4" />
+                <span className="font-medium">Quotes</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="orders" 
+                className="flex items-center space-x-2 px-0 py-3 border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent bg-transparent hover:bg-transparent text-gray-600 data-[state=active]:text-blue-600 rounded-none"
+              >
+                <Building2 className="h-4 w-4" />
+                <span className="font-medium">Orders</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="activities" 
+                className="flex items-center space-x-2 px-0 py-3 border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent bg-transparent hover:bg-transparent text-gray-600 data-[state=active]:text-blue-600 rounded-none"
+              >
+                <Calendar className="h-4 w-4" />
+                <span className="font-medium">Activities</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="progress" 
+                className="flex items-center space-x-2 px-0 py-3 border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent bg-transparent hover:bg-transparent text-gray-600 data-[state=active]:text-blue-600 rounded-none"
+              >
+                <BarChart3 className="h-4 w-4" />
+                <span className="font-medium">Client Progress</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="manpower" 
+                className="flex items-center space-x-2 px-0 py-3 border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent bg-transparent hover:bg-transparent text-gray-600 data-[state=active]:text-blue-600 rounded-none"
+              >
+                <Users className="h-4 w-4" />
+                <span className="font-medium">Manpower</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="financials" 
+                className="flex items-center space-x-2 px-0 py-3 border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent bg-transparent hover:bg-transparent text-gray-600 data-[state=active]:text-blue-600 rounded-none"
+              >
+                <Target className="h-4 w-4" />
+                <span className="font-medium">Financials</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="details" 
+                className="flex items-center space-x-2 px-0 py-3 border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent bg-transparent hover:bg-transparent text-gray-600 data-[state=active]:text-blue-600 rounded-none"
+              >
+                <ExternalLink className="h-4 w-4" />
+                <span className="font-medium">Details</span>
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
         </div>
       </div>
 
@@ -284,67 +385,191 @@ export default function ProjectDetail() {
             </TabsTrigger>
           </TabsList>
 
-          {/* Files & Drawings Tab */}
-          <TabsContent value="files" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <div className="flex justify-between items-center">
-                  <CardTitle className="flex items-center space-x-2">
-                    <FolderOpen className="h-5 w-5" />
-                    <span>Files / Drawings / Site Photos</span>
-                  </CardTitle>
-                  <div className="flex items-center space-x-4">
-                    <Select value={selectedFileType} onValueChange={setSelectedFileType}>
-                      <SelectTrigger className="w-48">
-                        <Tag className="h-4 w-4 mr-2" />
-                        <SelectValue placeholder="Filter by category" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Categories</SelectItem>
-                        <SelectItem value="layouts">Layouts</SelectItem>
-                        <SelectItem value="boq">BOQ</SelectItem>
-                        <SelectItem value="site photos">Site Photos</SelectItem>
-                        <SelectItem value="cad">CAD Drawings</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <Button className="bg-blue-600 hover:bg-blue-700">
-                      <Upload className="h-4 w-4 mr-2" />
-                      Upload Files
-                    </Button>
+          {/* Files Tab - Modern Design with Image Thumbnails */}
+          <TabsContent value="files" className="p-6 bg-gray-50">
+            {/* File Categories Tabs */}
+            <div className="mb-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex space-x-4">
+                  <Button 
+                    variant={selectedFileType === "recce" ? "default" : "outline"}
+                    onClick={() => setSelectedFileType("recce")}
+                    className={selectedFileType === "recce" ? "bg-blue-600 text-white" : "bg-white text-gray-700 border-gray-300"}
+                  >
+                    Recce
+                  </Button>
+                  <Button 
+                    variant={selectedFileType === "design" ? "default" : "outline"}
+                    onClick={() => setSelectedFileType("design")}
+                    className={selectedFileType === "design" ? "bg-blue-600 text-white" : "bg-white text-gray-700 border-gray-300"}
+                  >
+                    Design
+                  </Button>
+                  <Button 
+                    variant={selectedFileType === "drawing" ? "default" : "outline"}
+                    onClick={() => setSelectedFileType("drawing")}
+                    className={selectedFileType === "drawing" ? "bg-blue-600 text-white" : "bg-white text-gray-700 border-gray-300"}
+                  >
+                    Drawing
+                  </Button>
+                </div>
+                <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+                  <Upload className="h-4 w-4 mr-2" />
+                  Upload Files
+                </Button>
+              </div>
+            </div>
+
+            {/* Rooms Section */}
+            <div className="mb-8">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center space-x-2">
+                  <h3 className="text-lg font-semibold text-gray-900">Rooms</h3>
+                  <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                </div>
+                <Button variant="ghost" className="text-blue-600 hover:text-blue-700">
+                  <Plus className="h-4 w-4 mr-1" />
+                  Add More
+                </Button>
+              </div>
+              
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {/* Room Image Cards */}
+                <div className="relative group cursor-pointer">
+                  <div className="aspect-square bg-gray-200 rounded-lg overflow-hidden">
+                    <div className="w-full h-full bg-gradient-to-br from-amber-100 to-amber-200 flex items-center justify-center">
+                      <span className="text-amber-600 text-sm font-medium">Room 1</span>
+                    </div>
+                  </div>
+                  <div className="absolute bottom-2 right-2 bg-white rounded-full p-1 shadow-sm">
+                    <div className="w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center">
+                      <span className="text-white text-xs font-bold">i</span>
+                    </div>
                   </div>
                 </div>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {filteredFiles.map((file) => (
-                    <Card key={file.id} className="hover:shadow-md transition-shadow">
-                      <CardContent className="p-4">
-                        <div className="flex items-start justify-between">
-                          <div className="flex items-center space-x-3">
-                            {getFileIcon(file.type)}
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-gray-900 truncate">
-                                {file.name}
-                              </p>
-                              <p className="text-xs text-gray-500">{file.size}</p>
-                            </div>
-                          </div>
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                            <Download className="h-4 w-4" />
-                          </Button>
-                        </div>
-                        <div className="mt-3 flex items-center justify-between">
-                          <Badge variant="outline" className="text-xs">
-                            {file.category}
-                          </Badge>
-                          <span className="text-xs text-gray-500">{file.uploadedAt}</span>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
+                
+                <div className="relative group cursor-pointer">
+                  <div className="aspect-square bg-gray-200 rounded-lg overflow-hidden">
+                    <div className="w-full h-full bg-gradient-to-br from-orange-100 to-orange-200 flex items-center justify-center">
+                      <span className="text-orange-600 text-sm font-medium">Room 2</span>
+                    </div>
+                  </div>
+                  <div className="absolute bottom-2 right-2 bg-white rounded-full p-1 shadow-sm">
+                    <div className="w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center">
+                      <span className="text-white text-xs font-bold">i</span>
+                    </div>
+                  </div>
                 </div>
-              </CardContent>
-            </Card>
+                
+                <div className="relative group cursor-pointer">
+                  <div className="aspect-square bg-gray-200 rounded-lg overflow-hidden">
+                    <div className="w-full h-full bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center">
+                      <span className="text-blue-600 text-sm font-medium">Room 3</span>
+                    </div>
+                  </div>
+                  <div className="absolute bottom-2 right-2 bg-white rounded-full p-1 shadow-sm">
+                    <div className="w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center">
+                      <span className="text-white text-xs font-bold">i</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="relative group cursor-pointer">
+                  <div className="aspect-square bg-gray-200 rounded-lg overflow-hidden">
+                    <div className="w-full h-full bg-gradient-to-br from-green-100 to-green-200 flex items-center justify-center">
+                      <span className="text-green-600 text-sm font-medium">Room 4</span>
+                    </div>
+                  </div>
+                  <div className="absolute bottom-2 right-2 bg-white rounded-full p-1 shadow-sm">
+                    <div className="w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center">
+                      <span className="text-white text-xs font-bold">i</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Internal Areas Section */}
+            <div className="mb-8">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center space-x-2">
+                  <h3 className="text-lg font-semibold text-gray-900">Internal Areas</h3>
+                  <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                </div>
+                <Button variant="ghost" className="text-blue-600 hover:text-blue-700">
+                  <Plus className="h-4 w-4 mr-1" />
+                  Add More
+                </Button>
+              </div>
+              
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {/* Internal Area Image Cards */}
+                <div className="relative group cursor-pointer">
+                  <div className="aspect-square bg-gray-200 rounded-lg overflow-hidden">
+                    <div className="w-full h-full bg-gradient-to-br from-purple-100 to-purple-200 flex items-center justify-center">
+                      <span className="text-purple-600 text-sm font-medium">Kitchen</span>
+                    </div>
+                  </div>
+                  <div className="absolute bottom-2 right-2 bg-white rounded-full p-1 shadow-sm">
+                    <div className="w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center">
+                      <span className="text-white text-xs font-bold">i</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="relative group cursor-pointer">
+                  <div className="aspect-square bg-gray-200 rounded-lg overflow-hidden">
+                    <div className="w-full h-full bg-gradient-to-br from-teal-100 to-teal-200 flex items-center justify-center">
+                      <span className="text-teal-600 text-sm font-medium">Living</span>
+                    </div>
+                  </div>
+                  <div className="absolute bottom-2 right-2 bg-white rounded-full p-1 shadow-sm">
+                    <div className="w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center">
+                      <span className="text-white text-xs font-bold">i</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="relative group cursor-pointer">
+                  <div className="aspect-square bg-gray-200 rounded-lg overflow-hidden">
+                    <div className="w-full h-full bg-gradient-to-br from-indigo-100 to-indigo-200 flex items-center justify-center">
+                      <span className="text-indigo-600 text-sm font-medium">Bathroom</span>
+                    </div>
+                  </div>
+                  <div className="absolute bottom-2 right-2 bg-white rounded-full p-1 shadow-sm">
+                    <div className="w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center">
+                      <span className="text-white text-xs font-bold">i</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="relative group cursor-pointer">
+                  <div className="aspect-square bg-gray-200 rounded-lg overflow-hidden">
+                    <div className="w-full h-full bg-gradient-to-br from-pink-100 to-pink-200 flex items-center justify-center">
+                      <span className="text-pink-600 text-sm font-medium">Balcony</span>
+                    </div>
+                  </div>
+                  <div className="absolute bottom-2 right-2 bg-white rounded-full p-1 shadow-sm">
+                    <div className="w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center">
+                      <span className="text-white text-xs font-bold">i</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </TabsContent>
+
+          {/* Moodboard Tab */}
+          <TabsContent value="moodboard" className="p-6 bg-gray-50">
+            <div className="text-center py-12">
+              <Image className="h-16 w-16 mx-auto text-gray-300 mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Moodboard</h3>
+              <p className="text-gray-500 mb-6">Create a visual inspiration board for this project</p>
+              <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+                <Upload className="h-4 w-4 mr-2" />
+                Upload Images
+              </Button>
+            </div>
           </TabsContent>
 
           {/* Project Notes Tab */}
@@ -598,6 +823,125 @@ export default function ProjectDetail() {
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* Additional Tab Placeholders */}
+          <TabsContent value="quotes" className="p-6 bg-gray-50">
+            <div className="text-center py-12">
+              <FileText className="h-16 w-16 mx-auto text-gray-300 mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Quotes Management</h3>
+              <p className="text-gray-500 mb-6">Create and manage project quotes and estimates</p>
+              <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+                <Plus className="h-4 w-4 mr-2" />
+                Create Quote
+              </Button>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="orders" className="p-6 bg-gray-50">
+            <div className="text-center py-12">
+              <Building2 className="h-16 w-16 mx-auto text-gray-300 mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Orders Management</h3>
+              <p className="text-gray-500 mb-6">Track project orders and material procurement</p>
+              <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+                <Plus className="h-4 w-4 mr-2" />
+                New Order
+              </Button>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="activities" className="p-6 bg-gray-50">
+            <div className="text-center py-12">
+              <Calendar className="h-16 w-16 mx-auto text-gray-300 mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Activities Timeline</h3>
+              <p className="text-gray-500 mb-6">Track project activities and milestones</p>
+              <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+                <Plus className="h-4 w-4 mr-2" />
+                Add Activity
+              </Button>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="manpower" className="p-6 bg-gray-50">
+            <div className="text-center py-12">
+              <Users className="h-16 w-16 mx-auto text-gray-300 mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Manpower Management</h3>
+              <p className="text-gray-500 mb-6">Assign and manage project team members</p>
+              <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+                <Plus className="h-4 w-4 mr-2" />
+                Assign Team
+              </Button>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="financials" className="p-6 bg-gray-50">
+            <div className="text-center py-12">
+              <Target className="h-16 w-16 mx-auto text-gray-300 mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Financial Tracking</h3>
+              <p className="text-gray-500 mb-6">Monitor project budget and expenses</p>
+              <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+                <Plus className="h-4 w-4 mr-2" />
+                Add Expense
+              </Button>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="details" className="p-6 bg-gray-50">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Project Information</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <label className="text-sm font-medium text-gray-600">Project Name</label>
+                    <p className="text-gray-900">{project.name}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-600">Project Code</label>
+                    <p className="text-gray-900">{project.code}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-600">Description</label>
+                    <p className="text-gray-900">{project.description || 'No description provided'}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-600">Stage</label>
+                    <p className="text-gray-900">{project.stage.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}</p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Client Information</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {client ? (
+                    <>
+                      <div>
+                        <label className="text-sm font-medium text-gray-600">Client Name</label>
+                        <p className="text-gray-900">{client.name}</p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-600">Email</label>
+                        <p className="text-gray-900">{client.email}</p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-600">Phone</label>
+                        <p className="text-gray-900">{client.phone}</p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-600">Company</label>
+                        <p className="text-gray-900">{client.company || 'N/A'}</p>
+                      </div>
+                    </>
+                  ) : (
+                    <p className="text-gray-500">Loading client information...</p>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
         </Tabs>
       </div>
