@@ -1137,12 +1137,7 @@ export default function ProjectDetail() {
                                       Download
                                     </a>
                                   </DropdownMenuItem>
-                                  <DropdownMenuItem
-                                    onClick={() => setEditingComment({ fileId: file.id, comment: file.comment || '' })}
-                                  >
-                                    <MessageCircle className="h-4 w-4 mr-2" />
-                                    {file.comment ? 'Edit Comment' : 'Add Comment'}
-                                  </DropdownMenuItem>
+
                                   <DropdownMenuSeparator />
                                   <DropdownMenuItem
                                     onClick={() => handleDeleteFile(file.id, file.fileName)}
@@ -1156,20 +1151,36 @@ export default function ProjectDetail() {
                             </div>
                           </div>
 
-                          {/* Comment Section Below Image */}
+                          {/* Inline Editable Comment Section */}
                           <div className="mt-2">
-                            <div className="bg-gray-50 rounded p-2 min-h-[40px] flex items-center justify-between">
-                              {file.comment ? (
-                                <span className="text-xs text-gray-700 flex-1">{file.comment}</span>
-                              ) : (
-                                <span className="text-xs text-gray-400 flex-1">Add Comment</span>
-                              )}
-                              <button
-                                onClick={() => setEditingComment({ fileId: file.id, comment: file.comment || '' })}
-                                className="text-gray-400 hover:text-gray-600 ml-2"
-                              >
-                                <MoreVertical className="h-3 w-3" />
-                              </button>
+                            <div className="bg-gray-50 rounded p-2 min-h-[40px] flex items-center">
+                              <input
+                                type="text"
+                                value={editingComment?.fileId === file.id ? editingComment.comment : (file.comment || '')}
+                                placeholder="Nice"
+                                onChange={(e) => {
+                                  if (editingComment?.fileId === file.id) {
+                                    setEditingComment({ fileId: file.id, comment: e.target.value });
+                                  } else {
+                                    setEditingComment({ fileId: file.id, comment: e.target.value });
+                                  }
+                                }}
+                                onFocus={() => {
+                                  if (!editingComment || editingComment.fileId !== file.id) {
+                                    setEditingComment({ fileId: file.id, comment: file.comment || '' });
+                                  }
+                                }}
+                                onBlur={() => {
+                                  if (editingComment?.fileId === file.id) {
+                                    // Auto-save when clicking elsewhere
+                                    updateCommentMutation.mutate({
+                                      fileId: file.id,
+                                      comment: editingComment.comment
+                                    });
+                                  }
+                                }}
+                                className="text-xs text-gray-700 flex-1 bg-transparent border-none outline-none placeholder-gray-400"
+                              />
                             </div>
                           </div>
                         </div>
@@ -2376,49 +2387,7 @@ export default function ProjectDetail() {
         </DialogContent>
       </Dialog>
 
-      {/* Comment Edit Dialog */}
-      <Dialog open={!!editingComment} onOpenChange={() => setEditingComment(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Edit Comment</DialogTitle>
-            <DialogDescription>Add or edit a comment for this image</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <label className="text-sm font-medium text-gray-700 mb-2 block">
-                Comment
-              </label>
-              <Textarea
-                value={editingComment?.comment || ''}
-                onChange={(e) => setEditingComment(prev => prev ? { ...prev, comment: e.target.value } : null)}
-                placeholder="Enter your comment..."
-                rows={4}
-              />
-            </div>
-            <div className="flex justify-end space-x-3">
-              <Button 
-                variant="outline" 
-                onClick={() => setEditingComment(null)}
-              >
-                Cancel
-              </Button>
-              <Button 
-                onClick={() => {
-                  if (editingComment) {
-                    updateCommentMutation.mutate({
-                      fileId: editingComment.fileId,
-                      comment: editingComment.comment
-                    });
-                  }
-                }}
-                disabled={updateCommentMutation.isPending}
-              >
-                {updateCommentMutation.isPending ? 'Saving...' : 'Save Comment'}
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+
 
       {/* Image Preview Modal */}
       <Dialog open={showImagePreview} onOpenChange={setShowImagePreview}>
