@@ -9,6 +9,9 @@ import { Plus } from "lucide-react";
 import { authService } from "@/lib/auth";
 import MobileProductTable from "@/components/Mobile/MobileProductTable";
 import { useIsMobile } from "@/components/Mobile/MobileOptimizer";
+import FurniliLayout from "@/components/Layout/FurniliLayout";
+import FurniliCard from "@/components/UI/FurniliCard";
+import FurniliButton from "@/components/UI/FurniliButton";
 
 export default function Products() {
   const [showAddProduct, setShowAddProduct] = useState(false);

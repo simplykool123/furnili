@@ -19,6 +19,9 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { authenticatedApiRequest } from "@/lib/auth";
+import FurniliLayout from "@/components/Layout/FurniliLayout";
+import FurniliCard from "@/components/UI/FurniliCard";
+import FurniliButton from "@/components/UI/FurniliButton";
 import { 
   Clock, 
   Users, 
