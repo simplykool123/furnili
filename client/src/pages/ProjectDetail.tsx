@@ -6,7 +6,7 @@ import {
   Plus, Edit, Trash2, Tag, Users, BarChart3, Target,
   MessageCircle, Mail, ExternalLink, Paperclip, FolderOpen,
   Camera, Building2, MapPin, Star, Circle, CheckCircle2, Eye, RefreshCw, X,
-  MoreVertical, Mic, MicOff, Square
+  MoreVertical
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -93,11 +93,6 @@ export default function ProjectDetail() {
   const [previewImage, setPreviewImage] = useState<{ src: string; name: string } | null>(null);
   const [noteFiles, setNoteFiles] = useState<FileList | null>(null);
   const [editingNoteId, setEditingNoteId] = useState<number | null>(null);
-  const [isRecording, setIsRecording] = useState(false);
-  const [recordingTime, setRecordingTime] = useState(0);
-  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
-  const [audioChunks, setAudioChunks] = useState<Blob[]>([]);
-  const [isTranscribing, setIsTranscribing] = useState(false);
   
   // New state for grouped images
   const [editingGroupTitle, setEditingGroupTitle] = useState<string | null>(null);
@@ -153,124 +148,6 @@ export default function ProjectDetail() {
       inspirationType: "real" as const,
     },
   });
-
-  // Recording timer effect
-  useEffect(() => {
-    let interval: NodeJS.Timeout;
-    if (isRecording) {
-      interval = setInterval(() => {
-        setRecordingTime(prev => prev + 1);
-      }, 1000);
-    } else {
-      setRecordingTime(0);
-    }
-    return () => clearInterval(interval);
-  }, [isRecording]);
-
-  // Audio recording functions
-  const startRecording = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const recorder = new MediaRecorder(stream);
-      
-      setAudioChunks([]);
-      setMediaRecorder(recorder);
-      
-      recorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          setAudioChunks(prev => [...prev, event.data]);
-        }
-      };
-
-      recorder.onstop = () => {
-        stream.getTracks().forEach(track => track.stop());
-      };
-
-      recorder.start();
-      setIsRecording(true);
-      
-      toast({
-        title: "Recording Started",
-        description: "Speak your note. Click stop when finished.",
-      });
-    } catch (error) {
-      console.error('Error starting recording:', error);
-      toast({
-        title: "Recording Error",
-        description: "Unable to access microphone. Please check permissions.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const stopRecording = () => {
-    if (mediaRecorder) {
-      mediaRecorder.stop();
-      setIsRecording(false);
-    }
-  };
-
-  const transcribeAudio = async () => {
-    if (audioChunks.length === 0) return;
-    
-    setIsTranscribing(true);
-    
-    try {
-      const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
-      const formData = new FormData();
-      formData.append('audio', audioBlob, 'recording.wav');
-      
-      const token = localStorage.getItem('authToken') || localStorage.getItem('token');
-      const response = await fetch('/api/transcribe', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-        body: formData,
-      });
-      
-      if (response.ok) {
-        const result = await response.json();
-        const transcribedText = result.transcription || result.text || '';
-        
-        // Auto-fill the note form with transcribed text
-        const currentTime = new Date().toLocaleTimeString('en-US', { 
-          hour: '2-digit', 
-          minute: '2-digit',
-          hour12: false 
-        });
-        noteForm.setValue('title', `Voice Note - ${currentTime}`);
-        noteForm.setValue('content', transcribedText);
-        noteForm.setValue('type', 'note');
-        
-        toast({
-          title: "Transcription Complete",
-          description: "Your voice note has been transcribed and added to the form.",
-        });
-        
-        // Clear audio chunks
-        setAudioChunks([]);
-      } else {
-        throw new Error('Transcription failed');
-      }
-    } catch (error) {
-      console.error('Transcription error:', error);
-      toast({
-        title: "Transcription Failed",
-        description: "Unable to transcribe audio. Please try again or type manually.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsTranscribing(false);
-    }
-  };
-
-  // Auto-transcribe when recording stops
-  useEffect(() => {
-    if (!isRecording && audioChunks.length > 0 && !isTranscribing) {
-      transcribeAudio();
-    }
-  }, [isRecording, audioChunks]);
 
   // Handle file deletion
   const handleDeleteFile = async (fileId: number, fileName: string) => {
@@ -1762,61 +1639,6 @@ export default function ProjectDetail() {
                         )}
                       </div>
                     </div>
-
-                    {/* Quick Audio Transcription Section */}
-                    <div className="space-y-3 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                      <div className="flex items-center justify-between">
-                        <Label className="text-sm font-medium text-blue-900">
-                          <Mic className="h-4 w-4 inline mr-2" />
-                          Quick Audio Note
-                        </Label>
-                        {isRecording && (
-                          <div className="flex items-center space-x-2 text-red-600">
-                            <div className="w-2 h-2 rounded-full bg-red-600 animate-pulse"></div>
-                            <span className="text-sm font-medium">
-                              {Math.floor(recordingTime / 60)}:{(recordingTime % 60).toString().padStart(2, '0')}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                      
-                      <div className="flex items-center space-x-2">
-                        {!isRecording && !isTranscribing && (
-                          <Button
-                            type="button"
-                            onClick={startRecording}
-                            className="bg-blue-600 hover:bg-blue-700 text-white"
-                            size="sm"
-                          >
-                            <Mic className="h-4 w-4 mr-2" />
-                            Start Recording
-                          </Button>
-                        )}
-                        
-                        {isRecording && (
-                          <Button
-                            type="button"
-                            onClick={stopRecording}
-                            className="bg-red-600 hover:bg-red-700 text-white"
-                            size="sm"
-                          >
-                            <Square className="h-4 w-4 mr-2" />
-                            Stop Recording
-                          </Button>
-                        )}
-                        
-                        {isTranscribing && (
-                          <div className="flex items-center space-x-2 text-blue-600">
-                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-                            <span className="text-sm">Transcribing audio...</span>
-                          </div>
-                        )}
-                      </div>
-                      
-                      <p className="text-xs text-blue-700">
-                        Record your voice note and it will be automatically transcribed. Perfect for quick meeting notes, client calls, or site observations.
-                      </p>
-                    </div>
                     
                     <div className="flex justify-end">
                       <div className="flex gap-2">
@@ -3026,9 +2848,6 @@ export default function ProjectDetail() {
             <DialogTitle className="text-lg font-semibold">
               {previewImage?.name}
             </DialogTitle>
-            <DialogDescription>
-              Preview and download project file
-            </DialogDescription>
           </DialogHeader>
           <div className="flex-1 flex items-center justify-center p-6 pt-0">
             {previewImage && (

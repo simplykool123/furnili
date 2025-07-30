@@ -2,9 +2,6 @@ import express, { type Express } from "express";
 import { createServer, type Server } from "http";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
-import multer from "multer";
-import { promises as fs, createReadStream } from "fs";
-import OpenAI from "openai";
 import { storage } from "./storage";
 import { authenticateToken, requireRole, generateToken, comparePassword, type AuthRequest } from "./middleware/auth";
 import { productImageUpload, boqFileUpload, receiptImageUpload, csvFileUpload } from "./utils/fileUpload";
@@ -34,11 +31,6 @@ import {
   insertCrmSiteVisitSchema,
   insertMoodboardSchema,
 } from "@shared/schema";
-
-// Initialize OpenAI client
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth routes
@@ -2424,60 +2416,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Failed to fetch CRM stats:", error);
       res.status(500).json({ message: "Failed to fetch CRM stats", error });
-    }
-  });
-
-  // Audio transcription endpoint
-  app.post("/api/transcribe", multer({ dest: 'uploads/audio/' }).single('audio'), authenticateToken, async (req: AuthRequest, res) => {
-    try {
-      if (!req.file) {
-        return res.status(400).json({ message: "No audio file provided" });
-      }
-
-      // Use OpenAI Whisper API for real transcription
-      let transcribedText = '';
-      
-      try {
-        const transcription = await openai.audio.transcriptions.create({
-          file: createReadStream(req.file.path),
-          model: 'whisper-1',
-          language: 'en', // can be auto-detected by omitting this
-        });
-        
-        transcribedText = transcription.text;
-        
-        if (!transcribedText || transcribedText.trim().length === 0) {
-          transcribedText = "Unable to transcribe audio. Please speak clearly and try again.";
-        }
-      } catch (error) {
-        console.error('OpenAI Whisper transcription error:', error);
-        
-        // Provide specific error messages based on the error type
-        if (error.code === 'insufficient_quota') {
-          transcribedText = "OpenAI API quota exceeded. Please check your billing plan at platform.openai.com and add credits to continue using voice transcription.";
-        } else if (error.status === 401) {
-          transcribedText = "Invalid OpenAI API key. Please verify your API key in Replit Secrets.";
-        } else if (error.status === 429) {
-          transcribedText = "OpenAI API rate limit reached. Please wait a moment and try again.";
-        } else {
-          transcribedText = "Voice transcription failed. Please check your OpenAI API setup or type your note manually.";
-        }
-      }
-      
-      // Cleanup uploaded file
-      try {
-        await fs.unlink(req.file.path);
-      } catch (error) {
-        console.warn('Could not delete audio file:', error);
-      }
-
-      res.json({ 
-        transcription: transcribedText,
-        message: "Audio transcription completed" 
-      });
-    } catch (error) {
-      console.error("Failed to transcribe audio:", error);
-      res.status(500).json({ message: "Failed to transcribe audio", error: String(error) });
     }
   });
 
