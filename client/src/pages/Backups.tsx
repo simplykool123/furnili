@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Download, FileArchive, Clock, Shield } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { authenticatedApiRequest } from "@/lib/auth";
+import FurniliLayout from "@/components/Layout/FurniliLayout";
 
 // Get user from localStorage
 const getUser = () => {
@@ -97,16 +98,19 @@ export default function Backups() {
   };
 
   return (
-    <div className="container mx-auto p-6 max-w-4xl bg-[#F5F0E8] dark:bg-gray-900 min-h-screen">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Data Backups</h1>
-        {user?.role === 'admin' && (
-          <Badge variant="secondary" className="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">
-            <Shield className="h-3 w-3 mr-1" />
-            Admin Access
-          </Badge>
-        )}
-      </div>
+    <FurniliLayout
+      title="Data Backups"
+      subtitle="Export and manage your business data"
+    >
+      <div className="max-w-4xl mx-auto">
+        <div className="flex items-center justify-between mb-6">
+          {user?.role === 'admin' && (
+            <Badge variant="secondary" className="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">
+              <Shield className="h-3 w-3 mr-1" />
+              Admin Access
+            </Badge>
+          )}
+        </div>
 
       <div className="grid gap-6">
         {/* Main Backup Card */}
@@ -208,6 +212,7 @@ export default function Backups() {
           </CardContent>
         </Card>
       </div>
-    </div>
+      </div>
+    </FurniliLayout>
   );
 }

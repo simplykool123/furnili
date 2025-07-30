@@ -17,6 +17,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useEffect } from "react";
+import FurniliLayout from "@/components/Layout/FurniliLayout";
 
 const userSchema = z.object({
   username: z.string().min(3, "Username must be at least 3 characters"),
@@ -260,13 +261,15 @@ export default function Users() {
   }
 
   return (
-    <>
+    <FurniliLayout
+      title="System Users"
+      subtitle="Manage user accounts and roles"
+    >
       <div className="space-y-6">
         {/* Add User Button */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h2 className="text-lg font-semibold">System Users ({filteredUsers?.length || 0})</h2>
-            <p className="text-sm text-muted-foreground">Manage user accounts and roles</p>
+            <h2 className="text-lg font-semibold">({filteredUsers?.length || 0} users)</h2>
           </div>
           
           {/* Filter Tabs */}
@@ -642,6 +645,6 @@ export default function Users() {
           </DialogContent>
         </Dialog>
       </div>
-    </>
+    </FurniliLayout>
   );
 }

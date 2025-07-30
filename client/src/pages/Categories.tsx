@@ -6,6 +6,7 @@ import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import { Plus, Package, Tag, Users, Settings } from "lucide-react";
 import { CategoryForm } from "@/components/Categories/CategoryForm";
 import { CategoryTable } from "@/components/Categories/CategoryTable";
+import FurniliLayout from "@/components/Layout/FurniliLayout";
 import type { Category } from "@shared/schema";
 
 export default function Categories() {
@@ -24,14 +25,16 @@ export default function Categories() {
   const activeCategories = categories.filter(cat => cat.isActive).length;
 
   return (
-    <div className="space-y-4">
-      {/* Mobile-optimized Header */}
-      <MobileCard className="space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div className="space-y-1">
-            <MobileHeading>Categories Management</MobileHeading>
-            <MobileText>Organize and manage product categories</MobileText>
-          </div>
+    <FurniliLayout
+      title="Categories Management"
+      subtitle="Organize and manage product categories"
+    >
+      <div className="space-y-4">
+        {/* Mobile-optimized Header */}
+        <MobileCard className="space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="space-y-1">
+            </div>
           <Button 
             onClick={() => setIsCreating(true)}
             className={`furnili-gradient hover:opacity-90 text-white font-medium shadow-md hover:shadow-lg transition-all duration-200 ${isMobile ? 'w-full' : ''}`}
@@ -95,10 +98,11 @@ export default function Categories() {
         />
       </MobileCard>
       
-      {/* Hidden Dialog for Add Category */}
-      <Dialog open={isCreating} onOpenChange={setIsCreating}>
-        <CategoryForm onSuccess={() => setIsCreating(false)} />
-      </Dialog>
-    </div>
+        {/* Hidden Dialog for Add Category */}
+        <Dialog open={isCreating} onOpenChange={setIsCreating}>
+          <CategoryForm onSuccess={() => setIsCreating(false)} />
+        </Dialog>
+      </div>
+    </FurniliLayout>
   );
 }

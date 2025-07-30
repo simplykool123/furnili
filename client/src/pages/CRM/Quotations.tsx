@@ -20,6 +20,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Plus, Edit, FileText, Download, Send, Eye, Trash2 } from "lucide-react";
 import { useForm } from "react-hook-form";
+import FurniliLayout from "@/components/Layout/FurniliLayout";
 
 interface QuotationItem {
   id: number;
@@ -165,12 +166,12 @@ export default function Quotations() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Quotations</h1>
-          <p className="text-gray-600">Create and manage customer quotations</p>
-        </div>
+    <FurniliLayout
+      title="Quotations"
+      subtitle="Create and manage customer quotations"
+    >
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button onClick={() => {
@@ -400,6 +401,7 @@ export default function Quotations() {
           </Table>
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </FurniliLayout>
   );
 }

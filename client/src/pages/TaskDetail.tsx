@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ArrowLeft, Clock, User, Calendar, AlertTriangle, CheckCircle, Calendar as CalendarIcon } from "lucide-react";
 import { useState } from "react";
 import { authService, authenticatedApiRequest } from "@/lib/auth";
+import FurniliLayout from "@/components/Layout/FurniliLayout";
 
 interface Task {
   id: number;
@@ -113,8 +114,12 @@ export default function TaskDetail() {
   const canUpdateStatus = isAdmin || (currentUser && task.assignedTo === currentUser.id);
 
   return (
-    <div className="max-w-4xl mx-auto p-6 space-y-6">
-      {/* Header */}
+    <FurniliLayout
+      title="Task Details"
+      subtitle="View and manage task information"
+    >
+      <div className="max-w-4xl mx-auto space-y-6">
+        {/* Header */}
       <div className="flex items-center justify-between">
         <Button 
           variant="ghost" 
@@ -259,6 +264,7 @@ export default function TaskDetail() {
           )}
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </FurniliLayout>
   );
 }

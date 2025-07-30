@@ -16,6 +16,7 @@ import { ArrowUpCircle, ArrowDownCircle, Package, Calendar, User, Hash } from "l
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import FurniliLayout from "@/components/Layout/FurniliLayout";
 
 const movementSchema = z.object({
   productId: z.string().min(1, "Product is required"),
@@ -133,8 +134,12 @@ export default function InventoryMovement() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header Stats */}
+    <FurniliLayout
+      title="Inventory Movement"
+      subtitle="Track and manage stock movements"
+    >
+      <div className="space-y-6">
+        {/* Header Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -363,6 +368,7 @@ export default function InventoryMovement() {
           </form>
         </DialogContent>
       </Dialog>
-    </div>
+      </div>
+    </FurniliLayout>
   );
 }

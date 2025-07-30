@@ -21,6 +21,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Plus, Edit, Phone, Mail, Building, MapPin, Calendar, FileText } from "lucide-react";
 import { useForm } from "react-hook-form";
+import FurniliLayout from "@/components/Layout/FurniliLayout";
 
 interface Customer {
   id: number;
@@ -99,12 +100,12 @@ export default function Customers() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Customers</h1>
-          <p className="text-gray-600">Manage your converted customers and clients</p>
-        </div>
+    <FurniliLayout
+      title="Customers"
+      subtitle="Manage your converted customers and clients"
+    >
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button onClick={() => {
@@ -346,6 +347,7 @@ export default function Customers() {
           )}
         </TabsContent>
       </Tabs>
-    </div>
+      </div>
+    </FurniliLayout>
   );
 }

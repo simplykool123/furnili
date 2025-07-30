@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
 import { authenticatedApiRequest } from "@/lib/auth";
 import { Plus, TrendingDown, TrendingUp, DollarSign, BarChart3 } from "lucide-react";
+import FurniliLayout from "@/components/Layout/FurniliLayout";
 
 export default function PriceComparison() {
   const { toast } = useToast();
@@ -147,9 +148,12 @@ export default function PriceComparison() {
   }, 0) || 0;
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-gray-900">Price Comparison</h1>
+    <FurniliLayout
+      title="Price Comparison"
+      subtitle="Compare supplier prices and find the best deals"
+    >
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
         <Dialog open={isAddingComparison} onOpenChange={setIsAddingComparison}>
           <DialogTrigger asChild>
             <Button className="bg-amber-600 hover:bg-amber-700">
@@ -447,6 +451,7 @@ export default function PriceComparison() {
           </Table>
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </FurniliLayout>
   );
 }

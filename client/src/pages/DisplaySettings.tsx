@@ -3,15 +3,17 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useTheme } from "@/contexts/ThemeContext";
 import { Moon, Sun } from "lucide-react";
+import FurniliLayout from "@/components/Layout/FurniliLayout";
 
 export default function DisplaySettings() {
   const { theme, toggleTheme } = useTheme();
 
   return (
-    <div className="container mx-auto p-6 max-w-4xl bg-[#F5F0E8] dark:bg-gray-900 min-h-screen">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Display Settings</h1>
-      </div>
+    <FurniliLayout
+      title="Display Settings"
+      subtitle="Customize how the application looks and feels"
+    >
+        <div className="max-w-4xl mx-auto">
 
       <Card className="bg-white dark:bg-gray-800 shadow-md border-gray-200 dark:border-gray-700">
         <CardHeader>
@@ -69,6 +71,7 @@ export default function DisplaySettings() {
           </div>
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </FurniliLayout>
   );
 }

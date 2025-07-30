@@ -22,6 +22,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Plus, Calendar as CalendarIcon, Phone, MessageSquare, User, Clock, CheckCircle, AlertCircle } from "lucide-react";
 import { useForm } from "react-hook-form";
+import FurniliLayout from "@/components/Layout/FurniliLayout";
 
 interface FollowUp {
   id: number;
@@ -155,12 +156,12 @@ export default function FollowUps() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Follow-ups</h1>
-          <p className="text-gray-600">Schedule and manage customer follow-ups</p>
-        </div>
+    <FurniliLayout
+      title="Follow-ups"
+      subtitle="Schedule and manage customer follow-ups"
+    >
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
         <div className="flex gap-2">
           <Button
             variant={viewMode === 'list' ? 'default' : 'outline'}
@@ -532,6 +533,7 @@ export default function FollowUps() {
           </Card>
         </TabsContent>
       </Tabs>
-    </div>
+      </div>
+    </FurniliLayout>
   );
 }

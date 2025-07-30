@@ -20,6 +20,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Plus, Edit, Phone, Mail, Calendar, User } from "lucide-react";
 import { useForm } from "react-hook-form";
+import FurniliLayout from "@/components/Layout/FurniliLayout";
 
 interface Lead {
   id: number;
@@ -102,12 +103,12 @@ export default function Leads() {
   ];
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Leads Management</h1>
-          <p className="text-gray-600">Track and manage your sales leads</p>
-        </div>
+    <FurniliLayout
+      title="Leads Management"
+      subtitle="Track and manage your sales leads"
+    >
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button onClick={() => {
@@ -269,6 +270,7 @@ export default function Leads() {
           </Table>
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </FurniliLayout>
   );
 }
