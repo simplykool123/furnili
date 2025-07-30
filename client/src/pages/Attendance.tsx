@@ -1425,8 +1425,8 @@ export default function Attendance() {
         </div>
       </div>
 
-      {/* Enhanced Quick Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
+      {/* Compact Quick Stats */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Present Today</CardTitle>
@@ -1508,39 +1508,6 @@ export default function Attendance() {
           <CardContent>
             <div className="text-2xl font-bold text-blue-600">
               {attendanceStats?.workingDays || attendanceStats?.totalDays || 0}
-            </div>
-            <p className="text-xs text-gray-600">this month</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Sundays/Holidays</CardTitle>
-            <Calendar className="h-4 w-4 text-orange-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-orange-600">
-              {attendanceStats?.holidays || 0}
-            </div>
-            <p className="text-xs text-gray-600">this month</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Total Hours</CardTitle>
-            <Timer className="h-4 w-4 text-purple-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-purple-600">
-              {(() => {
-                // Calculate total hours from attendance records properly
-                const totalHours = attendanceRecords.reduce((sum: number, record: any) => {
-                  const hours = record.hoursWorked || record.workingHours || 0;
-                  return sum + hours;
-                }, 0);
-                return totalHours.toFixed(1);
-              })()}
             </div>
             <p className="text-xs text-gray-600">this month</p>
           </CardContent>
