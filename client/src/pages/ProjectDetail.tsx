@@ -992,7 +992,7 @@ export default function ProjectDetail() {
                   {filteredFiles.map((file) => (
                     <div key={file.id} className="bg-white rounded-lg border border-gray-200 hover:border-gray-300 transition-colors overflow-hidden">
                       {/* Thumbnail area */}
-                      <div className="h-32 bg-gray-50 relative overflow-hidden">
+                      <div className="h-32 bg-gray-50 relative overflow-hidden flex items-center justify-center">
                         {file.mimeType?.includes('image') ? (
                           <img
                             src={file.filePath ? `/${file.filePath}` : `/uploads/${file.fileName}`}
@@ -1003,17 +1003,11 @@ export default function ProjectDetail() {
                             }}
                             onError={(e) => {
                               console.error('Image failed to load:', e.currentTarget.src);
-                              // Replace with fallback on error
-                              e.currentTarget.style.display = 'none';
-                              const fallback = e.currentTarget.nextElementSibling;
-                              if (fallback) fallback.style.display = 'flex';
                             }}
                           />
-                        ) : null}
-                        {/* Fallback for non-images or failed images */}
-                        <div className={`absolute inset-0 flex items-center justify-center bg-gray-50 ${file.mimeType?.includes('image') ? 'hidden' : 'flex'}`}>
-                          {getFileIcon(file.mimeType, file.fileName)}
-                        </div>
+                        ) : (
+                          getFileIcon(file.mimeType, file.fileName)
+                        )}
                       </div>
                       
                       {/* File info */}
