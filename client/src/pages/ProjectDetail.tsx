@@ -418,9 +418,12 @@ export default function ProjectDetail() {
 
 
   // Form submission handlers
-  const handleNoteSubmit = () => {
-    const title = noteForm.watch('title');
-    const content = noteForm.watch('content');
+  const handleNoteSubmit = (data?: any) => {
+    const title = data?.title || noteForm.watch('title');
+    const content = data?.content || noteForm.watch('content');
+    const type = data?.type || noteForm.watch('type');
+    
+    console.log('Notes tab - Creating note with data:', { title, content, type });
     
     if (!content) {
       toast({
@@ -431,15 +434,15 @@ export default function ProjectDetail() {
       return;
     }
     
-    createLogMutation.mutate({
-      title: title || 'Meeting Note',
-      content: content,
-      type: noteForm.watch('type') || 'note',
-      attachments: noteFiles ? Array.from(noteFiles).map(file => ({
-        name: file.name,
-        url: URL.createObjectURL(file)
-      })) : []
-    });
+    const noteData = {
+      logType: type || "note", // Map 'type' to 'logType' for database schema
+      title: title || "Untitled Note",
+      description: content,
+      projectId: parseInt(projectId),
+    };
+    
+    console.log('Notes tab - Sending to API:', noteData);
+    createLogMutation.mutate(noteData);
   };
 
   // Note deletion mutation  
@@ -536,12 +539,21 @@ export default function ProjectDetail() {
   // Note creation handler
   const handleNoteCreate = (data: any) => {
     console.log('Creating note with data:', data);
+    console.log('Form data received:', {
+      title: data.title,
+      content: data.content,
+      type: data.type,
+      taggedUsers: data.taggedUsers
+    });
+    
     const noteData = {
-      logType: data.type, // Map 'type' to 'logType' for database schema
+      logType: data.type || "note", // Map 'type' to 'logType' for database schema, default to "note"
       title: data.title || "Untitled Note", // Use title field from form
       description: data.content,
       projectId: parseInt(projectId),
     };
+    
+    console.log('Sending to API:', noteData);
     createNoteMutation.mutate(noteData);
   };
 
@@ -1456,6 +1468,24 @@ export default function ProjectDetail() {
                       value={noteForm.watch('content') || ''}
                       onChange={(e) => noteForm.setValue('content', e.target.value)}
                     />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">Note Type</Label>
+                    <Select 
+                      value={noteForm.watch('type') || 'note'} 
+                      onValueChange={(value) => noteForm.setValue('type', value)}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select note type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="note">General Note</SelectItem>
+                        <SelectItem value="meeting">Meeting</SelectItem>
+                        <SelectItem value="call">Phone Call</SelectItem>
+                        <SelectItem value="email">Email</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                   
                   <div className="space-y-2">
@@ -2429,62 +2459,7 @@ export default function ProjectDetail() {
         </DialogContent>
       </Dialog>
 
-      {/* Add Note Dialog */}
-      <Dialog open={isNoteDialogOpen} onOpenChange={setIsNoteDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Add Project Note</DialogTitle>
-          </DialogHeader>
-          <Form {...noteForm}>
-            <form onSubmit={noteForm.handleSubmit(handleNoteSubmit)} className="space-y-4">
-              <FormField
-                control={noteForm.control}
-                name="content"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Note Content</FormLabel>
-                    <FormControl>
-                      <Textarea placeholder="Enter note content..." {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={noteForm.control}
-                name="type"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Note Type</FormLabel>
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select note type" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="note">Note</SelectItem>
-                        <SelectItem value="meeting">Meeting</SelectItem>
-                        <SelectItem value="call">Call</SelectItem>
-                        <SelectItem value="email">Email</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <div className="flex justify-end space-x-2">
-                <Button type="button" variant="outline" onClick={() => setIsNoteDialogOpen(false)}>
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={createLogMutation.isPending}>
-                  {createLogMutation.isPending ? "Adding..." : "Add Note"}
-                </Button>
-              </div>
-            </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
+
 
       {/* Create Moodboard Dialog */}
       <Dialog open={isMoodboardDialogOpen} onOpenChange={setIsMoodboardDialogOpen}>
