@@ -2451,8 +2451,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       } catch (error) {
         console.error('OpenAI Whisper transcription error:', error);
-        // Fallback to a helpful message
-        transcribedText = "Transcription service temporarily unavailable. Please type your note manually.";
+        
+        // Provide specific error messages based on the error type
+        if (error.code === 'insufficient_quota') {
+          transcribedText = "OpenAI API quota exceeded. Please check your billing plan at platform.openai.com and add credits to continue using voice transcription.";
+        } else if (error.status === 401) {
+          transcribedText = "Invalid OpenAI API key. Please verify your API key in Replit Secrets.";
+        } else if (error.status === 429) {
+          transcribedText = "OpenAI API rate limit reached. Please wait a moment and try again.";
+        } else {
+          transcribedText = "Voice transcription failed. Please check your OpenAI API setup or type your note manually.";
+        }
       }
       
       // Cleanup uploaded file
