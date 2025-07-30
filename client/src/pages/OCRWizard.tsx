@@ -13,6 +13,7 @@ import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import Tesseract from 'tesseract.js';
+import FurniliLayout from "@/components/Layout/FurniliLayout";
 
 interface OCRResult {
   text: string;
@@ -283,16 +284,12 @@ export default function OCRWizard() {
   };
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
+    <FurniliLayout
+      title="AI-Powered OCR Enhancement Wizard"
+      subtitle="Advanced OCR processing with AI-powered field extraction and enhancement"
+    >
+      <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-800 dark:text-white flex items-center gap-2">
-            <Brain className="w-8 h-8 text-blue-600" />
-            AI-Powered OCR Enhancement Wizard
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-2">
-            Advanced OCR processing with AI-powered field extraction and enhancement
-          </p>
         </div>
         <div className="flex gap-2">
           <Button onClick={saveAsTemplate} variant="outline" size="sm">
@@ -605,6 +602,6 @@ export default function OCRWizard() {
           </Card>
         </TabsContent>
       </Tabs>
-    </div>
+    </FurniliLayout>
   );
 }

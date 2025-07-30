@@ -14,6 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
 import { authenticatedApiRequest } from "@/lib/auth";
 import { Plus, MessageCircle, Send, Phone, Download, Copy } from "lucide-react";
+import FurniliLayout from "@/components/Layout/FurniliLayout";
 
 export default function WhatsAppExport() {
   const { toast } = useToast();
@@ -263,15 +264,11 @@ export default function WhatsAppExport() {
   };
 
   return (
-    <div className="space-y-8 animate-fade-in max-w-7xl mx-auto">
-      <div className="text-center sm:text-left">
-        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-amber-900 dark:text-amber-100">
-          WhatsApp Business Export
-        </h1>
-        <p className="text-base sm:text-lg text-amber-700 dark:text-amber-200 mt-2">
-          Generate and share professional business messages with clients and suppliers
-        </p>
-      </div>
+    <FurniliLayout
+      title="WhatsApp Business Export"
+      subtitle="Generate and share professional business messages with clients and suppliers"
+    >
+      <div className="space-y-8 animate-fade-in max-w-7xl mx-auto">
 
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Message Composer */}
@@ -476,6 +473,7 @@ export default function WhatsAppExport() {
           </div>
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </FurniliLayout>
   );
 }

@@ -21,6 +21,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Users, Building2, Phone, Mail, Calendar, Plus, Edit, Trash2, Eye, TrendingUp, DollarSign, Target, Activity } from "lucide-react";
 import { useForm } from "react-hook-form";
+import FurniliLayout from "@/components/Layout/FurniliLayout";
 
 interface Customer {
   id: number;
@@ -212,13 +213,11 @@ export default function CRM() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Customer Relationship Management</h1>
-          <p className="text-gray-600">Manage customers, leads, and deals</p>
-        </div>
-      </div>
+    <FurniliLayout
+      title="Customer Relationship Management"
+      subtitle="Manage customers, leads, and deals"
+    >
+      <div className="space-y-6">
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <TabsList className="grid w-full grid-cols-4">
@@ -694,6 +693,7 @@ export default function CRM() {
           </Card>
         </TabsContent>
       </Tabs>
-    </div>
+      </div>
+    </FurniliLayout>
   );
 }

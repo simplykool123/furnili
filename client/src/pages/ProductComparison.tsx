@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, Grid3X3, List, Share, FileDown, MessageCircle } from "lucide-react";
 import type { Category } from "@shared/schema";
+import FurniliLayout from "@/components/Layout/FurniliLayout";
 
 interface Product {
   id: number;
@@ -204,13 +205,15 @@ export default function ProductComparison() {
   }
 
   return (
-    <div className="space-y-6" id="comparison-content">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-amber-900">Product Comparison</h1>
-          <p className="text-gray-600">Compare products by category and find the best prices</p>
-        </div>
+    <FurniliLayout
+      title="Product Comparison"
+      subtitle="Compare products by category and find the best prices"
+    >
+      <div className="space-y-6" id="comparison-content">
+        {/* Header */}
+        <div className="flex justify-between items-center">
+          <div>
+          </div>
         <div className="flex gap-2">
           <Button onClick={exportToWhatsApp} variant="outline" className="border-green-200 text-green-700 hover:bg-green-50">
             <MessageCircle className="h-4 w-4 mr-2" />
@@ -288,6 +291,7 @@ export default function ProductComparison() {
           )}
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </FurniliLayout>
   );
 }

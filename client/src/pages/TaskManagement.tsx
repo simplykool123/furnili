@@ -14,6 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
 import { authenticatedApiRequest, authService } from "@/lib/auth";
 import { Plus, CheckCircle2, Clock, AlertCircle, User, Calendar, Search, Filter } from "lucide-react";
+import FurniliLayout from "@/components/Layout/FurniliLayout";
 
 export default function TaskManagement() {
   const { toast } = useToast();
@@ -42,10 +43,10 @@ export default function TaskManagement() {
   });
 
   // Filter staff users for assignment dropdown
-  const staffUsers = users?.filter((user: any) => user.isActive) || [];
+  const staffUsers = Array.isArray(users) ? users.filter((user: any) => user.isActive) : [];
 
   // Filter and search tasks
-  const filteredTasks = tasks?.filter((task: any) => {
+  const filteredTasks = Array.isArray(tasks) ? tasks.filter((task: any) => {
     const matchesStatus = statusFilter === "all" || task.status === statusFilter;
     const matchesAssignedTo = assignedToFilter === "all" || task.assignedTo.toString() === assignedToFilter;
     const matchesSearch = searchQuery === "" || 
@@ -54,7 +55,7 @@ export default function TaskManagement() {
       task.assignedUser?.name.toLowerCase().includes(searchQuery.toLowerCase());
     
     return matchesStatus && matchesAssignedTo && matchesSearch;
-  }) || [];
+  }) : [];
 
   const addTaskMutation = useMutation({
     mutationFn: async (taskData: any) => {
@@ -153,10 +154,10 @@ export default function TaskManagement() {
   };
 
   const taskStats = {
-    total: tasks?.length || 0,
-    pending: tasks?.filter((t: any) => t.status === "pending").length || 0,
-    inProgress: tasks?.filter((t: any) => t.status === "in_progress").length || 0,
-    completed: tasks?.filter((t: any) => t.status === "done").length || 0,
+    total: Array.isArray(tasks) ? tasks.length : 0,
+    pending: Array.isArray(tasks) ? tasks.filter((t: any) => t.status === "pending").length : 0,
+    inProgress: Array.isArray(tasks) ? tasks.filter((t: any) => t.status === "in_progress").length : 0,
+    completed: Array.isArray(tasks) ? tasks.filter((t: any) => t.status === "done").length : 0,
   };
 
   if (isLoading) {
@@ -168,13 +169,12 @@ export default function TaskManagement() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
+    <FurniliLayout
+      title="Task Management"
+      subtitle={isAdmin ? "Manage all tasks" : "Your assigned tasks"}
+    >
+      <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-amber-900">Task Management</h1>
-          <p className="text-amber-700/70 mt-1">
-            {isAdmin ? "Manage all tasks" : "Your assigned tasks"}
-          </p>
         </div>
         {isAdmin && (
           <Dialog open={isAddingTask} onOpenChange={setIsAddingTask}>
@@ -495,6 +495,6 @@ export default function TaskManagement() {
           )}
         </CardContent>
       </Card>
-    </div>
+    </FurniliLayout>
   );
 }

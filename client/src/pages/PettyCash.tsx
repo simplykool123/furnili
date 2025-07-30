@@ -547,12 +547,14 @@ export default function PettyCash() {
   };
 
   return (
-    <div className="space-y-4 sm:space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-0">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold">Petty Cash Management</h1>
-          <p className="text-sm text-gray-600 mt-1">Track expenses and manage cash flow</p>
-        </div>
+    <FurniliLayout
+      title="Petty Cash Management"
+      subtitle="Track expenses and manage cash flow"
+    >
+      <div className="space-y-4 sm:space-y-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-0">
+          <div>
+          </div>
         <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
           <Button onClick={() => setShowAddDialog(true)} className="flex-1 sm:flex-none">
             <Plus className="mr-2 h-4 w-4" />
@@ -1325,6 +1327,7 @@ export default function PettyCash() {
           )}
         </DialogContent>
       </Dialog>
-    </div>
+      </div>
+    </FurniliLayout>
   );
 }
