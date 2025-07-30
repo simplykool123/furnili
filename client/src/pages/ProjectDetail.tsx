@@ -997,22 +997,29 @@ export default function ProjectDetail() {
                       <div className="h-32 bg-gray-50 overflow-hidden">
                         {file.mimeType?.includes('image') ? (
                           <img
+                            key={`img-${file.id}`}
                             src={`/uploads/products/${file.fileName}`}
                             alt={file.originalName || file.fileName}
-                            className="w-full h-full object-cover"
                             style={{ 
-                              display: 'block',
-                              maxWidth: '100%',
-                              maxHeight: '100%',
-                              zIndex: 10
+                              width: '100%',
+                              height: '100%',
+                              objectFit: 'cover',
+                              display: 'block !important',
+                              visibility: 'visible !important',
+                              opacity: '1 !important',
+                              position: 'static !important',
+                              zIndex: '999 !important',
+                              backgroundColor: 'transparent'
                             }}
                             onLoad={(e) => {
-                              console.log('Image loaded successfully:', file.fileName, 'URL:', e.currentTarget.src);
-                              console.log('Image dimensions:', e.currentTarget.naturalWidth, 'x', e.currentTarget.naturalHeight);
+                              console.log('Image loaded and displayed:', file.fileName);
+                              e.currentTarget.style.display = 'block';
+                              e.currentTarget.style.visibility = 'visible';
+                              e.currentTarget.style.opacity = '1';
                             }}
                             onError={(e) => {
                               console.error('Image failed to load:', e.currentTarget.src);
-                              console.log('File data:', file);
+                              e.currentTarget.style.display = 'none';
                             }}
                           />
                         ) : (
