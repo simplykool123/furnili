@@ -16,6 +16,7 @@ import {
   projects,
   projectLogs,
   projectFiles,
+  moodboards,
   crmCustomers,
   crmLeads,
   crmDeals,
@@ -55,6 +56,8 @@ import {
   type InsertProject,
   type ProjectLog,
   type InsertProjectLog,
+  type Moodboard,
+  type InsertMoodboard,
   type CrmCustomer,
   type InsertCrmCustomer,
   type CrmLead,
@@ -176,6 +179,13 @@ export interface IStorage {
   getProjectFiles(projectId: number): Promise<ProjectFile[]>;
   createProjectFile(file: InsertProjectFile): Promise<ProjectFile>;
   deleteProjectFile(id: number): Promise<boolean>;
+
+  // Moodboard operations
+  getMoodboard(id: number): Promise<Moodboard | undefined>;
+  getAllMoodboards(filters?: { linkedProjectId?: number; createdBy?: number }): Promise<Moodboard[]>;
+  createMoodboard(moodboard: InsertMoodboard): Promise<Moodboard>;
+  updateMoodboard(id: number, updates: Partial<InsertMoodboard>): Promise<Moodboard | undefined>;
+  deleteMoodboard(id: number): Promise<boolean>;
 
   // Task operations - Enhanced for Phase 1
   getTask(id: number): Promise<Task | undefined>;
@@ -2778,6 +2788,70 @@ class DatabaseStorage implements IStorage {
       .where(eq(projects.id, id));
     return result.rowCount > 0;
   }
+
+  // Moodboard operations
+  async getMoodboard(id: number): Promise<Moodboard | undefined> {
+    try {
+      const result = await db.select().from(moodboards).where(eq(moodboards.id, id)).limit(1);
+      return result[0];
+    } catch (error) {
+      console.error('Error getting moodboard:', error);
+      return undefined;
+    }
+  }
+
+  async getAllMoodboards(filters?: { linkedProjectId?: number; createdBy?: number }): Promise<Moodboard[]> {
+    try {
+      let query = db.select().from(moodboards);
+      
+      if (filters?.linkedProjectId) {
+        query = query.where(eq(moodboards.linkedProjectId, filters.linkedProjectId));
+      }
+      
+      if (filters?.createdBy) {
+        query = query.where(eq(moodboards.createdBy, filters.createdBy));
+      }
+      
+      return await query.orderBy(desc(moodboards.createdAt));
+    } catch (error) {
+      console.error('Error getting moodboards:', error);
+      return [];
+    }
+  }
+
+  async createMoodboard(moodboard: InsertMoodboard): Promise<Moodboard> {
+    try {
+      const result = await db.insert(moodboards).values(moodboard).returning();
+      return result[0];
+    } catch (error) {
+      console.error('Error creating moodboard:', error);
+      throw error;
+    }
+  }
+
+  async updateMoodboard(id: number, updates: Partial<InsertMoodboard>): Promise<Moodboard | undefined> {
+    try {
+      const result = await db.update(moodboards)
+        .set({ ...updates, updatedAt: new Date() })
+        .where(eq(moodboards.id, id))
+        .returning();
+      return result[0];
+    } catch (error) {
+      console.error('Error updating moodboard:', error);
+      return undefined;
+    }
+  }
+
+  async deleteMoodboard(id: number): Promise<boolean> {
+    try {
+      const result = await db.delete(moodboards).where(eq(moodboards.id, id));
+      return result.rowCount !== null && result.rowCount > 0;
+    } catch (error) {
+      console.error('Error deleting moodboard:', error);
+      return false;
+    }
+  }
+
   async getLeave(id: number): Promise<Leave | undefined> { return undefined; }
   async getUserLeaves(userId: number): Promise<Leave[]> { return []; }
   async getAllLeaves(): Promise<Leave[]> { return []; }

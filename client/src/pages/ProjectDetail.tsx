@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { 
   ArrowLeft, Upload, Download, File, Image, FileText, Calendar, 
   User, MessageSquare, Phone, CheckCircle, Clock, AlertCircle,
-  Plus, Edit, Trash2, Tag, Users, BarChart3, Progress, Target,
+  Plus, Edit, Trash2, Tag, Users, BarChart3, Target,
   MessageCircle, Mail, ExternalLink, Paperclip, FolderOpen,
   Camera, Building2, MapPin, Star, Circle, CheckCircle2
 } from "lucide-react";
@@ -54,6 +54,13 @@ const uploadSchema = z.object({
   type: z.string().min(1, "Type is required"),
   title: z.string().min(1, "Title is required"),
   files: z.any().optional(),
+});
+
+const moodboardSchema = z.object({
+  name: z.string().min(1, "Moodboard name is required"),
+  keywords: z.string().min(1, "Keywords are required"),
+  roomType: z.string().min(1, "Room type is required"),
+  inspirationType: z.enum(["ai", "real"]),
 });
 
 export default function ProjectDetail() {
@@ -107,6 +114,16 @@ export default function ProjectDetail() {
     },
   });
 
+  const moodboardForm = useForm({
+    resolver: zodResolver(moodboardSchema),
+    defaultValues: {
+      name: "",
+      keywords: "",
+      roomType: "",
+      inspirationType: "real" as const,
+    },
+  });
+
   const uploadForm = useForm({
     resolver: zodResolver(uploadSchema),
     defaultValues: {
@@ -116,13 +133,7 @@ export default function ProjectDetail() {
     },
   });
 
-  const moodboardForm = useForm({
-    resolver: zodResolver(uploadSchema),
-    defaultValues: {
-      type: "moodboard",
-      title: "Moodboard Image",
-    },
-  });
+
 
   // Optimized Queries with caching
   const { data: project, isLoading: projectLoading } = useQuery({
@@ -139,7 +150,7 @@ export default function ProjectDetail() {
       return response.json();
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
-    cacheTime: 10 * 60 * 1000, // 10 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
   });
 
   const { data: client } = useQuery({
@@ -158,7 +169,7 @@ export default function ProjectDetail() {
     },
     enabled: !!project?.clientId,
     staleTime: 5 * 60 * 1000,
-    cacheTime: 10 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 
   // Real project files from database
@@ -240,40 +251,8 @@ export default function ProjectDetail() {
     });
   };
 
-  const handleMoodboardUpload = async (data: any) => {
-    if (!selectedFiles || selectedFiles.length === 0) {
-      toast({ title: "Please select files to upload", variant: "destructive" });
-      return;
-    }
-
-    const formData = new FormData();
-    Array.from(selectedFiles).forEach((file) => {
-      formData.append('files', file);
-    });
-    formData.append('category', 'moodboard');
-    formData.append('title', data.title);
-    formData.append('clientVisible', 'false');
-
-    try {
-      const token = localStorage.getItem('authToken') || localStorage.getItem('token');
-      const response = await fetch(`/api/projects/${projectId}/files`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-        body: formData,
-      });
-
-      if (!response.ok) throw new Error('Upload failed');
-
-      queryClient.invalidateQueries({ queryKey: ['/api/projects', projectId, 'files'] });
-      setIsMoodboardDialogOpen(false);
-      moodboardForm.reset();
-      setSelectedFiles(null);
-      toast({ title: "Moodboard images uploaded successfully!" });
-    } catch (error) {
-      toast({ title: "Upload failed", variant: "destructive" });
-    }
+  const handleMoodboardCreate = (data: any) => {
+    createMoodboardMutation.mutate(data);
   };
 
   const mockTasks = [
@@ -344,6 +323,41 @@ export default function ProjectDetail() {
       default: return 'bg-gray-100 text-gray-800';
     }
   };
+
+  // Moodboard creation mutation
+  const createMoodboardMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+      const response = await fetch('/api/moodboards', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...data,
+          linkedProjectId: parseInt(projectId),
+        }),
+      });
+      if (!response.ok) throw new Error('Failed to create moodboard');
+      return response.json();
+    },
+    onSuccess: () => {
+      setIsMoodboardDialogOpen(false);
+      moodboardForm.reset();
+      toast({
+        title: "Success",
+        description: "Moodboard created successfully",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to create moodboard",
+        variant: "destructive",
+      });
+    },
+  });
 
   // Stage update mutation
   const stageUpdateMutation = useMutation({
@@ -647,19 +661,59 @@ export default function ProjectDetail() {
                   >
                     Drawing
                   </Button>
+                  <Button 
+                    variant={selectedFileType === "moodboard" ? "default" : "outline"}
+                    onClick={() => setSelectedFileType("moodboard")}
+                    className={selectedFileType === "moodboard" ? "bg-blue-600 text-white" : "bg-white text-gray-700 border-gray-300"}
+                  >
+                    Moodboard
+                  </Button>
                 </div>
-                <Button 
-                  onClick={() => setIsUploadDialogOpen(true)}
-                  className="bg-blue-600 hover:bg-blue-700 text-white"
-                >
-                  <Upload className="h-4 w-4 mr-2" />
-                  Upload Files
-                </Button>
+                <div className="flex space-x-2">
+                  {selectedFileType === "moodboard" ? (
+                    <Button 
+                      onClick={() => setIsMoodboardDialogOpen(true)}
+                      className="bg-purple-600 hover:bg-purple-700 text-white"
+                    >
+                      <Star className="h-4 w-4 mr-2" />
+                      Create Moodboard
+                    </Button>
+                  ) : (
+                    <Button 
+                      onClick={() => setIsUploadDialogOpen(true)}
+                      className="bg-blue-600 hover:bg-blue-700 text-white"
+                    >
+                      <Upload className="h-4 w-4 mr-2" />
+                      Upload Files
+                    </Button>
+                  )}
+                </div>
               </div>
             </div>
 
-            {/* Uploaded Files Section - Only show when files exist */}
-            {filteredFiles.length > 0 && (
+            {/* Moodboard Section - Show when moodboard tab is selected */}
+            {selectedFileType === "moodboard" && (
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Project Moodboards</h3>
+                <div className="text-gray-500 text-center py-8">
+                  <div className="bg-gray-100 rounded-lg p-8">
+                    <div className="text-4xl mb-4">🎨</div>
+                    <h4 className="text-lg font-medium mb-2">No moodboards created yet</h4>
+                    <p className="text-sm text-gray-600 mb-4">Create beautiful moodboards with AI-generated images or real photos</p>
+                    <Button 
+                      onClick={() => setIsMoodboardDialogOpen(true)}
+                      className="bg-purple-600 hover:bg-purple-700 text-white"
+                    >
+                      <Star className="h-4 w-4 mr-2" />
+                      Create Your First Moodboard
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Uploaded Files Section - Only show when files exist and not moodboard tab */}
+            {selectedFileType !== "moodboard" && filteredFiles.length > 0 && (
               <div className="mb-6">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold text-gray-900">Uploaded Files</h3>
@@ -740,59 +794,33 @@ export default function ProjectDetail() {
           {/* Moodboard Tab */}
           <TabsContent value="moodboard" className="p-6 bg-gray-50">
             <div className="flex justify-between items-center mb-6">
-              <h3 className="text-lg font-semibold text-gray-900">Project Moodboard</h3>
+              <h3 className="text-lg font-semibold text-gray-900">Project Moodboards</h3>
               <Button 
                 onClick={() => setIsMoodboardDialogOpen(true)}
-                className="bg-blue-600 hover:bg-blue-700 text-white"
+                className="bg-purple-600 hover:bg-purple-700 text-white"
               >
-                <Upload className="h-4 w-4 mr-2" />
-                Upload Images
+                <Star className="h-4 w-4 mr-2" />
+                Create Moodboard
               </Button>
             </div>
 
-            {/* Moodboard Images Grid */}
-            {moodboardImages.length > 0 ? (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {moodboardImages.map((image) => (
-                  <div key={image.id} className="relative group">
-                    <img
-                      src={image.filePath ? `/${image.filePath}` : `/uploads/${image.fileName}`}
-                      alt={image.originalName}
-                      className="w-full h-32 object-cover rounded-lg shadow-md hover:shadow-lg transition-shadow"
-                    />
-                    <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-opacity rounded-lg flex items-center justify-center">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="opacity-0 group-hover:opacity-100 text-white"
-                        onClick={() => {
-                          const link = document.createElement('a');
-                          link.href = image.filePath ? `/${image.filePath}` : `/uploads/${image.fileName}`;
-                          link.download = image.originalName;
-                          link.click();
-                        }}
-                      >
-                        <Download className="h-4 w-4" />
-                      </Button>
-                    </div>
-                    <p className="text-xs text-gray-600 mt-1 truncate">{image.originalName}</p>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-12">
-                <Image className="h-16 w-16 mx-auto text-gray-300 mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No images uploaded</h3>
-                <p className="text-gray-500 mb-6">Create a visual inspiration board for this project</p>
+            {/* Moodboards Grid - Will display created moodboards from database */}
+            <div className="text-center py-12">
+              <div className="bg-white rounded-lg p-12 shadow-sm border border-gray-200">
+                <div className="text-6xl mb-6">🎨</div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-3">No moodboards created yet</h3>
+                <p className="text-gray-600 mb-6 max-w-md mx-auto">
+                  Create beautiful moodboards with AI-generated inspiration or curated real photos from design platforms
+                </p>
                 <Button 
                   onClick={() => setIsMoodboardDialogOpen(true)}
-                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                  className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3"
                 >
-                  <Upload className="h-4 w-4 mr-2" />
-                  Upload Images
+                  <Star className="h-5 w-5 mr-2" />
+                  Create Your First Moodboard
                 </Button>
               </div>
-            )}
+            </div>
           </TabsContent>
 
           {/* Project Notes Tab */}
@@ -1636,44 +1664,117 @@ export default function ProjectDetail() {
         </DialogContent>
       </Dialog>
 
-      {/* Moodboard Upload Dialog */}
+      {/* Create Moodboard Dialog */}
       <Dialog open={isMoodboardDialogOpen} onOpenChange={setIsMoodboardDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Upload Moodboard Images</DialogTitle>
-            <DialogDescription>Upload images for your project moodboard</DialogDescription>
+            <DialogTitle>Create New Moodboard</DialogTitle>
+            <DialogDescription>Create a moodboard for your project with AI inspiration or real photos</DialogDescription>
           </DialogHeader>
           <Form {...moodboardForm}>
-            <form onSubmit={moodboardForm.handleSubmit(handleMoodboardUpload)} className="space-y-4">
+            <form onSubmit={moodboardForm.handleSubmit(handleMoodboardCreate)} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={moodboardForm.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Moodboard Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g., Living Room Concept" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={moodboardForm.control}
+                  name="roomType"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Room Type</FormLabel>
+                      <Select value={field.value} onValueChange={field.onChange}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select room type" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="living-room">Living Room</SelectItem>
+                          <SelectItem value="bedroom">Bedroom</SelectItem>
+                          <SelectItem value="kitchen">Kitchen</SelectItem>
+                          <SelectItem value="bathroom">Bathroom</SelectItem>
+                          <SelectItem value="office">Office</SelectItem>
+                          <SelectItem value="dining-room">Dining Room</SelectItem>
+                          <SelectItem value="outdoor">Outdoor</SelectItem>
+                          <SelectItem value="other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              
               <FormField
                 control={moodboardForm.control}
-                name="title"
+                name="keywords"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Title</FormLabel>
+                    <FormLabel>Keywords & Tags</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter image title..." {...field} />
+                      <Input placeholder="e.g., modern, minimalist, warm colors, wood texture" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Select Images</label>
-                <input
-                  type="file"
-                  multiple
-                  accept="image/*"
-                  onChange={(e) => setSelectedFiles(e.target.files)}
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                />
-              </div>
-              <div className="flex justify-end space-x-2">
+
+              <FormField
+                control={moodboardForm.control}
+                name="inspirationType"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Inspiration Source</FormLabel>
+                    <FormControl>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div 
+                          className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
+                            field.value === 'ai' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'
+                          }`}
+                          onClick={() => field.onChange('ai')}
+                        >
+                          <div className="text-center">
+                            <Star className="h-8 w-8 mx-auto mb-2 text-blue-600" />
+                            <h3 className="font-medium">AI Inspiration</h3>
+                            <p className="text-sm text-gray-600 mt-1">Generate unique design concepts with AI</p>
+                          </div>
+                        </div>
+                        <div 
+                          className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
+                            field.value === 'real' ? 'border-green-500 bg-green-50' : 'border-gray-200 hover:border-gray-300'
+                          }`}
+                          onClick={() => field.onChange('real')}
+                        >
+                          <div className="text-center">
+                            <Camera className="h-8 w-8 mx-auto mb-2 text-green-600" />
+                            <h3 className="font-medium">Real Photos</h3>
+                            <p className="text-sm text-gray-600 mt-1">Curated photos from design platforms</p>
+                          </div>
+                        </div>
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="flex justify-end space-x-2 pt-4">
                 <Button type="button" variant="outline" onClick={() => setIsMoodboardDialogOpen(false)}>
                   Cancel
                 </Button>
-                <Button type="submit">
-                  Upload Images
+                <Button type="submit" disabled={createMoodboardMutation.isPending}>
+                  {createMoodboardMutation.isPending ? "Creating..." : "Create Moodboard"}
                 </Button>
               </div>
             </form>

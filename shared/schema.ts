@@ -281,7 +281,22 @@ export const projectTasks = pgTable("project_tasks", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-
+// Moodboards table for advanced moodboard system
+export const moodboards = pgTable("moodboards", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  keywords: text("keywords").notNull(), // comma-separated tags/keywords
+  roomType: text("room_type").notNull(), // Living Room, Bedroom, Kitchen, etc.
+  imageUrls: text("image_urls").array().default([]), // array of image URLs (external APIs or uploaded)
+  imageData: jsonb("image_data"), // metadata for images (source, alt text, etc.)
+  linkedProjectId: integer("linked_project_id").references(() => projects.id),
+  createdBy: integer("created_by").references(() => users.id).notNull(),
+  sourceType: text("source_type").default("real_photos"), // real_photos, ai_generated
+  aiPrompt: text("ai_prompt"), // for AI-generated moodboards
+  isPublic: boolean("is_public").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
 
 export const crmDeals = pgTable("crm_deals", {
   id: serial("id").primaryKey(),
@@ -651,6 +666,12 @@ export const insertProjectSchema = createInsertSchema(projects).omit({
 export const insertProjectLogSchema = createInsertSchema(projectLogs).omit({
   id: true,
   createdAt: true,
+});
+
+export const insertMoodboardSchema = createInsertSchema(moodboards).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
 });
 
 // CRM Insert Schemas

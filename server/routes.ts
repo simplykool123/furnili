@@ -28,6 +28,7 @@ import {
   insertCrmQuotationSchema,
   insertCrmFollowUpSchema,
   insertCrmSiteVisitSchema,
+  insertMoodboardSchema,
 } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -1313,6 +1314,87 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Failed to delete expense:", error);
       res.status(500).json({ message: "Failed to delete expense", error: String(error) });
+    }
+  });
+
+  // Moodboard routes
+  app.get("/api/moodboards", authenticateToken, async (req, res) => {
+    try {
+      const { linkedProjectId, createdBy } = req.query;
+      const filters = {
+        linkedProjectId: linkedProjectId ? parseInt(linkedProjectId as string) : undefined,
+        createdBy: createdBy ? parseInt(createdBy as string) : undefined,
+      };
+      
+      const moodboards = await storage.getAllMoodboards(filters);
+      res.json(moodboards);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch moodboards", error });
+    }
+  });
+
+  app.get("/api/moodboards/:id", authenticateToken, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const moodboard = await storage.getMoodboard(id);
+      
+      if (!moodboard) {
+        return res.status(404).json({ message: "Moodboard not found" });
+      }
+      
+      res.json(moodboard);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch moodboard", error });
+    }
+  });
+
+  app.post("/api/moodboards", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const user = req.user!;
+      const moodboardData = insertMoodboardSchema.parse({
+        ...req.body,
+        createdBy: user.id,
+      });
+      
+      const moodboard = await storage.createMoodboard(moodboardData);
+      res.status(201).json(moodboard);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Validation failed", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create moodboard", error });
+    }
+  });
+
+  app.put("/api/moodboards/:id", authenticateToken, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const updates = req.body;
+      
+      const moodboard = await storage.updateMoodboard(id, updates);
+      
+      if (!moodboard) {
+        return res.status(404).json({ message: "Moodboard not found" });
+      }
+      
+      res.json(moodboard);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update moodboard", error });
+    }
+  });
+
+  app.delete("/api/moodboards/:id", authenticateToken, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const deleted = await storage.deleteMoodboard(id);
+      
+      if (!deleted) {
+        return res.status(404).json({ message: "Moodboard not found" });
+      }
+      
+      res.json({ message: "Moodboard deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete moodboard", error });
     }
   });
 
