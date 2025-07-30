@@ -1,4 +1,4 @@
-import type { Express } from "express";
+import express, { type Express } from "express";
 import { createServer, type Server } from "http";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
@@ -902,16 +902,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     await exportLowStockCSV(res);
   });
 
-  // Serve static files
-  app.use('/uploads', (req, res, next) => {
-    // Simple static file serving
-    const filePath = req.path;
-    res.sendFile(filePath, { root: 'uploads' }, (err) => {
-      if (err) {
-        res.status(404).json({ message: 'File not found' });
-      }
-    });
-  });
+  // Serve static files from uploads directory
+  app.use('/uploads', express.static('uploads'));
 
   // Attendance routes
   app.get("/api/attendance", authenticateToken, async (req: AuthRequest, res) => {

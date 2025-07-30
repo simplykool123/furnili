@@ -676,7 +676,7 @@ export default function ProjectDetail() {
                       <div className="h-32 bg-gray-50 flex items-center justify-center">
                         {file.mimeType?.includes('image') ? (
                           <img
-                            src={`/uploads/${file.fileName}`}
+                            src={file.filePath ? `/${file.filePath}` : `/uploads/${file.fileName}`}
                             alt={file.originalName || file.fileName}
                             className="h-full w-full object-cover"
                             onError={(e) => {
@@ -711,7 +711,7 @@ export default function ProjectDetail() {
                               className="h-8 w-8 p-0"
                               onClick={() => {
                                 const link = document.createElement('a');
-                                link.href = `/uploads/${file.fileName}`;
+                                link.href = file.filePath ? `/${file.filePath}` : `/uploads/${file.fileName}`;
                                 link.download = file.originalName || file.fileName;
                                 link.click();
                               }}
@@ -756,7 +756,7 @@ export default function ProjectDetail() {
                 {moodboardImages.map((image) => (
                   <div key={image.id} className="relative group">
                     <img
-                      src={`/uploads/${image.fileName}`}
+                      src={image.filePath ? `/${image.filePath}` : `/uploads/${image.fileName}`}
                       alt={image.originalName}
                       className="w-full h-32 object-cover rounded-lg shadow-md hover:shadow-lg transition-shadow"
                     />
@@ -767,7 +767,7 @@ export default function ProjectDetail() {
                         className="opacity-0 group-hover:opacity-100 text-white"
                         onClick={() => {
                           const link = document.createElement('a');
-                          link.href = `/uploads/${image.fileName}`;
+                          link.href = image.filePath ? `/${image.filePath}` : `/uploads/${image.fileName}`;
                           link.download = image.originalName;
                           link.click();
                         }}
