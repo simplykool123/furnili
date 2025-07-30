@@ -2216,7 +2216,16 @@ export default function Attendance() {
                     const bonus = payroll.bonus || 0;
                     const overtimePay = payroll.overtimePay || 0;
                     const deductions = payroll.deductions || payroll.advance || 0;
-                    const netSalary = payroll.netSalary || (basicSalary + allowances + bonus + overtimePay - deductions);
+                    
+                    // If no working days, net salary should be 0
+                    const actualWorkingDays = payroll.actualWorkingDays || 0;
+                    const totalWorkingDays = payroll.totalWorkingDays || 30;
+                    
+                    // Calculate proportionate salary based on working days
+                    const proportionateSalary = actualWorkingDays > 0 ? 
+                      Math.round((basicSalary / totalWorkingDays) * actualWorkingDays) : 0;
+                    
+                    const netSalary = payroll.netSalary || (proportionateSalary + allowances + bonus + overtimePay - deductions);
                     
                     return (
                       <TableRow key={payroll.id}>

@@ -1875,8 +1875,27 @@ export class MemStorage {
         const totalDaysInMonth = current.totalWorkingDays || 31; // Use stored total days or default
         const actualWorkingDays = current.actualWorkingDays || 0;
         
-        // Recalculate net salary: Basic salary ÷ total days × working days  
-        updates.netSalary = Math.round((updates.basicSalary / totalDaysInMonth) * actualWorkingDays);
+        // Recalculate net salary: Basic salary ÷ total days × working days (0 if no working days)
+        updates.netSalary = actualWorkingDays > 0 ? 
+          Math.round((updates.basicSalary / totalDaysInMonth) * actualWorkingDays) : 0;
+      }
+      
+      // Also recalculate if allowances, bonus, or advance are updated
+      if (updates.allowances !== undefined || updates.bonus !== undefined || updates.advance !== undefined) {
+        const basicSalary = updates.basicSalary || current.basicSalary;
+        const totalDaysInMonth = current.totalWorkingDays || 31;
+        const actualWorkingDays = current.actualWorkingDays || 0;
+        
+        // Calculate proportionate basic salary
+        const proportionateSalary = actualWorkingDays > 0 ? 
+          Math.round((basicSalary / totalDaysInMonth) * actualWorkingDays) : 0;
+        
+        const allowances = updates.allowances !== undefined ? updates.allowances : (current.allowances || 0);
+        const bonus = updates.bonus !== undefined ? updates.bonus : (current.bonus || 0);
+        const advance = updates.advance !== undefined ? updates.advance : (current.advance || 0);
+        
+        // Net Salary = Proportionate Basic + Allowances + Bonus - Advance
+        updates.netSalary = proportionateSalary + allowances + bonus - advance;
       }
 
       // Update in database
@@ -2470,8 +2489,9 @@ class DatabaseStorage implements IStorage {
     const basicSalary = user.basicSalary || 25000;
     
     // Formula: Basic salary ÷ total days × working days
-    // Sundays are paid holidays by default (no deduction for Sundays)
-    const netSalary = Math.round((basicSalary / totalDaysInMonth) * actualWorkingDays);
+    // If no working days, net salary should be 0
+    const netSalary = actualWorkingDays > 0 ? 
+      Math.round((basicSalary / totalDaysInMonth) * actualWorkingDays) : 0;
 
     const payrollData: InsertPayroll = {
       userId,
