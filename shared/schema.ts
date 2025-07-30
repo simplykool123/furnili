@@ -123,44 +123,51 @@ export const crmLeads = pgTable("crm_leads", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// Phase 3 CRM Modules - New tables for project management
-
+// Phase 3 CRM Modules - Robust Relational Schema
 export const projectQuotes = pgTable("project_quotes", {
   id: serial("id").primaryKey(),
+  quoteNumber: text("quote_number").notNull().unique(), // QT-001, QT-002, etc.
   projectId: integer("project_id").references(() => projects.id).notNull(),
-  quoteNumber: text("quote_number").notNull().unique(),
+  clientId: integer("client_id").references(() => clients.id).notNull(),
   title: text("title").notNull(),
   description: text("description"),
-  items: jsonb("items").default([]), // BOQ items with quantities and prices
   subtotal: real("subtotal").default(0),
   taxAmount: real("tax_amount").default(0),
   totalAmount: real("total_amount").default(0),
-  status: text("status").default("draft"), // draft, sent, approved, rejected
   validUntil: timestamp("valid_until"),
-  sentDate: timestamp("sent_date"),
-  approvedDate: timestamp("approved_date"),
+  status: text("status").default("draft"), // draft, sent, approved, rejected, expired
+  terms: text("terms"),
+  items: jsonb("items").default([]), // Quote line items with quantities, rates
+  createdBy: integer("created_by").references(() => users.id),
+  sentAt: timestamp("sent_at"),
+  approvedAt: timestamp("approved_at"),
+  rejectedAt: timestamp("rejected_at"),
   notes: text("notes"),
   attachments: text("attachments").array().default([]),
-  createdBy: integer("created_by").references(() => users.id),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 export const projectOrders = pgTable("project_orders", {
   id: serial("id").primaryKey(),
+  orderNumber: text("order_number").notNull().unique(), // PO-001, PO-002, etc.
   projectId: integer("project_id").references(() => projects.id).notNull(),
-  quoteId: integer("quote_id").references(() => projectQuotes.id),
-  orderNumber: text("order_number").notNull().unique(),
+  clientId: integer("client_id").references(() => clients.id),
   vendorName: text("vendor_name").notNull(),
   vendorContact: text("vendor_contact"),
-  items: jsonb("items").default([]), // Ordered items
+  vendorEmail: text("vendor_email"),
+  vendorAddress: text("vendor_address"),
+  orderType: text("order_type").default("material"), // material, service, equipment
   totalAmount: real("total_amount").default(0),
-  status: text("status").default("pending"), // pending, confirmed, in-transit, delivered, cancelled
-  orderDate: timestamp("order_date").defaultNow(),
+  paidAmount: real("paid_amount").default(0),
+  status: text("status").default("pending"), // pending, confirmed, shipped, delivered, completed, cancelled
   expectedDelivery: timestamp("expected_delivery"),
   actualDelivery: timestamp("actual_delivery"),
-  documents: text("documents").array().default([]), // PO documents, delivery notes
+  items: jsonb("items").default([]), // Order items with quantities, rates, specifications
+  paymentTerms: text("payment_terms"),
+  deliveryAddress: text("delivery_address"),
   notes: text("notes"),
+  attachments: text("attachments").array().default([]),
   createdBy: integer("created_by").references(() => users.id),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
@@ -169,15 +176,19 @@ export const projectOrders = pgTable("project_orders", {
 export const projectFinances = pgTable("project_finances", {
   id: serial("id").primaryKey(),
   projectId: integer("project_id").references(() => projects.id).notNull(),
-  type: text("type").notNull(), // income, expense, budget_allocation
-  category: text("category").notNull(), // materials, labor, overhead, payment_received, etc.
+  clientId: integer("client_id").references(() => clients.id).notNull(),
+  entryType: text("entry_type").notNull(), // income, expense, budget_allocation
+  category: text("category").notNull(), // materials, labor, equipment, overhead, payment_received
   description: text("description").notNull(),
   amount: real("amount").notNull(),
-  date: timestamp("date").defaultNow(),
-  paymentMethod: text("payment_method"), // cash, bank_transfer, cheque, upi
-  reference: text("reference"), // invoice number, receipt number, etc.
-  attachments: text("attachments").array().default([]),
+  transactionDate: timestamp("transaction_date").defaultNow(),
+  paymentMethod: text("payment_method"), // cash, cheque, bank_transfer, upi
+  referenceNumber: text("reference_number"), // Receipt/Invoice number
   approvedBy: integer("approved_by").references(() => users.id),
+  notes: text("notes"),
+  attachments: text("attachments").array().default([]),
+  isRecurring: boolean("is_recurring").default(false),
+  recurringFrequency: text("recurring_frequency"), // monthly, quarterly, yearly
   createdBy: integer("created_by").references(() => users.id),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
@@ -186,14 +197,20 @@ export const projectFinances = pgTable("project_finances", {
 export const projectManpower = pgTable("project_manpower", {
   id: serial("id").primaryKey(),
   projectId: integer("project_id").references(() => projects.id).notNull(),
-  userId: integer("user_id").references(() => users.id),
-  workerName: text("worker_name").notNull(),
-  role: text("role").notNull(), // carpenter, painter, electrician, plumber, supervisor
+  workerId: integer("worker_id").references(() => users.id), // Link to existing staff or external worker
+  workerName: text("worker_name").notNull(), // For external workers not in users table
+  role: text("role").notNull(), // supervisor, mason, helper, electrician, plumber, etc.
+  skillLevel: text("skill_level").default("intermediate"), // beginner, intermediate, expert
   dailyRate: real("daily_rate").default(0),
-  contactNumber: text("contact_number"),
-  assignedDate: timestamp("assigned_date").defaultNow(),
+  startDate: timestamp("start_date").defaultNow(),
+  endDate: timestamp("end_date"),
   isActive: boolean("is_active").default(true),
+  contactNumber: text("contact_number"),
+  address: text("address"),
+  aadharNumber: text("aadhar_number"),
+  bankDetails: text("bank_details"),
   notes: text("notes"),
+  createdBy: integer("created_by").references(() => users.id),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -202,16 +219,69 @@ export const projectAttendance = pgTable("project_attendance", {
   id: serial("id").primaryKey(),
   projectId: integer("project_id").references(() => projects.id).notNull(),
   manpowerId: integer("manpower_id").references(() => projectManpower.id).notNull(),
-  date: timestamp("date").defaultNow(),
-  checkIn: timestamp("check_in"),
-  checkOut: timestamp("check_out"),
+  attendanceDate: timestamp("attendance_date").defaultNow(),
+  checkInTime: timestamp("check_in_time"),
+  checkOutTime: timestamp("check_out_time"),
   hoursWorked: real("hours_worked").default(0),
   overtimeHours: real("overtime_hours").default(0),
-  status: text("status").default("present"), // present, absent, half_day, overtime
+  status: text("status").default("present"), // present, absent, half_day, late, overtime
+  workDescription: text("work_description"),
+  location: text("location"), // GPS coordinates or site location
+  approvedBy: integer("approved_by").references(() => users.id),
   notes: text("notes"),
+  photos: text("photos").array().default([]), // Work progress photos
   createdBy: integer("created_by").references(() => users.id),
   createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
+
+export const projectFiles = pgTable("project_files", {
+  id: serial("id").primaryKey(),
+  projectId: integer("project_id").references(() => projects.id).notNull(),
+  clientId: integer("client_id").references(() => clients.id),
+  fileName: text("file_name").notNull(),
+  originalName: text("original_name").notNull(),
+  filePath: text("file_path").notNull(),
+  fileSize: integer("file_size").default(0),
+  mimeType: text("mime_type"),
+  category: text("category").default("general"), // drawings, photos, documents, contracts, permits
+  description: text("description"),
+  uploadedBy: integer("uploaded_by").references(() => users.id),
+  isPublic: boolean("is_public").default(false), // Client can view
+  version: integer("version").default(1),
+  tags: text("tags").array().default([]),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const projectTasks = pgTable("project_tasks", {
+  id: serial("id").primaryKey(),
+  projectId: integer("project_id").references(() => projects.id).notNull(),
+  clientId: integer("client_id").references(() => clients.id),
+  title: text("title").notNull(),
+  description: text("description"),
+  assignedTo: integer("assigned_to").references(() => users.id),
+  createdBy: integer("created_by").references(() => users.id),
+  priority: text("priority").default("medium"), // low, medium, high, urgent
+  status: text("status").default("pending"), // pending, in_progress, completed, cancelled, on_hold
+  category: text("category").default("general"), // design, procurement, construction, inspection, documentation
+  startDate: timestamp("start_date"),
+  dueDate: timestamp("due_date"),
+  completedAt: timestamp("completed_at"),
+  estimatedHours: real("estimated_hours").default(0),
+  actualHours: real("actual_hours").default(0),
+  dependencies: text("dependencies").array().default([]), // Task IDs that must be completed first
+  attachments: text("attachments").array().default([]),
+  comments: jsonb("comments").default([]), // Task comments and updates
+  tags: text("tags").array().default([]),
+  isRecurring: boolean("is_recurring").default(false),
+  recurringFrequency: text("recurring_frequency"), // daily, weekly, monthly
+  reminderDate: timestamp("reminder_date"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+
 
 export const crmDeals = pgTable("crm_deals", {
   id: serial("id").primaryKey(),
@@ -625,6 +695,49 @@ export const insertCrmSiteVisitSchema = createInsertSchema(crmSiteVisits).omit({
   updatedAt: true,
 });
 
+// Phase 3 CRM Module Schemas
+export const insertProjectQuoteSchema = createInsertSchema(projectQuotes).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertProjectOrderSchema = createInsertSchema(projectOrders).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertProjectFinanceSchema = createInsertSchema(projectFinances).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertProjectManpowerSchema = createInsertSchema(projectManpower).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertProjectAttendanceSchema = createInsertSchema(projectAttendance).omit({
+  id: true,  
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertProjectFileSchema = createInsertSchema(projectFiles).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertProjectTaskSchema = createInsertSchema(projectTasks).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -674,6 +787,22 @@ export type CrmFollowUp = typeof crmFollowUps.$inferSelect;
 export type InsertCrmFollowUp = z.infer<typeof insertCrmFollowUpSchema>;
 export type CrmSiteVisit = typeof crmSiteVisits.$inferSelect;
 export type InsertCrmSiteVisit = z.infer<typeof insertCrmSiteVisitSchema>;
+
+// Phase 3 CRM Module Types
+export type ProjectQuote = typeof projectQuotes.$inferSelect;
+export type InsertProjectQuote = z.infer<typeof insertProjectQuoteSchema>;
+export type ProjectOrder = typeof projectOrders.$inferSelect;
+export type InsertProjectOrder = z.infer<typeof insertProjectOrderSchema>;
+export type ProjectFinance = typeof projectFinances.$inferSelect;
+export type InsertProjectFinance = z.infer<typeof insertProjectFinanceSchema>;
+export type ProjectManpower = typeof projectManpower.$inferSelect;
+export type InsertProjectManpower = z.infer<typeof insertProjectManpowerSchema>;
+export type ProjectAttendance = typeof projectAttendance.$inferSelect;
+export type InsertProjectAttendance = z.infer<typeof insertProjectAttendanceSchema>;
+export type ProjectFile = typeof projectFiles.$inferSelect;
+export type InsertProjectFile = z.infer<typeof insertProjectFileSchema>;
+export type ProjectTask = typeof projectTasks.$inferSelect;
+export type InsertProjectTask = z.infer<typeof insertProjectTaskSchema>;
 
 // Extended types for API responses
 export type MaterialRequestWithItems = MaterialRequest & {
