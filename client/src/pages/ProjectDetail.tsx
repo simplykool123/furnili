@@ -83,6 +83,7 @@ export default function ProjectDetail() {
   const [previewImages, setPreviewImages] = useState<string[]>([]);
   const [isGeneratingPreview, setIsGeneratingPreview] = useState(false);
   const [previewGenerated, setPreviewGenerated] = useState(false);
+  const [imageLoadStates, setImageLoadStates] = useState<{[key: string]: 'loading' | 'loaded' | 'error'}>({});
 
   // Forms
   const taskForm = useForm({
@@ -994,22 +995,26 @@ export default function ProjectDetail() {
                       <div className="h-32 bg-gray-50 flex items-center justify-center relative">
                         {file.mimeType?.includes('image') ? (
                           <>
-                            <img
-                              src={file.filePath ? `/${file.filePath}` : `/uploads/${file.fileName}`}
-                              alt={file.originalName || file.fileName}
-                              className="h-full w-full object-cover"
-                              onError={(e) => {
-                                console.error('Image failed to load:', e.currentTarget.src);
-                                e.currentTarget.style.display = 'none';
-                                e.currentTarget.nextElementSibling?.style.setProperty('display', 'flex');
-                              }}
-                              onLoad={() => {
-                                console.log('Image loaded successfully:', file.filePath || file.fileName);
-                              }}
-                            />
-                            <div className="hidden absolute inset-0 flex items-center justify-center bg-gray-50">
-                              {getFileIcon(file.mimeType, file.fileName)}
-                            </div>
+                            {imageLoadStates[file.id] !== 'error' && (
+                              <img
+                                src={file.filePath ? `/${file.filePath}` : `/uploads/${file.fileName}`}
+                                alt={file.originalName || file.fileName}
+                                className="h-full w-full object-cover"
+                                onError={(e) => {
+                                  console.error('Image failed to load:', e.currentTarget.src);
+                                  setImageLoadStates(prev => ({ ...prev, [file.id]: 'error' }));
+                                }}
+                                onLoad={() => {
+                                  console.log('Image loaded successfully:', file.filePath || file.fileName);
+                                  setImageLoadStates(prev => ({ ...prev, [file.id]: 'loaded' }));
+                                }}
+                              />
+                            )}
+                            {(imageLoadStates[file.id] === 'error' || imageLoadStates[file.id] === undefined) && (
+                              <div className="absolute inset-0 flex items-center justify-center bg-gray-50">
+                                <FileText className="h-8 w-8 text-gray-400" />
+                              </div>
+                            )}
                           </>
                         ) : (
                           <div className="flex items-center justify-center h-full w-full">
