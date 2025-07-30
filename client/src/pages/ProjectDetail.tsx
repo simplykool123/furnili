@@ -797,7 +797,6 @@ export default function ProjectDetail() {
                 className="flex items-center space-x-2 px-0 py-3 border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent bg-transparent hover:bg-gray-50 text-gray-600 data-[state=active]:text-blue-600 rounded-none transition-all duration-200"
               >
                 <span className="text-base">📂</span>
-                <FolderOpen className="hidden sm:block h-4 w-4" />
                 <span className="font-medium text-sm">Files</span>
               </TabsTrigger>
               <TabsTrigger 
@@ -805,7 +804,6 @@ export default function ProjectDetail() {
                 className="flex items-center space-x-2 px-0 py-3 border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent bg-transparent hover:bg-gray-50 text-gray-600 data-[state=active]:text-blue-600 rounded-none transition-all duration-200"
               >
                 <span className="text-base">🎨</span>
-                <Image className="hidden sm:block h-4 w-4" />
                 <span className="font-medium text-sm">Moodboard</span>
               </TabsTrigger>
               <TabsTrigger 
@@ -813,7 +811,6 @@ export default function ProjectDetail() {
                 className="flex items-center space-x-2 px-0 py-3 border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent bg-transparent hover:bg-gray-50 text-gray-600 data-[state=active]:text-blue-600 rounded-none transition-all duration-200"
               >
                 <span className="text-base">🗒️</span>
-                <MessageSquare className="hidden sm:block h-4 w-4" />
                 <span className="font-medium text-sm">Notes</span>
               </TabsTrigger>
               <TabsTrigger 
@@ -821,7 +818,6 @@ export default function ProjectDetail() {
                 className="flex items-center space-x-2 px-0 py-3 border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent bg-transparent hover:bg-gray-50 text-gray-600 data-[state=active]:text-blue-600 rounded-none transition-all duration-200"
               >
                 <span className="text-base">✅</span>
-                <CheckCircle className="hidden sm:block h-4 w-4" />
                 <span className="font-medium text-sm">Tasks</span>
               </TabsTrigger>
               <TabsTrigger 
@@ -829,7 +825,6 @@ export default function ProjectDetail() {
                 className="flex items-center space-x-2 px-0 py-3 border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent bg-transparent hover:bg-gray-50 text-gray-600 data-[state=active]:text-blue-600 rounded-none transition-all duration-200"
               >
                 <span className="text-base">💸</span>
-                <FileText className="hidden sm:block h-4 w-4" />
                 <span className="font-medium text-sm">Quotes</span>
               </TabsTrigger>
               <TabsTrigger 
@@ -837,7 +832,6 @@ export default function ProjectDetail() {
                 className="flex items-center space-x-2 px-0 py-3 border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent bg-transparent hover:bg-gray-50 text-gray-600 data-[state=active]:text-blue-600 rounded-none transition-all duration-200"
               >
                 <span className="text-base">📦</span>
-                <Building2 className="hidden sm:block h-4 w-4" />
                 <span className="font-medium text-sm">Orders</span>
               </TabsTrigger>
               <TabsTrigger 
@@ -845,7 +839,6 @@ export default function ProjectDetail() {
                 className="flex items-center space-x-2 px-0 py-3 border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent bg-transparent hover:bg-gray-50 text-gray-600 data-[state=active]:text-blue-600 rounded-none transition-all duration-200"
               >
                 <span className="text-base">📅</span>
-                <Calendar className="hidden sm:block h-4 w-4" />
                 <span className="font-medium text-sm">Activities</span>
               </TabsTrigger>
               <TabsTrigger 
@@ -853,7 +846,6 @@ export default function ProjectDetail() {
                 className="flex items-center space-x-2 px-0 py-3 border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent bg-transparent hover:bg-gray-50 text-gray-600 data-[state=active]:text-blue-600 rounded-none transition-all duration-200"
               >
                 <span className="text-base">📊</span>
-                <BarChart3 className="hidden sm:block h-4 w-4" />
                 <span className="font-medium text-sm">Progress</span>
               </TabsTrigger>
               <TabsTrigger 
@@ -861,7 +853,6 @@ export default function ProjectDetail() {
                 className="flex items-center space-x-2 px-0 py-3 border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent bg-transparent hover:bg-gray-50 text-gray-600 data-[state=active]:text-blue-600 rounded-none transition-all duration-200"
               >
                 <span className="text-base">👷</span>
-                <Users className="hidden sm:block h-4 w-4" />
                 <span className="font-medium text-sm">Manpower</span>
               </TabsTrigger>
               <TabsTrigger 
@@ -869,7 +860,6 @@ export default function ProjectDetail() {
                 className="flex items-center space-x-2 px-0 py-3 border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent bg-transparent hover:bg-gray-50 text-gray-600 data-[state=active]:text-blue-600 rounded-none transition-all duration-200"
               >
                 <span className="text-base">💰</span>
-                <Target className="hidden sm:block h-4 w-4" />
                 <span className="font-medium text-sm">Finances</span>
               </TabsTrigger>
               <TabsTrigger 
