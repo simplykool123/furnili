@@ -1014,15 +1014,15 @@ export default function Attendance() {
         <style>
           * { margin: 0; padding: 0; box-sizing: border-box; }
           body { font-family: 'Arial', sans-serif; line-height: 1.4; color: #333; }
-          .container { width: 210mm; height: 297mm; margin: 0 auto; padding: 20mm; background: white; }
-          .header { text-align: center; margin-bottom: 25px; border-bottom: 3px solid #D4B896; padding-bottom: 15px; }
-          .logo { height: 60px; margin-bottom: 10px; }
-          .company-name { font-size: 24px; font-weight: bold; color: #D4B896; margin-bottom: 5px; }
-          .tagline { font-size: 12px; color: #666; letter-spacing: 1px; }
-          .pay-slip-title { font-size: 20px; font-weight: bold; color: #333; margin-top: 15px; }
+          .container { width: 210mm; margin: 0 auto; padding: 15mm; background: white; }
+          .header { text-align: center; margin-bottom: 12px; border-bottom: 2px solid #D4B896; padding-bottom: 8px; }
+          .logo { height: 40px; margin-bottom: 5px; }
+          .company-name { font-size: 18px; font-weight: bold; color: #D4B896; margin-bottom: 3px; }
+          .tagline { font-size: 10px; color: #666; letter-spacing: 0.5px; }
+          .pay-slip-title { font-size: 14px; font-weight: bold; color: #333; margin-top: 8px; }
           
-          .info-section { border: 2px solid #D4B896; border-radius: 8px; padding: 20px; margin-bottom: 20px; }
-          .info-row { display: flex; justify-content: space-between; margin-bottom: 12px; }
+          .info-section { border: 1px solid #D4B896; border-radius: 4px; padding: 10px; margin-bottom: 10px; }
+          .info-row { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 11px; }
           .info-row:last-child { margin-bottom: 0; }
           .label { font-weight: bold; color: #444; }
           .value { color: #666; }
@@ -1037,13 +1037,13 @@ export default function Attendance() {
           .total-section { background: #f8f9fa; border: 2px solid #D4B896; border-radius: 8px; padding: 15px; margin-bottom: 20px; }
           .total-row { display: flex; justify-content: space-between; font-weight: bold; font-size: 18px; color: #D4B896; }
           
-          .attendance-summary { border: 1px solid #ddd; border-radius: 8px; padding: 15px; margin-bottom: 20px; }
-          .attendance-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+          .attendance-summary { border: 1px solid #ddd; border-radius: 4px; padding: 8px; margin-bottom: 10px; }
+          .attendance-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; font-size: 10px; }
           
-          .footer { text-align: center; font-size: 11px; color: #666; margin-top: 30px; border-top: 1px solid #eee; padding-top: 15px; }
-          .signature-section { display: flex; justify-content: space-between; margin-top: 40px; }
-          .signature-box { text-align: center; width: 200px; }
-          .signature-line { border-bottom: 1px solid #333; margin-bottom: 5px; height: 40px; }
+          .footer { text-align: center; font-size: 9px; color: #666; margin-top: 12px; border-top: 1px solid #eee; padding-top: 6px; }
+          .signature-section { display: flex; justify-content: space-between; margin-top: 15px; }
+          .signature-box { text-align: center; width: 150px; font-size: 10px; }
+          .signature-line { border-bottom: 1px solid #333; margin-bottom: 3px; height: 20px; }
           
           @media print {
             .container { margin: 0; padding: 10mm; }
@@ -1157,7 +1157,7 @@ export default function Attendance() {
           </div>
           
           <div class="attendance-summary">
-            <h3 style="margin-bottom: 15px; color: #D4B896; text-align: center;">ATTENDANCE SUMMARY</h3>
+            <h3 style="margin-bottom: 8px; color: #D4B896; text-align: center; font-size: 12px;">ATTENDANCE SUMMARY</h3>
             <div class="attendance-grid">
               <div class="item">
                 <span class="label">Working Days:</span>
@@ -1207,17 +1207,19 @@ export default function Attendance() {
       </html>
     `;
 
-    // Generate PDF with optimized settings for better formatting
+    // Generate PDF with compact settings for single page
     const options = {
-      margin: [0.5, 0.3, 0.5, 0.3], // top, right, bottom, left in inches
+      margin: [0.2, 0.2, 0.2, 0.2], // smaller margins in inches
       filename: `PaySlip_${staffMember.name}_${new Date(0, payroll.month - 1).toLocaleString('default', { month: 'long' })}_${payroll.year}.pdf`,
-      image: { type: 'jpeg', quality: 0.95 },
+      image: { type: 'jpeg', quality: 0.9 },
       html2canvas: { 
-        scale: 1.5,
+        scale: 1.2, // reduced scale for compactness
         useCORS: true,
         allowTaint: true,
         logging: false,
-        letterRendering: true
+        letterRendering: true,
+        height: 1000, // fixed height for single page
+        width: 800
       },
       jsPDF: { 
         unit: 'in', 
