@@ -246,6 +246,7 @@ export const projectFiles = pgTable("project_files", {
   mimeType: text("mime_type"),
   category: text("category").default("general"), // drawings, photos, documents, contracts, permits
   description: text("description"),
+  comment: text("comment"), // New field for image comments
   uploadedBy: integer("uploaded_by").references(() => users.id),
   isPublic: boolean("is_public").default(false), // Client can view
   version: integer("version").default(1),

@@ -179,6 +179,8 @@ export interface IStorage {
   getProjectFiles(projectId: number): Promise<ProjectFile[]>;
   createProjectFile(file: InsertProjectFile): Promise<ProjectFile>;
   deleteProjectFile(id: number): Promise<boolean>;
+  updateFileComment(id: number, comment: string): Promise<boolean>;
+  getProjectFile(id: number): Promise<ProjectFile | undefined>;
 
   // Moodboard operations
   getMoodboard(id: number): Promise<Moodboard | undefined>;
@@ -3353,6 +3355,31 @@ class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('Error deleting project file:', error);
       return false;
+    }
+  }
+
+  async updateFileComment(id: number, comment: string): Promise<boolean> {
+    try {
+      const result = await db.update(projectFiles)
+        .set({ comment })
+        .where(eq(projectFiles.id, id));
+      return result.rowCount !== null && result.rowCount > 0;
+    } catch (error) {
+      console.error('Error updating file comment:', error);
+      return false;
+    }
+  }
+
+  async getProjectFile(id: number): Promise<ProjectFile | undefined> {
+    try {
+      const result = await db.select()
+        .from(projectFiles)
+        .where(eq(projectFiles.id, id))
+        .limit(1);
+      return result[0];
+    } catch (error) {
+      console.error('Error getting project file:', error);
+      return undefined;
     }
   }
 

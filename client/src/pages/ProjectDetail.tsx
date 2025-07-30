@@ -5,7 +5,8 @@ import {
   User, MessageSquare, Phone, CheckCircle, Clock, AlertCircle,
   Plus, Edit, Trash2, Tag, Users, BarChart3, Target,
   MessageCircle, Mail, ExternalLink, Paperclip, FolderOpen,
-  Camera, Building2, MapPin, Star, Circle, CheckCircle2, Eye, RefreshCw, X
+  Camera, Building2, MapPin, Star, Circle, CheckCircle2, Eye, RefreshCw, X,
+  MoreVertical
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,6 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -86,6 +88,17 @@ export default function ProjectDetail() {
   const [imageLoadStates, setImageLoadStates] = useState<{[key: string]: 'loading' | 'loaded' | 'error'}>({});
   const [showImagePreview, setShowImagePreview] = useState(false);
   const [previewImage, setPreviewImage] = useState<{ src: string; name: string } | null>(null);
+  
+  // New state for grouped images
+  const [editingGroupTitle, setEditingGroupTitle] = useState<string | null>(null);
+  const [editingComment, setEditingComment] = useState<{ fileId: number; comment: string } | null>(null);
+  const [groupTitles, setGroupTitles] = useState<Record<string, string>>({
+    recce: "Internal Recce",
+    design: "Design Files", 
+    drawing: "Technical Drawings",
+    documents: "Documents",
+    general: "General Files"
+  });
 
   // Forms
   const taskForm = useForm({
@@ -400,6 +413,18 @@ export default function ProjectDetail() {
     },
   });
 
+  // Comment update mutation
+  const updateCommentMutation = useMutation({
+    mutationFn: async ({ fileId, comment }: { fileId: number; comment: string }) => {
+      return apiRequest('PUT', `/api/files/${fileId}/comment`, { comment });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/projects', projectId, 'files'] });
+      setEditingComment(null);
+      toast({ title: "Comment updated successfully!" });
+    },
+  });
+
   const handleMoodboardCreate = (data: any) => {
     console.log('Creating moodboard with data:', data);
     console.log('Form errors:', moodboardForm.formState.errors);
@@ -708,6 +733,8 @@ export default function ProjectDetail() {
     },
   });
 
+
+
   const handleFileUpload = (data: any) => {
     if (!selectedFiles || selectedFiles.length === 0) {
       toast({
@@ -998,102 +1025,153 @@ export default function ProjectDetail() {
               </div>
             )}
 
-            {/* Uploaded Files Section - Only show when files exist and not moodboard tab */}
+            {/* Grouped Images Interface */}
             {selectedFileType !== "moodboard" && filteredFiles.length > 0 && (
-              <div className="mb-3">
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-base font-semibold text-gray-900">Uploaded Files</h3>
-                  <Badge variant="secondary" className="text-xs">
-                    {filteredFiles.length} files
-                  </Badge>
-                </div>
-                
-                {/* File list with thumbnails */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                  {filteredFiles.map((file) => {
-                    console.log('Rendering file:', file.fileName, 'MIME:', file.mimeType, 'isImage:', file.mimeType?.includes('image'));
-                    return (
-                    <div key={file.id} className="bg-white rounded-lg border border-gray-200 hover:border-gray-300 transition-colors overflow-hidden">
-                      {/* Thumbnail area */}
-                      <div className="h-24 bg-gray-50 overflow-hidden relative group">
-                        {file.mimeType?.includes('image') ? (
-                          <div 
-                            className="w-full h-full cursor-pointer transition-transform group-hover:scale-105"
-                            style={{
-                              backgroundImage: `url(/uploads/products/${file.fileName})`,
-                              backgroundSize: 'cover',
-                              backgroundPosition: 'center',
-                              backgroundRepeat: 'no-repeat',
-                              display: 'block',
-                              width: '100%',
-                              height: '100%'
+              <div className="space-y-4">
+                {Object.entries(
+                  filteredFiles.reduce((groups: any, file: any) => {
+                    const category = file.category || 'general';
+                    if (!groups[category]) groups[category] = [];
+                    groups[category].push(file);
+                    return groups;
+                  }, {})
+                ).map(([category, files]: [string, any]) => (
+                  <div key={category} className="bg-white rounded-lg border border-gray-200 p-4">
+                    {/* Editable Group Title */}
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-3">
+                        {editingGroupTitle === category ? (
+                          <input
+                            type="text"
+                            value={groupTitles[category] || category}
+                            onChange={(e) => setGroupTitles({
+                              ...groupTitles,
+                              [category]: e.target.value
+                            })}
+                            onBlur={() => setEditingGroupTitle(null)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') setEditingGroupTitle(null);
                             }}
-                            onClick={() => {
-                              setPreviewImage({
-                                src: `/uploads/products/${file.fileName}`,
-                                name: file.originalName || file.fileName
-                              });
-                              setShowImagePreview(true);
-                            }}
-                            onLoad={() => {
-                              console.log('Background image loaded:', file.fileName);
-                            }}
+                            className="text-lg font-semibold text-gray-900 bg-transparent border-b border-gray-300 focus:border-blue-500 outline-none"
+                            autoFocus
                           />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            {getFileIcon(file.mimeType, file.fileName)}
-                          </div>
+                          <h3 
+                            className="text-lg font-semibold text-gray-900 cursor-pointer hover:text-blue-600"
+                            onClick={() => setEditingGroupTitle(category)}
+                          >
+                            {groupTitles[category] || category}
+                          </h3>
                         )}
-                        
-                        {/* Delete button overlay */}
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (confirm(`Are you sure you want to delete ${file.originalName || file.fileName}?`)) {
-                              handleDeleteFile(file.id, file.fileName);
-                            }
-                          }}
-                          className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
+                        <Badge variant="secondary" className="text-xs">
+                          {files.length} files
+                        </Badge>
                       </div>
-                      
-                      {/* File info */}
-                      <div className="p-2">
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-gray-900 truncate" title={file.originalName || file.fileName}>
-                              {file.originalName || file.fileName}
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setIsUploadDialogOpen(true)}
+                        className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                      >
+                        <Plus className="h-4 w-4 mr-1" />
+                        Add More
+                      </Button>
+                    </div>
+
+                    {/* Image Grid */}
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3">
+                      {files.map((file: any) => (
+                        <div key={file.id} className="group relative">
+                          {/* Image Thumbnail */}
+                          <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden relative">
+                            {file.mimeType?.includes('image') ? (
+                              <img
+                                src={`/uploads/products/${file.fileName}`}
+                                alt={file.originalName}
+                                className="w-full h-full object-cover cursor-pointer hover:scale-105 transition-transform"
+                                onClick={() => {
+                                  setPreviewImage({
+                                    src: `/uploads/products/${file.fileName}`,
+                                    name: file.originalName
+                                  });
+                                  setShowImagePreview(true);
+                                }}
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center">
+                                {getFileIcon(file.mimeType, file.originalName)}
+                              </div>
+                            )}
+
+                            {/* Three-dot menu */}
+                            <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    className="h-6 w-6 p-0 bg-black/50 hover:bg-black/70 text-white rounded-full"
+                                  >
+                                    <MoreVertical className="h-3 w-3" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="w-48">
+                                  <DropdownMenuItem
+                                    onClick={() => {
+                                      setPreviewImage({
+                                        src: `/uploads/products/${file.fileName}`,
+                                        name: file.originalName
+                                      });
+                                      setShowImagePreview(true);
+                                    }}
+                                  >
+                                    <Eye className="h-4 w-4 mr-2" />
+                                    View Full Size
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem asChild>
+                                    <a
+                                      href={`/uploads/products/${file.fileName}`}
+                                      download={file.originalName}
+                                    >
+                                      <Download className="h-4 w-4 mr-2" />
+                                      Download
+                                    </a>
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    onClick={() => setEditingComment({ fileId: file.id, comment: file.comment || '' })}
+                                  >
+                                    <MessageCircle className="h-4 w-4 mr-2" />
+                                    {file.comment ? 'Edit Comment' : 'Add Comment'}
+                                  </DropdownMenuItem>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem
+                                    onClick={() => handleDeleteFile(file.id, file.fileName)}
+                                    className="text-red-600 hover:text-red-700"
+                                  >
+                                    <Trash2 className="h-4 w-4 mr-2" />
+                                    Delete
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </div>
+                          </div>
+
+                          {/* File Info and Comment */}
+                          <div className="mt-2 space-y-1">
+                            <p className="text-xs font-medium text-gray-900 truncate" title={file.originalName}>
+                              {file.originalName}
                             </p>
-                            <p className="text-xs text-gray-500 capitalize mt-1">{file.category}</p>
-                            {file.fileSize && (
-                              <p className="text-xs text-gray-400 mt-1">
-                                {(file.fileSize / (1024 * 1024)).toFixed(2)} MB
+                            {file.comment && (
+                              <p className="text-xs text-gray-600 italic truncate" title={file.comment}>
+                                "{file.comment}"
                               </p>
                             )}
                           </div>
-                          <div className="flex-shrink-0 ml-2">
-                            <Button 
-                              variant="ghost" 
-                              size="sm" 
-                              className="h-8 w-8 p-0"
-                              onClick={() => {
-                                const link = document.createElement('a');
-                                link.href = file.filePath ? `/${file.filePath}` : `/uploads/${file.fileName}`;
-                                link.download = file.originalName || file.fileName;
-                                link.click();
-                              }}
-                            >
-                              <Download className="h-4 w-4" />
-                            </Button>
-                          </div>
                         </div>
-                      </div>
+                      ))}
                     </div>
-                  );
-                  })}
-                </div>
+                  </div>
+                ))}
               </div>
             )}
 
@@ -2290,6 +2368,50 @@ export default function ProjectDetail() {
               </div>
             </form>
           </Form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Comment Edit Dialog */}
+      <Dialog open={!!editingComment} onOpenChange={() => setEditingComment(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Comment</DialogTitle>
+            <DialogDescription>Add or edit a comment for this image</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-2 block">
+                Comment
+              </label>
+              <Textarea
+                value={editingComment?.comment || ''}
+                onChange={(e) => setEditingComment(prev => prev ? { ...prev, comment: e.target.value } : null)}
+                placeholder="Enter your comment..."
+                rows={4}
+              />
+            </div>
+            <div className="flex justify-end space-x-3">
+              <Button 
+                variant="outline" 
+                onClick={() => setEditingComment(null)}
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={() => {
+                  if (editingComment) {
+                    updateCommentMutation.mutate({
+                      fileId: editingComment.fileId,
+                      comment: editingComment.comment
+                    });
+                  }
+                }}
+                disabled={updateCommentMutation.isPending}
+              >
+                {updateCommentMutation.isPending ? 'Saving...' : 'Save Comment'}
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
 

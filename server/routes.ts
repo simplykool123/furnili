@@ -1856,6 +1856,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update file comment
+  app.put("/api/files/:fileId/comment", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const fileId = parseInt(req.params.fileId);
+      const { comment } = req.body;
+      
+      const success = await storage.updateFileComment(fileId, comment);
+      if (!success) {
+        return res.status(404).json({ message: "File not found or update failed" });
+      }
+      
+      res.json({ message: "Comment updated successfully" });
+    } catch (error) {
+      console.error("Error updating comment:", error);
+      res.status(500).json({ message: "Failed to update comment", error: String(error) });
+    }
+  });
+
   // Project Log Routes
   app.get("/api/projects/:id/logs", authenticateToken, async (req: AuthRequest, res) => {
     try {
