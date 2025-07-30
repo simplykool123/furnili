@@ -249,12 +249,12 @@ export default function Projects() {
       <div className="bg-white border-b border-gray-200 px-6 py-4">
         <div className="flex justify-between items-center">
           <div className="flex items-center space-x-3">
-            <FolderOpen className="h-8 w-8 text-blue-600" />
+            <FolderOpen className="h-8 w-8 text-amber-900" />
             <h1 className="text-2xl font-semibold text-gray-900">Project Studio</h1>
           </div>
           <Button 
             onClick={() => setIsCreateDialogOpen(true)}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow-sm"
+            className="btn-primary"
           >
             <Plus className="mr-2 h-4 w-4" />
             Project
@@ -337,7 +337,7 @@ export default function Projects() {
                         year: 'numeric'
                       }) : 'N/A'}
                     </TableCell>
-                    <TableCell className="font-medium text-blue-600">
+                    <TableCell className="font-medium text-amber-900">
                       {project.code}
                     </TableCell>
                     <TableCell className="font-medium text-gray-900">
@@ -384,7 +384,7 @@ export default function Projects() {
               {/* Client Details Section */}
               <div className="space-y-4">
                 <div className="flex items-center space-x-2">
-                  <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center text-white text-sm font-medium">
+                  <div className="w-6 h-6 rounded-full bg-amber-900 flex items-center justify-center text-white text-sm font-medium">
                     1
                   </div>
                   <h3 className="text-lg font-semibold text-gray-900">Client Details</h3>
@@ -510,7 +510,7 @@ export default function Projects() {
               {/* Project Details Section */}
               <div className="space-y-4">
                 <div className="flex items-center space-x-2">
-                  <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center text-white text-sm font-medium">
+                  <div className="w-6 h-6 rounded-full bg-amber-900 flex items-center justify-center text-white text-sm font-medium">
                     2
                   </div>
                   <h3 className="text-lg font-semibold text-gray-900">Project Details</h3>
@@ -570,7 +570,7 @@ export default function Projects() {
                       </div>
                       <Button 
                         type="button"
-                        className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg mt-6"
+                        className="btn-primary mt-6"
                       >
                         <Building2 className="h-4 w-4 mr-2" />
                         Stage

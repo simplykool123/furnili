@@ -86,7 +86,7 @@
   --card-foreground: hsl(25, 25%, 15%);
   --border: hsl(39, 20%, 85%);
   --input: hsl(39, 20%, 92%);
-  --primary: hsl(217, 91%, 60%); /* Consistent blue primary */
+  --primary: hsl(28, 100%, 25%); /* Dark brown primary */
   --primary-foreground: hsl(0, 0%, 100%);
   --secondary: hsl(39, 60%, 55%);
   --secondary-foreground: hsl(0, 0%, 100%);
@@ -166,7 +166,7 @@
   --card-foreground: hsl(39, 20%, 90%);
   --border: hsl(25, 15%, 20%);
   --input: hsl(25, 15%, 18%);
-  --primary: hsl(217, 91%, 60%);
+  --primary: hsl(28, 100%, 25%);
   --primary-foreground: hsl(0, 0%, 100%);
   --secondary: hsl(39, 60%, 55%);
   --secondary-foreground: hsl(25, 25%, 15%);
