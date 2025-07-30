@@ -562,21 +562,58 @@ export default function ProjectDetail() {
                   </Badge>
                 </div>
                 
-                {/* Compact file list */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {/* File list with thumbnails */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {filteredFiles.map((file) => (
-                    <div key={file.id} className="flex items-center space-x-3 p-3 bg-white rounded-lg border border-gray-200 hover:border-gray-300 transition-colors">
-                      <div className="flex-shrink-0">
-                        {getFileIcon(file.mimeType, file.fileName)}
+                    <div key={file.id} className="bg-white rounded-lg border border-gray-200 hover:border-gray-300 transition-colors overflow-hidden">
+                      {/* Thumbnail area */}
+                      <div className="h-32 bg-gray-50 flex items-center justify-center">
+                        {file.mimeType?.includes('image') ? (
+                          <img
+                            src={`/uploads/${file.fileName}`}
+                            alt={file.originalName || file.fileName}
+                            className="h-full w-full object-cover"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                              e.currentTarget.nextElementSibling.style.display = 'flex';
+                            }}
+                          />
+                        ) : null}
+                        <div className={`flex items-center justify-center h-full w-full ${file.mimeType?.includes('image') ? 'hidden' : 'flex'}`}>
+                          {getFileIcon(file.mimeType, file.fileName)}
+                        </div>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900 truncate">{file.originalName || file.fileName}</p>
-                        <p className="text-xs text-gray-500 capitalize">{file.category}</p>
-                      </div>
-                      <div className="flex-shrink-0">
-                        <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
-                          <Download className="h-3 w-3" />
-                        </Button>
+                      
+                      {/* File info */}
+                      <div className="p-3">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-gray-900 truncate" title={file.originalName || file.fileName}>
+                              {file.originalName || file.fileName}
+                            </p>
+                            <p className="text-xs text-gray-500 capitalize mt-1">{file.category}</p>
+                            {file.fileSize && (
+                              <p className="text-xs text-gray-400 mt-1">
+                                {(file.fileSize / (1024 * 1024)).toFixed(2)} MB
+                              </p>
+                            )}
+                          </div>
+                          <div className="flex-shrink-0 ml-2">
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="h-8 w-8 p-0"
+                              onClick={() => {
+                                const link = document.createElement('a');
+                                link.href = `/uploads/${file.fileName}`;
+                                link.download = file.originalName || file.fileName;
+                                link.click();
+                              }}
+                            >
+                              <Download className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   ))}
