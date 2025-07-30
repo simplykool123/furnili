@@ -252,6 +252,7 @@ export default function ProjectDetail() {
   };
 
   const handleMoodboardCreate = (data: any) => {
+    console.log('Creating moodboard with data:', data);
     createMoodboardMutation.mutate(data);
   };
 
@@ -1736,34 +1737,38 @@ export default function ProjectDetail() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Inspiration Source</FormLabel>
-                    <FormControl>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div 
-                          className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
-                            field.value === 'ai' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'
-                          }`}
-                          onClick={() => field.onChange('ai')}
-                        >
-                          <div className="text-center">
-                            <Star className="h-8 w-8 mx-auto mb-2 text-blue-600" />
-                            <h3 className="font-medium">AI Inspiration</h3>
-                            <p className="text-sm text-gray-600 mt-1">Generate unique design concepts with AI</p>
-                          </div>
-                        </div>
-                        <div 
-                          className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
-                            field.value === 'real' ? 'border-green-500 bg-green-50' : 'border-gray-200 hover:border-gray-300'
-                          }`}
-                          onClick={() => field.onChange('real')}
-                        >
-                          <div className="text-center">
-                            <Camera className="h-8 w-8 mx-auto mb-2 text-green-600" />
-                            <h3 className="font-medium">Real Photos</h3>
-                            <p className="text-sm text-gray-600 mt-1">Curated photos from design platforms</p>
-                          </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div 
+                        className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
+                          field.value === 'ai' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'
+                        }`}
+                        onClick={() => {
+                          field.onChange('ai');
+                          console.log('Selected AI inspiration');
+                        }}
+                      >
+                        <div className="text-center">
+                          <Star className="h-8 w-8 mx-auto mb-2 text-blue-600" />
+                          <h3 className="font-medium">AI Inspiration</h3>
+                          <p className="text-sm text-gray-600 mt-1">Generate unique design concepts with AI</p>
                         </div>
                       </div>
-                    </FormControl>
+                      <div 
+                        className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
+                          field.value === 'real' ? 'border-green-500 bg-green-50' : 'border-gray-200 hover:border-gray-300'
+                        }`}
+                        onClick={() => {
+                          field.onChange('real');
+                          console.log('Selected Real Photos');
+                        }}
+                      >
+                        <div className="text-center">
+                          <Camera className="h-8 w-8 mx-auto mb-2 text-green-600" />
+                          <h3 className="font-medium">Real Photos</h3>
+                          <p className="text-sm text-gray-600 mt-1">Curated photos from design platforms</p>
+                        </div>
+                      </div>
+                    </div>
                     <FormMessage />
                   </FormItem>
                 )}
