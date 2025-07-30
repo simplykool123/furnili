@@ -1398,6 +1398,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get moodboards for a specific project
+  app.get("/api/projects/:projectId/moodboards", authenticateToken, async (req, res) => {
+    try {
+      const projectId = parseInt(req.params.projectId);
+      const moodboards = await storage.getMoodboardsByProject(projectId);
+      res.json(moodboards);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch project moodboards", error });
+    }
+  });
+
   // Task Management routes
   app.get("/api/tasks", authenticateToken, async (req: AuthRequest, res) => {
     try {

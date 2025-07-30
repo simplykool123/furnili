@@ -207,6 +207,23 @@ export default function ProjectDetail() {
     enabled: !!projectId,
   });
 
+  // Query for project moodboards
+  const { data: projectMoodboards = [] } = useQuery({
+    queryKey: ['/api/projects', projectId, 'moodboards'],
+    queryFn: async () => {
+      const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+      const response = await fetch(`/api/projects/${projectId}/moodboards`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      if (!response.ok) throw new Error('Failed to fetch project moodboards');
+      return response.json();
+    },
+    enabled: !!projectId,
+  });
+
   // Separate moodboard images from regular files
   const moodboardImages = useMemo(() => {
     return projectFiles.filter((file: any) => 
@@ -841,33 +858,53 @@ export default function ProjectDetail() {
               </div>
             </div>
 
-            {/* Moodboards Grid - Will display created moodboards from database */}
-            <div className="text-center py-12">
-              <div className="bg-white rounded-lg p-12 shadow-sm border border-gray-200">
-                <div className="text-6xl mb-6">🎨</div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-3">No moodboards created yet</h3>
-                <p className="text-gray-600 mb-6 max-w-md mx-auto">
-                  Create beautiful moodboards with AI-generated inspiration or curated real photos from design platforms, or upload your own images
-                </p>
-                <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                  <Button 
-                    onClick={() => setIsMoodboardDialogOpen(true)}
-                    className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3"
-                  >
-                    <Star className="h-5 w-5 mr-2" />
-                    Create Moodboard
-                  </Button>
-                  <Button 
-                    onClick={() => setIsUploadDialogOpen(true)}
-                    variant="outline"
-                    className="border-purple-200 text-purple-700 hover:bg-purple-50 px-8 py-3"
-                  >
-                    <Upload className="h-5 w-5 mr-2" />
-                    Upload Images
-                  </Button>
+            {/* Moodboards Grid - Display created moodboards from database */}
+            {projectMoodboards.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {projectMoodboards.map((moodboard: any) => (
+                  <div key={moodboard.id} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                    <div className="p-4">
+                      <h4 className="font-semibold text-gray-900 mb-2">{moodboard.name}</h4>
+                      <p className="text-sm text-gray-600 mb-3">{moodboard.keywords}</p>
+                      <div className="flex items-center justify-between text-xs text-gray-500">
+                        <span>{moodboard.roomType}</span>
+                        <span>{moodboard.sourceType === 'ai' ? '🤖 AI Generated' : '📷 Real Photos'}</span>
+                      </div>
+                      <div className="mt-3 text-xs text-gray-400">
+                        Created {new Date(moodboard.createdAt).toLocaleDateString()}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <div className="bg-white rounded-lg p-12 shadow-sm border border-gray-200">
+                  <div className="text-6xl mb-6">🎨</div>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-3">No moodboards created yet</h3>
+                  <p className="text-gray-600 mb-6 max-w-md mx-auto">
+                    Create beautiful moodboards with AI-generated inspiration or curated real photos from design platforms, or upload your own images
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                    <Button 
+                      onClick={() => setIsMoodboardDialogOpen(true)}
+                      className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3"
+                    >
+                      <Star className="h-5 w-5 mr-2" />
+                      Create Moodboard
+                    </Button>
+                    <Button 
+                      onClick={() => setIsUploadDialogOpen(true)}
+                      variant="outline"
+                      className="border-purple-200 text-purple-700 hover:bg-purple-50 px-8 py-3"
+                    >
+                      <Upload className="h-5 w-5 mr-2" />
+                      Upload Images
+                    </Button>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
           </TabsContent>
 
           {/* Project Notes Tab */}

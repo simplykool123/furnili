@@ -183,6 +183,7 @@ export interface IStorage {
   // Moodboard operations
   getMoodboard(id: number): Promise<Moodboard | undefined>;
   getAllMoodboards(filters?: { linkedProjectId?: number; createdBy?: number }): Promise<Moodboard[]>;
+  getMoodboardsByProject(projectId: number): Promise<Moodboard[]>;
   createMoodboard(moodboard: InsertMoodboard): Promise<Moodboard>;
   updateMoodboard(id: number, updates: Partial<InsertMoodboard>): Promise<Moodboard | undefined>;
   deleteMoodboard(id: number): Promise<boolean>;
@@ -2849,6 +2850,18 @@ class DatabaseStorage implements IStorage {
     } catch (error) {
       console.error('Error deleting moodboard:', error);
       return false;
+    }
+  }
+
+  async getMoodboardsByProject(projectId: number): Promise<Moodboard[]> {
+    try {
+      const result = await db.select().from(moodboards)
+        .where(eq(moodboards.linkedProjectId, projectId))
+        .orderBy(desc(moodboards.createdAt));
+      return result;
+    } catch (error) {
+      console.error('Error getting moodboards by project:', error);
+      return [];
     }
   }
 
