@@ -10,15 +10,16 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes (January 2025)
 
-- ✅ **NOTES SYSTEM IMAGE ATTACHMENTS COMPLETE**: Enhanced notes system with visual image preview functionality
-  - **Visual Thumbnails**: Images uploaded with notes now display as clickable thumbnails below note content
-  - **Click to Expand**: Image thumbnails open full-size view in new browser tab when clicked
+- ✅ **NOTES SYSTEM IMAGE ATTACHMENTS COMPLETE**: Enhanced notes system with inline image preview functionality
+  - **Inline Image Previews**: Images uploaded with notes display as large inline previews below note content (no click required)  
   - **Smart File Detection**: Automatically detects image formats (jpg, png, gif, webp, svg) vs documents
   - **File Icons**: Non-image files display with document icons and downloadable links
   - **Upload Route**: Added dedicated `/api/projects/:projectId/upload` endpoint for note attachments
   - **Database Storage**: File attachments properly stored in project_files table with note-attachment category
+  - **Authentication Fixed**: Resolved "Invalid token" errors - upload now works with proper authToken validation
   - **Form Clearing**: File input automatically clears after successful note creation/update
   - **Error Handling**: Graceful fallback for images that fail to load with proper user feedback
+  - **User Experience**: Clean inline preview layout with max height control and professional styling
 - ✅ **PROJECT CODE FORMAT UPDATED**: Reset project codes to "Fur/25-26/XXX" format starting from 101
   - **Database Update**: Changed existing projects to "Fur/25-26/101" and "Fur/25-26/102" 
   - **Code Generation**: Modified createProject methods to use new format with fixed prefix "Fur/25-26/"
