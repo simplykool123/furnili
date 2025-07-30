@@ -2227,9 +2227,9 @@ export default function Attendance() {
                               })}
                               className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-2 py-1"
                               disabled={generatePayrollMutation.isPending}
+                              title="Generate"
                             >
-                              <FileText className="w-3 h-3 mr-1" />
-                              Generate
+                              <FileText className="w-3 h-3" />
                             </Button>
                             
                             {/* Status-specific buttons */}
@@ -2240,9 +2240,9 @@ export default function Attendance() {
                                 onClick={() => processPayrollMutation.mutate(payroll.id)}
                                 className="bg-green-600 hover:bg-green-700 text-white text-xs px-2 py-1"
                                 disabled={processPayrollMutation.isPending}
+                                title="Paid"
                               >
-                                <CreditCard className="w-3 h-3 mr-1" />
-                                Paid
+                                <CreditCard className="w-3 h-3" />
                               </Button>
                             )}
                             
@@ -2252,9 +2252,9 @@ export default function Attendance() {
                                 variant="outline"
                                 onClick={() => downloadPayslip(payroll.id)}
                                 className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-2 py-1"
+                                title="PDF"
                               >
-                                <Download className="w-3 h-3 mr-1" />
-                                PDF
+                                <Download className="w-3 h-3" />
                               </Button>
                             )}
                             
@@ -2264,6 +2264,7 @@ export default function Attendance() {
                               onClick={() => handleEditPayroll(payroll)}
                               style={{ backgroundColor: 'hsl(28, 100%, 25%)', color: 'white' }}
                               className="text-xs px-2 py-1"
+                              title="Edit"
                             >
                               <Edit className="w-3 h-3" />
                             </Button>
