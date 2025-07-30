@@ -858,26 +858,77 @@ export default function ProjectDetail() {
               </div>
             </div>
 
-            {/* Moodboards Grid - Display created moodboards from database */}
-            {projectMoodboards.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {projectMoodboards.map((moodboard: any) => (
-                  <div key={moodboard.id} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-                    <div className="p-4">
-                      <h4 className="font-semibold text-gray-900 mb-2">{moodboard.name}</h4>
-                      <p className="text-sm text-gray-600 mb-3">{moodboard.keywords}</p>
-                      <div className="flex items-center justify-between text-xs text-gray-500">
-                        <span>{moodboard.roomType}</span>
-                        <span>{moodboard.sourceType === 'ai' ? '🤖 AI Generated' : '📷 Real Photos'}</span>
+            {/* Combined Moodboards and Uploaded Images Display */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {/* Display Database Moodboards */}
+              {projectMoodboards.map((moodboard: any) => (
+                <div key={`moodboard-${moodboard.id}`} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                  {/* Image Display Area */}
+                  <div className="h-48 bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center">
+                    {moodboard.imageUrls && moodboard.imageUrls.length > 0 ? (
+                      <div className="grid grid-cols-2 gap-1 w-full h-full p-2">
+                        {moodboard.imageUrls.slice(0, 4).map((url: string, index: number) => (
+                          <img 
+                            key={index}
+                            src={url} 
+                            alt={`Moodboard ${index + 1}`}
+                            className="w-full h-full object-cover rounded"
+                          />
+                        ))}
                       </div>
-                      <div className="mt-3 text-xs text-gray-400">
-                        Created {new Date(moodboard.createdAt).toLocaleDateString()}
+                    ) : (
+                      <div className="text-center">
+                        <div className="text-4xl mb-2">🎨</div>
+                        <p className="text-sm text-gray-500">No images yet</p>
+                        <p className="text-xs text-gray-400 mt-1">Click to add images</p>
                       </div>
+                    )}
+                  </div>
+                  <div className="p-4">
+                    <h4 className="font-semibold text-gray-900 mb-2">{moodboard.name}</h4>
+                    <p className="text-sm text-gray-600 mb-3">{moodboard.keywords}</p>
+                    <div className="flex items-center justify-between text-xs text-gray-500">
+                      <span className="capitalize">{moodboard.roomType?.replace('-', ' ')}</span>
+                      <span>{moodboard.sourceType === 'ai' ? '🤖 AI Generated' : '📷 Real Photos'}</span>
+                    </div>
+                    <div className="mt-3 text-xs text-gray-400">
+                      Created {new Date(moodboard.createdAt).toLocaleDateString()}
                     </div>
                   </div>
-                ))}
-              </div>
-            ) : (
+                </div>
+              ))}
+
+              {/* Display Uploaded Moodboard Images */}
+              {moodboardImages.map((file: any) => (
+                <div key={`upload-${file.id}`} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                  {/* Image Display */}
+                  <div className="h-48 bg-gray-100">
+                    <img 
+                      src={`/uploads/products/${file.fileName}`}
+                      alt={file.originalName}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik04NyA3NEg2M0M2MS4zNDMxIDc0IDYwIDc1LjM0MzEgNjAgNzdWMTIzQzYwIDEyNC42NTcgNjEuMzQzMSAxMjYgNjMgMTI2SDEzN0MxMzguNjU3IDEyNiAxNDAgMTI0LjY1NyAxNDAgMTIzVjc3QzE0MCA3NS4zNDMxIDEzOC42NTcgNzQgMTM3IDc0SDExM001IDkxSDE0MIIgc3Ryb2tlPSIjOTlBM0E0IiBzdHJva2Utd2lkdGg9IjIiLz4KPC9zdmc+';
+                      }}
+                    />
+                  </div>
+                  <div className="p-4">
+                    <h4 className="font-semibold text-gray-900 mb-2">Uploaded Image</h4>
+                    <p className="text-sm text-gray-600 mb-3">{file.originalName}</p>
+                    <div className="flex items-center justify-between text-xs text-gray-500">
+                      <span>Moodboard Image</span>
+                      <span>📷 Uploaded</span>
+                    </div>
+                    <div className="mt-3 text-xs text-gray-400">
+                      Uploaded {new Date(file.createdAt).toLocaleDateString()}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Show empty state only if no moodboards AND no uploaded images */}
+            {projectMoodboards.length === 0 && moodboardImages.length === 0 && (
               <div className="text-center py-12">
                 <div className="bg-white rounded-lg p-12 shadow-sm border border-gray-200">
                   <div className="text-6xl mb-6">🎨</div>
