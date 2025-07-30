@@ -991,25 +991,31 @@ export default function ProjectDetail() {
                   {filteredFiles.map((file) => (
                     <div key={file.id} className="bg-white rounded-lg border border-gray-200 hover:border-gray-300 transition-colors overflow-hidden">
                       {/* Thumbnail area */}
-                      <div className="h-32 bg-gray-50 flex items-center justify-center">
+                      <div className="h-32 bg-gray-50 flex items-center justify-center relative">
                         {file.mimeType?.includes('image') ? (
-                          <img
-                            src={file.filePath ? `/${file.filePath}` : `/uploads/${file.fileName}`}
-                            alt={file.originalName || file.fileName}
-                            className="h-full w-full object-cover"
-                            onError={(e) => {
-                              console.error('Image failed to load:', e.target.src);
-                              e.currentTarget.style.display = 'none';
-                              e.currentTarget.nextElementSibling.style.display = 'flex';
-                            }}
-                            onLoad={() => {
-                              console.log('Image loaded successfully:', file.filePath || file.fileName);
-                            }}
-                          />
-                        ) : null}
-                        <div className={`flex items-center justify-center h-full w-full ${file.mimeType?.includes('image') ? 'hidden' : 'flex'}`}>
-                          {getFileIcon(file.mimeType, file.fileName)}
-                        </div>
+                          <>
+                            <img
+                              src={file.filePath ? `/${file.filePath}` : `/uploads/${file.fileName}`}
+                              alt={file.originalName || file.fileName}
+                              className="h-full w-full object-cover"
+                              onError={(e) => {
+                                console.error('Image failed to load:', e.currentTarget.src);
+                                e.currentTarget.style.display = 'none';
+                                e.currentTarget.nextElementSibling?.style.setProperty('display', 'flex');
+                              }}
+                              onLoad={() => {
+                                console.log('Image loaded successfully:', file.filePath || file.fileName);
+                              }}
+                            />
+                            <div className="hidden absolute inset-0 flex items-center justify-center bg-gray-50">
+                              {getFileIcon(file.mimeType, file.fileName)}
+                            </div>
+                          </>
+                        ) : (
+                          <div className="flex items-center justify-center h-full w-full">
+                            {getFileIcon(file.mimeType, file.fileName)}
+                          </div>
+                        )}
                       </div>
                       
                       {/* File info */}
