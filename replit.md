@@ -10,6 +10,8 @@ This is a professional workforce management platform designed as a modern web ap
 ✓ **Database File References**: Repaired existing project file entries to use correct file paths
 ✓ **Receipt Image Display**: Fixed petty cash receipt images in both thumbnail and full-size dialog views
 ✓ **File Deletion Functionality**: Resolved ES module import issues in file deletion routes
+✓ **Project Finances Receipt Images**: Fixed receipt image display in Project Detail → Finances tab with optimized 2-column layout
+✓ **Dual Location Consistency**: Both main Petty Cash page and Project Finances show identical expense details dialogs with working receipt images
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.
