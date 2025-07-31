@@ -18,10 +18,11 @@ interface HeaderProps {
   subtitle: string;
   showAddButton?: boolean;
   onAddClick?: () => void;
+  actions?: React.ReactNode;
   onMenuClick?: () => void;
 }
 
-export default function Header({ title, subtitle, showAddButton = false, onAddClick, onMenuClick }: HeaderProps) {
+export default function Header({ title, subtitle, showAddButton = false, onAddClick, actions, onMenuClick }: HeaderProps) {
   const user = authService.getUser();
   
   const { data: stats } = useQuery({
@@ -57,6 +58,13 @@ export default function Header({ title, subtitle, showAddButton = false, onAddCl
         </div>
         
         <div className="flex items-center space-x-3 sm:space-x-4">
+          {/* Custom Actions */}
+          {actions && (
+            <div className="flex items-center space-x-2">
+              {actions}
+            </div>
+          )}
+          
           {/* Task Notifications for Staff */}
           <AnimatedNotificationBell />
           

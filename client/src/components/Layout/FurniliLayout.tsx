@@ -9,6 +9,7 @@ interface FurniliLayoutProps {
   subtitle: string;
   showAddButton?: boolean;
   onAddClick?: () => void;
+  actions?: React.ReactNode;
   className?: string;
 }
 
@@ -18,6 +19,7 @@ export default function FurniliLayout({
   subtitle, 
   showAddButton, 
   onAddClick,
+  actions,
   className 
 }: FurniliLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -71,6 +73,7 @@ export default function FurniliLayout({
               subtitle={subtitle}
               showAddButton={showAddButton}
               onAddClick={onAddClick}
+              actions={actions}
               onMenuClick={() => setSidebarOpen(!sidebarOpen)}
             />
           </div>
