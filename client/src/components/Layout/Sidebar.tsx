@@ -236,7 +236,10 @@ export default function Sidebar({ onItemClick, collapsed = false, onToggleCollap
                   onClick={onItemClick}
                   title={collapsed ? item.name : undefined}
                 >
-                  <item.icon className="w-4 h-4 flex-shrink-0" />
+                  <item.icon className={cn(
+                    "w-4 h-4 flex-shrink-0",
+                    item.name === 'Staff Attendance' ? "!text-amber-900" : ""
+                  )} />
                   {!collapsed && <span className="truncate font-semibold">{item.name}</span>}
                 </Link>
               ) : null;
