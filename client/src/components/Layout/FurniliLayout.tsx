@@ -53,8 +53,8 @@ export default function FurniliLayout({
       <div className="flex min-h-screen">
         {/* Sidebar */}
         <div className={cn(
-          "fixed inset-y-0 left-0 z-50 transform transition-all duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0",
-          sidebarOpen ? "translate-x-0" : "-translate-x-full",
+          "fixed inset-y-0 left-0 z-50 transform transition-all duration-300 ease-in-out lg:relative lg:translate-x-0",
+          sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
           sidebarCollapsed && !isMobile ? "w-16" : "w-64"
         )}
         onClick={() => {
@@ -80,24 +80,18 @@ export default function FurniliLayout({
         )}
 
         {/* Sidebar Toggle Button for Desktop */}
-        {!isMobile && (
+        {!isMobile && sidebarCollapsed && (
           <button
-            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-            className={cn(
-              "fixed top-1/2 -translate-y-1/2 z-40 w-8 h-12 bg-[hsl(28,100%,25%)] hover:bg-[hsl(28,100%,20%)] text-white shadow-lg transition-all duration-200 flex items-center justify-center group",
-              sidebarCollapsed ? "left-4 rounded-r-lg" : "left-60 rounded-l-lg"
-            )}
-            title={sidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+            onClick={() => setSidebarCollapsed(false)}
+            className="fixed left-4 top-1/2 -translate-y-1/2 z-40 w-8 h-12 bg-[hsl(28,100%,25%)] hover:bg-[hsl(28,100%,20%)] text-white rounded-r-lg shadow-lg transition-all duration-200 flex items-center justify-center"
+            title="Expand Sidebar"
           >
-            <ChevronRight className={cn("w-4 h-4 transition-transform duration-200", !sidebarCollapsed && "rotate-180")} />
+            <ChevronRight className="w-4 h-4" />
           </button>
         )}
 
         {/* Main content */}
-        <div className={cn(
-          "flex-1 flex flex-col min-w-0 transition-all duration-300 ease-in-out",
-          sidebarCollapsed && !isMobile ? "lg:ml-16" : "lg:ml-64"
-        )}>
+        <div className="flex-1 flex flex-col min-w-0">
           {/* Header */}
           <div className="furnili-header sticky top-0 z-30">
             <Header
@@ -113,8 +107,8 @@ export default function FurniliLayout({
           {/* Page content */}
           <main className={cn(
             "flex-1 overflow-auto",
-            "px-3 sm:px-4 lg:px-6 py-4 sm:py-5 lg:py-6",
-            "max-w-7xl mx-auto w-full",
+            "px-4 sm:px-6 lg:px-8 py-4 sm:py-5 lg:py-6",
+            "w-full",
             className
           )}>
             <div className="space-y-4 sm:space-y-5 lg:space-y-6">
