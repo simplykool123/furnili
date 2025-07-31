@@ -473,11 +473,11 @@ export default function ProductForm({ product, onClose, isMobile = false }: Prod
                     className="hidden"
                     id="image-upload"
                   />
-                  <Label htmlFor="image-upload" className="cursor-pointer">
-                    <Button type="button" variant="outline" size="sm">
+                  <label htmlFor="image-upload" className="cursor-pointer inline-block">
+                    <div className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-3">
                       Choose Image
-                    </Button>
-                  </Label>
+                    </div>
+                  </label>
                   <p className="text-xs text-gray-500 mt-1">Max size: 5MB</p>
                   <p className="text-xs text-gray-400 mt-1">Or copy & paste image here</p>
                 </div>
