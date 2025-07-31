@@ -15,6 +15,13 @@
       "when": 1753988100445,
       "tag": "0001_luxuriant_blacklash",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1753988238353,
+      "tag": "0002_keen_slayback",
+      "breakpoints": true
     }
   ]
 }

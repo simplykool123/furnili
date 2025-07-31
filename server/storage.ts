@@ -59,8 +59,7 @@ import {
   type InsertProjectFinance,
   type ProjectManpower,
   type InsertProjectManpower,
-  type ProjectAttendance,  
-  type InsertProjectAttendance,
+
   type ProjectFile,
   type InsertProjectFile,
   type ProjectTask,

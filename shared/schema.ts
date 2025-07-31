@@ -181,25 +181,7 @@ export const projectManpower = pgTable("project_manpower", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-export const projectAttendance = pgTable("project_attendance", {
-  id: serial("id").primaryKey(),
-  projectId: integer("project_id").references(() => projects.id).notNull(),
-  manpowerId: integer("manpower_id").references(() => projectManpower.id).notNull(),
-  attendanceDate: timestamp("attendance_date").defaultNow(),
-  checkInTime: timestamp("check_in_time"),
-  checkOutTime: timestamp("check_out_time"),
-  hoursWorked: real("hours_worked").default(0),
-  overtimeHours: real("overtime_hours").default(0),
-  status: text("status").default("present"), // present, absent, half_day, late, overtime
-  workDescription: text("work_description"),
-  location: text("location"), // GPS coordinates or site location
-  approvedBy: integer("approved_by").references(() => users.id),
-  notes: text("notes"),
-  photos: text("photos").array().default([]), // Work progress photos
-  createdBy: integer("created_by").references(() => users.id),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-});
+
 
 export const projectFiles = pgTable("project_files", {
   id: serial("id").primaryKey(),
@@ -591,11 +573,7 @@ export const insertProjectManpowerSchema = createInsertSchema(projectManpower).o
   updatedAt: true,
 });
 
-export const insertProjectAttendanceSchema = createInsertSchema(projectAttendance).omit({
-  id: true,  
-  createdAt: true,
-  updatedAt: true,
-});
+
 
 export const insertProjectFileSchema = createInsertSchema(projectFiles).omit({
   id: true,
@@ -654,8 +632,7 @@ export type ProjectFinance = typeof projectFinances.$inferSelect;
 export type InsertProjectFinance = z.infer<typeof insertProjectFinanceSchema>;
 export type ProjectManpower = typeof projectManpower.$inferSelect;
 export type InsertProjectManpower = z.infer<typeof insertProjectManpowerSchema>;
-export type ProjectAttendance = typeof projectAttendance.$inferSelect;
-export type InsertProjectAttendance = z.infer<typeof insertProjectAttendanceSchema>;
+
 export type ProjectFile = typeof projectFiles.$inferSelect;
 export type InsertProjectFile = z.infer<typeof insertProjectFileSchema>;
 export type ProjectTask = typeof projectTasks.$inferSelect;
