@@ -3,6 +3,14 @@
 ## Overview
 This is a professional workforce management platform designed as a modern web application with React frontend and Express backend. It provides comprehensive staff management, project tracking, inventory control, financial management, and role-based access control. The system features a clean, mobile-first design with the Furnili brand identity and optimized performance.
 
+## Recent Changes (July 31, 2025)
+✓ **Image Display System Fully Resolved**: Fixed all file upload, storage, and display issues across the platform
+✓ **File Upload Configuration**: Updated multer to use proper diskStorage with file extensions instead of temporary files
+✓ **Static File Serving**: Corrected MIME type handling and file path construction for all uploaded content
+✓ **Database File References**: Repaired existing project file entries to use correct file paths
+✓ **Receipt Image Display**: Fixed petty cash receipt images in both thumbnail and full-size dialog views
+✓ **File Deletion Functionality**: Resolved ES module import issues in file deletion routes
+
 ## User Preferences
 Preferred communication style: Simple, everyday language.
 
