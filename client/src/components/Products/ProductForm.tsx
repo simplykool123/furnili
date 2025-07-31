@@ -166,28 +166,105 @@ export default function ProductForm({ product, onClose, isMobile = false }: Prod
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 5 * 1024 * 1024) { // 5MB limit
-        toast({
-          title: "File too large",
-          description: "Image must be less than 5MB",
-          variant: "destructive",
-        });
-        return;
-      }
-      
-      setSelectedImage(file);
-      
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setImagePreview(e.target?.result as string);
-      };
-      reader.readAsDataURL(file);
+      processImageFile(file);
     }
   };
 
   const removeImage = () => {
     setSelectedImage(null);
     setImagePreview(null);
+  };
+
+  // Handle paste events for image upload
+  const handleImagePaste = (e: React.ClipboardEvent) => {
+    const items = e.clipboardData?.items;
+    if (items) {
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        if (item.type.indexOf('image') !== -1) {
+          const file = item.getAsFile();
+          if (file) {
+            processImageFile(file);
+          }
+          break;
+        }
+      }
+    }
+  };
+
+  // Handle drag and drop events
+  const handleImageDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+      const file = files[0];
+      if (file.type.startsWith('image/')) {
+        processImageFile(file);
+      }
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDragEnter = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  // Process image file with proper extension handling
+  const processImageFile = (file: File) => {
+    if (file.size > 5 * 1024 * 1024) { // 5MB limit
+      toast({
+        title: "File too large",
+        description: "Image must be less than 5MB",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Create a new file with proper extension if needed
+    let processedFile = file;
+    
+    // If file is pasted and doesn't have proper name/extension, generate one
+    if (!file.name || file.name === 'image.png' || file.name === 'blob') {
+      const extension = getExtensionFromMimeType(file.type);
+      const newName = `pasted-image-${Date.now()}.${extension}`;
+      processedFile = new File([file], newName, { type: file.type });
+    }
+
+    setSelectedImage(processedFile);
+    
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setImagePreview(e.target?.result as string);
+    };
+    reader.readAsDataURL(processedFile);
+  };
+
+  // Get file extension from MIME type
+  const getExtensionFromMimeType = (mimeType: string): string => {
+    switch (mimeType) {
+      case 'image/jpeg':
+        return 'jpg';
+      case 'image/png':
+        return 'png';
+      case 'image/gif':
+        return 'gif';
+      case 'image/webp':
+        return 'webp';
+      default:
+        return 'jpg'; // fallback
+    }
   };
 
   // Fetch categories from API
@@ -378,7 +455,15 @@ export default function ProductForm({ product, onClose, isMobile = false }: Prod
                   </Button>
                 </div>
               ) : (
-                <div className={`border-2 border-dashed border-gray-300 rounded-lg text-center ${isMobile ? "p-3" : "p-6"}`}>
+                <div 
+                  className={`border-2 border-dashed border-gray-300 rounded-lg text-center ${isMobile ? "p-3" : "p-6"} relative`}
+                  onPaste={handleImagePaste}
+                  onDrop={handleImageDrop}
+                  onDragOver={handleDragOver}
+                  onDragEnter={handleDragEnter}
+                  onDragLeave={handleDragLeave}
+                  tabIndex={0}
+                >
                   <Upload className={`text-gray-400 mx-auto mb-2 ${isMobile ? "w-6 h-6" : "w-8 h-8"}`} />
                   <p className={`text-gray-600 mb-2 ${isMobile ? "text-xs" : "text-sm"}`}>Upload product image</p>
                   <input
@@ -394,6 +479,7 @@ export default function ProductForm({ product, onClose, isMobile = false }: Prod
                     </Button>
                   </Label>
                   <p className="text-xs text-gray-500 mt-1">Max size: 5MB</p>
+                  <p className="text-xs text-gray-400 mt-1">Or copy & paste image here</p>
                 </div>
               )}
             </div>

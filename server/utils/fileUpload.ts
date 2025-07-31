@@ -11,7 +11,28 @@ export const productImageUpload = multer({
     filename: function (req, file, cb) {
       // Generate unique filename with original extension
       const uniqueName = crypto.randomBytes(16).toString('hex');
-      const ext = path.extname(file.originalname);
+      let ext = path.extname(file.originalname);
+      
+      // If no extension, derive from mimetype (for pasted images)
+      if (!ext) {
+        switch (file.mimetype) {
+          case 'image/jpeg':
+            ext = '.jpg';
+            break;
+          case 'image/png':
+            ext = '.png';
+            break;
+          case 'image/gif':
+            ext = '.gif';
+            break;
+          case 'image/webp':
+            ext = '.webp';
+            break;
+          default:
+            ext = '.jpg'; // fallback
+        }
+      }
+      
       cb(null, uniqueName + ext);
     }
   }),
@@ -19,14 +40,29 @@ export const productImageUpload = multer({
     fileSize: 5 * 1024 * 1024, // 5MB limit
   },
   fileFilter: (req, file, cb) => {
-    const allowedTypes = /jpeg|jpg|png|gif/;
-    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-    const mimetype = allowedTypes.test(file.mimetype);
+    console.log('Product image upload - File details:', {
+      originalname: file.originalname,
+      mimetype: file.mimetype,
+      fieldname: file.fieldname
+    });
+    
+    const allowedTypes = /jpeg|jpg|png|gif|webp/;
+    const extname = file.originalname ? allowedTypes.test(path.extname(file.originalname).toLowerCase()) : true;
+    const allowedMimeTypes = [
+      'image/jpeg',
+      'image/jpg', 
+      'image/png',
+      'image/gif',
+      'image/webp'  // Add webp support for pasted images
+    ];
+    const mimetype = allowedMimeTypes.includes(file.mimetype);
 
-    if (mimetype && extname) {
+    if (mimetype && (extname || !file.originalname)) {
+      console.log('Product image accepted by multer filter');
       return cb(null, true);
     } else {
-      cb(new Error("Only image files are allowed"));
+      console.log('Product image rejected by multer filter - Invalid type');
+      cb(new Error("Only image files (JPEG, PNG, GIF, WebP) are allowed"));
     }
   },
 });
