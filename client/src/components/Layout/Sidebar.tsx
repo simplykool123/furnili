@@ -15,6 +15,8 @@ import {
   Warehouse,
   Clock,
   Wallet,
+  DollarSign,
+  Receipt,
   CheckSquare,
   TrendingUp,
   MessageCircle,
@@ -36,7 +38,7 @@ const navigation = [
   { name: 'Products', href: '/products', icon: Package, roles: ['admin', 'manager', 'staff'] },
   { name: 'Material Requests', href: '/requests', icon: ClipboardList, roles: ['admin', 'manager', 'staff'] },
   { name: 'Staff Attendance', href: '/attendance', icon: Clock, roles: ['admin', 'manager', 'staff'] },
-  { name: 'Petty Cash', href: '/petty-cash', icon: Wallet, roles: ['admin', 'manager', 'staff'] },
+  { name: 'Petty Cash', href: '/petty-cash', icon: Receipt, roles: ['admin', 'manager', 'staff'] },
   { name: 'Project Management', href: '/projects', icon: FolderOpen, roles: ['admin', 'manager', 'staff'] },
   { name: 'Task Management', href: '/tasks', icon: CheckSquare, roles: ['admin', 'manager', 'staff'] },
   { name: 'Product Comparison', href: '/product-comparison', icon: GitCompare, roles: ['admin', 'manager'] }, // Manager can access for team supervision

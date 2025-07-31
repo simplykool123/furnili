@@ -18,7 +18,7 @@ import { format } from "date-fns";
 import FurniliLayout from "@/components/Layout/FurniliLayout";
 import FurniliCard from "@/components/UI/FurniliCard";
 import FurniliButton from "@/components/UI/FurniliButton";
-import { Plus, Search, Filter, Download, Upload, Camera, Eye, Share2, Pencil, Trash2, ChevronDown, ChevronUp } from "lucide-react";
+import { Plus, Search, Filter, Download, Upload, Camera, Eye, Share2, Pencil, Trash2, ChevronDown, ChevronUp, Receipt } from "lucide-react";
 import Tesseract from 'tesseract.js';
 
 interface PettyCashExpense {
