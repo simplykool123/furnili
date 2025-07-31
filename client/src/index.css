@@ -69,6 +69,22 @@
   animation: shimmer 2s infinite;
 }
 
+/* Mobile Touch Optimization */
+@media (max-width: 1024px) {
+  .touch-target {
+    min-width: 44px;
+    min-height: 44px;
+    touch-action: manipulation;
+  }
+  
+  button, [role="button"] {
+    touch-action: manipulation;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+}
+
 /* Furnili Professional Component Styles */
 .furnili-card {
   @apply bg-white rounded-xl shadow-sm border hover:shadow-md transition-all duration-200;

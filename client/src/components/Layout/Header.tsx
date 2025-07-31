@@ -44,10 +44,15 @@ export default function Header({ title, subtitle, showAddButton = false, onAddCl
             <Button 
               variant="ghost" 
               size="sm" 
-              className="lg:hidden hover:bg-primary/10 dark:hover:bg-primary/20 p-2"
-              onClick={onMenuClick}
+              className="lg:hidden hover:bg-primary/10 dark:hover:bg-primary/20 p-3 min-w-[44px] min-h-[44px] touch-manipulation"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Mobile menu clicked!');
+                onMenuClick();
+              }}
             >
-              <Menu className="w-4 h-4 sm:w-5 sm:h-5 text-foreground" />
+              <Menu className="w-5 h-5 text-foreground" />
             </Button>
           )}
           
