@@ -203,20 +203,22 @@ export default function ProductForm({ product, onClose, isMobile = false }: Prod
     <div className={`${isMobile ? 'h-full flex flex-col' : ''}`}>
       <div className={`${isMobile ? 'flex-1 overflow-y-auto p-4' : ''}`}>
         <form onSubmit={handleSubmit(onSubmit)} className={`${isMobile ? 'space-y-3 pb-16' : 'space-y-6'}`}>
-          <div className={`grid grid-cols-1 ${isMobile ? '' : 'md:grid-cols-2'} ${isMobile ? 'gap-3' : 'gap-6'}`}>
-            <div>
-              <Label htmlFor="name" className={isMobile ? "text-sm font-medium" : ""}>Product Name *</Label>
-              <Input
-                id="name"
-                {...register("name")}
-                className={`${errors.name ? "border-red-500" : ""} ${isMobile ? "h-10 text-sm" : ""}`}
-                placeholder="e.g., Calibrated ply"
-              />
-              {errors.name && (
-                <p className="text-xs text-red-600 mt-1">{errors.name.message}</p>
-              )}
-            </div>
+          {/* Product Name - Full Width */}
+          <div>
+            <Label htmlFor="name" className={isMobile ? "text-sm font-medium" : ""}>Product Name *</Label>
+            <Input
+              id="name"
+              {...register("name")}
+              className={`${errors.name ? "border-red-500" : ""} ${isMobile ? "h-10 text-sm" : ""}`}
+              placeholder="e.g., Calibrated ply"
+            />
+            {errors.name && (
+              <p className="text-xs text-red-600 mt-1">{errors.name.message}</p>
+            )}
+          </div>
 
+          {/* Category & Brand - Two columns on mobile, same row */}
+          <div className={`grid ${isMobile ? 'grid-cols-2 gap-2' : 'grid-cols-2 gap-6'}`}>
             <div>
               <Label htmlFor="category" className={isMobile ? "text-sm font-medium" : ""}>Category *</Label>
               <Select 
@@ -236,26 +238,27 @@ export default function ProductForm({ product, onClose, isMobile = false }: Prod
                 <p className="text-xs text-red-600 mt-1">{errors.category.message}</p>
               )}
             </div>
-          </div>
 
-          <div className={`grid grid-cols-1 ${isMobile ? '' : 'md:grid-cols-3'} ${isMobile ? 'gap-3' : 'gap-6'}`}>
             <div>
               <Label htmlFor="brand" className={isMobile ? "text-sm font-medium" : ""}>Brand</Label>
               <Input
                 id="brand"
                 {...register("brand")}
+                className={`${isMobile ? "h-10 text-sm" : ""}`}
                 placeholder="e.g., ebco"
-                className={isMobile ? "h-10 text-sm" : ""}
               />
             </div>
+          </div>
 
+          {/* Size & Thickness - Two columns on mobile, same row */}
+          <div className={`grid ${isMobile ? 'grid-cols-2 gap-2' : 'grid-cols-2 gap-6'}`}>
             <div>
               <Label htmlFor="size" className={isMobile ? "text-sm font-medium" : ""}>Size/Specification</Label>
               <Input
                 id="size"
                 {...register("size")}
+                className={`${isMobile ? "h-10 text-sm" : ""}`}
                 placeholder="e.g., 8 X 4 feet"
-                className={isMobile ? "h-10 text-sm" : ""}
               />
             </div>
 
@@ -264,13 +267,14 @@ export default function ProductForm({ product, onClose, isMobile = false }: Prod
               <Input
                 id="thickness"
                 {...register("thickness")}
+                className={`${isMobile ? "h-10 text-sm" : ""}`}
                 placeholder="e.g., 12 mm, 6 mm, 16 mm"
-                className={isMobile ? "h-10 text-sm" : ""}
               />
             </div>
           </div>
 
-          <div className={`grid grid-cols-1 ${isMobile ? '' : 'md:grid-cols-3'} ${isMobile ? 'gap-3' : 'gap-6'}`}>
+          {/* SKU - Hidden on mobile since it's auto-generated */}
+          {!isMobile && (
             <div>
               <Label htmlFor="sku" className={isMobile ? "text-sm font-medium" : ""}>SKU</Label>
               <Input
@@ -280,6 +284,10 @@ export default function ProductForm({ product, onClose, isMobile = false }: Prod
                 className={isMobile ? "h-10 text-sm" : ""}
               />
             </div>
+          )}
+
+          {/* Price & Unit - Two columns on mobile, same row */}
+          <div className={`grid ${isMobile ? 'grid-cols-2 gap-2' : 'grid-cols-2 gap-6'}`}>
 
             <div>
               <Label htmlFor="price" className={isMobile ? "text-sm font-medium" : ""}>Price per Unit *</Label>
@@ -317,7 +325,8 @@ export default function ProductForm({ product, onClose, isMobile = false }: Prod
             </div>
           </div>
 
-          <div className={`grid grid-cols-1 ${isMobile ? '' : 'md:grid-cols-2'} ${isMobile ? 'gap-3' : 'gap-6'}`}>
+          {/* Current Stock & Minimum Stock - Two columns on mobile, same row */}
+          <div className={`grid ${isMobile ? 'grid-cols-2 gap-2' : 'grid-cols-2 gap-6'}`}>
             <div>
               <Label htmlFor="currentStock" className={isMobile ? "text-sm font-medium" : ""}>Current Stock *</Label>
               <Input

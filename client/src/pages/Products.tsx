@@ -9,13 +9,28 @@ import { Plus } from "lucide-react";
 import { authService } from "@/lib/auth";
 import MobileProductTable from "@/components/Mobile/MobileProductTable";
 import { useIsMobile } from "@/components/Mobile/MobileOptimizer";
+
+interface Product {
+  id: number;
+  name: string;
+  category: string;
+  brand?: string;
+  size?: string;
+  thickness?: string;
+  sku?: string;
+  price: number;
+  currentStock: number;
+  minStock: number;
+  unit: string;
+  imageUrl?: string;
+}
 import FurniliLayout from "@/components/Layout/FurniliLayout";
 import FurniliCard from "@/components/UI/FurniliCard";
 import FurniliButton from "@/components/UI/FurniliButton";
 
 export default function Products() {
   const [showAddProduct, setShowAddProduct] = useState(false);
-  const [editingProduct, setEditingProduct] = useState(null);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const user = authService.getUser();
   const { isMobile } = useIsMobile();
   
