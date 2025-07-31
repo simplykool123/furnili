@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Search, Filter, Building2, Calendar, User, MapPin, Eye, Edit, FolderOpen } from "lucide-react";
+import { Plus, Search, Filter, Building2, Calendar, User, MapPin, Eye, Edit, FolderOpen, Trash2 } from "lucide-react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -46,6 +47,9 @@ export default function Projects() {
 
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isCreateClientDialogOpen, setIsCreateClientDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editingProject, setEditingProject] = useState<Project | null>(null);
+  const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [stageFilter, setStageFilter] = useState("all");
   const [clientFilter, setClientFilter] = useState("all");
@@ -161,12 +165,78 @@ export default function Projects() {
     },
   });
 
+  const updateProjectMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: number; data: any }) => {
+      const response = await apiRequest('PUT', `/api/projects/${id}`, data);
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Project updated successfully" });
+      queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
+      setIsEditDialogOpen(false);
+      setEditingProject(null);
+      projectForm.reset();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to update project",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteProjectMutation = useMutation({
+    mutationFn: async (projectId: number) => {
+      const response = await apiRequest('DELETE', `/api/projects/${projectId}`, {});
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Project deleted successfully" });
+      queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
+      setProjectToDelete(null);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Failed to delete project",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const onSubmitProject = (data: any) => {
-    createProjectMutation.mutate(data);
+    if (editingProject) {
+      updateProjectMutation.mutate({ id: editingProject.id, data });
+    } else {
+      createProjectMutation.mutate(data);
+    }
   };
 
   const onSubmitClient = (data: any) => {
     createClientMutation.mutate(data);
+  };
+
+  const handleEditProject = (project: Project) => {
+    setEditingProject(project);
+    projectForm.reset({
+      name: project.name,
+      description: project.description || "",
+      clientId: project.clientId,
+      stage: project.stage,
+      budget: project.budget || 0,
+      addressLine1: project.addressLine1 || "",
+      addressLine2: project.addressLine2 || "",
+      state: project.state || "",
+      city: project.city || "",
+      location: project.location || "",
+      pincode: project.pincode || "",
+    });
+    setIsEditDialogOpen(true);
+  };
+
+  const handleDeleteProject = (project: Project) => {
+    setProjectToDelete(project);
   };
 
   // Filter projects based on search and filters
@@ -337,12 +407,16 @@ export default function Projects() {
                   <TableHead className="text-gray-700 font-medium">Client Name</TableHead>
                   <TableHead className="text-gray-700 font-medium">City</TableHead>
                   <TableHead className="text-gray-700 font-medium">Stage</TableHead>
-                  <TableHead className="text-gray-700 font-medium text-center">View Details</TableHead>
+                  <TableHead className="text-gray-700 font-medium text-center">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredProjects.map((project: Project) => (
-                  <TableRow key={project.id} className="hover:bg-gray-50">
+                  <TableRow 
+                    key={project.id} 
+                    className="hover:bg-gray-50 cursor-pointer"
+                    onClick={() => setLocation(`/projects/${project.id}`)}
+                  >
                     <TableCell className="text-gray-600">
                       {project.createdAt ? new Date(project.createdAt).toLocaleDateString('en-GB', {
                         day: '2-digit',
@@ -368,14 +442,44 @@ export default function Projects() {
                       </Badge>
                     </TableCell>
                     <TableCell className="text-center">
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="h-8 w-8 p-0"
-                        onClick={() => setLocation(`/projects/${project.id}`)}
-                      >
-                        <Eye className="h-4 w-4 text-gray-500" />
-                      </Button>
+                      <div className="flex items-center justify-center gap-1">
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="h-8 w-8 p-0"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setLocation(`/projects/${project.id}`);
+                          }}
+                          title="View Details"
+                        >
+                          <Eye className="h-4 w-4 text-gray-500" />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="h-8 w-8 p-0"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEditProject(project);
+                          }}
+                          title="Edit Project"
+                        >
+                          <Edit className="h-4 w-4 text-blue-500" />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="h-8 w-8 p-0"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteProject(project);
+                          }}
+                          title="Delete Project"
+                        >
+                          <Trash2 className="h-4 w-4 text-red-500" />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -782,6 +886,302 @@ export default function Projects() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Edit Project Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="max-w-[95vw] sm:max-w-2xl lg:max-w-4xl max-h-[90vh] overflow-hidden">
+          <div className="max-h-[80vh] flex flex-col">
+            <DialogHeader className="pb-4 flex-shrink-0">
+              <DialogTitle className="text-xl font-semibold">Edit Project</DialogTitle>
+              <DialogDescription>
+                Update project details and information.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="flex-1 overflow-y-auto">
+              <Form {...projectForm}>
+                <form onSubmit={projectForm.handleSubmit(onSubmitProject)} className="space-y-8 pb-4">
+                  {/* Client Details Section */}
+                  <div className="space-y-4">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-6 h-6 rounded-full bg-amber-900 flex items-center justify-center text-white text-sm font-medium">
+                        1
+                      </div>
+                      <h3 className="text-lg font-semibold text-gray-900">Client Details</h3>
+                    </div>
+
+                    <div className="space-y-4">
+                      <FormField
+                        control={projectForm.control}
+                        name="clientId"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-sm font-medium text-gray-700">
+                              Select Client <span className="text-red-500">*</span>
+                            </FormLabel>
+                            <Select value={field.value?.toString()} onValueChange={(value) => field.onChange(parseInt(value))}>
+                              <FormControl>
+                                <SelectTrigger className="h-12 bg-gray-100 border-gray-200">
+                                  <SelectValue placeholder="Select a client" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {clients.map((client: Client) => (
+                                  <SelectItem key={client.id} value={client.id.toString()}>
+                                    {client.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Project Details Section */}
+                  <div className="space-y-4">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-6 h-6 rounded-full bg-amber-900 flex items-center justify-center text-white text-sm font-medium">
+                        2
+                      </div>
+                      <h3 className="text-lg font-semibold text-gray-900">Project Details</h3>
+                    </div>
+
+                    <div className="space-y-4">
+                      <FormField
+                        control={projectForm.control}
+                        name="name"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-sm font-medium text-gray-700">
+                              Project Name <span className="text-red-500">*</span>
+                            </FormLabel>
+                            <FormControl>
+                              <Input className="h-12 bg-gray-100 border-gray-200" placeholder="Enter project name" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <FormField
+                          control={projectForm.control}
+                          name="stage"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-sm font-medium text-gray-700">
+                                Project Stage <span className="text-red-500">*</span>
+                              </FormLabel>
+                              <Select value={field.value} onValueChange={field.onChange}>
+                                <FormControl>
+                                  <SelectTrigger className="h-12 bg-gray-100 border-gray-200">
+                                    <SelectValue placeholder="Select stage" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  <SelectItem value="prospect">Prospect</SelectItem>
+                                  <SelectItem value="recce-done">Recce Done</SelectItem>
+                                  <SelectItem value="design-in-progress">Design In Progress</SelectItem>
+                                  <SelectItem value="design-approved">Design Approved</SelectItem>
+                                  <SelectItem value="estimate-given">Estimate Given</SelectItem>
+                                  <SelectItem value="client-approved">Client Approved</SelectItem>
+                                  <SelectItem value="production">Production</SelectItem>
+                                  <SelectItem value="installation">Installation</SelectItem>
+                                  <SelectItem value="handover">Handover</SelectItem>
+                                  <SelectItem value="completed">Completed</SelectItem>
+                                  <SelectItem value="on-hold">On Hold</SelectItem>
+                                  <SelectItem value="lost">Lost</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={projectForm.control}
+                          name="budget"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-sm font-medium text-gray-700">
+                                Budget <span className="text-red-500">*</span>
+                              </FormLabel>
+                              <FormControl>
+                                <Input 
+                                  type="number" 
+                                  className="h-12 bg-gray-100 border-gray-200" 
+                                  placeholder="Enter budget" 
+                                  {...field} 
+                                  onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)} 
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
+                      <FormField
+                        control={projectForm.control}
+                        name="description"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-sm font-medium text-gray-700">Description</FormLabel>
+                            <FormControl>
+                              <Textarea className="min-h-24 bg-gray-100 border-gray-200" placeholder="Enter project description" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Address Details Section */}
+                  <div className="space-y-4">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center text-white text-sm font-medium">
+                        3
+                      </div>
+                      <h3 className="text-lg font-semibold text-gray-900">Address Details</h3>
+                    </div>
+
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <FormField
+                          control={projectForm.control}
+                          name="addressLine1"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-sm font-medium text-gray-700">Address Line 1</FormLabel>
+                              <FormControl>
+                                <Input className="h-12 bg-gray-100 border-gray-200" placeholder="Enter address line 1" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={projectForm.control}
+                          name="addressLine2"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-sm font-medium text-gray-700">Address Line 2</FormLabel>
+                              <FormControl>
+                                <Input className="h-12 bg-gray-100 border-gray-200" placeholder="Enter address line 2" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-4 gap-4">
+                        <FormField
+                          control={projectForm.control}
+                          name="state"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-sm font-medium text-gray-700">State</FormLabel>
+                              <FormControl>
+                                <Input className="h-12 bg-gray-100 border-gray-200" placeholder="Enter state" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={projectForm.control}
+                          name="city"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-sm font-medium text-gray-700">City</FormLabel>
+                              <FormControl>
+                                <Input className="h-12 bg-gray-100 border-gray-200" placeholder="Enter city" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={projectForm.control}
+                          name="location"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-sm font-medium text-gray-700">Location</FormLabel>
+                              <FormControl>
+                                <Input className="h-12 bg-gray-100 border-gray-200" placeholder="Enter location" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={projectForm.control}
+                          name="pincode"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-sm font-medium text-gray-700">Pincode</FormLabel>
+                              <FormControl>
+                                <Input className="h-12 bg-gray-100 border-gray-200" placeholder="Enter pincode" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </form>
+              </Form>
+            </div>
+            
+            <div className="flex items-center justify-end space-x-4 pt-4 border-t flex-shrink-0">
+              <Button type="button" variant="outline" onClick={() => {
+                setIsEditDialogOpen(false);
+                setEditingProject(null);
+                projectForm.reset();
+              }}>
+                Cancel
+              </Button>
+              <Button 
+                type="submit" 
+                disabled={updateProjectMutation.isPending} 
+                onClick={projectForm.handleSubmit(onSubmitProject)}
+              >
+                {updateProjectMutation.isPending ? "Updating..." : "Update Project"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!projectToDelete} onOpenChange={() => setProjectToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you Freaking Sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the project "{projectToDelete?.name}" and remove all associated data.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setProjectToDelete(null)}>
+              No, Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => projectToDelete && deleteProjectMutation.mutate(projectToDelete.id)}
+              className="bg-red-600 hover:bg-red-700 text-white"
+              disabled={deleteProjectMutation.isPending}
+            >
+              {deleteProjectMutation.isPending ? "Deleting..." : "Yes, Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </FurniliLayout>
   );
 }
