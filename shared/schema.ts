@@ -463,35 +463,51 @@ export const salesProducts = pgTable("sales_products", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// Quotes Table
+// Quotes Table - Enhanced for Professional Quote Generation
 export const quotes = pgTable("quotes", {
   id: serial("id").primaryKey(),
   quoteNumber: text("quote_number").notNull().unique(), // Auto-generated: Q-001, Q-002, etc.
-  projectId: integer("project_id").references(() => projects.id).notNull(),
+  projectId: integer("project_id").references(() => projects.id),
   clientId: integer("client_id").references(() => clients.id).notNull(),
   title: text("title").notNull(),
   description: text("description"),
+  // Financial calculations
   subtotal: real("subtotal").default(0),
+  discountType: text("discount_type").default("percentage"), // percentage, fixed
+  discountValue: real("discount_value").default(0), // 5% or ₹500
+  discountAmount: real("discount_amount").default(0), // Calculated discount
   taxAmount: real("tax_amount").default(0),
   totalAmount: real("total_amount").default(0),
-  status: text("status").notNull().default("draft"), // draft, sent, approved, rejected
+  // Quote details
+  status: text("status").notNull().default("draft"), // draft, sent, approved, rejected, expired
   validUntil: timestamp("valid_until"),
+  expirationDate: timestamp("expiration_date"),
+  paymentTerms: text("payment_terms").default("Immediate Payment"), // Payment terms
+  pricelist: text("pricelist").default("Public Pricelist (EGP)"), // Pricelist type
   terms: text("terms"), // Terms and conditions
   notes: text("notes"), // Additional notes
   createdBy: integer("created_by").references(() => users.id).notNull(),
+  isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// Quote Items Table
+// Quote Items Table - Enhanced with UOM and better pricing
 export const quoteItems = pgTable("quote_items", {
   id: serial("id").primaryKey(),
   quoteId: integer("quote_id").references(() => quotes.id).notNull(),
-  salesProductId: integer("sales_product_id").references(() => salesProducts.id).notNull(),
-  quantity: integer("quantity").notNull().default(1),
-  unitPrice: real("unit_price").notNull(), // Price at time of quote (can differ from product price)
-  taxPercentage: real("tax_percentage").default(0),
-  lineTotal: real("line_total").notNull(), // quantity * unitPrice
+  salesProductId: integer("sales_product_id").references(() => salesProducts.id),
+  itemName: text("item_name").notNull(), // Manual item entry or from sales product
+  description: text("description"),
+  quantity: real("quantity").notNull().default(1),
+  uom: text("uom").default("pcs"), // Unit of Measurement (pcs, sqft, lm, etc.)
+  unitPrice: real("unit_price").notNull().default(0), // Rate
+  discountPercentage: real("discount_percentage").default(0), // Item-level discount
+  discountAmount: real("discount_amount").default(0), // Calculated item discount
+  taxPercentage: real("tax_percentage").default(0), // Tax %
+  taxAmount: real("tax_amount").default(0), // Calculated tax
+  lineTotal: real("line_total").notNull().default(0), // Final amount after discount and tax
+  sortOrder: integer("sort_order").default(0), // For ordering items
   notes: text("notes"), // Item-specific notes
 });
 

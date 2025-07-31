@@ -1,0 +1,452 @@
+import type { Express } from "express";
+import { db } from "./db";
+import { quotes, quoteItems, clients, salesProducts, users, projects } from "@shared/schema";
+import { eq, desc, and, like, or } from "drizzle-orm";
+import { insertQuoteSchema, insertQuoteItemSchema } from "@shared/schema";
+import { z } from "zod";
+import { authenticateToken } from "./middleware/auth";
+
+export function setupQuotesRoutes(app: Express) {
+  // Get all quotes with client and project details
+  app.get("/api/quotes", authenticateToken, async (req, res) => {
+    try {
+      const { search, status, clientId } = req.query;
+      
+      let whereConditions = [eq(quotes.isActive, true)];
+      
+      if (status && status !== 'all') {
+        whereConditions.push(eq(quotes.status, status as string));
+      }
+      
+      if (clientId) {
+        whereConditions.push(eq(quotes.clientId, parseInt(clientId as string)));
+      }
+
+      const quotesData = await db
+        .select({
+          quote: quotes,
+          client: {
+            id: clients.id,
+            name: clients.name,
+            email: clients.email,
+            mobile: clients.mobile,
+            city: clients.city,
+          },
+          project: {
+            id: projects.id,
+            name: projects.name,
+            code: projects.code,
+          },
+          createdBy: {
+            id: users.id,
+            name: users.name,
+          }
+        })
+        .from(quotes)
+        .leftJoin(clients, eq(quotes.clientId, clients.id))
+        .leftJoin(projects, eq(quotes.projectId, projects.id))
+        .leftJoin(users, eq(quotes.createdBy, users.id))
+        .where(and(...whereConditions))
+        .orderBy(desc(quotes.createdAt));
+
+      // Apply search filter if provided
+      let filteredQuotes = quotesData;
+      if (search) {
+        const searchTerm = (search as string).toLowerCase();
+        filteredQuotes = quotesData.filter(item => 
+          item.quote.quoteNumber.toLowerCase().includes(searchTerm) ||
+          item.quote.title.toLowerCase().includes(searchTerm) ||
+          item.client?.name.toLowerCase().includes(searchTerm) ||
+          item.project?.name.toLowerCase().includes(searchTerm)
+        );
+      }
+
+      res.json(filteredQuotes);
+    } catch (error) {
+      console.error("Error fetching quotes:", error);
+      res.status(500).json({ error: "Failed to fetch quotes" });
+    }
+  });
+
+  // Get quote by ID with items
+  app.get("/api/quotes/:id", authenticateToken, async (req, res) => {
+    try {
+      const quoteId = parseInt(req.params.id);
+
+      // Get quote with client and project details
+      const quoteData = await db
+        .select({
+          quote: quotes,
+          client: clients,
+          project: projects,
+          createdBy: {
+            id: users.id,
+            name: users.name,
+          }
+        })
+        .from(quotes)
+        .leftJoin(clients, eq(quotes.clientId, clients.id))
+        .leftJoin(projects, eq(quotes.projectId, projects.id))
+        .leftJoin(users, eq(quotes.createdBy, users.id))
+        .where(and(eq(quotes.id, quoteId), eq(quotes.isActive, true)))
+        .limit(1);
+
+      if (quoteData.length === 0) {
+        return res.status(404).json({ error: "Quote not found" });
+      }
+
+      // Get quote items with sales product details
+      const items = await db
+        .select({
+          item: quoteItems,
+          salesProduct: salesProducts,
+        })
+        .from(quoteItems)
+        .leftJoin(salesProducts, eq(quoteItems.salesProductId, salesProducts.id))
+        .where(eq(quoteItems.quoteId, quoteId))
+        .orderBy(quoteItems.sortOrder);
+
+      res.json({
+        ...quoteData[0],
+        items: items
+      });
+    } catch (error) {
+      console.error("Error fetching quote:", error);
+      res.status(500).json({ error: "Failed to fetch quote" });
+    }
+  });
+
+  // Create new quote
+  app.post("/api/quotes", authenticateToken, async (req, res) => {
+    try {
+      const userId = (req as any).user.userId;
+      
+      // Generate quote number
+      const lastQuote = await db
+        .select({ quoteNumber: quotes.quoteNumber })
+        .from(quotes)
+        .orderBy(desc(quotes.createdAt))
+        .limit(1);
+
+      let nextNumber = 1;
+      if (lastQuote.length > 0) {
+        const lastNumber = parseInt(lastQuote[0].quoteNumber.split('-')[1]);
+        nextNumber = lastNumber + 1;
+      }
+      const quoteNumber = `Q-${nextNumber.toString().padStart(3, '0')}`;
+
+      // Validate quote data
+      const quoteData = insertQuoteSchema.parse({
+        ...req.body,
+        quoteNumber,
+        createdBy: userId,
+      });
+
+      // Create quote
+      const [newQuote] = await db
+        .insert(quotes)
+        .values(quoteData)
+        .returning();
+
+      // Create quote items if provided
+      if (req.body.items && req.body.items.length > 0) {
+        const itemsData = req.body.items.map((item: any, index: number) => ({
+          ...item,
+          quoteId: newQuote.id,
+          sortOrder: index,
+        }));
+
+        await db.insert(quoteItems).values(itemsData);
+      }
+
+      res.status(201).json(newQuote);
+    } catch (error) {
+      console.error("Error creating quote:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Validation failed", details: error.errors });
+      }
+      res.status(500).json({ error: "Failed to create quote" });
+    }
+  });
+
+  // Update quote
+  app.put("/api/quotes/:id", authenticateToken, async (req, res) => {
+    try {
+      const quoteId = parseInt(req.params.id);
+      const { items, ...quoteData } = req.body;
+
+      // Update quote
+      const [updatedQuote] = await db
+        .update(quotes)
+        .set({ ...quoteData, updatedAt: new Date() })
+        .where(eq(quotes.id, quoteId))
+        .returning();
+
+      if (!updatedQuote) {
+        return res.status(404).json({ error: "Quote not found" });
+      }
+
+      // Update quote items if provided
+      if (items) {
+        // Delete existing items
+        await db.delete(quoteItems).where(eq(quoteItems.quoteId, quoteId));
+
+        // Insert new items
+        if (items.length > 0) {
+          const itemsData = items.map((item: any, index: number) => ({
+            ...item,
+            quoteId: quoteId,
+            sortOrder: index,
+          }));
+
+          await db.insert(quoteItems).values(itemsData);
+        }
+      }
+
+      res.json(updatedQuote);
+    } catch (error) {
+      console.error("Error updating quote:", error);
+      res.status(500).json({ error: "Failed to update quote" });
+    }
+  });
+
+  // Delete quote (soft delete)
+  app.delete("/api/quotes/:id", authenticateToken, async (req, res) => {
+    try {
+      const quoteId = parseInt(req.params.id);
+
+      const [deletedQuote] = await db
+        .update(quotes)
+        .set({ isActive: false, updatedAt: new Date() })
+        .where(eq(quotes.id, quoteId))
+        .returning();
+
+      if (!deletedQuote) {
+        return res.status(404).json({ error: "Quote not found" });
+      }
+
+      res.json({ message: "Quote deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting quote:", error);
+      res.status(500).json({ error: "Failed to delete quote" });
+    }
+  });
+
+  // Generate PDF quote
+  app.get("/api/quotes/:id/pdf", authenticateToken, async (req, res) => {
+    try {
+      const quoteId = parseInt(req.params.id);
+
+      // Get quote with all details
+      const quoteData = await db
+        .select({
+          quote: quotes,
+          client: clients,
+          project: projects,
+          createdBy: {
+            id: users.id,
+            name: users.name,
+          }
+        })
+        .from(quotes)
+        .leftJoin(clients, eq(quotes.clientId, clients.id))
+        .leftJoin(projects, eq(quotes.projectId, projects.id))
+        .leftJoin(users, eq(quotes.createdBy, users.id))
+        .where(and(eq(quotes.id, quoteId), eq(quotes.isActive, true)))
+        .limit(1);
+
+      if (quoteData.length === 0) {
+        return res.status(404).json({ error: "Quote not found" });
+      }
+
+      // Get quote items
+      const items = await db
+        .select({
+          item: quoteItems,
+          salesProduct: salesProducts,
+        })
+        .from(quoteItems)
+        .leftJoin(salesProducts, eq(quoteItems.salesProductId, salesProducts.id))
+        .where(eq(quoteItems.quoteId, quoteId))
+        .orderBy(quoteItems.sortOrder);
+
+      const quote = quoteData[0];
+
+      // Generate HTML for PDF
+      const html = generateQuotePDFHTML(quote, items);
+
+      // Set headers for PDF download
+      res.setHeader('Content-Type', 'application/json');
+      res.json({ 
+        html: html,
+        filename: `Quote_${quote.quote.quoteNumber}_${quote.client?.name || 'Client'}.pdf`
+      });
+
+    } catch (error) {
+      console.error("Error generating quote PDF:", error);
+      res.status(500).json({ error: "Failed to generate PDF" });
+    }
+  });
+
+  // Get clients for quote creation
+  app.get("/api/quotes/clients/list", authenticateToken, async (req, res) => {
+    try {
+      const clientsList = await db
+        .select({
+          id: clients.id,
+          name: clients.name,
+          email: clients.email,
+          mobile: clients.mobile,
+          city: clients.city,
+        })
+        .from(clients)
+        .where(eq(clients.isActive, true))
+        .orderBy(clients.name);
+
+      res.json(clientsList);
+    } catch (error) {
+      console.error("Error fetching clients list:", error);
+      res.status(500).json({ error: "Failed to fetch clients" });
+    }
+  });
+
+  // Get sales products for quote items
+  app.get("/api/quotes/products/list", authenticateToken, async (req, res) => {
+    try {
+      const productsList = await db
+        .select()
+        .from(salesProducts)
+        .where(eq(salesProducts.isActive, true))
+        .orderBy(salesProducts.name);
+
+      res.json(productsList);
+    } catch (error) {
+      console.error("Error fetching products list:", error);
+      res.status(500).json({ error: "Failed to fetch products" });
+    }
+  });
+}
+
+// HTML template for PDF generation
+function generateQuotePDFHTML(quote: any, items: any[]) {
+  const { quote: quoteData, client, project, createdBy } = quote;
+  
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <title>Quote ${quoteData.quoteNumber}</title>
+      <style>
+        body { font-family: Arial, sans-serif; margin: 20px; color: #333; }
+        .header { display: flex; justify-content: space-between; margin-bottom: 30px; border-bottom: 2px solid #8B4513; padding-bottom: 20px; }
+        .company-info { flex: 1; }
+        .quote-info { flex: 1; text-align: right; }
+        .company-name { font-size: 24px; font-weight: bold; color: #8B4513; margin-bottom: 5px; }
+        .company-details { font-size: 12px; color: #666; }
+        .quote-number { font-size: 20px; font-weight: bold; color: #8B4513; }
+        .client-section { margin: 20px 0; }
+        .client-title { font-weight: bold; color: #8B4513; margin-bottom: 10px; }
+        .client-details { background: #f8f8f8; padding: 15px; border-radius: 5px; }
+        .items-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        .items-table th, .items-table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        .items-table th { background: #8B4513; color: white; font-weight: bold; }
+        .items-table tr:nth-child(even) { background: #f9f9f9; }
+        .totals-section { margin-top: 20px; text-align: right; }
+        .totals-table { margin-left: auto; }
+        .totals-table td { padding: 5px 10px; }
+        .total-row { font-weight: bold; font-size: 16px; background: #8B4513; color: white; }
+        .terms { margin-top: 30px; font-size: 12px; }
+        .footer { margin-top: 40px; text-align: center; font-size: 12px; color: #666; border-top: 1px solid #ddd; padding-top: 20px; }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <div class="company-info">
+          <div class="company-name">FURNILI</div>
+          <div class="company-details">
+            Professional Furniture Solutions<br>
+            Email: info@furnili.com<br>
+            Phone: +91 XXX XXX XXXX
+          </div>
+        </div>
+        <div class="quote-info">
+          <div class="quote-number">Quote ${quoteData.quoteNumber}</div>
+          <div>Date: ${new Date(quoteData.createdAt).toLocaleDateString()}</div>
+          <div>Valid Until: ${quoteData.validUntil ? new Date(quoteData.validUntil).toLocaleDateString() : 'N/A'}</div>
+          <div>Status: ${quoteData.status.charAt(0).toUpperCase() + quoteData.status.slice(1)}</div>
+        </div>
+      </div>
+
+      <div class="client-section">
+        <div class="client-title">Bill To:</div>
+        <div class="client-details">
+          <strong>${client?.name || 'N/A'}</strong><br>
+          ${client?.email || ''}<br>
+          ${client?.mobile || ''}<br>
+          ${client?.city || ''}
+        </div>
+      </div>
+
+      ${project ? `
+        <div class="client-section">
+          <div class="client-title">Project:</div>
+          <div class="client-details">
+            <strong>${project.name}</strong> (${project.code})<br>
+            ${quoteData.description || ''}
+          </div>
+        </div>
+      ` : ''}
+
+      <table class="items-table">
+        <thead>
+          <tr>
+            <th>Item Details</th>
+            <th>Qty</th>
+            <th>UOM</th>
+            <th>Rate</th>
+            <th>Discount</th>
+            <th>Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${items.map(({ item, salesProduct }) => `
+            <tr>
+              <td>
+                <strong>${item.itemName}</strong>
+                ${item.description ? `<br><small>${item.description}</small>` : ''}
+              </td>
+              <td>${item.quantity}</td>
+              <td>${item.uom}</td>
+              <td>₹${item.unitPrice.toFixed(2)}</td>
+              <td>${item.discountPercentage}%</td>
+              <td>₹${item.lineTotal.toFixed(2)}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+
+      <div class="totals-section">
+        <table class="totals-table">
+          <tr><td>Sub Total:</td><td>₹${quoteData.subtotal.toFixed(2)}</td></tr>
+          <tr><td>Discount (${quoteData.discountType === 'percentage' ? quoteData.discountValue + '%' : '₹' + quoteData.discountValue}):</td><td>-₹${quoteData.discountAmount.toFixed(2)}</td></tr>
+          <tr><td>GST:</td><td>₹${quoteData.taxAmount.toFixed(2)}</td></tr>
+          <tr class="total-row"><td>Total:</td><td>₹${quoteData.totalAmount.toFixed(2)}</td></tr>
+        </table>
+      </div>
+
+      ${quoteData.terms ? `
+        <div class="terms">
+          <strong>Terms & Conditions:</strong><br>
+          ${quoteData.terms}
+        </div>
+      ` : ''}
+
+      <div class="footer">
+        Generated by ${createdBy?.name || 'System'} on ${new Date().toLocaleDateString()}<br>
+        This is a computer-generated quote and does not require a signature.
+      </div>
+    </body>
+    </html>
+  `;
+}

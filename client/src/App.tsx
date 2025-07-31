@@ -31,6 +31,7 @@ import Projects from "@/pages/Projects";
 import ProjectDetail from "@/pages/ProjectDetail";
 import SalesProducts from "@/pages/SalesProducts";
 import Clients from "@/pages/Clients";
+import Quotes from "@/pages/Quotes";
 import NotFound from "@/pages/not-found";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -214,6 +215,30 @@ function Router() {
       <Route path="/sales-products">
         <ProtectedRoute>
           <SalesProducts />
+        </ProtectedRoute>
+      </Route>
+
+      <Route path="/quotes">
+        <ProtectedRoute>
+          <Quotes />
+        </ProtectedRoute>
+      </Route>
+
+      <Route path="/projects">
+        <ProtectedRoute>
+          <Projects />
+        </ProtectedRoute>
+      </Route>
+
+      <Route path="/projects/:id">
+        <ProtectedRoute>
+          <ProjectDetail />
+        </ProtectedRoute>
+      </Route>
+
+      <Route path="/clients">
+        <ProtectedRoute>
+          <Clients />
         </ProtectedRoute>
       </Route>
       

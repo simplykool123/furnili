@@ -8,6 +8,7 @@ import { productImageUpload, boqFileUpload, receiptImageUpload, csvFileUpload } 
 import { exportProductsCSV, exportRequestsCSV, exportLowStockCSV } from "./utils/csvExport";
 import { createBackupZip } from "./utils/backupExport";
 import { canOrderMaterials, getMaterialRequestEligibleProjects, getStageDisplayName } from "./utils/projectStageValidation";
+import { setupQuotesRoutes } from "./quotesRoutes";
 import {
   insertUserSchema,
   insertProductSchema,
@@ -2349,7 +2350,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-
+  // Setup quotes routes
+  setupQuotesRoutes(app);
 
   const httpServer = createServer(app);
   return httpServer;
