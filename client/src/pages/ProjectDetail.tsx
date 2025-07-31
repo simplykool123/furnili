@@ -71,6 +71,217 @@ const moodboardSchema = z.object({
   inspirationType: z.enum(["ai", "real"]),
 });
 
+// Project Financials Component
+function ProjectFinancials({ projectId }: { projectId: string }) {
+  const [dateFilter, setDateFilter] = useState("all");
+  const [showAddExpense, setShowAddExpense] = useState(false);
+  
+  // Fetch project petty cash expenses
+  const { data: projectExpenses, isLoading: expensesLoading } = useQuery({
+    queryKey: ['/api/petty-cash', 'project', projectId],
+    queryFn: () => apiRequest(`/api/petty-cash?projectId=${projectId}`),
+  });
+
+  // Fetch project material requests/orders
+  const { data: materialOrders, isLoading: ordersLoading } = useQuery({
+    queryKey: ['/api/requests', 'project', projectId],
+    queryFn: () => apiRequest(`/api/requests?projectId=${projectId}`),
+  });
+
+  // Calculate totals
+  const pettyCashTotal = projectExpenses?.reduce((sum: number, expense: any) => {
+    return expense.status === 'expense' ? sum + expense.amount : sum;
+  }, 0) || 0;
+
+  const materialOrdersTotal = materialOrders?.reduce((sum: number, order: any) => {
+    return sum + (order.totalAmount || 0);
+  }, 0) || 0;
+
+  const totalProjectCost = pettyCashTotal + materialOrdersTotal;
+
+  if (expensesLoading || ordersLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="text-center">
+          <RefreshCw className="h-8 w-8 animate-spin mx-auto text-gray-400 mb-4" />
+          <p className="text-gray-500">Loading financial data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Financial Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card className="border-l-4 border-l-blue-500">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-gray-600 mb-1">Petty Cash Expenses</p>
+                <p className="text-lg font-bold text-blue-600">₹{pettyCashTotal.toLocaleString()}</p>
+                <p className="text-[10px] text-gray-500">{projectExpenses?.filter((e: any) => e.status === 'expense').length || 0} transactions</p>
+              </div>
+              <div className="h-8 w-8 bg-blue-100 rounded-full flex items-center justify-center">
+                <Target className="h-4 w-4 text-blue-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-l-4 border-l-green-500">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-gray-600 mb-1">Material Orders</p>
+                <p className="text-lg font-bold text-green-600">₹{materialOrdersTotal.toLocaleString()}</p>
+                <p className="text-[10px] text-gray-500">{materialOrders?.length || 0} orders</p>
+              </div>
+              <div className="h-8 w-8 bg-green-100 rounded-full flex items-center justify-center">
+                <BarChart3 className="h-4 w-4 text-green-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-l-4 border-l-amber-500">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-gray-600 mb-1">Total Project Cost</p>
+                <p className="text-lg font-bold text-amber-600">₹{totalProjectCost.toLocaleString()}</p>
+                <p className="text-[10px] text-gray-500">Combined expenses</p>
+              </div>
+              <div className="h-8 w-8 bg-amber-100 rounded-full flex items-center justify-center">
+                <Target className="h-4 w-4 text-amber-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Quick Actions */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        <Link href={`/petty-cash?projectId=${projectId}`}>
+          <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+            <Plus className="h-4 w-4 mr-2" />
+            Add Petty Cash Expense
+          </Button>
+        </Link>
+        <Link href={`/requests?projectId=${projectId}`}>
+          <Button variant="outline" className="border-amber-600 text-amber-600 hover:bg-amber-50">
+            <Plus className="h-4 w-4 mr-2" />
+            Create Material Request
+          </Button>
+        </Link>
+      </div>
+
+      {/* Recent Expenses List */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Petty Cash Expenses */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center">
+              <Target className="h-5 w-5 mr-2 text-blue-600" />
+              Recent Petty Cash Expenses
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {projectExpenses && projectExpenses.length > 0 ? (
+              <div className="space-y-3">
+                {projectExpenses
+                  .filter((expense: any) => expense.status === 'expense')
+                  .slice(0, 5)
+                  .map((expense: any) => (
+                    <div key={expense.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-gray-900">{expense.vendor}</p>
+                        <p className="text-xs text-gray-600">{expense.category}</p>
+                        <p className="text-xs text-gray-500">{new Date(expense.expenseDate).toLocaleDateString('en-GB')}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-bold text-red-600">-₹{expense.amount.toLocaleString()}</p>
+                        <p className="text-xs text-gray-500">{expense.paymentMode}</p>
+                      </div>
+                    </div>
+                  ))}
+                {projectExpenses.filter((e: any) => e.status === 'expense').length > 5 && (
+                  <Link href={`/petty-cash?projectId=${projectId}`}>
+                    <Button variant="outline" className="w-full text-blue-600 border-blue-200 hover:bg-blue-50">
+                      View All Expenses
+                    </Button>
+                  </Link>
+                )}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <Target className="h-12 w-12 mx-auto text-gray-300 mb-3" />
+                <p className="text-gray-500 text-sm">No petty cash expenses yet</p>
+                <Link href={`/petty-cash?projectId=${projectId}`}>
+                  <Button className="mt-3 text-blue-600 hover:bg-blue-50" variant="outline">
+                    Add First Expense
+                  </Button>
+                </Link>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Material Orders */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center">
+              <BarChart3 className="h-5 w-5 mr-2 text-green-600" />
+              Material Orders
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {materialOrders && materialOrders.length > 0 ? (
+              <div className="space-y-3">
+                {materialOrders.slice(0, 5).map((order: any) => (
+                  <div key={order.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-gray-900">Request #{order.id}</p>
+                      <p className="text-xs text-gray-600">{order.items?.length || 0} items</p>
+                      <p className="text-xs text-gray-500">{new Date(order.createdAt).toLocaleDateString('en-GB')}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-bold text-green-600">₹{(order.totalAmount || 0).toLocaleString()}</p>
+                      <Badge
+                        variant={order.status === 'completed' ? 'default' : 'secondary'}
+                        className="text-xs"
+                      >
+                        {order.status}
+                      </Badge>
+                    </div>
+                  </div>
+                ))}
+                {materialOrders.length > 5 && (
+                  <Link href={`/requests?projectId=${projectId}`}>
+                    <Button variant="outline" className="w-full text-green-600 border-green-200 hover:bg-green-50">
+                      View All Orders
+                    </Button>
+                  </Link>
+                )}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <BarChart3 className="h-12 w-12 mx-auto text-gray-300 mb-3" />
+                <p className="text-gray-500 text-sm">No material orders yet</p>
+                <Link href={`/requests?projectId=${projectId}`}>
+                  <Button className="mt-3 text-green-600 hover:bg-green-50" variant="outline">
+                    Create First Order
+                  </Button>
+                </Link>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}
+
 export default function ProjectDetail() {
   const [location, setLocation] = useLocation();
   const { toast } = useToast();
@@ -2214,15 +2425,7 @@ export default function ProjectDetail() {
 
 
           <TabsContent value="financials" className="p-6 bg-gray-50">
-            <div className="text-center py-12">
-              <Target className="h-16 w-16 mx-auto text-gray-300 mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Financial Tracking</h3>
-              <p className="text-gray-500 mb-6">Monitor project budget and expenses</p>
-              <Button className="bg-blue-600 hover:bg-blue-700 text-white">
-                <Plus className="h-4 w-4 mr-2" />
-                Add Expense
-              </Button>
-            </div>
+            <ProjectFinancials projectId={projectId} />
           </TabsContent>
 
           <TabsContent value="details" className="p-6 bg-gray-50">
