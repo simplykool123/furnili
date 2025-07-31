@@ -364,10 +364,17 @@ function ProjectFinancials({ projectId }: { projectId: string }) {
                   <div className="text-sm font-medium text-gray-600 mb-2">Receipt</div>
                   <div className="flex justify-center">
                     <img 
-                      src={selectedExpense.receiptImageUrl}
+                      src={selectedExpense.receiptImageUrl.startsWith('http') ? selectedExpense.receiptImageUrl : `/${selectedExpense.receiptImageUrl}`}
                       alt="Receipt" 
                       className="max-w-full max-h-[200px] object-contain rounded-lg border cursor-pointer"
                       title="Receipt image"
+                      onError={(e) => {
+                        console.error('Failed to load receipt image:', selectedExpense.receiptImageUrl);
+                        console.error('Attempted URL:', e.currentTarget.src);
+                      }}
+                      onLoad={() => {
+                        console.log('Successfully loaded receipt image:', selectedExpense.receiptImageUrl);
+                      }}
                     />
                   </div>
                 </div>
