@@ -504,7 +504,7 @@ export class MemStorage {
     return this.pettyCashExpenses.get(id);
   }
 
-  async getAllPettyCashExpenses(filters?: { status?: string; category?: string; addedBy?: number }): Promise<PettyCashExpense[]> {
+  async getAllPettyCashExpenses(filters?: { status?: string; category?: string; addedBy?: number; projectId?: number }): Promise<PettyCashExpense[]> {
     let allExpenses = Array.from(this.pettyCashExpenses.values());
     
     if (filters?.status) {
@@ -519,13 +519,28 @@ export class MemStorage {
       allExpenses = allExpenses.filter(e => e.addedBy === filters.addedBy);
     }
     
-    // Include user information
+    if (filters?.projectId) {
+      allExpenses = allExpenses.filter(e => e.projectId === filters.projectId);
+    }
+    
+    // Include user and project information
     const expensesWithUsers = await Promise.all(
       allExpenses.map(async (expense) => {
         const user = await this.getUser(expense.addedBy);
+        let project = null;
+        
+        if (expense.projectId) {
+          try {
+            project = await this.getProject(expense.projectId);
+          } catch (error) {
+            console.error(`Error fetching project ${expense.projectId}:`, error);
+          }
+        }
+        
         return {
           ...expense,
-          user: user ? { id: user.id, name: user.name, email: user.email } : null,
+          user: user ? { id: user.id, name: user.name, email: user.email, username: user.username } : null,
+          project: project ? { id: project.id, code: project.code, name: project.name } : null,
         };
       })
     );
@@ -2603,7 +2618,7 @@ class DatabaseStorage implements IStorage {
     return result[0];
   }
 
-  async getAllPettyCashExpenses(filters?: { status?: string; category?: string; addedBy?: number }): Promise<PettyCashExpense[]> {
+  async getAllPettyCashExpenses(filters?: { status?: string; category?: string; addedBy?: number; projectId?: number }): Promise<PettyCashExpense[]> {
     let query = db.select().from(pettyCashExpenses);
     
     if (filters?.status) {
@@ -2616,6 +2631,10 @@ class DatabaseStorage implements IStorage {
     
     if (filters?.addedBy) {
       query = query.where(eq(pettyCashExpenses.addedBy, filters.addedBy));
+    }
+    
+    if (filters?.projectId) {
+      query = query.where(eq(pettyCashExpenses.projectId, filters.projectId));
     }
     
     const expenses = await query.orderBy(desc(pettyCashExpenses.createdAt));
