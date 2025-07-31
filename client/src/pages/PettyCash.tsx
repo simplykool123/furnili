@@ -1043,11 +1043,11 @@ export default function PettyCash() {
                     <TableCell className="py-2 px-3">
                       {expense.receiptImageUrl ? (
                         <img 
-                          src={`/${expense.receiptImageUrl}`}
+                          src={expense.receiptImageUrl}
                           alt="Receipt"
                           className="w-6 h-6 object-cover rounded cursor-pointer border mx-auto"
                           onClick={() => {
-                            setSelectedImage(`/${expense.receiptImageUrl}`);
+                            setSelectedImage(expense.receiptImageUrl || "");
                             setShowImageDialog(true);
                           }}
                           title="Click to view full image"
