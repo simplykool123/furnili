@@ -556,43 +556,38 @@ export default function Dashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-0">
-            <div className="space-y-2 max-h-48 overflow-y-auto">
-              {ongoingProjects.slice(0, 6).map((project: any) => (
+            <div className="space-y-1 max-h-40 overflow-y-auto">
+              {ongoingProjects.slice(0, 8).map((project: any) => (
                 <div 
                   key={project.id} 
-                  className="flex items-center justify-between p-3 rounded-lg bg-gray-50/50 border border-gray-100/50 hover:bg-gray-100/50 cursor-pointer transition-colors"
+                  className="flex items-center justify-between p-2 rounded-md bg-gray-50/50 border border-gray-100/50 hover:bg-gray-100/50 cursor-pointer transition-colors"
                   onClick={() => setLocation(`/projects/${project.id}`)}
                 >
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <p className="text-sm font-medium text-gray-900 truncate">
-                        {project.code}
-                      </p>
-                      <Badge 
-                        variant={
-                          project.stage === 'Production' ? 'default' :
-                          project.stage === 'Installation' ? 'secondary' :
-                          project.stage === 'Client Approved' ? 'destructive' :
-                          'outline'
-                        }
-                        className="text-xs"
-                      >
-                        {project.stage}
-                      </Badge>
-                    </div>
-                    <p className="text-xs text-gray-600 mt-1 truncate">
-                      {project.name}
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    <p className="text-sm font-medium text-gray-900 min-w-fit">
+                      {project.code}
                     </p>
-                    <p className="text-xs text-gray-500">
-                      Client: {project.clientName}
+                    <Badge 
+                      variant={
+                        project.stage === 'Production' ? 'default' :
+                        project.stage === 'Installation' ? 'secondary' :
+                        project.stage === 'Client Approved' ? 'destructive' :
+                        'outline'
+                      }
+                      className="text-xs min-w-fit"
+                    >
+                      {project.stage}
+                    </Badge>
+                    <p className="text-xs text-gray-600 truncate">
+                      {project.name} - {project.clientName}
                     </p>
                   </div>
-                  <ArrowRight className="h-4 w-4 text-gray-400" />
+                  <ArrowRight className="h-3 w-3 text-gray-400 flex-shrink-0" />
                 </div>
               ))}
             </div>
-            {ongoingProjects.length > 6 && (
-              <div className="mt-3 pt-2 border-t border-gray-200">
+            {ongoingProjects.length > 8 && (
+              <div className="mt-2 pt-2 border-t border-gray-200">
                 <Button
                   variant="outline"
                   size="sm"
