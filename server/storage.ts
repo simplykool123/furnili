@@ -50,8 +50,6 @@ import {
   type InsertProject,
   type ProjectLog,
   type InsertProjectLog,
-  type Moodboard,
-  type InsertMoodboard,
 
   type ProjectQuote,
   type InsertProjectQuote,
@@ -67,6 +65,8 @@ import {
   type InsertProjectFile,
   type ProjectTask,
   type InsertProjectTask,
+  type Moodboard,
+  type InsertMoodboard,
   type MaterialRequestWithItems,
   type ProductWithStock,
   type BOQExtractedItem,

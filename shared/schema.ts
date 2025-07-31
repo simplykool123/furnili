@@ -661,6 +661,10 @@ export type InsertProjectFile = z.infer<typeof insertProjectFileSchema>;
 export type ProjectTask = typeof projectTasks.$inferSelect;
 export type InsertProjectTask = z.infer<typeof insertProjectTaskSchema>;
 
+// Moodboard types
+export type Moodboard = typeof moodboards.$inferSelect;
+export type InsertMoodboard = z.infer<typeof insertMoodboardSchema>;
+
 // Extended types for API responses
 export type MaterialRequestWithItems = MaterialRequest & {
   items: (RequestItem & { product: Product })[];
