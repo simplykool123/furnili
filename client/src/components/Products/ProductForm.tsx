@@ -200,9 +200,9 @@ export default function ProductForm({ product, onClose, isMobile = false }: Prod
   ];
 
   return (
-    <div className={`${isMobile ? 'h-full flex flex-col' : ''}`}>
-      <div className={`${isMobile ? 'flex-1 overflow-y-auto p-4' : ''}`}>
-        <form onSubmit={handleSubmit(onSubmit)} className={`${isMobile ? 'space-y-3 pb-16' : 'space-y-6'}`}>
+    <div className={`${isMobile ? 'h-full flex flex-col' : 'h-full flex flex-col'}`}>
+      <div className={`${isMobile ? 'flex-1 overflow-y-auto p-4' : 'flex-1 overflow-y-auto py-4'}`}>
+        <form onSubmit={handleSubmit(onSubmit)} className={`${isMobile ? 'space-y-3 pb-4' : 'space-y-6 pb-4'}`}>
           {/* Product Name - Full Width */}
           <div>
             <Label htmlFor="name" className={isMobile ? "text-sm font-medium" : ""}>Product Name *</Label>
@@ -403,7 +403,7 @@ export default function ProductForm({ product, onClose, isMobile = false }: Prod
       </div>
       
       {/* Mobile-friendly Action Buttons */}
-      <div className={`${isMobile ? 'p-3 border-t bg-white' : 'flex items-center justify-end space-x-4 pt-6 border-t'}`}>
+      <div className={`${isMobile ? 'p-3 border-t bg-white flex-shrink-0' : 'flex items-center justify-end space-x-4 pt-4 border-t flex-shrink-0'}`}>
         <div className={`${isMobile ? 'flex gap-2' : 'flex items-center space-x-4'}`}>
           <Button 
             type="button" 

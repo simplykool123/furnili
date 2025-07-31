@@ -575,11 +575,12 @@ export default function BOQUpload() {
 
       {/* Material Request Modal */}
       <Dialog open={showRequestModal} onOpenChange={setShowRequestModal}>
-        <DialogContent className="max-w-[95vw] sm:max-w-2xl lg:max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Create Material Request from BOQ</DialogTitle>
-          </DialogHeader>
-          <div className="mt-4">
+        <DialogContent className="max-w-[95vw] sm:max-w-2xl lg:max-w-4xl max-h-[90vh] overflow-hidden">
+          <div className="max-h-[85vh] flex flex-col">
+            <DialogHeader className="flex-shrink-0">
+              <DialogTitle>Create Material Request from BOQ</DialogTitle>
+            </DialogHeader>
+            <div className="flex-1 overflow-y-auto mt-4">
             <RequestFormSimplified
               initialData={{
                 clientName: extractedData?.client || extractedData?.projectName || 'BOQ Project',
@@ -605,6 +606,7 @@ export default function BOQUpload() {
               }}
               onClose={() => setShowRequestModal(false)}
             />
+            </div>
           </div>
         </DialogContent>
       </Dialog>

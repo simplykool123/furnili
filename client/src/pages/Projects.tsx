@@ -387,13 +387,15 @@ export default function Projects() {
 
       {/* Create Project Dialog */}
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-        <DialogContent className="max-w-[95vw] sm:max-w-2xl lg:max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader className="pb-4">
+        <DialogContent className="max-w-[95vw] sm:max-w-2xl lg:max-w-4xl max-h-[90vh] overflow-hidden">
+          <div className="max-h-[80vh] flex flex-col">
+          <DialogHeader className="pb-4 flex-shrink-0">
             <DialogTitle className="text-xl font-semibold">New Project</DialogTitle>
           </DialogHeader>
 
-          <Form {...projectForm}>
-            <form onSubmit={projectForm.handleSubmit(onSubmitProject)} className="space-y-8">
+          <div className="flex-1 overflow-y-auto">
+            <Form {...projectForm}>
+              <form onSubmit={projectForm.handleSubmit(onSubmitProject)} className="space-y-8 pb-4">
               {/* Client Details Section */}
               <div className="space-y-4">
                 <div className="flex items-center space-x-2">
@@ -765,18 +767,19 @@ export default function Projects() {
                 </div>
               </div>
 
-              {/* Submit Button */}
-              <div className="flex justify-end pt-6">
-                <Button 
-                  type="submit" 
-                  disabled={createProjectMutation.isPending}
-                  className="bg-blue-500 hover:bg-blue-600 text-white px-8 py-3 rounded-lg font-medium"
-                >
-                  {createProjectMutation.isPending ? "Creating..." : "Submit"}
-                </Button>
-              </div>
-            </form>
-          </Form>
+              </form>
+            </Form>
+          </div>
+          
+          <div className="flex items-center justify-end space-x-4 pt-4 border-t flex-shrink-0">
+            <Button type="button" variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={createProjectMutation.isPending} onClick={projectForm.handleSubmit(onSubmitProject)}>
+              {createProjectMutation.isPending ? "Creating..." : "Submit"}
+            </Button>
+          </div>
+          </div>
         </DialogContent>
       </Dialog>
     </FurniliLayout>

@@ -110,14 +110,14 @@ export default function Products() {
         if (!open) setEditingProduct(null);
       }}>
         <DialogContent className={`${isMobile ? 'max-w-[95vw] h-[95vh] p-0' : 'max-w-[90vw] sm:max-w-2xl lg:max-w-4xl'} max-h-[90vh] overflow-hidden`} aria-describedby="product-form-description">
-          <div className={`${isMobile ? 'h-full flex flex-col' : ''}`}>
-            <DialogHeader className={`space-y-3 ${isMobile ? 'p-4 pb-2 border-b' : ''}`}>
+          <div className={`${isMobile ? 'h-full flex flex-col' : 'max-h-[80vh] flex flex-col'}`}>
+            <DialogHeader className={`space-y-3 ${isMobile ? 'p-4 pb-2 border-b' : 'px-6 pt-6 pb-2 border-b'} flex-shrink-0`}>
               <DialogTitle className="text-xl font-semibold text-foreground">
                 {editingProduct ? 'Edit Product' : 'Add New Product'}
               </DialogTitle>
               
           </DialogHeader>
-          <div className={`${isMobile ? 'flex-1 overflow-hidden' : ''}`}>
+          <div className={`${isMobile ? 'flex-1 overflow-y-auto' : 'flex-1 overflow-y-auto px-6'}`}>
             <ProductForm 
               product={editingProduct} 
               onClose={() => {
