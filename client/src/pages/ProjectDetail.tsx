@@ -79,13 +79,35 @@ function ProjectFinancials({ projectId }: { projectId: string }) {
   // Fetch project petty cash expenses
   const { data: projectExpenses, isLoading: expensesLoading } = useQuery({
     queryKey: ['/api/petty-cash', 'project', projectId],
-    queryFn: () => apiRequest(`/api/petty-cash?projectId=${projectId}`),
+    queryFn: async () => {
+      const response = await fetch(`/api/petty-cash?projectId=${projectId}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('authToken') || localStorage.getItem('token')}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      if (!response.ok) {
+        throw new Error('Failed to fetch petty cash expenses');
+      }
+      return response.json();
+    },
   });
 
   // Fetch project material requests/orders
   const { data: materialOrders, isLoading: ordersLoading } = useQuery({
     queryKey: ['/api/requests', 'project', projectId],
-    queryFn: () => apiRequest(`/api/requests?projectId=${projectId}`),
+    queryFn: async () => {
+      const response = await fetch(`/api/requests?projectId=${projectId}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('authToken') || localStorage.getItem('token')}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      if (!response.ok) {
+        throw new Error('Failed to fetch material orders');
+      }
+      return response.json();
+    },
   });
 
   // Calculate totals
@@ -94,7 +116,7 @@ function ProjectFinancials({ projectId }: { projectId: string }) {
   }, 0) || 0;
 
   const materialOrdersTotal = materialOrders?.reduce((sum: number, order: any) => {
-    return sum + (order.totalAmount || 0);
+    return sum + (order.totalValue || 0);
   }, 0) || 0;
 
   const totalProjectCost = pettyCashTotal + materialOrdersTotal;

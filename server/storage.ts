@@ -1256,7 +1256,112 @@ export class MemStorage {
       createdAt: new Date(),
     });
 
-    this.currentId = 10;
+    // Add sample petty cash expenses for project 1
+    this.pettyCashExpenses.set(1, {
+      id: 1,
+      category: "Material",
+      amount: 1500,
+      vendor: "Local Hardware Store",
+      description: "Cement and sand purchase",
+      projectId: 1,
+      orderNo: null,
+      paidBy: 10,
+      receiptImageUrl: null,
+      extractedData: null,
+      expenseDate: new Date("2024-01-15"),
+      addedBy: 10,
+      approvedBy: null,
+      status: "expense",
+      createdAt: new Date("2024-01-15"),
+      updatedAt: new Date("2024-01-15"),
+    });
+
+    this.pettyCashExpenses.set(2, {
+      id: 2,
+      category: "Transport",
+      amount: 500,
+      vendor: "Auto Rickshaw",
+      description: "Site visit transportation",
+      projectId: 1,
+      orderNo: null,
+      paidBy: 10,
+      receiptImageUrl: null,
+      extractedData: null,
+      expenseDate: new Date("2024-01-16"),
+      addedBy: 10,
+      approvedBy: null,
+      status: "expense",
+      createdAt: new Date("2024-01-16"),
+      updatedAt: new Date("2024-01-16"),
+    });
+
+    this.pettyCashExpenses.set(3, {
+      id: 3,
+      category: "Labour",
+      amount: 2000,
+      vendor: "Daily Wage Workers",
+      description: "Site cleaning and preparation",
+      projectId: 1,
+      orderNo: null,
+      paidBy: 10,
+      receiptImageUrl: null,
+      extractedData: null,
+      expenseDate: new Date("2024-01-17"),
+      addedBy: 10,
+      approvedBy: null,
+      status: "expense",
+      createdAt: new Date("2024-01-17"),
+      updatedAt: new Date("2024-01-17"),
+    });
+
+    // Add sample material requests for project 1
+    this.materialRequests.set(1, {
+      id: 1,
+      clientName: "kunal",
+      orderNumber: "ORD-001",
+      requestedBy: 10,
+      status: "approved",
+      priority: "high",
+      boqReference: "BOQ-Kunal-001",
+      remarks: "Initial material requirement for project start",
+      totalValue: 15000,
+      approvedBy: 10,
+      approvedAt: new Date("2024-01-18"),
+      issuedBy: null,
+      issuedAt: null,
+      createdAt: new Date("2024-01-18"),
+      updatedAt: new Date("2024-01-18"),
+      projectId: 1,
+    });
+
+    // Add sample request items for the material request
+    this.requestItems.set(1, {
+      id: 1,
+      requestId: 1,
+      productId: 1,
+      quantity: 10,
+      unitPrice: 50,
+      totalPrice: 500,
+      specification: "High quality cement bags",
+      remarks: "Required for foundation work",
+      createdAt: new Date("2024-01-18"),
+      updatedAt: new Date("2024-01-18"),
+    });
+
+    this.requestItems.set(2, {
+      id: 2,
+      requestId: 1,
+      productId: 2,
+      quantity: 20,
+      unitPrice: 25,
+      totalPrice: 500,
+      specification: "TMT steel bars 12mm",
+      remarks: "For reinforcement structure",
+      createdAt: new Date("2024-01-18"),
+      updatedAt: new Date("2024-01-18"),
+    });
+
+    this.currentId = 20;
   }
 
   // User operations
