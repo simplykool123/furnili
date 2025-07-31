@@ -44,6 +44,13 @@ interface PettyCashStats {
   currentMonthExpenses: number;
 }
 
+interface PersonalPettyCashStats {
+  myExpenses: number;
+  cashGivenToMe: number;
+  myBalance: number;
+  thisMonth: number;
+}
+
 const paymentModes = ["UPI", "GPay", "PhonePe", "Paytm", "Cash", "Bank Transfer", "Card", "Cheque"];
 const categories = ["Material", "Transport", "Site", "Office", "Food", "Fuel", "Repair", "Other"];
 
@@ -111,6 +118,7 @@ export default function PettyCash() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/petty-cash"] });
       queryClient.invalidateQueries({ queryKey: ["/api/petty-cash/stats"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/petty-cash/my-stats"] });
       queryClient.invalidateQueries({ queryKey: ["/api/petty-cash/staff-balances"] });
       setShowEditDialog(false);
       setEditingExpense(null);
@@ -129,6 +137,7 @@ export default function PettyCash() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/petty-cash"] });
       queryClient.invalidateQueries({ queryKey: ["/api/petty-cash/stats"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/petty-cash/my-stats"] });
       queryClient.invalidateQueries({ queryKey: ["/api/petty-cash/staff-balances"] });
       toast({ title: "Success", description: "Expense deleted successfully!" });
     },
@@ -168,9 +177,13 @@ export default function PettyCash() {
     },
   });
 
+  // Fetch stats - personal for staff, global for others
   const { data: stats } = useQuery({
-    queryKey: ["/api/petty-cash/stats"],
-    queryFn: () => authenticatedApiRequest("GET", "/api/petty-cash/stats"),
+    queryKey: user?.role === 'staff' ? ["/api/petty-cash/my-stats"] : ["/api/petty-cash/stats"],
+    queryFn: () => {
+      const endpoint = user?.role === 'staff' ? "/api/petty-cash/my-stats" : "/api/petty-cash/stats";
+      return authenticatedApiRequest("GET", endpoint);
+    },
   });
 
   const { data: staffBalances = [] } = useQuery({
@@ -205,6 +218,7 @@ export default function PettyCash() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/petty-cash"] });
       queryClient.invalidateQueries({ queryKey: ["/api/petty-cash/stats"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/petty-cash/my-stats"] });
       queryClient.invalidateQueries({ queryKey: ["/api/petty-cash/staff-balances"] });
       setShowAddDialog(false);
       resetForm();
@@ -236,6 +250,7 @@ export default function PettyCash() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/petty-cash"] });
       queryClient.invalidateQueries({ queryKey: ["/api/petty-cash/stats"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/petty-cash/my-stats"] });
       queryClient.invalidateQueries({ queryKey: ["/api/petty-cash/staff-balances"] });
       setShowAddFundsDialog(false);
       resetFundsForm();
@@ -551,8 +566,8 @@ export default function PettyCash() {
 
   return (
     <FurniliLayout
-      title="Petty Cash Management"
-      subtitle="Track expenses and manage cash flow"
+      title={user?.role === 'staff' ? "My Petty Cash" : "Petty Cash Management"}
+      subtitle={user?.role === 'staff' ? "Track my expenses and cash received" : "Track expenses and manage cash flow"}
     >
       <div className="space-y-4 sm:space-y-6">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-0">
@@ -577,31 +592,59 @@ export default function PettyCash() {
           {/* Mobile Compact Stats - Single Line */}
           {isMobile && (
             <Card className="p-3">
-              <div className="grid grid-cols-3 gap-2 text-center">
-                <div className="space-y-1">
-                  <div className="text-xs font-medium text-gray-600">Total Expenses</div>
-                  <div className="text-sm font-bold text-red-600">-₹{stats.totalExpenses?.toLocaleString()}</div>
-                  <div className="text-xs text-red-500">Money Out</div>
-                </div>
-                <div className="space-y-1">
-                  <div className="text-xs font-medium text-gray-600">Total Funds</div>
-                  <div className="text-sm font-bold text-green-600">+₹{stats.totalIncome?.toLocaleString()}</div>
-                  <div className="text-xs text-green-500">Money In</div>
-                </div>
-                <div className="space-y-1">
-                  <div className="text-xs font-medium text-gray-600">Current Balance</div>
-                  <div className={`text-sm font-bold ${stats.balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                    {stats.balance >= 0 ? '+' : ''}₹{stats.balance?.toLocaleString()}
+              {user?.role === 'staff' ? (
+                // Personal stats for staff users
+                <div className="grid grid-cols-3 gap-2 text-center">
+                  <div className="space-y-1">
+                    <div className="text-xs font-medium text-gray-600">My Expenses</div>
+                    <div className="text-sm font-bold text-red-600">-₹{(stats as PersonalPettyCashStats).myExpenses?.toLocaleString()}</div>
+                    <div className="text-xs text-red-500">Money Spent</div>
                   </div>
-                  <div className={`text-xs ${stats.balance >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                    {stats.balance >= 0 ? 'Available' : 'Deficit'}
+                  <div className="space-y-1">
+                    <div className="text-xs font-medium text-gray-600">Cash Given to Me</div>
+                    <div className="text-sm font-bold text-green-600">+₹{(stats as PersonalPettyCashStats).cashGivenToMe?.toLocaleString()}</div>
+                    <div className="text-xs text-green-500">Received</div>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="text-xs font-medium text-gray-600">My Balance</div>
+                    <div className={`text-sm font-bold ${(stats as PersonalPettyCashStats).myBalance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                      {(stats as PersonalPettyCashStats).myBalance >= 0 ? '+' : ''}₹{(stats as PersonalPettyCashStats).myBalance?.toLocaleString()}
+                    </div>
+                    <div className={`text-xs ${(stats as PersonalPettyCashStats).myBalance >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                      {(stats as PersonalPettyCashStats).myBalance >= 0 ? 'Available' : 'Deficit'}
+                    </div>
                   </div>
                 </div>
-              </div>
+              ) : (
+                // Global stats for admin users
+                <div className="grid grid-cols-3 gap-2 text-center">
+                  <div className="space-y-1">
+                    <div className="text-xs font-medium text-gray-600">Total Expenses</div>
+                    <div className="text-sm font-bold text-red-600">-₹{(stats as PettyCashStats).totalExpenses?.toLocaleString()}</div>
+                    <div className="text-xs text-red-500">Money Out</div>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="text-xs font-medium text-gray-600">Total Funds</div>
+                    <div className="text-sm font-bold text-green-600">+₹{(stats as PettyCashStats).totalIncome?.toLocaleString()}</div>
+                    <div className="text-xs text-green-500">Money In</div>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="text-xs font-medium text-gray-600">Current Balance</div>
+                    <div className={`text-sm font-bold ${(stats as PettyCashStats).balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                      {(stats as PettyCashStats).balance >= 0 ? '+' : ''}₹{(stats as PettyCashStats).balance?.toLocaleString()}
+                    </div>
+                    <div className={`text-xs ${(stats as PettyCashStats).balance >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                      {(stats as PettyCashStats).balance >= 0 ? 'Available' : 'Deficit'}
+                    </div>
+                  </div>
+                </div>
+              )}
               {/* This Month Stats on Mobile */}
               <div className="mt-3 pt-3 border-t text-center">
                 <div className="text-xs font-medium text-gray-600">This Month</div>
-                <div className="text-lg font-bold">₹{stats.currentMonthExpenses?.toLocaleString()}</div>
+                <div className="text-lg font-bold">₹{user?.role === 'staff' ? 
+                  (stats as PersonalPettyCashStats).thisMonth?.toLocaleString() : 
+                  (stats as PettyCashStats).currentMonthExpenses?.toLocaleString()}</div>
               </div>
             </Card>
           )}
@@ -609,45 +652,93 @@ export default function PettyCash() {
           {/* Desktop Stats Cards */}
           {!isMobile && (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Expenses (Debit)</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-red-600">-₹{stats.totalExpenses?.toLocaleString()}</div>
-                  <p className="text-xs text-red-500 mt-1">Money Out</p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Funds (Credit)</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-green-600">+₹{stats.totalIncome?.toLocaleString()}</div>
-                  <p className="text-xs text-green-500 mt-1">Money In</p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Current Balance</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className={`text-2xl font-bold ${stats.balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                    {stats.balance >= 0 ? '+' : ''}₹{stats.balance?.toLocaleString()}
-                  </div>
-                  <p className={`text-xs mt-1 ${stats.balance >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                    {stats.balance >= 0 ? 'Available Funds' : 'Deficit'}
-                  </p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">This Month</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">₹{stats.currentMonthExpenses?.toLocaleString()}</div>
-                </CardContent>
-              </Card>
+              {user?.role === 'staff' ? (
+                // Personal stats cards for staff users
+                <>
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">My Expenses</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold text-red-600">-₹{(stats as PersonalPettyCashStats).myExpenses?.toLocaleString()}</div>
+                      <p className="text-xs text-red-500 mt-1">Money Spent</p>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">Cash Given to Me</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold text-green-600">+₹{(stats as PersonalPettyCashStats).cashGivenToMe?.toLocaleString()}</div>
+                      <p className="text-xs text-green-500 mt-1">Received</p>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">My Balance</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className={`text-2xl font-bold ${(stats as PersonalPettyCashStats).myBalance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        {(stats as PersonalPettyCashStats).myBalance >= 0 ? '+' : ''}₹{(stats as PersonalPettyCashStats).myBalance?.toLocaleString()}
+                      </div>
+                      <p className={`text-xs mt-1 ${(stats as PersonalPettyCashStats).myBalance >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                        {(stats as PersonalPettyCashStats).myBalance >= 0 ? 'Available' : 'Deficit'}
+                      </p>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">This Month</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">₹{(stats as PersonalPettyCashStats).thisMonth?.toLocaleString()}</div>
+                    </CardContent>
+                  </Card>
+                </>
+              ) : (
+                // Global stats cards for admin users
+                <>
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">Total Expenses (Debit)</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold text-red-600">-₹{(stats as PettyCashStats).totalExpenses?.toLocaleString()}</div>
+                      <p className="text-xs text-red-500 mt-1">Money Out</p>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">Total Funds (Credit)</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold text-green-600">+₹{(stats as PettyCashStats).totalIncome?.toLocaleString()}</div>
+                      <p className="text-xs text-green-500 mt-1">Money In</p>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">Current Balance</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className={`text-2xl font-bold ${(stats as PettyCashStats).balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        {(stats as PettyCashStats).balance >= 0 ? '+' : ''}₹{(stats as PettyCashStats).balance?.toLocaleString()}
+                      </div>
+                      <p className={`text-xs mt-1 ${(stats as PettyCashStats).balance >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                        {(stats as PettyCashStats).balance >= 0 ? 'Available Funds' : 'Deficit'}
+                      </p>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">This Month</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">₹{(stats as PettyCashStats).currentMonthExpenses?.toLocaleString()}</div>
+                    </CardContent>
+                  </Card>
+                </>
+              )}
             </div>
           )}
         </>

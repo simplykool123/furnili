@@ -1218,6 +1218,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Personal stats for staff users
+  app.get("/api/petty-cash/my-stats", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const userId = req.user!.id;
+      const personalStats = await storage.getPersonalPettyCashStats(userId);
+      res.json(personalStats);
+    } catch (error) {
+      console.error("Failed to fetch personal stats:", error);
+      res.status(500).json({ message: "Failed to fetch personal stats", error: String(error) });
+    }
+  });
+
   app.get("/api/petty-cash/summary", authenticateToken, async (req: AuthRequest, res) => {
     try {
       const stats = await storage.getPettyCashStats();

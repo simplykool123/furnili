@@ -2548,6 +2548,51 @@ class DatabaseStorage implements IStorage {
     };
   }
 
+  // Personal stats for staff users - showing only their own expenses and funds received
+  async getPersonalPettyCashStats(userId: number): Promise<{
+    myExpenses: number;
+    cashGivenToMe: number;
+    myBalance: number;
+    thisMonth: number;
+  }> {
+    const userExpenses = await db.select().from(pettyCashExpenses)
+      .where(eq(pettyCashExpenses.addedBy, userId));
+    
+    // Money spent by this user (expenses they created)
+    const myExpenses = userExpenses
+      .filter(e => e.status === 'expense')
+      .reduce((sum, e) => sum + e.amount, 0);
+    
+    // Money given TO this user (where they are listed as paidBy in income entries)
+    const allIncomeEntries = await db.select().from(pettyCashExpenses)
+      .where(and(
+        eq(pettyCashExpenses.status, 'income'),
+        eq(pettyCashExpenses.paidBy, userId)
+      ));
+    
+    const cashGivenToMe = allIncomeEntries.reduce((sum, e) => sum + e.amount, 0);
+    
+    // Current month expenses by this user
+    const currentMonth = new Date().getMonth();
+    const currentYear = new Date().getFullYear();
+    
+    const thisMonth = userExpenses
+      .filter(e => {
+        const expenseDate = new Date(e.expenseDate);
+        return expenseDate.getMonth() === currentMonth && 
+               expenseDate.getFullYear() === currentYear &&
+               e.status === 'expense';
+      })
+      .reduce((sum, e) => sum + e.amount, 0);
+    
+    return {
+      myExpenses,
+      cashGivenToMe,
+      myBalance: cashGivenToMe - myExpenses,
+      thisMonth,
+    };
+  }
+
   async getStaffUsers(): Promise<User[]> {
     return db.select().from(users).where(and(
       eq(users.isActive, true),
