@@ -975,10 +975,8 @@ export default function PettyCash() {
               <TableBody>
                 {filteredExpenses.map((expense: PettyCashExpense) => (
                   <TableRow key={expense.id} className="text-xs hover:bg-gray-50">
-                    <TableCell className="py-2 px-3 font-medium">
-                      {format(new Date(expense.expenseDate), 'dd MMM\nyyyy').split('\n').map((line, i) => (
-                        <div key={i} className={i === 0 ? 'font-semibold' : 'text-gray-500 text-[10px]'}>{line}</div>
-                      ))}
+                    <TableCell className="py-2 px-3 text-gray-700 text-xs">
+                      {format(new Date(expense.expenseDate), 'dd/MM/yy')}
                     </TableCell>
                     <TableCell className="py-2 px-3">
                       <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
@@ -1010,20 +1008,13 @@ export default function PettyCash() {
                     <TableCell className="py-2 px-3">
                       <Badge variant="outline" className="text-[10px] px-1 py-0.5">{expense.category}</Badge>
                     </TableCell>
-                    <TableCell className="py-2 px-3">
+                    <TableCell className="py-2 px-3 text-gray-700 text-xs">
                       {expense.projectId && expense.project ? (
-                        <div className="text-center">
-                          <div className="text-xs font-semibold text-blue-600" title={expense.project.name}>
-                            {expense.project.code}
-                          </div>
-                          <div className="text-[9px] text-gray-400">
-                            {expense.projectId}
-                          </div>
+                        <div className="text-center" title={expense.project.name}>
+                          {expense.project.code}
                         </div>
                       ) : expense.projectId ? (
-                        <div className="text-center">
-                          <div className="text-xs text-gray-600">{expense.projectId}</div>
-                        </div>
+                        <div className="text-center">{expense.projectId}</div>
                       ) : (
                         <span className="text-gray-400 text-center block">-</span>
                       )}
@@ -1083,10 +1074,10 @@ export default function PettyCash() {
               {/* Total Row */}
               {filteredExpenses.length > 0 && (
                 <TableRow className="bg-gray-50 border-t-2">
-                  <TableCell colSpan={2} className="py-4 px-3">
-                    <div className="font-bold text-gray-700 text-sm">TOTAL</div>
+                  <TableCell colSpan={2} className="py-3 px-3">
+                    <div className="text-gray-700 text-xs font-medium">TOTAL</div>
                   </TableCell>
-                  <TableCell className="py-4 px-3" colSpan={8}>
+                  <TableCell className="py-3 px-3" colSpan={8}>
                     {(() => {
                       const totalIncome = filteredExpenses
                         .filter((expense: PettyCashExpense) => expense.status === 'income')
@@ -1096,22 +1087,22 @@ export default function PettyCash() {
                         .reduce((sum: number, expense: PettyCashExpense) => sum + expense.amount, 0);
                       const netTotal = totalIncome - totalExpenses;
                       return (
-                        <div className="grid grid-cols-3 gap-3 text-xs">
-                          <div className="flex justify-between items-center bg-green-50 px-3 py-2 rounded-lg border border-green-200">
-                            <span className="text-green-700 font-medium">Received:</span>
-                            <span className="font-bold text-green-600 text-sm">+₹{totalIncome.toLocaleString()}</span>
+                        <div className="grid grid-cols-3 gap-2">
+                          <div className="flex justify-between items-center bg-green-50 px-2 py-1.5 rounded border border-green-200">
+                            <span className="text-green-700 text-xs">Received:</span>
+                            <span className="text-green-600 text-xs font-semibold">+₹{totalIncome.toLocaleString()}</span>
                           </div>
-                          <div className="flex justify-between items-center bg-red-50 px-3 py-2 rounded-lg border border-red-200">
-                            <span className="text-red-700 font-medium">Spent:</span>
-                            <span className="font-bold text-red-600 text-sm">-₹{totalExpenses.toLocaleString()}</span>
+                          <div className="flex justify-between items-center bg-red-50 px-2 py-1.5 rounded border border-red-200">
+                            <span className="text-red-700 text-xs">Spent:</span>
+                            <span className="text-red-600 text-xs font-semibold">-₹{totalExpenses.toLocaleString()}</span>
                           </div>
-                          <div className={`flex justify-between items-center px-3 py-2 rounded-lg border ${
+                          <div className={`flex justify-between items-center px-2 py-1.5 rounded border ${
                             netTotal >= 0 
                               ? 'bg-green-100 border-green-300' 
                               : 'bg-red-100 border-red-300'
                           }`}>
-                            <span className={`font-medium ${netTotal >= 0 ? 'text-green-700' : 'text-red-700'}`}>Balance:</span>
-                            <span className={`font-bold text-sm ${netTotal >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                            <span className={`text-xs ${netTotal >= 0 ? 'text-green-700' : 'text-red-700'}`}>Balance:</span>
+                            <span className={`text-xs font-semibold ${netTotal >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                               {netTotal >= 0 ? '+' : ''}₹{netTotal.toLocaleString()}
                             </span>
                           </div>
