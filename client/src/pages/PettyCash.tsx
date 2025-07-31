@@ -18,7 +18,7 @@ import { format } from "date-fns";
 import FurniliLayout from "@/components/Layout/FurniliLayout";
 import FurniliCard from "@/components/UI/FurniliCard";
 import FurniliButton from "@/components/UI/FurniliButton";
-import { Plus, Search, Filter, Download, Upload, Camera, Eye, Share2, Pencil, Trash2 } from "lucide-react";
+import { Plus, Search, Filter, Download, Upload, Camera, Eye, Share2, Pencil, Trash2, ChevronDown, ChevronUp } from "lucide-react";
 import Tesseract from 'tesseract.js';
 
 interface PettyCashExpense {
@@ -59,7 +59,7 @@ export default function PettyCash() {
   const [editingExpense, setEditingExpense] = useState<PettyCashExpense | null>(null);
   const [showImageDialog, setShowImageDialog] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string>("");
-
+  const [showStaffBalances, setShowStaffBalances] = useState(false);
   
   // Mobile optimization hook
   const { isMobile } = useIsMobile();
@@ -571,65 +571,147 @@ export default function PettyCash() {
           )}
         </div>
       </div>
-      {/* Individual Staff Balances - Mobile Compact View */}
-      {staffBalances.length > 0 && (
-        <div className={`${isMobile ? 'space-y-3' : 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4'}`}>
-          {staffBalances.map((staff: any) => (
-            <Card key={staff.userId} className={`${isMobile ? 'p-3' : 'p-4'} ${isMobile ? 'bg-gray-50' : 'border rounded-lg bg-gray-50'}`}>
-              <div className={`${isMobile ? 'text-sm' : 'text-sm'} font-medium mb-2`}>
-                {staff.userName}
+      {/* Stats Cards */}
+      {stats && (
+        <>
+          {/* Mobile Compact Stats - Single Line */}
+          {isMobile && (
+            <Card className="p-3">
+              <div className="grid grid-cols-3 gap-2 text-center">
+                <div className="space-y-1">
+                  <div className="text-xs font-medium text-gray-600">Total Expenses</div>
+                  <div className="text-sm font-bold text-red-600">-₹{stats.totalExpenses?.toLocaleString()}</div>
+                  <div className="text-xs text-red-500">Money Out</div>
+                </div>
+                <div className="space-y-1">
+                  <div className="text-xs font-medium text-gray-600">Total Funds</div>
+                  <div className="text-sm font-bold text-green-600">+₹{stats.totalIncome?.toLocaleString()}</div>
+                  <div className="text-xs text-green-500">Money In</div>
+                </div>
+                <div className="space-y-1">
+                  <div className="text-xs font-medium text-gray-600">Current Balance</div>
+                  <div className={`text-sm font-bold ${stats.balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    {stats.balance >= 0 ? '+' : ''}₹{stats.balance?.toLocaleString()}
+                  </div>
+                  <div className={`text-xs ${stats.balance >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                    {stats.balance >= 0 ? 'Available' : 'Deficit'}
+                  </div>
+                </div>
               </div>
-              {isMobile ? (
-                /* Mobile: Single compact line layout */
-                <div className="grid grid-cols-3 gap-2 text-center">
-                  <div className="space-y-1">
-                    <div className="text-xs text-green-600">Received</div>
-                    <div className="text-sm font-bold text-green-600">+₹{staff.received.toLocaleString()}</div>
+              {/* This Month Stats on Mobile */}
+              <div className="mt-3 pt-3 border-t text-center">
+                <div className="text-xs font-medium text-gray-600">This Month</div>
+                <div className="text-lg font-bold">₹{stats.currentMonthExpenses?.toLocaleString()}</div>
+              </div>
+            </Card>
+          )}
+          
+          {/* Desktop Stats Cards */}
+          {!isMobile && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Total Expenses (Debit)</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-red-600">-₹{stats.totalExpenses?.toLocaleString()}</div>
+                  <p className="text-xs text-red-500 mt-1">Money Out</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Total Funds (Credit)</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-green-600">+₹{stats.totalIncome?.toLocaleString()}</div>
+                  <p className="text-xs text-green-500 mt-1">Money In</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Current Balance</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className={`text-2xl font-bold ${stats.balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    {stats.balance >= 0 ? '+' : ''}₹{stats.balance?.toLocaleString()}
                   </div>
-                  <div className="space-y-1">
-                    <div className="text-xs text-red-600">Spent</div>
-                    <div className="text-sm font-bold text-red-600">-₹{staff.spent.toLocaleString()}</div>
-                  </div>
-                  <div className="space-y-1">
-                    <div className="text-xs font-medium">Balance</div>
-                    <div className={`text-sm font-bold ${staff.balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                      {staff.balance >= 0 ? '+' : ''}₹{staff.balance.toLocaleString()}
+                  <p className={`text-xs mt-1 ${stats.balance >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                    {stats.balance >= 0 ? 'Available Funds' : 'Deficit'}
+                  </p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">This Month</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">₹{stats.currentMonthExpenses?.toLocaleString()}</div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* Staff Balances - Hide for staff users */}
+      {user?.role !== 'staff' && staffBalances.length > 0 && (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Individual Staff Balances</CardTitle>
+                <p className="text-sm text-gray-600">Track funds received vs spent by each staff member</p>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowStaffBalances(!showStaffBalances)}
+                className="flex items-center gap-2"
+              >
+                {showStaffBalances ? (
+                  <>
+                    <ChevronUp className="h-4 w-4" />
+                    Hide
+                  </>
+                ) : (
+                  <>
+                    <ChevronDown className="h-4 w-4" />
+                    Show
+                  </>
+                )}
+              </Button>
+            </div>
+          </CardHeader>
+          {showStaffBalances && (
+            <CardContent>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {staffBalances.map((staff: any) => (
+                <div key={staff.userId} className="p-4 border rounded-lg bg-gray-50">
+                  <div className="font-medium text-sm mb-2">{staff.userName}</div>
+                  <div className="space-y-1 text-xs">
+                    <div className="flex justify-between">
+                      <span className="text-green-600">Received:</span>
+                      <span className="font-medium text-green-600">+₹{staff.received.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-red-600">Spent:</span>
+                      <span className="font-medium text-red-600">-₹{staff.spent.toLocaleString()}</span>
+                    </div>
+                    <hr className="my-2" />
+                    <div className="flex justify-between">
+                      <span className="font-medium">Balance:</span>
+                      <span className={`font-bold ${staff.balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        {staff.balance >= 0 ? '+' : ''}₹{staff.balance.toLocaleString()}
+                      </span>
                     </div>
                   </div>
                 </div>
-              ) : (
-                /* Desktop: Original vertical layout */
-                <div className="space-y-1 text-xs">
-                  <div className="flex justify-between">
-                    <span className="text-green-600">Received:</span>
-                    <span className="font-medium text-green-600">+₹{staff.received.toLocaleString()}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-red-600">Spent:</span>
-                    <span className="font-medium text-red-600">-₹{staff.spent.toLocaleString()}</span>
-                  </div>
-                  <hr className="my-2" />
-                  <div className="flex justify-between">
-                    <span className="font-medium">Balance:</span>
-                    <span className={`font-bold ${staff.balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                      {staff.balance >= 0 ? '+' : ''}₹{staff.balance.toLocaleString()}
-                    </span>
-                  </div>
-                </div>
-              )}
-            </Card>
-          ))}
-        </div>
-      )}
-
-      {/* Show message if no staff balances */}
-      {staffBalances.length === 0 && (
-        <Card className="p-6 text-center">
-          <div className="text-gray-500">No staff expense data available</div>
+                ))}
+              </div>
+            </CardContent>
+          )}
         </Card>
       )}
-
-
 
       {/* Filters */}
       <Card>
