@@ -58,17 +58,6 @@ export default function Header({ title, subtitle, showAddButton = false, onAddCl
         </div>
         
         <div className="flex items-center space-x-1 sm:space-x-2 lg:space-x-3">
-          {/* Add Button */}
-          {showAddButton && onAddClick && (
-            <Button 
-              onClick={onAddClick}
-              className="bg-[hsl(28,100%,25%)] hover:bg-[hsl(28,100%,20%)] text-white px-4 py-2 rounded-lg transition-colors duration-200 flex items-center space-x-2"
-            >
-              <Plus className="w-4 h-4" />
-              <span className="hidden sm:inline">New Project</span>
-            </Button>
-          )}
-          
           {/* Custom Actions */}
           {actions && (
             <div className="flex items-center space-x-1 sm:space-x-2">

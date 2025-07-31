@@ -256,8 +256,6 @@ export default function Projects() {
     <FurniliLayout
       title="Project Studio"
       subtitle="Manage your projects, clients, and project details"
-      showAddButton={true}
-      onAddClick={() => setIsCreateDialogOpen(true)}
     >
 
       {/* Main Content */}
@@ -314,6 +312,15 @@ export default function Projects() {
                   ))}
                 </SelectContent>
               </Select>
+
+              {/* New Project Button */}
+              <Button 
+                onClick={() => setIsCreateDialogOpen(true)}
+                className="bg-[hsl(28,100%,25%)] hover:bg-[hsl(28,100%,20%)] text-white px-4 py-2 rounded-lg transition-colors duration-200 flex items-center space-x-2"
+              >
+                <Plus className="w-4 h-4" />
+                <span>New Project</span>
+              </Button>
             </div>
           </div>
 
