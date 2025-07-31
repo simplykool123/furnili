@@ -1406,8 +1406,8 @@ export default function Attendance() {
 
   return (
     <FurniliLayout
-      title="Staff Attendance & Payroll"
-      subtitle="Complete staff management system"
+      title={user?.role === 'staff' ? "My Attendance" : "Staff Attendance & Payroll"}
+      subtitle={user?.role === 'staff' ? "View your attendance and check in/out" : "Complete staff management system"}
     >
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
@@ -1478,98 +1478,131 @@ export default function Attendance() {
       </div>
 
       {/* Compact Quick Stats */}
-      <div className="grid grid-cols-3 md:grid-cols-6 gap-2 sm:gap-3">
+      <div className={`grid gap-2 sm:gap-3 ${user?.role === 'staff' ? 'grid-cols-1 max-w-md mx-auto' : 'grid-cols-3 md:grid-cols-6'}`}>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Present Today</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              {user?.role === 'staff' ? "Your Status Today" : "Present Today"}
+            </CardTitle>
             <UserCheck className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">
-              {todayAttendance.filter((a: any) => a.status === "present").length}
-            </div>
-            <p className="text-xs text-gray-600">out of {staff.length} staff</p>
+            {user?.role === 'staff' ? (
+              <>
+                {(() => {
+                  const myTodayRecord = todayAttendance.find((a: any) => a.userId === user.id);
+                  return myTodayRecord ? (
+                    <div>
+                      <div className="text-lg font-bold text-green-600">
+                        You are marked present today
+                      </div>
+                      <p className="text-xs text-gray-600">
+                        Check-in: {formatTime(myTodayRecord.checkInTime)}
+                        {myTodayRecord.checkOutTime && ` | Check-out: ${formatTime(myTodayRecord.checkOutTime)}`}
+                      </p>
+                    </div>
+                  ) : (
+                    <div>
+                      <div className="text-lg font-bold text-gray-500">Not checked in</div>
+                      <p className="text-xs text-gray-600">Use Check In/Out tab</p>
+                    </div>
+                  );
+                })()}
+              </>
+            ) : (
+              <>
+                <div className="text-2xl font-bold text-green-600">
+                  {todayAttendance.filter((a: any) => a.status === "present").length}
+                </div>
+                <p className="text-xs text-gray-600">out of {staff.length} staff</p>
+              </>
+            )}
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Absent Today</CardTitle>
-            <UserX className="h-4 w-4 text-red-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-red-600">
-              {(() => {
-                // Calculate actual absent staff: total staff - those who checked in today
-                const checkedInToday = todayAttendance.filter((a: any) => 
-                  a.status === "present" || a.status === "late" || a.status === "half_day"
-                ).length;
-                const explicitlyAbsent = todayAttendance.filter((a: any) => a.status === "absent").length;
-                const totalAbsent = Math.max(staff.length - checkedInToday, explicitlyAbsent);
-                return totalAbsent;
-              })()}
-            </div>
-            <p className="text-xs text-gray-600">staff members</p>
-          </CardContent>
-        </Card>
+        {/* Hide these cards for staff users */}
+        {user?.role !== 'staff' && (
+          <>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium">Absent Today</CardTitle>
+                <UserX className="h-4 w-4 text-red-600" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-red-600">
+                  {(() => {
+                    // Calculate actual absent staff: total staff - those who checked in today
+                    const checkedInToday = todayAttendance.filter((a: any) => 
+                      a.status === "present" || a.status === "late" || a.status === "half_day"
+                    ).length;
+                    const explicitlyAbsent = todayAttendance.filter((a: any) => a.status === "absent").length;
+                    const totalAbsent = Math.max(staff.length - checkedInToday, explicitlyAbsent);
+                    return totalAbsent;
+                  })()}
+                </div>
+                <p className="text-xs text-gray-600">staff members</p>
+              </CardContent>
+            </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Half Day</CardTitle>
-            <Clock className="h-4 w-4 text-yellow-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-yellow-600">
-              {todayAttendance.filter((a: any) => a.status === "half_day").length}
-            </div>
-            <p className="text-xs text-gray-600">staff members</p>
-          </CardContent>
-        </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium">Half Day</CardTitle>
+                <Clock className="h-4 w-4 text-yellow-600" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-yellow-600">
+                  {todayAttendance.filter((a: any) => a.status === "half_day").length}
+                </div>
+                <p className="text-xs text-gray-600">staff members</p>
+              </CardContent>
+            </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Late Entries</CardTitle>
-            <Timer className="h-4 w-4 text-orange-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-orange-600">
-              {todayAttendance.filter((a: any) => a.status === "late").length}
-            </div>
-            <p className="text-xs text-gray-600">staff members</p>
-          </CardContent>
-        </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium">Late Entries</CardTitle>
+                <Timer className="h-4 w-4 text-orange-600" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-orange-600">
+                  {todayAttendance.filter((a: any) => a.status === "late").length}
+                </div>
+                <p className="text-xs text-gray-600">staff members</p>
+              </CardContent>
+            </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Attendance %</CardTitle>
-            <Users className="h-4 w-4 text-blue-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-blue-600">
-              {staff.length > 0 ? Math.round((todayAttendance.filter((a: any) => a.status === "present" || a.status === "late").length / staff.length) * 100) : 0}%
-            </div>
-            <p className="text-xs text-gray-600">today</p>
-          </CardContent>
-        </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium">Attendance %</CardTitle>
+                <Users className="h-4 w-4 text-blue-600" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-blue-600">
+                  {staff.length > 0 ? Math.round((todayAttendance.filter((a: any) => a.status === "present" || a.status === "late").length / staff.length) * 100) : 0}%
+                </div>
+                <p className="text-xs text-gray-600">today</p>
+              </CardContent>
+            </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Working Days</CardTitle>
-            <Calendar className="h-4 w-4 text-blue-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-blue-600">
-              {attendanceStats?.workingDays || attendanceStats?.totalDays || 0}
-            </div>
-            <p className="text-xs text-gray-600">this month</p>
-          </CardContent>
-        </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium">Working Days</CardTitle>
+                <Calendar className="h-4 w-4 text-blue-600" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-blue-600">
+                  {attendanceStats?.workingDays || attendanceStats?.totalDays || 0}
+                </div>
+                <p className="text-xs text-gray-600">this month</p>
+              </CardContent>
+            </Card>
+          </>
+        )}
       </div>
 
       {/* Main Tabs */}
       <Tabs defaultValue="dashboard" className="space-y-4">
         <TabsList className={`grid w-full ${user?.role === 'staff' ? 'grid-cols-2' : 'grid-cols-5'}`}>
-          <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
+          <TabsTrigger value="dashboard">{user?.role === 'staff' ? 'My Attendance' : 'Dashboard'}</TabsTrigger>
           <TabsTrigger value="checkin">Check In/Out</TabsTrigger>
           {user?.role !== 'staff' && (
             <>
@@ -1597,29 +1630,40 @@ export default function Attendance() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
-                  {todayAttendance.length > 0 ? (
-                    todayAttendance.map((attendance: any) => (
-                      <div key={attendance.id} className="flex items-center justify-between p-2 border rounded-md bg-gray-50 hover:bg-gray-100 transition-colors">
-                        <div className="flex items-center gap-2 min-w-0 flex-1">
-                          <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                            <Users className="w-4 h-4 text-blue-600" />
+                  {(() => {
+                    // For staff users, show only their own attendance record
+                    const attendanceToShow = user?.role === 'staff' 
+                      ? todayAttendance.filter((a: any) => a.userId === user.id)
+                      : todayAttendance;
+                    
+                    return attendanceToShow.length > 0 ? (
+                      attendanceToShow.map((attendance: any) => (
+                        <div key={attendance.id} className="flex items-center justify-between p-2 border rounded-md bg-gray-50 hover:bg-gray-100 transition-colors">
+                          <div className="flex items-center gap-2 min-w-0 flex-1">
+                            <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                              <Users className="w-4 h-4 text-blue-600" />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <p className="font-medium text-sm truncate">
+                                {user?.role === 'staff' && attendance.userId === user.id ? 'You' : attendance.user?.name}
+                              </p>
+                              <p className="text-xs text-gray-600">
+                                In: {formatTime(attendance.checkInTime)} 
+                                {attendance.checkOutTime && ` | Out: ${formatTime(attendance.checkOutTime)}`}
+                              </p>
+                            </div>
                           </div>
-                          <div className="min-w-0 flex-1">
-                            <p className="font-medium text-sm truncate">{attendance.user?.name}</p>
-                            <p className="text-xs text-gray-600">
-                              In: {formatTime(attendance.checkInTime)} 
-                              {attendance.checkOutTime && ` | Out: ${formatTime(attendance.checkOutTime)}`}
-                            </p>
+                          <div className="flex-shrink-0">
+                            {getStatusBadge(attendance.status)}
                           </div>
                         </div>
-                        <div className="flex-shrink-0">
-                          {getStatusBadge(attendance.status)}
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-center text-gray-500 py-4 text-sm">No attendance records for today</p>
-                  )}
+                      ))
+                    ) : (
+                      <p className="text-center text-gray-500 py-4 text-sm">
+                        {user?.role === 'staff' ? 'You have not checked in today' : 'No attendance records for today'}
+                      </p>
+                    );
+                  })()}
                 </div>
               </CardContent>
             </Card>
@@ -1630,38 +1674,60 @@ export default function Attendance() {
                 <CardTitle>Quick Actions</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <Button 
-                  className="w-full justify-start" 
-                  variant="outline"
-                  onClick={() => {
-                    // Generate payroll for all staff
-                    staff.forEach((member: any) => {
-                      generatePayrollMutation.mutate({
-                        userId: member.id,
-                        month: selectedMonth,
-                        year: selectedYear,
-                      });
-                    });
-                  }}
-                >
-                  <Calculator className="w-4 h-4 mr-2" />
-                  Generate Monthly Payroll
-                </Button>
-                
-                <Button 
-                  className="w-full justify-start" 
-                  variant="outline"
-                  onClick={exportAttendanceReport}
-                  disabled={isExporting}
-                >
-                  <Download className={`w-4 h-4 mr-2 ${isExporting ? 'animate-spin' : ''}`} />
-                  {isExporting ? 'Exporting...' : 'Export Attendance Report'}
-                </Button>
-                
-                <Button className="w-full justify-start" variant="outline">
-                  <FileText className="w-4 h-4 mr-2" />
-                  Generate Pay Slips
-                </Button>
+                {user?.role === 'staff' ? (
+                  /* Staff users see limited actions */
+                  <div className="text-center py-4">
+                    <p className="text-sm text-gray-600 mb-4">Use the Check In/Out tab to manage your attendance</p>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => {
+                        // Navigate to Check In/Out tab
+                        const tabTrigger = document.querySelector('[value="checkin"]') as HTMLElement;
+                        if (tabTrigger) tabTrigger.click();
+                      }}
+                      className="w-full"
+                    >
+                      <Clock className="w-4 h-4 mr-2" />
+                      Go to Check In/Out
+                    </Button>
+                  </div>
+                ) : (
+                  /* Admin/Manager users see all actions */
+                  <>
+                    <Button 
+                      className="w-full justify-start" 
+                      variant="outline"
+                      onClick={() => {
+                        // Generate payroll for all staff
+                        staff.forEach((member: any) => {
+                          generatePayrollMutation.mutate({
+                            userId: member.id,
+                            month: selectedMonth,
+                            year: selectedYear,
+                          });
+                        });
+                      }}
+                    >
+                      <Calculator className="w-4 h-4 mr-2" />
+                      Generate Monthly Payroll
+                    </Button>
+                    
+                    <Button 
+                      className="w-full justify-start" 
+                      variant="outline"
+                      onClick={exportAttendanceReport}
+                      disabled={isExporting}
+                    >
+                      <Download className={`w-4 h-4 mr-2 ${isExporting ? 'animate-spin' : ''}`} />
+                      {isExporting ? 'Exporting...' : 'Export Attendance Report'}
+                    </Button>
+                    
+                    <Button className="w-full justify-start" variant="outline">
+                      <FileText className="w-4 h-4 mr-2" />
+                      Generate Pay Slips
+                    </Button>
+                  </>
+                )}
               </CardContent>
             </Card>
           </div>
