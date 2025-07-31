@@ -7,12 +7,12 @@ export default function Reports() {
   const user = authService.getUser();
 
   useEffect(() => {
-    if (user && !['admin'].includes(user.role)) {
+    if (user && !['admin', 'manager'].includes(user.role)) {
       window.location.href = '/';
     }
   }, [user]);
 
-  if (!user || !['admin'].includes(user.role)) {
+  if (!user || !['admin', 'manager'].includes(user.role)) {
     return null;
   }
 

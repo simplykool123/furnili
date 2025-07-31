@@ -45,7 +45,7 @@ export default function ProductTable() {
   const queryClient = useQueryClient();
 
   // Check if user can see pricing information
-  const canSeePricing = user && ['admin'].includes(user.role);
+  const canSeePricing = user && ['admin', 'manager'].includes(user.role);
 
   const { data: products, isLoading } = useQuery({
     queryKey: ['/api/products', filters],

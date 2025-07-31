@@ -35,7 +35,7 @@ export default function MobileProductTable({ onEdit, onDelete, onView }: MobileP
   const user = authService.getUser();
   
   // Check if user can see pricing information
-  const canSeePricing = user && ['admin'].includes(user.role);
+  const canSeePricing = user && ['admin', 'manager'].includes(user.role);
 
   // Fetch products
   const { data: products = [], isLoading } = useQuery({

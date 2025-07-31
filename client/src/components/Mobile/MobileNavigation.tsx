@@ -13,12 +13,12 @@ interface MobileNavigationProps {
 }
 
 const navigationItems = [
-  { icon: Home, label: "Dashboard", href: "/", roles: ['admin', 'staff', 'store_incharge'] },
-  { icon: Package, label: "Products", href: "/products", roles: ['admin', 'staff', 'store_incharge'] },
-  { icon: FileText, label: "Requests", href: "/requests", roles: ['admin', 'staff', 'store_incharge'] },
-  { icon: Users, label: "Staff", href: "/attendance", roles: ['admin', 'staff', 'store_incharge'] },
-  { icon: DollarSign, label: "Petty Cash", href: "/petty-cash", roles: ['admin', 'staff', 'store_incharge'] },
-  { icon: BarChart3, label: "Reports", href: "/reports", roles: ['admin'] }, // Only admin access
+  { icon: Home, label: "Dashboard", href: "/", roles: ['admin', 'manager', 'staff', 'store_incharge'] },
+  { icon: Package, label: "Products", href: "/products", roles: ['admin', 'manager', 'staff', 'store_incharge'] },
+  { icon: FileText, label: "Requests", href: "/requests", roles: ['admin', 'manager', 'staff', 'store_incharge'] },
+  { icon: Users, label: "Staff", href: "/attendance", roles: ['admin', 'manager', 'staff', 'store_incharge'] },
+  { icon: DollarSign, label: "Petty Cash", href: "/petty-cash", roles: ['admin', 'manager', 'staff', 'store_incharge'] },
+  { icon: BarChart3, label: "Reports", href: "/reports", roles: ['admin', 'manager'] }, // Admin and Manager access
 ];
 
 export default function MobileNavigation({ isOpen, onToggle, onClose }: MobileNavigationProps) {

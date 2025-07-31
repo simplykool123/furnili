@@ -32,7 +32,8 @@ The system features a professional and consistent UI/UX based on the "Furnili De
 
 #### Authentication & Authorization
 - JWT token-based authentication.
-- Four distinct user roles: Admin, Manager, Storekeeper, and User, with role-based access control for routes and UI components.
+- Four distinct user roles: Admin, Manager, Staff, and Store Incharge, with role-based access control for routes and UI components.
+- Manager Role: Team & module supervisor with permissions to view/manage teams, approve/review entries, access reports and pricing, but cannot access core settings, backups, or user management.
 
 #### Product Management
 - Comprehensive product catalog with categories, brands, and specifications.

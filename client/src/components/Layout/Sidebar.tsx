@@ -32,30 +32,30 @@ import {
 } from "lucide-react";
 
 const navigation = [
-  { name: 'Dashboard', href: '/', icon: LayoutDashboard, roles: ['admin', 'staff'] },
-  { name: 'Products', href: '/products', icon: Package, roles: ['admin', 'staff'] },
-  { name: 'Material Requests', href: '/requests', icon: ClipboardList, roles: ['admin', 'staff'] },
-  { name: 'Staff Attendance', href: '/attendance', icon: Clock, roles: ['admin', 'staff'] },
-  { name: 'Petty Cash', href: '/petty-cash', icon: Wallet, roles: ['admin', 'staff'] },
-  { name: 'Project Management', href: '/projects', icon: FolderOpen, roles: ['admin', 'staff'] },
-  { name: 'Task Management', href: '/tasks', icon: CheckSquare, roles: ['admin', 'staff'] },
-  { name: 'Product Comparison', href: '/product-comparison', icon: GitCompare, roles: ['admin'] }, // Staff disabled
-  { name: 'WhatsApp Export', href: '/whatsapp', icon: MessageCircle, roles: ['admin', 'staff'] },
+  { name: 'Dashboard', href: '/', icon: LayoutDashboard, roles: ['admin', 'manager', 'staff'] },
+  { name: 'Products', href: '/products', icon: Package, roles: ['admin', 'manager', 'staff'] },
+  { name: 'Material Requests', href: '/requests', icon: ClipboardList, roles: ['admin', 'manager', 'staff'] },
+  { name: 'Staff Attendance', href: '/attendance', icon: Clock, roles: ['admin', 'manager', 'staff'] },
+  { name: 'Petty Cash', href: '/petty-cash', icon: Wallet, roles: ['admin', 'manager', 'staff'] },
+  { name: 'Project Management', href: '/projects', icon: FolderOpen, roles: ['admin', 'manager', 'staff'] },
+  { name: 'Task Management', href: '/tasks', icon: CheckSquare, roles: ['admin', 'manager', 'staff'] },
+  { name: 'Product Comparison', href: '/product-comparison', icon: GitCompare, roles: ['admin', 'manager'] }, // Manager can access for team supervision
+  { name: 'WhatsApp Export', href: '/whatsapp', icon: MessageCircle, roles: ['admin', 'manager', 'staff'] },
 
-  { name: 'Reports', href: '/reports', icon: BarChart3, roles: ['admin'] }, // Removed staff/user access
+  { name: 'Reports', href: '/reports', icon: BarChart3, roles: ['admin', 'manager'] }, // Manager can access for team supervision
   { 
     name: 'Master', 
     icon: Database, 
-    roles: ['admin', 'staff'], // Show Master section for staff but with limited items
+    roles: ['admin', 'manager', 'staff'], // Show Master section with role-based items
     isCollapsible: true,
     subItems: [
-      { name: 'Inventory Movement', href: '/inventory-movement', icon: ArrowUpDown, roles: ['admin'] }, // Staff disabled
-      { name: 'Categories', href: '/categories', icon: Tag, roles: ['admin'] }, // Staff disabled
-      { name: 'Users', href: '/users', icon: Users, roles: ['admin'] },
-      { name: 'OCR Wizard', href: '/ocr-wizard', icon: Brain, roles: ['admin', 'staff'] },
-      { name: 'Price Comparison', href: '/price-comparison', icon: TrendingUp, roles: ['admin'] }, // Staff disabled
-      { name: 'Display Settings', href: '/display-settings', icon: Settings, roles: ['admin', 'staff'] },
-      { name: 'Backups', href: '/backups', icon: Download, roles: ['admin'] },
+      { name: 'Inventory Movement', href: '/inventory-movement', icon: ArrowUpDown, roles: ['admin', 'manager'] }, // Manager can supervise inventory
+      { name: 'Categories', href: '/categories', icon: Tag, roles: ['admin'] }, // Admin only - core settings
+      { name: 'Users', href: '/users', icon: Users, roles: ['admin'] }, // Admin only - user management
+      { name: 'OCR Wizard', href: '/ocr-wizard', icon: Brain, roles: ['admin', 'manager', 'staff'] },
+      { name: 'Price Comparison', href: '/price-comparison', icon: TrendingUp, roles: ['admin', 'manager'] }, // Manager can access for supervision
+      { name: 'Display Settings', href: '/display-settings', icon: Settings, roles: ['admin', 'manager', 'staff'] },
+      { name: 'Backups', href: '/backups', icon: Download, roles: ['admin'] }, // Admin only - core settings
     ]
   },
 ];
