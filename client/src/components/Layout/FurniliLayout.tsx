@@ -39,16 +39,7 @@ export default function FurniliLayout({
     return () => window.removeEventListener('resize', checkIsMobile);
   }, []);
 
-  // Auto-hide logic: collapse sidebar when not hovering (desktop only)
-  useEffect(() => {
-    if (!isMobile && !isHovering) {
-      const timer = setTimeout(() => {
-        setSidebarCollapsed(true);
-      }, 1500); // Auto-hide after 1.5 seconds of no hover
-
-      return () => clearTimeout(timer);
-    }
-  }, [isHovering, isMobile]);
+  // No auto-hide - sidebar stays open once expanded
 
   return (
     <div className="furnili-page">
@@ -66,12 +57,10 @@ export default function FurniliLayout({
           sidebarOpen ? "translate-x-0" : "-translate-x-full",
           sidebarCollapsed && !isMobile ? "w-16" : "w-64"
         )}
-        onMouseEnter={() => {
-          setIsHovering(true);
-          if (!isMobile) setSidebarCollapsed(false);
-        }}
-        onMouseLeave={() => {
-          setIsHovering(false);
+        onClick={() => {
+          if (!isMobile && sidebarCollapsed) {
+            setSidebarCollapsed(false);
+          }
         }}>
           <div className="furnili-sidebar h-full shadow-xl border-r border-border/50">
             <Sidebar 
@@ -91,16 +80,16 @@ export default function FurniliLayout({
         )}
 
         {/* Sidebar Toggle Button for Desktop */}
-        {!isMobile && sidebarCollapsed && (
+        {!isMobile && (
           <button
-            onClick={() => {
-              setSidebarCollapsed(false);
-              setIsHovering(true);
-            }}
-            className="fixed left-4 top-1/2 -translate-y-1/2 z-40 w-8 h-12 bg-[hsl(28,100%,25%)] hover:bg-[hsl(28,100%,20%)] text-white rounded-r-lg shadow-lg transition-all duration-200 flex items-center justify-center group"
-            title="Expand Sidebar"
+            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+            className={cn(
+              "fixed top-1/2 -translate-y-1/2 z-40 w-8 h-12 bg-[hsl(28,100%,25%)] hover:bg-[hsl(28,100%,20%)] text-white shadow-lg transition-all duration-200 flex items-center justify-center group",
+              sidebarCollapsed ? "left-4 rounded-r-lg" : "left-60 rounded-l-lg"
+            )}
+            title={sidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
           >
-            <ChevronRight className="w-4 h-4" />
+            <ChevronRight className={cn("w-4 h-4 transition-transform duration-200", !sidebarCollapsed && "rotate-180")} />
           </button>
         )}
 
