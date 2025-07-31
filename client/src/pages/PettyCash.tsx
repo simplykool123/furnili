@@ -539,10 +539,10 @@ export default function PettyCash() {
     
     const formDataToSend = new FormData();
     formDataToSend.append('expenseDate', formData.date);
-    formDataToSend.append('paidTo', formData.paidTo);
+    formDataToSend.append('vendor', formData.paidTo); // Changed from paidTo to vendor
     formDataToSend.append('amount', formData.amount);
     formDataToSend.append('paidBy', formData.paidBy);
-    formDataToSend.append('note', formData.purpose);
+    formDataToSend.append('description', formData.purpose); // Changed from note to description
     formDataToSend.append('category', formData.category);
     formDataToSend.append('projectId', formData.projectId);
     formDataToSend.append('orderNo', formData.orderNo);
@@ -1237,9 +1237,9 @@ export default function PettyCash() {
             const formPayload = new FormData();
             formPayload.append('expenseDate', formData.date);
             formPayload.append('amount', formData.amount);
-            formPayload.append('paidTo', formData.paidTo);
+            formPayload.append('vendor', formData.paidTo); // Changed from paidTo to vendor
             formPayload.append('paidBy', formData.paidBy);
-            formPayload.append('note', formData.purpose);
+            formPayload.append('description', formData.purpose); // Changed from note to description
             formPayload.append('projectId', formData.projectId);
             formPayload.append('orderNo', formData.orderNo);
             formPayload.append('category', formData.category);

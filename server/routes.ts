@@ -1279,8 +1279,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const expenseData = {
         category: req.body.category,
         amount: parseFloat(req.body.amount),
-        vendor: req.body.paidTo,
-        description: req.body.note,
+        vendor: req.body.vendor, // Changed from paidTo to vendor
+        description: req.body.description, // Changed from note to description
         projectId: req.body.projectId ? parseInt(req.body.projectId) : undefined,
         orderNo: req.body.orderNo,
         paidBy: req.body.paidBy ? parseInt(req.body.paidBy) : undefined,
@@ -1337,13 +1337,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/petty-cash/:id", authenticateToken, receiptImageUpload.single("receipt"), async (req: AuthRequest, res) => {
     try {
       const id = parseInt(req.params.id);
-      const updateData = {
-        ...req.body,
-        amount: req.body.amount ? parseFloat(req.body.amount) : undefined,
-        projectId: req.body.projectId ? parseInt(req.body.projectId) : undefined,
-        date: req.body.date ? new Date(req.body.date) : undefined,
-        receiptImageUrl: req.file?.path || undefined,
-      };
+      
+      // Properly construct update data with correct field names and type conversions
+      const updateData: any = {};
+      
+      if (req.body.amount !== undefined) {
+        updateData.amount = parseFloat(req.body.amount);
+      }
+      
+      if (req.body.projectId !== undefined) {
+        updateData.projectId = req.body.projectId ? parseInt(req.body.projectId) : null;
+      }
+      
+      if (req.body.vendor !== undefined) {
+        updateData.vendor = req.body.vendor;
+      }
+      
+      if (req.body.description !== undefined) {
+        updateData.description = req.body.description;
+      }
+      
+      if (req.body.category !== undefined) {
+        updateData.category = req.body.category;
+      }
+      
+      if (req.body.paidBy !== undefined) {
+        updateData.paidBy = req.body.paidBy ? parseInt(req.body.paidBy) : null;
+      }
+      
+      if (req.body.expenseDate !== undefined) {
+        updateData.expenseDate = new Date(req.body.expenseDate);
+      }
+      
+      if (req.file) {
+        updateData.receiptImageUrl = req.file.path;
+      }
+      
+      console.log("Update data being sent:", updateData);
       
       const expense = await storage.updatePettyCashExpense(id, updateData);
       if (!expense) {
