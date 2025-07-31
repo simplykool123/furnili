@@ -1,7 +1,7 @@
-# Comprehensive Inventory Management System
+# Furnili Workforce Management System
 
 ## Overview
-This is a full-featured inventory management system designed as a web application with a React frontend and Express backend. It provides multi-user authentication, role-based access control, inventory tracking, staff management, financial tracking, and task allocation. The system aims to offer comprehensive inventory and staff management capabilities for businesses.
+This is a professional workforce management platform designed as a modern web application with React frontend and Express backend. It provides comprehensive staff management, project tracking, inventory control, financial management, and role-based access control. The system features a clean, mobile-first design with the Furnili brand identity and optimized performance.
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.
