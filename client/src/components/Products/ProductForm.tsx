@@ -201,31 +201,31 @@ export default function ProductForm({ product, onClose, isMobile = false }: Prod
 
   return (
     <div className={`${isMobile ? 'h-full flex flex-col' : 'h-full flex flex-col'}`}>
-      <div className={`${isMobile ? 'flex-1 overflow-y-auto p-4' : 'flex-1 overflow-y-auto py-4'}`}>
-        <form onSubmit={handleSubmit(onSubmit)} className={`${isMobile ? 'space-y-3 pb-4' : 'space-y-6 pb-4'}`}>
+      <div className={`${isMobile ? 'flex-1 overflow-y-auto p-3' : 'flex-1 overflow-y-auto py-3 px-4'}`}>
+        <form onSubmit={handleSubmit(onSubmit)} className={`${isMobile ? 'space-y-2 pb-4' : 'space-y-4 pb-4'}`}>
           {/* Product Name - Full Width */}
           <div>
-            <Label htmlFor="name" className={isMobile ? "text-sm font-medium" : ""}>Product Name *</Label>
+            <Label htmlFor="name" className="text-sm font-medium mb-1">Product Name *</Label>
             <Input
               id="name"
               {...register("name")}
-              className={`${errors.name ? "border-red-500" : ""} ${isMobile ? "h-10 text-sm" : ""}`}
+              className={`${errors.name ? "border-red-500" : ""} h-9 text-sm`}
               placeholder="e.g., Calibrated ply"
             />
             {errors.name && (
-              <p className="text-xs text-red-600 mt-1">{errors.name.message}</p>
+              <p className="text-xs text-red-600 mt-0.5">{errors.name.message}</p>
             )}
           </div>
 
           {/* Category & Brand - Two columns on mobile, same row */}
-          <div className={`grid ${isMobile ? 'grid-cols-2 gap-2' : 'grid-cols-2 gap-6'}`}>
+          <div className={`grid ${isMobile ? 'grid-cols-2 gap-2' : 'grid-cols-2 gap-4'}`}>
             <div>
-              <Label htmlFor="category" className={isMobile ? "text-sm font-medium" : ""}>Category *</Label>
+              <Label htmlFor="category" className="text-sm font-medium mb-1">Category *</Label>
               <Select 
                 value={watch("category")}
                 onValueChange={(value) => setValue("category", value)}
               >
-                <SelectTrigger className={`${errors.category ? "border-red-500" : ""} ${isMobile ? "h-10 text-sm" : ""}`}>
+                <SelectTrigger className={`${errors.category ? "border-red-500" : ""} h-9 text-sm`}>
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
                 <SelectContent>
@@ -235,39 +235,39 @@ export default function ProductForm({ product, onClose, isMobile = false }: Prod
                 </SelectContent>
               </Select>
               {errors.category && (
-                <p className="text-xs text-red-600 mt-1">{errors.category.message}</p>
+                <p className="text-xs text-red-600 mt-0.5">{errors.category.message}</p>
               )}
             </div>
 
             <div>
-              <Label htmlFor="brand" className={isMobile ? "text-sm font-medium" : ""}>Brand</Label>
+              <Label htmlFor="brand" className="text-sm font-medium mb-1">Brand</Label>
               <Input
                 id="brand"
                 {...register("brand")}
-                className={`${isMobile ? "h-10 text-sm" : ""}`}
+                className="h-9 text-sm"
                 placeholder="e.g., ebco"
               />
             </div>
           </div>
 
           {/* Size & Thickness - Two columns on mobile, same row */}
-          <div className={`grid ${isMobile ? 'grid-cols-2 gap-2' : 'grid-cols-2 gap-6'}`}>
+          <div className={`grid ${isMobile ? 'grid-cols-2 gap-2' : 'grid-cols-2 gap-4'}`}>
             <div>
-              <Label htmlFor="size" className={isMobile ? "text-sm font-medium" : ""}>Size/Specification</Label>
+              <Label htmlFor="size" className="text-sm font-medium mb-1">Size/Specification</Label>
               <Input
                 id="size"
                 {...register("size")}
-                className={`${isMobile ? "h-10 text-sm" : ""}`}
+                className="h-9 text-sm"
                 placeholder="e.g., 8 X 4 feet"
               />
             </div>
 
             <div>
-              <Label htmlFor="thickness" className={isMobile ? "text-sm font-medium" : ""}>Thickness</Label>
+              <Label htmlFor="thickness" className="text-sm font-medium mb-1">Thickness</Label>
               <Input
                 id="thickness"
                 {...register("thickness")}
-                className={`${isMobile ? "h-10 text-sm" : ""}`}
+                className="h-9 text-sm"
                 placeholder="e.g., 12 mm, 6 mm, 16 mm"
               />
             </div>
@@ -276,41 +276,41 @@ export default function ProductForm({ product, onClose, isMobile = false }: Prod
           {/* SKU - Hidden on mobile since it's auto-generated */}
           {!isMobile && (
             <div>
-              <Label htmlFor="sku" className={isMobile ? "text-sm font-medium" : ""}>SKU</Label>
+              <Label htmlFor="sku" className="text-sm font-medium mb-1">SKU</Label>
               <Input
                 id="sku"
                 {...register("sku")}
                 placeholder="Auto-generated if empty"
-                className={isMobile ? "h-10 text-sm" : ""}
+                className="h-9 text-sm"
               />
             </div>
           )}
 
           {/* Price & Unit - Two columns on mobile, same row */}
-          <div className={`grid ${isMobile ? 'grid-cols-2 gap-2' : 'grid-cols-2 gap-6'}`}>
+          <div className={`grid ${isMobile ? 'grid-cols-2 gap-2' : 'grid-cols-2 gap-4'}`}>
 
             <div>
-              <Label htmlFor="price" className={isMobile ? "text-sm font-medium" : ""}>Price per Unit *</Label>
+              <Label htmlFor="price" className="text-sm font-medium mb-1">Price per Unit *</Label>
               <Input
                 id="price"
                 type="number"
                 step="0.01"
                 {...register("price")}
-                className={`${errors.price ? "border-red-500" : ""} ${isMobile ? "h-10 text-sm" : ""}`}
+                className={`${errors.price ? "border-red-500" : ""} h-9 text-sm`}
                 placeholder="0.00"
               />
               {errors.price && (
-                <p className="text-xs text-red-600 mt-1">{errors.price.message}</p>
+                <p className="text-xs text-red-600 mt-0.5">{errors.price.message}</p>
               )}
             </div>
 
             <div>
-              <Label htmlFor="unit" className={isMobile ? "text-sm font-medium" : ""}>Unit *</Label>
+              <Label htmlFor="unit" className="text-sm font-medium mb-1">Unit *</Label>
               <Select 
                 value={watch("unit")}
                 onValueChange={(value) => setValue("unit", value)}
               >
-                <SelectTrigger className={`${errors.unit ? "border-red-500" : ""} ${isMobile ? "h-10 text-sm" : ""}`}>
+                <SelectTrigger className={`${errors.unit ? "border-red-500" : ""} h-9 text-sm`}>
                   <SelectValue placeholder="Select unit" />
                 </SelectTrigger>
                 <SelectContent>
@@ -320,46 +320,46 @@ export default function ProductForm({ product, onClose, isMobile = false }: Prod
                 </SelectContent>
               </Select>
               {errors.unit && (
-                <p className="text-xs text-red-600 mt-1">{errors.unit.message}</p>
+                <p className="text-xs text-red-600 mt-0.5">{errors.unit.message}</p>
               )}
             </div>
           </div>
 
           {/* Current Stock & Minimum Stock - Two columns on mobile, same row */}
-          <div className={`grid ${isMobile ? 'grid-cols-2 gap-2' : 'grid-cols-2 gap-6'}`}>
+          <div className={`grid ${isMobile ? 'grid-cols-2 gap-2' : 'grid-cols-2 gap-4'}`}>
             <div>
-              <Label htmlFor="currentStock" className={isMobile ? "text-sm font-medium" : ""}>Current Stock *</Label>
+              <Label htmlFor="currentStock" className="text-sm font-medium mb-1">Current Stock *</Label>
               <Input
                 id="currentStock"
                 type="number"
                 {...register("currentStock")}
-                className={`${errors.currentStock ? "border-red-500" : ""} ${isMobile ? "h-10 text-sm" : ""}`}
+                className={`${errors.currentStock ? "border-red-500" : ""} h-9 text-sm`}
                 placeholder="0"
               />
               {errors.currentStock && (
-                <p className="text-xs text-red-600 mt-1">{errors.currentStock.message}</p>
+                <p className="text-xs text-red-600 mt-0.5">{errors.currentStock.message}</p>
               )}
             </div>
 
             <div>
-              <Label htmlFor="minStock" className={isMobile ? "text-sm font-medium" : ""}>Minimum Stock Level *</Label>
+              <Label htmlFor="minStock" className="text-sm font-medium mb-1">Minimum Stock Level *</Label>
               <Input
                 id="minStock"
                 type="number"
                 {...register("minStock")}
-                className={`${errors.minStock ? "border-red-500" : ""} ${isMobile ? "h-10 text-sm" : ""}`}
+                className={`${errors.minStock ? "border-red-500" : ""} h-9 text-sm`}
                 placeholder="10"
               />
               {errors.minStock && (
-                <p className="text-xs text-red-600 mt-1">{errors.minStock.message}</p>
+                <p className="text-xs text-red-600 mt-0.5">{errors.minStock.message}</p>
               )}
             </div>
           </div>
 
           {/* Image Upload */}
           <div>
-            <Label className={isMobile ? "text-sm font-medium" : ""}>Product Image</Label>
-            <div className={isMobile ? "mt-1" : "mt-2"}>
+            <Label className="text-sm font-medium mb-1">Product Image</Label>
+            <div className="mt-1">
               {imagePreview ? (
                 <div className="relative inline-block">
                   <img 
