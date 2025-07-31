@@ -1399,10 +1399,46 @@ export default function Attendance() {
     );
   }
 
+  // Get current user's today attendance to show check in/out status
+  const currentUserAttendance = todayAttendance.find((a: any) => a.userId === user?.id);
+  const hasCheckedInToday = currentUserAttendance?.checkInTime;
+  const hasCheckedOutToday = currentUserAttendance?.checkOutTime;
+
   return (
     <FurniliLayout
       title="Staff Attendance & Payroll"
       subtitle="Complete staff management system"
+      actions={
+        <div className="flex gap-2">
+          {/* Quick Check In/Out Buttons */}
+          {!hasCheckedInToday ? (
+            <FurniliButton
+              variant="furnili-primary"
+              size="sm"
+              onClick={() => selfCheckInMutation.mutate({})}
+              disabled={selfCheckInMutation.isPending}
+            >
+              <LogIn className="w-4 h-4 mr-2" />
+              {selfCheckInMutation.isPending ? "Checking In..." : "Quick Check In"}
+            </FurniliButton>
+          ) : !hasCheckedOutToday ? (
+            <FurniliButton
+              variant="furnili-secondary"
+              size="sm"
+              onClick={() => selfCheckOutMutation.mutate()}
+              disabled={selfCheckOutMutation.isPending}
+            >
+              <LogOut className="w-4 h-4 mr-2" />
+              {selfCheckOutMutation.isPending ? "Checking Out..." : "Quick Check Out"}
+            </FurniliButton>
+          ) : (
+            <Badge variant="secondary" className="px-3 py-1">
+              <Check className="w-4 h-4 mr-1" />
+              Completed for today
+            </Badge>
+          )}
+        </div>
+      }
     >
       {/* Header */}
       <div className="flex justify-between items-center mb-6">

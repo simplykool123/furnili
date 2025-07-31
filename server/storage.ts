@@ -2193,12 +2193,31 @@ class DatabaseStorage implements IStorage {
     const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
     const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59);
     
-    return db.select().from(attendance)
-      .where(and(
-        gte(attendance.date, startOfDay),
-        lte(attendance.date, endOfDay)
-      ))
-      .orderBy(desc(attendance.checkInTime));
+    const result = await db.select({
+      id: attendance.id,
+      userId: attendance.userId,
+      date: attendance.date,
+      checkInTime: attendance.checkInTime,
+      checkOutTime: attendance.checkOutTime,
+      status: attendance.status,
+      location: attendance.location,
+      notes: attendance.notes,
+      createdAt: attendance.createdAt,
+      user: {
+        id: users.id,
+        name: users.name,
+        email: users.email
+      }
+    })
+    .from(attendance)
+    .leftJoin(users, eq(attendance.userId, users.id))
+    .where(and(
+      gte(attendance.date, startOfDay),
+      lte(attendance.date, endOfDay)
+    ))
+    .orderBy(desc(attendance.checkInTime));
+    
+    return result as any;
   }
 
   // Helper function to calculate working days (excluding Sundays)
