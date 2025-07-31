@@ -2860,6 +2860,105 @@ class DatabaseStorage implements IStorage {
     return result.rowCount > 0;
   }
 
+  // Project Log Operations
+  async getProjectLogs(projectId: number): Promise<ProjectLog[]> {
+    const logs = await db.select().from(projectLogs)
+      .where(eq(projectLogs.projectId, projectId))
+      .orderBy(desc(projectLogs.createdAt));
+    
+    // Add user information for each log
+    const logsWithUsers = await Promise.all(
+      logs.map(async (log) => {
+        const user = log.createdBy ? await this.getUser(log.createdBy) : null;
+        return {
+          ...log,
+          user: user ? { id: user.id, name: user.name, email: user.email } : null,
+        };
+      })
+    );
+    
+    return logsWithUsers;
+  }
+
+  async createProjectLog(log: InsertProjectLog): Promise<ProjectLog> {
+    const result = await db.insert(projectLogs).values(log).returning();
+    return result[0];
+  }
+
+  async updateProjectLog(id: number, updates: Partial<ProjectLog>): Promise<ProjectLog | undefined> {
+    try {
+      const result = await db.update(projectLogs)
+        .set(updates)
+        .where(eq(projectLogs.id, id))
+        .returning();
+      return result[0];
+    } catch (error) {
+      console.error('Error updating project log:', error);
+      return undefined;
+    }
+  }
+
+  async deleteProjectLog(id: number): Promise<boolean> {
+    const result = await db.delete(projectLogs).where(eq(projectLogs.id, id));
+    return result.rowCount > 0;
+  }
+
+  // Project File Operations
+  async getProjectFiles(projectId: number): Promise<ProjectFile[]> {
+    try {
+      const result = await db.select()
+        .from(projectFiles)
+        .where(eq(projectFiles.projectId, projectId))
+        .orderBy(desc(projectFiles.createdAt));
+      return result;
+    } catch (error) {
+      console.error('Error getting project files:', error);
+      return [];
+    }
+  }
+
+  async createProjectFile(file: InsertProjectFile): Promise<ProjectFile> {
+    try {
+      const result = await db.insert(projectFiles).values(file).returning();
+      return result[0];
+    } catch (error) {
+      console.error('Error creating project file:', error);
+      throw error;
+    }
+  }
+
+  async deleteProjectFile(id: number): Promise<boolean> {
+    try {
+      const result = await db.delete(projectFiles).where(eq(projectFiles.id, id));
+      return result.rowCount !== null && result.rowCount > 0;
+    } catch (error) {
+      console.error('Error deleting project file:', error);
+      return false;
+    }
+  }
+
+  async updateFileComment(id: number, comment: string): Promise<boolean> {
+    try {
+      const result = await db.update(projectFiles)
+        .set({ comment, updatedAt: new Date() })
+        .where(eq(projectFiles.id, id));
+      return result.rowCount !== null && result.rowCount > 0;
+    } catch (error) {
+      console.error('Error updating file comment:', error);
+      return false;
+    }
+  }
+
+  async getProjectFile(id: number): Promise<ProjectFile | undefined> {
+    try {
+      const result = await db.select().from(projectFiles).where(eq(projectFiles.id, id)).limit(1);
+      return result[0];
+    } catch (error) {
+      console.error('Error getting project file:', error);
+      return undefined;
+    }
+  }
+
   // Moodboard operations
   async getMoodboard(id: number): Promise<Moodboard | undefined> {
     try {
