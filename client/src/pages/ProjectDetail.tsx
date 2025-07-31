@@ -303,48 +303,73 @@ function ProjectFinancials({ projectId }: { projectId: string }) {
         </Card>
       </div>
 
-      {/* Expense Detail Modal */}
+      {/* Expense Detail Modal - Optimized Layout */}
       {selectedExpense && (
         <Dialog open={!!selectedExpense} onOpenChange={() => setSelectedExpense(null)}>
-          <DialogContent className="max-w-md">
+          <DialogContent className="sm:max-w-[500px]">
             <DialogHeader>
-              <DialogTitle className="text-lg">Expense Details</DialogTitle>
+              <DialogTitle>Expense Details</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
-              <div>
-                <label className="text-sm font-medium text-gray-600">Paid By</label>
-                <p className="text-sm">{selectedExpense.user?.name || 'Unknown'}</p>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-600">Category</label>
-                <p className="text-sm">{selectedExpense.category}</p>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-600">Vendor</label>
-                <p className="text-sm">{selectedExpense.vendor}</p>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-600">Amount</label>
-                <p className="text-lg font-bold text-red-600">₹{selectedExpense.amount.toLocaleString()}</p>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-600">Date</label>
-                <p className="text-sm">{new Date(selectedExpense.expenseDate).toLocaleDateString('en-GB')}</p>
-              </div>
-              {selectedExpense.description && (
+              {/* Two columns layout for better space utilization */}
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium text-gray-600">Description</label>
-                  <p className="text-sm">{selectedExpense.description}</p>
+                  <div className="text-sm font-medium text-gray-600">Paid By</div>
+                  <div className="text-sm">{selectedExpense.user?.name || selectedExpense.user?.username || 'N/A'}</div>
                 </div>
-              )}
+                <div>
+                  <div className="text-sm font-medium text-gray-600">Category</div>
+                  <div className="text-sm">{selectedExpense.category}</div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <div className="text-sm font-medium text-gray-600">Vendor</div>
+                  <div className="text-sm">{selectedExpense.vendor}</div>
+                </div>
+                <div>
+                  <div className="text-sm font-medium text-gray-600">Amount</div>
+                  <div className={`text-sm font-bold ${
+                    selectedExpense.status === 'income' ? 'text-green-600' : 'text-red-600'
+                  }`}>
+                    {selectedExpense.status === 'income' ? '+' : '-'}₹{selectedExpense.amount.toLocaleString()}
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <div className="text-sm font-medium text-gray-600">Date</div>
+                  <div className="text-sm">{new Date(selectedExpense.expenseDate).toLocaleDateString('en-GB')}</div>
+                </div>
+                <div>
+                  <div className="text-sm font-medium text-gray-600">Project</div>
+                  <div className="text-sm">
+                    {selectedExpense.projectId && selectedExpense.project ? 
+                      `${selectedExpense.project.code} - ${selectedExpense.project.name}` : 
+                      selectedExpense.projectId ? selectedExpense.projectId : '-'
+                    }
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <div className="text-sm font-medium text-gray-600">Description</div>
+                <div className="text-sm">{selectedExpense.description || '-'}</div>
+              </div>
+
               {selectedExpense.receiptImageUrl && (
                 <div>
-                  <label className="text-sm font-medium text-gray-600">Receipt</label>
-                  <img 
-                    src={selectedExpense.receiptImageUrl} 
-                    alt="Receipt" 
-                    className="w-full max-h-40 object-contain border rounded"
-                  />
+                  <div className="text-sm font-medium text-gray-600 mb-2">Receipt</div>
+                  <div className="flex justify-center">
+                    <img 
+                      src={selectedExpense.receiptImageUrl}
+                      alt="Receipt" 
+                      className="max-w-full max-h-[200px] object-contain rounded-lg border cursor-pointer"
+                      title="Receipt image"
+                    />
+                  </div>
                 </div>
               )}
             </div>
