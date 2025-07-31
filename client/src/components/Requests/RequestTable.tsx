@@ -242,20 +242,22 @@ export default function RequestTable() {
 
   return (
     <div className="space-y-4 sm:space-y-6">
-      {/* Mobile Quick Filters for Status */}
+      {/* Mobile Status Filter - Simple Select */}
       {isMobile && (
-        <MobileQuickFilters
-          options={[
-            { value: "all", label: "All", count: statusCounts.all },
-            { value: "pending", label: "Pending", count: statusCounts.pending },
-            { value: "approved", label: "Approved", count: statusCounts.approved },
-            { value: "issued", label: "Issued", count: statusCounts.issued },
-            { value: "rejected", label: "Rejected", count: statusCounts.rejected },
-          ]}
-          selectedValue={activeTab}
-          onChange={setActiveTab}
-          className="mb-4"
-        />
+        <div className="mb-4">
+          <Select value={activeTab} onValueChange={setActiveTab}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Filter by status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All ({statusCounts.all})</SelectItem>
+              <SelectItem value="pending">Pending ({statusCounts.pending})</SelectItem>
+              <SelectItem value="approved">Approved ({statusCounts.approved})</SelectItem>
+              <SelectItem value="issued">Issued ({statusCounts.issued})</SelectItem>
+              <SelectItem value="rejected">Rejected ({statusCounts.rejected})</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       )}
 
       {/* Mobile Filters */}
