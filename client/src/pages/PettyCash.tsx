@@ -584,20 +584,45 @@ export default function PettyCash() {
 
   // Export functions
   const exportToWhatsApp = () => {
-    const text = filteredExpenses.map((expense: PettyCashExpense) => 
-      `📄 ${expense.vendor}\n💰 ₹${expense.amount}\n📅 ${format(new Date(expense.expenseDate), 'dd MMM yyyy')}\n🏷️ ${expense.category}\n👤 ${expense.user?.name || expense.user?.username || 'N/A'}\n${expense.description ? `📝 ${expense.description}\n` : ''}\n---`
-    ).join('\n\n');
+    // Calculate totals
+    const totalIncome = filteredExpenses
+      .filter((expense: PettyCashExpense) => expense.status === 'income')
+      .reduce((sum: number, expense: PettyCashExpense) => sum + expense.amount, 0);
+    const totalExpenses = filteredExpenses
+      .filter((expense: PettyCashExpense) => expense.status === 'expense')
+      .reduce((sum: number, expense: PettyCashExpense) => sum + expense.amount, 0);
+    const netTotal = totalIncome - totalExpenses;
+
+    const message = filteredExpenses.map((expense: PettyCashExpense) => 
+      `${format(new Date(expense.expenseDate), 'dd MMM yyyy')} - ${expense.status === 'income' ? 'Credit' : 'Debit'} - ${expense.status === 'income' ? '+' : '-'}₹${expense.amount.toLocaleString()} - ${expense.vendor} - ${expense.category} - ${expense.description || ''}`
+    ).join('\n');
     
-    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(`💰 Petty Cash Report\n\n${text}\n\n💸 Total: ₹${filteredExpenses.reduce((sum: number, exp: PettyCashExpense) => sum + exp.amount, 0)}`)}`;
+    const totals = `\n\n📊 SUMMARY:\n💰 Total Income: +₹${totalIncome.toLocaleString()}\n💸 Total Expenses: -₹${totalExpenses.toLocaleString()}\n📈 Net Total: ${netTotal >= 0 ? '+' : ''}₹${netTotal.toLocaleString()}`;
+    
+    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(`💰 Petty Cash Report\n📅 ${format(new Date(), 'dd MMM yyyy')}\n\n${message}${totals}`)}`;
     window.open(whatsappUrl, '_blank');
   };
 
   const exportToExcel = () => {
+    // Calculate totals
+    const totalIncome = filteredExpenses
+      .filter((expense: PettyCashExpense) => expense.status === 'income')
+      .reduce((sum: number, expense: PettyCashExpense) => sum + expense.amount, 0);
+    const totalExpenses = filteredExpenses
+      .filter((expense: PettyCashExpense) => expense.status === 'expense')
+      .reduce((sum: number, expense: PettyCashExpense) => sum + expense.amount, 0);
+    const netTotal = totalIncome - totalExpenses;
+
     const csvContent = [
-      'Date,Paid To,Amount,Paid By,Category,Description',
+      'Date,Type,Amount,Paid To/Source,Paid By,Purpose,Category,Project ID,Description',
       ...filteredExpenses.map((expense: PettyCashExpense) => 
-        `${expense.expenseDate},"${expense.vendor}",${expense.amount},"${expense.user?.name || expense.user?.username || 'N/A'}","${expense.category}","${expense.description || ''}"`
-      )
+        `${format(new Date(expense.expenseDate), 'dd MMM yyyy')},"${expense.status === 'income' ? 'Credit' : 'Debit'}","${expense.status === 'income' ? '+' : '-'}₹${expense.amount.toLocaleString()}","${expense.vendor}","${expense.user?.name || expense.user?.username || 'N/A'}","${expense.description || ''}","${expense.category}","${expense.projectId || '-'}","${expense.description || ''}"`
+      ),
+      '',
+      'TOTALS:',
+      `Total Income,+₹${totalIncome.toLocaleString()}`,
+      `Total Expenses,-₹${totalExpenses.toLocaleString()}`,
+      `Net Total,${netTotal >= 0 ? '+' : ''}₹${netTotal.toLocaleString()}`
     ].join('\n');
     
     const blob = new Blob([csvContent], { type: 'text/csv' });
@@ -988,7 +1013,7 @@ export default function PettyCash() {
                     <TableCell className="py-2 px-3 text-blue-600 font-medium">
                       {expense.projectId ? (
                         <div className="text-center">
-                          <div className="text-xs font-semibold">#{expense.projectId}</div>
+                          <div className="text-xs font-semibold">{expense.projectId}</div>
                           {expense.project && (
                             <div className="text-[10px] text-gray-500 truncate max-w-[80px]" title={expense.project.name}>
                               {expense.project.code}
@@ -1046,9 +1071,38 @@ export default function PettyCash() {
               ))}
               {filteredExpenses.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={9} className="text-center text-gray-500 py-8">
+                  <TableCell colSpan={10} className="text-center text-gray-500 py-8">
                     No expenses found matching your filters
                   </TableCell>
+                </TableRow>
+              )}
+              {/* Total Row */}
+              {filteredExpenses.length > 0 && (
+                <TableRow className="bg-gray-100 border-t-2 font-bold">
+                  <TableCell colSpan={2} className="py-3 px-3 text-center font-bold text-gray-700">
+                    TOTAL
+                  </TableCell>
+                  <TableCell className="py-3 px-3 font-bold text-right">
+                    {(() => {
+                      const totalIncome = filteredExpenses
+                        .filter((expense: PettyCashExpense) => expense.status === 'income')
+                        .reduce((sum: number, expense: PettyCashExpense) => sum + expense.amount, 0);
+                      const totalExpenses = filteredExpenses
+                        .filter((expense: PettyCashExpense) => expense.status === 'expense')
+                        .reduce((sum: number, expense: PettyCashExpense) => sum + expense.amount, 0);
+                      const netTotal = totalIncome - totalExpenses;
+                      return (
+                        <div className="text-sm">
+                          <div className="text-green-600">+₹{totalIncome.toLocaleString()}</div>
+                          <div className="text-red-600">-₹{totalExpenses.toLocaleString()}</div>
+                          <div className={`font-bold ${netTotal >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                            Net: {netTotal >= 0 ? '+' : ''}₹{netTotal.toLocaleString()}
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </TableCell>
+                  <TableCell colSpan={7} className="py-3 px-3"></TableCell>
                 </TableRow>
               )}
             </TableBody>
