@@ -61,6 +61,9 @@ export default function PettyCash() {
   const [selectedImage, setSelectedImage] = useState<string>("");
   const [showStaffBalances, setShowStaffBalances] = useState(false);
   
+  // Mobile optimization hook
+  const { isMobile } = useIsMobile();
+  
   // Get current user
   const user = authService.getUser();
   
@@ -556,63 +559,98 @@ export default function PettyCash() {
           <div>
           </div>
         <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-          <Button onClick={() => setShowAddDialog(true)} className="flex-1 sm:flex-none">
+          <Button onClick={() => setShowAddDialog(true)} className={`flex-1 sm:flex-none ${isMobile ? 'h-9 text-sm' : ''}`}>
             <Plus className="mr-2 h-4 w-4" />
-            <span className="sm:hidden">Add Expense</span>
-            <span className="hidden sm:inline">Add Expense</span>
+            Add Expense
           </Button>
           {user?.role !== 'staff' && (
-            <Button onClick={() => setShowAddFundsDialog(true)} variant="outline" className="flex-1 sm:flex-none bg-green-50 border-green-200 hover:bg-green-100 text-green-700">
+            <Button onClick={() => setShowAddFundsDialog(true)} variant="outline" className={`flex-1 sm:flex-none bg-green-50 border-green-200 hover:bg-green-100 text-green-700 ${isMobile ? 'h-9 text-sm' : ''}`}>
               <Plus className="mr-2 h-4 w-4" />
-              <span className="sm:hidden">Add Funds</span>
-              <span className="hidden sm:inline">Add Funds</span>
+              Add Funds
             </Button>
           )}
         </div>
       </div>
       {/* Stats Cards */}
       {stats && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Expenses (Debit)</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-red-600">-₹{stats.totalExpenses?.toLocaleString()}</div>
-              <p className="text-xs text-red-500 mt-1">Money Out</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Funds (Credit)</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-green-600">+₹{stats.totalIncome?.toLocaleString()}</div>
-              <p className="text-xs text-green-500 mt-1">Money In</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Current Balance</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className={`text-2xl font-bold ${stats.balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {stats.balance >= 0 ? '+' : ''}₹{stats.balance?.toLocaleString()}
+        <>
+          {/* Mobile Compact Stats - Single Line */}
+          {isMobile && (
+            <Card className="p-3">
+              <div className="grid grid-cols-3 gap-2 text-center">
+                <div className="space-y-1">
+                  <div className="text-xs font-medium text-gray-600">Total Expenses</div>
+                  <div className="text-sm font-bold text-red-600">-₹{stats.totalExpenses?.toLocaleString()}</div>
+                  <div className="text-xs text-red-500">Money Out</div>
+                </div>
+                <div className="space-y-1">
+                  <div className="text-xs font-medium text-gray-600">Total Funds</div>
+                  <div className="text-sm font-bold text-green-600">+₹{stats.totalIncome?.toLocaleString()}</div>
+                  <div className="text-xs text-green-500">Money In</div>
+                </div>
+                <div className="space-y-1">
+                  <div className="text-xs font-medium text-gray-600">Current Balance</div>
+                  <div className={`text-sm font-bold ${stats.balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    {stats.balance >= 0 ? '+' : ''}₹{stats.balance?.toLocaleString()}
+                  </div>
+                  <div className={`text-xs ${stats.balance >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                    {stats.balance >= 0 ? 'Available' : 'Deficit'}
+                  </div>
+                </div>
               </div>
-              <p className={`text-xs mt-1 ${stats.balance >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                {stats.balance >= 0 ? 'Available Funds' : 'Deficit'}
-              </p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">This Month</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">₹{stats.currentMonthExpenses?.toLocaleString()}</div>
-            </CardContent>
-          </Card>
-        </div>
+              {/* This Month Stats on Mobile */}
+              <div className="mt-3 pt-3 border-t text-center">
+                <div className="text-xs font-medium text-gray-600">This Month</div>
+                <div className="text-lg font-bold">₹{stats.currentMonthExpenses?.toLocaleString()}</div>
+              </div>
+            </Card>
+          )}
+          
+          {/* Desktop Stats Cards */}
+          {!isMobile && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Total Expenses (Debit)</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-red-600">-₹{stats.totalExpenses?.toLocaleString()}</div>
+                  <p className="text-xs text-red-500 mt-1">Money Out</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Total Funds (Credit)</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-green-600">+₹{stats.totalIncome?.toLocaleString()}</div>
+                  <p className="text-xs text-green-500 mt-1">Money In</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Current Balance</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className={`text-2xl font-bold ${stats.balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    {stats.balance >= 0 ? '+' : ''}₹{stats.balance?.toLocaleString()}
+                  </div>
+                  <p className={`text-xs mt-1 ${stats.balance >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                    {stats.balance >= 0 ? 'Available Funds' : 'Deficit'}
+                  </p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">This Month</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">₹{stats.currentMonthExpenses?.toLocaleString()}</div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+        </>
       )}
 
       {/* Staff Balances - Hide for staff users */}
@@ -677,10 +715,10 @@ export default function PettyCash() {
 
       {/* Filters */}
       <Card>
-        <CardContent className="pt-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:flex lg:flex-wrap gap-3 lg:gap-4">
-            <div className="lg:flex-1 lg:min-w-[200px] sm:col-span-2">
-              <Label htmlFor="search">Search</Label>
+        <CardContent className={`${isMobile ? 'pt-4' : 'pt-6'}`}>
+          <div className={`${isMobile ? 'space-y-3' : 'grid grid-cols-1 sm:grid-cols-2 lg:flex lg:flex-wrap gap-3 lg:gap-4'}`}>
+            <div className={`${isMobile ? '' : 'lg:flex-1 lg:min-w-[200px] sm:col-span-2'}`}>
+              <Label htmlFor="search" className={`${isMobile ? 'text-sm' : ''}`}>Search</Label>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <Input
@@ -688,62 +726,64 @@ export default function PettyCash() {
                   placeholder="Search by name or note..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
+                  className={`pl-10 ${isMobile ? 'h-9 text-sm' : ''}`}
                 />
               </div>
             </div>
-            <div>
-              <Label htmlFor="category-filter">Category</Label>
-              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                <SelectTrigger className="w-full lg:w-[150px]">
-                  <SelectValue placeholder="All Categories" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Categories</SelectItem>
-                  {categories.map((category) => (
-                    <SelectItem key={category} value={category}>
-                      {category}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className={`${isMobile ? 'grid grid-cols-2 gap-3' : 'contents'}`}>
+              <div>
+                <Label htmlFor="category-filter" className={`${isMobile ? 'text-sm' : ''}`}>Category</Label>
+                <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                  <SelectTrigger className={`w-full ${isMobile ? 'h-9 text-sm' : 'lg:w-[150px]'}`}>
+                    <SelectValue placeholder="All Categories" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Categories</SelectItem>
+                    {categories.map((category) => (
+                      <SelectItem key={category} value={category}>
+                        {category}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              {user?.role !== 'staff' && (
+                <div>
+                  <Label htmlFor="paid-by-filter" className={`${isMobile ? 'text-sm' : ''}`}>Paid By</Label>
+                  <Select value={selectedPaidBy} onValueChange={setSelectedPaidBy}>
+                    <SelectTrigger className={`w-full ${isMobile ? 'h-9 text-sm' : 'lg:w-[150px]'}`}>
+                      <SelectValue placeholder="All Staff" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Staff</SelectItem>
+                      {users.map((user: any) => (
+                        <SelectItem key={user.id} value={user.name || user.username}>
+                          {user.name || user.username}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+              <div className={`${user?.role === 'staff' ? 'col-span-1' : ''}`}>
+                <Label htmlFor="date-filter" className={`${isMobile ? 'text-sm' : ''}`}>Date</Label>
+                <Input
+                  id="date-filter"
+                  type="date"
+                  value={dateFilter}
+                  onChange={(e) => setDateFilter(e.target.value)}
+                  className={`w-full ${isMobile ? 'h-9 text-sm' : 'lg:w-[150px]'}`}
+                />
+              </div>
             </div>
-{user?.role !== 'staff' && (
-            <div>
-              <Label htmlFor="paid-by-filter">Paid By</Label>
-              <Select value={selectedPaidBy} onValueChange={setSelectedPaidBy}>
-                <SelectTrigger className="w-full lg:w-[150px]">
-                  <SelectValue placeholder="All Staff" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Staff</SelectItem>
-                  {users.map((user: any) => (
-                    <SelectItem key={user.id} value={user.name || user.username}>
-                      {user.name || user.username}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            )}
-            <div>
-              <Label htmlFor="date-filter">Date</Label>
-              <Input
-                id="date-filter"
-                type="date"
-                value={dateFilter}
-                onChange={(e) => setDateFilter(e.target.value)}
-                className="w-full lg:w-[150px]"
-              />
-            </div>
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-end gap-2 sm:col-span-2 lg:col-span-1">
-              <Button variant="outline" onClick={exportToWhatsApp} className="flex-1 sm:flex-none">
+            <div className={`${isMobile ? 'grid grid-cols-2 gap-2' : 'flex flex-col sm:flex-row items-stretch sm:items-end gap-2 sm:col-span-2 lg:col-span-1'}`}>
+              <Button variant="outline" onClick={exportToWhatsApp} className={`${isMobile ? 'h-9 text-sm' : 'flex-1 sm:flex-none'}`}>
                 <Share2 className="mr-2 h-4 w-4" />
-                WhatsApp
+                {isMobile ? 'WhatsApp' : 'WhatsApp'}
               </Button>
-              <Button variant="outline" onClick={exportToExcel} className="flex-1 sm:flex-none">
+              <Button variant="outline" onClick={exportToExcel} className={`${isMobile ? 'h-9 text-sm' : 'flex-1 sm:flex-none'}`}>
                 <Download className="mr-2 h-4 w-4" />
-                Excel
+                {isMobile ? 'Excel' : 'Excel'}
               </Button>
             </div>
           </div>
