@@ -1588,31 +1588,37 @@ export default function Attendance() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Clock className="w-5 h-5" />
-                  Today's Attendance
+                  {new Date().toLocaleDateString("en-IN", { 
+                    weekday: 'short',
+                    month: 'short', 
+                    day: 'numeric'
+                  })} Attendance
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
+                <div className="space-y-2">
                   {todayAttendance.length > 0 ? (
                     todayAttendance.map((attendance: any) => (
-                      <div key={attendance.id} className="flex items-center justify-between p-3 border rounded-lg">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                            <Users className="w-5 h-5 text-blue-600" />
+                      <div key={attendance.id} className="flex items-center justify-between p-2 border rounded-md bg-gray-50 hover:bg-gray-100 transition-colors">
+                        <div className="flex items-center gap-2 min-w-0 flex-1">
+                          <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                            <Users className="w-4 h-4 text-blue-600" />
                           </div>
-                          <div>
-                            <p className="font-medium">{attendance.user?.name}</p>
-                            <p className="text-sm text-gray-600">
+                          <div className="min-w-0 flex-1">
+                            <p className="font-medium text-sm truncate">{attendance.user?.name}</p>
+                            <p className="text-xs text-gray-600">
                               In: {formatTime(attendance.checkInTime)} 
                               {attendance.checkOutTime && ` | Out: ${formatTime(attendance.checkOutTime)}`}
                             </p>
                           </div>
                         </div>
-                        {getStatusBadge(attendance.status)}
+                        <div className="flex-shrink-0">
+                          {getStatusBadge(attendance.status)}
+                        </div>
                       </div>
                     ))
                   ) : (
-                    <p className="text-center text-gray-500 py-4">No attendance records for today</p>
+                    <p className="text-center text-gray-500 py-4 text-sm">No attendance records for today</p>
                   )}
                 </div>
               </CardContent>
