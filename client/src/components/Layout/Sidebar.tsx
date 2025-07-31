@@ -42,7 +42,7 @@ const navigation = [
   { name: 'Product Comparison', href: '/product-comparison', icon: GitCompare, roles: ['admin'] }, // Staff disabled
   { name: 'WhatsApp Export', href: '/whatsapp', icon: MessageCircle, roles: ['admin', 'staff'] },
 
-  { name: 'Reports', href: '/reports', icon: BarChart3, roles: ['admin', 'staff'] },
+  { name: 'Reports', href: '/reports', icon: BarChart3, roles: ['admin'] }, // Removed staff/user access
   { 
     name: 'Master', 
     icon: Database, 

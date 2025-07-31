@@ -4,6 +4,7 @@ import { Menu, X, Home, Package, FileText, Users, DollarSign, BarChart3 } from "
 import { Link, useLocation } from "wouter";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "./MobileOptimizer";
+import { authService } from "@/lib/auth";
 
 interface MobileNavigationProps {
   isOpen: boolean;
@@ -12,19 +13,25 @@ interface MobileNavigationProps {
 }
 
 const navigationItems = [
-  { icon: Home, label: "Dashboard", href: "/" },
-  { icon: Package, label: "Products", href: "/products" },
-  { icon: FileText, label: "Requests", href: "/requests" },
-  { icon: Users, label: "Staff", href: "/attendance" },
-  { icon: DollarSign, label: "Petty Cash", href: "/petty-cash" },
-  { icon: BarChart3, label: "Reports", href: "/whatsapp-export" },
+  { icon: Home, label: "Dashboard", href: "/", roles: ['admin', 'staff', 'store_incharge'] },
+  { icon: Package, label: "Products", href: "/products", roles: ['admin', 'staff', 'store_incharge'] },
+  { icon: FileText, label: "Requests", href: "/requests", roles: ['admin', 'staff', 'store_incharge'] },
+  { icon: Users, label: "Staff", href: "/attendance", roles: ['admin', 'staff', 'store_incharge'] },
+  { icon: DollarSign, label: "Petty Cash", href: "/petty-cash", roles: ['admin', 'staff', 'store_incharge'] },
+  { icon: BarChart3, label: "Reports", href: "/reports", roles: ['admin'] }, // Only admin access
 ];
 
 export default function MobileNavigation({ isOpen, onToggle, onClose }: MobileNavigationProps) {
   const { isMobile } = useIsMobile();
   const [location] = useLocation();
+  const user = authService.getUser();
 
-  if (!isMobile) return null;
+  if (!isMobile || !user) return null;
+
+  // Filter navigation items based on user role
+  const filteredNavigationItems = navigationItems.filter(item => 
+    item.roles.includes(user.role)
+  );
 
   return (
     <>
@@ -76,7 +83,7 @@ export default function MobileNavigation({ isOpen, onToggle, onClose }: MobileNa
               {/* Navigation Items */}
               <div className="flex-1 overflow-y-auto py-4">
                 <nav className="space-y-2 px-3">
-                  {navigationItems.map((item) => {
+                  {filteredNavigationItems.map((item) => {
                     const isActive = location === item.href;
                     return (
                       <Link key={item.href} href={item.href}>
