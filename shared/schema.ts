@@ -396,14 +396,15 @@ export const pettyCashExpenses = pgTable("petty_cash_expenses", {
   amount: real("amount").notNull(),
   vendor: text("vendor"),
   description: text("description"),
-  orderNo: text("order_no"), // Order No./Client Reference
+  projectId: integer("project_id").references(() => projects.id), // Project reference for expense tracking
+  orderNo: text("order_no"), // Legacy field - keeping for backward compatibility
   paidBy: integer("paid_by").references(() => users.id), // Staff member who paid
   receiptImageUrl: text("receipt_image_url"), // Google Pay screenshot
   extractedData: jsonb("extracted_data"), // OCR extracted data
   expenseDate: timestamp("expense_date").notNull(),
   addedBy: integer("added_by").references(() => users.id).notNull(),
   approvedBy: integer("approved_by").references(() => users.id),
-  status: text("status").notNull().default("pending"), // pending, approved, rejected
+  status: text("status").notNull().default("expense"), // expense, income, pending, approved, rejected
   createdAt: timestamp("created_at").defaultNow(),
 });
 

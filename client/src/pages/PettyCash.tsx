@@ -81,7 +81,8 @@ export default function PettyCash() {
     paidTo: "", // Name of person/vendor
     paidBy: user ? user.id.toString() : "", // Default to current logged-in user
     purpose: "", // Purpose/Description 
-    orderNo: "", // Order No./Client Reference
+    projectId: "", // Project ID for expense tracking
+    orderNo: "", // Legacy field for backward compatibility
     receiptImage: null as File | null,
     category: "", // Keep for filtering
   });
@@ -155,6 +156,7 @@ export default function PettyCash() {
       paidTo: expense.vendor || '',
       paidBy: expense.user?.id?.toString() || '',
       purpose: expense.description || '',
+      projectId: "", // Will be updated when we add project data to expense interface
       orderNo: expense.orderNo || '',
       receiptImage: null,
       category: expense.category
@@ -195,6 +197,12 @@ export default function PettyCash() {
   const { data: users = [] } = useQuery({
     queryKey: ["/api/users"],
     queryFn: () => authenticatedApiRequest("GET", "/api/users"),
+  });
+
+  // Fetch projects for Project ID dropdown
+  const { data: projects = [] } = useQuery({
+    queryKey: ["/api/projects"],
+    queryFn: () => authenticatedApiRequest("GET", "/api/projects"),
   });
 
   // Create expense mutation
@@ -269,6 +277,7 @@ export default function PettyCash() {
       paidTo: "",
       paidBy: user ? user.id.toString() : "", // Always default to current user
       purpose: "",
+      projectId: "",
       orderNo: "",
       receiptImage: null,
       category: "",
@@ -535,6 +544,7 @@ export default function PettyCash() {
     formDataToSend.append('paidBy', formData.paidBy);
     formDataToSend.append('note', formData.purpose);
     formDataToSend.append('category', formData.category);
+    formDataToSend.append('projectId', formData.projectId);
     formDataToSend.append('orderNo', formData.orderNo);
     
     if (formData.receiptImage) {
@@ -550,9 +560,10 @@ export default function PettyCash() {
     
     // Log all FormData entries for debugging
     console.log("FormData entries:");
-    for (let [key, value] of formDataToSend.entries()) {
+    const entries = Array.from(formDataToSend.entries());
+    entries.forEach(([key, value]) => {
       console.log(key, value);
-    }
+    });
     
     addExpenseMutation.mutate(formDataToSend);
   };
@@ -1105,13 +1116,22 @@ export default function PettyCash() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="orderNo">Order No. / Client Name</Label>
-                <Input
-                  id="orderNo"
-                  placeholder=""
-                  value={formData.orderNo}
-                  onChange={(e) => setFormData(prev => ({ ...prev, orderNo: e.target.value }))}
-                />
+                <Label htmlFor="projectId">Project ID *</Label>
+                <Select 
+                  value={formData.projectId} 
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, projectId: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select project" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {projects.map((project: any) => (
+                      <SelectItem key={project.id} value={project.id.toString()}>
+                        {project.code} - {project.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div>
                 <Label htmlFor="category">Category </Label>
@@ -1220,6 +1240,7 @@ export default function PettyCash() {
             formPayload.append('paidTo', formData.paidTo);
             formPayload.append('paidBy', formData.paidBy);
             formPayload.append('note', formData.purpose);
+            formPayload.append('projectId', formData.projectId);
             formPayload.append('orderNo', formData.orderNo);
             formPayload.append('category', formData.category);
             if (formData.receiptImage) {
@@ -1298,13 +1319,22 @@ export default function PettyCash() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="edit-orderNo">Order No. / Client Reference</Label>
-                <Input
-                  id="edit-orderNo"
-                  placeholder="Pintu Order"
-                  value={formData.orderNo}
-                  onChange={(e) => setFormData(prev => ({ ...prev, orderNo: e.target.value }))}
-                />
+                <Label htmlFor="edit-projectId">Project ID *</Label>
+                <Select 
+                  value={formData.projectId} 
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, projectId: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select project" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {projects.map((project: any) => (
+                      <SelectItem key={project.id} value={project.id.toString()}>
+                        {project.code} - {project.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div>
                 <Label htmlFor="edit-category">Category (For Reports)</Label>

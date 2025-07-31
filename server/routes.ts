@@ -1281,6 +1281,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         amount: parseFloat(req.body.amount),
         vendor: req.body.paidTo,
         description: req.body.note,
+        projectId: req.body.projectId ? parseInt(req.body.projectId) : undefined,
         orderNo: req.body.orderNo,
         paidBy: req.body.paidBy ? parseInt(req.body.paidBy) : undefined,
         expenseDate: new Date(req.body.expenseDate),
@@ -1339,6 +1340,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const updateData = {
         ...req.body,
         amount: req.body.amount ? parseFloat(req.body.amount) : undefined,
+        projectId: req.body.projectId ? parseInt(req.body.projectId) : undefined,
         date: req.body.date ? new Date(req.body.date) : undefined,
         receiptImageUrl: req.file?.path || undefined,
       };
