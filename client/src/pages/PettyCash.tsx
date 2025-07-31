@@ -69,6 +69,8 @@ export default function PettyCash() {
   const [showImageDialog, setShowImageDialog] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string>("");
   const [showStaffBalances, setShowStaffBalances] = useState(false);
+  const [showExpenseDetailsDialog, setShowExpenseDetailsDialog] = useState(false);
+  const [selectedExpenseDetails, setSelectedExpenseDetails] = useState<PettyCashExpense | null>(null);
   
   // Mobile optimization hook
   const { isMobile } = useIsMobile();
@@ -150,6 +152,11 @@ export default function PettyCash() {
   });
 
   // Handler functions
+  const handleShowExpenseDetails = (expense: PettyCashExpense) => {
+    setSelectedExpenseDetails(expense);
+    setShowExpenseDetailsDialog(true);
+  };
+
   const handleEditExpense = (expense: PettyCashExpense) => {
     setEditingExpense(expense);
     setFormData({
@@ -995,7 +1002,11 @@ export default function PettyCash() {
               </TableHeader>
               <TableBody>
                 {filteredExpenses.map((expense: PettyCashExpense) => (
-                  <TableRow key={expense.id} className="text-xs hover:bg-gray-50">
+                  <TableRow 
+                    key={expense.id} 
+                    className="text-xs hover:bg-gray-50 cursor-pointer" 
+                    onClick={() => handleShowExpenseDetails(expense)}
+                  >
                     <TableCell className="py-2 px-3 text-gray-700 text-xs">
                       {format(new Date(expense.expenseDate), 'dd/MM/yy')}
                     </TableCell>
@@ -1046,7 +1057,8 @@ export default function PettyCash() {
                           src={expense.receiptImageUrl}
                           alt="Receipt"
                           className="w-6 h-6 object-cover rounded cursor-pointer border mx-auto"
-                          onClick={() => {
+                          onClick={(e) => {
+                            e.stopPropagation(); // Prevent row click
                             setSelectedImage(expense.receiptImageUrl || "");
                             setShowImageDialog(true);
                           }}
@@ -1057,14 +1069,17 @@ export default function PettyCash() {
                       )}
                     </TableCell>
                     <TableCell className="py-2 px-3 text-right">
-                      <div className="flex items-center justify-end gap-1">
+                      <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
                         {/* Only show edit/delete for creator or admin */}
                         {(expense.addedBy === user?.id || user?.role === 'admin') && (
                           <>
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => handleEditExpense(expense)}
+                              onClick={(e) => {
+                                e.stopPropagation(); // Prevent row click
+                                handleEditExpense(expense);
+                              }}
                               title="Edit expense"
                               className="h-6 w-6 p-0"
                             >
@@ -1073,7 +1088,10 @@ export default function PettyCash() {
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => handleDeleteExpense(expense.id)}
+                              onClick={(e) => {
+                                e.stopPropagation(); // Prevent row click
+                                handleDeleteExpense(expense.id);
+                              }}
                               className="text-red-600 hover:text-red-700 h-6 w-6 p-0"
                               title="Delete expense"
                             >
@@ -1602,6 +1620,85 @@ export default function PettyCash() {
               </Button>
             </div>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Expense Details Dialog - Optimized Layout */}
+      <Dialog open={showExpenseDetailsDialog} onOpenChange={setShowExpenseDetailsDialog}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Expense Details</DialogTitle>
+          </DialogHeader>
+          {selectedExpenseDetails && (
+            <div className="space-y-4">
+              {/* Two columns layout for better space utilization */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <div className="text-sm font-medium text-gray-600">Paid By</div>
+                  <div className="text-sm">{selectedExpenseDetails.user?.name || selectedExpenseDetails.user?.username || 'N/A'}</div>
+                </div>
+                <div>
+                  <div className="text-sm font-medium text-gray-600">Category</div>
+                  <div className="text-sm">{selectedExpenseDetails.category}</div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <div className="text-sm font-medium text-gray-600">Vendor</div>
+                  <div className="text-sm">{selectedExpenseDetails.vendor}</div>
+                </div>
+                <div>
+                  <div className="text-sm font-medium text-gray-600">Amount</div>
+                  <div className={`text-sm font-bold ${
+                    selectedExpenseDetails.status === 'income' ? 'text-green-600' : 'text-red-600'
+                  }`}>
+                    {selectedExpenseDetails.status === 'income' ? '+' : '-'}₹{selectedExpenseDetails.amount.toLocaleString()}
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <div className="text-sm font-medium text-gray-600">Date</div>
+                  <div className="text-sm">{format(new Date(selectedExpenseDetails.expenseDate), 'dd/MM/yyyy')}</div>
+                </div>
+                <div>
+                  <div className="text-sm font-medium text-gray-600">Project</div>
+                  <div className="text-sm">
+                    {selectedExpenseDetails.projectId && selectedExpenseDetails.project ? 
+                      `${selectedExpenseDetails.project.code} - ${selectedExpenseDetails.project.name}` : 
+                      selectedExpenseDetails.projectId ? selectedExpenseDetails.projectId : '-'
+                    }
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <div className="text-sm font-medium text-gray-600">Description</div>
+                <div className="text-sm">{selectedExpenseDetails.description || '-'}</div>
+              </div>
+
+              {selectedExpenseDetails.receiptImageUrl && (
+                <div>
+                  <div className="text-sm font-medium text-gray-600 mb-2">Receipt</div>
+                  <div className="flex justify-center">
+                    <img 
+                      src={selectedExpenseDetails.receiptImageUrl}
+                      alt="Receipt" 
+                      className="max-w-full max-h-[200px] object-contain rounded-lg border cursor-pointer"
+                      onClick={() => {
+                        setSelectedImage(selectedExpenseDetails.receiptImageUrl || "");
+                        setShowImageDialog(true);
+                        setShowExpenseDetailsDialog(false);
+                      }}
+                      title="Click to view full size"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </DialogContent>
       </Dialog>
 
