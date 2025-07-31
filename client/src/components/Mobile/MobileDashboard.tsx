@@ -120,78 +120,57 @@ export default function MobileDashboard({ onMenuClick }: MobileDashboardProps) {
   ];
 
   return (
-    <div className="space-y-6">
-      {/* Mobile Header with Menu Button */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-3">
-          {onMenuClick && (
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={onMenuClick}
-              className="touch-target hover:bg-primary/10"
-            >
-              <Menu className="w-5 h-5 text-foreground" />
-            </Button>
-          )}
-          <div className="space-y-1">
-            <MobileHeading>Dashboard Overview</MobileHeading>
-            <MobileText>Real-time business metrics and insights</MobileText>
-          </div>
-        </div>
+    <div className="space-y-4">
+      {/* Mobile Header */}
+      <div className="space-y-1">
+        <MobileHeading>Dashboard Overview</MobileHeading>
+        <MobileText>Real-time business metrics and insights</MobileText>
       </div>
 
-      {/* Stats Grid */}
+      {/* Stats Grid - Compact Mobile Layout */}
       <MobileGrid 
         mobileColumns={2} 
         tabletColumns={3} 
         desktopColumns={isMobile ? 2 : 6}
-        className="gap-3 sm:gap-4"
+        className="gap-2 sm:gap-3"
       >
         {statCards.map((stat, index) => (
           <div
             key={index}
-            className="relative overflow-hidden group hover:shadow-lg transition-all duration-300 animate-bounce-in border-l-4 border-l-current cursor-pointer active:scale-95 bg-card rounded-lg p-4 shadow-sm"
+            className="relative overflow-hidden group hover:shadow-md transition-all duration-200 border-l-4 border-l-current cursor-pointer active:scale-95 bg-card rounded-lg p-3 shadow-sm"
             style={{ borderLeftColor: `var(--${stat.color}-500, #6b7280)` }}
             onClick={() => setLocation(stat.href)}
           >
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center space-x-2">
-                <div 
-                  className={`w-8 h-8 rounded-full bg-gradient-to-br ${stat.gradient} flex items-center justify-center flex-shrink-0`}
-                >
-                  <stat.icon className="w-4 h-4 text-white" />
-                </div>
-                <span className={`text-xs font-medium text-muted-foreground ${isMobile ? 'hidden' : 'block'}`}>
-                  {stat.title}
-                </span>
+            <div className="flex items-start justify-between mb-2">
+              <div 
+                className={`w-7 h-7 rounded-full bg-gradient-to-br ${stat.gradient} flex items-center justify-center flex-shrink-0`}
+              >
+                <stat.icon className="w-3.5 h-3.5 text-white" />
               </div>
-              {isMobile && (
-                <span className="text-xs font-medium text-muted-foreground">
-                  {stat.title}
-                </span>
-              )}
+              <span className="text-xs font-medium text-muted-foreground">
+                {stat.title}
+              </span>
             </div>
             
-            <div className="space-y-1">
-              <div className={`font-bold text-foreground ${isMobile ? 'text-xl' : 'text-2xl'}`}>
+            <div className="space-y-0.5">
+              <div className="text-lg font-bold text-foreground leading-tight">
                 {typeof stat.value === 'string' ? stat.value : stat.value.toLocaleString()}
               </div>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-muted-foreground leading-tight">
                 {stat.description}
               </p>
             </div>
 
             {/* Gradient overlay */}
-            <div className={`absolute inset-0 bg-gradient-to-br ${stat.gradient} opacity-0 group-hover:opacity-5 transition-opacity duration-300 pointer-events-none`} />
+            <div className={`absolute inset-0 bg-gradient-to-br ${stat.gradient} opacity-0 group-hover:opacity-5 transition-opacity duration-200 pointer-events-none`} />
           </div>
         ))}
       </MobileGrid>
 
-      {/* Quick Actions */}
-      <MobileCard className="space-y-4">
-        <MobileHeading className="text-lg">Quick Actions</MobileHeading>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      {/* Quick Actions - Compact */}
+      <MobileCard className="space-y-3">
+        <MobileHeading className="text-base">Quick Actions</MobileHeading>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
           {[
             { label: "Add Product", icon: Package, color: "bg-blue-100 text-blue-700", action: () => {
               setLocation('/products');
@@ -206,12 +185,12 @@ export default function MobileDashboard({ onMenuClick }: MobileDashboardProps) {
             <button
               key={index}
               onClick={action.action}
-              className={`flex items-center space-x-3 p-4 rounded-lg border border-border hover:bg-muted/50 transition-all duration-200 group active:scale-95 ${isMobile ? 'min-h-[56px]' : 'min-h-[48px]'}`}
+              className="flex items-center space-x-2 p-3 rounded-lg border border-border hover:bg-muted/50 transition-all duration-200 group active:scale-95 min-h-[48px]"
             >
-              <div className={`w-10 h-10 rounded-full ${action.color} flex items-center justify-center group-hover:scale-110 transition-transform duration-200`}>
-                <action.icon className="w-5 h-5" />
+              <div className={`w-8 h-8 rounded-full ${action.color} flex items-center justify-center group-hover:scale-110 transition-transform duration-200`}>
+                <action.icon className="w-4 h-4" />
               </div>
-              <span className="font-medium text-foreground">
+              <span className="text-sm font-medium text-foreground">
                 {action.label}
               </span>
             </button>
@@ -219,25 +198,25 @@ export default function MobileDashboard({ onMenuClick }: MobileDashboardProps) {
         </div>
       </MobileCard>
 
-      {/* Recent Activity */}
-      <MobileCard className="space-y-4">
+      {/* Recent Activity - Compact */}
+      <MobileCard className="space-y-3">
         <div className="flex items-center justify-between">
-          <MobileHeading className="text-lg">Recent Activity</MobileHeading>
-          <button className="text-sm text-primary hover:text-primary/80 transition-colors">
+          <MobileHeading className="text-base">Recent Activity</MobileHeading>
+          <button className="text-xs text-primary hover:text-primary/80 transition-colors">
             View All
           </button>
         </div>
         
         {activity.length > 0 ? (
-          <div className="space-y-3">
-            {activity.slice(0, isMobile ? 3 : 5).map((item: any, index: number) => (
-              <div key={index} className="flex items-start space-x-3 p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
-                <div className="w-2 h-2 rounded-full bg-primary mt-2 flex-shrink-0" />
+          <div className="space-y-2">
+            {activity.slice(0, isMobile ? 2 : 3).map((item: any, index: number) => (
+              <div key={index} className="flex items-start space-x-2 p-2 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
+                <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2 flex-shrink-0" />
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm text-foreground font-medium break-words">
+                  <p className="text-xs text-foreground font-medium break-words leading-tight">
                     {item.description}
                   </p>
-                  <p className="text-xs text-muted-foreground mt-1">
+                  <p className="text-xs text-muted-foreground mt-0.5">
                     {new Date(item.timestamp).toLocaleString()}
                   </p>
                 </div>
@@ -245,19 +224,19 @@ export default function MobileDashboard({ onMenuClick }: MobileDashboardProps) {
             ))}
           </div>
         ) : (
-          <div className="text-center py-8">
-            <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mx-auto mb-3">
-              <Clock className="w-6 h-6 text-muted-foreground" />
+          <div className="text-center py-4">
+            <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center mx-auto mb-2">
+              <Clock className="w-4 h-4 text-muted-foreground" />
             </div>
-            <p className="text-sm text-muted-foreground">No recent activity</p>
+            <p className="text-xs text-muted-foreground">No recent activity</p>
           </div>
         )}
       </MobileCard>
 
-      {/* Performance Metrics */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <MobileCard className="space-y-4">
-          <MobileHeading className="text-lg">Inventory Health</MobileHeading>
+      {/* Performance Metrics - Compact */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+        <MobileCard className="space-y-3">
+          <MobileHeading className="text-base">Inventory Health</MobileHeading>
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">Total Stock Value</span>
@@ -276,8 +255,8 @@ export default function MobileDashboard({ onMenuClick }: MobileDashboardProps) {
           </div>
         </MobileCard>
 
-        <MobileCard className="space-y-4">
-          <MobileHeading className="text-lg">Team Performance</MobileHeading>
+        <MobileCard className="space-y-3">
+          <MobileHeading className="text-base">Team Performance</MobileHeading>
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">Present Today</span>
