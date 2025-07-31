@@ -256,10 +256,14 @@ export default function Dashboard() {
 
   // Use mobile dashboard for mobile devices
   if (isMobile) {
-    return <MobileDashboard onMenuClick={() => {
-      // Trigger sidebar toggle event for mobile
-      window.dispatchEvent(new CustomEvent('toggleMobileSidebar'));
-    }} />;
+    return (
+      <FurniliLayout
+        title={`Welcome back, ${currentUser?.name || 'Admin'}!`}
+        subtitle="Here's your business overview and key metrics for today."
+      >
+        <MobileDashboard />
+      </FurniliLayout>
+    );
   }
 
   return (

@@ -4,8 +4,6 @@ import { useQuery } from "@tanstack/react-query";
 import { authenticatedApiRequest } from "@/lib/auth";
 import { MobileGrid, MobileCard, MobileHeading, MobileText, useIsMobile } from "./MobileOptimizer";
 import { useLocation } from "wouter";
-import { Menu } from "lucide-react";
-import { Button } from "@/components/ui/button";
 
 interface DashboardStats {
   totalProducts: number;
@@ -17,11 +15,7 @@ interface DashboardStats {
   lowStockItems?: number;
 }
 
-interface MobileDashboardProps {
-  onMenuClick?: () => void;
-}
-
-export default function MobileDashboard({ onMenuClick }: MobileDashboardProps) {
+export default function MobileDashboard() {
   const { isMobile } = useIsMobile();
   const [, setLocation] = useLocation();
 
