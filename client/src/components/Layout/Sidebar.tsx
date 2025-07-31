@@ -70,8 +70,6 @@ export default function Sidebar({ onItemClick, collapsed = false, onToggleCollap
   const [location] = useLocation();
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
   const user = authService.getUser();
-  
-  if (!user) return null;
 
   // Auto-expand Master menu if any sub-item is active
   useEffect(() => {
@@ -98,6 +96,9 @@ export default function Sidebar({ onItemClick, collapsed = false, onToggleCollap
         : [...prev, itemName]
     );
   };
+
+  // Return early if no user, but after all hooks
+  if (!user) return null;
 
   const filteredNavigation = navigation.filter(item => 
     item.roles.includes(user.role)
