@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Search, Edit, Trash2, Package, Tag, DollarSign, Eye, Filter } from "lucide-react";
+import { Plus, Search, Edit, Trash2, Package, Tag, DollarSign, Eye, Filter, Upload, Image, Copy, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -50,8 +50,11 @@ function SalesProductForm({
   const [isLoading, setIsLoading] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(product?.imageUrl || null);
+  const [isDragOver, setIsDragOver] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const dropzoneRef = useRef<HTMLDivElement>(null);
 
   const {
     register,
@@ -73,22 +76,113 @@ function SalesProductForm({
 
   const isMobile = window.innerWidth < 768;
 
+  // Enhanced file handling with proper extensions and validation
+  const processImageFile = useCallback((file: File) => {
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Invalid File",
+        description: "Please select an image file",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate file size (5MB limit)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "File Too Large",
+        description: "Image must be smaller than 5MB",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Create a new file with proper extension if needed
+    let processedFile = file;
+    if (!file.name.includes('.')) {
+      const extension = file.type.split('/')[1] || 'jpg';
+      processedFile = new File([file], `image.${extension}`, { type: file.type });
+    }
+
+    setImageFile(processedFile);
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImagePreview(reader.result as string);
+    };
+    reader.readAsDataURL(processedFile);
+  }, [toast]);
+
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setImageFile(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+      processImageFile(file);
     }
   };
+
+  // Copy-paste functionality
+  const handlePaste = useCallback((e: ClipboardEvent) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      if (item.type.startsWith('image/')) {
+        e.preventDefault();
+        const file = item.getAsFile();
+        if (file) {
+          // Generate proper filename for pasted images
+          const timestamp = Date.now();
+          const extension = item.type.split('/')[1] || 'png';
+          const pastedFile = new File([file], `pasted-image-${timestamp}.${extension}`, { type: item.type });
+          processImageFile(pastedFile);
+        }
+        break;
+      }
+    }
+  }, [processImageFile]);
+
+  // Drag and drop functionality
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+      processImageFile(files[0]);
+    }
+  }, [processImageFile]);
 
   const removeImage = () => {
     setImageFile(null);
     setImagePreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
+
+  // Set up paste event listener
+  useEffect(() => {
+    const handleGlobalPaste = (e: ClipboardEvent) => {
+      // Only handle paste if the form is open and focused
+      if (document.activeElement?.closest('.sales-product-form')) {
+        handlePaste(e);
+      }
+    };
+
+    document.addEventListener('paste', handleGlobalPaste);
+    return () => document.removeEventListener('paste', handleGlobalPaste);
+  }, [handlePaste]);
 
   const onSubmit = async (data: SalesProductFormData) => {
     setIsLoading(true);
@@ -103,12 +197,17 @@ function SalesProductForm({
 
         const uploadResponse = await fetch("/api/upload", {
           method: "POST",
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+          },
           body: formData,
         });
 
         if (uploadResponse.ok) {
           const uploadResult = await uploadResponse.json();
           imageUrl = uploadResult.filePath;
+        } else {
+          throw new Error('Failed to upload image');
         }
       }
 
@@ -121,12 +220,20 @@ function SalesProductForm({
       if (product) {
         await apiRequest(`/api/sales-products/${product.id}`, {
           method: "PUT",
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+          },
           body: JSON.stringify(salesProductData),
         });
         toast({ title: "Success", description: "Sales product updated successfully" });
       } else {
         await apiRequest("/api/sales-products", {
           method: "POST",
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+          },
           body: JSON.stringify(salesProductData),
         });
         toast({ title: "Success", description: "Sales product created successfully" });
@@ -134,10 +241,11 @@ function SalesProductForm({
 
       queryClient.invalidateQueries({ queryKey: ["/api/sales-products"] });
       onSuccess();
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Save sales product error:', error);
       toast({
         title: "Error",
-        description: "Failed to save sales product",
+        description: error?.message || "Failed to save sales product",
         variant: "destructive",
       });
     } finally {
@@ -146,26 +254,26 @@ function SalesProductForm({
   };
 
   return (
-    <div className={`flex flex-col ${isMobile ? 'max-h-[90vh]' : 'h-[600px]'}`}>
+    <div className="sales-product-form flex flex-col max-h-[90vh] sm:max-h-[85vh]">
       {/* Header */}
-      <div className={`${isMobile ? 'p-3 border-b bg-white flex-shrink-0' : 'flex items-center justify-between pb-4 border-b flex-shrink-0'}`}>
+      <div className="p-4 border-b bg-white flex-shrink-0">
         <h3 className="text-lg font-semibold">
           {product ? "Edit Sales Product" : "Add New Sales Product"}
         </h3>
       </div>
 
       {/* Form Content - Scrollable */}
-      <div className={`flex-1 overflow-y-auto ${isMobile ? 'p-3' : 'py-4'}`}>
-        <form onSubmit={handleSubmit(onSubmit)} className={`space-y-${isMobile ? '3' : '4'}`}>
+      <div className="flex-1 overflow-y-auto p-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           
           {/* Product Name & Category */}
-          <div className={`grid ${isMobile ? 'grid-cols-1 gap-3' : 'grid-cols-2 gap-4'}`}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <Label htmlFor="name" className="text-sm font-medium mb-1">Product Name *</Label>
+              <Label htmlFor="name" className="text-xs font-medium mb-1 block">Product Name *</Label>
               <Input
                 id="name"
                 {...register("name")}
-                className={`${errors.name ? "border-red-500" : ""} h-9 text-sm`}
+                className={`${errors.name ? "border-red-500" : ""} h-8 text-sm`}
                 placeholder="Executive Workstation"
               />
               {errors.name && (
@@ -174,9 +282,9 @@ function SalesProductForm({
             </div>
 
             <div>
-              <Label htmlFor="category" className="text-sm font-medium mb-1">Category</Label>
+              <Label htmlFor="category" className="text-xs font-medium mb-1 block">Category</Label>
               <Select onValueChange={(value) => setValue("category", value)} defaultValue={product?.category}>
-                <SelectTrigger className="h-9">
+                <SelectTrigger className="h-8">
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
                 <SelectContent>
@@ -189,15 +297,15 @@ function SalesProductForm({
           </div>
 
           {/* Price & Tax */}
-          <div className={`grid ${isMobile ? 'grid-cols-1 gap-3' : 'grid-cols-2 gap-4'}`}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <Label htmlFor="unitPrice" className="text-sm font-medium mb-1">Unit Price *</Label>
+              <Label htmlFor="unitPrice" className="text-xs font-medium mb-1 block">Unit Price *</Label>
               <Input
                 id="unitPrice"
                 type="number"
                 step="0.01"
                 {...register("unitPrice", { valueAsNumber: true })}
-                className={`${errors.unitPrice ? "border-red-500" : ""} h-9 text-sm`}
+                className={`${errors.unitPrice ? "border-red-500" : ""} h-8 text-sm`}
                 placeholder="25000"
               />
               {errors.unitPrice && (
@@ -206,13 +314,13 @@ function SalesProductForm({
             </div>
 
             <div>
-              <Label htmlFor="taxPercentage" className="text-sm font-medium mb-1">Tax % (GST/VAT)</Label>
+              <Label htmlFor="taxPercentage" className="text-xs font-medium mb-1 block">Tax % (GST/VAT)</Label>
               <Input
                 id="taxPercentage"
                 type="number"
                 step="0.01"
                 {...register("taxPercentage", { valueAsNumber: true })}
-                className={`${errors.taxPercentage ? "border-red-500" : ""} h-9 text-sm`}
+                className={`${errors.taxPercentage ? "border-red-500" : ""} h-8 text-sm`}
                 placeholder="18"
               />
               {errors.taxPercentage && (
@@ -223,11 +331,11 @@ function SalesProductForm({
 
           {/* Description */}
           <div>
-            <Label htmlFor="description" className="text-sm font-medium mb-1">Description</Label>
+            <Label htmlFor="description" className="text-xs font-medium mb-1 block">Description</Label>
             <Textarea
               id="description"
               {...register("description")}
-              className={`${errors.description ? "border-red-500" : ""} text-sm min-h-[80px] resize-none`}
+              className={`${errors.description ? "border-red-500" : ""} text-sm min-h-[60px] resize-none`}
               placeholder="L-shaped workstation with overhead storage, premium laminate finish..."
             />
             {errors.description && (
@@ -237,53 +345,73 @@ function SalesProductForm({
 
           {/* Internal Notes */}
           <div>
-            <Label htmlFor="internalNotes" className="text-sm font-medium mb-1">Internal Notes</Label>
+            <Label htmlFor="internalNotes" className="text-xs font-medium mb-1 block">Internal Notes</Label>
             <Textarea
               id="internalNotes"
               {...register("internalNotes")}
-              className={`${errors.internalNotes ? "border-red-500" : ""} text-sm min-h-[60px] resize-none`}
-              placeholder="Cost: ₹18,000, Profit margin: 40%, Lead time: 2 weeks..."
+              className={`${errors.internalNotes ? "border-red-500" : ""} text-sm min-h-[50px] resize-none`}
+              placeholder="Cost: ₹18,000, Profit margin: 37%, Lead time: 2-3 weeks..."
             />
           </div>
 
-          {/* Image Upload */}
+          {/* Enhanced Image Upload with Copy-Paste */}
           <div>
-            <Label className="text-sm font-medium mb-1">Product Image</Label>
+            <Label className="text-xs font-medium mb-1 block">Product Image</Label>
             <div className="mt-1">
               {imagePreview ? (
                 <div className="relative inline-block">
                   <img 
                     src={imagePreview} 
                     alt="Preview" 
-                    className={`object-cover rounded-lg border ${isMobile ? "w-24 h-24" : "w-32 h-32"}`}
+                    className="w-24 h-24 object-cover rounded-lg border"
                   />
                   <Button
                     type="button"
                     variant="destructive"
                     size="sm"
-                    className="absolute -top-2 -right-2"
+                    className="absolute -top-2 -right-2 w-6 h-6 p-0"
                     onClick={removeImage}
                   >
-                    ×
+                    <X className="w-3 h-3" />
                   </Button>
                 </div>
               ) : (
-                <div className={`border-2 border-dashed border-gray-300 rounded-lg text-center ${isMobile ? "p-3" : "p-6"}`}>
-                  <Package className={`text-gray-400 mx-auto mb-2 ${isMobile ? "w-6 h-6" : "w-8 h-8"}`} />
-                  <p className={`text-gray-600 mb-2 ${isMobile ? "text-xs" : "text-sm"}`}>Upload product image</p>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageChange}
-                    className="hidden"
-                    id="image-upload"
-                  />
-                  <label htmlFor="image-upload" className="cursor-pointer inline-block">
-                    <div className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-3">
-                      Choose Image
+                <div 
+                  ref={dropzoneRef}
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                  className={`border-2 border-dashed rounded-lg text-center p-4 transition-colors ${
+                    isDragOver 
+                      ? 'border-blue-400 bg-blue-50' 
+                      : 'border-gray-300 hover:border-gray-400'
+                  }`}
+                >
+                  <div className="flex flex-col items-center">
+                    <Package className="text-gray-400 mb-2 w-6 h-6" />
+                    <p className="text-gray-600 mb-2 text-xs">Upload product image</p>
+                    <div className="flex flex-wrap gap-2 justify-center">
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageChange}
+                        className="hidden"
+                        id="image-upload"
+                      />
+                      <label htmlFor="image-upload" className="cursor-pointer">
+                        <div className="inline-flex items-center justify-center rounded-md text-xs font-medium border border-input bg-background hover:bg-accent hover:text-accent-foreground h-7 px-2">
+                          <Upload className="w-3 h-3 mr-1" />
+                          Browse
+                        </div>
+                      </label>
+                      <div className="inline-flex items-center justify-center rounded-md text-xs font-medium border border-input bg-background h-7 px-2 text-gray-500">
+                        <Copy className="w-3 h-3 mr-1" />
+                        Paste (Ctrl+V)
+                      </div>
                     </div>
-                  </label>
-                  <p className="text-xs text-gray-500 mt-1">Max size: 5MB</p>
+                    <p className="text-xs text-gray-500 mt-1">Drag & drop, browse, or paste. Max 5MB</p>
+                  </div>
                 </div>
               )}
             </div>
@@ -293,20 +421,20 @@ function SalesProductForm({
       </div>
       
       {/* Action Buttons */}
-      <div className={`${isMobile ? 'p-3 border-t bg-white flex-shrink-0' : 'flex items-center justify-end space-x-4 pt-4 border-t flex-shrink-0'}`}>
-        <div className={`${isMobile ? 'flex gap-2' : 'flex items-center space-x-4'}`}>
+      <div className="p-4 border-t bg-white flex-shrink-0">
+        <div className="flex gap-3">
           <Button 
             type="button" 
             variant="outline" 
             onClick={onClose}
-            className={`${isMobile ? 'flex-1 h-10 text-sm' : ''}`}
+            className="flex-1 h-9 text-sm"
           >
             Cancel
           </Button>
           <Button 
             type="submit" 
             disabled={isLoading}
-            className={`furnili-gradient hover:opacity-90 text-white ${isMobile ? 'flex-1 h-10 text-sm' : ''}`}
+            className="furnili-gradient hover:opacity-90 text-white flex-1 h-9 text-sm"
             onClick={handleSubmit(onSubmit)}
           >
             {isLoading ? "Saving..." : product ? "Update" : "Create"}
