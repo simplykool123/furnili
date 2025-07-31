@@ -24,6 +24,8 @@ export default function FurniliLayout({
 }: FurniliLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [isHovering, setIsHovering] = useState(false);
 
   useEffect(() => {
     const checkIsMobile = () => {
@@ -35,6 +37,19 @@ export default function FurniliLayout({
     
     return () => window.removeEventListener('resize', checkIsMobile);
   }, []);
+
+  // Auto-hide logic: collapse sidebar when not hovering (desktop only)
+  useEffect(() => {
+    if (!isMobile) {
+      const timer = setTimeout(() => {
+        if (!isHovering) {
+          setSidebarCollapsed(true);
+        }
+      }, 2000); // Auto-hide after 2 seconds of no hover
+
+      return () => clearTimeout(timer);
+    }
+  }, [isHovering, isMobile]);
 
   return (
     <div className="furnili-page">
@@ -48,11 +63,23 @@ export default function FurniliLayout({
       <div className="flex min-h-screen">
         {/* Sidebar */}
         <div className={cn(
-          "fixed inset-y-0 left-0 z-50 w-64 transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0",
-          sidebarOpen ? "translate-x-0" : "-translate-x-full"
-        )}>
+          "fixed inset-y-0 left-0 z-50 transform transition-all duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0",
+          sidebarOpen ? "translate-x-0" : "-translate-x-full",
+          sidebarCollapsed && !isMobile ? "w-16" : "w-64"
+        )}
+        onMouseEnter={() => {
+          setIsHovering(true);
+          if (!isMobile) setSidebarCollapsed(false);
+        }}
+        onMouseLeave={() => {
+          setIsHovering(false);
+        }}>
           <div className="furnili-sidebar h-full shadow-xl border-r border-border/50">
-            <Sidebar onItemClick={() => isMobile && setSidebarOpen(false)} />
+            <Sidebar 
+              onItemClick={() => isMobile && setSidebarOpen(false)} 
+              collapsed={sidebarCollapsed && !isMobile}
+              onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
+            />
           </div>
         </div>
 
@@ -65,7 +92,10 @@ export default function FurniliLayout({
         )}
 
         {/* Main content */}
-        <div className="flex-1 flex flex-col min-w-0">
+        <div className={cn(
+          "flex-1 flex flex-col min-w-0 transition-all duration-300 ease-in-out",
+          sidebarCollapsed && !isMobile ? "lg:ml-16" : "lg:ml-64"
+        )}>
           {/* Header */}
           <div className="furnili-header sticky top-0 z-30">
             <Header
