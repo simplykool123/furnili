@@ -51,6 +51,7 @@ const navigation = [
     roles: ['admin', 'manager', 'staff'], // Show Master section with role-based items
     isCollapsible: true,
     subItems: [
+      { name: 'Clients', href: '/clients', icon: Users, roles: ['admin', 'manager'] }, // Manager can manage clients for projects
       { name: 'Inventory Movement', href: '/inventory-movement', icon: ArrowUpDown, roles: ['admin', 'manager'] }, // Manager can supervise inventory
       { name: 'Categories', href: '/categories', icon: Tag, roles: ['admin'] }, // Admin only - core settings
       { name: 'Users', href: '/users', icon: Users, roles: ['admin'] }, // Admin only - user management
