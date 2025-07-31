@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
+import { ChevronRight } from 'lucide-react';
 import Header from './Header';
 import Sidebar from './Sidebar';
 
@@ -24,7 +25,7 @@ export default function FurniliLayout({
 }: FurniliLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(true); // Start collapsed
   const [isHovering, setIsHovering] = useState(false);
 
   useEffect(() => {
@@ -40,12 +41,10 @@ export default function FurniliLayout({
 
   // Auto-hide logic: collapse sidebar when not hovering (desktop only)
   useEffect(() => {
-    if (!isMobile) {
+    if (!isMobile && !isHovering) {
       const timer = setTimeout(() => {
-        if (!isHovering) {
-          setSidebarCollapsed(true);
-        }
-      }, 2000); // Auto-hide after 2 seconds of no hover
+        setSidebarCollapsed(true);
+      }, 1500); // Auto-hide after 1.5 seconds of no hover
 
       return () => clearTimeout(timer);
     }
@@ -89,6 +88,20 @@ export default function FurniliLayout({
             className="fixed inset-0 z-40 bg-black/20 backdrop-blur-sm lg:hidden" 
             onClick={() => setSidebarOpen(false)}
           />
+        )}
+
+        {/* Sidebar Toggle Button for Desktop */}
+        {!isMobile && sidebarCollapsed && (
+          <button
+            onClick={() => {
+              setSidebarCollapsed(false);
+              setIsHovering(true);
+            }}
+            className="fixed left-4 top-1/2 -translate-y-1/2 z-40 w-8 h-12 bg-[hsl(28,100%,25%)] hover:bg-[hsl(28,100%,20%)] text-white rounded-r-lg shadow-lg transition-all duration-200 flex items-center justify-center group"
+            title="Expand Sidebar"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
         )}
 
         {/* Main content */}
