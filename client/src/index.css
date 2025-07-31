@@ -286,6 +286,57 @@
   .compact-spacing {
     @apply space-y-2;
   }
+  
+  /* Mobile-Optimized Form Styles */
+  .mobile-form {
+    @apply space-y-3 p-3;
+  }
+  
+  .mobile-form-field {
+    @apply space-y-1;
+  }
+  
+  .mobile-form-input {
+    @apply h-10 text-sm;
+  }
+  
+  .mobile-form-label {
+    @apply text-sm font-medium;
+  }
+  
+  .mobile-action-buttons {
+    @apply fixed bottom-0 left-0 right-0 bg-white border-t p-3 flex gap-2 z-50;
+  }
+  
+  .mobile-table-header {
+    @apply text-xs font-medium p-2 border-r;
+  }
+  
+  .mobile-table-cell {
+    @apply text-xs p-1 border-r;
+  }
+  
+  /* Mobile Dialog Optimizations */
+  .mobile-dialog {
+    @apply max-w-[95vw] max-h-[95vh] m-1 p-0 overflow-hidden;
+  }
+  
+  .mobile-dialog-header {
+    @apply p-3 pb-2 border-b;
+  }
+  
+  .mobile-dialog-title {
+    @apply text-base font-semibold;
+  }
+  
+  /* Touch-friendly buttons */
+  .mobile-button {
+    @apply h-10 text-sm px-3;
+  }
+  
+  .mobile-button-sm {
+    @apply h-8 text-xs px-2;
+  }
 }
 
 .dark {

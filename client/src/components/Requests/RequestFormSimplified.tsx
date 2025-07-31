@@ -73,6 +73,7 @@ interface RequestFormSimplifiedProps {
   onClose: () => void;
   onSuccess?: () => void;
   preSelectedProjectId?: number;
+  isMobile?: boolean;
   initialData?: {
     projectId?: number;
     clientName?: string;
@@ -88,7 +89,7 @@ interface RequestFormSimplifiedProps {
   };
 }
 
-export default function RequestFormSimplified({ onClose, onSuccess, preSelectedProjectId, initialData }: RequestFormSimplifiedProps) {
+export default function RequestFormSimplified({ onClose, onSuccess, preSelectedProjectId, isMobile = false, initialData }: RequestFormSimplifiedProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isClientDropdownOpen, setIsClientDropdownOpen] = useState(false);
@@ -361,32 +362,34 @@ export default function RequestFormSimplified({ onClose, onSuccess, preSelectedP
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-      <Card>
-        <CardContent className="space-y-4">
-          {/* All fields in one compact row */}
-          <div className="grid grid-cols-12 gap-3 items-end">
-            <div className="col-span-4">
-              <Label htmlFor="projectId" className="text-sm font-medium">Project ID *</Label>
-              <Select 
-                value={watch("projectId")?.toString() || ""}
-                onValueChange={(value) => {
-                  const projectId = parseInt(value);
-                  setValue("projectId", projectId);
-                  
-                  // Auto-fill client name based on selected project
-                  const selectedProject = eligibleProjects.find(p => p.id === projectId);
-                  if (selectedProject) {
-                    setValue("clientName", selectedProject.clientName, { 
-                      shouldValidate: true, 
-                      shouldDirty: true 
-                    });
-                  }
-                }}
-              >
-                <SelectTrigger className="text-sm">
-                  <SelectValue placeholder="Select project..." />
-                </SelectTrigger>
+    <div className={`${isMobile ? 'h-full flex flex-col' : ''}`}>
+      <div className={`${isMobile ? 'flex-1 overflow-y-auto p-3' : ''}`}>
+        <form onSubmit={handleSubmit(onSubmit)} className={`${isMobile ? 'space-y-3 pb-16' : 'space-y-6'}`}>
+          <Card>
+            <CardContent className={`${isMobile ? 'space-y-3 p-3' : 'space-y-4'}`}>
+              {/* Responsive field layout */}
+              <div className={`grid ${isMobile ? 'grid-cols-1 gap-2' : 'grid-cols-12 gap-3'} items-end`}>
+                <div className={isMobile ? '' : 'col-span-4'}>
+                  <Label htmlFor="projectId" className={`${isMobile ? 'text-sm' : 'text-sm'} font-medium`}>Project ID *</Label>
+                  <Select 
+                    value={watch("projectId")?.toString() || ""}
+                    onValueChange={(value) => {
+                      const projectId = parseInt(value);
+                      setValue("projectId", projectId);
+                      
+                      // Auto-fill client name based on selected project
+                      const selectedProject = eligibleProjects.find(p => p.id === projectId);
+                      if (selectedProject) {
+                        setValue("clientName", selectedProject.clientName, { 
+                          shouldValidate: true, 
+                          shouldDirty: true 
+                        });
+                      }
+                    }}
+                  >
+                    <SelectTrigger className={`${isMobile ? 'h-10 text-sm' : 'text-sm'}`}>
+                      <SelectValue placeholder="Select project..." />
+                    </SelectTrigger>
                 <SelectContent>
                   {eligibleProjects.length === 0 ? (
                     <div className="px-2 py-2 text-sm text-amber-600">
@@ -409,64 +412,67 @@ export default function RequestFormSimplified({ onClose, onSuccess, preSelectedP
               )}
             </div>
 
-            <div className="col-span-3">
-              <Label htmlFor="clientName" className="text-sm font-medium">Client *</Label>
-              <Input
-                id="clientName"
-                {...register("clientName")}
-                placeholder="Auto-filled from project"
-                className={`text-sm ${errors.clientName ? "border-red-500" : ""}`}
-                disabled={!watch("projectId")}
-              />
-              {errors.clientName && (
-                <p className="text-sm text-red-600 mt-1">{errors.clientName.message}</p>
-              )}
-            </div>
+                <div className={isMobile ? '' : 'col-span-3'}>
+                  <Label htmlFor="clientName" className={`${isMobile ? 'text-sm' : 'text-sm'} font-medium`}>Client *</Label>
+                  <Input
+                    id="clientName"
+                    {...register("clientName")}
+                    placeholder="Auto-filled from project"
+                    className={`${isMobile ? 'h-10 text-sm' : 'text-sm'} ${errors.clientName ? "border-red-500" : ""}`}
+                    disabled={!watch("projectId")}
+                  />
+                  {errors.clientName && (
+                    <p className="text-xs text-red-600 mt-1">{errors.clientName.message}</p>
+                  )}
+                </div>
 
-            <div className="col-span-3">
-              <Label htmlFor="orderNumber" className="text-sm font-medium">Order No</Label>
-              <Input
-                id="orderNumber"
-                {...register("orderNumber")}
-                placeholder="e.g., ORD-2024-001"
-                className={`text-sm ${errors.orderNumber ? "border-red-500" : ""}`}
-              />
-              {errors.orderNumber && (
-                <p className="text-sm text-red-600 mt-1">{errors.orderNumber.message}</p>
-              )}
-            </div>
+                <div className={isMobile ? '' : 'col-span-3'}>
+                  <Label htmlFor="orderNumber" className={`${isMobile ? 'text-sm' : 'text-sm'} font-medium`}>Order No</Label>
+                  <Input
+                    id="orderNumber"
+                    {...register("orderNumber")}
+                    placeholder="e.g., ORD-2024-001"
+                    className={`${isMobile ? 'h-10 text-sm' : 'text-sm'} ${errors.orderNumber ? "border-red-500" : ""}`}
+                  />
+                  {errors.orderNumber && (
+                    <p className="text-xs text-red-600 mt-1">{errors.orderNumber.message}</p>
+                  )}
+                </div>
 
-            <div className="col-span-2">
-              <Label htmlFor="priority" className="text-sm font-medium">Priority</Label>
-              <Select 
-                value={watch("priority")}
-                onValueChange={(value) => setValue("priority", value as "high" | "medium" | "low")}
-              >
-                <SelectTrigger className="text-sm">
-                  <SelectValue placeholder="Priority" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="high">High</SelectItem>
-                  <SelectItem value="medium">Medium</SelectItem>
-                  <SelectItem value="low">Low</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
+                <div className={isMobile ? '' : 'col-span-2'}>
+                  <Label htmlFor="priority" className={`${isMobile ? 'text-sm' : 'text-sm'} font-medium`}>Priority</Label>
+                  <Select 
+                    value={watch("priority")}
+                    onValueChange={(value) => setValue("priority", value as "high" | "medium" | "low")}
+                  >
+                    <SelectTrigger className={`${isMobile ? 'h-10 text-sm' : 'text-sm'}`}>
+                      <SelectValue placeholder="Priority" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="high">High</SelectItem>
+                      <SelectItem value="medium">Medium</SelectItem>
+                      <SelectItem value="low">Low</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
 
-          {/* Remarks in one line */}
-          <div className="grid grid-cols-12 gap-3 items-end">
-            <div className="col-span-2">
-              <Label htmlFor="remarks" className="text-sm font-medium">Remarks:</Label>
-            </div>
-            <div className="col-span-10">
-              <Input
-                id="remarks"
-                {...register("remarks")}
-                placeholder="Any additional notes or requirements..."
-              />
-            </div>
-          </div>
+              {/* Remarks */}
+              <div className={`${isMobile ? '' : 'grid grid-cols-12 gap-3 items-end'}`}>
+                <div className={isMobile ? '' : 'col-span-2'}>
+                  <Label htmlFor="remarks" className={`${isMobile ? 'text-sm' : 'text-sm'} font-medium`}>Remarks:</Label>
+                </div>
+                <div className={isMobile ? '' : 'col-span-10'}>
+                  <Input
+                    id="remarks"
+                    {...register("remarks")}
+                    placeholder="Any additional notes or requirements..."
+                    className={isMobile ? 'h-10 text-sm' : ''}
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Materials Table */}
           {errors.items && (
@@ -645,31 +651,59 @@ export default function RequestFormSimplified({ onClose, onSuccess, preSelectedP
                 quantity: 1, 
                 unit: "pcs" 
               })}
+              className={isMobile ? 'h-9 text-sm' : ''}
             >
               <Plus className="w-4 h-4 mr-1" />
               Add Row
             </Button>
           </div>
-        </CardContent>
-      </Card>
-
-      {/* Actions */}
-      <div className="flex items-center justify-end space-x-4 pt-6 border-t">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={onClose}
-          disabled={createRequestMutation.isPending}
-        >
-          Cancel
-        </Button>
-        <Button
-          type="submit"
-          disabled={createRequestMutation.isPending}
-        >
-          {createRequestMutation.isPending ? "Creating..." : "Create Request"}
-        </Button>
+        </form>
       </div>
-    </form>
+      
+      {/* Mobile Action Buttons - Fixed at bottom */}
+      {isMobile && (
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t p-3 flex gap-2 z-50">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onClose}
+            disabled={createRequestMutation.isPending}
+            className="flex-1 h-10 text-sm"
+          >
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            disabled={createRequestMutation.isPending}
+            className="flex-1 h-10 text-sm furnili-gradient text-white"
+            onClick={handleSubmit(onSubmit)}
+          >
+            {createRequestMutation.isPending ? "Creating..." : "Create"}
+          </Button>
+        </div>
+      )}
+      
+      {/* Desktop Actions */}
+      {!isMobile && (
+        <div className="flex items-center justify-end space-x-4 pt-6 border-t">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onClose}
+            disabled={createRequestMutation.isPending}
+          >
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            disabled={createRequestMutation.isPending}
+            className="furnili-gradient text-white"
+            onClick={handleSubmit(onSubmit)}
+          >
+            {createRequestMutation.isPending ? "Creating..." : "Create Request"}
+          </Button>
+        </div>
+      )}
+    </div>
   );
 }

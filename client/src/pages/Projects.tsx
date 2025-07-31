@@ -22,6 +22,7 @@ import { insertClientSchema } from "@shared/schema";
 import FurniliLayout from "@/components/Layout/FurniliLayout";
 import FurniliCard from "@/components/UI/FurniliCard";
 import FurniliButton from "@/components/UI/FurniliButton";
+import { useIsMobile } from "@/components/Mobile/MobileOptimizer";
 
 const createProjectSchema = z.object({
   name: z.string().min(1, "Project name is required"),
@@ -41,6 +42,7 @@ export default function Projects() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [location, setLocation] = useLocation();
+  const { isMobile } = useIsMobile();
 
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isCreateClientDialogOpen, setIsCreateClientDialogOpen] = useState(false);
@@ -538,7 +540,7 @@ export default function Projects() {
                         </FormLabel>
                         <FormControl>
                           <Input 
-                            className="h-12 bg-gray-100 border-gray-200" 
+                            className={`${isMobile ? 'h-10' : 'h-12'} bg-gray-100 border-gray-200 ${isMobile ? 'text-sm' : ''}`} 
                             placeholder="Enter project name" 
                             {...field} 
                           />
@@ -548,20 +550,20 @@ export default function Projects() {
                     )}
                   />
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="flex items-center space-x-4">
+                  <div className={`grid ${isMobile ? 'grid-cols-1 gap-3' : 'grid-cols-2 gap-4'}`}>
+                    <div className={`${isMobile ? '' : 'flex items-center space-x-4'}`}>
                       <div className="flex-1">
                         <FormField
                           control={projectForm.control}
                           name="stage"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel className="text-sm font-medium text-gray-700">
+                              <FormLabel className={`${isMobile ? 'text-sm' : 'text-sm'} font-medium text-gray-700`}>
                                 Project Stage <span className="text-red-500">*</span>
                               </FormLabel>
                               <Select value={field.value} onValueChange={field.onChange}>
                                 <FormControl>
-                                  <SelectTrigger className="h-12 bg-gray-100 border-gray-200">
+                                  <SelectTrigger className={`${isMobile ? 'h-10' : 'h-12'} bg-gray-100 border-gray-200 ${isMobile ? 'text-sm' : ''}`}>
                                     <SelectValue placeholder="Select stage" />
                                   </SelectTrigger>
                                 </FormControl>
@@ -585,13 +587,15 @@ export default function Projects() {
                           )}
                         />
                       </div>
-                      <Button 
-                        type="button"
-                        className="btn-primary mt-6"
-                      >
-                        <Building2 className="h-4 w-4 mr-2" />
-                        Stage
-                      </Button>
+{!isMobile && (
+                        <Button 
+                          type="button"
+                          className="btn-primary mt-6"
+                        >
+                          <Building2 className="h-4 w-4 mr-2" />
+                          Stage
+                        </Button>
+                      )}
                     </div>
 
                     <FormField
@@ -605,7 +609,7 @@ export default function Projects() {
                           <FormControl>
                             <Input 
                               type="number" 
-                              className="h-12 bg-gray-100 border-gray-200" 
+                              className={`${isMobile ? 'h-10' : 'h-12'} bg-gray-100 border-gray-200 ${isMobile ? 'text-sm' : ''}`} 
                               placeholder="Enter budget" 
                               {...field} 
                               onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)} 

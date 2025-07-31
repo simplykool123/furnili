@@ -64,24 +64,27 @@ export default function MaterialRequests() {
       
       <Dialog open={showNewRequest} onOpenChange={setShowNewRequest}>
         <DialogContent 
-          className={`${isMobile ? 'max-w-[95vw] max-h-[90vh] m-2' : 'max-w-4xl max-h-[90vh]'} overflow-y-auto mobile-scroll`} 
+          className={`${isMobile ? 'max-w-[95vw] max-h-[95vh] m-1 p-0' : 'max-w-4xl max-h-[90vh]'} overflow-hidden`} 
           aria-describedby="new-request-description"
         >
-          <DialogHeader className="space-y-3">
-            <DialogTitle className={`${isMobile ? 'text-lg' : 'text-xl'} font-semibold text-foreground`}>
+          <DialogHeader className={`${isMobile ? 'p-3 pb-2 border-b' : 'space-y-3'}`}>
+            <DialogTitle className={`${isMobile ? 'text-base' : 'text-xl'} font-semibold text-foreground`}>
               Create New Material Request
             </DialogTitle>
             <p id="new-request-description" className="sr-only">
               Form to create a new material request with client details and product items
             </p>
           </DialogHeader>
-          <RequestFormSimplified 
-            preSelectedProjectId={selectedProjectId}
-            onClose={() => {
-              setShowNewRequest(false);
-              setSelectedProjectId(undefined);
-            }} 
-          />
+          <div className={isMobile ? "h-full overflow-hidden" : ""}>
+            <RequestFormSimplified 
+              preSelectedProjectId={selectedProjectId}
+              onClose={() => {
+                setShowNewRequest(false);
+                setSelectedProjectId(undefined);
+              }}
+              isMobile={isMobile}
+            />
+          </div>
         </DialogContent>
       </Dialog>
     </FurniliLayout>
