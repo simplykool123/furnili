@@ -1,9 +1,20 @@
 import multer from "multer";
 import path from "path";
+import crypto from "crypto";
 
-// Product image upload configuration
+// Product image upload configuration with proper storage
 export const productImageUpload = multer({
-  dest: "uploads/products/",
+  storage: multer.diskStorage({
+    destination: function (req, file, cb) {
+      cb(null, 'uploads/products/');
+    },
+    filename: function (req, file, cb) {
+      // Generate unique filename with original extension
+      const uniqueName = crypto.randomBytes(16).toString('hex');
+      const ext = path.extname(file.originalname);
+      cb(null, uniqueName + ext);
+    }
+  }),
   limits: {
     fileSize: 5 * 1024 * 1024, // 5MB limit
   },

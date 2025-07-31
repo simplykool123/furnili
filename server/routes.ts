@@ -1884,7 +1884,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           clientId: null, // Will be set based on project
           fileName: file.filename,
           originalName: file.originalname,
-          filePath: file.path,
+          filePath: `uploads/products/${file.filename}`,
           fileSize: file.size,
           mimeType: file.mimetype,
           category: category || 'general',
@@ -1928,7 +1928,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           clientId: null,
           fileName: file.filename,
           originalName: file.originalname,
-          filePath: file.path,
+          filePath: `uploads/products/${file.filename}`,
           fileSize: file.size,
           mimeType: file.mimetype,
           category: type === 'note-attachment' ? 'note-attachment' : (category || 'general'),
