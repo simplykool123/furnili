@@ -801,6 +801,19 @@ export class MemStorage {
     return result[0];
   }
 
+  async updateProjectLog(id: number, updates: Partial<ProjectLog>): Promise<ProjectLog | undefined> {
+    try {
+      const result = await db.update(projectLogs)
+        .set(updates)
+        .where(eq(projectLogs.id, id))
+        .returning();
+      return result[0];
+    } catch (error) {
+      console.error('Error updating project log:', error);
+      return undefined;
+    }
+  }
+
   async deleteProjectLog(id: number): Promise<boolean> {
     const result = await db.delete(projectLogs).where(eq(projectLogs.id, id));
     return result.rowCount > 0;
@@ -837,6 +850,28 @@ export class MemStorage {
     } catch (error) {
       console.error('Error deleting project file:', error);
       return false;
+    }
+  }
+
+  async updateFileComment(id: number, comment: string): Promise<boolean> {
+    try {
+      const result = await db.update(projectFiles)
+        .set({ comment, updatedAt: new Date() })
+        .where(eq(projectFiles.id, id));
+      return result.rowCount !== null && result.rowCount > 0;
+    } catch (error) {
+      console.error('Error updating file comment:', error);
+      return false;
+    }
+  }
+
+  async getProjectFile(id: number): Promise<ProjectFile | undefined> {
+    try {
+      const result = await db.select().from(projectFiles).where(eq(projectFiles.id, id)).limit(1);
+      return result[0];
+    } catch (error) {
+      console.error('Error getting project file:', error);
+      return undefined;
     }
   }
 
