@@ -70,13 +70,27 @@ export const receiptImageUpload = multer({
     fileSize: 5 * 1024 * 1024, // 5MB limit
   },
   fileFilter: (req, file, cb) => {
+    console.log('Multer file filter - File details:', {
+      originalname: file.originalname,
+      mimetype: file.mimetype,
+      fieldname: file.fieldname
+    });
+    
     const allowedTypes = /jpeg|jpg|png/;
     const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-    const mimetype = allowedTypes.test(file.mimetype);
+    const allowedMimeTypes = [
+      'image/jpeg',
+      'image/jpg', 
+      'image/png',
+      'image/webp'  // Add webp support for pasted images
+    ];
+    const mimetype = allowedMimeTypes.includes(file.mimetype);
 
-    if (mimetype && extname) {
+    if (mimetype || extname) {
+      console.log('File accepted by multer filter');
       return cb(null, true);
     } else {
+      console.log('File rejected by multer filter - Invalid type');
       cb(new Error("Only image files are allowed for receipts"));
     }
   },

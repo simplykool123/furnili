@@ -1265,7 +1265,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/petty-cash", authenticateToken, receiptImageUpload.single("receipt"), async (req: AuthRequest, res) => {
     try {
-      console.log("File uploaded:", req.file);
+      console.log("=== PETTY CASH EXPENSE SUBMISSION ===");
+      console.log("File uploaded:", req.file ? {
+        originalname: req.file.originalname,
+        mimetype: req.file.mimetype,
+        size: req.file.size,
+        path: req.file.path,
+        fieldname: req.file.fieldname
+      } : "No file");
       console.log("Request body:", req.body);
       
       // Manually construct expense data to bypass strict Zod validation
@@ -1282,7 +1289,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         status: req.body.status || "expense", // Default to expense status, allow income
       };
       
+      console.log("Constructed expense data:", expenseData);
+      
       const expense = await storage.createPettyCashExpense(expenseData);
+      console.log("Expense created successfully:", expense.id);
       res.json(expense);
     } catch (error) {
       console.error("Failed to add expense:", error);

@@ -458,6 +458,13 @@ export default function PettyCash() {
   };
 
   const processFile = (file: File) => {
+    console.log('Processing file:', {
+      name: file.name,
+      type: file.type,
+      size: file.size,
+      lastModified: file.lastModified
+    });
+    
     setFormData(prev => ({ ...prev, receiptImage: file }));
     
     // Auto-process with OCR if it's an image
@@ -497,7 +504,22 @@ export default function PettyCash() {
     if (imageItem) {
       const file = imageItem.getAsFile();
       if (file) {
-        processFile(file);
+        // Create a new file with proper naming for pasted images
+        const timestamp = Date.now();
+        const extension = file.type.includes('png') ? '.png' : '.jpg';
+        const renamedFile = new File([file], `pasted-receipt-${timestamp}${extension}`, {
+          type: file.type,
+          lastModified: Date.now(),
+        });
+        
+        console.log('Pasted image details:', {
+          originalName: file.name,
+          newName: renamedFile.name,
+          type: renamedFile.type,
+          size: renamedFile.size
+        });
+        
+        processFile(renamedFile);
         toast({ title: "Image pasted", description: "Processing with OCR...", });
       }
     }
@@ -516,10 +538,20 @@ export default function PettyCash() {
     formDataToSend.append('orderNo', formData.orderNo);
     
     if (formData.receiptImage) {
-      console.log("Appending receipt file:", formData.receiptImage);
+      console.log("Appending receipt file:", {
+        name: formData.receiptImage.name,
+        type: formData.receiptImage.type,
+        size: formData.receiptImage.size
+      });
       formDataToSend.append('receipt', formData.receiptImage);
     } else {
       console.log("No receipt file to append");
+    }
+    
+    // Log all FormData entries for debugging
+    console.log("FormData entries:");
+    for (let [key, value] of formDataToSend.entries()) {
+      console.log(key, value);
     }
     
     addExpenseMutation.mutate(formDataToSend);
