@@ -3,6 +3,7 @@ import { cn } from "@/lib/utils";
 import { authService } from "@/lib/auth";
 import { useState, useEffect } from "react";
 import ChangePassword from "@/components/ChangePassword";
+import ProjectManagementIcon from "@/components/icons/ProjectManagementIcon";
 import { 
   LayoutDashboard, 
   Package, 
@@ -37,7 +38,7 @@ const navigation = [
   { name: 'Material Requests', href: '/requests', icon: PackageSearch, roles: ['admin', 'manager', 'staff'] },
   { name: 'Staff Attendance', href: '/attendance', icon: UserRoundPen, roles: ['admin', 'manager', 'staff'] },
   { name: 'Petty Cash', href: '/petty-cash', icon: CircleDollarSign, roles: ['admin', 'manager', 'staff'] },
-  { name: 'Project Management', href: '/projects', icon: FolderOpen, roles: ['admin', 'manager', 'staff'] },
+  { name: 'Project Management', href: '/projects', icon: ProjectManagementIcon, roles: ['admin', 'manager', 'staff'] },
   { name: 'Task Management', href: '/tasks', icon: CheckSquare, roles: ['admin', 'manager', 'staff'] },
   { name: 'Product Comparison', href: '/product-comparison', icon: GitCompare, roles: ['admin', 'manager'] }, // Manager can access for team supervision
   { name: 'WhatsApp Export', href: '/whatsapp', icon: MessageCircle, roles: ['admin', 'manager', 'staff'] },
