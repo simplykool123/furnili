@@ -51,9 +51,9 @@ export default function FurniliLayout({
       </div>
 
       <div className="flex min-h-screen">
-        {/* Sidebar */}
+        {/* Sidebar - Always Fixed */}
         <div className={cn(
-          "fixed inset-y-0 left-0 z-50 transform transition-all duration-300 ease-in-out lg:relative lg:translate-x-0",
+          "fixed inset-y-0 left-0 z-50 transform transition-all duration-300 ease-in-out",
           sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
           sidebarCollapsed && !isMobile ? "w-16" : "w-64"
         )}
@@ -91,7 +91,11 @@ export default function FurniliLayout({
         )}
 
         {/* Main content */}
-        <div className="flex-1 flex flex-col min-w-0">
+        <div className={cn(
+          "flex-1 flex flex-col min-w-0 transition-all duration-300 ease-in-out",
+          sidebarCollapsed && !isMobile ? "ml-16" : "ml-64 lg:ml-64",
+          isMobile ? "ml-0" : ""
+        )}>
           {/* Header */}
           <div className="furnili-header sticky top-0 z-30">
             <Header
