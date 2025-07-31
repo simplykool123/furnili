@@ -9,9 +9,15 @@ app.use(express.urlencoded({ extended: false }));
 // Serve uploaded files statically with proper MIME type handling
 app.use('/uploads', express.static('uploads', {
   setHeaders: (res, path, stat) => {
-    // Get the original file extension from database for proper MIME type
-    if (path.includes('uploads/products/')) {
-      res.setHeader('Content-Type', 'image/jpeg'); // Default to JPEG for product images
+    // Set proper MIME types for uploaded files
+    if (path.includes('.png')) {
+      res.setHeader('Content-Type', 'image/png');
+    } else if (path.includes('.jpg') || path.includes('.jpeg')) {
+      res.setHeader('Content-Type', 'image/jpeg');
+    } else if (path.includes('.gif')) {
+      res.setHeader('Content-Type', 'image/gif');
+    } else if (path.includes('.pdf')) {
+      res.setHeader('Content-Type', 'application/pdf');
     }
   }
 }));

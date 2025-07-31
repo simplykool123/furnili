@@ -1573,12 +1573,12 @@ export default function ProjectDetail() {
                           <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden relative">
                             {file.mimeType?.includes('image') ? (
                               <img
-                                src={`/uploads/products/${file.fileName}`}
+                                src={`/${file.filePath}`}
                                 alt={file.originalName}
                                 className="w-full h-full object-cover cursor-pointer hover:scale-105 transition-transform"
                                 onClick={() => {
                                   setPreviewImage({
-                                    src: `/uploads/products/${file.fileName}`,
+                                    src: `/${file.filePath}`,
                                     name: file.originalName
                                   });
                                   setShowImagePreview(true);
@@ -1606,7 +1606,7 @@ export default function ProjectDetail() {
                                   <DropdownMenuItem
                                     onClick={() => {
                                       setPreviewImage({
-                                        src: `/uploads/products/${file.fileName}`,
+                                        src: `/${file.filePath}`,
                                         name: file.originalName
                                       });
                                       setShowImagePreview(true);
@@ -1617,7 +1617,7 @@ export default function ProjectDetail() {
                                   </DropdownMenuItem>
                                   <DropdownMenuItem asChild>
                                     <a
-                                      href={`/uploads/products/${file.fileName}`}
+                                      href={`/${file.filePath}`}
                                       download={file.originalName}
                                     >
                                       <Download className="h-4 w-4 mr-2" />
@@ -1770,14 +1770,14 @@ export default function ProjectDetail() {
               {/* Display Uploaded Moodboard Images (only show if no duplicate in moodboards) */}
               {moodboardImages.filter((file: any) => 
                 !projectMoodboards.some((mb: any) => 
-                  mb.imageUrls && mb.imageUrls.includes(`/uploads/products/${file.fileName}`)
+                  mb.imageUrls && mb.imageUrls.includes(`/${file.filePath}`)
                 )
               ).map((file: any) => (
                 <div key={`upload-${file.id}`} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
                   {/* Image Display */}
                   <div className="h-48 bg-gray-100">
                     <img 
-                      src={`/uploads/products/${file.fileName}`}
+                      src={`/${file.filePath}`}
                       alt={file.originalName}
                       className="w-full h-full object-cover"
                       onError={(e) => {
@@ -2054,7 +2054,7 @@ export default function ProjectDetail() {
                                           return (
                                             <div key={index} className="mb-2">
                                               <img
-                                                src={`/uploads/products/${attachment}`}
+                                                src={attachment.startsWith('/') ? attachment : `/uploads/products/${attachment}`}
                                                 alt={`Attachment ${index + 1}`}
                                                 className="max-w-full max-h-64 rounded-lg border border-gray-200 shadow-sm"
                                                 onError={(e) => {
@@ -2071,7 +2071,7 @@ export default function ProjectDetail() {
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                               </svg>
                                               <a
-                                                href={`/uploads/products/${attachment}`}
+                                                href={attachment.startsWith('/') ? attachment : `/uploads/products/${attachment}`}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
                                                 className="text-sm text-blue-600 hover:text-blue-800 underline flex-1 truncate"
