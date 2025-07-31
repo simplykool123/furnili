@@ -664,7 +664,7 @@ export default function PettyCash() {
             <Card className="p-3">
               {user?.role === 'staff' ? (
                 // Personal stats for staff users
-                <div className="grid grid-cols-3 gap-2 text-center">
+                (<div className="grid grid-cols-3 gap-2 text-center">
                   <div className="space-y-1">
                     <div className="text-xs font-medium text-gray-600">My Expenses</div>
                     <div className="text-sm font-bold text-red-600">-₹{(stats as PersonalPettyCashStats).myExpenses?.toLocaleString()}</div>
@@ -684,10 +684,10 @@ export default function PettyCash() {
                       {(stats as PersonalPettyCashStats).myBalance >= 0 ? 'Available' : 'Deficit'}
                     </div>
                   </div>
-                </div>
+                </div>)
               ) : (
                 // Global stats for admin users
-                <div className="grid grid-cols-3 gap-2 text-center">
+                (<div className="grid grid-cols-3 gap-2 text-center">
                   <div className="space-y-1">
                     <div className="text-xs font-medium text-gray-600">Total Expenses</div>
                     <div className="text-sm font-bold text-red-600">-₹{(stats as PettyCashStats).totalExpenses?.toLocaleString()}</div>
@@ -707,7 +707,7 @@ export default function PettyCash() {
                       {(stats as PettyCashStats).balance >= 0 ? 'Available' : 'Deficit'}
                     </div>
                   </div>
-                </div>
+                </div>)
               )}
               {/* This Month Stats on Mobile */}
               <div className="mt-3 pt-3 border-t text-center">
@@ -724,7 +724,7 @@ export default function PettyCash() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
               {user?.role === 'staff' ? (
                 // Personal stats cards for staff users
-                <>
+                (<>
                   <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                       <CardTitle className="text-sm font-medium">My Expenses</CardTitle>
@@ -764,10 +764,10 @@ export default function PettyCash() {
                       <div className="text-2xl font-bold">₹{(stats as PersonalPettyCashStats).thisMonth?.toLocaleString()}</div>
                     </CardContent>
                   </Card>
-                </>
+                </>)
               ) : (
                 // Global stats cards for admin users
-                <>
+                (<>
                   <Card className="border-l-4 border-l-red-500">
                     <CardContent className="p-3">
                       <div className="flex items-center justify-between">
@@ -820,7 +820,7 @@ export default function PettyCash() {
                         <div>
                           <p className="text-xs text-gray-600 mb-1">This Month</p>
                           <p className="text-lg font-bold text-gray-900">₹{(stats as PettyCashStats).currentMonthExpenses?.toLocaleString()}</p>
-                          <p className="text-[10px] text-gray-500">Monthly Spend</p>
+                          <p className="text-[10px] text-gray-500">Monthly Damage</p>
                         </div>
                         <div className="h-6 w-6 bg-blue-100 rounded-full flex items-center justify-center">
                           <Calendar className="h-3 w-3 text-blue-600" />
@@ -828,7 +828,7 @@ export default function PettyCash() {
                       </div>
                     </CardContent>
                   </Card>
-                </>
+                </>)
               )}
             </div>
           )}
