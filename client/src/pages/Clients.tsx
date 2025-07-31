@@ -351,19 +351,17 @@ export default function Clients() {
 
       {/* Create Client Dialog */}
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-        <DialogContent className="max-w-[90vw] sm:max-w-2xl lg:max-w-4xl max-h-[90vh] overflow-hidden">
-          <div className="max-h-[80vh] flex flex-col">
-            <DialogHeader className="pb-4 flex-shrink-0">
-              <DialogTitle className="text-xl font-semibold">Add New Client</DialogTitle>
-              <DialogDescription>
-                Enter client information and contact details.
-              </DialogDescription>
-            </DialogHeader>
+        <DialogContent className="max-w-[90vw] sm:max-w-md max-h-[90vh] overflow-y-auto">
+          <DialogHeader className="pb-3">
+            <DialogTitle className="text-lg font-semibold">Add New Client</DialogTitle>
+            <DialogDescription className="text-sm text-gray-600">
+              Enter client information and contact details.
+            </DialogDescription>
+          </DialogHeader>
 
-            <div className="flex-1 overflow-y-auto">
-              <Form {...clientForm}>
-                <form onSubmit={clientForm.handleSubmit(onSubmitClient)} className="space-y-6 pb-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Form {...clientForm}>
+            <form onSubmit={clientForm.handleSubmit(onSubmitClient)} className="space-y-3">
+              <div className="grid grid-cols-1 gap-3">
                     <FormField
                       control={clientForm.control}
                       name="name"
@@ -517,26 +515,24 @@ export default function Clients() {
                       </FormItem>
                     )}
                   />
-                </form>
-              </Form>
-            </div>
-            
-            <div className="flex items-center justify-end space-x-4 pt-4 border-t flex-shrink-0">
-              <Button type="button" variant="outline" onClick={() => {
-                setIsCreateDialogOpen(false);
-                clientForm.reset();
-              }}>
-                Cancel
-              </Button>
-              <Button 
-                type="submit" 
-                disabled={createClientMutation.isPending} 
-                onClick={clientForm.handleSubmit(onSubmitClient)}
-              >
-                {createClientMutation.isPending ? "Creating..." : "Create Client"}
-              </Button>
-            </div>
-          </div>
+              <div className="flex items-center justify-end gap-2 pt-3">
+                <Button type="button" variant="outline" onClick={() => {
+                  setIsCreateDialogOpen(false);
+                  clientForm.reset();
+                }} className="h-8 px-3 text-sm">
+                  Cancel
+                </Button>
+                <Button 
+                  type="submit" 
+                  disabled={createClientMutation.isPending} 
+                  onClick={clientForm.handleSubmit(onSubmitClient)}
+                  className="h-8 px-3 text-sm"
+                >
+                  {createClientMutation.isPending ? "Creating..." : "Create Client"}
+                </Button>
+              </div>
+            </form>
+          </Form>
         </DialogContent>
       </Dialog>
 

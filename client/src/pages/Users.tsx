@@ -437,10 +437,10 @@ export default function Users() {
 
         {/* Add User Dialog */}
         <Dialog open={showAddUser} onOpenChange={setShowAddUser}>
-          <DialogContent aria-describedby="add-user-description">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <UserPlus className="w-5 h-5" />
+          <DialogContent className="max-w-[90vw] sm:max-w-md max-h-[90vh] overflow-y-auto" aria-describedby="add-user-description">
+            <DialogHeader className="pb-3">
+              <DialogTitle className="flex items-center gap-2 text-lg">
+                <UserPlus className="w-4 h-4" />
                 Add New User
               </DialogTitle>
               <p id="add-user-description" className="sr-only">
@@ -448,70 +448,70 @@ export default function Users() {
               </p>
             </DialogHeader>
             
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="name">Full Name *</Label>
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label htmlFor="name" className="text-xs font-medium">Full Name *</Label>
                   <Input
                     id="name"
                     {...register("name")}
-                    className={errors.name ? "border-red-500" : ""}
+                    className={`h-8 text-sm ${errors.name ? "border-red-500" : ""}`}
                     placeholder="John Doe"
                   />
                   {errors.name && (
-                    <p className="text-sm text-red-600 mt-1">{errors.name.message}</p>
+                    <p className="text-xs text-red-600">{errors.name.message}</p>
                   )}
                 </div>
 
-                <div>
-                  <Label htmlFor="username">Username *</Label>
+                <div className="space-y-1">
+                  <Label htmlFor="username" className="text-xs font-medium">Username *</Label>
                   <Input
                     id="username"
                     {...register("username")}
-                    className={errors.username ? "border-red-500" : ""}
+                    className={`h-8 text-sm ${errors.username ? "border-red-500" : ""}`}
                     placeholder="johndoe"
                   />
                   {errors.username && (
-                    <p className="text-sm text-red-600 mt-1">{errors.username.message}</p>
+                    <p className="text-xs text-red-600">{errors.username.message}</p>
                   )}
                 </div>
               </div>
 
-              <div>
-                <Label htmlFor="email">Email Address *</Label>
+              <div className="space-y-1">
+                <Label htmlFor="email" className="text-xs font-medium">Email Address *</Label>
                 <Input
                   id="email"
                   type="email"
                   {...register("email")}
-                  className={errors.email ? "border-red-500" : ""}
+                  className={`h-8 text-sm ${errors.email ? "border-red-500" : ""}`}
                   placeholder="john@company.com"
                 />
                 {errors.email && (
-                  <p className="text-sm text-red-600 mt-1">{errors.email.message}</p>
+                  <p className="text-xs text-red-600">{errors.email.message}</p>
                 )}
               </div>
 
-              <div>
-                <Label htmlFor="password">Password *</Label>
+              <div className="space-y-1">
+                <Label htmlFor="password" className="text-xs font-medium">Password *</Label>
                 <Input
                   id="password"
                   type="password"
                   {...register("password")}
-                  className={errors.password ? "border-red-500" : ""}
+                  className={`h-8 text-sm ${errors.password ? "border-red-500" : ""}`}
                   placeholder="••••••••"
                 />
                 {errors.password && (
-                  <p className="text-sm text-red-600 mt-1">{errors.password.message}</p>
+                  <p className="text-xs text-red-600">{errors.password.message}</p>
                 )}
               </div>
 
-              <div>
-                <Label htmlFor="role">Role *</Label>
+              <div className="space-y-1">
+                <Label htmlFor="role" className="text-xs font-medium">Role *</Label>
                 <Select 
                   value={watch("role")}
                   onValueChange={(value) => setValue("role", value as any)}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="h-8 text-sm">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -521,15 +521,15 @@ export default function Users() {
                   </SelectContent>
                 </Select>
                 {errors.role && (
-                  <p className="text-sm text-red-600 mt-1">{errors.role.message}</p>
+                  <p className="text-xs text-red-600">{errors.role.message}</p>
                 )}
               </div>
 
-              <div className="flex items-center justify-end space-x-4 pt-4">
-                <Button type="button" variant="outline" onClick={() => setShowAddUser(false)}>
+              <div className="flex items-center justify-end gap-2 pt-3">
+                <Button type="button" variant="outline" onClick={() => setShowAddUser(false)} className="h-8 px-3 text-sm">
                   Cancel
                 </Button>
-                <Button type="submit" disabled={createUserMutation.isPending}>
+                <Button type="submit" disabled={createUserMutation.isPending} className="h-8 px-3 text-sm">
                   {createUserMutation.isPending ? "Creating..." : "Create User"}
                 </Button>
               </div>
@@ -539,52 +539,55 @@ export default function Users() {
 
         {/* Edit User Dialog */}
         <Dialog open={showEditUser} onOpenChange={setShowEditUser}>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>Edit User</DialogTitle>
+          <DialogContent className="max-w-[90vw] sm:max-w-md max-h-[90vh] overflow-y-auto">
+            <DialogHeader className="pb-3">
+              <DialogTitle className="text-lg">Edit User</DialogTitle>
             </DialogHeader>
-            <form onSubmit={editHandleSubmit(onEditSubmit)} className="space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="edit-username">Username</Label>
+            <form onSubmit={editHandleSubmit(onEditSubmit)} className="space-y-3">
+              <div className="space-y-1">
+                <Label htmlFor="edit-username" className="text-xs font-medium">Username</Label>
                 <Input
                   id="edit-username"
                   {...editRegister("username")}
                   placeholder="Enter username"
+                  className="h-8 text-sm"
                 />
                 {editErrors.username && (
-                  <p className="text-sm text-red-600 mt-1">{editErrors.username.message}</p>
+                  <p className="text-xs text-red-600">{editErrors.username.message}</p>
                 )}
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="edit-email">Email</Label>
+              <div className="space-y-1">
+                <Label htmlFor="edit-email" className="text-xs font-medium">Email</Label>
                 <Input
                   id="edit-email"
                   type="email"
                   {...editRegister("email")}
                   placeholder="Enter email address"
+                  className="h-8 text-sm"
                 />
                 {editErrors.email && (
-                  <p className="text-sm text-red-600 mt-1">{editErrors.email.message}</p>
+                  <p className="text-xs text-red-600">{editErrors.email.message}</p>
                 )}
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="edit-name">Full Name</Label>
+              <div className="space-y-1">
+                <Label htmlFor="edit-name" className="text-xs font-medium">Full Name</Label>
                 <Input
                   id="edit-name"
                   {...editRegister("name")}
                   placeholder="Enter full name"
+                  className="h-8 text-sm"
                 />
                 {editErrors.name && (
-                  <p className="text-sm text-red-600 mt-1">{editErrors.name.message}</p>
+                  <p className="text-xs text-red-600">{editErrors.name.message}</p>
                 )}
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="edit-role">Role</Label>
+              <div className="space-y-1">
+                <Label htmlFor="edit-role" className="text-xs font-medium">Role</Label>
                 <Select onValueChange={(value) => editSetValue("role", value as any)} value={editWatch("role")}>
-                  <SelectTrigger>
+                  <SelectTrigger className="h-8 text-sm">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -594,11 +597,11 @@ export default function Users() {
                   </SelectContent>
                 </Select>
                 {editErrors.role && (
-                  <p className="text-sm text-red-600 mt-1">{editErrors.role.message}</p>
+                  <p className="text-xs text-red-600">{editErrors.role.message}</p>
                 )}
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-1">
                 <div className="flex items-center space-x-2">
                   <input
                     type="checkbox"
@@ -606,7 +609,7 @@ export default function Users() {
                     {...editRegister("resetPassword")}
                     className="rounded border-gray-300"
                   />
-                  <Label htmlFor="reset-password" className="text-sm font-medium">
+                  <Label htmlFor="reset-password" className="text-xs font-medium">
                     Reset password to 'temp123456'
                   </Label>
                 </div>
@@ -615,15 +618,15 @@ export default function Users() {
                 </p>
               </div>
 
-              <div className="flex items-center justify-end space-x-4 pt-4">
+              <div className="flex items-center justify-end gap-2 pt-3">
                 <Button type="button" variant="outline" onClick={() => {
                   setShowEditUser(false);
                   setEditingUser(null);
                   editReset();
-                }}>
+                }} className="h-8 px-3 text-sm">
                   Cancel
                 </Button>
-                <Button type="submit" disabled={editUserMutation.isPending}>
+                <Button type="submit" disabled={editUserMutation.isPending} className="h-8 px-3 text-sm">
                   {editUserMutation.isPending ? "Updating..." : "Update User"}
                 </Button>
               </div>

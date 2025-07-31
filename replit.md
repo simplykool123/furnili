@@ -15,9 +15,12 @@ This is a professional workforce management platform designed as a modern web ap
 ✓ **Dialog Scroll Optimization**: Implemented proper scrolling functionality for all large dialog forms (Product forms, Project creation, BOQ upload)
 ✓ **Compact Form Design**: Applied space-efficient styling across all dialog forms with reduced spacing, smaller input heights, and optimized layouts
 ✓ **Copy-Paste Image Upload**: Enhanced product image upload with clipboard paste support, drag-and-drop functionality, and proper file extension handling for pasted images
+✓ **Delete Confirmation Standardization**: All modules now use consistent "Are you Freaking Sure?" AlertDialog pattern instead of window.confirm()
+🔄 **POPUP FORM OPTIMIZATION IN PROGRESS**: Implementing compact layouts with space-y-3, h-8 inputs, text-xs labels, and max-w-[90vw] mobile optimization across all modules (Users partially complete, working on Clients, SalesProducts, Projects, PettyCash)
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.
+**Form Layout Requirements**: All popup forms must be optimized for screen size with compact layouts - space-y-3 form spacing, h-8 input heights, text-xs labels, max-w-[90vw] mobile width, reduced spacing between rows for maximum space efficiency.
 
 ## System Architecture
 
