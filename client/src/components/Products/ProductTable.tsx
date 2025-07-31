@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { Category } from "@shared/schema";
-import { authenticatedApiRequest } from "@/lib/auth";
+import { authenticatedApiRequest, authService } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -39,9 +39,13 @@ export default function ProductTable() {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
   const { isMobile } = useIsMobile();
+  const user = authService.getUser();
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Check if user can see pricing information
+  const canSeePricing = user && ['admin'].includes(user.role);
 
   const { data: products, isLoading } = useQuery({
     queryKey: ['/api/products', filters],
@@ -102,7 +106,7 @@ export default function ProductTable() {
   };
 
   // Mobile table columns configuration
-  const mobileColumns = [
+  const baseMobileColumns = [
     {
       key: 'name',
       label: 'Product Name',
@@ -136,12 +140,6 @@ export default function ProductTable() {
       render: (value: number, row: Product) => `${value} ${row.unit}`,
     },
     {
-      key: 'pricePerUnit',
-      label: 'Price per Unit',
-      priority: 'low' as const,
-      render: (value: number) => `₹${value?.toFixed(2)}`,
-    },
-    {
       key: 'size',
       label: 'Size',
       priority: 'low' as const,
@@ -152,6 +150,20 @@ export default function ProductTable() {
       priority: 'low' as const,
     },
   ];
+
+  // Add price column only for admin users
+  const mobileColumns = canSeePricing 
+    ? [
+        ...baseMobileColumns.slice(0, 6), // Insert price after currentStock
+        {
+          key: 'pricePerUnit',
+          label: 'Price per Unit',
+          priority: 'low' as const,
+          render: (value: number) => `₹${value?.toFixed(2)}`,
+        },
+        ...baseMobileColumns.slice(6) // Add remaining columns after price
+      ]
+    : baseMobileColumns;
 
   // Mobile filter configuration
   const mobileFilters = [
@@ -236,7 +248,9 @@ export default function ProductTable() {
                 <p className="text-xs text-gray-500">{product.category}</p>
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-gray-600">{product.brand || '-'}</span>
-                  <span className="font-medium">₹{(product.pricePerUnit || 0).toFixed(0)}</span>
+                  {canSeePricing && (
+                    <span className="font-medium">₹{(product.pricePerUnit || 0).toFixed(0)}</span>
+                  )}
                 </div>
               </div>
               
@@ -291,7 +305,7 @@ export default function ProductTable() {
             <TableHead>Size</TableHead>
             <TableHead>Thk.</TableHead>
             <TableHead>Stock</TableHead>
-            <TableHead>Price</TableHead>
+            {canSeePricing && <TableHead>Price</TableHead>}
             <TableHead>Status</TableHead>
             <TableHead className="w-[80px]">Actions</TableHead>
           </TableRow>
@@ -330,7 +344,9 @@ export default function ProductTable() {
                   <span className="text-gray-500 ml-1">{product.unit}</span>
                 </div>
               </TableCell>
-              <TableCell className="text-xs font-medium">₹{(product.pricePerUnit || 0).toFixed(0)}</TableCell>
+              {canSeePricing && (
+                <TableCell className="text-xs font-medium">₹{(product.pricePerUnit || 0).toFixed(0)}</TableCell>
+              )}
               <TableCell>{getStockStatusBadge(product.stockStatus)}</TableCell>
               <TableCell>
                 <div className="flex items-center space-x-1">

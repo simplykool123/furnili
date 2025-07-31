@@ -3,7 +3,7 @@ import { Edit, Trash2, Eye, Package } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import MobileTable from "./MobileTable";
 import { useQuery } from "@tanstack/react-query";
-import { authenticatedApiRequest } from "@/lib/auth";
+import { authenticatedApiRequest, authService } from "@/lib/auth";
 
 interface Product {
   id: number;
@@ -32,6 +32,10 @@ interface MobileProductTableProps {
 export default function MobileProductTable({ onEdit, onDelete, onView }: MobileProductTableProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
+  const user = authService.getUser();
+  
+  // Check if user can see pricing information
+  const canSeePricing = user && ['admin'].includes(user.role);
 
   // Fetch products
   const { data: products = [], isLoading } = useQuery({
@@ -58,8 +62,8 @@ export default function MobileProductTable({ onEdit, onDelete, onView }: MobileP
     return matchesSearch && matchesCategory;
   });
 
-  // Configure mobile table columns
-  const columns = [
+  // Configure mobile table columns - base columns without pricing
+  const baseColumns = [
     {
       key: 'name',
       label: 'Product Name',
@@ -112,17 +116,6 @@ export default function MobileProductTable({ onEdit, onDelete, onView }: MobileP
         )
     },
     {
-      key: 'pricePerUnit',
-      label: 'Price',
-      priority: 'medium' as const,
-      render: (value: number, row: Product) => (
-        <div className="text-right">
-          <div className="font-medium text-foreground">₹{value.toLocaleString()}</div>
-          <div className="text-xs text-muted-foreground">per {row.unit}</div>
-        </div>
-      )
-    },
-    {
       key: 'brand',
       label: 'Brand',
       priority: 'low' as const,
@@ -150,6 +143,25 @@ export default function MobileProductTable({ onEdit, onDelete, onView }: MobileP
       )
     }
   ];
+
+  // Add price column only for admin users
+  const columns = canSeePricing 
+    ? [
+        ...baseColumns.slice(0, 3), // Insert price after currentStock
+        {
+          key: 'pricePerUnit',
+          label: 'Price',
+          priority: 'medium' as const,
+          render: (value: number, row: Product) => (
+            <div className="text-right">
+              <div className="font-medium text-foreground">₹{value.toLocaleString()}</div>
+              <div className="text-xs text-muted-foreground">per {row.unit}</div>
+            </div>
+          )
+        },
+        ...baseColumns.slice(3) // Add remaining columns after price
+      ]
+    : baseColumns;
 
   if (isLoading) {
     return (
