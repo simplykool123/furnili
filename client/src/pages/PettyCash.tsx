@@ -18,7 +18,7 @@ import { format } from "date-fns";
 import FurniliLayout from "@/components/Layout/FurniliLayout";
 import FurniliCard from "@/components/UI/FurniliCard";
 import FurniliButton from "@/components/UI/FurniliButton";
-import { Plus, Search, Filter, Download, Upload, Camera, Eye, Share2, Pencil, Trash2, ChevronDown, ChevronUp } from "lucide-react";
+import { Plus, Search, Filter, Download, Upload, Camera, Eye, Share2, Pencil, Trash2, ChevronDown, ChevronUp, TrendingDown, TrendingUp, Wallet, Calendar } from "lucide-react";
 import Tesseract from 'tesseract.js';
 
 interface PettyCashExpense {
@@ -768,43 +768,64 @@ export default function PettyCash() {
               ) : (
                 // Global stats cards for admin users
                 <>
-                  <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium">Total Expenses (Debit)</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-2xl font-bold text-red-600">-₹{(stats as PettyCashStats).totalExpenses?.toLocaleString()}</div>
-                      <p className="text-xs text-red-500 mt-1">Money Out</p>
-                    </CardContent>
-                  </Card>
-                  <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium">Total Funds (Credit)</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-2xl font-bold text-green-600">+₹{(stats as PettyCashStats).totalIncome?.toLocaleString()}</div>
-                      <p className="text-xs text-green-500 mt-1">Money In</p>
-                    </CardContent>
-                  </Card>
-                  <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium">Current Balance</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className={`text-2xl font-bold ${(stats as PettyCashStats).balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                        {(stats as PettyCashStats).balance >= 0 ? '+' : ''}₹{(stats as PettyCashStats).balance?.toLocaleString()}
+                  <Card className="border-l-4 border-l-red-500">
+                    <CardContent className="p-3">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-xs text-gray-600 mb-1">Total Expenses (Debit)</p>
+                          <p className="text-lg font-bold text-red-600">-₹{(stats as PettyCashStats).totalExpenses?.toLocaleString()}</p>
+                          <p className="text-[10px] text-gray-500">Money Out</p>
+                        </div>
+                        <div className="h-6 w-6 bg-red-100 rounded-full flex items-center justify-center">
+                          <Download className="h-3 w-3 text-red-600" />
+                        </div>
                       </div>
-                      <p className={`text-xs mt-1 ${(stats as PettyCashStats).balance >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                        {(stats as PettyCashStats).balance >= 0 ? 'Available Funds' : 'Deficit'}
-                      </p>
                     </CardContent>
                   </Card>
-                  <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium">This Month</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-2xl font-bold">₹{(stats as PettyCashStats).currentMonthExpenses?.toLocaleString()}</div>
+                  <Card className="border-l-4 border-l-green-500">
+                    <CardContent className="p-3">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-xs text-gray-600 mb-1">Total Funds (Credit)</p>
+                          <p className="text-lg font-bold text-green-600">+₹{(stats as PettyCashStats).totalIncome?.toLocaleString()}</p>
+                          <p className="text-[10px] text-gray-500">Money In</p>
+                        </div>
+                        <div className="h-6 w-6 bg-green-100 rounded-full flex items-center justify-center">
+                          <Upload className="h-3 w-3 text-green-600" />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card className={`border-l-4 ${(stats as PettyCashStats).balance >= 0 ? 'border-l-green-500' : 'border-l-red-500'}`}>
+                    <CardContent className="p-3">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-xs text-gray-600 mb-1">Current Balance</p>
+                          <p className={`text-lg font-bold ${(stats as PettyCashStats).balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                            {(stats as PettyCashStats).balance >= 0 ? '+' : ''}₹{(stats as PettyCashStats).balance?.toLocaleString()}
+                          </p>
+                          <p className="text-[10px] text-gray-500">Available Funds</p>
+                        </div>
+                        <div className={`h-6 w-6 rounded-full flex items-center justify-center ${
+                          (stats as PettyCashStats).balance >= 0 ? 'bg-green-100' : 'bg-red-100'
+                        }`}>
+                          <Wallet className={`h-3 w-3 ${(stats as PettyCashStats).balance >= 0 ? 'text-green-600' : 'text-red-600'}`} />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card className="border-l-4 border-l-blue-500">
+                    <CardContent className="p-3">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-xs text-gray-600 mb-1">This Month</p>
+                          <p className="text-lg font-bold text-gray-900">₹{(stats as PettyCashStats).currentMonthExpenses?.toLocaleString()}</p>
+                          <p className="text-[10px] text-gray-500">Monthly Spend</p>
+                        </div>
+                        <div className="h-6 w-6 bg-blue-100 rounded-full flex items-center justify-center">
+                          <Calendar className="h-3 w-3 text-blue-600" />
+                        </div>
+                      </div>
                     </CardContent>
                   </Card>
                 </>
