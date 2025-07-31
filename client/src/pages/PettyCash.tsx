@@ -33,8 +33,10 @@ interface PettyCashExpense {
   status: string; // "expense" or "income"
   addedBy: number;
   createdAt: string;
-  orderNo?: string; // Add orderNo field
+  projectId?: number; // Project ID for expense tracking
+  orderNo?: string; // Legacy field for backward compatibility
   user?: { id: number; name: string; email: string; username?: string }; // Add username field
+  project?: { id: number; code: string; name: string }; // Project information
 }
 
 interface PettyCashStats {
@@ -156,7 +158,7 @@ export default function PettyCash() {
       paidTo: expense.vendor || '',
       paidBy: expense.user?.id?.toString() || '',
       purpose: expense.description || '',
-      projectId: "", // Will be updated when we add project data to expense interface
+      projectId: expense.projectId?.toString() || '', // Use projectId from expense
       orderNo: expense.orderNo || '',
       receiptImage: null,
       category: expense.category
@@ -928,101 +930,118 @@ export default function PettyCash() {
         <CardHeader>
           <CardTitle>Expense History ({filteredExpenses.length} entries)</CardTitle>
         </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Date</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Amount</TableHead>
-                <TableHead>Paid To/Source</TableHead>
-                <TableHead>Paid By</TableHead>
-                <TableHead>Purpose</TableHead>
-                <TableHead>Category</TableHead>
-                <TableHead>Order No.</TableHead>
-                <TableHead>Receipt</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredExpenses.map((expense: PettyCashExpense) => (
-                <TableRow key={expense.id}>
-                  <TableCell>{format(new Date(expense.expenseDate), 'dd MMM yyyy')}</TableCell>
-                  <TableCell>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      expense.status === 'income' 
-                        ? 'bg-green-100 text-green-800' 
-                        : 'bg-red-100 text-red-800'
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow className="text-xs">
+                  <TableHead className="py-2 px-3 w-20">Date</TableHead>
+                  <TableHead className="py-2 px-3 w-16">Type</TableHead>
+                  <TableHead className="py-2 px-3 w-20 text-right">Amount</TableHead>
+                  <TableHead className="py-2 px-3 min-w-[120px]">Paid To/Source</TableHead>
+                  <TableHead className="py-2 px-3 w-20">Paid By</TableHead>
+                  <TableHead className="py-2 px-3 min-w-[150px]">Purpose</TableHead>
+                  <TableHead className="py-2 px-3 w-20">Category</TableHead>
+                  <TableHead className="py-2 px-3 w-24">Project ID</TableHead>
+                  <TableHead className="py-2 px-3 w-16">Receipt</TableHead>
+                  <TableHead className="py-2 px-3 w-20 text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredExpenses.map((expense: PettyCashExpense) => (
+                  <TableRow key={expense.id} className="text-xs hover:bg-gray-50">
+                    <TableCell className="py-2 px-3 font-medium">
+                      {format(new Date(expense.expenseDate), 'dd MMM\nyyyy').split('\n').map((line, i) => (
+                        <div key={i} className={i === 0 ? 'font-semibold' : 'text-gray-500 text-[10px]'}>{line}</div>
+                      ))}
+                    </TableCell>
+                    <TableCell className="py-2 px-3">
+                      <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
+                        expense.status === 'income' 
+                          ? 'bg-green-100 text-green-800' 
+                          : 'bg-red-100 text-red-800'
+                      }`}>
+                        {expense.status === 'income' ? 'Credit' : 'Debit'}
+                      </span>
+                    </TableCell>
+                    <TableCell className={`py-2 px-3 font-bold text-right ${
+                      expense.status === 'income' ? 'text-green-600' : 'text-red-600'
                     }`}>
-                      {expense.status === 'income' ? 'Credit' : 'Debit'}
-                    </span>
-                  </TableCell>
-                  <TableCell className={`font-semibold ${
-                    expense.status === 'income' ? 'text-green-600' : 'text-red-600'
-                  }`}>
-                    {expense.status === 'income' ? '+' : '-'}₹{expense.amount.toFixed(2)}
-                  </TableCell>
-                  <TableCell className="font-medium">{expense.vendor}</TableCell>
-                  <TableCell className="font-medium">{expense.user?.name || expense.user?.username || 'N/A'}</TableCell>
-                  <TableCell className="max-w-[200px] truncate">{expense.description || '-'}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline">{expense.category}</Badge>
-                  </TableCell>
-                  <TableCell className="text-sm text-gray-600">{expense.orderNo || '-'}</TableCell>
-                  <TableCell>
-                    {expense.receiptImageUrl ? (
-                      <div className="flex items-center gap-2">
+                      {expense.status === 'income' ? '+' : '-'}₹{expense.amount.toLocaleString()}
+                    </TableCell>
+                    <TableCell className="py-2 px-3 font-medium max-w-[120px]">
+                      <div className="truncate" title={expense.vendor}>{expense.vendor}</div>
+                    </TableCell>
+                    <TableCell className="py-2 px-3 text-gray-600">
+                      <div className="truncate max-w-[80px]" title={expense.user?.name || expense.user?.username || 'N/A'}>
+                        {expense.user?.name || expense.user?.username || 'N/A'}
+                      </div>
+                    </TableCell>
+                    <TableCell className="py-2 px-3 max-w-[150px]">
+                      <div className="truncate text-gray-700" title={expense.description || '-'}>
+                        {expense.description || '-'}
+                      </div>
+                    </TableCell>
+                    <TableCell className="py-2 px-3">
+                      <Badge variant="outline" className="text-[10px] px-1 py-0.5">{expense.category}</Badge>
+                    </TableCell>
+                    <TableCell className="py-2 px-3 text-blue-600 font-medium">
+                      {expense.projectId ? (
+                        <div className="text-center">
+                          <div className="text-xs font-semibold">#{expense.projectId}</div>
+                          {expense.project && (
+                            <div className="text-[10px] text-gray-500 truncate max-w-[80px]" title={expense.project.name}>
+                              {expense.project.code}
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="text-gray-400 text-center block">-</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="py-2 px-3">
+                      {expense.receiptImageUrl ? (
                         <img 
                           src={`/${expense.receiptImageUrl}`}
                           alt="Receipt"
-                          className="w-8 h-8 object-cover rounded cursor-pointer border"
+                          className="w-6 h-6 object-cover rounded cursor-pointer border mx-auto"
                           onClick={() => {
                             setSelectedImage(`/${expense.receiptImageUrl}`);
                             setShowImageDialog(true);
                           }}
                           title="Click to view full image"
                         />
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            setSelectedImage(`/${expense.receiptImageUrl}`);
-                            setShowImageDialog(true);
-                          }}
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    ) : (
-                      <span className="text-gray-400">No receipt</span>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      {/* Only show edit/delete for creator or admin */}
-                      {(expense.addedBy === user?.id || user?.role === 'admin') && (
-                        <>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleEditExpense(expense)}
-                            title="Edit expense"
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDeleteExpense(expense.id)}
-                            className="text-red-600 hover:text-red-700"
-                            title="Delete expense"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </>
+                      ) : (
+                        <span className="text-gray-400 text-center block text-[10px]">No receipt</span>
                       )}
-                    </div>
-                  </TableCell>
+                    </TableCell>
+                    <TableCell className="py-2 px-3 text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        {/* Only show edit/delete for creator or admin */}
+                        {(expense.addedBy === user?.id || user?.role === 'admin') && (
+                          <>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleEditExpense(expense)}
+                              title="Edit expense"
+                              className="h-6 w-6 p-0"
+                            >
+                              <Pencil className="h-3 w-3" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDeleteExpense(expense.id)}
+                              className="text-red-600 hover:text-red-700 h-6 w-6 p-0"
+                              title="Delete expense"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </>
+                        )}
+                      </div>
+                    </TableCell>
                 </TableRow>
               ))}
               {filteredExpenses.length === 0 && (
@@ -1034,6 +1053,7 @@ export default function PettyCash() {
               )}
             </TableBody>
           </Table>
+          </div>
         </CardContent>
       </Card>
       {/* Add Expense Dialog */}
