@@ -75,6 +75,7 @@ const moodboardSchema = z.object({
 function ProjectFinancials({ projectId }: { projectId: string }) {
   const [dateFilter, setDateFilter] = useState("all");
   const [showAddExpense, setShowAddExpense] = useState(false);
+  const [selectedExpense, setSelectedExpense] = useState<any>(null);
   
   // Fetch project petty cash expenses
   const { data: projectExpenses, isLoading: expensesLoading } = useQuery({
@@ -215,16 +216,17 @@ function ProjectFinancials({ projectId }: { projectId: string }) {
                   .filter((expense: any) => expense.status === 'expense')
                   .slice(0, 5)
                   .map((expense: any) => (
-                    <div key={expense.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-gray-900">{expense.vendor}</p>
-                        <p className="text-xs text-gray-600">{expense.category}</p>
-                        <p className="text-xs text-gray-500">{new Date(expense.expenseDate).toLocaleDateString('en-GB')}</p>
+                    <div 
+                      key={expense.id} 
+                      className="flex items-center justify-between py-2 px-2 rounded hover:bg-gray-50 cursor-pointer transition-colors"
+                      onClick={() => setSelectedExpense(expense)}
+                    >
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs text-gray-900 truncate">
+                          {expense.user?.name || 'Unknown'} - {expense.category} - {new Date(expense.expenseDate).toLocaleDateString('en-GB')}
+                        </p>
                       </div>
-                      <div className="text-right">
-                        <p className="text-sm font-bold text-red-600">-₹{expense.amount.toLocaleString()}</p>
-                        <p className="text-xs text-gray-500">{expense.paymentMode}</p>
-                      </div>
+                      <p className="text-xs font-semibold text-red-600 ml-2">-₹{expense.amount.toLocaleString()}</p>
                     </div>
                   ))}
                 {projectExpenses.filter((e: any) => e.status === 'expense').length > 5 && (
@@ -300,6 +302,55 @@ function ProjectFinancials({ projectId }: { projectId: string }) {
           </CardContent>
         </Card>
       </div>
+
+      {/* Expense Detail Modal */}
+      {selectedExpense && (
+        <Dialog open={!!selectedExpense} onOpenChange={() => setSelectedExpense(null)}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="text-lg">Expense Details</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium text-gray-600">Paid By</label>
+                <p className="text-sm">{selectedExpense.user?.name || 'Unknown'}</p>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-600">Category</label>
+                <p className="text-sm">{selectedExpense.category}</p>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-600">Vendor</label>
+                <p className="text-sm">{selectedExpense.vendor}</p>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-600">Amount</label>
+                <p className="text-lg font-bold text-red-600">₹{selectedExpense.amount.toLocaleString()}</p>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-600">Date</label>
+                <p className="text-sm">{new Date(selectedExpense.expenseDate).toLocaleDateString('en-GB')}</p>
+              </div>
+              {selectedExpense.description && (
+                <div>
+                  <label className="text-sm font-medium text-gray-600">Description</label>
+                  <p className="text-sm">{selectedExpense.description}</p>
+                </div>
+              )}
+              {selectedExpense.receiptImageUrl && (
+                <div>
+                  <label className="text-sm font-medium text-gray-600">Receipt</label>
+                  <img 
+                    src={selectedExpense.receiptImageUrl} 
+                    alt="Receipt" 
+                    className="w-full max-h-40 object-contain border rounded"
+                  />
+                </div>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }
