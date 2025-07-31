@@ -29,6 +29,7 @@ import Backups from "@/pages/Backups";
 
 import Projects from "@/pages/Projects";
 import ProjectDetail from "@/pages/ProjectDetail";
+import SalesProducts from "@/pages/SalesProducts";
 import NotFound from "@/pages/not-found";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -203,7 +204,11 @@ function Router() {
         </ProtectedRoute>
       </Route>
 
-
+      <Route path="/sales-products">
+        <ProtectedRoute>
+          <SalesProducts />
+        </ProtectedRoute>
+      </Route>
       
       <Route component={NotFound} />
     </Switch>

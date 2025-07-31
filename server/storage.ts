@@ -17,6 +17,9 @@ import {
   projectLogs,
   projectFiles,
   moodboards,
+  salesProducts,
+  quotes,
+  quoteItems,
 
   type User,
   type InsertUser,
@@ -66,6 +69,12 @@ import {
   type InsertProjectTask,
   type Moodboard,
   type InsertMoodboard,
+  type SalesProduct,
+  type InsertSalesProduct,
+  type Quote,
+  type InsertQuote,
+  type QuoteItem,
+  type InsertQuoteItem,
   type MaterialRequestWithItems,
   type ProductWithStock,
   type BOQExtractedItem,
@@ -3288,6 +3297,109 @@ class DatabaseStorage implements IStorage {
       console.error('Error in getMonthlyExpenses:', error);
       return 0;
     }
+  }
+
+  // Sales Products methods
+  async getAllSalesProducts(): Promise<SalesProduct[]> {
+    return await db.select().from(salesProducts).where(eq(salesProducts.isActive, true)).orderBy(desc(salesProducts.createdAt));
+  }
+
+  async getSalesProduct(id: number): Promise<SalesProduct | undefined> {
+    const result = await db.select().from(salesProducts).where(eq(salesProducts.id, id));
+    return result[0];
+  }
+
+  async createSalesProduct(product: InsertSalesProduct): Promise<SalesProduct> {
+    const result = await db.insert(salesProducts).values(product).returning();
+    return result[0];
+  }
+
+  async updateSalesProduct(id: number, updates: Partial<InsertSalesProduct>): Promise<SalesProduct | undefined> {
+    const result = await db.update(salesProducts).set({
+      ...updates,
+      updatedAt: new Date(),
+    }).where(eq(salesProducts.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteSalesProduct(id: number): Promise<boolean> {
+    await db.update(salesProducts).set({ isActive: false }).where(eq(salesProducts.id, id));
+    return true;
+  }
+
+  // Quote methods
+  async getAllQuotes(): Promise<Quote[]> {
+    return await db.select().from(quotes).orderBy(desc(quotes.createdAt));
+  }
+
+  async getQuotesByProject(projectId: number): Promise<Quote[]> {
+    return await db.select().from(quotes).where(eq(quotes.projectId, projectId)).orderBy(desc(quotes.createdAt));
+  }
+
+  async getQuote(id: number): Promise<Quote | undefined> {
+    const result = await db.select().from(quotes).where(eq(quotes.id, id));
+    return result[0];
+  }
+
+  async createQuote(quote: InsertQuote): Promise<Quote> {
+    // Generate quote number
+    const year = new Date().getFullYear();
+    const month = String(new Date().getMonth() + 1).padStart(2, '0');
+    const count = await db.select({ count: sql<number>`count(*)` }).from(quotes);
+    const nextNumber = (count[0]?.count || 0) + 1;
+    const quoteNumber = `Q${year.toString().slice(-2)}${month}${String(nextNumber).padStart(3, '0')}`;
+
+    const result = await db.insert(quotes).values({
+      ...quote,
+      quoteNumber,
+    }).returning();
+    return result[0];
+  }
+
+  async getQuoteWithItems(id: number): Promise<Quote & { items: (QuoteItem & { salesProduct: SalesProduct })[] } | undefined> {
+    const quote = await this.getQuote(id);
+    if (!quote) return undefined;
+
+    const items = await db.select({
+      id: quoteItems.id,
+      quoteId: quoteItems.quoteId,
+      salesProductId: quoteItems.salesProductId,
+      quantity: quoteItems.quantity,
+      unitPrice: quoteItems.unitPrice,
+      taxPercentage: quoteItems.taxPercentage,
+      lineTotal: quoteItems.lineTotal,
+      notes: quoteItems.notes,
+      salesProduct: {
+        id: salesProducts.id,
+        name: salesProducts.name,
+        description: salesProducts.description,
+        imageUrl: salesProducts.imageUrl,
+        unitPrice: salesProducts.unitPrice,
+        category: salesProducts.category,
+        taxPercentage: salesProducts.taxPercentage,
+        internalNotes: salesProducts.internalNotes,
+        isActive: salesProducts.isActive,
+        createdAt: salesProducts.createdAt,
+        updatedAt: salesProducts.updatedAt,
+      }
+    }).from(quoteItems)
+      .leftJoin(salesProducts, eq(quoteItems.salesProductId, salesProducts.id))
+      .where(eq(quoteItems.quoteId, id));
+
+    return {
+      ...quote,
+      items: items.map(item => ({
+        id: item.id,
+        quoteId: item.quoteId,
+        salesProductId: item.salesProductId,
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+        taxPercentage: item.taxPercentage,
+        lineTotal: item.lineTotal,
+        notes: item.notes,
+        salesProduct: item.salesProduct
+      }))
+    };
   }
 
 }

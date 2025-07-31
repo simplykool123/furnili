@@ -448,6 +448,53 @@ export const priceComparisons = pgTable("price_comparisons", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Sales Products Table for Quote Management
+export const salesProducts = pgTable("sales_products", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  imageUrl: text("image_url"),
+  unitPrice: real("unit_price").notNull().default(0),
+  category: text("category"), // Furniture, Seating, Storage, etc.
+  taxPercentage: real("tax_percentage").default(0), // GST/VAT %
+  internalNotes: text("internal_notes"), // Cost, profit margin, etc.
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Quotes Table
+export const quotes = pgTable("quotes", {
+  id: serial("id").primaryKey(),
+  quoteNumber: text("quote_number").notNull().unique(), // Auto-generated: Q-001, Q-002, etc.
+  projectId: integer("project_id").references(() => projects.id).notNull(),
+  clientId: integer("client_id").references(() => clients.id).notNull(),
+  title: text("title").notNull(),
+  description: text("description"),
+  subtotal: real("subtotal").default(0),
+  taxAmount: real("tax_amount").default(0),
+  totalAmount: real("total_amount").default(0),
+  status: text("status").notNull().default("draft"), // draft, sent, approved, rejected
+  validUntil: timestamp("valid_until"),
+  terms: text("terms"), // Terms and conditions
+  notes: text("notes"), // Additional notes
+  createdBy: integer("created_by").references(() => users.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Quote Items Table
+export const quoteItems = pgTable("quote_items", {
+  id: serial("id").primaryKey(),
+  quoteId: integer("quote_id").references(() => quotes.id).notNull(),
+  salesProductId: integer("sales_product_id").references(() => salesProducts.id).notNull(),
+  quantity: integer("quantity").notNull().default(1),
+  unitPrice: real("unit_price").notNull(), // Price at time of quote (can differ from product price)
+  taxPercentage: real("tax_percentage").default(0),
+  lineTotal: real("line_total").notNull(), // quantity * unitPrice
+  notes: text("notes"), // Item-specific notes
+});
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users, {
   joiningDate: z.string().optional().transform((val) => val ? new Date(val) : undefined),
@@ -521,6 +568,23 @@ export const insertPriceComparisonSchema = createInsertSchema(priceComparisons).
   id: true,
   createdAt: true,
   updatedAt: true,
+});
+
+export const insertSalesProductSchema = createInsertSchema(salesProducts).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertQuoteSchema = createInsertSchema(quotes).omit({
+  id: true,
+  quoteNumber: true, // Auto-generated
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertQuoteItemSchema = createInsertSchema(quoteItems).omit({
+  id: true,
 });
 
 export const insertClientSchema = createInsertSchema(clients).omit({
@@ -621,6 +685,13 @@ export type BOQUpload = typeof boqUploads.$inferSelect;
 export type InsertBOQUpload = z.infer<typeof insertBOQUploadSchema>;
 export type StockMovement = typeof stockMovements.$inferSelect;
 export type InsertStockMovement = z.infer<typeof insertStockMovementSchema>;
+
+export type SalesProduct = typeof salesProducts.$inferSelect;
+export type InsertSalesProduct = z.infer<typeof insertSalesProductSchema>;
+export type Quote = typeof quotes.$inferSelect;
+export type InsertQuote = z.infer<typeof insertQuoteSchema>;
+export type QuoteItem = typeof quoteItems.$inferSelect;
+export type InsertQuoteItem = z.infer<typeof insertQuoteItemSchema>;
 
 
 

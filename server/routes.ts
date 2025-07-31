@@ -24,6 +24,9 @@ import {
   insertPriceComparisonSchema,
 
   insertMoodboardSchema,
+  insertSalesProductSchema,
+  insertQuoteSchema,
+  insertQuoteItemSchema,
 } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -2194,6 +2197,98 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(movement);
     } catch (error) {
       res.status(500).json({ message: "Failed to record movement", error });
+    }
+  });
+
+  // Sales Products routes
+  app.get("/api/sales-products", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const products = await storage.getAllSalesProducts();
+      res.json(products);
+    } catch (error) {
+      console.error("Get sales products error:", error);
+      res.status(500).json({ message: "Failed to fetch sales products" });
+    }
+  });
+
+  app.post("/api/sales-products", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const validatedData = insertSalesProductSchema.parse(req.body);
+      const product = await storage.createSalesProduct(validatedData);
+      res.json(product);
+    } catch (error) {
+      console.error("Create sales product error:", error);
+      res.status(500).json({ message: "Failed to create sales product" });
+    }
+  });
+
+  app.put("/api/sales-products/:id", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const productId = parseInt(req.params.id);
+      const validatedData = insertSalesProductSchema.parse(req.body);
+      const product = await storage.updateSalesProduct(productId, validatedData);
+      res.json(product);
+    } catch (error) {
+      console.error("Update sales product error:", error);
+      res.status(500).json({ message: "Failed to update sales product" });
+    }
+  });
+
+  app.delete("/api/sales-products/:id", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const productId = parseInt(req.params.id);
+      await storage.deleteSalesProduct(productId);
+      res.json({ message: "Sales product deleted successfully" });
+    } catch (error) {
+      console.error("Delete sales product error:", error);
+      res.status(500).json({ message: "Failed to delete sales product" });
+    }
+  });
+
+  // Quotes routes
+  app.get("/api/quotes", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const quotes = await storage.getAllQuotes();
+      res.json(quotes);
+    } catch (error) {
+      console.error("Get quotes error:", error);
+      res.status(500).json({ message: "Failed to fetch quotes" });
+    }
+  });
+
+  app.get("/api/projects/:projectId/quotes", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const projectId = parseInt(req.params.projectId);
+      const quotes = await storage.getQuotesByProject(projectId);
+      res.json(quotes);
+    } catch (error) {
+      console.error("Get project quotes error:", error);
+      res.status(500).json({ message: "Failed to fetch project quotes" });
+    }
+  });
+
+  app.post("/api/quotes", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const validatedData = insertQuoteSchema.parse({
+        ...req.body,
+        createdBy: req.user!.id,
+      });
+      const quote = await storage.createQuote(validatedData);
+      res.json(quote);
+    } catch (error) {
+      console.error("Create quote error:", error);
+      res.status(500).json({ message: "Failed to create quote" });
+    }
+  });
+
+  app.get("/api/quotes/:id", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const quoteId = parseInt(req.params.id);
+      const quote = await storage.getQuoteWithItems(quoteId);
+      res.json(quote);
+    } catch (error) {
+      console.error("Get quote error:", error);
+      res.status(500).json({ message: "Failed to fetch quote" });
     }
   });
 
