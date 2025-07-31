@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Edit, Trash2, Search, Grid3X3, List, Package } from "lucide-react";
 import { useIsMobile } from "@/components/Mobile/MobileOptimizer";
 import MobileTable from "@/components/Mobile/MobileTable";
@@ -38,6 +39,7 @@ export default function ProductTable() {
   });
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
+  const [productToDelete, setProductToDelete] = useState<Product | null>(null);
   const { isMobile } = useIsMobile();
   const user = authService.getUser();
 
@@ -70,6 +72,7 @@ export default function ProductTable() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/products'] });
+      setProductToDelete(null);
       toast({
         title: "Product deleted",
         description: "Product has been successfully deleted.",
@@ -277,11 +280,7 @@ export default function ProductTable() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => {
-                    if (confirm('Delete this product?')) {
-                      deleteProductMutation.mutate(product.id);
-                    }
-                  }}
+                  onClick={() => setProductToDelete(product)}
                   className="h-7 px-2"
                 >
                   <Trash2 className="w-3 h-3 text-red-600" />
@@ -361,11 +360,7 @@ export default function ProductTable() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => {
-                      if (confirm('Delete this product?')) {
-                        deleteProductMutation.mutate(product.id);
-                      }
-                    }}
+                    onClick={() => setProductToDelete(product)}
                     className="h-6 w-6 p-0"
                   >
                     <Trash2 className="w-3 h-3 text-red-600" />
@@ -448,11 +443,7 @@ export default function ProductTable() {
             {
               label: 'Delete',
               icon: Trash2,
-              onClick: () => {
-                if (confirm('Delete this product?')) {
-                  deleteProductMutation.mutate(product.id);
-                }
-              },
+              onClick: () => setProductToDelete(product),
               destructive: true,
             },
           ]}
@@ -489,6 +480,29 @@ export default function ProductTable() {
         </Card>
       )}
 
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!productToDelete} onOpenChange={() => setProductToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you Freaking Sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the product "{productToDelete?.name}" and remove it from inventory and all related records.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setProductToDelete(null)}>
+              No, Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => productToDelete && deleteProductMutation.mutate(productToDelete.id)}
+              className="bg-red-600 hover:bg-red-700 text-white"
+              disabled={deleteProductMutation.isPending}
+            >
+              {deleteProductMutation.isPending ? "Deleting..." : "Yes, Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
     </div>
   );

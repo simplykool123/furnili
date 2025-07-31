@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -450,6 +451,7 @@ export default function SalesProducts() {
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<SalesProduct | null>(null);
+  const [productToDelete, setProductToDelete] = useState<SalesProduct | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -464,6 +466,7 @@ export default function SalesProducts() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/sales-products"] });
       toast({ title: "Success", description: "Sales product deleted successfully" });
+      setProductToDelete(null);
     },
     onError: () => {
       toast({
@@ -473,6 +476,10 @@ export default function SalesProducts() {
       });
     },
   });
+
+  const handleDeleteProduct = (product: SalesProduct) => {
+    setProductToDelete(product);
+  };
 
   // Filter products
   const filteredProducts = salesProducts.filter(product => {
@@ -646,7 +653,7 @@ export default function SalesProducts() {
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => deleteMutation.mutate(product.id)}
+                              onClick={() => handleDeleteProduct(product)}
                               className="text-red-600 hover:text-red-700"
                             >
                               <Trash2 className="w-4 h-4" />
@@ -674,6 +681,30 @@ export default function SalesProducts() {
             )}
           </DialogContent>
         </Dialog>
+
+        {/* Delete Confirmation Dialog */}
+        <AlertDialog open={!!productToDelete} onOpenChange={() => setProductToDelete(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Are you Freaking Sure?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This action cannot be undone. This will permanently delete the sales product "{productToDelete?.name}" and remove it from all quotes and orders.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => setProductToDelete(null)}>
+                No, Cancel
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => productToDelete && deleteMutation.mutate(productToDelete.id)}
+                className="bg-red-600 hover:bg-red-700 text-white"
+                disabled={deleteMutation.isPending}
+              >
+                {deleteMutation.isPending ? "Deleting..." : "Yes, Delete"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </FurniliLayout>
   );

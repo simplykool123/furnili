@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Trash2, UserPlus, Shield, Edit3 } from "lucide-react";
 import { useForm } from "react-hook-form";
@@ -45,6 +46,7 @@ export default function Users() {
   const [showEditUser, setShowEditUser] = useState(false);
   const [editingUser, setEditingUser] = useState<any>(null);
   const [activeFilter, setActiveFilter] = useState<'all' | 'active' | 'inactive'>('active');
+  const [userToDelete, setUserToDelete] = useState<any>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const currentUser = authService.getUser();
@@ -165,6 +167,7 @@ export default function Users() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/users'] });
+      setUserToDelete(null);
       toast({
         title: "Staff member moved to inactive",
         description: "The staff member has been moved to inactive list. Their data and history are preserved.",
@@ -402,7 +405,7 @@ export default function Users() {
                             {user.isActive ? "Deactivate" : "Activate"}
                           </Button>
                           
-                          {/* Permanent Delete - Only for truly removing users */}
+                          {/* Delete - Moves to inactive status */}
                           <Button
                             variant="ghost"
                             size="sm"
@@ -415,24 +418,7 @@ export default function Users() {
                                 });
                                 return;
                               }
-                              
-                              const confirmDelete = confirm(
-                                `🚨 PERMANENT DELETE\n\nAre you sure you want to PERMANENTLY delete "${user.name}"?\n\n⚠️ THIS ACTION CANNOT BE UNDONE!\n\nThis will completely remove:\n• User account and login access\n• All associated data and records\n• Staff information and documents\n• Attendance history and payroll data\n\nConsider using "Deactivate" instead to preserve data.\n\nClick OK only if you want to permanently delete this user.`
-                              );
-                              
-                              if (confirmDelete) {
-                                // Additional confirmation for critical users
-                                if (user.role === 'admin' && !confirm(`🚨 ADMIN USER WARNING!\n\n"${user.name}" has ADMIN privileges!\n\nDeleting this account may affect system administration capabilities.\n\nThis is your FINAL warning. Click OK to proceed with permanent deletion.`)) {
-                                  return;
-                                }
-                                
-                                toast({
-                                  title: "Permanently deleting staff member...",
-                                  description: `Removing ${user.name} from the system forever.`,
-                                });
-                                
-                                deleteUserMutation.mutate(user.id);
-                              }
+                              setUserToDelete(user);
                             }}
                             disabled={user.id === currentUser?.id || deleteUserMutation.isPending}
                             className="text-red-600 hover:text-red-700 hover:bg-red-50"
@@ -644,6 +630,30 @@ export default function Users() {
             </form>
           </DialogContent>
         </Dialog>
+
+        {/* Delete Confirmation Dialog */}
+        <AlertDialog open={!!userToDelete} onOpenChange={() => setUserToDelete(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Are you Freaking Sure?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This action will deactivate "{userToDelete?.name}" and move them to inactive status. They will lose access to the system but their data and history will be preserved. You can reactivate them later if needed.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => setUserToDelete(null)}>
+                No, Cancel
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => userToDelete && deleteUserMutation.mutate(userToDelete.id)}
+                className="bg-red-600 hover:bg-red-700 text-white"
+                disabled={deleteUserMutation.isPending}
+              >
+                {deleteUserMutation.isPending ? "Deactivating..." : "Yes, Deactivate"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </FurniliLayout>
   );

@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { toast } from "@/hooks/use-toast";
 import { authenticatedApiRequest, authService } from "@/lib/auth";
 import { queryClient } from "@/lib/queryClient";
@@ -71,6 +72,7 @@ export default function PettyCash() {
   const [showStaffBalances, setShowStaffBalances] = useState(false);
   const [showExpenseDetailsDialog, setShowExpenseDetailsDialog] = useState(false);
   const [selectedExpenseDetails, setSelectedExpenseDetails] = useState<PettyCashExpense | null>(null);
+  const [expenseToDelete, setExpenseToDelete] = useState<PettyCashExpense | null>(null);
   
   // Mobile optimization hook
   const { isMobile } = useIsMobile();
@@ -144,6 +146,7 @@ export default function PettyCash() {
       queryClient.invalidateQueries({ queryKey: ["/api/petty-cash/stats"] });
       queryClient.invalidateQueries({ queryKey: ["/api/petty-cash/my-stats"] });
       queryClient.invalidateQueries({ queryKey: ["/api/petty-cash/staff-balances"] });
+      setExpenseToDelete(null);
       toast({ title: "Success", description: "Expense deleted successfully!" });
     },
     onError: (error: any) => {
@@ -173,10 +176,8 @@ export default function PettyCash() {
     setShowEditDialog(true);
   };
 
-  const handleDeleteExpense = async (id: number) => {
-    if (window.confirm("Are you sure you want to delete this expense?")) {
-      deleteExpenseMutation.mutate(id);
-    }
+  const handleDeleteExpense = (expense: PettyCashExpense) => {
+    setExpenseToDelete(expense);
   };
 
   // Fetch expenses and stats - filter by user for staff role
@@ -1090,7 +1091,7 @@ export default function PettyCash() {
                               size="sm"
                               onClick={(e) => {
                                 e.stopPropagation(); // Prevent row click
-                                handleDeleteExpense(expense.id);
+                                handleDeleteExpense(expense);
                               }}
                               className="text-red-600 hover:text-red-700 h-6 w-6 p-0"
                               title="Delete expense"
@@ -1719,6 +1720,30 @@ export default function PettyCash() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!expenseToDelete} onOpenChange={() => setExpenseToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you Freaking Sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the expense record for "₹{expenseToDelete?.amount} to {expenseToDelete?.vendor}" and remove it from all calculations.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setExpenseToDelete(null)}>
+              No, Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => expenseToDelete && deleteExpenseMutation.mutate(expenseToDelete.id)}
+              className="bg-red-600 hover:bg-red-700 text-white"
+              disabled={deleteExpenseMutation.isPending}
+            >
+              {deleteExpenseMutation.isPending ? "Deleting..." : "Yes, Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       </div>
     </FurniliLayout>
   );
