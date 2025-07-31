@@ -1010,20 +1010,19 @@ export default function PettyCash() {
                     <TableCell className="py-2 px-3">
                       <Badge variant="outline" className="text-[10px] px-1 py-0.5">{expense.category}</Badge>
                     </TableCell>
-                    <TableCell className="py-2 px-3 text-blue-600 font-medium">
+                    <TableCell className="py-2 px-3">
                       {expense.projectId && expense.project ? (
                         <div className="text-center">
-                          <div className="text-xs font-semibold" title={expense.project.name}>
+                          <div className="text-xs font-semibold text-blue-600" title={expense.project.name}>
                             {expense.project.code}
                           </div>
-                          <div className="text-[10px] text-gray-500">
-                            #{expense.projectId}
+                          <div className="text-[9px] text-gray-400">
+                            {expense.projectId}
                           </div>
                         </div>
                       ) : expense.projectId ? (
                         <div className="text-center">
-                          <div className="text-xs font-semibold">#{expense.projectId}</div>
-                          <div className="text-[10px] text-gray-500">Loading...</div>
+                          <div className="text-xs text-gray-600">{expense.projectId}</div>
                         </div>
                       ) : (
                         <span className="text-gray-400 text-center block">-</span>
@@ -1097,18 +1096,22 @@ export default function PettyCash() {
                         .reduce((sum: number, expense: PettyCashExpense) => sum + expense.amount, 0);
                       const netTotal = totalIncome - totalExpenses;
                       return (
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-sm">
-                          <div className="flex justify-between bg-green-50 p-2 rounded border">
+                        <div className="grid grid-cols-3 gap-3 text-xs">
+                          <div className="flex justify-between items-center bg-green-50 px-3 py-2 rounded-lg border border-green-200">
                             <span className="text-green-700 font-medium">Received:</span>
-                            <span className="font-bold text-green-600">+₹{totalIncome.toLocaleString()}</span>
+                            <span className="font-bold text-green-600 text-sm">+₹{totalIncome.toLocaleString()}</span>
                           </div>
-                          <div className="flex justify-between bg-red-50 p-2 rounded border">
+                          <div className="flex justify-between items-center bg-red-50 px-3 py-2 rounded-lg border border-red-200">
                             <span className="text-red-700 font-medium">Spent:</span>
-                            <span className="font-bold text-red-600">-₹{totalExpenses.toLocaleString()}</span>
+                            <span className="font-bold text-red-600 text-sm">-₹{totalExpenses.toLocaleString()}</span>
                           </div>
-                          <div className={`flex justify-between p-2 rounded border ${netTotal >= 0 ? 'bg-green-100' : 'bg-red-100'}`}>
-                            <span className={`font-bold ${netTotal >= 0 ? 'text-green-700' : 'text-red-700'}`}>Balance:</span>
-                            <span className={`font-bold ${netTotal >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                          <div className={`flex justify-between items-center px-3 py-2 rounded-lg border ${
+                            netTotal >= 0 
+                              ? 'bg-green-100 border-green-300' 
+                              : 'bg-red-100 border-red-300'
+                          }`}>
+                            <span className={`font-medium ${netTotal >= 0 ? 'text-green-700' : 'text-red-700'}`}>Balance:</span>
+                            <span className={`font-bold text-sm ${netTotal >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                               {netTotal >= 0 ? '+' : ''}₹{netTotal.toLocaleString()}
                             </span>
                           </div>
