@@ -138,7 +138,7 @@ export default function Sidebar({ onItemClick, collapsed = false, onToggleCollap
             </div>
             {!collapsed && (
               <div className="flex-1">
-                <h2 className="font-bold text-amber-900 text-sm tracking-wide">Furnili MS</h2>
+                <h2 className="font-bold text-amber-900 text-sm tracking-wide">Furnili </h2>
                 <p className="text-xs text-amber-800 capitalize font-medium">{user.role}</p>
               </div>
             )}
@@ -154,9 +154,6 @@ export default function Sidebar({ onItemClick, collapsed = false, onToggleCollap
           )}
         </div>
       </div>
-
-      
-
       {/* Navigation */}
       <nav className="flex-1 p-2">
         <div className="space-y-0.5">
@@ -245,7 +242,6 @@ export default function Sidebar({ onItemClick, collapsed = false, onToggleCollap
           })}
         </div>
       </nav>
-
       {/* User Actions */}
       <div className="p-2 border-t border-primary-foreground/20 space-y-1">
         {/* Change Password */}
