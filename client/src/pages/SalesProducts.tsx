@@ -350,7 +350,7 @@ export default function SalesProducts() {
   const filteredProducts = salesProducts.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          (product.description && product.description.toLowerCase().includes(searchTerm.toLowerCase()));
-    const matchesCategory = !selectedCategory || product.category === selectedCategory;
+    const matchesCategory = !selectedCategory || selectedCategory === "all" || product.category === selectedCategory;
     return matchesSearch && matchesCategory && product.isActive;
   });
 
@@ -415,7 +415,7 @@ export default function SalesProducts() {
                     <SelectValue placeholder="All Categories" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Categories</SelectItem>
+                    <SelectItem value="all">All Categories</SelectItem>
                     {PRODUCT_CATEGORIES.map((category) => (
                       <SelectItem key={category} value={category}>
                         {category}
