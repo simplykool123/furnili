@@ -408,6 +408,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.put("/api/clients/:id", authenticateToken, requireRole(["admin", "manager"]), async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const updates = insertClientSchema.partial().parse(req.body);
+      
+      const client = await storage.updateClient(id, updates);
+      
+      if (!client) {
+        return res.status(404).json({ message: "Client not found" });
+      }
+      
+      res.json(client);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Validation failed", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to update client", error });
+    }
+  });
+
+  app.delete("/api/clients/:id", authenticateToken, requireRole(["admin", "manager"]), async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const deleted = await storage.deleteClient(id);
+      
+      if (!deleted) {
+        return res.status(404).json({ message: "Client not found" });
+      }
+      
+      res.json({ message: "Client deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete client", error });
+    }
+  });
+
   // Product routes
   app.get("/api/products", authenticateToken, async (req, res) => {
     try {
