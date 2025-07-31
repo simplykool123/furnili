@@ -1408,70 +1408,72 @@ export default function Attendance() {
     <FurniliLayout
       title="Staff Attendance & Payroll"
       subtitle="Complete staff management system"
-      actions={
-        <div className="flex gap-2">
-          {/* Quick Check In/Out Buttons */}
-          {!hasCheckedInToday ? (
-            <FurniliButton
-              variant="furnili-primary"
-              size="sm"
-              onClick={() => selfCheckInMutation.mutate({})}
-              disabled={selfCheckInMutation.isPending}
-            >
-              <LogIn className="w-4 h-4 mr-2" />
-              {selfCheckInMutation.isPending ? "Checking In..." : "Quick Check In"}
-            </FurniliButton>
-          ) : !hasCheckedOutToday ? (
-            <FurniliButton
-              variant="furnili-secondary"
-              size="sm"
-              onClick={() => selfCheckOutMutation.mutate()}
-              disabled={selfCheckOutMutation.isPending}
-            >
-              <LogOut className="w-4 h-4 mr-2" />
-              {selfCheckOutMutation.isPending ? "Checking Out..." : "Quick Check Out"}
-            </FurniliButton>
-          ) : (
-            <Badge variant="secondary" className="px-3 py-1">
-              <Check className="w-4 h-4 mr-1" />
-              Completed for today
-            </Badge>
-          )}
-        </div>
-      }
     >
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <div>
         </div>
         
-        {/* Month/Year Selector */}
-        <div className="flex gap-2">
-          <Select value={selectedMonth.toString()} onValueChange={(value) => setSelectedMonth(parseInt(value))}>
-            <SelectTrigger className="w-32">
-              <SelectValue placeholder="Month" />
-            </SelectTrigger>
-            <SelectContent>
-              {Array.from({ length: 12 }, (_, i) => (
-                <SelectItem key={i + 1} value={(i + 1).toString()}>
-                  {new Date(2024, i).toLocaleString("en-IN", { month: "long" })}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          
-          <Select value={selectedYear.toString()} onValueChange={(value) => setSelectedYear(parseInt(value))}>
-            <SelectTrigger className="w-24">
-              <SelectValue placeholder="Year" />
-            </SelectTrigger>
-            <SelectContent>
-              {yearOptions.map(year => (
-                <SelectItem key={year} value={year.toString()}>
-                  {year}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        {/* Quick Check In/Out Button and Month/Year Selector */}
+        <div className="flex gap-3 items-center">
+          {/* Quick Check In/Out Buttons */}
+          <div className="flex gap-2">
+            {!hasCheckedInToday ? (
+              <FurniliButton
+                variant="furnili-primary"
+                size="sm"
+                onClick={() => selfCheckInMutation.mutate({})}
+                disabled={selfCheckInMutation.isPending}
+              >
+                <LogIn className="w-4 h-4 mr-2" />
+                {selfCheckInMutation.isPending ? "Checking In..." : "Quick Check In"}
+              </FurniliButton>
+            ) : !hasCheckedOutToday ? (
+              <FurniliButton
+                variant="furnili-secondary"
+                size="sm"
+                onClick={() => selfCheckOutMutation.mutate()}
+                disabled={selfCheckOutMutation.isPending}
+              >
+                <LogOut className="w-4 h-4 mr-2" />
+                {selfCheckOutMutation.isPending ? "Checking Out..." : "Quick Check Out"}
+              </FurniliButton>
+            ) : (
+              <Badge variant="secondary" className="px-3 py-1">
+                <Check className="w-4 h-4 mr-1" />
+                Completed for today
+              </Badge>
+            )}
+          </div>
+
+          {/* Month/Year Selector */}
+          <div className="flex gap-2">
+            <Select value={selectedMonth.toString()} onValueChange={(value) => setSelectedMonth(parseInt(value))}>
+              <SelectTrigger className="w-32">
+                <SelectValue placeholder="Month" />
+              </SelectTrigger>
+              <SelectContent>
+                {Array.from({ length: 12 }, (_, i) => (
+                  <SelectItem key={i + 1} value={(i + 1).toString()}>
+                    {new Date(2024, i).toLocaleString("en-IN", { month: "long" })}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            
+            <Select value={selectedYear.toString()} onValueChange={(value) => setSelectedYear(parseInt(value))}>
+              <SelectTrigger className="w-24">
+                <SelectValue placeholder="Year" />
+              </SelectTrigger>
+              <SelectContent>
+                {yearOptions.map(year => (
+                  <SelectItem key={year} value={year.toString()}>
+                    {year}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
 
