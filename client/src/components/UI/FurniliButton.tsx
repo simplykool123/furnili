@@ -2,7 +2,7 @@ import { cn } from '@/lib/utils';
 import { Button, ButtonProps } from '@/components/ui/button';
 import { forwardRef } from 'react';
 
-interface FurniliButtonProps extends ButtonProps {
+interface FurniliButtonProps extends Omit<ButtonProps, 'variant'> {
   variant?: 'default' | 'secondary' | 'outline' | 'ghost' | 'destructive' | 'furnili-primary' | 'furnili-secondary';
   loading?: boolean;
 }
@@ -30,7 +30,7 @@ const FurniliButton = forwardRef<HTMLButtonElement, FurniliButtonProps>(
           loading && 'opacity-80 cursor-not-allowed',
           className
         )}
-        variant={furniliClasses ? undefined : variant}
+        variant={furniliClasses ? undefined : (variant as any)}
         ref={ref}
         disabled={isDisabled}
         {...props}

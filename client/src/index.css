@@ -77,21 +77,23 @@
 
 .furnili-button-primary {
   @apply px-6 py-3 rounded-lg font-medium transition-all duration-200 shadow-sm hover:shadow-md text-white;
-  background-color: hsl(var(--primary));
+  background-color: var(--furnili-primary);
 }
 
 .furnili-button-primary:hover {
-  background-color: hsl(var(--primary) / 0.9);
+  background-color: var(--furnili-accent);
 }
 
 .furnili-button-secondary {
-  @apply px-6 py-3 rounded-lg font-medium transition-all duration-200;
-  background-color: hsl(var(--secondary));
-  color: hsl(var(--secondary-foreground));
+  @apply px-6 py-3 rounded-lg font-medium transition-all duration-200 border;
+  background-color: white;
+  color: var(--furnili-primary);
+  border-color: var(--furnili-primary);
 }
 
 .furnili-button-secondary:hover {
-  background-color: hsl(var(--secondary) / 0.9);
+  background-color: var(--furnili-primary);
+  color: white;
 }
 
 .furnili-gradient {
