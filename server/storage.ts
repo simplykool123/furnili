@@ -2620,18 +2620,29 @@ class DatabaseStorage implements IStorage {
     
     const expenses = await query.orderBy(desc(pettyCashExpenses.createdAt));
     
-    // Add user information
-    const expensesWithUsers = await Promise.all(
+    // Add user and project information
+    const expensesWithRelatedData = await Promise.all(
       expenses.map(async (expense) => {
         const user = await this.getUser(expense.addedBy);
+        let project = null;
+        
+        if (expense.projectId) {
+          try {
+            project = await this.getProject(expense.projectId);
+          } catch (error) {
+            console.error(`Error fetching project ${expense.projectId}:`, error);
+          }
+        }
+        
         return {
           ...expense,
-          user: user ? { id: user.id, name: user.name, email: user.email } : null,
+          user: user ? { id: user.id, name: user.name, email: user.email, username: user.username } : null,
+          project: project ? { id: project.id, code: project.code, name: project.name } : null,
         };
       })
     );
     
-    return expensesWithUsers;
+    return expensesWithRelatedData;
   }
 
   async createPettyCashExpense(expense: InsertPettyCashExpense): Promise<PettyCashExpense> {

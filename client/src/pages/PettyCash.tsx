@@ -1011,14 +1011,19 @@ export default function PettyCash() {
                       <Badge variant="outline" className="text-[10px] px-1 py-0.5">{expense.category}</Badge>
                     </TableCell>
                     <TableCell className="py-2 px-3 text-blue-600 font-medium">
-                      {expense.projectId ? (
+                      {expense.projectId && expense.project ? (
                         <div className="text-center">
-                          <div className="text-xs font-semibold">{expense.projectId}</div>
-                          {expense.project && (
-                            <div className="text-[10px] text-gray-500 truncate max-w-[80px]" title={expense.project.name}>
-                              {expense.project.code}
-                            </div>
-                          )}
+                          <div className="text-xs font-semibold" title={expense.project.name}>
+                            {expense.project.code}
+                          </div>
+                          <div className="text-[10px] text-gray-500">
+                            #{expense.projectId}
+                          </div>
+                        </div>
+                      ) : expense.projectId ? (
+                        <div className="text-center">
+                          <div className="text-xs font-semibold">#{expense.projectId}</div>
+                          <div className="text-[10px] text-gray-500">Loading...</div>
                         </div>
                       ) : (
                         <span className="text-gray-400 text-center block">-</span>
@@ -1078,11 +1083,11 @@ export default function PettyCash() {
               )}
               {/* Total Row */}
               {filteredExpenses.length > 0 && (
-                <TableRow className="bg-gray-100 border-t-2 font-bold">
-                  <TableCell colSpan={2} className="py-3 px-3 text-center font-bold text-gray-700">
-                    TOTAL
+                <TableRow className="bg-gray-50 border-t-2">
+                  <TableCell colSpan={2} className="py-4 px-3">
+                    <div className="font-bold text-gray-700 text-sm">TOTAL</div>
                   </TableCell>
-                  <TableCell className="py-3 px-3 font-bold text-right">
+                  <TableCell className="py-4 px-3" colSpan={8}>
                     {(() => {
                       const totalIncome = filteredExpenses
                         .filter((expense: PettyCashExpense) => expense.status === 'income')
@@ -1092,17 +1097,25 @@ export default function PettyCash() {
                         .reduce((sum: number, expense: PettyCashExpense) => sum + expense.amount, 0);
                       const netTotal = totalIncome - totalExpenses;
                       return (
-                        <div className="text-sm">
-                          <div className="text-green-600">+₹{totalIncome.toLocaleString()}</div>
-                          <div className="text-red-600">-₹{totalExpenses.toLocaleString()}</div>
-                          <div className={`font-bold ${netTotal >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                            Net: {netTotal >= 0 ? '+' : ''}₹{netTotal.toLocaleString()}
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-sm">
+                          <div className="flex justify-between bg-green-50 p-2 rounded border">
+                            <span className="text-green-700 font-medium">Received:</span>
+                            <span className="font-bold text-green-600">+₹{totalIncome.toLocaleString()}</span>
+                          </div>
+                          <div className="flex justify-between bg-red-50 p-2 rounded border">
+                            <span className="text-red-700 font-medium">Spent:</span>
+                            <span className="font-bold text-red-600">-₹{totalExpenses.toLocaleString()}</span>
+                          </div>
+                          <div className={`flex justify-between p-2 rounded border ${netTotal >= 0 ? 'bg-green-100' : 'bg-red-100'}`}>
+                            <span className={`font-bold ${netTotal >= 0 ? 'text-green-700' : 'text-red-700'}`}>Balance:</span>
+                            <span className={`font-bold ${netTotal >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                              {netTotal >= 0 ? '+' : ''}₹{netTotal.toLocaleString()}
+                            </span>
                           </div>
                         </div>
                       );
                     })()}
                   </TableCell>
-                  <TableCell colSpan={7} className="py-3 px-3"></TableCell>
                 </TableRow>
               )}
             </TableBody>
