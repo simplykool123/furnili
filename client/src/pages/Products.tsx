@@ -100,9 +100,7 @@ export default function Products() {
               <DialogTitle className="text-xl font-semibold text-foreground">
                 {editingProduct ? 'Edit Product' : 'Add New Product'}
               </DialogTitle>
-              <p id="product-form-description" className="text-sm text-muted-foreground">
-                {editingProduct ? 'Update product information and inventory details' : 'Add a new product to the inventory system with complete specifications'}
-            </p>
+              
           </DialogHeader>
           <div className={`${isMobile ? 'flex-1 overflow-hidden' : ''}`}>
             <ProductForm 
