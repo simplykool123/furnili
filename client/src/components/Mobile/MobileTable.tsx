@@ -1,264 +1,219 @@
-import { ReactNode, useState } from "react";
-import { ChevronDown, ChevronRight, MoreVertical } from "lucide-react";
+import { ReactNode } from "react";
 import { cn } from "@/lib/utils";
-import { useIsMobile } from "./MobileOptimizer";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
 interface MobileTableColumn {
   key: string;
   label: string;
-  width?: string;
   render?: (value: any, row: any) => ReactNode;
-  mobileHide?: boolean; // Hide column on mobile
-  mobilePrimary?: boolean; // Show as primary info on mobile
+  className?: string;
+  priority?: 'high' | 'medium' | 'low'; // For responsive display
+}
+
+interface MobileTableAction {
+  label: string;
+  icon?: any;
+  onClick: () => void;
+  destructive?: boolean;
 }
 
 interface MobileTableProps {
   data: any[];
   columns: MobileTableColumn[];
-  className?: string;
   onRowClick?: (row: any) => void;
-  actions?: Array<{
-    label: string;
-    onClick: (row: any) => void;
-    icon?: ReactNode;
-    variant?: 'default' | 'destructive';
-  }>;
+  emptyMessage?: string;
+  className?: string;
+  cardClassName?: string;
+  itemActions?: (row: any) => MobileTableAction[];
 }
 
-// Mobile card view for table rows
-function MobileTableCard({ 
-  row, 
-  columns, 
-  onRowClick, 
-  actions 
-}: {
-  row: any;
-  columns: MobileTableColumn[];
-  onRowClick?: (row: any) => void;
-  actions?: MobileTableProps['actions'];
-}) {
-  const [expanded, setExpanded] = useState(false);
-  
-  const primaryColumns = columns.filter(col => col.mobilePrimary);
-  const secondaryColumns = columns.filter(col => !col.mobilePrimary && !col.mobileHide);
-  
+export default function MobileTable({
+  data,
+  columns,
+  onRowClick,
+  emptyMessage = "No data available",
+  className,
+  cardClassName,
+  itemActions
+}: MobileTableProps) {
+  if (!data || data.length === 0) {
+    return (
+      <Card className={cn("w-full", cardClassName)}>
+        <CardContent className="p-6 text-center text-muted-foreground">
+          {emptyMessage}
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Determine which columns to show based on priority and screen space
+  const primaryColumns = columns.filter(col => col.priority === 'high' || !col.priority);
+  const secondaryColumns = columns.filter(col => col.priority === 'medium');
+  const tertiaryColumns = columns.filter(col => col.priority === 'low');
+
   return (
-    <div className="bg-card border border-border rounded-lg p-4 space-y-3 shadow-sm">
-      {/* Primary Information */}
-      <div className="flex items-start justify-between">
-        <div 
-          className="flex-1 space-y-1 cursor-pointer"
+    <div className={cn("space-y-3", className)}>
+      {data.map((row, index) => (
+        <Card 
+          key={row.id || index}
+          className={cn(
+            "transition-all duration-200 hover:shadow-md border border-border/50",
+            onRowClick && "cursor-pointer hover:bg-muted/30 active:bg-muted/50",
+            cardClassName
+          )}
           onClick={() => onRowClick?.(row)}
         >
-          {primaryColumns.map(column => (
-            <div key={column.key}>
-              {column.key === primaryColumns[0].key ? (
-                <h3 className="font-medium text-foreground text-base">
-                  {column.render ? column.render(row[column.key], row) : row[column.key]}
-                </h3>
-              ) : (
-                <div className="text-sm text-muted-foreground">
-                  {column.render ? column.render(row[column.key], row) : row[column.key]}
+          <CardContent className="p-4">
+            <div className="space-y-3">
+              {/* Primary Information - Always Visible */}
+              <div className="space-y-2">
+                {primaryColumns.map((column) => {
+                  const value = row[column.key];
+                  return (
+                    <div key={column.key} className="flex items-start justify-between gap-3">
+                      <span className="text-sm font-medium text-muted-foreground min-w-0 flex-shrink-0">
+                        {column.label}:
+                      </span>
+                      <div className="text-sm text-foreground font-medium text-right min-w-0 flex-1">
+                        {column.render ? column.render(value, row) : String(value || '-')}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Secondary Information - Collapsible */}
+              {secondaryColumns.length > 0 && (
+                <details className="group">
+                  <summary className="text-xs text-muted-foreground cursor-pointer list-none flex items-center gap-1 hover:text-foreground transition-colors">
+                    <span className="group-open:rotate-90 transition-transform">▶</span>
+                    More details
+                  </summary>
+                  <div className="mt-2 pt-2 border-t border-border/50 space-y-2">
+                    {secondaryColumns.map((column) => {
+                      const value = row[column.key];
+                      return (
+                        <div key={column.key} className="flex items-start justify-between gap-3">
+                          <span className="text-xs text-muted-foreground min-w-0 flex-shrink-0">
+                            {column.label}:
+                          </span>
+                          <div className="text-xs text-foreground text-right min-w-0 flex-1">
+                            {column.render ? column.render(value, row) : String(value || '-')}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </details>
+              )}
+
+              {/* Tertiary Information - Hidden by default, can be shown in expanded view */}
+              {tertiaryColumns.length > 0 && (
+                <details className="group">
+                  <summary className="text-xs text-muted-foreground cursor-pointer list-none flex items-center gap-1 hover:text-foreground transition-colors">
+                    <span className="group-open:rotate-90 transition-transform">▶</span>
+                    Additional info
+                  </summary>
+                  <div className="mt-2 pt-2 border-t border-border/50 space-y-2">
+                    {tertiaryColumns.map((column) => {
+                      const value = row[column.key];
+                      return (
+                        <div key={column.key} className="flex items-start justify-between gap-3">
+                          <span className="text-xs text-muted-foreground min-w-0 flex-shrink-0">
+                            {column.label}:
+                          </span>
+                          <div className="text-xs text-foreground text-right min-w-0 flex-1">
+                            {column.render ? column.render(value, row) : String(value || '-')}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </details>
+              )}
+
+              {/* Actions */}
+              {itemActions && (
+                <div className="pt-2 border-t border-border/50">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {itemActions(row).map((action, actionIndex) => {
+                      const IconComponent = action.icon;
+                      return (
+                        <Button
+                          key={actionIndex}
+                          variant={action.destructive ? "destructive" : "ghost"}
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            action.onClick();
+                          }}
+                          className="h-8 px-3 text-xs"
+                        >
+                          {IconComponent && <IconComponent className="w-3 h-3 mr-1" />}
+                          {action.label}
+                        </Button>
+                      );
+                    })}
+                  </div>
                 </div>
               )}
             </div>
-          ))}
-        </div>
-        
-        {/* Actions */}
-        <div className="flex items-center space-x-2">
-          {actions && actions.length > 0 && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                  <MoreVertical className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                {actions.map((action, index) => (
-                  <DropdownMenuItem 
-                    key={index}
-                    onClick={() => action.onClick(row)}
-                    className={action.variant === 'destructive' ? 'text-destructive' : ''}
-                  >
-                    {action.icon && <span className="mr-2">{action.icon}</span>}
-                    {action.label}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
-          
-          {secondaryColumns.length > 0 && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-8 w-8 p-0"
-              onClick={() => setExpanded(!expanded)}
-            >
-              {expanded ? (
-                <ChevronDown className="h-4 w-4" />
-              ) : (
-                <ChevronRight className="h-4 w-4" />
-              )}
-            </Button>
-          )}
-        </div>
-      </div>
-      
-      {/* Secondary Information (Expandable) */}
-      {expanded && secondaryColumns.length > 0 && (
-        <div className="pt-2 border-t border-border space-y-2">
-          {secondaryColumns.map(column => (
-            <div key={column.key} className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground font-medium">
-                {column.label}:
-              </span>
-              <div className="text-sm text-foreground">
-                {column.render ? column.render(row[column.key], row) : row[column.key]}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+          </CardContent>
+        </Card>
+      ))}
     </div>
   );
 }
 
-// Desktop table view
-function DesktopTable({ 
-  data, 
-  columns, 
-  className, 
-  onRowClick, 
-  actions 
-}: MobileTableProps) {
+// Status Badge Component for consistent mobile styling
+export function MobileStatusBadge({ 
+  status, 
+  variant 
+}: { 
+  status: string; 
+  variant?: 'default' | 'success' | 'warning' | 'destructive' | 'outline' 
+}) {
   return (
-    <div className={cn("overflow-x-auto", className)}>
-      <table className="w-full">
-        <thead>
-          <tr className="border-b border-border">
-            {columns.map(column => (
-              <th
-                key={column.key}
-                className="text-left py-3 px-4 font-medium text-foreground"
-                style={{ width: column.width }}
-              >
-                {column.label}
-              </th>
-            ))}
-            {actions && actions.length > 0 && (
-              <th className="text-right py-3 px-4 font-medium text-foreground w-20">
-                Actions
-              </th>
-            )}
-          </tr>
-        </thead>
-        <tbody>
-          {data.map((row, index) => (
-            <tr
-              key={index}
-              className={cn(
-                "border-b border-border hover:bg-muted/50 transition-colors",
-                onRowClick && "cursor-pointer"
-              )}
-              onClick={() => onRowClick?.(row)}
-            >
-              {columns.map(column => (
-                <td key={column.key} className="py-3 px-4 text-sm">
-                  {column.render ? column.render(row[column.key], row) : row[column.key]}
-                </td>
-              ))}
-              {actions && actions.length > 0 && (
-                <td className="py-3 px-4 text-right">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                        <MoreVertical className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      {actions.map((action, actionIndex) => (
-                        <DropdownMenuItem 
-                          key={actionIndex}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            action.onClick(row);
-                          }}
-                          className={action.variant === 'destructive' ? 'text-destructive' : ''}
-                        >
-                          {action.icon && <span className="mr-2">{action.icon}</span>}
-                          {action.label}
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </td>
-              )}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <Badge 
+      variant={variant || 'default'} 
+      className="text-xs px-2 py-1 font-medium"
+    >
+      {status}
+    </Badge>
   );
 }
 
-// Main mobile table component
-export default function MobileTable(props: MobileTableProps) {
-  const { isMobile } = useIsMobile();
-  const { data, columns, className } = props;
-  
-  if (data.length === 0) {
-    return (
-      <div className="text-center py-8 text-muted-foreground">
-        <p>No data available</p>
-      </div>
-    );
-  }
-  
-  if (isMobile) {
-    return (
-      <div className={cn("space-y-3", className)}>
-        {data.map((row, index) => (
-          <MobileTableCard
-            key={index}
-            row={row}
-            columns={columns}
-            onRowClick={props.onRowClick}
-            actions={props.actions}
-          />
-        ))}
-      </div>
-    );
-  }
-  
-  return <DesktopTable {...props} />;
-}
-
-// Hook for mobile table configuration
-export function useMobileTableColumns<T>(
-  baseColumns: Array<{
-    key: keyof T;
+// Action Buttons Component for mobile tables
+export function MobileTableActions({ 
+  actions 
+}: { 
+  actions: Array<{
     label: string;
-    width?: string;
-    render?: (value: any, row: T) => ReactNode;
-  }>,
-  mobileConfig?: {
-    primaryColumns?: (keyof T)[];
-    hideColumns?: (keyof T)[];
-  }
-): MobileTableColumn[] {
-  return baseColumns.map(column => ({
-    ...column,
-    key: column.key as string,
-    mobilePrimary: mobileConfig?.primaryColumns?.includes(column.key) || false,
-    mobileHide: mobileConfig?.hideColumns?.includes(column.key) || false,
-  }));
+    onClick: () => void;
+    variant?: 'default' | 'outline' | 'destructive';
+    size?: 'sm' | 'xs';
+    icon?: ReactNode;
+  }> 
+}) {
+  return (
+    <div className="flex flex-wrap gap-1.5 justify-end">
+      {actions.map((action, index) => (
+        <Button
+          key={index}
+          variant={action.variant || 'outline'}
+          size={action.size || 'xs'}
+          onClick={(e) => {
+            e.stopPropagation();
+            action.onClick();
+          }}
+          className="text-xs h-7 px-2"
+        >
+          {action.icon && <span className="mr-1">{action.icon}</span>}
+          {action.label}
+        </Button>
+      ))}
+    </div>
+  );
 }

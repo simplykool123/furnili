@@ -11,6 +11,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Eye, Check, X, Truck, FileText, Download, Search } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useIsMobile } from "@/components/Mobile/MobileOptimizer";
+import MobileTable from "@/components/Mobile/MobileTable";
+import MobileFilters from "@/components/Mobile/MobileFilters";
 
 interface MaterialRequest {
   id: number;
@@ -34,6 +37,7 @@ export default function RequestTable() {
   const [selectedRequest, setSelectedRequest] = useState<MaterialRequest | null>(null);
   const [showDetails, setShowDetails] = useState(false);
   const [activeTab, setActiveTab] = useState("all");
+  const { isMobile } = useIsMobile();
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -166,192 +170,304 @@ export default function RequestTable() {
     );
   }
 
+  // Mobile table columns configuration
+  const mobileColumns = [
+    {
+      key: 'orderNumber',
+      label: 'Order No',
+      priority: 'high' as const,
+    },
+    {
+      key: 'clientName',
+      label: 'Client',
+      priority: 'high' as const,
+    },
+    {
+      key: 'status',
+      label: 'Status',
+      priority: 'high' as const,
+      render: (value: string) => getStatusBadge(value),
+    },
+    {
+      key: 'priority',
+      label: 'Priority',
+      priority: 'medium' as const,
+      render: (value: string) => getPriorityBadge(value),
+    },
+    {
+      key: 'totalValue',
+      label: 'Total Value',
+      priority: 'medium' as const,
+      render: (value: number) => `₹${value?.toLocaleString() || 0}`,
+    },
+    {
+      key: 'requestedByUser',
+      label: 'Requested By',
+      priority: 'low' as const,
+      render: (value: any) => value?.name || '-',
+    },
+    {
+      key: 'createdAt',
+      label: 'Created',
+      priority: 'low' as const,
+      render: (value: string) => new Date(value).toLocaleDateString(),
+    },
+  ];
+
+  // Mobile filter configuration
+  const mobileFilters = [
+    {
+      key: 'search',
+      label: 'Search',
+      type: 'search' as const,
+      placeholder: 'Search by client, order number...',
+      value: filters.search,
+      onChange: (value: string) => setFilters(prev => ({ ...prev, search: value })),
+    },
+    {
+      key: 'status',
+      label: 'Status',
+      type: 'select' as const,
+      value: filters.status,
+      onChange: (value: string) => setFilters(prev => ({ ...prev, status: value })),
+      options: [
+        { value: 'pending', label: 'Pending' },
+        { value: 'approved', label: 'Approved' },
+        { value: 'rejected', label: 'Rejected' },
+        { value: 'issued', label: 'Issued' },
+        { value: 'completed', label: 'Completed' },
+      ],
+    },
+  ];
+
   return (
-    <div className="space-y-6">
-      {/* Status Tabs */}
-      <Card>
-        <CardContent className="pt-6">
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-5">
-              <TabsTrigger value="all" className="flex items-center gap-2">
-                All Requests
-                <Badge variant="secondary" className="ml-1">{statusCounts.all}</Badge>
-              </TabsTrigger>
-              <TabsTrigger value="pending" className="flex items-center gap-2">
-                Pending
-                <Badge className="bg-yellow-100 text-yellow-800 ml-1">{statusCounts.pending}</Badge>
-              </TabsTrigger>
-              <TabsTrigger value="approved" className="flex items-center gap-2">
-                Approved
-                <Badge className="bg-green-100 text-green-800 ml-1">{statusCounts.approved}</Badge>
-              </TabsTrigger>
-              <TabsTrigger value="issued" className="flex items-center gap-2">
-                Issued
-                <Badge className="bg-blue-100 text-blue-800 ml-1">{statusCounts.issued}</Badge>
-              </TabsTrigger>
-              <TabsTrigger value="rejected" className="flex items-center gap-2">
-                Rejected
-                <Badge className="bg-red-100 text-red-800 ml-1">{statusCounts.rejected}</Badge>
-              </TabsTrigger>
-            </TabsList>
+    <div className="space-y-4 sm:space-y-6">
+      {/* Mobile Quick Filters for Status */}
+      {isMobile && (
+        <MobileQuickFilters
+          options={[
+            { value: "all", label: "All", count: statusCounts.all },
+            { value: "pending", label: "Pending", count: statusCounts.pending },
+            { value: "approved", label: "Approved", count: statusCounts.approved },
+            { value: "issued", label: "Issued", count: statusCounts.issued },
+            { value: "rejected", label: "Rejected", count: statusCounts.rejected },
+          ]}
+          selectedValue={activeTab}
+          onChange={setActiveTab}
+          className="mb-4"
+        />
+      )}
+
+      {/* Mobile Filters */}
+      {isMobile && (
+        <MobileFilters
+          filters={mobileFilters}
+          onClearAll={() => setFilters({ search: "", status: "", clientName: "" })}
+          className="mb-4"
+        />
+      )}
+
+      {/* Desktop Status Tabs */}
+      {!isMobile && (
+        <Card>
+          <CardContent className="pt-6">
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
+              <TabsList className="grid w-full grid-cols-5">
+                <TabsTrigger value="all" className="flex items-center gap-2">
+                  All Requests
+                  <Badge variant="secondary" className="ml-1">{statusCounts.all}</Badge>
+                </TabsTrigger>
+                <TabsTrigger value="pending" className="flex items-center gap-2">
+                  Pending
+                  <Badge className="bg-yellow-100 text-yellow-800 ml-1">{statusCounts.pending}</Badge>
+                </TabsTrigger>
+                <TabsTrigger value="approved" className="flex items-center gap-2">
+                  Approved
+                  <Badge className="bg-green-100 text-green-800 ml-1">{statusCounts.approved}</Badge>
+                </TabsTrigger>
+                <TabsTrigger value="issued" className="flex items-center gap-2">
+                  Issued
+                  <Badge className="bg-blue-100 text-blue-800 ml-1">{statusCounts.issued}</Badge>
+                </TabsTrigger>
+                <TabsTrigger value="rejected" className="flex items-center gap-2">
+                  Rejected
+                  <Badge className="bg-red-100 text-red-800 ml-1">{statusCounts.rejected}</Badge>
+                </TabsTrigger>
+              </TabsList>
           </Tabs>
         </CardContent>
       </Card>
+      )}
 
-      {/* Filters */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+      {/* Desktop Filters */}
+      {!isMobile && (
+        <Card>
+          <CardContent className="pt-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <Input
+                  placeholder="Search requests..."
+                  value={filters.search}
+                  onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+                  className="pl-10"
+                />
+              </div>
+
+              <Select 
+                value={filters.status}
+                onValueChange={(value) => setFilters({ ...filters, status: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="All Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="approved">Approved</SelectItem>
+                  <SelectItem value="issued">Issued</SelectItem>
+                  <SelectItem value="completed">Completed</SelectItem>
+                  <SelectItem value="rejected">Rejected</SelectItem>
+                </SelectContent>
+              </Select>
+
               <Input
-                placeholder="Search requests..."
-                value={filters.search}
-                onChange={(e) => setFilters({ ...filters, search: e.target.value })}
-                className="pl-10"
+                placeholder="Client name..."
+                value={filters.clientName}
+                onChange={(e) => setFilters({ ...filters, clientName: e.target.value })}
               />
+
+              <Button onClick={exportRequests} variant="outline">
+                <Download className="w-4 h-4 mr-2" />
+                Export CSV
+              </Button>
             </div>
+          </CardContent>
+        </Card>
+      )}
 
-            <Select 
-              value={filters.status}
-              onValueChange={(value) => setFilters({ ...filters, status: value })}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="All Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="approved">Approved</SelectItem>
-                <SelectItem value="issued">Issued</SelectItem>
-                <SelectItem value="completed">Completed</SelectItem>
-                <SelectItem value="rejected">Rejected</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Input
-              placeholder="Client name..."
-              value={filters.clientName}
-              onChange={(e) => setFilters({ ...filters, clientName: e.target.value })}
-            />
-
-            <Button onClick={exportRequests} variant="outline">
-              <Download className="w-4 h-4 mr-2" />
-              Export CSV
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Requests Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Material Requests ({filteredRequests.length})</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Request Details</TableHead>
-                  <TableHead>Client Info</TableHead>
-                  <TableHead>Items</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Priority</TableHead>
-                  <TableHead>Value</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredRequests.map((request: MaterialRequest) => (
-                  <TableRow key={request.id}>
-                    <TableCell>
-                      <div>
-                        <p className="font-medium">REQ-{request.id.toString().padStart(4, '0')}</p>
-                        <p className="text-sm text-gray-600">
-                          By: {request.requestedByUser.name}
-                        </p>
-                        <p className="text-sm text-gray-600">
-                          {new Date(request.createdAt).toLocaleDateString()}
-                        </p>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div>
-                        <p className="font-medium">{request.clientName}</p>
-                        <p className="text-sm text-gray-600">{request.orderNumber}</p>
-                        {request.boqReference && (
-                          <p className="text-sm text-blue-600">{request.boqReference}</p>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div>
-                        <p className="font-medium">{request.items?.length || 0} items</p>
-                        <p className="text-sm text-gray-600">
-                          {request.items?.slice(0, 2).map(item => item.product.name).join(', ')}
-                          {(request.items?.length || 0) > 2 && '...'}
-                        </p>
-                      </div>
-                    </TableCell>
-                    <TableCell>{getStatusBadge(request.status)}</TableCell>
-                    <TableCell>{getPriorityBadge(request.priority)}</TableCell>
-                    <TableCell>
-                      <p className="font-medium">₹{request.totalValue.toFixed(2)}</p>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center space-x-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            setSelectedRequest(request);
-                            setShowDetails(true);
-                          }}
-                        >
-                          <Eye className="w-4 h-4" />
-                        </Button>
-                        
-                        {user?.role === 'storekeeper' && request.status === 'pending' && (
-                          <>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => updateStatusMutation.mutate({ id: request.id, status: 'approved' })}
-                              className="text-green-600 hover:text-green-700"
-                            >
-                              <Check className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => updateStatusMutation.mutate({ id: request.id, status: 'rejected' })}
-                              className="text-red-600 hover:text-red-700"
-                            >
-                              <X className="w-4 h-4" />
-                            </Button>
-                          </>
-                        )}
-                        
-                        {user?.role === 'storekeeper' && request.status === 'approved' && (
+      {/* Mobile Table */}
+      {isMobile ? (
+        <MobileTable
+          data={filteredRequests}
+          columns={mobileColumns}
+          onRowClick={(request) => {
+            setSelectedRequest(request);
+            setShowDetails(true);
+          }}
+          emptyMessage="No material requests found"
+        />
+      ) : (
+        /* Desktop Table */
+        <Card>
+          <CardHeader>
+            <CardTitle>Material Requests ({filteredRequests.length})</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Request Details</TableHead>
+                    <TableHead>Client Info</TableHead>
+                    <TableHead>Items</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Priority</TableHead>
+                    <TableHead>Value</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredRequests.map((request: MaterialRequest) => (
+                    <TableRow key={request.id}>
+                      <TableCell>
+                        <div>
+                          <p className="font-medium">REQ-{request.id.toString().padStart(4, '0')}</p>
+                          <p className="text-sm text-gray-600">
+                            By: {request.requestedByUser.name}
+                          </p>
+                          <p className="text-sm text-gray-600">
+                            {new Date(request.createdAt).toLocaleDateString()}
+                          </p>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div>
+                          <p className="font-medium">{request.clientName}</p>
+                          <p className="text-sm text-gray-600">{request.orderNumber}</p>
+                          {request.boqReference && (
+                            <p className="text-sm text-blue-600">{request.boqReference}</p>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div>
+                          <p className="font-medium">{request.items?.length || 0} items</p>
+                          <p className="text-sm text-gray-600">
+                            {request.items?.slice(0, 2).map(item => item.product.name).join(', ')}
+                            {(request.items?.length || 0) > 2 && '...'}
+                          </p>
+                        </div>
+                      </TableCell>
+                      <TableCell>{getStatusBadge(request.status)}</TableCell>
+                      <TableCell>{getPriorityBadge(request.priority)}</TableCell>
+                      <TableCell>
+                        <p className="font-medium">₹{request.totalValue.toFixed(2)}</p>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center space-x-2">
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => updateStatusMutation.mutate({ id: request.id, status: 'issued' })}
-                            className="text-blue-600 hover:text-blue-700"
+                            onClick={() => {
+                              setSelectedRequest(request);
+                              setShowDetails(true);
+                            }}
                           >
-                            <Truck className="w-4 h-4" />
+                            <Eye className="w-4 h-4" />
                           </Button>
-                        )}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
+                          
+                          {user?.role === 'storekeeper' && request.status === 'pending' && (
+                            <>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => updateStatusMutation.mutate({ id: request.id, status: 'approved' })}
+                                className="text-green-600 hover:text-green-700"
+                              >
+                                <Check className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => updateStatusMutation.mutate({ id: request.id, status: 'rejected' })}
+                                className="text-red-600 hover:text-red-700"
+                              >
+                                <X className="w-4 h-4" />
+                              </Button>
+                            </>
+                          )}
+                          
+                          {user?.role === 'storekeeper' && request.status === 'approved' && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => updateStatusMutation.mutate({ id: request.id, status: 'issued' })}
+                              className="text-blue-600 hover:text-blue-700"
+                            >
+                              <Truck className="w-4 h-4" />
+                            </Button>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Request Details Dialog */}
       <Dialog open={showDetails} onOpenChange={setShowDetails}>

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Edit, Trash2, Eye, Package } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import MobileTable, { useMobileTableColumns } from "./MobileTable";
+import MobileTable from "./MobileTable";
 import { useQuery } from "@tanstack/react-query";
 import { authenticatedApiRequest } from "@/lib/auth";
 
@@ -59,114 +59,95 @@ export default function MobileProductTable({ onEdit, onDelete, onView }: MobileP
   });
 
   // Configure mobile table columns
-  const columns = useMobileTableColumns<Product>(
-    [
-      {
-        key: 'name',
-        label: 'Product Name',
-        render: (value, row) => (
-          <div className="flex items-center space-x-3">
-            {row.imageUrl ? (
-              <img 
-                src={row.imageUrl} 
-                alt={row.name}
-                className="w-10 h-10 rounded-lg object-cover bg-muted"
-              />
-            ) : (
-              <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
-                <Package className="w-5 h-5 text-muted-foreground" />
-              </div>
+  const columns = [
+    {
+      key: 'name',
+      label: 'Product Name',
+      priority: 'high' as const,
+      render: (value: string, row: Product) => (
+        <div className="flex items-center space-x-3">
+          {row.imageUrl ? (
+            <img 
+              src={row.imageUrl} 
+              alt={row.name}
+              className="w-10 h-10 rounded-lg object-cover bg-muted"
+            />
+          ) : (
+            <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
+              <Package className="w-5 h-5 text-muted-foreground" />
+            </div>
+          )}
+          <div>
+            <div className="font-medium text-foreground">{value}</div>
+            {row.sku && (
+              <div className="text-xs text-muted-foreground">SKU: {row.sku}</div>
             )}
-            <div>
-              <div className="font-medium text-foreground">{value}</div>
-              {row.sku && (
-                <div className="text-xs text-muted-foreground">SKU: {row.sku}</div>
-              )}
-            </div>
           </div>
-        )
-      },
-      {
-        key: 'category',
-        label: 'Category',
-        render: (value) => (
-          <Badge variant="secondary" className="text-xs">
+        </div>
+      )
+    },
+    {
+      key: 'category',
+      label: 'Category',
+      priority: 'high' as const,
+      render: (value: string) => (
+        <Badge variant="secondary" className="text-xs">
+          {value}
+        </Badge>
+      )
+    },
+    {
+      key: 'currentStock',
+      label: 'Stock',
+      priority: 'high' as const,
+      render: (value: number, row: Product) => (
+        <div className="text-right">
+          <div className={`font-medium ${value <= row.minStock ? 'text-destructive' : 'text-foreground'}`}>
             {value}
-          </Badge>
-        )
-      },
-      {
-        key: 'currentStock',
-        label: 'Stock',
-        render: (value, row) => (
-          <div className="text-right">
-            <div className={`font-medium ${value <= row.minStock ? 'text-destructive' : 'text-foreground'}`}>
-              {value}
-            </div>
+          </div>
             <div className="text-xs text-muted-foreground">
               Min: {row.minStock} {row.unit}
             </div>
           </div>
         )
-      },
-      {
-        key: 'pricePerUnit',
-        label: 'Price',
-        render: (value, row) => (
-          <div className="text-right">
-            <div className="font-medium text-foreground">₹{value.toLocaleString()}</div>
-            <div className="text-xs text-muted-foreground">per {row.unit}</div>
-          </div>
-        )
-      },
-      {
-        key: 'brand',
-        label: 'Brand',
-        render: (value) => value || '-'
-      },
-      {
-        key: 'size',
-        label: 'Size',
-        render: (value, row) => {
-          if (value && row.thickness) {
-            return `${value} × ${row.thickness}`;
-          }
-          return value || row.thickness || '-';
+    },
+    {
+      key: 'pricePerUnit',
+      label: 'Price',
+      priority: 'medium' as const,
+      render: (value: number, row: Product) => (
+        <div className="text-right">
+          <div className="font-medium text-foreground">₹{value.toLocaleString()}</div>
+          <div className="text-xs text-muted-foreground">per {row.unit}</div>
+        </div>
+      )
+    },
+    {
+      key: 'brand',
+      label: 'Brand',
+      priority: 'low' as const,
+      render: (value: string) => value || '-'
+    },
+    {
+      key: 'size',
+      label: 'Size',
+      priority: 'low' as const,
+      render: (value: string, row: Product) => {
+        if (value && row.thickness) {
+          return `${value} × ${row.thickness}`;
         }
-      },
-      {
-        key: 'isActive',
-        label: 'Status',
-        render: (value) => (
-          <Badge variant={value ? "default" : "secondary"}>
-            {value ? "Active" : "Inactive"}
-          </Badge>
-        )
+        return value || row.thickness || '-';
       }
-    ],
-    {
-      primaryColumns: ['name', 'currentStock'],
-      hideColumns: ['brand', 'size', 'isActive']
-    }
-  );
-
-  // Table actions
-  const actions = [
-    {
-      label: 'View Details',
-      onClick: onView || (() => {}),
-      icon: <Eye className="w-4 h-4" />
     },
     {
-      label: 'Edit Product',
-      onClick: onEdit || (() => {}),
-      icon: <Edit className="w-4 h-4" />
-    },
-    {
-      label: 'Delete Product',
-      onClick: onDelete || (() => {}),
-      icon: <Trash2 className="w-4 h-4" />,
-      variant: 'destructive' as const
+      key: 'isActive',
+      label: 'Status',
+      priority: 'low' as const,
+      render: (value: boolean) => (
+        <Badge variant={value ? "default" : "secondary"}>
+          {value ? "Active" : "Inactive"}
+        </Badge>
+      )
     }
   ];
 
@@ -239,7 +220,24 @@ export default function MobileProductTable({ onEdit, onDelete, onView }: MobileP
       <MobileTable
         data={filteredProducts}
         columns={columns}
-        actions={actions}
+        itemActions={(product) => [
+          {
+            label: 'View',
+            icon: Eye,
+            onClick: () => onView?.(product)
+          },
+          {
+            label: 'Edit',
+            icon: Edit,
+            onClick: () => onEdit?.(product)
+          },
+          {
+            label: 'Delete',
+            icon: Trash2,
+            onClick: () => onDelete?.(product),
+            destructive: true
+          }
+        ]}
         className="animate-fade-in"
       />
 

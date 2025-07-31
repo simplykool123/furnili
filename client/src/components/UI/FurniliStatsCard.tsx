@@ -38,12 +38,12 @@ export default function FurniliStatsCard({
             {title}
           </p>
           <div className="flex items-baseline gap-2">
-            <p className="text-2xl lg:text-3xl font-bold text-foreground">
+            <p className="text-lg sm:text-xl lg:text-2xl xl:text-3xl font-bold text-foreground">
               {value}
             </p>
             {trend && (
               <span className={cn(
-                "text-xs font-medium px-2 py-1 rounded-full",
+                "text-xs font-medium px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-full",
                 trend.isPositive 
                   ? "text-green-700 bg-green-100" 
                   : "text-red-700 bg-red-100"
@@ -59,8 +59,8 @@ export default function FurniliStatsCard({
           )}
         </div>
         {Icon && (
-          <div className="furnili-gradient p-3 rounded-lg">
-            <Icon className="h-6 w-6 text-white" />
+          <div className="furnili-gradient p-2 sm:p-3 rounded-lg">
+            <Icon className="h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6 text-white" />
           </div>
         )}
       </div>

@@ -111,11 +111,11 @@ export default function FurniliLayout({
           {/* Page content */}
           <main className={cn(
             "flex-1 overflow-auto",
-            "px-4 sm:px-6 lg:px-8 py-6 lg:py-8",
+            "px-3 sm:px-4 lg:px-6 py-4 sm:py-5 lg:py-6",
             "max-w-7xl mx-auto w-full",
             className
           )}>
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-5 lg:space-y-6">
               {children}
             </div>
           </main>

@@ -393,8 +393,8 @@ export default function Dashboard() {
       {/* Stock Warnings */}
       <StockWarnings />
 
-      {/* Stats Grid */}
-      <div className="grid gap-2 sm:gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+      {/* Stats Grid - Mobile Optimized */}
+      <div className="grid gap-3 sm:gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-6">
         <Card className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-blue-500 bg-gradient-to-br from-card to-blue-50/20 cursor-pointer" onClick={() => setLocation('/products')}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
             <CardTitle className="text-xs font-semibold text-card-foreground">Products</CardTitle>

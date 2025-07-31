@@ -36,37 +36,44 @@ export default function Header({ title, subtitle, showAddButton = false, onAddCl
   const lowStockCount = stats?.lowStockItems || (Array.isArray(stats?.lowStockProducts) ? stats.lowStockProducts.length : 0);
 
   return (
-    <header className="border-b border-border bg-card/50 backdrop-blur-sm px-4 sm:px-6 lg:px-8 py-4 sm:py-5 sticky top-0 z-40">
-      <div className="flex items-center justify-between max-w-7xl mx-auto">
-        <div className="flex items-center space-x-4">
+    <header className="border-b border-border bg-card/50 backdrop-blur-sm px-3 sm:px-4 lg:px-6 py-3 sm:py-4 lg:py-5 sticky top-0 z-40">
+      <div className="flex items-center justify-between w-full">
+        <div className="flex items-center space-x-2 sm:space-x-4 min-w-0 flex-1">
           {/* Mobile Menu Button */}
           {onMenuClick && (
             <Button 
               variant="ghost" 
               size="sm" 
-              className="lg:hidden hover:bg-primary/10 dark:hover:bg-primary/20"
+              className="lg:hidden hover:bg-primary/10 dark:hover:bg-primary/20 p-2"
               onClick={onMenuClick}
             >
-              <Menu className="w-5 h-5 text-foreground" />
+              <Menu className="w-4 h-4 sm:w-5 sm:h-5 text-foreground" />
             </Button>
           )}
           
           <div className="min-w-0 flex-1">
-            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-amber-900 dark:text-amber-100 truncate">{title}</h1>
-            <p className="text-sm sm:text-base text-amber-700 dark:text-amber-200 truncate mt-1">{subtitle}</p>
+            <h1 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-amber-900 dark:text-amber-100 truncate leading-tight">{title}</h1>
+            <p className="text-xs sm:text-sm text-amber-700 dark:text-amber-200 truncate mt-0.5 sm:mt-1">{subtitle}</p>
           </div>
         </div>
         
-        <div className="flex items-center space-x-3 sm:space-x-4">
+        <div className="flex items-center space-x-1 sm:space-x-2 lg:space-x-3">
           {/* Custom Actions */}
           {actions && (
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-1 sm:space-x-2">
               {actions}
             </div>
           )}
           
           {/* Task Notifications for Staff */}
-          <AnimatedNotificationBell />
+          <div className="hidden sm:block">
+            <AnimatedNotificationBell />
+          </div>
+          
+          {/* Mobile compact notifications */}
+          <div className="sm:hidden">
+            <AnimatedNotificationBell />
+          </div>
           
           {/* Low Stock Notification */}
           <DropdownMenu>
@@ -74,20 +81,20 @@ export default function Header({ title, subtitle, showAddButton = false, onAddCl
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className="relative hover:bg-primary/10 dark:hover:bg-primary/20 transition-colors"
+                className="relative hover:bg-primary/10 dark:hover:bg-primary/20 transition-colors p-2"
               >
-                <Bell className="w-5 h-5 text-foreground" />
+                <Bell className="w-3 h-3 sm:w-4 sm:h-4 text-foreground" />
                 {lowStockCount > 0 && (
                   <Badge 
                     variant="destructive" 
-                    className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs font-bold animate-pulse"
+                    className="absolute -top-0.5 -right-0.5 h-4 w-4 sm:h-5 sm:w-5 rounded-full p-0 flex items-center justify-center text-xs font-bold animate-pulse"
                   >
-                    {lowStockCount}
+                    {lowStockCount > 9 ? '9+' : lowStockCount}
                   </Badge>
                 )}
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-80 sm:w-96 glass-effect border shadow-lg">
+            <DropdownMenuContent align="end" className="w-72 sm:w-80 lg:w-96 glass-effect border shadow-lg">
               <div className="p-4 border-b border-border">
                 <h4 className="font-semibold text-foreground">Low Stock Alerts</h4>
                 <p className="text-sm text-muted-foreground">{lowStockCount} items need attention</p>

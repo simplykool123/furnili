@@ -10,6 +10,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Edit, Trash2, Search, Grid3X3, List, Package } from "lucide-react";
+import { useIsMobile } from "@/components/Mobile/MobileOptimizer";
+import MobileTable from "@/components/Mobile/MobileTable";
+import MobileFilters from "@/components/Mobile/MobileFilters";
 
 interface Product {
   id: number;
@@ -35,6 +38,7 @@ export default function ProductTable() {
   });
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
+  const { isMobile } = useIsMobile();
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -96,6 +100,102 @@ export default function ProductTable() {
         return <Badge variant="secondary" className="text-xs">Unknown</Badge>;
     }
   };
+
+  // Mobile table columns configuration
+  const mobileColumns = [
+    {
+      key: 'name',
+      label: 'Product Name',
+      priority: 'high' as const,
+    },
+    {
+      key: 'sku',
+      label: 'SKU',
+      priority: 'high' as const,
+    },
+    {
+      key: 'stockStatus',
+      label: 'Stock Status',
+      priority: 'high' as const,
+      render: (value: string, row: Product) => getStockStatusBadge(value),
+    },
+    {
+      key: 'category',
+      label: 'Category',
+      priority: 'medium' as const,
+    },
+    {
+      key: 'brand',
+      label: 'Brand',
+      priority: 'medium' as const,
+    },
+    {
+      key: 'currentStock',
+      label: 'Current Stock',
+      priority: 'medium' as const,
+      render: (value: number, row: Product) => `${value} ${row.unit}`,
+    },
+    {
+      key: 'pricePerUnit',
+      label: 'Price per Unit',
+      priority: 'low' as const,
+      render: (value: number) => `₹${value?.toFixed(2)}`,
+    },
+    {
+      key: 'size',
+      label: 'Size',
+      priority: 'low' as const,
+    },
+    {
+      key: 'thickness',
+      label: 'Thickness',
+      priority: 'low' as const,
+    },
+  ];
+
+  // Mobile filter configuration
+  const mobileFilters = [
+    {
+      key: 'search',
+      label: 'Search',
+      type: 'search' as const,
+      placeholder: 'Search products, SKU, brand...',
+      value: filters.search,
+      onChange: (value: string) => setFilters(prev => ({ ...prev, search: value })),
+    },
+    {
+      key: 'category',
+      label: 'Category',
+      type: 'select' as const,
+      value: filters.category,
+      onChange: (value: string) => setFilters(prev => ({ ...prev, category: value })),
+      options: categories.map(cat => ({ value: cat.name, label: cat.name })),
+    },
+    {
+      key: 'stockStatus',
+      label: 'Stock Status',
+      type: 'select' as const,
+      value: filters.stockStatus,
+      onChange: (value: string) => setFilters(prev => ({ ...prev, stockStatus: value })),
+      options: [
+        { value: 'in-stock', label: 'In Stock' },
+        { value: 'low-stock', label: 'Low Stock' },
+        { value: 'out-of-stock', label: 'Out of Stock' },
+      ],
+    },
+  ];
+
+  const filteredProducts = products?.filter((product: Product) => {
+    const matchesSearch = filters.search === "" || 
+      product.name.toLowerCase().includes(filters.search.toLowerCase()) ||
+      product.sku.toLowerCase().includes(filters.search.toLowerCase()) ||
+      product.brand.toLowerCase().includes(filters.search.toLowerCase());
+    
+    const matchesCategory = filters.category === "" || filters.category === "all" || product.category === filters.category;
+    const matchesStockStatus = filters.stockStatus === "" || filters.stockStatus === "all" || product.stockStatus === filters.stockStatus;
+    
+    return matchesSearch && matchesCategory && matchesStockStatus;
+  }) || [];
 
   if (isLoading) {
     return (
@@ -265,78 +365,113 @@ export default function ProductTable() {
 
   return (
     <div className="space-y-4">
-      {/* Compact Filters & Controls */}
-      <div className="bg-white rounded-lg border p-3">
-        <div className="flex items-center gap-3 flex-wrap">
-          <Input
-            placeholder="Search products..."
-            value={filters.search}
-            onChange={(e) => setFilters({ ...filters, search: e.target.value })}
-            className="max-w-xs h-8 text-sm"
-          />
-          <Select 
-            value={filters.category}
-            onValueChange={(value) => setFilters({ ...filters, category: value })}
-          >
-            <SelectTrigger className="w-40 h-8 text-sm">
-              <SelectValue placeholder="Category" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Categories</SelectItem>
-              {categories.map((category) => (
-                <SelectItem key={category.id} value={category.name}>
-                  {category.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select 
-            value={filters.stockStatus}
-            onValueChange={(value) => setFilters({ ...filters, stockStatus: value })}
-          >
-            <SelectTrigger className="w-32 h-8 text-sm">
-              <SelectValue placeholder="Stock" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Stock</SelectItem>
-              <SelectItem value="in-stock">In Stock</SelectItem>
-              <SelectItem value="low-stock">Low Stock</SelectItem>
-              <SelectItem value="out-of-stock">Out of Stock</SelectItem>
-            </SelectContent>
-          </Select>
+      {/* Mobile Filters */}
+      {isMobile && (
+        <MobileFilters
+          filters={mobileFilters}
+          onClearAll={() => setFilters({ search: '', category: '', stockStatus: '' })}
+        />
+      )}
 
-        </div>
-      </div>
-
-      {/* Products Display */}
-      <Card>
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-lg">Products ({products?.length || 0})</CardTitle>
-            <div className="flex items-center gap-2">
-              <Button
-                variant={viewMode === 'list' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setViewMode('list')}
-                className="h-8 px-3"
-              >
-                <List className="w-4 h-4" />
-              </Button>
-              <Button
-                variant={viewMode === 'grid' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setViewMode('grid')}
-                className="h-8 px-3"
-              >
-                <Grid3X3 className="w-4 h-4" />
-              </Button>
-            </div>
+      {/* Desktop Filters & Controls */}
+      {!isMobile && (
+        <div className="bg-white rounded-lg border p-3">
+          <div className="flex items-center gap-3 flex-wrap">
+            <Input
+              placeholder="Search products..."
+              value={filters.search}
+              onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+              className="max-w-xs h-8 text-sm"
+            />
+            <Select 
+              value={filters.category}
+              onValueChange={(value) => setFilters({ ...filters, category: value })}
+            >
+              <SelectTrigger className="w-40 h-8 text-sm">
+                <SelectValue placeholder="Category" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Categories</SelectItem>
+                {categories.map((category) => (
+                  <SelectItem key={category.id} value={category.name}>
+                    {category.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select 
+              value={filters.stockStatus}
+              onValueChange={(value) => setFilters({ ...filters, stockStatus: value })}
+            >
+              <SelectTrigger className="w-32 h-8 text-sm">
+                <SelectValue placeholder="Stock" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Stock</SelectItem>
+                <SelectItem value="in-stock">In Stock</SelectItem>
+                <SelectItem value="low-stock">Low Stock</SelectItem>
+                <SelectItem value="out-of-stock">Out of Stock</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
-        </CardHeader>
-        <CardContent>
-          {viewMode === 'grid' ? <GridView /> : <ListView />}
-        </CardContent>
-      </Card>
+        </div>
+      )}
+
+      {/* Mobile Products Table */}
+      {isMobile ? (
+        <MobileTable
+          data={filteredProducts}
+          columns={mobileColumns}
+          emptyMessage="No products found"
+          itemActions={(product) => [
+            {
+              label: 'Edit',
+              icon: Edit,
+              onClick: () => handleEdit(product),
+            },
+            {
+              label: 'Delete',
+              icon: Trash2,
+              onClick: () => {
+                if (confirm('Delete this product?')) {
+                  deleteProductMutation.mutate(product.id);
+                }
+              },
+              destructive: true,
+            },
+          ]}
+        />
+      ) : (
+        /* Desktop Products Display */
+        <Card>
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg">Products ({filteredProducts?.length || 0})</CardTitle>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant={viewMode === 'list' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setViewMode('list')}
+                  className="h-8 px-3"
+                >
+                  <List className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant={viewMode === 'grid' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setViewMode('grid')}
+                  className="h-8 px-3"
+                >
+                  <Grid3X3 className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {viewMode === 'grid' ? <GridView /> : <ListView />}
+          </CardContent>
+        </Card>
+      )}
 
 
     </div>

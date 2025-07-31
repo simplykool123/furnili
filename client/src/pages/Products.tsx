@@ -51,8 +51,8 @@ export default function Products() {
       showAddButton={canManageProducts}
       onAddClick={() => setShowAddProduct(true)}
     >
-      {/* Bulk Operations */}
-      <div className="flex flex-wrap gap-3 mb-6">
+      {/* Bulk Operations - Mobile Optimized */}
+      <div className="flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-3 mb-4 sm:mb-6">
         <BulkExportModal />
         {canManageProducts && (
           <BulkImportModal onSuccess={() => {
@@ -63,7 +63,7 @@ export default function Products() {
         {canManageProducts && (
           <FurniliButton 
             onClick={() => setShowAddProduct(true)}
-            className="flex items-center gap-2"
+            className="flex items-center justify-center gap-1.5 sm:gap-2 text-sm sm:text-base w-full sm:w-auto"
           >
             <Plus className="w-4 h-4" />
             Add New Product
