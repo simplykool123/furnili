@@ -255,22 +255,22 @@ function SalesProductForm({
   };
 
   return (
-    <div className="sales-product-form flex flex-col max-h-[90vh] sm:max-h-[85vh]">
+    <div className="sales-product-form flex flex-col max-h-[90vh]">
       {/* Header */}
-      <div className="p-4 border-b bg-white flex-shrink-0">
+      <div className="p-3 border-b bg-white flex-shrink-0">
         <h3 className="text-lg font-semibold">
           {product ? "Edit Sales Product" : "Add New Sales Product"}
         </h3>
       </div>
 
       {/* Form Content - Scrollable */}
-      <div className="flex-1 overflow-y-auto p-4">
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <div className="flex-1 overflow-y-auto p-3">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
           
           {/* Product Name & Category */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <Label htmlFor="name" className="text-xs font-medium mb-1 block">Product Name *</Label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div className="space-y-1">
+              <Label htmlFor="name" className="text-xs font-medium text-gray-700">Product Name *</Label>
               <Input
                 id="name"
                 {...register("name")}
@@ -282,10 +282,10 @@ function SalesProductForm({
               )}
             </div>
 
-            <div>
-              <Label htmlFor="category" className="text-xs font-medium mb-1 block">Category</Label>
+            <div className="space-y-1">
+              <Label htmlFor="category" className="text-xs font-medium text-gray-700">Category</Label>
               <Select onValueChange={(value) => setValue("category", value)} defaultValue={product?.category}>
-                <SelectTrigger className="h-8">
+                <SelectTrigger className="h-8 text-sm">
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
                 <SelectContent>
@@ -298,9 +298,9 @@ function SalesProductForm({
           </div>
 
           {/* Price & Tax */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <Label htmlFor="unitPrice" className="text-xs font-medium mb-1 block">Unit Price *</Label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div className="space-y-1">
+              <Label htmlFor="unitPrice" className="text-xs font-medium text-gray-700">Unit Price *</Label>
               <Input
                 id="unitPrice"
                 type="number"
@@ -314,8 +314,8 @@ function SalesProductForm({
               )}
             </div>
 
-            <div>
-              <Label htmlFor="taxPercentage" className="text-xs font-medium mb-1 block">Tax % (GST/VAT)</Label>
+            <div className="space-y-1">
+              <Label htmlFor="taxPercentage" className="text-xs font-medium text-gray-700">Tax % (GST/VAT)</Label>
               <Input
                 id="taxPercentage"
                 type="number"
@@ -331,12 +331,12 @@ function SalesProductForm({
           </div>
 
           {/* Description */}
-          <div>
-            <Label htmlFor="description" className="text-xs font-medium mb-1 block">Description</Label>
+          <div className="space-y-1">
+            <Label htmlFor="description" className="text-xs font-medium text-gray-700">Description</Label>
             <Textarea
               id="description"
               {...register("description")}
-              className={`${errors.description ? "border-red-500" : ""} text-sm min-h-[60px] resize-none`}
+              className={`${errors.description ? "border-red-500" : ""} text-sm min-h-[50px] resize-none`}
               placeholder="L-shaped workstation with overhead storage, premium laminate finish..."
             />
             {errors.description && (
@@ -345,20 +345,20 @@ function SalesProductForm({
           </div>
 
           {/* Internal Notes */}
-          <div>
-            <Label htmlFor="internalNotes" className="text-xs font-medium mb-1 block">Internal Notes</Label>
+          <div className="space-y-1">
+            <Label htmlFor="internalNotes" className="text-xs font-medium text-gray-700">Internal Notes</Label>
             <Textarea
               id="internalNotes"
               {...register("internalNotes")}
-              className={`${errors.internalNotes ? "border-red-500" : ""} text-sm min-h-[50px] resize-none`}
+              className={`${errors.internalNotes ? "border-red-500" : ""} text-sm min-h-[40px] resize-none`}
               placeholder="Cost: ₹18,000, Profit margin: 37%, Lead time: 2-3 weeks..."
             />
           </div>
 
           {/* Enhanced Image Upload with Copy-Paste */}
-          <div>
-            <Label className="text-xs font-medium mb-1 block">Product Image</Label>
-            <div className="mt-1">
+          <div className="space-y-1">
+            <Label className="text-xs font-medium text-gray-700">Product Image</Label>
+            <div>
               {imagePreview ? (
                 <div className="relative inline-block">
                   <img 
@@ -422,20 +422,20 @@ function SalesProductForm({
       </div>
       
       {/* Action Buttons */}
-      <div className="p-4 border-t bg-white flex-shrink-0">
-        <div className="flex gap-3">
+      <div className="p-3 border-t bg-white flex-shrink-0">
+        <div className="flex gap-2">
           <Button 
             type="button" 
             variant="outline" 
             onClick={onClose}
-            className="flex-1 h-9 text-sm"
+            className="flex-1 h-8 text-sm"
           >
             Cancel
           </Button>
           <Button 
             type="submit" 
             disabled={isLoading}
-            className="furnili-gradient hover:opacity-90 text-white flex-1 h-9 text-sm"
+            className="furnili-gradient hover:opacity-90 text-white flex-1 h-8 text-sm"
             onClick={handleSubmit(onSubmit)}
           >
             {isLoading ? "Saving..." : product ? "Update" : "Create"}
