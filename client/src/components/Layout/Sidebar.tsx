@@ -181,7 +181,7 @@ export default function Sidebar({ onItemClick, collapsed = false, onToggleCollap
                     title={collapsed ? item.name : undefined}
                   >
                     <div className={cn("flex items-center", collapsed ? "justify-center" : "space-x-2")}>
-                      <item.icon className="w-4 h-4 flex-shrink-0" />
+                      <item.icon className="w-4 h-4 flex-shrink-0 !text-amber-900" style={{ color: '#92400e' }} />
                       {!collapsed && <span className="truncate font-semibold">{item.name}</span>}
                     </div>
                     {!collapsed && (isExpanded ? (
@@ -209,7 +209,7 @@ export default function Sidebar({ onItemClick, collapsed = false, onToggleCollap
                             )}
                             onClick={onItemClick}
                           >
-                            <subItem.icon className="w-3 h-3 flex-shrink-0" />
+                            <subItem.icon className="w-3 h-3 flex-shrink-0 !text-amber-900" style={{ color: '#92400e' }} />
                             <span className="truncate">{subItem.name}</span>
                           </Link>
                         ) : null;
@@ -236,10 +236,7 @@ export default function Sidebar({ onItemClick, collapsed = false, onToggleCollap
                   onClick={onItemClick}
                   title={collapsed ? item.name : undefined}
                 >
-                  <item.icon className={cn(
-                    "w-4 h-4 flex-shrink-0",
-                    (item.name === 'Staff Attendance' || item.name === 'Petty Cash') ? "!text-amber-900" : ""
-                  )} />
+                  <item.icon className="w-4 h-4 flex-shrink-0 !text-amber-900" style={{ color: '#92400e' }} />
                   {!collapsed && <span className="truncate font-semibold">{item.name}</span>}
                 </Link>
               ) : null;
@@ -266,7 +263,7 @@ export default function Sidebar({ onItemClick, collapsed = false, onToggleCollap
           )}
           title={collapsed ? "Logout" : undefined}
         >
-          <LogOut className="w-4 h-4 flex-shrink-0" />
+          <LogOut className="w-4 h-4 flex-shrink-0 !text-amber-900" style={{ color: '#92400e' }} />
           {!collapsed && <span className="font-semibold">Logout</span>}
         </button>
       </div>
