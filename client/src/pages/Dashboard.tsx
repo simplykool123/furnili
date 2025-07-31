@@ -175,6 +175,14 @@ export default function Dashboard() {
     cacheTime: 3 * 60 * 1000, // 3 minutes
   });
 
+  // Fetch ongoing projects (not completed)
+  const { data: ongoingProjects = [] } = useQuery({
+    queryKey: ["/api/projects"],
+    queryFn: () => authenticatedApiRequest('GET', "/api/projects"),
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    select: (data: any[]) => data.filter(project => project.stage !== 'Completed'), // Filter out completed projects
+  });
+
   // Fetch pending tasks for dashboard display
   const { data: pendingTasks = [] } = useQuery<DashboardTask[]>({
     queryKey: ["/api/dashboard/tasks"],
@@ -538,32 +546,77 @@ export default function Dashboard() {
         </Card>
       )}
 
-      {/* Recent Activity Section */}
-      {recentActivity && Array.isArray(recentActivity) && recentActivity.length > 0 && (
+      {/* Ongoing Projects Section */}
+      {ongoingProjects && ongoingProjects.length > 0 && (
         <Card className="hover:shadow-md transition-all duration-200">
           <CardHeader className="pb-2">
             <CardTitle className="text-base font-semibold text-foreground flex items-center gap-2">
-              <Clock className="h-4 w-4" />
-              Recent Activity
+              <Package className="h-4 w-4" />
+              Ongoing Projects
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-0">
-            <div className="space-y-2 max-h-32 overflow-y-auto">
-              {recentActivity.slice(0, 5).map((activity: any, index: number) => (
-                <div key={index} className="flex items-start gap-2 p-2 rounded-lg bg-gray-50/50 border border-gray-100/50">
+            <div className="space-y-2 max-h-48 overflow-y-auto">
+              {ongoingProjects.slice(0, 6).map((project: any) => (
+                <div 
+                  key={project.id} 
+                  className="flex items-center justify-between p-3 rounded-lg bg-gray-50/50 border border-gray-100/50 hover:bg-gray-100/50 cursor-pointer transition-colors"
+                  onClick={() => setLocation(`/projects/${project.id}`)}
+                >
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-medium text-gray-900">
-                      {activity.description}
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-medium text-gray-900 truncate">
+                        {project.code}
+                      </p>
+                      <Badge 
+                        variant={
+                          project.stage === 'Production' ? 'default' :
+                          project.stage === 'Installation' ? 'secondary' :
+                          project.stage === 'Client Approved' ? 'destructive' :
+                          'outline'
+                        }
+                        className="text-xs"
+                      >
+                        {project.stage}
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-gray-600 mt-1 truncate">
+                      {project.name}
                     </p>
-                    <p className="text-xs text-gray-500 mt-1">
-                      {activity.createdAt && !isNaN(new Date(activity.createdAt).getTime()) 
-                        ? new Date(activity.createdAt).toLocaleString()
-                        : 'Recently'
-                      }
+                    <p className="text-xs text-gray-500">
+                      Client: {project.clientName}
                     </p>
                   </div>
+                  <ArrowRight className="h-4 w-4 text-gray-400" />
                 </div>
               ))}
+            </div>
+            {ongoingProjects.length > 6 && (
+              <div className="mt-3 pt-2 border-t border-gray-200">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full text-xs"
+                  onClick={() => setLocation('/projects')}
+                >
+                  View All {ongoingProjects.length} Ongoing Projects
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* No Ongoing Projects Message */}
+      {ongoingProjects && ongoingProjects.length === 0 && (
+        <Card className="bg-blue-50/50 border-blue-200">
+          <CardContent className="pt-4 pb-4">
+            <div className="flex items-center gap-3">
+              <CheckCircle2 className="h-5 w-5 text-blue-600" />
+              <div>
+                <p className="text-sm font-medium text-blue-900">All projects completed!</p>
+                <p className="text-xs text-blue-700">No ongoing projects at the moment.</p>
+              </div>
             </div>
           </CardContent>
         </Card>
