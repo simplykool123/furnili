@@ -473,7 +473,7 @@ export default function RequestTable() {
 
       {/* Request Details Dialog */}
       <Dialog open={showDetails} onOpenChange={setShowDetails}>
-        <DialogContent className="max-w-4xl">
+        <DialogContent className="max-w-[95vw] sm:max-w-2xl lg:max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               Request Details - REQ-{selectedRequest?.id.toString().padStart(4, '0')}

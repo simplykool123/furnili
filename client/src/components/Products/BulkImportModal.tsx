@@ -124,7 +124,7 @@ export default function BulkImportModal({ onSuccess }: BulkImportModalProps) {
           Bulk Import
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-[90vw] sm:max-w-md max-h-[90vh]">
         <DialogHeader>
           <DialogTitle className="text-amber-900">Bulk Import Products</DialogTitle>
         </DialogHeader>

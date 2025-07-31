@@ -105,7 +105,7 @@ export function CategoryForm({ category, onSuccess }: CategoryFormProps) {
   const isActive = watch("isActive");
 
   return (
-    <DialogContent aria-describedby="category-form-description">
+    <DialogContent className="max-w-[90vw] sm:max-w-md max-h-[90vh]" aria-describedby="category-form-description">
       <DialogHeader>
         <DialogTitle>
           {category ? "Edit Category" : "Add Category"}

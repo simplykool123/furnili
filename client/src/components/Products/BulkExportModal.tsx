@@ -118,7 +118,7 @@ export default function BulkExportModal({ onSuccess }: BulkExportModalProps) {
           Bulk Export
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-[90vw] sm:max-w-lg max-h-[90vh]">
         <DialogHeader>
           <DialogTitle className="text-amber-900">Bulk Export Products</DialogTitle>
         </DialogHeader>

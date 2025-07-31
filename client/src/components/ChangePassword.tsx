@@ -71,7 +71,7 @@ export default function ChangePassword() {
           Change Password
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="max-w-[90vw] sm:max-w-md max-h-[90vh]">
         <DialogHeader>
           <DialogTitle>Change Password</DialogTitle>
         </DialogHeader>

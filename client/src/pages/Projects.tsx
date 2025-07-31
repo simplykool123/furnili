@@ -387,7 +387,7 @@ export default function Projects() {
 
       {/* Create Project Dialog */}
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-[95vw] sm:max-w-2xl lg:max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader className="pb-4">
             <DialogTitle className="text-xl font-semibold">New Project</DialogTitle>
           </DialogHeader>
@@ -444,7 +444,7 @@ export default function Projects() {
                           Client
                         </Button>
                       </DialogTrigger>
-                      <DialogContent>
+                      <DialogContent className="max-w-[90vw] sm:max-w-md max-h-[90vh]">
                         <DialogHeader>
                           <DialogTitle>Add New Client</DialogTitle>
                         </DialogHeader>
