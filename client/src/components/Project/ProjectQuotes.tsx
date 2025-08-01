@@ -656,6 +656,9 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{editingItem ? 'Edit Item' : 'Add Item'}</DialogTitle>
+            <DialogDescription>
+              {editingItem ? 'Update the quote item details' : 'Add a new item to the quote'}
+            </DialogDescription>
           </DialogHeader>
           <Form {...itemForm}>
             <form onSubmit={itemForm.handleSubmit(handleSaveItem)} className="space-y-4">
