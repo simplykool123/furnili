@@ -2438,7 +2438,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // AI Image Generation Route
+  // AI Image Generation Route with Free Fallbacks
   app.post("/api/generate-moodboard-images", authenticateToken, async (req: AuthRequest, res) => {
     try {
       const { name, keywords, roomType, inspirationType } = req.body;
@@ -2460,53 +2460,118 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log('Generating AI images with prompts:', prompts);
 
-      // Generate 4 images using OpenAI DALL-E
-      const imagePromises = prompts.map(async (prompt) => {
+      // Try OpenAI DALL-E first if available
+      if (process.env.OPENAI_API_KEY) {
         try {
-          const response = await openai.images.generate({
-            model: "dall-e-3",
-            prompt: prompt,
-            n: 1,
-            size: "1024x1024",
-            quality: "standard",
+          const imagePromises = prompts.map(async (prompt) => {
+            const response = await openai.images.generate({
+              model: "dall-e-3",
+              prompt: prompt,
+              n: 1,
+              size: "1024x1024",
+              quality: "standard",
+            });
+            return response.data[0]?.url || '';
           });
-          return response.data[0].url;
-        } catch (error) {
-          console.error('Error generating individual image:', error);
-          // Return a fallback if one image fails
-          return null;
+
+          const imageUrls = await Promise.all(imagePromises);
+          
+          return res.json({ 
+            images: imageUrls,
+            generated: true,
+            provider: 'OpenAI DALL-E 3',
+            timestamp: new Date().toISOString()
+          });
+
+        } catch (openaiError: any) {
+          console.log('OpenAI failed, trying free alternatives:', openaiError?.message || 'Unknown error');
+          
+          if (openaiError?.message?.includes('billing_hard_limit_reached')) {
+            console.log('OpenAI billing limit reached, falling back to free services');
+          }
         }
-      });
-
-      const imageUrls = await Promise.all(imagePromises);
-      const validUrls = imageUrls.filter(url => url !== null);
-
-      if (validUrls.length === 0) {
-        throw new Error('Failed to generate any images');
       }
 
-      res.json({ 
-        images: validUrls,
-        generated: true,
-        timestamp: new Date().toISOString()
-      });
+      // Fallback to DeepAI (free API)
+      try {
+        console.log('Using DeepAI as free fallback');
+        
+        const deepAIPromises = prompts.map(async (prompt) => {
+          const response = await fetch('https://api.deepai.org/api/text2img', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Api-Key': 'quickstart-QUdJIGlzIGNvbWluZy4uLi4K', // Free public key
+            },
+            body: JSON.stringify({ text: prompt }),
+          });
+
+          if (!response.ok) {
+            throw new Error(`DeepAI API error: ${response.status}`);
+          }
+
+          const result = await response.json();
+          return result.output_url;
+        });
+
+        const images = await Promise.all(deepAIPromises);
+        
+        return res.json({ 
+          images,
+          generated: true,
+          provider: 'DeepAI (Free)',
+          timestamp: new Date().toISOString()
+        });
+
+      } catch (deepAIError: any) {
+        console.log('DeepAI failed, trying Craiyon:', deepAIError?.message || 'Unknown error');
+
+        // Fallback to Craiyon (completely free, no limits)
+        try {
+          console.log('Using Craiyon as final fallback');
+          const prompt = `${inspirationType === 'ai' ? 'AI generated interior design' : 'Interior photography'} ${roomType.replace('-', ' ')} ${keywords} modern professional`;
+          
+          const response = await fetch('https://backend.craiyon.com/generate', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              prompt: prompt,
+              version: "35s5hfwn9n78gb06",
+              token: null,
+              model: "photo"
+            }),
+          });
+
+          if (!response.ok) {
+            throw new Error(`Craiyon API error: ${response.status}`);
+          }
+
+          const result = await response.json();
+          
+          // Craiyon returns base64 images, convert to data URLs
+          const images = result.images.map((base64: string) => `data:image/jpeg;base64,${base64}`).slice(0, 4);
+          
+          return res.json({ 
+            images,
+            generated: true,
+            provider: 'Craiyon (Free)',
+            timestamp: new Date().toISOString()
+          });
+
+        } catch (craiyonError) {
+          console.error('All AI services failed:', craiyonError);
+          throw new Error('All AI image generation services are currently unavailable');
+        }
+      }
 
     } catch (error) {
       console.error('AI image generation error:', error);
-      
-      // Check for billing limit error specifically
-      if (error instanceof Error && error.message.includes('billing_hard_limit_reached')) {
-        res.status(402).json({ 
-          message: "OpenAI billing limit reached", 
-          error: "Please check your OpenAI account billing settings and add payment method",
-          code: "billing_limit"
-        });
-      } else {
-        res.status(500).json({ 
-          message: "Failed to generate AI images", 
-          error: error instanceof Error ? error.message : 'Unknown error'
-        });
-      }
+      res.status(500).json({ 
+        message: "Failed to generate AI images from all providers", 
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
     }
   });
 

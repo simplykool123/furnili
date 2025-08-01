@@ -554,8 +554,8 @@ export default function ProjectDetail() {
       setPreviewGenerated(true);
       
       toast({
-        title: "Real AI Images Generated!",
-        description: `Generated ${result.images.length} unique ${formData.inspirationType === 'ai' ? 'AI-designed' : 'realistic'} images using DALL-E`,
+        title: "AI Images Generated Successfully!",
+        description: `Generated ${result.images.length} unique images using ${result.provider || 'AI service'}`,
       });
       
     } catch (error) {
