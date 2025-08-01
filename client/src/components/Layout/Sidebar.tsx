@@ -34,21 +34,11 @@ import {
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard, roles: ['admin', 'manager', 'staff'] },
-  { 
-    name: 'Master Data', 
-    icon: Settings, 
-    roles: ['admin', 'manager', 'staff'],
-    isCollapsible: true,
-    subItems: [
-      // User will specify what goes here
-    ]
-  },
   { name: 'Products', href: '/products', icon: Package, roles: ['admin', 'manager', 'staff'] },
   { name: 'Material Requests', href: '/requests', icon: PackageSearch, roles: ['admin', 'manager', 'staff'] },
   { name: 'Staff Attendance', href: '/attendance', icon: UserRoundPen, roles: ['admin', 'manager', 'staff'] },
   { name: 'Petty Cash', href: '/petty-cash', icon: CircleDollarSign, roles: ['admin', 'manager', 'staff'] },
   { name: 'Project Management', href: '/projects', icon: ProjectManagementIcon, roles: ['admin', 'manager', 'staff'] },
-  { name: 'Sales Products', href: '/sales-products', icon: Package, roles: ['admin', 'manager', 'staff'] },
   { name: 'Task Management', href: '/tasks', icon: CheckSquare, roles: ['admin', 'manager', 'staff'] },
   { name: 'Product Comparison', href: '/product-comparison', icon: GitCompare, roles: ['admin', 'manager'] }, // Manager can access for team supervision
   { name: 'WhatsApp Export', href: '/whatsapp', icon: MessageCircle, roles: ['admin', 'manager', 'staff'] },
@@ -60,14 +50,23 @@ const navigation = [
     roles: ['admin', 'manager', 'staff'], // Show System Settings section with role-based items
     isCollapsible: true,
     subItems: [
-      { name: 'Clients', href: '/clients', icon: Users, roles: ['admin', 'manager'] }, // Manager can manage clients for projects
       { name: 'Inventory Movement', href: '/inventory-movement', icon: ArrowUpDown, roles: ['admin', 'manager'] }, // Manager can supervise inventory
-      { name: 'Categories', href: '/categories', icon: Tag, roles: ['admin'] }, // Admin only - core settings
-      { name: 'Users', href: '/users', icon: Users, roles: ['admin'] }, // Admin only - user management
       { name: 'OCR Wizard', href: '/ocr-wizard', icon: Brain, roles: ['admin', 'manager', 'staff'] },
       { name: 'Price Comparison', href: '/price-comparison', icon: TrendingUp, roles: ['admin', 'manager'] }, // Manager can access for supervision
       { name: 'Display Settings', href: '/display-settings', icon: Settings, roles: ['admin', 'manager', 'staff'] },
       { name: 'Backups', href: '/backups', icon: Download, roles: ['admin'] }, // Admin only - core settings
+    ]
+  },
+  { 
+    name: 'Master Data', 
+    icon: Settings, 
+    roles: ['admin', 'manager', 'staff'],
+    isCollapsible: true,
+    subItems: [
+      { name: 'Clients', href: '/clients', icon: Users, roles: ['admin', 'manager'] }, // Manager can manage clients for projects
+      { name: 'Users', href: '/users', icon: Users, roles: ['admin'] }, // Admin only - user management
+      { name: 'Sales Products', href: '/sales-products', icon: Package, roles: ['admin', 'manager', 'staff'] },
+      { name: 'Categories', href: '/categories', icon: Tag, roles: ['admin'] }, // Admin only - core settings
     ]
   },
 ];

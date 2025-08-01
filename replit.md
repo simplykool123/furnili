@@ -4,7 +4,7 @@
 This is a professional workforce management platform designed as a modern web application with React frontend and Express backend. It provides comprehensive staff management, project tracking, inventory control, financial management, and role-based access control. The system features a clean, mobile-first design with the Furnili brand identity and optimized performance.
 
 ## Recent Changes (August 1, 2025)
-✓ **SIDEBAR NAVIGATION ENHANCEMENT**: Created two distinct settings sections - "Master Data" positioned directly under Dashboard for business data management, and "System Settings" for system-wide configurations, providing clear separation of concerns in navigation structure
+✓ **SIDEBAR NAVIGATION ENHANCEMENT**: Reorganized navigation with Master Data section positioned at the end containing Clients, Users, Sales Products, and Categories, while System Settings contains operational tools like Inventory Movement, OCR Wizard, Price Comparison, Display Settings, and Backups
 ✓ **PROJECTQUOTES ERROR RESOLUTION**: Fixed all undefined toFixed() errors with comprehensive null safety checks and enhanced totals calculation with fallback values for robust error prevention
 ✓ **ACCESSIBILITY COMPLIANCE**: Resolved dialog accessibility warnings by adding proper DialogTitle and aria-describedby attributes across all dialog components
 ✓ **QUOTES MODULE ARCHITECTURAL CORRECTION**: Successfully moved Quotes functionality from standalone module to integrated Project Management sub-module as per user requirements - Quotes now accessible via Project Details → Quotes tab
