@@ -2609,7 +2609,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         } catch (craiyonError) {
           console.error('All AI services failed:', craiyonError);
-          throw new Error('All AI image generation services are currently unavailable');
+          
+          // Fallback: Provide setup guidance with sample response structure
+          console.log('All external AI services unavailable, providing setup guidance');
+          
+          return res.json({ 
+            images: [],
+            generated: false,
+            provider: 'Setup Required',
+            setupRequired: true,
+            message: 'Set up Stable Diffusion WebUI for unlimited free AI generation',
+            instructions: [
+              '1. Download from: github.com/AUTOMATIC1111/stable-diffusion-webui',
+              '2. Enable API: Set COMMANDLINE_ARGS=--api',
+              '3. Add STABLE_DIFFUSION_URL=http://127.0.0.1:7860 to environment',
+              '4. Restart application for unlimited AI moodboards'
+            ],
+            timestamp: new Date().toISOString()
+          });
         }
       }
 

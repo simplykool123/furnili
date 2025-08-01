@@ -546,6 +546,24 @@ export default function ProjectDetail() {
 
       const result = await response.json();
       
+      // Handle setup required response
+      if (result.setupRequired) {
+        toast({
+          title: "Stable Diffusion WebUI Setup Required",
+          description: "Set up local Stable Diffusion WebUI for unlimited free AI generation. Check console for instructions.",
+          variant: "default",
+        });
+        
+        console.log('=== STABLE DIFFUSION WEBUI SETUP INSTRUCTIONS ===');
+        result.instructions?.forEach((instruction: string) => {
+          console.log(instruction);
+        });
+        console.log('=== See STABLE_DIFFUSION_SETUP.md for detailed guide ===');
+        
+        setIsGeneratingPreview(false);
+        return;
+      }
+      
       if (!result.images || result.images.length === 0) {
         throw new Error('No AI images were generated');
       }
