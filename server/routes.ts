@@ -2,6 +2,7 @@ import express, { type Express } from "express";
 import { createServer, type Server } from "http";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
+import OpenAI from "openai";
 import { storage } from "./storage";
 import { authenticateToken, requireRole, generateToken, comparePassword, type AuthRequest } from "./middleware/auth";
 import { productImageUpload, boqFileUpload, receiptImageUpload, csvFileUpload, projectFileUpload } from "./utils/fileUpload";
@@ -9,6 +10,11 @@ import { exportProductsCSV, exportRequestsCSV, exportLowStockCSV } from "./utils
 import { createBackupZip } from "./utils/backupExport";
 import { canOrderMaterials, getMaterialRequestEligibleProjects, getStageDisplayName } from "./utils/projectStageValidation";
 import { setupQuotesRoutes } from "./quotesRoutes";
+
+// Initialize OpenAI client
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
 import {
   insertUserSchema,
   insertProductSchema,
@@ -2429,6 +2435,68 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Update quote error:", error);
       res.status(500).json({ message: "Failed to update quote" });
+    }
+  });
+
+  // AI Image Generation Route
+  app.post("/api/generate-moodboard-images", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const { name, keywords, roomType, inspirationType } = req.body;
+      
+      if (!name || !keywords || !roomType || !inspirationType) {
+        return res.status(400).json({ message: "Missing required fields for image generation" });
+      }
+
+      // Create descriptive prompts based on form data
+      const basePrompt = `Interior design ${roomType.replace('-', ' ')} with ${keywords}`;
+      const styleModifier = inspirationType === 'ai' ? 'modern and innovative design' : 'realistic photography style';
+      
+      const prompts = [
+        `${basePrompt}, ${styleModifier}, professional interior photography, high quality, well-lit`,
+        `${basePrompt}, ${styleModifier}, different angle, beautiful lighting, architectural photography`,
+        `${basePrompt}, ${styleModifier}, detail shot, elegant and sophisticated, interior design magazine quality`,
+        `${basePrompt}, ${styleModifier}, wide shot, contemporary style, professional real estate photography`
+      ];
+
+      console.log('Generating AI images with prompts:', prompts);
+
+      // Generate 4 images using OpenAI DALL-E
+      const imagePromises = prompts.map(async (prompt) => {
+        try {
+          const response = await openai.images.generate({
+            model: "dall-e-3",
+            prompt: prompt,
+            n: 1,
+            size: "1024x1024",
+            quality: "standard",
+          });
+          return response.data[0].url;
+        } catch (error) {
+          console.error('Error generating individual image:', error);
+          // Return a fallback if one image fails
+          return null;
+        }
+      });
+
+      const imageUrls = await Promise.all(imagePromises);
+      const validUrls = imageUrls.filter(url => url !== null);
+
+      if (validUrls.length === 0) {
+        throw new Error('Failed to generate any images');
+      }
+
+      res.json({ 
+        images: validUrls,
+        generated: true,
+        timestamp: new Date().toISOString()
+      });
+
+    } catch (error) {
+      console.error('AI image generation error:', error);
+      res.status(500).json({ 
+        message: "Failed to generate AI images", 
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
     }
   });
 

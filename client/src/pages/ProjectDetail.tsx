@@ -503,7 +503,7 @@ export default function ProjectDetail() {
     }
   };
 
-  // Generate preview images based on form data
+  // Generate real AI preview images using OpenAI DALL-E
   const generatePreview = async () => {
     const formData = moodboardForm.getValues();
     if (!formData.keywords || !formData.roomType || !formData.inspirationType) {
@@ -518,71 +518,45 @@ export default function ProjectDetail() {
     setIsGeneratingPreview(true);
     
     try {
-      // Simulate AI generation delay
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      let images: string[] = [];
-      const randomSeed = Math.floor(Math.random() * 1000);
-      
-      if (formData.inspirationType === 'ai') {
-        // AI-style interior design images focused on walls, cupboards, furniture
-        const roomTypeImages: Record<string, string[]> = {
-          'living-room': [
-            `https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=300&fit=crop&auto=format`, // Modern living room
-            `https://images.unsplash.com/photo-1567767292278-a4f21aa2d36e?w=400&h=300&fit=crop&auto=format`, // Wall design
-            `https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=300&fit=crop&auto=format&blur=1`, // Blurred effect
-            `https://images.unsplash.com/photo-1567767292278-a4f21aa2d36e?w=400&h=300&fit=crop&auto=format&blur=1`
-          ],
-          'bedroom': [
-            `https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=400&h=300&fit=crop&auto=format`, // Bedroom design
-            `https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=300&fit=crop&auto=format`, // Wall treatments
-            `https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=400&h=300&fit=crop&auto=format&blur=1`,
-            `https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=300&fit=crop&auto=format&blur=1`
-          ],
-          'kitchen': [
-            `https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=400&h=300&fit=crop&auto=format`, // Kitchen cabinets
-            `https://images.unsplash.com/photo-1565538810643-b5bdb714032a?w=400&h=300&fit=crop&auto=format`, // Kitchen design
-            `https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=400&h=300&fit=crop&auto=format&blur=1`,
-            `https://images.unsplash.com/photo-1565538810643-b5bdb714032a?w=400&h=300&fit=crop&auto=format&blur=1`
-          ]
-        };
-        images = roomTypeImages[formData.roomType] || roomTypeImages['living-room'];
-      } else {
-        // Real photo inspiration images for interior design
-        const roomTypeImages: Record<string, string[]> = {
-          'living-room': [
-            `https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=300&fit=crop&auto=format`,
-            `https://images.unsplash.com/photo-1567767292278-a4f21aa2d36e?w=400&h=300&fit=crop&auto=format`,
-            `https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=400&h=300&fit=crop&auto=format`,
-            `https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&h=300&fit=crop&auto=format`
-          ],
-          'bedroom': [
-            `https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=400&h=300&fit=crop&auto=format`,
-            `https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=300&fit=crop&auto=format`,
-            `https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=400&h=300&fit=crop&auto=format`,
-            `https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&h=300&fit=crop&auto=format`
-          ],
-          'kitchen': [
-            `https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=400&h=300&fit=crop&auto=format`,
-            `https://images.unsplash.com/photo-1565538810643-b5bdb714032a?w=400&h=300&fit=crop&auto=format`,
-            `https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=400&h=300&fit=crop&auto=format`,
-            `https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&h=300&fit=crop&auto=format`
-          ]
-        };
-        images = roomTypeImages[formData.roomType] || roomTypeImages['living-room'];
+      const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+      const response = await fetch('/api/generate-moodboard-images', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          keywords: formData.keywords,
+          roomType: formData.roomType,
+          inspirationType: formData.inspirationType,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to generate AI images');
       }
+
+      const result = await response.json();
       
-      setPreviewImages(images);
+      if (!result.images || result.images.length === 0) {
+        throw new Error('No AI images were generated');
+      }
+
+      setPreviewImages(result.images);
       setPreviewGenerated(true);
       
       toast({
-        title: "Preview Generated",
-        description: `${formData.inspirationType === 'ai' ? 'AI-generated' : 'Real photo'} moodboard preview ready`,
+        title: "Real AI Images Generated!",
+        description: `Generated ${result.images.length} unique ${formData.inspirationType === 'ai' ? 'AI-designed' : 'realistic'} images using DALL-E`,
       });
+      
     } catch (error) {
+      console.error('AI preview generation error:', error);
       toast({
-        title: "Generation Failed",
-        description: "Failed to generate preview. Please try again.",
+        title: "AI Generation Failed",
+        description: error instanceof Error ? error.message : "Failed to generate AI images. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -900,56 +874,15 @@ export default function ProjectDetail() {
     console.log('Creating moodboard with data:', data);
     console.log('Form errors:', moodboardForm.formState.errors);
     
-    // Use preview images if available, otherwise generate new ones
+    // Use preview images if available, otherwise require preview generation first
     let finalImages = previewImages;
     if (!previewGenerated || previewImages.length === 0) {
-      if (data.inspirationType === 'ai') {
-        // AI-style interior design images focused on walls, cupboards, furniture
-        const roomTypeImages = {
-          'living-room': [
-            `https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=300&fit=crop&auto=format`, // Modern living room
-            `https://images.unsplash.com/photo-1567767292278-a4f21aa2d36e?w=400&h=300&fit=crop&auto=format`, // Wall design
-            `https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=300&fit=crop&auto=format&blur=1`, // Blurred effect
-            `https://images.unsplash.com/photo-1567767292278-a4f21aa2d36e?w=400&h=300&fit=crop&auto=format&blur=1`
-          ],
-          'bedroom': [
-            `https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=400&h=300&fit=crop&auto=format`, // Bedroom design
-            `https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=300&fit=crop&auto=format`, // Wall treatments
-            `https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=400&h=300&fit=crop&auto=format&blur=1`,
-            `https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=300&fit=crop&auto=format&blur=1`
-          ],
-          'kitchen': [
-            `https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=400&h=300&fit=crop&auto=format`, // Kitchen cabinets
-            `https://images.unsplash.com/photo-1565538810643-b5bdb714032a?w=400&h=300&fit=crop&auto=format`, // Kitchen design
-            `https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=400&h=300&fit=crop&auto=format&blur=1`,
-            `https://images.unsplash.com/photo-1565538810643-b5bdb714032a?w=400&h=300&fit=crop&auto=format&blur=1`
-          ]
-        };
-        finalImages = roomTypeImages[data.roomType] || roomTypeImages['living-room'];
-      } else {
-        // Real photo inspiration images for interior design
-        const roomTypeImages = {
-          'living-room': [
-            `https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=300&fit=crop&auto=format`,
-            `https://images.unsplash.com/photo-1567767292278-a4f21aa2d36e?w=400&h=300&fit=crop&auto=format`,
-            `https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=400&h=300&fit=crop&auto=format`,
-            `https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&h=300&fit=crop&auto=format`
-          ],
-          'bedroom': [
-            `https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=400&h=300&fit=crop&auto=format`,
-            `https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=300&fit=crop&auto=format`,
-            `https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=400&h=300&fit=crop&auto=format`,
-            `https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&h=300&fit=crop&auto=format`
-          ],
-          'kitchen': [
-            `https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=400&h=300&fit=crop&auto=format`,
-            `https://images.unsplash.com/photo-1565538810643-b5bdb714032a?w=400&h=300&fit=crop&auto=format`,
-            `https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=400&h=300&fit=crop&auto=format`,
-            `https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&h=300&fit=crop&auto=format`
-          ]
-        };
-        finalImages = roomTypeImages[data.roomType] || roomTypeImages['living-room'];
-      }
+      toast({
+        title: "Generate Preview First",
+        description: "Please generate a preview using AI before creating the moodboard",
+        variant: "destructive",
+      });
+      return;
     }
     
     const moodboardData = {
