@@ -2615,9 +2615,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     } catch (error) {
       console.error('AI image generation error:', error);
-      res.status(500).json({ 
-        message: "Failed to generate AI images from all providers", 
-        error: error instanceof Error ? error.message : 'Unknown error'
+      
+      // Provide helpful setup instructions when all services fail
+      const setupMessage = process.env.STABLE_DIFFUSION_URL ? 
+        "All AI services are temporarily unavailable. Please check your Stable Diffusion WebUI instance or try again later." :
+        "To enable unlimited free AI generation, set up Stable Diffusion WebUI locally and add STABLE_DIFFUSION_URL environment variable.";
+      
+      res.status(503).json({ 
+        message: "AI image generation temporarily unavailable", 
+        error: error instanceof Error ? error.message : 'Unknown error',
+        setupInstructions: setupMessage,
+        providers: {
+          stableDiffusion: process.env.STABLE_DIFFUSION_URL ? 'configured' : 'not_configured',
+          openai: process.env.OPENAI_API_KEY ? 'billing_limit_reached' : 'not_configured',
+          deepai: 'api_issues',
+          craiyon: 'api_issues'
+        }
       });
     }
   });

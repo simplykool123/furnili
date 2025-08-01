@@ -560,9 +560,26 @@ export default function ProjectDetail() {
       
     } catch (error) {
       console.error('AI preview generation error:', error);
+      
+      // Enhanced error handling with setup instructions
+      let title = "AI Generation Failed";
+      let description = "Failed to generate AI images. Please try again.";
+      
+      if (error instanceof Error) {
+        if (error.message.includes('billing limit')) {
+          title = "OpenAI Billing Limit Reached";
+          description = "Please check your OpenAI account billing settings or set up Stable Diffusion WebUI for unlimited free generation.";
+        } else if (error.message.includes('Setup Required')) {
+          title = "AI Setup Required";
+          description = "Set up Stable Diffusion WebUI locally for unlimited free AI image generation. Check console for details.";
+        } else {
+          description = error.message;
+        }
+      }
+      
       toast({
-        title: "AI Generation Failed",
-        description: error instanceof Error ? error.message : "Failed to generate AI images. Please try again.",
+        title,
+        description,
         variant: "destructive",
       });
     } finally {
