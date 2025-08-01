@@ -130,10 +130,18 @@ export function setupQuotesRoutes(app: Express) {
 
       let nextNumber = 1;
       if (lastQuote.length > 0) {
-        const lastNumber = parseInt(lastQuote[0].quoteNumber.split('-')[1]);
+        // Extract number from format Q250801, Q250802, etc.
+        const lastNumber = parseInt(lastQuote[0].quoteNumber.substring(1));
         nextNumber = lastNumber + 1;
       }
-      const quoteNumber = `Q-${nextNumber.toString().padStart(3, '0')}`;
+      
+      // Format: Q + YYMM + DD + sequential number (QYYMMDDNN)
+      const now = new Date();
+      const year = now.getFullYear().toString().substring(2);
+      const month = (now.getMonth() + 1).toString().padStart(2, '0');
+      const day = now.getDate().toString().padStart(2, '0');
+      const seq = nextNumber.toString().padStart(2, '0');
+      const quoteNumber = `Q${year}${month}${day}${seq}`;
 
       // Validate quote data
       const quoteData = insertQuoteSchema.parse({
@@ -145,7 +153,7 @@ export function setupQuotesRoutes(app: Express) {
       // Create quote
       const [newQuote] = await db
         .insert(quotes)
-        .values(quoteData)
+        .values([quoteData])
         .returning();
 
       // Create quote items if provided
@@ -229,6 +237,54 @@ export function setupQuotesRoutes(app: Express) {
     } catch (error) {
       console.error("Error deleting quote:", error);
       res.status(500).json({ error: "Failed to delete quote" });
+    }
+  });
+
+  // Get quote details for PDF and detailed view
+  app.get("/api/quotes/:id/details", authenticateToken, async (req, res) => {
+    try {
+      const quoteId = parseInt(req.params.id);
+
+      // Get quote with complete client and project details
+      const quoteData = await db
+        .select({
+          quote: quotes,
+          client: clients,
+          project: projects,
+          createdBy: {
+            id: users.id,
+            name: users.name,
+          }
+        })
+        .from(quotes)
+        .leftJoin(clients, eq(quotes.clientId, clients.id))
+        .leftJoin(projects, eq(quotes.projectId, projects.id))
+        .leftJoin(users, eq(quotes.createdBy, users.id))
+        .where(and(eq(quotes.id, quoteId), eq(quotes.isActive, true)))
+        .limit(1);
+
+      if (quoteData.length === 0) {
+        return res.status(404).json({ error: "Quote not found" });
+      }
+
+      // Get quote items with complete sales product details
+      const items = await db
+        .select({
+          item: quoteItems,
+          salesProduct: salesProducts,
+        })
+        .from(quoteItems)
+        .leftJoin(salesProducts, eq(quoteItems.salesProductId, salesProducts.id))
+        .where(eq(quoteItems.quoteId, quoteId))
+        .orderBy(quoteItems.sortOrder);
+
+      res.json({
+        ...quoteData[0],
+        items: items
+      });
+    } catch (error) {
+      console.error("Error fetching quote details:", error);
+      res.status(500).json({ error: "Failed to fetch quote details" });
     }
   });
 
