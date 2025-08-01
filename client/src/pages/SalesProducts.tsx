@@ -522,9 +522,10 @@ export default function SalesProducts() {
                 Add Product
               </FurniliButton>
             </DialogTrigger>
-            <DialogContent className="max-w-[90vw] sm:max-w-2xl lg:max-w-4xl max-h-[90vh] p-0">
+            <DialogContent className="max-w-[90vw] sm:max-w-2xl lg:max-w-4xl max-h-[90vh] p-0" aria-describedby="add-product-description">
               <DialogHeader className="sr-only">
                 <DialogTitle>Add New Sales Product</DialogTitle>
+                <div id="add-product-description" className="sr-only">Form to add a new sales product with details like name, category, price, and image</div>
               </DialogHeader>
               <SalesProductForm
                 onClose={() => setIsAddDialogOpen(false)}
@@ -679,11 +680,12 @@ export default function SalesProducts() {
 
         {/* Edit Dialog */}
         <Dialog open={!!editingProduct} onOpenChange={() => setEditingProduct(null)}>
-          <DialogContent className="max-w-[90vw] sm:max-w-2xl lg:max-w-4xl max-h-[90vh] p-0">
+          <DialogContent className="max-w-[90vw] sm:max-w-2xl lg:max-w-4xl max-h-[90vh] p-0" aria-describedby="edit-product-description">
             <DialogHeader className="sr-only">
               <DialogTitle>
                 {editingProduct ? "Edit Sales Product" : "Add New Sales Product"}
               </DialogTitle>
+              <div id="edit-product-description" className="sr-only">Form to edit sales product details including name, category, price, and image</div>
             </DialogHeader>
             {editingProduct && (
               <SalesProductForm

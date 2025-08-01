@@ -304,24 +304,28 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
   // Calculate quote totals
   const calculateTotals = () => {
     const subtotal = quoteItems.reduce((sum, item) => {
-      return sum + (item.quantity * item.unitPrice);
+      return sum + ((item.quantity || 0) * (item.unitPrice || 0));
     }, 0);
     
     const totalDiscountAmount = quoteItems.reduce((sum, item) => {
-      return sum + item.discountAmount;
+      return sum + (item.discountAmount || 0);
     }, 0);
     
     const totalTaxAmount = quoteItems.reduce((sum, item) => {
-      return sum + item.taxAmount;
+      return sum + (item.taxAmount || 0);
     }, 0);
     
-    const total = quoteItems.reduce((sum, item) => sum + item.lineTotal, 0);
+    const total = quoteItems.reduce((sum, item) => sum + (item.lineTotal || 0), 0);
     
     return {
-      subtotal,
-      totalDiscountAmount,
-      totalTaxAmount,
-      total,
+      subtotal: subtotal || 0,
+      totalDiscountAmount: totalDiscountAmount || 0,
+      totalTaxAmount: totalTaxAmount || 0,
+      total: total || 0,
+      // Also provide alternative names for compatibility
+      totalDiscount: totalDiscountAmount || 0,
+      totalTax: totalTaxAmount || 0,
+      grandTotal: total || 0,
     };
   };
 
@@ -772,19 +776,19 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
                       <div className="border-t pt-2 space-y-1">
                         <div className="flex justify-between text-sm">
                           <span>Subtotal:</span>
-                          <span>₹{totals.subtotal.toFixed(2)}</span>
+                          <span>₹{(totals.subtotal || 0).toFixed(2)}</span>
                         </div>
                         <div className="flex justify-between text-sm">
                           <span>Discount:</span>
-                          <span>-₹{totals.totalDiscountAmount.toFixed(2)}</span>
+                          <span>-₹{(totals.totalDiscountAmount || 0).toFixed(2)}</span>
                         </div>
                         <div className="flex justify-between text-sm">
                           <span>Tax:</span>
-                          <span>₹{totals.totalTaxAmount.toFixed(2)}</span>
+                          <span>₹{(totals.totalTaxAmount || 0).toFixed(2)}</span>
                         </div>
                         <div className="flex justify-between font-bold">
                           <span>Total:</span>
-                          <span>₹{totals.total.toFixed(2)}</span>
+                          <span>₹{(totals.total || 0).toFixed(2)}</span>
                         </div>
                       </div>
                     </div>
@@ -1339,19 +1343,19 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
                       <div className="space-y-2 text-sm">
                         <div className="flex justify-between">
                           <span>Subtotal:</span>
-                          <span>₹{totals.subtotal.toFixed(2)}</span>
+                          <span>₹{(totals.subtotal || 0).toFixed(2)}</span>
                         </div>
                         <div className="flex justify-between">
                           <span>Total Discount:</span>
-                          <span>₹{totals.totalDiscount.toFixed(2)}</span>
+                          <span>₹{(totals.totalDiscount || 0).toFixed(2)}</span>
                         </div>
                         <div className="flex justify-between">
                           <span>Total Tax:</span>
-                          <span>₹{totals.totalTax.toFixed(2)}</span>
+                          <span>₹{(totals.totalTax || 0).toFixed(2)}</span>
                         </div>
                         <div className="flex justify-between font-bold text-base">
                           <span>Grand Total:</span>
-                          <span>₹{totals.grandTotal.toFixed(2)}</span>
+                          <span>₹{(totals.grandTotal || 0).toFixed(2)}</span>
                         </div>
                       </div>
                     </div>
