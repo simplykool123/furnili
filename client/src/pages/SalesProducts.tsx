@@ -523,6 +523,9 @@ export default function SalesProducts() {
               </FurniliButton>
             </DialogTrigger>
             <DialogContent className="max-w-[90vw] sm:max-w-2xl lg:max-w-4xl max-h-[90vh] p-0">
+              <DialogHeader className="sr-only">
+                <DialogTitle>Add New Sales Product</DialogTitle>
+              </DialogHeader>
               <SalesProductForm
                 onClose={() => setIsAddDialogOpen(false)}
                 onSuccess={() => {
@@ -677,6 +680,11 @@ export default function SalesProducts() {
         {/* Edit Dialog */}
         <Dialog open={!!editingProduct} onOpenChange={() => setEditingProduct(null)}>
           <DialogContent className="max-w-[90vw] sm:max-w-2xl lg:max-w-4xl max-h-[90vh] p-0">
+            <DialogHeader className="sr-only">
+              <DialogTitle>
+                {editingProduct ? "Edit Sales Product" : "Add New Sales Product"}
+              </DialogTitle>
+            </DialogHeader>
             {editingProduct && (
               <SalesProductForm
                 product={editingProduct}
