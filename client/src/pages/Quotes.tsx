@@ -121,41 +121,34 @@ export default function Quotes() {
   // Fetch quotes
   const { data: quotes = [], isLoading, refetch } = useQuery({
     queryKey: ['/api/quotes', searchTerm, statusFilter, clientFilter],
-    queryFn: () => apiRequest(`/api/quotes?search=${searchTerm}&status=${statusFilter}&clientId=${clientFilter !== 'all' ? clientFilter : ''}`) as Promise<any[]>,
+    queryFn: () => apiRequest(`/api/quotes?search=${searchTerm}&status=${statusFilter}&clientId=${clientFilter !== 'all' ? clientFilter : ''}`),
   });
 
   // Fetch clients for dropdown
   const { data: clients = [] } = useQuery({
     queryKey: ['/api/quotes/clients/list'],
-    queryFn: () => apiRequest('/api/quotes/clients/list') as Promise<any[]>,
+    queryFn: () => apiRequest('/api/quotes/clients/list'),
   });
 
   // Fetch projects for dropdown
   const { data: projects = [] } = useQuery({
     queryKey: ['/api/projects'],
-    queryFn: () => apiRequest('/api/projects') as Promise<any[]>,
+    queryFn: () => apiRequest('/api/projects'),
   });
 
   // Fetch sales products for items
   const { data: salesProducts = [] } = useQuery({
     queryKey: ['/api/quotes/products/list'],
-    queryFn: () => apiRequest('/api/quotes/products/list') as Promise<any[]>,
+    queryFn: () => apiRequest('/api/quotes/products/list'),
   });
 
   // Create quote mutation
   const createMutation = useMutation({
-    mutationFn: async (data: QuoteFormData & { items: QuoteItem[] }) => {
-      const response = await fetch('/api/quotes', {
+    mutationFn: (data: QuoteFormData & { items: QuoteItem[] }) => 
+      apiRequest('/api/quotes', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
-        },
         body: JSON.stringify(data),
-      });
-      if (!response.ok) throw new Error('Failed to create quote');
-      return response.json();
-    },
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/quotes'] });
       setShowCreateDialog(false);
@@ -169,18 +162,11 @@ export default function Quotes() {
 
   // Update quote mutation
   const updateMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: number; data: QuoteFormData & { items: QuoteItem[] } }) => {
-      const response = await fetch(`/api/quotes/${id}`, {
+    mutationFn: ({ id, data }: { id: number; data: QuoteFormData & { items: QuoteItem[] } }) => 
+      apiRequest(`/api/quotes/${id}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
-        },
         body: JSON.stringify(data),
-      });
-      if (!response.ok) throw new Error('Failed to update quote');
-      return response.json();
-    },
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/quotes'] });
       setShowEditDialog(false);
@@ -194,16 +180,10 @@ export default function Quotes() {
 
   // Delete quote mutation
   const deleteMutation = useMutation({
-    mutationFn: async (id: number) => {
-      const response = await fetch(`/api/quotes/${id}`, {
+    mutationFn: (id: number) => 
+      apiRequest(`/api/quotes/${id}`, {
         method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
-        },
-      });
-      if (!response.ok) throw new Error('Failed to delete quote');
-      return response.json();
-    },
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/quotes'] });
       setShowDeleteDialog(false);

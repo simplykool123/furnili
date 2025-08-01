@@ -9,26 +9,28 @@ async function throwIfResNotOk(res: Response) {
 }
 
 export async function apiRequest(
-  method: string,
   url: string,
-  data?: unknown | undefined,
-): Promise<Response> {
+  options: {
+    method?: string;
+    body?: string;
+    headers?: Record<string, string>;
+  } = {}
+): Promise<any> {
   // Debug and clean token before use
   debugToken();
   const token = cleanToken();
   
   // Clean the method string and validate
-  const cleanMethod = String(method || 'GET').trim().toUpperCase();
+  const cleanMethod = String(options.method || 'GET').trim().toUpperCase();
   if (!['GET', 'POST', 'PUT', 'DELETE', 'PATCH'].includes(cleanMethod)) {
-    console.error('Invalid HTTP method provided:', method, 'typeof:', typeof method);
-    throw new Error(`Invalid HTTP method: ${method}`);
+    console.error('Invalid HTTP method provided:', options.method, 'typeof:', typeof options.method);
+    throw new Error(`Invalid HTTP method: ${options.method}`);
   }
   
-  const headers: Record<string, string> = {};
-  
-  if (data) {
-    headers['Content-Type'] = 'application/json';
-  }
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...options.headers,
+  };
   
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
@@ -39,12 +41,12 @@ export async function apiRequest(
   const res = await fetch(url, {
     method: cleanMethod,
     headers,
-    body: data ? JSON.stringify(data) : undefined,
+    body: options.body,
     credentials: "include",
   });
 
   await throwIfResNotOk(res);
-  return res;
+  return res.json();
 }
 
 type UnauthorizedBehavior = "returnNull" | "throw";
