@@ -63,6 +63,7 @@ interface QuoteItem {
   lineTotal: number;
   sortOrder?: number;
   notes?: string;
+  size?: string; // Add size field for quote items
 }
 
 interface QuoteFormData {
@@ -73,10 +74,11 @@ interface QuoteFormData {
   expirationDate?: string;
   paymentTerms: string;
   pricelist: string;
-  discountType: "percentage" | "fixed";
-  discountValue: number;
+  status?: string; // Add status field
   terms?: string;
   notes?: string;
+  discountType: "percentage" | "fixed";
+  discountValue: number;
 }
 
 const quoteSchema = z.object({
@@ -91,6 +93,7 @@ const quoteSchema = z.object({
   discountValue: z.number().min(0),
   terms: z.string().optional(),
   notes: z.string().optional(),
+  status: z.string().optional(),
 });
 
 const quoteItemSchema = z.object({
@@ -102,12 +105,22 @@ const quoteItemSchema = z.object({
   discountPercentage: z.number().min(0).max(100),
   taxPercentage: z.number().min(0).max(100),
   size: z.string().optional(),
-  salesProductId: z.string().optional(),
+  salesProductId: z.number().optional(),
 });
 
 export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  
+  // Filter quotes based on search and status
+  const filteredQuotes = (quotes || []).filter((quote: Quote) => {
+    const matchesSearch = searchTerm === '' || 
+                         quote.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         quote.quoteNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (quote.description && quote.description.toLowerCase().includes(searchTerm.toLowerCase()));
+    const matchesStatus = statusFilter === 'all' || quote.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  }).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   const [selectedQuote, setSelectedQuote] = useState<Quote | null>(null);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
@@ -223,6 +236,8 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
       unitPrice: 0,
       discountPercentage: 0,
       taxPercentage: 18,
+      size: "",
+      salesProductId: undefined,
     },
   });
 
@@ -471,8 +486,8 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
         jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
       };
 
-      // Import html2pdf dynamically
-      const { default: html2pdf } = await import('html2pdf.js') as any;
+      // Import html2pdf dynamically  
+      const { default: html2pdf } = await import('html2pdf.js');
       html2pdf().set(opt).from(element).save();
       
       toast({
@@ -630,18 +645,22 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Create Quote Button */}
-      <div className="flex justify-end">
+    <div className="space-y-4">
+      {/* Mobile-Optimized Header */}
+      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-start sm:items-center justify-between">
+        <div>
+          <h2 className="text-lg font-semibold">Project Quotes</h2>
+          <p className="text-sm text-muted-foreground">Manage quotes for this project</p>
+        </div>
         
         <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
           <DialogTrigger asChild>
-            <Button className="w-full sm:w-auto">
-              <Plus className="h-4 w-4 mr-2" />
+            <Button className="w-full sm:w-auto h-8 text-xs">
+              <Plus className="h-3 w-3 mr-1" />
               New Quote
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-[95vw] sm:max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Create New Quote</DialogTitle>
               <DialogDescription>
@@ -650,8 +669,8 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
             </DialogHeader>
             
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <FormField
                     control={form.control}
                     name="title"
@@ -706,18 +725,18 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
                 />
 
                 {/* Quote Items Section */}
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <h3 className="font-medium">Quote Items</h3>
-                    <Button type="button" variant="outline" size="sm" onClick={() => setShowItemDialog(true)}>
-                      <Plus className="h-4 w-4 mr-1" />
+                <div className="space-y-3">
+                  <div className="flex flex-col sm:flex-row gap-2 sm:gap-0 justify-between items-start sm:items-center">
+                    <h3 className="text-sm font-medium">Quote Items</h3>
+                    <Button type="button" variant="outline" size="sm" onClick={() => setShowItemDialog(true)} className="h-7 text-xs">
+                      <Plus className="h-3 w-3 mr-1" />
                       Add Item
                     </Button>
                   </div>
 
                   {/* Quick Add Products */}
                   <div className="space-y-2">
-                    <h4 className="text-xs font-medium">Quick Add Products:</h4>
+                    <h4 className="text-xs font-medium text-muted-foreground">Quick Add Products:</h4>
                     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 max-h-32 overflow-y-auto">
                       {Array.isArray(salesProducts) && salesProducts.map((product: any) => (
                         <Button
@@ -809,18 +828,55 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
         </Dialog>
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-4">
+      {/* Quote Statistics Summary */}
+      {quotes && quotes.length > 0 && (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <Card className="p-3">
+            <div className="text-center">
+              <div className="text-lg font-bold">{quotes.length}</div>
+              <div className="text-xs text-muted-foreground">Total Quotes</div>
+            </div>
+          </Card>
+          <Card className="p-3">
+            <div className="text-center">
+              <div className="text-lg font-bold text-green-600">
+                {quotes.filter(q => q.status === 'approved').length}
+              </div>
+              <div className="text-xs text-muted-foreground">Approved</div>
+            </div>
+          </Card>
+          <Card className="p-3">
+            <div className="text-center">
+              <div className="text-lg font-bold text-blue-600">
+                {quotes.filter(q => q.status === 'sent').length}
+              </div>
+              <div className="text-xs text-muted-foreground">Sent</div>
+            </div>
+          </Card>
+          <Card className="p-3">
+            <div className="text-center">
+              <div className="text-lg font-bold">
+                ₹{quotes.reduce((sum, q) => sum + (q.totalAmount || 0), 0).toFixed(0)}
+              </div>
+              <div className="text-xs text-muted-foreground">Total Value</div>
+            </div>
+          </Card>
+        </div>
+      )}
+
+      {/* Mobile-Optimized Search & Filters */}
+      <div className="flex flex-col sm:flex-row gap-3">
         <div className="flex-1">
           <Input
-            placeholder="Search quotes..."
+            placeholder="Search quotes by title or number..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
+            className="h-8 text-sm"
           />
         </div>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-full sm:w-48">
-            <SelectValue placeholder="Filter by status" />
+          <SelectTrigger className="w-full sm:w-36 h-8 text-sm">
+            <SelectValue placeholder="Status" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Status</SelectItem>
@@ -835,7 +891,7 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
 
       {/* Quotes List */}
       <div className="grid gap-4">
-        {quotes.length === 0 ? (
+        {filteredQuotes.length === 0 ? (
           <Card>
             <CardContent className="p-8 text-center">
               <p className="text-muted-foreground">No quotes found for this project.</p>
@@ -848,27 +904,30 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
             </CardContent>
           </Card>
         ) : (
-          quotes.map((quote: Quote) => (
-            <Card key={quote.id}>
-              <CardHeader className="pb-3">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <CardTitle className="text-lg">{quote.title}</CardTitle>
-                    <p className="text-sm text-muted-foreground">
-                      Quote #{quote.quoteNumber} • ₹{(quote.totalAmount || 0).toFixed(2)}
+          filteredQuotes.map((quote: Quote) => (
+            <Card key={quote.id} className="overflow-hidden">
+              <CardHeader className="pb-2">
+                <div className="flex flex-col sm:flex-row gap-2 sm:gap-0 justify-between items-start">
+                  <div className="flex-1">
+                    <CardTitle className="text-base leading-tight">{quote.title}</CardTitle>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      #{quote.quoteNumber}
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
                     {getStatusBadge(quote.status)}
+                    <span className="text-sm font-medium">₹{(quote.totalAmount || 0).toFixed(0)}</span>
                   </div>
                 </div>
               </CardHeader>
               <CardContent className="pt-0">
-                <div className="flex justify-between items-center">
-                  <div className="text-sm text-muted-foreground">
+                <div className="flex flex-col sm:flex-row gap-3 sm:gap-0 justify-between items-start sm:items-center">
+                  <div className="text-xs text-muted-foreground">
                     Created: {new Date(quote.createdAt).toLocaleDateString()}
                   </div>
-                  <div className="flex gap-2">
+                  
+                  {/* Mobile-Optimized Actions */}
+                  <div className="flex flex-wrap gap-1 w-full sm:w-auto">
                     <Button 
                       variant="outline" 
                       size="sm"
@@ -876,24 +935,27 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
                         setSelectedQuote(quote);
                         setShowViewDialog(true);
                       }}
+                      className="flex-1 sm:flex-none h-7 text-xs"
                     >
-                      <Eye className="h-4 w-4 mr-1" />
+                      <Eye className="h-3 w-3 mr-1" />
                       View
                     </Button>
                     <Button 
                       variant="outline" 
                       size="sm"
                       onClick={() => handleExportPDF(quote)}
+                      className="flex-1 sm:flex-none h-7 text-xs"
                     >
-                      <Download className="h-4 w-4 mr-1" />
+                      <Download className="h-3 w-3 mr-1" />
                       PDF
                     </Button>
                     <Button 
                       variant="outline" 
                       size="sm"
                       onClick={() => handleShareQuote(quote)}
+                      className="flex-1 sm:flex-none h-7 text-xs"
                     >
-                      <Share className="h-4 w-4 mr-1" />
+                      <Share className="h-3 w-3 mr-1" />
                       Share
                     </Button>
                     <Button 
@@ -901,19 +963,33 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
                       size="sm"
                       onClick={() => {
                         setSelectedQuote(quote);
+                        const quoteItems = quote.items || [];
+                        setQuoteItems(quoteItems);
+                        form.reset({
+                          title: quote.title,
+                          description: quote.description || "",
+                          paymentTerms: quote.paymentTerms || "Net 30",
+                          pricelist: quote.pricelist || "Standard",
+                          discountType: "percentage",
+                          discountValue: 0,
+                          terms: quote.terms || "",
+                          notes: quote.notes || "",
+                          status: quote.status || "draft",
+                        });
                         setShowEditDialog(true);
                       }}
+                      className="flex-1 sm:flex-none h-7 text-xs"
                     >
-                      <Edit className="h-4 w-4 mr-1" />
+                      <Edit className="h-3 w-3 mr-1" />
                       Edit
                     </Button>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <Button variant="destructive" size="sm">
-                          <Trash2 className="h-4 w-4" />
+                        <Button variant="destructive" size="sm" className="h-7">
+                          <Trash2 className="h-3 w-3" />
                         </Button>
                       </AlertDialogTrigger>
-                      <AlertDialogContent>
+                      <AlertDialogContent className="max-w-[90vw] sm:max-w-md">
                         <AlertDialogHeader>
                           <AlertDialogTitle>Are you Freaking Sure?</AlertDialogTitle>
                           <AlertDialogDescription>
@@ -1307,7 +1383,7 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
                                 onClick={() => {
                                   const item = quoteItems[index];
                                   setEditingItem(item);
-                                  setEditingItemIndex(index);
+                                  // setEditingItemIndex(index); // Not needed, we use editingItem
                                   itemForm.reset({
                                     itemName: item.itemName,
                                     description: item.description,
@@ -1316,8 +1392,8 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
                                     unitPrice: item.unitPrice,
                                     discountPercentage: item.discountPercentage,
                                     taxPercentage: item.taxPercentage,
-                                    size: item.size,
-                                    salesProductId: item.salesProductId?.toString() || "",
+                                    size: item.size || "",
+                                    salesProductId: item.salesProductId,
                                   });
                                   setShowItemDialog(true);
                                 }}
@@ -1328,7 +1404,7 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
                                 type="button"
                                 variant="outline"
                                 size="sm"
-                                onClick={() => handleRemoveItem(index)}
+                                onClick={() => removeItem(index)}
                               >
                                 <Trash2 className="h-3 w-3" />
                               </Button>
