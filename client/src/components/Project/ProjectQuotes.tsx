@@ -314,6 +314,75 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
 
   const totals = calculateTotals();
 
+  // Export PDF function
+  const handleExportPDF = async (quote: Quote) => {
+    try {
+      // Use html2pdf.js to generate PDF
+      const element = document.createElement('div');
+      element.innerHTML = `
+        <div style="font-family: Arial, sans-serif; padding: 20px;">
+          <h1 style="color: hsl(28, 100%, 25%); margin-bottom: 20px;">FURNILI</h1>
+          <h2>${quote.title}</h2>
+          <p><strong>Quote #:</strong> ${quote.quoteNumber}</p>
+          <p><strong>Date:</strong> ${new Date(quote.createdAt).toLocaleDateString()}</p>
+          <p><strong>Total Amount:</strong> ₹${quote.totalAmount.toFixed(2)}</p>
+          <p><strong>Status:</strong> ${quote.status}</p>
+          ${quote.description ? `<p><strong>Description:</strong> ${quote.description}</p>` : ''}
+        </div>
+      `;
+      
+      const opt = {
+        margin: 1,
+        filename: `${quote.quoteNumber}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+      };
+
+      // Import html2pdf dynamically
+      const { default: html2pdf } = await import('html2pdf.js');
+      html2pdf().set(opt).from(element).save();
+      
+      toast({
+        title: "PDF Generated",
+        description: "Quote PDF has been downloaded successfully."
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to generate PDF. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Share quote function
+  const handleShareQuote = async (quote: Quote) => {
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: `Quote ${quote.quoteNumber}`,
+          text: `${quote.title} - ₹${quote.totalAmount.toFixed(2)}`,
+          url: window.location.href
+        });
+      } else {
+        // Fallback: copy to clipboard
+        const shareText = `Quote ${quote.quoteNumber}: ${quote.title}\nAmount: ₹${quote.totalAmount.toFixed(2)}\nStatus: ${quote.status}`;
+        await navigator.clipboard.writeText(shareText);
+        toast({
+          title: "Copied to Clipboard",
+          description: "Quote details copied to clipboard."
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to share quote. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
   // Handle form submission
   const handleSubmit = (data: QuoteFormData) => {
     if (quoteItems.length === 0) {
@@ -603,19 +672,41 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
                     Created: {new Date(quote.createdAt).toLocaleDateString()}
                   </div>
                   <div className="flex gap-2">
-                    <Button variant="outline" size="sm">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => {
+                        setSelectedQuote(quote);
+                        setShowViewDialog(true);
+                      }}
+                    >
                       <Eye className="h-4 w-4 mr-1" />
                       View
                     </Button>
-                    <Button variant="outline" size="sm">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleExportPDF(quote)}
+                    >
                       <Download className="h-4 w-4 mr-1" />
                       PDF
                     </Button>
-                    <Button variant="outline" size="sm">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleShareQuote(quote)}
+                    >
                       <Share className="h-4 w-4 mr-1" />
                       Share
                     </Button>
-                    <Button variant="outline" size="sm">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => {
+                        setSelectedQuote(quote);
+                        setShowEditDialog(true);
+                      }}
+                    >
                       <Edit className="h-4 w-4 mr-1" />
                       Edit
                     </Button>
@@ -812,6 +903,75 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
               </div>
             </form>
           </Form>
+        </DialogContent>
+      </Dialog>
+
+      {/* View Quote Dialog */}
+      <Dialog open={showViewDialog} onOpenChange={setShowViewDialog}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>View Quote Details</DialogTitle>
+            <DialogDescription>
+              Quote information and items
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedQuote && (
+            <div className="space-y-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-xs font-medium">Quote Title</Label>
+                  <p className="text-sm">{selectedQuote.title}</p>
+                </div>
+                <div>
+                  <Label className="text-xs font-medium">Quote Number</Label>
+                  <p className="text-sm">{selectedQuote.quoteNumber}</p>
+                </div>
+                <div>
+                  <Label className="text-xs font-medium">Status</Label>
+                  <p className="text-sm">{selectedQuote.status}</p>
+                </div>
+                <div>
+                  <Label className="text-xs font-medium">Total Amount</Label>
+                  <p className="text-sm font-bold">₹{selectedQuote.totalAmount.toFixed(2)}</p>
+                </div>
+              </div>
+              
+              {selectedQuote.description && (
+                <div>
+                  <Label className="text-xs font-medium">Description</Label>
+                  <p className="text-sm">{selectedQuote.description}</p>
+                </div>
+              )}
+              
+              <div className="flex gap-2">
+                <Button onClick={() => handleExportPDF(selectedQuote)}>
+                  <Download className="h-4 w-4 mr-2" />
+                  Download PDF
+                </Button>
+                <Button variant="outline" onClick={() => handleShareQuote(selectedQuote)}>
+                  <Share className="h-4 w-4 mr-2" />
+                  Share
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Quote Dialog */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Quote</DialogTitle>
+            <DialogDescription>
+              Update quote details and items
+            </DialogDescription>
+          </DialogHeader>
+          
+          <p className="text-sm text-muted-foreground">
+            Edit functionality will be implemented in a future update.
+          </p>
         </DialogContent>
       </Dialog>
     </div>
