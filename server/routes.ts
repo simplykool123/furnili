@@ -977,6 +977,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { type } = req.body;
       const file = req.file;
       
+      console.log('Upload request - user:', req.user?.id);
       console.log('Upload request - type:', type);
       console.log('Upload request - file:', file ? {
         filename: file.filename,

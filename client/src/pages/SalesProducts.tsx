@@ -196,10 +196,18 @@ function SalesProductForm({
         formData.append("image", imageFile);
         formData.append("type", "sales-product");
 
+        const { cleanToken } = await import('../utils/tokenDebug');
+        const token = cleanToken();
+        console.log('Auth token for upload:', token ? 'exists' : 'missing');
+        
+        if (!token) {
+          throw new Error('Authentication required. Please log in again.');
+        }
+        
         const uploadResponse = await fetch("/api/upload", {
           method: "POST",
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+            'Authorization': `Bearer ${token}`,
           },
           body: formData,
         });
@@ -208,7 +216,9 @@ function SalesProductForm({
           const uploadResult = await uploadResponse.json();
           imageUrl = uploadResult.filePath;
         } else {
-          throw new Error('Failed to upload image');
+          const errorText = await uploadResponse.text();
+          console.error('Upload error response:', errorText);
+          throw new Error(`Failed to upload image: ${uploadResponse.status} ${uploadResponse.statusText}`);
         }
       }
 
@@ -276,7 +286,7 @@ function SalesProductForm({
 
             <div className="space-y-1">
               <Label htmlFor="category" className="text-xs font-medium text-gray-700">Category</Label>
-              <Select onValueChange={(value) => setValue("category", value)} defaultValue={product?.category}>
+              <Select onValueChange={(value) => setValue("category", value)} defaultValue={product?.category || undefined}>
                 <SelectTrigger className="h-8 text-sm">
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
