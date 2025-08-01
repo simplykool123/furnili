@@ -2351,6 +2351,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get quote details with items
+  app.get("/api/quotes/:id/details", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const quoteId = parseInt(req.params.id);
+      const quote = await storage.getQuoteWithItems(quoteId);
+      res.json(quote);
+    } catch (error) {
+      console.error("Get quote details error:", error);
+      res.status(500).json({ message: "Failed to fetch quote details" });
+    }
+  });
+
+  // Get quote items
+  app.get("/api/quotes/:id/items", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const quoteId = parseInt(req.params.id);
+      const items = await storage.getQuoteItems(quoteId);
+      res.json(items);
+    } catch (error) {
+      console.error("Get quote items error:", error);
+      res.status(500).json({ message: "Failed to fetch quote items" });
+    }
+  });
+
+  // Update quote
+  app.put("/api/quotes/:id", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const quoteId = parseInt(req.params.id);
+      const { items, ...quoteData } = req.body;
+      
+      // Update quote
+      const updatedQuote = await storage.updateQuote(quoteId, quoteData);
+      
+      // Update quote items if provided
+      if (items && Array.isArray(items)) {
+        await storage.updateQuoteItems(quoteId, items);
+      }
+      
+      res.json(updatedQuote);
+    } catch (error) {
+      console.error("Update quote error:", error);
+      res.status(500).json({ message: "Failed to update quote" });
+    }
+  });
+
   // Backup routes
   app.get("/api/backups/download-all", authenticateToken, requireRole(['admin']), async (req: AuthRequest, res) => {
     try {

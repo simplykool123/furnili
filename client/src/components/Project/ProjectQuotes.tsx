@@ -537,6 +537,70 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
     }
   };
 
+  // Handle edit quote
+  const handleEditQuote = (quote: Quote) => {
+    setSelectedQuote(quote);
+    // Populate form with existing quote data
+    form.setValue('title', quote.title);
+    form.setValue('description', quote.description || '');
+    form.setValue('status', quote.status);
+    
+    // Fetch and set quote items
+    fetchQuoteItems(quote.id);
+    setShowEditDialog(true);
+  };
+
+  // Fetch quote items for editing
+  const fetchQuoteItems = async (quoteId: number) => {
+    try {
+      const response = await apiRequest(`/api/quotes/${quoteId}/items`);
+      setQuoteItems(response || []);
+    } catch (error) {
+      console.error('Error fetching quote items:', error);
+      setQuoteItems([]);
+    }
+  };
+
+  // Handle update quote
+  const handleUpdateQuote = async (data: z.infer<typeof quoteSchema>) => {
+    if (!selectedQuote) return;
+
+    try {
+      const totals = calculateTotals();
+      const quoteData = {
+        ...data,
+        subtotal: totals.subtotal,
+        totalDiscount: totals.totalDiscount,
+        taxAmount: totals.totalTax,
+        totalAmount: totals.grandTotal,
+        items: quoteItems
+      };
+
+      await apiRequest(`/api/quotes/${selectedQuote.id}`, {
+        method: 'PUT',
+        body: JSON.stringify(quoteData)
+      });
+
+      // Invalidate and refetch quotes
+      queryClient.invalidateQueries({ queryKey: ['/api/quotes'] });
+
+      toast({
+        title: "Quote Updated",
+        description: "Quote has been updated successfully."
+      });
+
+      setShowEditDialog(false);
+      setQuoteItems([]);
+      form.reset();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update quote. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
   const getStatusBadge = (status: string) => {
     const variants = {
       draft: "secondary",
@@ -1141,9 +1205,170 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
             </DialogDescription>
           </DialogHeader>
           
-          <p className="text-sm text-muted-foreground">
-            Edit functionality will be implemented in a future update.
-          </p>
+          {selectedQuote && (
+            <div className="space-y-6">
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(handleUpdateQuote)} className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="title"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs">Quote Title *</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="Enter quote title" className="h-8" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="status"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs">Status</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger className="h-8">
+                                <SelectValue placeholder="Select status" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="draft">Draft</SelectItem>
+                              <SelectItem value="sent">Sent</SelectItem>
+                              <SelectItem value="approved">Approved</SelectItem>
+                              <SelectItem value="rejected">Rejected</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <FormField
+                    control={form.control}
+                    name="description"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs">Description</FormLabel>
+                        <FormControl>
+                          <Textarea {...field} placeholder="Quote description" className="min-h-[60px]" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Items Section */}
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <h3 className="text-lg font-semibold">Quote Items</h3>
+                      <Button type="button" onClick={() => setShowItemDialog(true)} size="sm">
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add Item
+                      </Button>
+                    </div>
+
+                    {/* Items List */}
+                    <div className="space-y-2">
+                      {quoteItems.map((item, index) => (
+                        <Card key={index} className="p-3">
+                          <div className="flex justify-between items-start">
+                            <div className="flex-1 grid grid-cols-4 gap-2 text-sm">
+                              <div>
+                                <p className="font-medium">{item.itemName}</p>
+                                <p className="text-muted-foreground text-xs">{item.description}</p>
+                              </div>
+                              <div>
+                                <p>Size: {item.size || 'N/A'}</p>
+                                <p>Qty: {item.quantity} {item.uom}</p>
+                              </div>
+                              <div>
+                                <p>Rate: ₹{item.unitPrice}</p>
+                                <p>Discount: {item.discountPercentage}%</p>
+                              </div>
+                              <div>
+                                <p className="font-medium">₹{item.lineTotal.toFixed(2)}</p>
+                              </div>
+                            </div>
+                            <div className="flex gap-1">
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  const item = quoteItems[index];
+                                  setEditingItem(item);
+                                  setEditingItemIndex(index);
+                                  itemForm.reset({
+                                    itemName: item.itemName,
+                                    description: item.description,
+                                    quantity: item.quantity,
+                                    uom: item.uom,
+                                    unitPrice: item.unitPrice,
+                                    discountPercentage: item.discountPercentage,
+                                    taxPercentage: item.taxPercentage,
+                                    size: item.size,
+                                    salesProductId: item.salesProductId?.toString() || "",
+                                  });
+                                  setShowItemDialog(true);
+                                }}
+                              >
+                                <Edit className="h-3 w-3" />
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleRemoveItem(index)}
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          </div>
+                        </Card>
+                      ))}
+                    </div>
+
+                    {/* Totals */}
+                    <div className="bg-muted p-4 rounded-lg">
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span>Subtotal:</span>
+                          <span>₹{totals.subtotal.toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Total Discount:</span>
+                          <span>₹{totals.totalDiscount.toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Total Tax:</span>
+                          <span>₹{totals.totalTax.toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between font-bold text-base">
+                          <span>Grand Total:</span>
+                          <span>₹{totals.grandTotal.toFixed(2)}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end gap-2 pt-4">
+                    <Button type="button" variant="outline" onClick={() => setShowEditDialog(false)}>
+                      Cancel
+                    </Button>
+                    <Button type="submit">
+                      Update Quote
+                    </Button>
+                  </div>
+                </form>
+              </Form>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>
