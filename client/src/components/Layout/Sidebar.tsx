@@ -46,7 +46,7 @@ const navigation = [
   { name: 'Reports', href: '/reports', icon: BarChart3, roles: ['admin', 'manager'] }, // Manager can access for team supervision
   { 
     name: 'System Settings', 
-    icon: Settings, 
+    icon: Database, 
     roles: ['admin', 'manager', 'staff'], // Show System Settings section with role-based items
     isCollapsible: true,
     subItems: [
@@ -59,7 +59,7 @@ const navigation = [
   },
   { 
     name: 'Master Data', 
-    icon: Database, 
+    icon: Settings, 
     roles: ['admin', 'manager', 'staff'],
     isCollapsible: true,
     subItems: [
