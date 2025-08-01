@@ -240,6 +240,25 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
     return afterDiscount + taxAmount;
   };
 
+  // Handle product selection from dropdown
+  const handleProductSelection = (productId: string) => {
+    if (!productId) return;
+    
+    const selectedProduct = salesProducts.find((p: any) => p.id.toString() === productId);
+    if (selectedProduct) {
+      // Auto-populate product details
+      itemForm.setValue('itemName', selectedProduct.name);
+      itemForm.setValue('description', selectedProduct.description || selectedProduct.specifications || `${selectedProduct.name} - Premium quality furniture product`);
+      itemForm.setValue('unitPrice', selectedProduct.unitPrice || 0);
+      itemForm.setValue('uom', selectedProduct.unit || 'pcs');
+      
+      // Set default quantity to 1 if not already set
+      if (!itemForm.watch('quantity')) {
+        itemForm.setValue('quantity', 1);
+      }
+    }
+  };
+
   // Add item to quote
   const handleSaveItem = (data: any) => {
     const newItem: QuoteItem = {
@@ -293,17 +312,6 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
     };
     newItem.lineTotal = calculateLineTotal(newItem);
     setQuoteItems([...quoteItems, newItem]);
-  };
-
-  // Handle product selection in item form
-  const handleProductSelection = (productId: string) => {
-    const selectedProduct = salesProducts.find((p: any) => p.id.toString() === productId);
-    if (selectedProduct) {
-      itemForm.setValue('itemName', selectedProduct.name);
-      itemForm.setValue('description', selectedProduct.description || '');
-      itemForm.setValue('unitPrice', selectedProduct.unitPrice || 0);
-      itemForm.setValue('uom', selectedProduct.uom || 'pcs');
-    }
   };
 
   // Calculate quote totals
@@ -1032,20 +1040,23 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
                 name="salesProductId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-xs">Select Product (Optional)</FormLabel>
+                    <FormLabel className="text-sm font-medium">Product Name *</FormLabel>
                     <Select onValueChange={(value) => {
                       field.onChange(value);
                       handleProductSelection(value);
-                    }} value={field.value}>
+                    }} value={field.value?.toString()}>
                       <FormControl>
-                        <SelectTrigger className="h-8">
-                          <SelectValue placeholder="Choose from product catalog" />
+                        <SelectTrigger className="h-10">
+                          <SelectValue placeholder="Select a product from catalog" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
                         {salesProducts.map((product: any) => (
                           <SelectItem key={product.id} value={product.id.toString()}>
-                            {product.name}
+                            <div className="flex justify-between items-center w-full">
+                              <span className="font-medium">{product.name}</span>
+                              <span className="text-muted-foreground ml-2">₹{product.unitPrice}</span>
+                            </div>
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -1055,61 +1066,70 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
                 )}
               />
 
+              {/* Hidden Item Name Field - Auto-populated from Product Selection */}
               <FormField
                 control={itemForm.control}
                 name="itemName"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-xs">Item Name *</FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder="Enter item name" className="h-8" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
+                  <Input {...field} type="hidden" />
                 )}
               />
 
+              {/* Auto-populated Product Description */}
               <FormField
                 control={itemForm.control}
                 name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-xs">Description</FormLabel>
+                    <FormLabel className="text-sm font-medium">Product Description</FormLabel>
                     <FormControl>
-                      <Textarea {...field} placeholder="Item description" className="min-h-[50px]" />
+                      <Textarea {...field} placeholder="Product description will auto-populate when product is selected" className="min-h-[80px]" readOnly />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
 
-              <FormField
-                control={itemForm.control}
-                name="size"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-xs">Size/Dimensions</FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder="e.g., 1050 X 600 X 750" className="h-8" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
 
-              <div className="grid grid-cols-3 gap-2">
+
+              {/* Quantity, Rate, and Total Section */}
+              <div className="grid grid-cols-4 gap-4 items-end">
                 <FormField
                   control={itemForm.control}
                   name="quantity"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-xs">Qty *</FormLabel>
+                      <FormLabel className="text-sm font-medium">Qty *</FormLabel>
                       <FormControl>
                         <Input 
                           {...field} 
                           type="number" 
                           placeholder="1" 
-                          className="h-8"
+                          className="h-10 text-center"
+                          min="0.01"
+                          step="0.01"
+                          onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={itemForm.control}
+                  name="unitPrice"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-sm font-medium">Rate *</FormLabel>
+                      <FormControl>
+                        <Input 
+                          {...field} 
+                          type="number" 
+                          placeholder="0.00" 
+                          className="h-10"
+                          min="0"
+                          step="0.01"
                           onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
                         />
                       </FormControl>
@@ -1123,19 +1143,20 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
                   name="uom"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-xs">UOM *</FormLabel>
+                      <FormLabel className="text-sm font-medium">UOM *</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
-                          <SelectTrigger className="h-8">
+                          <SelectTrigger className="h-10">
                             <SelectValue placeholder="Unit" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
                           <SelectItem value="pcs">Pieces</SelectItem>
                           <SelectItem value="sqft">Square Feet</SelectItem>
+                          <SelectItem value="nos">Numbers</SelectItem>
+                          <SelectItem value="set">Set</SelectItem>
                           <SelectItem value="lm">Linear Meter</SelectItem>
                           <SelectItem value="kg">Kilogram</SelectItem>
-                          <SelectItem value="set">Set</SelectItem>
                           <SelectItem value="lot">Lot</SelectItem>
                         </SelectContent>
                       </Select>
@@ -1144,25 +1165,14 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
                   )}
                 />
 
-                <FormField
-                  control={itemForm.control}
-                  name="unitPrice"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-xs">Price *</FormLabel>
-                      <FormControl>
-                        <Input 
-                          {...field} 
-                          type="number" 
-                          placeholder="0" 
-                          className="h-8"
-                          onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <div>
+                  <Label className="text-sm font-medium">Total Amount</Label>
+                  <div className="h-10 px-3 py-2 border border-input bg-muted rounded-md flex items-center">
+                    <span className="font-medium">
+                      ₹{((itemForm.watch('quantity') || 0) * (itemForm.watch('unitPrice') || 0)).toFixed(2)}
+                    </span>
+                  </div>
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-2">
