@@ -71,7 +71,7 @@ function SalesProductForm({
       unitPrice: product?.unitPrice || 0,
       category: product?.category || "",
       taxPercentage: product?.taxPercentage || 0,
-      internalNotes: product?.internalNotes || "",
+      internalNotes: product?.internalNotes || undefined,
     },
   });
 

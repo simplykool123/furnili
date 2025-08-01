@@ -3402,6 +3402,61 @@ class DatabaseStorage implements IStorage {
     };
   }
 
+  // Get quote items
+  async getQuoteItems(quoteId: number) {
+    try {
+      const items = await db.select().from(quoteItems).where(eq(quoteItems.quoteId, quoteId));
+      return items;
+    } catch (error) {
+      console.error('Error fetching quote items:', error);
+      throw error;
+    }
+  }
+
+  // Update quote
+  async updateQuote(quoteId: number, data: any) {
+    try {
+      const [updatedQuote] = await db
+        .update(quotes)
+        .set({
+          ...data,
+          updatedAt: new Date(),
+        })
+        .where(eq(quotes.id, quoteId))
+        .returning();
+      
+      return updatedQuote;
+    } catch (error) {
+      console.error('Error updating quote:', error);
+      throw error;
+    }
+  }
+
+  // Update quote items
+  async updateQuoteItems(quoteId: number, items: any[]) {
+    try {
+      // Delete existing items
+      await db.delete(quoteItems).where(eq(quoteItems.quoteId, quoteId));
+      
+      // Insert new items
+      if (items.length > 0) {
+        const itemsToInsert = items.map(item => ({
+          ...item,
+          quoteId,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        }));
+        
+        await db.insert(quoteItems).values(itemsToInsert);
+      }
+      
+      return items;
+    } catch (error) {
+      console.error('Error updating quote items:', error);
+      throw error;
+    }
+  }
+
 }
 
 export const storage = new DatabaseStorage();
