@@ -2460,7 +2460,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log('Generating AI images with prompts:', prompts);
 
-      // Try OpenAI DALL-E first if available
+      // Try Stable Diffusion WebUI first if available (best free option)
+      if (process.env.STABLE_DIFFUSION_URL) {
+        try {
+          console.log('Using Stable Diffusion WebUI (local/self-hosted)');
+          
+          const stableDiffusionPromises = prompts.map(async (prompt) => {
+            const response = await fetch(`${process.env.STABLE_DIFFUSION_URL}/sdapi/v1/txt2img`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                prompt: prompt,
+                negative_prompt: "blurry, low quality, distorted, ugly, deformed",
+                steps: 20,
+                width: 1024,
+                height: 1024,
+                cfg_scale: 7.5,
+                sampler_name: "DPM++ 2M Karras",
+                batch_size: 1,
+                n_iter: 1,
+              }),
+            });
+
+            if (!response.ok) {
+              throw new Error(`Stable Diffusion API error: ${response.status}`);
+            }
+
+            const result = await response.json();
+            // Convert base64 to data URL
+            return `data:image/png;base64,${result.images[0]}`;
+          });
+
+          const images = await Promise.all(stableDiffusionPromises);
+          
+          return res.json({ 
+            images,
+            generated: true,
+            provider: 'Stable Diffusion WebUI (Self-Hosted)',
+            timestamp: new Date().toISOString()
+          });
+
+        } catch (sdError: any) {
+          console.log('Stable Diffusion failed, trying OpenAI:', sdError?.message || 'Unknown error');
+        }
+      }
+
+      // Try OpenAI DALL-E second if available
       if (process.env.OPENAI_API_KEY) {
         try {
           const imagePromises = prompts.map(async (prompt) => {
