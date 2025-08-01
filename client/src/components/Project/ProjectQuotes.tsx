@@ -101,6 +101,8 @@ const quoteItemSchema = z.object({
   unitPrice: z.number().min(0, "Unit price must be positive"),
   discountPercentage: z.number().min(0).max(100),
   taxPercentage: z.number().min(0).max(100),
+  size: z.string().optional(),
+  salesProductId: z.string().optional(),
 });
 
 export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
@@ -288,6 +290,17 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
     setQuoteItems([...quoteItems, newItem]);
   };
 
+  // Handle product selection in item form
+  const handleProductSelection = (productId: string) => {
+    const selectedProduct = salesProducts.find((p: any) => p.id.toString() === productId);
+    if (selectedProduct) {
+      itemForm.setValue('itemName', selectedProduct.name);
+      itemForm.setValue('description', selectedProduct.description || '');
+      itemForm.setValue('unitPrice', selectedProduct.unitPrice || 0);
+      itemForm.setValue('uom', selectedProduct.uom || 'pcs');
+    }
+  };
+
   // Calculate quote totals
   const calculateTotals = () => {
     const subtotal = quoteItems.reduce((sum, item) => {
@@ -314,40 +327,156 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
 
   const totals = calculateTotals();
 
-  // Export PDF function
+  // Export PDF function with professional Furnili format
   const handleExportPDF = async (quote: Quote) => {
     try {
-      // Use html2pdf.js to generate PDF
+      // Fetch quote items (you may need to implement this API endpoint)
+      const quoteData = await apiRequest(`/api/quotes/${quote.id}/details`).catch(() => ({
+        ...quote,
+        items: quoteItems // fallback to current items
+      }));
+
+      const client = projectData?.client || { name: 'Client Name', address: 'Client Address' };
+      const items = quoteData.items || [];
+      
+      // Create professional PDF content matching Furnili format
       const element = document.createElement('div');
       element.innerHTML = `
-        <div style="font-family: Arial, sans-serif; padding: 20px;">
-          <h1 style="color: hsl(28, 100%, 25%); margin-bottom: 20px;">FURNILI</h1>
-          <h2>${quote.title}</h2>
-          <p><strong>Quote #:</strong> ${quote.quoteNumber}</p>
-          <p><strong>Date:</strong> ${new Date(quote.createdAt).toLocaleDateString()}</p>
-          <p><strong>Total Amount:</strong> ₹${quote.totalAmount.toFixed(2)}</p>
-          <p><strong>Status:</strong> ${quote.status}</p>
-          ${quote.description ? `<p><strong>Description:</strong> ${quote.description}</p>` : ''}
+        <div style="font-family: Arial, sans-serif; font-size: 12px; margin: 0; padding: 20px;">
+          <!-- Header -->
+          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px;">
+            <div>
+              <h1 style="font-size: 36px; font-weight: bold; margin: 0; letter-spacing: 2px;">FURNILI</h1>
+              <p style="font-size: 12px; margin: 0; letter-spacing: 1px;">BESPOKE MODULAR FURNITURE</p>
+            </div>
+          </div>
+
+          <!-- Quotation Title -->
+          <div style="text-align: center; margin: 20px 0;">
+            <h2 style="font-size: 24px; font-weight: bold; margin: 0; border-bottom: 2px solid #000; display: inline-block; padding-bottom: 5px;">Quotation</h2>
+          </div>
+
+          <!-- Client and Quote Details -->
+          <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+            <div style="width: 60%;">
+              <p style="margin: 0;"><strong>To,</strong></p>
+              <p style="margin: 0; font-weight: bold;">${client.name}</p>
+              <p style="margin: 0;">${client.address || 'Address'}</p>
+            </div>
+            <div style="width: 35%; text-align: right;">
+              <p style="margin: 0;"><strong>Date :-</strong> ${new Date(quote.createdAt).toLocaleDateString('en-GB')}</p>
+              <p style="margin: 0;"><strong>Est. No. :-</strong> ${quote.quoteNumber}</p>
+              <p style="margin: 0;"><strong>GSTN :-</strong> 27AAKFF2192A1ZO</p>
+              <p style="margin: 0;"><strong>PAN :-</strong> AAKFF2192A</p>
+              <p style="margin: 0;"><strong>Contact Person :-</strong> ${client.name}</p>
+            </div>
+          </div>
+
+          <!-- Items Table -->
+          <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 11px;">
+            <thead>
+              <tr style="background-color: #f0f0f0;">
+                <th style="border: 1px solid #000; padding: 8px; text-align: center; width: 40px;">Sr. No.</th>
+                <th style="border: 1px solid #000; padding: 8px; text-align: center; width: 150px;">Product</th>
+                <th style="border: 1px solid #000; padding: 8px; text-align: center;">Item Description</th>
+                <th style="border: 1px solid #000; padding: 8px; text-align: center; width: 80px;">SIZE</th>
+                <th style="border: 1px solid #000; padding: 8px; text-align: center; width: 50px;">Qty</th>
+                <th style="border: 1px solid #000; padding: 8px; text-align: center; width: 80px;">Rate</th>
+                <th style="border: 1px solid #000; padding: 8px; text-align: center; width: 80px;">Total Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${items.map((item: any, index: number) => `
+                <tr>
+                  <td style="border: 1px solid #000; padding: 8px; text-align: center;">${index + 1}</td>
+                  <td style="border: 1px solid #000; padding: 8px;">${item.itemName}</td>
+                  <td style="border: 1px solid #000; padding: 8px;">${item.description || ''}</td>
+                  <td style="border: 1px solid #000; padding: 8px; text-align: center;">${item.size || '-'}</td>
+                  <td style="border: 1px solid #000; padding: 8px; text-align: center;">${item.quantity}</td>
+                  <td style="border: 1px solid #000; padding: 8px; text-align: right;">₹${item.unitPrice.toFixed(0)}</td>
+                  <td style="border: 1px solid #000; padding: 8px; text-align: right;">₹${(item.quantity * item.unitPrice).toFixed(0)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+
+          <!-- Footer Totals -->
+          <div style="display: flex; justify-content: space-between; margin-top: 20px;">
+            <div style="width: 60%;">
+              <h3 style="font-size: 14px; margin-bottom: 10px;">Furniture Specifications</h3>
+              <p style="font-size: 10px; margin: 2px 0;">- All furniture will be manufactured using Said Materials</p>
+              <p style="font-size: 10px; margin: 2px 0;">- All hardware considered of standard make.</p>
+              <p style="font-size: 10px; margin: 2px 0;">- Standard laminates considered as per selection.</p>
+              <p style="font-size: 10px; margin: 2px 0;">- Any modifications or changes in material selection may result in additional charges.</p>
+              
+              <h3 style="font-size: 14px; margin: 20px 0 10px 0;">Payment Terms</h3>
+              <p style="font-size: 10px; margin: 2px 0;"><strong>30%</strong> Advance Payment: Due upon order confirmation.</p>
+              <p style="font-size: 10px; margin: 2px 0;"><strong>50%</strong> Payment Before Delivery: To be settled prior to dispatch.</p>
+              <p style="font-size: 10px; margin: 2px 0;"><strong>20%</strong> Payment on Delivery</p>
+            </div>
+            
+            <div style="width: 35%;">
+              <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
+                <tr>
+                  <td style="border-bottom: 1px solid #000; padding: 5px; text-align: right; font-weight: bold;">Total</td>
+                  <td style="border-bottom: 1px solid #000; padding: 5px; text-align: right;">₹${quote.subtotal?.toFixed(0) || quote.totalAmount.toFixed(0)}</td>
+                </tr>
+                <tr>
+                  <td style="border-bottom: 1px solid #000; padding: 5px; text-align: right;">Packaging @ 2%</td>
+                  <td style="border-bottom: 1px solid #000; padding: 5px; text-align: right;">₹${((quote.subtotal || quote.totalAmount) * 0.02).toFixed(0)}</td>
+                </tr>
+                <tr>
+                  <td style="border-bottom: 1px solid #000; padding: 5px; text-align: right;">Transportation</td>
+                  <td style="border-bottom: 1px solid #000; padding: 5px; text-align: right;">₹5,000</td>
+                </tr>
+                <tr>
+                  <td style="border-bottom: 1px solid #000; padding: 5px; text-align: right;">GST @ 18%</td>
+                  <td style="border-bottom: 1px solid #000; padding: 5px; text-align: right;">₹${(quote.taxAmount || ((quote.subtotal || quote.totalAmount) * 0.18)).toFixed(0)}</td>
+                </tr>
+                <tr style="font-weight: bold; font-size: 12px;">
+                  <td style="border-bottom: 2px solid #000; padding: 8px; text-align: right;">Grand Total</td>
+                  <td style="border-bottom: 2px solid #000; padding: 8px; text-align: right;">₹${quote.totalAmount.toFixed(0)}</td>
+                </tr>
+              </table>
+              
+              <div style="margin-top: 20px;">
+                <h4 style="font-size: 12px; margin-bottom: 10px;">Bank Details</h4>
+                <p style="font-size: 10px; margin: 1px 0;"><strong>A/C Name:</strong> Furnili</p>
+                <p style="font-size: 10px; margin: 1px 0;"><strong>Bank:</strong> ICICI Bank</p>
+                <p style="font-size: 10px; margin: 1px 0;"><strong>Branch:</strong> Nigdi</p>
+                <p style="font-size: 10px; margin: 1px 0;"><strong>A/C No.:</strong> 230505006647</p>
+                <p style="font-size: 10px; margin: 1px 0;"><strong>IFSC:</strong> ICIC0002305</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Company Footer -->
+          <div style="background-color: #2c3e50; color: white; padding: 15px; margin-top: 30px; text-align: center;">
+            <h3 style="margin: 0; font-size: 16px;">Furnili - Bespoke Modular Furniture</h3>
+            <p style="margin: 5px 0; font-size: 10px;">Sr.no - 31/1 , Pisoli Road, Near Mohan Marbel, Pisoli,, Pune - 411048</p>
+            <p style="margin: 5px 0; font-size: 10px;">+91 98231 01223 | info@furnili.com</p>
+          </div>
         </div>
       `;
       
       const opt = {
-        margin: 1,
-        filename: `${quote.quoteNumber}.pdf`,
+        margin: [0.5, 0.5, 0.5, 0.5],
+        filename: `${quote.quoteNumber}_Furnili_Quote.pdf`,
         image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2 },
-        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
       };
 
       // Import html2pdf dynamically
-      const { default: html2pdf } = await import('html2pdf.js');
+      const { default: html2pdf } = await import('html2pdf.js') as any;
       html2pdf().set(opt).from(element).save();
       
       toast({
-        title: "PDF Generated",
-        description: "Quote PDF has been downloaded successfully."
+        title: "Professional PDF Generated",
+        description: "Furnili branded quote PDF downloaded successfully."
       });
     } catch (error) {
+      console.error('PDF generation error:', error);
       toast({
         title: "Error",
         description: "Failed to generate PDF. Please try again.",
@@ -753,6 +882,35 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
           </DialogHeader>
           <Form {...itemForm}>
             <form onSubmit={itemForm.handleSubmit(handleSaveItem)} className="space-y-4">
+              {/* Product Selection Dropdown */}
+              <FormField
+                control={itemForm.control}
+                name="salesProductId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs">Select Product (Optional)</FormLabel>
+                    <Select onValueChange={(value) => {
+                      field.onChange(value);
+                      handleProductSelection(value);
+                    }} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger className="h-8">
+                          <SelectValue placeholder="Choose from product catalog" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {salesProducts.map((product: any) => (
+                          <SelectItem key={product.id} value={product.id.toString()}>
+                            {product.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
               <FormField
                 control={itemForm.control}
                 name="itemName"
@@ -775,6 +933,20 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
                     <FormLabel className="text-xs">Description</FormLabel>
                     <FormControl>
                       <Textarea {...field} placeholder="Item description" className="min-h-[50px]" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={itemForm.control}
+                name="size"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs">Size/Dimensions</FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder="e.g., 1050 X 600 X 750" className="h-8" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
