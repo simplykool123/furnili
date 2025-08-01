@@ -32,6 +32,7 @@ import { Link } from "wouter";
 import FurniliLayout from "@/components/Layout/FurniliLayout";
 import FurniliCard from "@/components/UI/FurniliCard";
 import FurniliButton from "@/components/UI/FurniliButton";
+import ProjectQuotes from "@/components/Project/ProjectQuotes";
 
 // Schemas for various forms
 const taskSchema = z.object({
@@ -2527,7 +2528,9 @@ export default function ProjectDetail() {
             </div>
           </TabsContent>
 
-
+          <TabsContent value="quotes" className="p-6 bg-gray-50">
+            <ProjectQuotes projectId={projectId} />
+          </TabsContent>
 
           <TabsContent value="financials" className="p-6 bg-gray-50">
             <ProjectFinancials projectId={projectId} />
