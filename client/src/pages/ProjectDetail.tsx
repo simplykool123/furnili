@@ -2403,18 +2403,7 @@ export default function ProjectDetail() {
             </Card>
           </TabsContent>
 
-          {/* Additional Tab Placeholders */}
-          <TabsContent value="quotes" className="p-6 bg-gray-50">
-            <div className="text-center py-12">
-              <FileText className="h-16 w-16 mx-auto text-gray-300 mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Quotes Management</h3>
-              <p className="text-gray-500 mb-6">Create and manage project quotes and estimates</p>
-              <Button className="bg-blue-600 hover:bg-blue-700 text-white">
-                <Plus className="h-4 w-4 mr-2" />
-                Create Quote
-              </Button>
-            </div>
-          </TabsContent>
+
 
           <TabsContent value="orders" className="p-6 bg-gray-50">
             <div className="flex justify-between items-center mb-6">
