@@ -2251,9 +2251,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const validatedData = insertSalesProductSchema.parse(req.body);
       const product = await storage.createSalesProduct(validatedData);
-      res.json(product);
+      res.status(201).json(product);
     } catch (error) {
       console.error("Create sales product error:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Validation failed", errors: error.errors });
+      }
       res.status(500).json({ message: "Failed to create sales product" });
     }
   });
@@ -2261,11 +2264,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/sales-products/:id", authenticateToken, async (req: AuthRequest, res) => {
     try {
       const productId = parseInt(req.params.id);
-      const validatedData = insertSalesProductSchema.parse(req.body);
+      if (isNaN(productId)) {
+        return res.status(400).json({ message: "Invalid product ID" });
+      }
+      
+      const validatedData = insertSalesProductSchema.partial().parse(req.body);
       const product = await storage.updateSalesProduct(productId, validatedData);
+      
+      if (!product) {
+        return res.status(404).json({ message: "Sales product not found" });
+      }
+      
       res.json(product);
     } catch (error) {
       console.error("Update sales product error:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Validation failed", errors: error.errors });
+      }
       res.status(500).json({ message: "Failed to update sales product" });
     }
   });
@@ -2273,7 +2288,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete("/api/sales-products/:id", authenticateToken, async (req: AuthRequest, res) => {
     try {
       const productId = parseInt(req.params.id);
-      await storage.deleteSalesProduct(productId);
+      if (isNaN(productId)) {
+        return res.status(400).json({ message: "Invalid product ID" });
+      }
+      
+      const success = await storage.deleteSalesProduct(productId);
+      if (!success) {
+        return res.status(404).json({ message: "Sales product not found" });
+      }
+      
       res.json({ message: "Sales product deleted successfully" });
     } catch (error) {
       console.error("Delete sales product error:", error);

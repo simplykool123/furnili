@@ -55,40 +55,12 @@ export default function Projects() {
   const [clientFilter, setClientFilter] = useState("all");
   const [activeTab, setActiveTab] = useState("client");
 
-  const { data: projects = [], isLoading, error: projectsError } = useQuery({
+  const { data: projects = [], isLoading, error: projectsError } = useQuery<Project[]>({
     queryKey: ['/api/projects'],
-    queryFn: async () => {
-      const token = localStorage.getItem('authToken') || localStorage.getItem('token');
-      const response = await fetch('/api/projects', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-      if (!response.ok) {
-        throw new Error(`Failed to fetch projects: ${response.status}`);
-      }
-      const data = await response.json();
-      return Array.isArray(data) ? data : [];
-    }
   });
 
-  const { data: clients = [], error: clientsError } = useQuery({
+  const { data: clients = [], error: clientsError } = useQuery<Client[]>({
     queryKey: ['/api/clients'],
-    queryFn: async () => {
-      const token = localStorage.getItem('authToken') || localStorage.getItem('token');
-      const response = await fetch('/api/clients', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-      if (!response.ok) {
-        throw new Error(`Failed to fetch clients: ${response.status}`);
-      }
-      const data = await response.json();
-      return Array.isArray(data) ? data : [];
-    }
   });
 
   const projectForm = useForm({
@@ -123,10 +95,11 @@ export default function Projects() {
   });
 
   const createProjectMutation = useMutation({
-    mutationFn: async (projectData: any) => {
-      const response = await apiRequest('POST', '/api/projects', projectData);
-      return response.json();
-    },
+    mutationFn: (projectData: any) => 
+      apiRequest('/api/projects', {
+        method: 'POST',
+        body: JSON.stringify(projectData),
+      }),
     onSuccess: () => {
       toast({ title: "Project created successfully" });
       setIsCreateDialogOpen(false);
@@ -143,10 +116,11 @@ export default function Projects() {
   });
 
   const createClientMutation = useMutation({
-    mutationFn: async (clientData: any) => {
-      const response = await apiRequest('POST', '/api/clients', clientData);
-      return response.json();
-    },
+    mutationFn: (clientData: any) => 
+      apiRequest('/api/clients', {
+        method: 'POST',
+        body: JSON.stringify(clientData),
+      }),
     onSuccess: (newClient: Client) => {
       toast({ title: "Client created successfully" });
       setIsCreateClientDialogOpen(false);
@@ -166,10 +140,11 @@ export default function Projects() {
   });
 
   const updateProjectMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: number; data: any }) => {
-      const response = await apiRequest('PUT', `/api/projects/${id}`, data);
-      return response.json();
-    },
+    mutationFn: ({ id, data }: { id: number; data: any }) => 
+      apiRequest(`/api/projects/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify(data),
+      }),
     onSuccess: () => {
       toast({ title: "Project updated successfully" });
       queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
@@ -187,10 +162,10 @@ export default function Projects() {
   });
 
   const deleteProjectMutation = useMutation({
-    mutationFn: async (projectId: number) => {
-      const response = await apiRequest('DELETE', `/api/projects/${projectId}`, {});
-      return response.json();
-    },
+    mutationFn: (projectId: number) => 
+      apiRequest(`/api/projects/${projectId}`, {
+        method: 'DELETE',
+      }),
     onSuccess: () => {
       toast({ title: "Project deleted successfully" });
       queryClient.invalidateQueries({ queryKey: ['/api/projects'] });

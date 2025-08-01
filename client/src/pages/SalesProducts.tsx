@@ -221,20 +221,12 @@ function SalesProductForm({
       if (product) {
         await apiRequest(`/api/sales-products/${product.id}`, {
           method: "PUT",
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
-          },
           body: JSON.stringify(salesProductData),
         });
         toast({ title: "Success", description: "Sales product updated successfully" });
       } else {
         await apiRequest("/api/sales-products", {
           method: "POST",
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
-          },
           body: JSON.stringify(salesProductData),
         });
         toast({ title: "Success", description: "Sales product created successfully" });
