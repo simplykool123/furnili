@@ -365,12 +365,8 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold">Project Quotes</h2>
-          <p className="text-muted-foreground">Manage quotes for this project</p>
-        </div>
+      {/* Create Quote Button */}
+      <div className="flex justify-end">
         
         <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
           <DialogTrigger asChild>
