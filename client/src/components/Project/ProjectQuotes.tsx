@@ -855,7 +855,7 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
                   <div>
                     <CardTitle className="text-lg">{quote.title}</CardTitle>
                     <p className="text-sm text-muted-foreground">
-                      Quote #{quote.quoteNumber} • ₹{quote.totalAmount.toFixed(2)}
+                      Quote #{quote.quoteNumber} • ₹{(quote.totalAmount || 0).toFixed(2)}
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
@@ -1173,7 +1173,7 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
                 </div>
                 <div>
                   <Label className="text-xs font-medium">Total Amount</Label>
-                  <p className="text-sm font-bold">₹{selectedQuote.totalAmount.toFixed(2)}</p>
+                  <p className="text-sm font-bold">₹{(selectedQuote.totalAmount || 0).toFixed(2)}</p>
                 </div>
               </div>
               
@@ -1296,7 +1296,7 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
                                 <p>Discount: {item.discountPercentage}%</p>
                               </div>
                               <div>
-                                <p className="font-medium">₹{item.lineTotal.toFixed(2)}</p>
+                                <p className="font-medium">₹{(item.lineTotal || 0).toFixed(2)}</p>
                               </div>
                             </div>
                             <div className="flex gap-1">
@@ -1347,15 +1347,15 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
                         </div>
                         <div className="flex justify-between">
                           <span>Total Discount:</span>
-                          <span>₹{(totals.totalDiscount || 0).toFixed(2)}</span>
+                          <span>₹{(totals.totalDiscount || totals.totalDiscountAmount || 0).toFixed(2)}</span>
                         </div>
                         <div className="flex justify-between">
                           <span>Total Tax:</span>
-                          <span>₹{(totals.totalTax || 0).toFixed(2)}</span>
+                          <span>₹{(totals.totalTax || totals.totalTaxAmount || 0).toFixed(2)}</span>
                         </div>
                         <div className="flex justify-between font-bold text-base">
                           <span>Grand Total:</span>
-                          <span>₹{(totals.grandTotal || 0).toFixed(2)}</span>
+                          <span>₹{(totals.grandTotal || totals.total || 0).toFixed(2)}</span>
                         </div>
                       </div>
                     </div>
