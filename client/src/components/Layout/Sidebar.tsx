@@ -35,7 +35,7 @@ import {
 const navigation = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard, roles: ['admin', 'manager', 'staff'] },
   { 
-    name: 'Settings', 
+    name: 'Master Data', 
     icon: Settings, 
     roles: ['admin', 'manager', 'staff'],
     isCollapsible: true,
@@ -83,9 +83,9 @@ export default function Sidebar({ onItemClick, collapsed = false, onToggleCollap
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
   const user = authService.getUser();
 
-  // Auto-expand Settings/System Settings menus if any sub-item is active
+  // Auto-expand Master Data/System Settings menus if any sub-item is active
   useEffect(() => {
-    ['Settings', 'System Settings'].forEach(sectionName => {
+    ['Master Data', 'System Settings'].forEach(sectionName => {
       const settingsItem = navigation.find(item => item.name === sectionName);
       if (settingsItem?.subItems) {
         const hasActiveSettingsSubItem = settingsItem.subItems.some(subItem => 
