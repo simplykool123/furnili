@@ -733,35 +733,100 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
                 />
 
                 {/* Quote Items Section */}
-                <div className="space-y-3">
-                  <div className="flex flex-col sm:flex-row gap-2 sm:gap-0 justify-between items-start sm:items-center">
-                    <h3 className="text-sm font-medium">Quote Items</h3>
-                    <Button type="button" variant="outline" size="sm" onClick={() => setShowItemDialog(true)} className="h-7 text-xs">
-                      <Plus className="h-3 w-3 mr-1" />
-                      Add Item
-                    </Button>
-                  </div>
+                <div className="space-y-4">
+                  <h3 className="text-sm font-medium">Quote Items</h3>
 
-                  {/* Quick Add Products */}
-                  <div className="space-y-2">
-                    <h4 className="text-xs font-medium text-muted-foreground">Quick Add Products:</h4>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 max-h-32 overflow-y-auto">
-                      {Array.isArray(salesProducts) && salesProducts.map((product: any) => (
-                        <Button
-                          key={product.id}
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => addFromSalesProduct(product)}
-                          className="justify-start text-left h-auto p-2"
+                  {/* Simple Inline Product Addition */}
+                  <div className="border rounded-lg p-4 bg-gray-50">
+                    <div className="grid grid-cols-1 sm:grid-cols-5 gap-3 items-end">
+                      {/* Product Selection */}
+                      <div className="sm:col-span-2">
+                        <Label className="text-xs font-medium">Product Name</Label>
+                        <Select 
+                          onValueChange={(value) => {
+                            const selectedProduct = salesProducts.find((p: any) => p.id.toString() === value);
+                            if (selectedProduct) {
+                              itemForm.setValue('salesProductId', selectedProduct.id);
+                              itemForm.setValue('itemName', selectedProduct.name);
+                              itemForm.setValue('description', selectedProduct.description || selectedProduct.specifications || `${selectedProduct.name} - Premium quality`);
+                              itemForm.setValue('unitPrice', selectedProduct.unitPrice || 0);
+                              itemForm.setValue('uom', selectedProduct.unit || 'pcs');
+                              itemForm.setValue('quantity', 1);
+                            }
+                          }}
                         >
-                          <div>
-                            <div className="font-medium text-xs truncate">{product.name}</div>
-                            <div className="text-xs text-gray-500">₹{product.unitPrice}</div>
-                          </div>
+                          <SelectTrigger className="h-8">
+                            <SelectValue placeholder="Select product" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {salesProducts.map((product: any) => (
+                              <SelectItem key={product.id} value={product.id.toString()}>
+                                {product.name} - ₹{product.unitPrice}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* Quantity */}
+                      <div>
+                        <Label className="text-xs font-medium">Qty</Label>
+                        <Input 
+                          type="number" 
+                          placeholder="1" 
+                          className="h-8"
+                          value={itemForm.watch('quantity') || ''}
+                          onChange={(e) => itemForm.setValue('quantity', parseFloat(e.target.value) || 1)}
+                        />
+                      </div>
+
+                      {/* Rate */}
+                      <div>
+                        <Label className="text-xs font-medium">Rate</Label>
+                        <Input 
+                          type="number" 
+                          placeholder="0" 
+                          className="h-8"
+                          value={itemForm.watch('unitPrice') || ''}
+                          onChange={(e) => itemForm.setValue('unitPrice', parseFloat(e.target.value) || 0)}
+                        />
+                      </div>
+
+                      {/* Add Button */}
+                      <div>
+                        <Button 
+                          type="button" 
+                          onClick={() => {
+                            const formData = itemForm.getValues();
+                            if (formData.itemName && formData.quantity && formData.unitPrice) {
+                              handleSaveItem(formData);
+                              itemForm.reset({
+                                itemName: "",
+                                description: "",
+                                quantity: 1,
+                                uom: "pcs",
+                                unitPrice: 0,
+                                discountPercentage: 0,
+                                taxPercentage: 18,
+                                size: "",
+                                salesProductId: 0,
+                              });
+                            }
+                          }}
+                          className="h-8 bg-[hsl(28,100%,25%)] hover:bg-[hsl(28,100%,20%)]"
+                        >
+                          Add
                         </Button>
-                      ))}
+                      </div>
                     </div>
+
+                    {/* Auto-populated Description */}
+                    {itemForm.watch('description') && (
+                      <div className="mt-3 pt-3 border-t">
+                        <Label className="text-xs font-medium text-green-700">Auto-filled Description:</Label>
+                        <p className="text-xs text-gray-600 mt-1">{itemForm.watch('description')}</p>
+                      </div>
+                    )}
                   </div>
 
                   {/* Items List */}
@@ -1023,224 +1088,7 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
         )}
       </div>
 
-      {/* Add Item Dialog */}
-      <Dialog open={showItemDialog} onOpenChange={setShowItemDialog}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-semibold">Add Product to Quote</DialogTitle>
-            <DialogDescription>
-              Select a product and specify quantity details
-            </DialogDescription>
-          </DialogHeader>
-          <Form {...itemForm}>
-            <form onSubmit={itemForm.handleSubmit(handleSaveItem)} className="space-y-6">
-              {/* Product Selection Dropdown */}
-              <FormField
-                control={itemForm.control}
-                name="salesProductId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-sm font-medium">Product Name *</FormLabel>
-                    <Select onValueChange={(value) => {
-                      field.onChange(value);
-                      handleProductSelection(value);
-                    }} value={field.value?.toString()}>
-                      <FormControl>
-                        <SelectTrigger className="h-10">
-                          <SelectValue placeholder="Select a product from catalog" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {salesProducts.map((product: any) => (
-                          <SelectItem key={product.id} value={product.id.toString()}>
-                            <div className="flex justify-between items-center w-full">
-                              <span className="font-medium">{product.name}</span>
-                              <span className="text-muted-foreground ml-2">₹{product.unitPrice}</span>
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {/* Hidden Item Name Field - Auto-populated from Product Selection */}
-              <FormField
-                control={itemForm.control}
-                name="itemName"
-                render={({ field }) => (
-                  <Input {...field} type="hidden" />
-                )}
-              />
-
-              {/* Auto-populated Product Description */}
-              <FormField
-                control={itemForm.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-sm font-medium flex items-center gap-2">
-                      Product Description
-                      {field.value && (
-                        <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">Auto-filled</span>
-                      )}
-                    </FormLabel>
-                    <FormControl>
-                      <Textarea 
-                        {...field} 
-                        placeholder="Product description will auto-populate when product is selected above" 
-                        className="min-h-[100px] bg-gray-50 border-2 border-dashed" 
-                        readOnly 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-
-
-              {/* Quantity, Rate, and Total Section */}
-              <div className="grid grid-cols-4 gap-4 items-end">
-                <FormField
-                  control={itemForm.control}
-                  name="quantity"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-sm font-medium">Qty *</FormLabel>
-                      <FormControl>
-                        <Input 
-                          {...field} 
-                          type="number" 
-                          placeholder="1" 
-                          className="h-10 text-center"
-                          min="0.01"
-                          step="0.01"
-                          onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={itemForm.control}
-                  name="unitPrice"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-sm font-medium">Rate *</FormLabel>
-                      <FormControl>
-                        <Input 
-                          {...field} 
-                          type="number" 
-                          placeholder="0.00" 
-                          className="h-10"
-                          min="0"
-                          step="0.01"
-                          onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={itemForm.control}
-                  name="uom"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-sm font-medium">UOM *</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger className="h-10">
-                            <SelectValue placeholder="Unit" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="pcs">Pieces</SelectItem>
-                          <SelectItem value="sqft">Square Feet</SelectItem>
-                          <SelectItem value="nos">Numbers</SelectItem>
-                          <SelectItem value="set">Set</SelectItem>
-                          <SelectItem value="lm">Linear Meter</SelectItem>
-                          <SelectItem value="kg">Kilogram</SelectItem>
-                          <SelectItem value="lot">Lot</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <div>
-                  <Label className="text-sm font-medium">Total Amount</Label>
-                  <div className="h-10 px-3 py-2 border-2 border-[hsl(28,100%,25%)] bg-orange-50 rounded-md flex items-center">
-                    <span className="font-bold text-[hsl(28,100%,25%)] text-lg">
-                      ₹{((itemForm.watch('quantity') || 0) * (itemForm.watch('unitPrice') || 0)).toFixed(2)}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-2">
-                <FormField
-                  control={itemForm.control}
-                  name="discountPercentage"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-xs">Discount %</FormLabel>
-                      <FormControl>
-                        <Input 
-                          {...field} 
-                          type="number" 
-                          placeholder="0" 
-                          className="h-8"
-                          min="0"
-                          max="100"
-                          onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={itemForm.control}
-                  name="taxPercentage"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-xs">Tax %</FormLabel>
-                      <FormControl>
-                        <Input 
-                          {...field} 
-                          type="number" 
-                          placeholder="18" 
-                          className="h-8"
-                          onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <div className="flex justify-end gap-3 pt-4 border-t">
-                <Button type="button" variant="outline" onClick={() => setShowItemDialog(false)} className="px-6">
-                  Cancel
-                </Button>
-                <Button type="submit" className="px-6 bg-[hsl(28,100%,25%)] hover:bg-[hsl(28,100%,20%)]">
-                  Add to Quote
-                </Button>
-              </div>
-            </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
+      {/* Quote Management Dialogs */}
 
       {/* View Quote Dialog */}
       <Dialog open={showViewDialog} onOpenChange={setShowViewDialog}>
@@ -1363,106 +1211,12 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
                     )}
                   />
 
-                  {/* Items Section */}
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-center">
-                      <h3 className="text-lg font-semibold">Quote Items</h3>
-                      <Button type="button" onClick={() => setShowItemDialog(true)} size="sm">
-                        <Plus className="h-4 w-4 mr-2" />
-                        Add Item
-                      </Button>
-                    </div>
-
-                    {/* Items List */}
-                    <div className="space-y-2">
-                      {quoteItems.map((item, index) => (
-                        <Card key={index} className="p-3">
-                          <div className="flex justify-between items-start">
-                            <div className="flex-1 grid grid-cols-4 gap-2 text-sm">
-                              <div>
-                                <p className="font-medium">{item.itemName}</p>
-                                <p className="text-muted-foreground text-xs">{item.description}</p>
-                              </div>
-                              <div>
-                                <p>Size: {item.size || 'N/A'}</p>
-                                <p>Qty: {item.quantity} {item.uom}</p>
-                              </div>
-                              <div>
-                                <p>Rate: ₹{item.unitPrice}</p>
-                                <p>Discount: {item.discountPercentage}%</p>
-                              </div>
-                              <div>
-                                <p className="font-medium">₹{(item.lineTotal || 0).toFixed(2)}</p>
-                              </div>
-                            </div>
-                            <div className="flex gap-1">
-                              <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                onClick={() => {
-                                  const item = quoteItems[index];
-                                  setEditingItem(item);
-                                  // setEditingItemIndex(index); // Not needed, we use editingItem
-                                  itemForm.reset({
-                                    itemName: item.itemName,
-                                    description: item.description,
-                                    quantity: item.quantity,
-                                    uom: item.uom,
-                                    unitPrice: item.unitPrice,
-                                    discountPercentage: item.discountPercentage,
-                                    taxPercentage: item.taxPercentage,
-                                    size: item.size || "",
-                                    salesProductId: item.salesProductId,
-                                  });
-                                  setShowItemDialog(true);
-                                }}
-                              >
-                                <Edit className="h-3 w-3" />
-                              </Button>
-                              <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                onClick={() => removeItem(index)}
-                              >
-                                <Trash2 className="h-3 w-3" />
-                              </Button>
-                            </div>
-                          </div>
-                        </Card>
-                      ))}
-                    </div>
-
-                    {/* Totals */}
-                    <div className="bg-muted p-4 rounded-lg">
-                      <div className="space-y-2 text-sm">
-                        <div className="flex justify-between">
-                          <span>Subtotal:</span>
-                          <span>₹{(totals.subtotal || 0).toFixed(2)}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>Total Discount:</span>
-                          <span>₹{(totals.totalDiscount || totals.totalDiscountAmount || 0).toFixed(2)}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>Total Tax:</span>
-                          <span>₹{(totals.totalTax || totals.totalTaxAmount || 0).toFixed(2)}</span>
-                        </div>
-                        <div className="flex justify-between font-bold text-base">
-                          <span>Grand Total:</span>
-                          <span>₹{(totals.grandTotal || totals.total || 0).toFixed(2)}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
                   <div className="flex justify-end gap-2 pt-4">
-                    <Button type="button" variant="outline" onClick={() => setShowEditDialog(false)}>
+                    <Button type="button" variant="outline" onClick={() => setShowCreateDialog(false)}>
                       Cancel
                     </Button>
                     <Button type="submit">
-                      Update Quote
+                      Create Quote
                     </Button>
                   </div>
                 </form>
@@ -1471,6 +1225,7 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
           )}
         </DialogContent>
       </Dialog>
+
     </div>
   );
 }
