@@ -34,6 +34,15 @@ import {
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard, roles: ['admin', 'manager', 'staff'] },
+  { 
+    name: 'Settings', 
+    icon: Settings, 
+    roles: ['admin', 'manager', 'staff'],
+    isCollapsible: true,
+    subItems: [
+      // User will specify what goes here
+    ]
+  },
   { name: 'Products', href: '/products', icon: Package, roles: ['admin', 'manager', 'staff'] },
   { name: 'Material Requests', href: '/requests', icon: PackageSearch, roles: ['admin', 'manager', 'staff'] },
   { name: 'Staff Attendance', href: '/attendance', icon: UserRoundPen, roles: ['admin', 'manager', 'staff'] },
@@ -46,9 +55,9 @@ const navigation = [
 
   { name: 'Reports', href: '/reports', icon: BarChart3, roles: ['admin', 'manager'] }, // Manager can access for team supervision
   { 
-    name: 'Settings', 
+    name: 'System Settings', 
     icon: Database, 
-    roles: ['admin', 'manager', 'staff'], // Show Settings section with role-based items
+    roles: ['admin', 'manager', 'staff'], // Show System Settings section with role-based items
     isCollapsible: true,
     subItems: [
       { name: 'Clients', href: '/clients', icon: Users, roles: ['admin', 'manager'] }, // Manager can manage clients for projects
@@ -74,17 +83,19 @@ export default function Sidebar({ onItemClick, collapsed = false, onToggleCollap
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
   const user = authService.getUser();
 
-  // Auto-expand Settings menu if any sub-item is active
+  // Auto-expand Settings/System Settings menus if any sub-item is active
   useEffect(() => {
-    const settingsItem = navigation.find(item => item.name === 'Settings');
-    if (settingsItem?.subItems) {
-      const hasActiveSettingsSubItem = settingsItem.subItems.some(subItem => 
-        subItem.href && (location === subItem.href || (subItem.href !== '/' && location.startsWith(subItem.href)))
-      );
-      if (hasActiveSettingsSubItem && !expandedItems.includes('Settings')) {
-        setExpandedItems(prev => [...prev, 'Settings']);
+    ['Settings', 'System Settings'].forEach(sectionName => {
+      const settingsItem = navigation.find(item => item.name === sectionName);
+      if (settingsItem?.subItems) {
+        const hasActiveSettingsSubItem = settingsItem.subItems.some(subItem => 
+          subItem.href && (location === subItem.href || (subItem.href !== '/' && location.startsWith(subItem.href)))
+        );
+        if (hasActiveSettingsSubItem && !expandedItems.includes(sectionName)) {
+          setExpandedItems(prev => [...prev, sectionName]);
+        }
       }
-    }
+    });
   }, [location, expandedItems]);
 
   const handleLogout = () => {
