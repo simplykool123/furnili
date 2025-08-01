@@ -586,7 +586,10 @@ export const insertPriceComparisonSchema = createInsertSchema(priceComparisons).
   updatedAt: true,
 });
 
-export const insertSalesProductSchema = createInsertSchema(salesProducts).omit({
+export const insertSalesProductSchema = createInsertSchema(salesProducts, {
+  unitPrice: z.number().min(0, "Unit price must be positive"),
+  taxPercentage: z.number().min(0).max(100, "Tax percentage must be between 0-100").optional(),
+}).omit({
   id: true,
   createdAt: true,
   updatedAt: true,

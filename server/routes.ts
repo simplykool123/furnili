@@ -971,6 +971,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     await exportLowStockCSV(res);
   });
 
+  // Generic file upload endpoint for sales products and other uses
+  app.post("/api/upload", authenticateToken, productImageUpload.single('image'), async (req: AuthRequest, res) => {
+    try {
+      const { type } = req.body;
+      const file = req.file;
+      
+      console.log('Upload request - type:', type);
+      console.log('Upload request - file:', file ? {
+        filename: file.filename,
+        originalname: file.originalname,
+        mimetype: file.mimetype,
+        size: file.size
+      } : 'none');
+      
+      if (!file) {
+        return res.status(400).json({ message: "No file uploaded" });
+      }
+
+      // For sales products and other general uploads
+      const filePath = `/uploads/products/${file.filename}`;
+      
+      res.json({ 
+        success: true,
+        filePath,
+        filename: file.filename,
+        originalName: file.originalname,
+        size: file.size,
+        mimeType: file.mimetype
+      });
+    } catch (error) {
+      console.error("Upload error:", error);
+      res.status(500).json({ message: "Failed to upload file", error: String(error) });
+    }
+  });
+
   // Serve static files from uploads directory
   app.use('/uploads', express.static('uploads'));
 
