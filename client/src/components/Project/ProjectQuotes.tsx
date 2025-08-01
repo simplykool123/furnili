@@ -1025,15 +1025,15 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
 
       {/* Add Item Dialog */}
       <Dialog open={showItemDialog} onOpenChange={setShowItemDialog}>
-        <DialogContent>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{editingItem ? 'Edit Item' : 'Add Item'}</DialogTitle>
+            <DialogTitle className="text-xl font-semibold">Add Product to Quote</DialogTitle>
             <DialogDescription>
-              {editingItem ? 'Update the quote item details' : 'Add a new item to the quote'}
+              Select a product and specify quantity details
             </DialogDescription>
           </DialogHeader>
           <Form {...itemForm}>
-            <form onSubmit={itemForm.handleSubmit(handleSaveItem)} className="space-y-4">
+            <form onSubmit={itemForm.handleSubmit(handleSaveItem)} className="space-y-6">
               {/* Product Selection Dropdown */}
               <FormField
                 control={itemForm.control}
@@ -1081,9 +1081,19 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
                 name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-sm font-medium">Product Description</FormLabel>
+                    <FormLabel className="text-sm font-medium flex items-center gap-2">
+                      Product Description
+                      {field.value && (
+                        <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">Auto-filled</span>
+                      )}
+                    </FormLabel>
                     <FormControl>
-                      <Textarea {...field} placeholder="Product description will auto-populate when product is selected" className="min-h-[80px]" readOnly />
+                      <Textarea 
+                        {...field} 
+                        placeholder="Product description will auto-populate when product is selected above" 
+                        className="min-h-[100px] bg-gray-50 border-2 border-dashed" 
+                        readOnly 
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -1167,8 +1177,8 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
 
                 <div>
                   <Label className="text-sm font-medium">Total Amount</Label>
-                  <div className="h-10 px-3 py-2 border border-input bg-muted rounded-md flex items-center">
-                    <span className="font-medium">
+                  <div className="h-10 px-3 py-2 border-2 border-[hsl(28,100%,25%)] bg-orange-50 rounded-md flex items-center">
+                    <span className="font-bold text-[hsl(28,100%,25%)] text-lg">
                       ₹{((itemForm.watch('quantity') || 0) * (itemForm.watch('unitPrice') || 0)).toFixed(2)}
                     </span>
                   </div>
@@ -1219,12 +1229,12 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
                 />
               </div>
 
-              <div className="flex justify-end gap-2 pt-2">
-                <Button type="button" variant="outline" onClick={() => setShowItemDialog(false)}>
+              <div className="flex justify-end gap-3 pt-4 border-t">
+                <Button type="button" variant="outline" onClick={() => setShowItemDialog(false)} className="px-6">
                   Cancel
                 </Button>
-                <Button type="submit">
-                  {editingItem ? "Update Item" : "Add Item"}
+                <Button type="submit" className="px-6 bg-[hsl(28,100%,25%)] hover:bg-[hsl(28,100%,20%)]">
+                  Add to Quote
                 </Button>
               </div>
             </form>
