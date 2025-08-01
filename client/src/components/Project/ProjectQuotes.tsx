@@ -347,14 +347,16 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
   // Export PDF function with professional Furnili format
   const handleExportPDF = async (quote: Quote) => {
     try {
-      // Fetch quote items (you may need to implement this API endpoint)
-      const quoteData = await apiRequest(`/api/quotes/${quote.id}/details`).catch(() => ({
-        ...quote,
-        items: quoteItems // fallback to current items
-      }));
-
-      const client = projectData?.client || { name: 'Client Name', address: 'Client Address' };
-      const items = quoteData.items || [];
+      // Fetch complete quote details including client and items
+      const quoteDetailsResponse = await apiRequest(`/api/quotes/${quote.id}/details`);
+      
+      // Extract client data from the quote details response
+      const client = quoteDetailsResponse.client || { name: 'Client Name', address: 'Client Address' };
+      const items = quoteDetailsResponse.items || [];
+      
+      console.log('Quote Details:', quoteDetailsResponse);
+      console.log('Client Data:', client);
+      console.log('Items Data:', items);
       
       // Create professional PDF content matching Furnili format
       const element = document.createElement('div');
@@ -377,8 +379,10 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
           <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
             <div style="width: 60%;">
               <p style="margin: 0;"><strong>To,</strong></p>
-              <p style="margin: 0; font-weight: bold;">${client.name}</p>
-              <p style="margin: 0;">${client.address || 'Address'}</p>
+              <p style="margin: 0; font-weight: bold;">${client.name || 'Client Name'}</p>
+              <p style="margin: 0;">${client.email || ''}</p>
+              <p style="margin: 0;">${client.mobile || ''}</p>
+              <p style="margin: 0;">${client.city || 'Address'}</p>
             </div>
             <div style="width: 35%; text-align: right;">
               <p style="margin: 0;"><strong>Date :-</strong> ${new Date(quote.createdAt).toLocaleDateString('en-GB')}</p>
@@ -403,17 +407,20 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
               </tr>
             </thead>
             <tbody>
-              ${items.map((item: any, index: number) => `
+              ${items.map((itemData: any, index: number) => {
+                const item = itemData.item || itemData; // Handle both nested and flat structures
+                const product = itemData.salesProduct || {};
+                return `
                 <tr>
                   <td style="border: 1px solid #000; padding: 8px; text-align: center;">${index + 1}</td>
-                  <td style="border: 1px solid #000; padding: 8px;">${item.itemName}</td>
-                  <td style="border: 1px solid #000; padding: 8px;">${item.description || ''}</td>
+                  <td style="border: 1px solid #000; padding: 8px;">${item.itemName || product.name || 'Product'}</td>
+                  <td style="border: 1px solid #000; padding: 8px;">${item.description || product.description || ''}</td>
                   <td style="border: 1px solid #000; padding: 8px; text-align: center;">${item.size || '-'}</td>
-                  <td style="border: 1px solid #000; padding: 8px; text-align: center;">${item.quantity}</td>
-                  <td style="border: 1px solid #000; padding: 8px; text-align: right;">₹${item.unitPrice.toFixed(0)}</td>
-                  <td style="border: 1px solid #000; padding: 8px; text-align: right;">₹${(item.quantity * item.unitPrice).toFixed(0)}</td>
+                  <td style="border: 1px solid #000; padding: 8px; text-align: center;">${item.quantity || 0}</td>
+                  <td style="border: 1px solid #000; padding: 8px; text-align: right;">₹${(item.unitPrice || 0).toFixed(0)}</td>
+                  <td style="border: 1px solid #000; padding: 8px; text-align: right;">₹${((item.quantity || 0) * (item.unitPrice || 0)).toFixed(0)}</td>
                 </tr>
-              `).join('')}
+              `;}).join('')}
             </tbody>
           </table>
 
