@@ -3007,22 +3007,22 @@ export default function ProjectDetail() {
 
       {/* Create Moodboard Dialog */}
       <Dialog open={isMoodboardDialogOpen} onOpenChange={setIsMoodboardDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-[90vw] sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Create New Moodboard</DialogTitle>
-            <DialogDescription>Create a moodboard for your project with AI inspiration or real photos</DialogDescription>
+            <DialogTitle className="text-base">Create New Moodboard</DialogTitle>
+            <DialogDescription className="text-xs">Create a moodboard for your project with AI inspiration or real photos</DialogDescription>
           </DialogHeader>
           <Form {...moodboardForm}>
-            <form onSubmit={moodboardForm.handleSubmit(handleMoodboardCreate)} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <form onSubmit={moodboardForm.handleSubmit(handleMoodboardCreate)} className="space-y-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <FormField
                   control={moodboardForm.control}
                   name="name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Moodboard Name</FormLabel>
+                      <FormLabel className="text-xs font-medium">Moodboard Name</FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g., Living Room Concept" {...field} />
+                        <Input placeholder="e.g., Living Room Concept" className="h-8 text-sm" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -3033,10 +3033,10 @@ export default function ProjectDetail() {
                   name="roomType"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Room Type</FormLabel>
+                      <FormLabel className="text-xs font-medium">Room Type</FormLabel>
                       <Select value={field.value} onValueChange={field.onChange}>
                         <FormControl>
-                          <SelectTrigger>
+                          <SelectTrigger className="h-8 text-sm">
                             <SelectValue placeholder="Select room type" />
                           </SelectTrigger>
                         </FormControl>
@@ -3062,9 +3062,9 @@ export default function ProjectDetail() {
                 name="keywords"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Keywords & Tags</FormLabel>
+                    <FormLabel className="text-xs font-medium">Keywords & Tags</FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g., modern, minimalist, warm colors, wood texture" {...field} />
+                      <Input placeholder="e.g., modern, minimalist, warm colors, wood texture" className="h-8 text-sm" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -3072,26 +3072,27 @@ export default function ProjectDetail() {
               />
 
               {/* Preview Section */}
-              <div className="space-y-4">
+              <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <label className="text-sm font-medium text-gray-900">Preview</label>
-                  <div className="flex space-x-2">
+                  <label className="text-xs font-medium text-gray-900">Preview</label>
+                  <div className="flex space-x-1">
                     <Button 
                       type="button" 
                       variant="outline" 
                       size="sm"
+                      className="h-7 px-2 text-xs"
                       onClick={generatePreview}
                       disabled={isGeneratingPreview}
                     >
                       {isGeneratingPreview ? (
                         <>
-                          <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-600 mr-2"></div>
-                          Generating...
+                          <div className="animate-spin rounded-full h-2 w-2 border-b-2 border-blue-600 mr-1"></div>
+                          <span className="text-xs">Generating...</span>
                         </>
                       ) : (
                         <>
-                          <Eye className="h-3 w-3 mr-2" />
-                          Generate Preview
+                          <Eye className="h-2 w-2 mr-1" />
+                          <span className="text-xs">Generate Preview</span>
                         </>
                       )}
                     </Button>
@@ -3100,38 +3101,39 @@ export default function ProjectDetail() {
                         type="button" 
                         variant="outline" 
                         size="sm"
+                        className="h-7 px-2 text-xs"
                         onClick={regeneratePreview}
                         disabled={isGeneratingPreview}
                       >
-                        <RefreshCw className="h-3 w-3 mr-2" />
-                        Regenerate
+                        <RefreshCw className="h-2 w-2 mr-1" />
+                        <span className="text-xs">Regenerate</span>
                       </Button>
                     )}
                   </div>
                 </div>
                 
                 {/* Preview Grid */}
-                <div className="border-2 border-dashed border-gray-200 rounded-lg p-4 min-h-[200px] flex items-center justify-center">
+                <div className="border-2 border-dashed border-gray-200 rounded-lg p-3 min-h-[120px] flex items-center justify-center">
                   {isGeneratingPreview ? (
                     <div className="text-center">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-3"></div>
-                      <p className="text-sm text-gray-500">Generating preview images...</p>
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto mb-2"></div>
+                      <p className="text-xs text-gray-500">Generating preview images...</p>
                     </div>
                   ) : previewGenerated && previewImages.length > 0 ? (
-                    <div className="grid grid-cols-2 gap-2 w-full max-w-md">
+                    <div className="grid grid-cols-2 gap-2 w-full max-w-xs">
                       {previewImages.map((imageUrl, index) => (
                         <img 
                           key={index}
                           src={imageUrl} 
                           alt={`Preview ${index + 1}`}
-                          className="w-full h-24 object-cover rounded border"
+                          className="w-full h-16 object-cover rounded border"
                         />
                       ))}
                     </div>
                   ) : (
                     <div className="text-center">
-                      <Eye className="h-8 w-8 mx-auto text-gray-300 mb-2" />
-                      <p className="text-sm text-gray-500">Click "Generate Preview" to see sample images</p>
+                      <Eye className="h-6 w-6 mx-auto text-gray-300 mb-1" />
+                      <p className="text-xs text-gray-500">Click "Generate Preview" to see sample images</p>
                       <p className="text-xs text-gray-400 mt-1">Fill in all fields first</p>
                     </div>
                   )}
@@ -3143,10 +3145,10 @@ export default function ProjectDetail() {
                 name="inspirationType"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Inspiration Source</FormLabel>
-                    <div className="grid grid-cols-2 gap-4">
+                    <FormLabel className="text-xs font-medium">Inspiration Source</FormLabel>
+                    <div className="grid grid-cols-2 gap-3">
                       <div 
-                        className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
+                        className={`border-2 rounded-lg p-3 cursor-pointer transition-all ${
                           field.value === 'ai' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'
                         }`}
                         onClick={(e) => {
@@ -3157,13 +3159,13 @@ export default function ProjectDetail() {
                         }}
                       >
                         <div className="text-center">
-                          <Star className="h-8 w-8 mx-auto mb-2 text-blue-600" />
-                          <h3 className="font-medium">AI Inspiration</h3>
-                          <p className="text-sm text-gray-600 mt-1">Generate unique design concepts with AI</p>
+                          <Star className="h-6 w-6 mx-auto mb-1 text-blue-600" />
+                          <h3 className="text-sm font-medium">AI Inspiration</h3>
+                          <p className="text-xs text-gray-600 mt-1">Generate unique design concepts with AI</p>
                         </div>
                       </div>
                       <div 
-                        className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
+                        className={`border-2 rounded-lg p-3 cursor-pointer transition-all ${
                           field.value === 'real' ? 'border-green-500 bg-green-50' : 'border-gray-200 hover:border-gray-300'
                         }`}
                         onClick={(e) => {
@@ -3174,9 +3176,9 @@ export default function ProjectDetail() {
                         }}
                       >
                         <div className="text-center">
-                          <Camera className="h-8 w-8 mx-auto mb-2 text-green-600" />
-                          <h3 className="font-medium">Real Photos</h3>
-                          <p className="text-sm text-gray-600 mt-1">Curated photos from design platforms</p>
+                          <Camera className="h-6 w-6 mx-auto mb-1 text-green-600" />
+                          <h3 className="text-sm font-medium">Real Photos</h3>
+                          <p className="text-xs text-gray-600 mt-1">Curated photos from design platforms</p>
                         </div>
                       </div>
                     </div>
@@ -3185,11 +3187,11 @@ export default function ProjectDetail() {
                 )}
               />
 
-              <div className="flex justify-end space-x-2 pt-4">
-                <Button type="button" variant="outline" onClick={() => setIsMoodboardDialogOpen(false)}>
+              <div className="flex justify-end space-x-2 pt-2">
+                <Button type="button" variant="outline" className="h-8 px-3 text-xs" onClick={() => setIsMoodboardDialogOpen(false)}>
                   Cancel
                 </Button>
-                <Button type="submit" disabled={createMoodboardMutation.isPending}>
+                <Button type="submit" className="h-8 px-3 text-xs" disabled={createMoodboardMutation.isPending}>
                   {createMoodboardMutation.isPending ? "Creating..." : "Create Moodboard"}
                 </Button>
               </div>
