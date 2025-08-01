@@ -405,9 +405,7 @@ export default function ProjectDetail() {
   const [selectedFileType, setSelectedFileType] = useState("all");
   const [activeFileTab, setActiveFileTab] = useState("recce");
   const [selectedFiles, setSelectedFiles] = useState<FileList | null>(null);
-  const [previewImages, setPreviewImages] = useState<string[]>([]);
-  const [isGeneratingPreview, setIsGeneratingPreview] = useState(false);
-  const [previewGenerated, setPreviewGenerated] = useState(false);
+  // AI preview functionality removed for simplicity
   const [imageLoadStates, setImageLoadStates] = useState<{[key: string]: 'loading' | 'loaded' | 'error'}>({});
   const [showImagePreview, setShowImagePreview] = useState(false);
   const [previewImage, setPreviewImage] = useState<{ src: string; name: string } | null>(null);
@@ -503,114 +501,7 @@ export default function ProjectDetail() {
     }
   };
 
-  // Generate real AI preview images using OpenAI DALL-E
-  const generatePreview = async () => {
-    const formData = moodboardForm.getValues();
-    if (!formData.keywords || !formData.roomType || !formData.inspirationType) {
-      toast({
-        title: "Missing Information",
-        description: "Please fill in all required fields to generate preview",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsGeneratingPreview(true);
-    
-    try {
-      const token = localStorage.getItem('authToken') || localStorage.getItem('token');
-      const response = await fetch('/api/generate-moodboard-images', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          name: formData.name,
-          keywords: formData.keywords,
-          roomType: formData.roomType,
-          inspirationType: formData.inspirationType,
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        
-        // Handle billing limit specifically
-        if (response.status === 402 && errorData.code === 'billing_limit') {
-          throw new Error('OpenAI billing limit reached. Please check your OpenAI account billing settings.');
-        }
-        
-        throw new Error(errorData.message || 'Failed to generate AI images');
-      }
-
-      const result = await response.json();
-      
-      // Handle setup required response
-      if (result.setupRequired) {
-        toast({
-          title: "Stable Diffusion WebUI Setup Required",
-          description: "Set up local Stable Diffusion WebUI for unlimited free AI generation. Check console for instructions.",
-          variant: "default",
-        });
-        
-        console.log('=== STABLE DIFFUSION WEBUI SETUP INSTRUCTIONS ===');
-        result.instructions?.forEach((instruction: string) => {
-          console.log(instruction);
-        });
-        console.log('=== See STABLE_DIFFUSION_SETUP.md for detailed guide ===');
-        
-        setIsGeneratingPreview(false);
-        return;
-      }
-      
-      if (!result.images || result.images.length === 0) {
-        throw new Error('No AI images were generated');
-      }
-
-      setPreviewImages(result.images);
-      setPreviewGenerated(true);
-      
-      toast({
-        title: "AI Images Generated Successfully!",
-        description: `Generated ${result.images.length} unique images using ${result.provider || 'AI service'}`,
-      });
-      
-    } catch (error) {
-      console.error('AI preview generation error:', error);
-      
-      // Enhanced error handling with setup instructions
-      let title = "AI Generation Failed";
-      let description = "Failed to generate AI images. Please try again.";
-      
-      if (error instanceof Error) {
-        if (error.message.includes('billing limit')) {
-          title = "OpenAI Billing Limit Reached";
-          description = "Please check your OpenAI account billing settings or set up Stable Diffusion WebUI for unlimited free generation.";
-        } else if (error.message.includes('Setup Required')) {
-          title = "AI Setup Required";
-          description = "Set up Stable Diffusion WebUI locally for unlimited free AI image generation. Check console for details.";
-        } else {
-          description = error.message;
-        }
-      }
-      
-      toast({
-        title,
-        description,
-        variant: "destructive",
-      });
-    } finally {
-      setIsGeneratingPreview(false);
-    }
-  };
-
-  // Regenerate preview with different images
-  const regeneratePreview = () => {
-    setPreviewGenerated(false);
-    setPreviewImages([]);
-    generatePreview();
-  };
+  // AI functionality removed - moodboards now use manual image uploads only
 
   const uploadForm = useForm({
     resolver: zodResolver(uploadSchema),
@@ -915,21 +806,11 @@ export default function ProjectDetail() {
     console.log('Creating moodboard with data:', data);
     console.log('Form errors:', moodboardForm.formState.errors);
     
-    // Use preview images if available, otherwise require preview generation first
-    let finalImages = previewImages;
-    if (!previewGenerated || previewImages.length === 0) {
-      toast({
-        title: "Generate Preview First",
-        description: "Please generate a preview using AI before creating the moodboard",
-        variant: "destructive",
-      });
-      return;
-    }
-    
+    // Simple moodboard creation with manual image uploads only
     const moodboardData = {
       ...data,
-      sourceType: data.inspirationType === 'ai' ? 'ai_generated' : 'real_photos',
-      imageUrls: finalImages,
+      sourceType: 'manual_upload',
+      imageUrls: [], // Will be populated when users upload images
       linkedProjectId: parseInt(projectId),
     };
     // Remove the old field name
@@ -1120,8 +1001,7 @@ export default function ProjectDetail() {
     onSuccess: () => {
       setIsMoodboardDialogOpen(false);
       moodboardForm.reset();
-      setPreviewImages([]);
-      setPreviewGenerated(false);
+      // AI preview functionality removed
       toast({
         title: "Success",
         description: "Moodboard created successfully",
@@ -1497,7 +1377,7 @@ export default function ProjectDetail() {
                   <div className="bg-gray-100 rounded-lg p-8">
                     <div className="text-4xl mb-4">🎨</div>
                     <h4 className="text-lg font-medium mb-2">No moodboards created yet</h4>
-                    <p className="text-sm text-gray-600 mb-4">Create beautiful moodboards with AI-generated images or real photos</p>
+                    <p className="text-sm text-gray-600 mb-4">Create beautiful moodboards by uploading your own images</p>
                     <div className="flex flex-col sm:flex-row gap-3 justify-center">
                       <Button 
                         onClick={() => setIsMoodboardDialogOpen(true)}
@@ -2984,7 +2864,7 @@ export default function ProjectDetail() {
         <DialogContent className="max-w-[90vw] sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="text-base">Create New Moodboard</DialogTitle>
-            <DialogDescription className="text-xs">Create a moodboard for your project with AI inspiration or real photos</DialogDescription>
+            <DialogDescription className="text-xs">Create a moodboard for your project with manual image uploads</DialogDescription>
           </DialogHeader>
           <Form {...moodboardForm}>
             <form onSubmit={moodboardForm.handleSubmit(handleMoodboardCreate)} className="space-y-3">
@@ -3045,121 +2925,9 @@ export default function ProjectDetail() {
                 )}
               />
 
-              {/* Preview Section */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <label className="text-xs font-medium text-gray-900">Preview</label>
-                  <div className="flex space-x-1">
-                    <Button 
-                      type="button" 
-                      variant="outline" 
-                      size="sm"
-                      className="h-7 px-2 text-xs"
-                      onClick={generatePreview}
-                      disabled={isGeneratingPreview}
-                    >
-                      {isGeneratingPreview ? (
-                        <>
-                          <div className="animate-spin rounded-full h-2 w-2 border-b-2 border-blue-600 mr-1"></div>
-                          <span className="text-xs">Generating...</span>
-                        </>
-                      ) : (
-                        <>
-                          <Eye className="h-2 w-2 mr-1" />
-                          <span className="text-xs">Generate Preview</span>
-                        </>
-                      )}
-                    </Button>
-                    {previewGenerated && (
-                      <Button 
-                        type="button" 
-                        variant="outline" 
-                        size="sm"
-                        className="h-7 px-2 text-xs"
-                        onClick={regeneratePreview}
-                        disabled={isGeneratingPreview}
-                      >
-                        <RefreshCw className="h-2 w-2 mr-1" />
-                        <span className="text-xs">Regenerate</span>
-                      </Button>
-                    )}
-                  </div>
-                </div>
-                
-                {/* Preview Grid */}
-                <div className="border-2 border-dashed border-gray-200 rounded-lg p-3 min-h-[120px] flex items-center justify-center">
-                  {isGeneratingPreview ? (
-                    <div className="text-center">
-                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto mb-2"></div>
-                      <p className="text-xs text-gray-500">Generating preview images...</p>
-                    </div>
-                  ) : previewGenerated && previewImages.length > 0 ? (
-                    <div className="grid grid-cols-2 gap-2 w-full max-w-xs">
-                      {previewImages.map((imageUrl, index) => (
-                        <img 
-                          key={index}
-                          src={imageUrl} 
-                          alt={`Preview ${index + 1}`}
-                          className="w-full h-16 object-cover rounded border"
-                        />
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center">
-                      <Eye className="h-6 w-6 mx-auto text-gray-300 mb-1" />
-                      <p className="text-xs text-gray-500">Click "Generate Preview" to see sample images</p>
-                      <p className="text-xs text-gray-400 mt-1">Fill in all fields first</p>
-                    </div>
-                  )}
-                </div>
-              </div>
+              {/* Note: AI preview functionality removed for simplicity */}
 
-              <FormField
-                control={moodboardForm.control}
-                name="inspirationType"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-xs font-medium">Inspiration Source</FormLabel>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div 
-                        className={`border-2 rounded-lg p-3 cursor-pointer transition-all ${
-                          field.value === 'ai' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'
-                        }`}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          field.onChange('ai');
-                          console.log('Selected AI inspiration, current value:', field.value);
-                        }}
-                      >
-                        <div className="text-center">
-                          <Star className="h-6 w-6 mx-auto mb-1 text-blue-600" />
-                          <h3 className="text-sm font-medium">AI Inspiration</h3>
-                          <p className="text-xs text-gray-600 mt-1">Generate unique design concepts with AI</p>
-                        </div>
-                      </div>
-                      <div 
-                        className={`border-2 rounded-lg p-3 cursor-pointer transition-all ${
-                          field.value === 'real' ? 'border-green-500 bg-green-50' : 'border-gray-200 hover:border-gray-300'
-                        }`}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          field.onChange('real');
-                          console.log('Selected Real Photos, current value:', field.value);
-                        }}
-                      >
-                        <div className="text-center">
-                          <Camera className="h-6 w-6 mx-auto mb-1 text-green-600" />
-                          <h3 className="text-sm font-medium">Real Photos</h3>
-                          <p className="text-xs text-gray-600 mt-1">Curated photos from design platforms</p>
-                        </div>
-                      </div>
-                    </div>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {/* Inspiration type selection removed - simplified to manual upload only */}
 
               <div className="flex justify-end space-x-2 pt-2">
                 <Button type="button" variant="outline" className="h-8 px-3 text-xs" onClick={() => setIsMoodboardDialogOpen(false)}>

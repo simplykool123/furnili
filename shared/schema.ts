@@ -230,18 +230,17 @@ export const projectTasks = pgTable("project_tasks", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// Moodboards table for advanced moodboard system
+// Moodboards table - simplified for manual image uploads only
 export const moodboards = pgTable("moodboards", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   keywords: text("keywords").notNull(), // comma-separated tags/keywords
   roomType: text("room_type").notNull(), // Living Room, Bedroom, Kitchen, etc.
-  imageUrls: text("image_urls").array().default([]), // array of image URLs (external APIs or uploaded)
-  imageData: jsonb("image_data"), // metadata for images (source, alt text, etc.)
+  imageUrls: text("image_urls").array().default([]), // array of uploaded image URLs
+  imageData: jsonb("image_data"), // metadata for images (name, size, etc.)
   linkedProjectId: integer("linked_project_id").references(() => projects.id),
   createdBy: integer("created_by").references(() => users.id).notNull(),
-  sourceType: text("source_type").default("real_photos"), // real_photos, ai_generated
-  aiPrompt: text("ai_prompt"), // for AI-generated moodboards
+  sourceType: text("source_type").default("manual_upload"), // simplified to manual_upload only
   isPublic: boolean("is_public").default(false),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
