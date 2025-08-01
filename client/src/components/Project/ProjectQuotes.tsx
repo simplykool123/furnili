@@ -111,16 +111,6 @@ const quoteItemSchema = z.object({
 export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  
-  // Filter quotes based on search and status
-  const filteredQuotes = (quotes || []).filter((quote: Quote) => {
-    const matchesSearch = searchTerm === '' || 
-                         quote.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         quote.quoteNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         (quote.description && quote.description.toLowerCase().includes(searchTerm.toLowerCase()));
-    const matchesStatus = statusFilter === 'all' || quote.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  }).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   const [selectedQuote, setSelectedQuote] = useState<Quote | null>(null);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
@@ -237,7 +227,7 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
       discountPercentage: 0,
       taxPercentage: 18,
       size: "",
-      salesProductId: undefined,
+      salesProductId: 0,
     },
   });
 
@@ -636,6 +626,16 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
     );
   };
 
+  // Filter quotes based on search and status
+  const filteredQuotes = (quotes || []).filter((quote: Quote) => {
+    const matchesSearch = searchTerm === '' || 
+                         quote.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         quote.quoteNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (quote.description && quote.description.toLowerCase().includes(searchTerm.toLowerCase()));
+    const matchesStatus = statusFilter === 'all' || quote.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  }).sort((a: Quote, b: Quote) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-48">
@@ -840,7 +840,7 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
           <Card className="p-3">
             <div className="text-center">
               <div className="text-lg font-bold text-green-600">
-                {quotes.filter(q => q.status === 'approved').length}
+                {quotes.filter((q: Quote) => q.status === 'approved').length}
               </div>
               <div className="text-xs text-muted-foreground">Approved</div>
             </div>
@@ -848,7 +848,7 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
           <Card className="p-3">
             <div className="text-center">
               <div className="text-lg font-bold text-blue-600">
-                {quotes.filter(q => q.status === 'sent').length}
+                {quotes.filter((q: Quote) => q.status === 'sent').length}
               </div>
               <div className="text-xs text-muted-foreground">Sent</div>
             </div>
@@ -856,7 +856,7 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
           <Card className="p-3">
             <div className="text-center">
               <div className="text-lg font-bold">
-                ₹{quotes.reduce((sum, q) => sum + (q.totalAmount || 0), 0).toFixed(0)}
+                ₹{quotes.reduce((sum: number, q: Quote) => sum + (q.totalAmount || 0), 0).toFixed(0)}
               </div>
               <div className="text-xs text-muted-foreground">Total Value</div>
             </div>
@@ -963,7 +963,7 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
                       size="sm"
                       onClick={() => {
                         setSelectedQuote(quote);
-                        const quoteItems = quote.items || [];
+                        const quoteItems = (quote as any).items || [];
                         setQuoteItems(quoteItems);
                         form.reset({
                           title: quote.title,
