@@ -535,6 +535,12 @@ export default function ProjectDetail() {
 
       if (!response.ok) {
         const errorData = await response.json();
+        
+        // Handle billing limit specifically
+        if (response.status === 402 && errorData.code === 'billing_limit') {
+          throw new Error('OpenAI billing limit reached. Please check your OpenAI account billing settings.');
+        }
+        
         throw new Error(errorData.message || 'Failed to generate AI images');
       }
 

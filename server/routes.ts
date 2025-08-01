@@ -2493,10 +2493,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     } catch (error) {
       console.error('AI image generation error:', error);
-      res.status(500).json({ 
-        message: "Failed to generate AI images", 
-        error: error instanceof Error ? error.message : 'Unknown error'
-      });
+      
+      // Check for billing limit error specifically
+      if (error instanceof Error && error.message.includes('billing_hard_limit_reached')) {
+        res.status(402).json({ 
+          message: "OpenAI billing limit reached", 
+          error: "Please check your OpenAI account billing settings and add payment method",
+          code: "billing_limit"
+        });
+      } else {
+        res.status(500).json({ 
+          message: "Failed to generate AI images", 
+          error: error instanceof Error ? error.message : 'Unknown error'
+        });
+      }
     }
   });
 
