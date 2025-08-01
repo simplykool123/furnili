@@ -4,7 +4,7 @@ import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { storage } from "./storage";
 import { authenticateToken, requireRole, generateToken, comparePassword, type AuthRequest } from "./middleware/auth";
-import { productImageUpload, boqFileUpload, receiptImageUpload, csvFileUpload } from "./utils/fileUpload";
+import { productImageUpload, boqFileUpload, receiptImageUpload, csvFileUpload, projectFileUpload } from "./utils/fileUpload";
 import { exportProductsCSV, exportRequestsCSV, exportLowStockCSV } from "./utils/csvExport";
 import { createBackupZip } from "./utils/backupExport";
 import { canOrderMaterials, getMaterialRequestEligibleProjects, getStageDisplayName } from "./utils/projectStageValidation";
@@ -1942,7 +1942,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/projects/:id/files", authenticateToken, productImageUpload.array('files', 10), async (req: AuthRequest, res) => {
+  app.post("/api/projects/:id/files", authenticateToken, projectFileUpload.array('files', 10), async (req: AuthRequest, res) => {
     try {
       const projectId = parseInt(req.params.id);
       const { category, title, clientVisible } = req.body;
@@ -1980,7 +1980,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Alternative upload route for note attachments  
-  app.post("/api/projects/:projectId/upload", authenticateToken, productImageUpload.array('files', 10), async (req: AuthRequest, res) => {
+  app.post("/api/projects/:projectId/upload", authenticateToken, projectFileUpload.array('files', 10), async (req: AuthRequest, res) => {
     try {
       const projectId = parseInt(req.params.projectId);
       const { category, title, clientVisible, type } = req.body;

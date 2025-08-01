@@ -110,6 +110,77 @@ export const csvFileUpload = multer({
   },
 });
 
+// Project file upload configuration (for all project files)
+export const projectFileUpload = multer({
+  storage: multer.diskStorage({
+    destination: function (req, file, cb) {
+      cb(null, 'uploads/projects/');
+    },
+    filename: function (req, file, cb) {
+      // Keep original filename or generate unique one
+      const originalName = file.originalname || 'upload';
+      const uniqueName = crypto.randomBytes(8).toString('hex');
+      let ext = path.extname(originalName);
+      
+      // If no extension, derive from mimetype
+      if (!ext) {
+        switch (file.mimetype) {
+          case 'image/jpeg':
+            ext = '.jpg';
+            break;
+          case 'image/png':
+            ext = '.png';
+            break;
+          case 'image/gif':
+            ext = '.gif';
+            break;
+          case 'image/webp':
+            ext = '.webp';
+            break;
+          case 'application/pdf':
+            ext = '.pdf';
+            break;
+          default:
+            ext = '.file';
+        }
+      }
+      
+      // Use original name if it exists, otherwise use unique name
+      const baseName = originalName ? path.parse(originalName).name : uniqueName;
+      cb(null, `${baseName}_${uniqueName}${ext}`);
+    }
+  }),
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    console.log('Project file upload filter:', {
+      originalname: file.originalname,
+      mimetype: file.mimetype,
+      fieldname: file.fieldname
+    });
+    
+    const allowedTypes = /jpeg|jpg|png|gif|webp|pdf|doc|docx|txt/;
+    const extname = file.originalname ? allowedTypes.test(path.extname(file.originalname).toLowerCase()) : true;
+    const allowedMimeTypes = [
+      'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp',
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'text/plain'
+    ];
+    const mimetype = allowedMimeTypes.includes(file.mimetype);
+
+    if (mimetype || extname || !file.originalname) {
+      console.log('Project file accepted by multer filter');
+      return cb(null, true);
+    } else {
+      console.log('Project file rejected by multer filter - Invalid type');
+      cb(new Error("File type not allowed for project files"));
+    }
+  },
+});
+
 // Receipt image upload for petty cash
 export const receiptImageUpload = multer({
   dest: "uploads/receipts/",
