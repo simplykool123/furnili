@@ -2925,6 +2925,22 @@ export default function ProjectDetail() {
                 <div 
                   className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer"
                   onClick={() => document.getElementById('file-upload')?.click()}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    e.currentTarget.classList.add('border-blue-400', 'bg-blue-50');
+                  }}
+                  onDragLeave={(e) => {
+                    e.preventDefault();
+                    e.currentTarget.classList.remove('border-blue-400', 'bg-blue-50');
+                  }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    e.currentTarget.classList.remove('border-blue-400', 'bg-blue-50');
+                    const files = e.dataTransfer.files;
+                    if (files.length > 0) {
+                      setSelectedFiles(files);
+                    }
+                  }}
                 >
                   <input
                     type="file"
@@ -2953,7 +2969,7 @@ export default function ProjectDetail() {
                       ) : (
                         <div>
                           <p className="text-sm text-gray-600 mb-1">
-                            Click to select files
+                            Drag and drop files here, or click to select
                           </p>
                           <p className="text-xs text-gray-400">
                             Supports: Images, PDF, DOC, DOCX, DWG
