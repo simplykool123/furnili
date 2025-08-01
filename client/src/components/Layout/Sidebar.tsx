@@ -46,9 +46,9 @@ const navigation = [
 
   { name: 'Reports', href: '/reports', icon: BarChart3, roles: ['admin', 'manager'] }, // Manager can access for team supervision
   { 
-    name: 'Master', 
+    name: 'Settings', 
     icon: Database, 
-    roles: ['admin', 'manager', 'staff'], // Show Master section with role-based items
+    roles: ['admin', 'manager', 'staff'], // Show Settings section with role-based items
     isCollapsible: true,
     subItems: [
       { name: 'Clients', href: '/clients', icon: Users, roles: ['admin', 'manager'] }, // Manager can manage clients for projects
@@ -74,15 +74,15 @@ export default function Sidebar({ onItemClick, collapsed = false, onToggleCollap
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
   const user = authService.getUser();
 
-  // Auto-expand Master menu if any sub-item is active
+  // Auto-expand Settings menu if any sub-item is active
   useEffect(() => {
-    const masterItem = navigation.find(item => item.name === 'Master');
-    if (masterItem?.subItems) {
-      const hasActiveMasterSubItem = masterItem.subItems.some(subItem => 
+    const settingsItem = navigation.find(item => item.name === 'Settings');
+    if (settingsItem?.subItems) {
+      const hasActiveSettingsSubItem = settingsItem.subItems.some(subItem => 
         subItem.href && (location === subItem.href || (subItem.href !== '/' && location.startsWith(subItem.href)))
       );
-      if (hasActiveMasterSubItem && !expandedItems.includes('Master')) {
-        setExpandedItems(prev => [...prev, 'Master']);
+      if (hasActiveSettingsSubItem && !expandedItems.includes('Settings')) {
+        setExpandedItems(prev => [...prev, 'Settings']);
       }
     }
   }, [location, expandedItems]);
