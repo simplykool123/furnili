@@ -70,8 +70,12 @@ export default function LoginSimple() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 to-amber-50 p-4">
       <Card className="w-full max-w-md shadow-xl">
         <CardHeader className="space-y-3 text-center pb-6">
-          <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto" style={{ backgroundColor: 'hsl(28, 100%, 25%)' }}>
-            <div className="text-white font-bold text-xl">F</div>
+          <div className="w-20 h-16 flex items-center justify-center mx-auto">
+            <img 
+              src="/attached_assets/furnili%20logo_1754162875016.png" 
+              alt="Furnili Logo" 
+              className="w-full h-full object-contain"
+            />
           </div>
           <CardTitle className="text-3xl font-bold text-gray-900">
             Furnili
