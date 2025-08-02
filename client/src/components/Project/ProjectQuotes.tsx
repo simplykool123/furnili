@@ -527,9 +527,10 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
           <table style="width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 0px;">
             <!-- Total Row with Total in Words -->
             <tr>
-              <td style="border: 1px solid #000; padding: 6px 8px; vertical-align: middle; width: calc(100% - 280px);">
-                <span style="font-size: 12px; font-weight: bold;">Total in Words:</span>
-                <span style="font-size: 11px; font-style: italic; text-decoration: underline; margin-left: 8px;">
+              <td style="border: 1px solid #000; padding: 6px 8px; vertical-align: middle; width: calc(100% - 280px); height: 31px;">
+                <div style="display: flex; align-items: center; height: 100%;">
+                  <span style="font-size: 12px; font-weight: bold;">Total in Words:</span>
+                  <span style="font-size: 11px; font-style: italic; text-decoration: underline; margin-left: 8px;">
                   ${(() => {
                     // Calculate grand total for words conversion
                     const itemsTotal = items.reduce((sum: number, item: any) => sum + (item.lineTotal || (item.quantity * item.unitPrice) || 0), 0);
@@ -599,7 +600,8 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
                     const wordsAmount = numberToWords(grandTotal);
                     return wordsAmount + ' Rupees Only';
                   })()}
-                </span>
+                  </span>
+                </div>
               </td>
               <td style="border: 1px solid #000; border-left: none; padding: 6px 8px; text-align: right; vertical-align: middle; width: 190px; font-size: 11px;">Total</td>
               <td style="border: 1px solid #000; border-left: none; padding: 6px 8px; text-align: right; vertical-align: middle; width: 90px; font-size: 11px;">
