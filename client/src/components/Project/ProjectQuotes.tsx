@@ -523,9 +523,9 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
             </tbody>
           </table>
 
-          <!-- Totals Table (Right Aligned) -->
-          <div style="margin-top: 20px; display: flex; justify-content: flex-end;">
-            <table style="width: 300px; border-collapse: collapse; font-size: 11px;">
+          <!-- Totals Table (Right Aligned to match Size, Qty, Rate columns) -->
+          <div style="margin-top: 0px; display: flex; justify-content: flex-end;">
+            <table style="width: 210px; border-collapse: collapse; font-size: 11px;">
               ${(() => {
                 // Calculate correct totals from items
                 const itemsTotal = items.reduce((sum: number, item: any) => sum + (item.lineTotal || (item.quantity * item.unitPrice) || 0), 0);
