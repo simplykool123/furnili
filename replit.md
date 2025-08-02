@@ -22,6 +22,8 @@ This is a professional workforce management platform designed as a modern web ap
 ✓ **NAVIGATION CLEANUP**: Removed standalone Quotes route from main sidebar navigation and App.tsx routing, maintaining clean project-centric architecture
 ✓ **COMPONENT MODULARIZATION**: Created dedicated ProjectQuotes component (client/src/components/Project/ProjectQuotes.tsx) with full quote management functionality integrated into ProjectDetail interface
 ✓ **MOBILE-OPTIMIZED QUOTES TAB**: Quotes functionality maintains mobile-first design principles with compact layouts, responsive forms, and optimized mobile interface within project context
+✓ **PDF LAYOUT ENHANCEMENT**: Restructured PDF bottom section to match reference image with right-aligned totals table, left-side furniture specifications, bank details with signature box, and full-width payment terms
+✓ **FURNILI LOGO INTEGRATION**: Added authentic Furnili logo from login page to PDF header, permanently stored at /public/assets/furnili-logo.png with proper static file serving configured for consistent branding across platform
 
 **Previous System Optimizations (July 31, 2025):**
 ✓ **Image Display System Fully Resolved**: Fixed all file upload, storage, and display issues across the platform
