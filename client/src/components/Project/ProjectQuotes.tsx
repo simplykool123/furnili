@@ -482,15 +482,15 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
           </div>
 
           <!-- Items Table -->
-          <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 11px;">
+          <table style="width: 100%; border-collapse: collapse; margin-bottom: 0px; font-size: 11px;">
             <thead>
               <tr style="background-color: #f0f0f0;">
                 <th style="border: 1px solid #000; padding: 8px; text-align: center; width: 40px;">Sr. No.</th>
-                <th style="border: 1px solid #000; padding: 8px; text-align: center; width: 180px;">Product </th>
+                <th style="border: 1px solid #000; padding: 8px; text-align: center; width: 120px;">Product </th>
                 <th style="border: 1px solid #000; padding: 8px; text-align: center;">Item Description</th>
                 <th style="border: 1px solid #000; padding: 8px; text-align: center; width: 80px;">Size</th>
                 <th style="border: 1px solid #000; padding: 8px; text-align: center; width: 50px;">Qty</th>
-                <th style="border: 1px solid #000; padding: 8px; text-align: center; width: 80px;">Rate</th>
+                <th style="border: 1px solid #000; padding: 8px; text-align: center; width: 60px;">Rate</th>
                 <th style="border: 1px solid #000; padding: 8px; text-align: center; width: 90px;">Total Amount</th>
               </tr>
             </thead>
@@ -534,8 +534,8 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
               <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">- Any modifications or changes in material selection may result in additional charges.</p>
             </div>
             
-            <!-- Right Side: Totals Table - Aligned to Size + Qty + Rate columns (210px) -->
-            <table style="width: 210px; border-collapse: collapse; font-size: 11px;">
+            <!-- Right Side: Totals Table - Aligned to Size + Qty + Rate columns (190px) -->
+            <table style="width: 190px; border-collapse: collapse; font-size: 11px;">
               ${(() => {
                 // Calculate correct totals from items
                 const itemsTotal = items.reduce((sum: number, item: any) => sum + (item.lineTotal || (item.quantity * item.unitPrice) || 0), 0);
@@ -546,24 +546,24 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
                 
                 return `
                   <tr>
-                    <td style="border: 1px solid #000; padding: 6px; text-align: right; width: 120px;">Total</td>
-                    <td style="border: 1px solid #000; padding: 6px; text-align: right; width: 90px;">₹${itemsTotal.toLocaleString('en-IN')}</td>
+                    <td style="border: 1px solid #000; padding: 8px; text-align: right; width: 100px;">Total</td>
+                    <td style="border: 1px solid #000; padding: 8px; text-align: right; width: 90px;">₹${itemsTotal.toLocaleString('en-IN')}</td>
                   </tr>
                   <tr>
-                    <td style="border: 1px solid #000; padding: 6px; text-align: right;">Packaging @ 2%</td>
-                    <td style="border: 1px solid #000; padding: 6px; text-align: right;">₹${packagingAmount.toLocaleString('en-IN')}</td>
+                    <td style="border: 1px solid #000; padding: 8px; text-align: right;">Packaging @ 2%</td>
+                    <td style="border: 1px solid #000; padding: 8px; text-align: right;">₹${packagingAmount.toLocaleString('en-IN')}</td>
                   </tr>
                   <tr>
-                    <td style="border: 1px solid #000; padding: 6px; text-align: right;">Transportation</td>
-                    <td style="border: 1px solid #000; padding: 6px; text-align: right;">₹${transportationAmount.toLocaleString('en-IN')}</td>
+                    <td style="border: 1px solid #000; padding: 8px; text-align: right;">Transportation</td>
+                    <td style="border: 1px solid #000; padding: 8px; text-align: right;">₹${transportationAmount.toLocaleString('en-IN')}</td>
                   </tr>
                   <tr>
-                    <td style="border: 1px solid #000; padding: 6px; text-align: right;">GST @ 18%</td>
-                    <td style="border: 1px solid #000; padding: 6px; text-align: right;">₹${gstAmount.toLocaleString('en-IN')}</td>
+                    <td style="border: 1px solid #000; padding: 8px; text-align: right;">GST @ 18%</td>
+                    <td style="border: 1px solid #000; padding: 8px; text-align: right;">₹${gstAmount.toLocaleString('en-IN')}</td>
                   </tr>
                   <tr style="font-weight: bold;">
-                    <td style="border: 1px solid #000; padding: 8px; text-align: right; background-color: #f0f0f0;">Grand Total</td>
-                    <td style="border: 1px solid #000; padding: 8px; text-align: right; background-color: #f0f0f0; font-weight: bold;">₹${grandTotal.toLocaleString('en-IN')}</td>
+                    <td style="border: 1px solid #000; padding: 10px; text-align: right; background-color: #f0f0f0;">Grand Total</td>
+                    <td style="border: 1px solid #000; padding: 10px; text-align: right; background-color: #f0f0f0; font-weight: bold;">₹${grandTotal.toLocaleString('en-IN')}</td>
                   </tr>
                 `;
               })()}
