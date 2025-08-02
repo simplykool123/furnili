@@ -523,17 +523,8 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
             </tbody>
           </table>
 
-          <!-- Totals Section with Specifications on Left -->
-          <div style="margin-top: 0px; display: flex; align-items: flex-start;">
-            <!-- Left Side: Furniture Specifications with Border -->
-            <div style="border: 1px solid #000; padding: 8px; border-right: none; width: calc(100% - 280px);">
-              <h3 style="font-size: 12px; font-weight: bold; margin: 0 0 8px 0;">Furniture Specifications</h3>
-              <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">- All furniture will be manufactured using Said Materials</p>
-              <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">- All hardware considered of standard make.</p>
-              <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">- Standard laminates considered as per selection.</p>
-              <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">- Any modifications or changes in material selection may result in additional charges.</p>
-            </div>
-            
+          <!-- Totals Section -->
+          <div style="margin-top: 0px; display: flex; justify-content: flex-end;">
             <!-- Right Side: Totals Table - Aligned to Size + Qty + Rate + Total Amount columns (280px) -->
             <table style="width: 280px; border-collapse: collapse; font-size: 11px;">
               ${(() => {
@@ -568,6 +559,48 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
                 `;
               })()}
             </table>
+          </div>
+
+          <!-- Total in Words Section -->
+          <div style="margin-top: 20px; width: 100%; border: 1px solid #000; padding: 8px;">
+            <h3 style="font-size: 12px; font-weight: bold; margin: 0 0 8px 0;">Total in Words</h3>
+            <p style="font-size: 11px; margin: 0; font-style: italic;">
+              ${(() => {
+                // Calculate grand total for words conversion
+                const itemsTotal = items.reduce((sum: number, item: any) => sum + (item.lineTotal || (item.quantity * item.unitPrice) || 0), 0);
+                const packagingAmount = Math.round(itemsTotal * 0.02);
+                const transportationAmount = 5000;
+                const gstAmount = Math.round(itemsTotal * 0.18);
+                const grandTotal = itemsTotal + packagingAmount + transportationAmount + gstAmount;
+                
+                // Convert number to words (simplified version)
+                function numberToWords(num) {
+                  const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine'];
+                  const teens = ['Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
+                  const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+                  
+                  if (num === 0) return 'Zero';
+                  if (num < 10) return ones[num];
+                  if (num < 20) return teens[num - 10];
+                  if (num < 100) return tens[Math.floor(num / 10)] + (num % 10 !== 0 ? ' ' + ones[num % 10] : '');
+                  if (num < 1000) return ones[Math.floor(num / 100)] + ' Hundred' + (num % 100 !== 0 ? ' ' + numberToWords(num % 100) : '');
+                  if (num < 100000) return numberToWords(Math.floor(num / 1000)) + ' Thousand' + (num % 1000 !== 0 ? ' ' + numberToWords(num % 1000) : '');
+                  return 'Rupees ' + Math.floor(num).toLocaleString('en-IN');
+                }
+                
+                // Simple conversion for display
+                return 'Rupees ' + grandTotal.toLocaleString('en-IN') + ' Only';
+              })()}
+            </p>
+          </div>
+
+          <!-- Furniture Specifications Section -->
+          <div style="margin-top: 20px; width: 100%; border: 1px solid #000; padding: 8px;">
+            <h3 style="font-size: 12px; font-weight: bold; margin: 0 0 8px 0;">Furniture Specifications</h3>
+            <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">- All furniture will be manufactured using Said Materials</p>
+            <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">- All hardware considered of standard make.</p>
+            <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">- Standard laminates considered as per selection.</p>
+            <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">- Any modifications or changes in material selection may result in additional charges.</p>
           </div>
 
           <!-- Bottom Section: 3-Part Layout with Borders -->
