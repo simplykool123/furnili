@@ -523,8 +523,18 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
             </tbody>
           </table>
 
-          <!-- Totals Table (Right Aligned to match Size, Qty, Rate columns only) -->
-          <div style="margin-top: 0px; display: flex; justify-content: flex-end;">
+          <!-- Totals Section with Specifications on Left -->
+          <div style="margin-top: 0px; display: flex; justify-content: space-between; align-items: flex-start;">
+            <!-- Left Side: Furniture Specifications -->
+            <div style="width: 45%;">
+              <h3 style="font-size: 12px; font-weight: bold; margin: 0 0 8px 0;">Furniture Specifications</h3>
+              <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">- All furniture will be manufactured using Said Materials</p>
+              <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">- All hardware considered of standard make.</p>
+              <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">- Standard laminates considered as per selection.</p>
+              <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">- Any modifications or changes in material selection may result in additional charges.</p>
+            </div>
+            
+            <!-- Right Side: Totals Table -->
             <table style="width: 210px; border-collapse: collapse; font-size: 11px;">
               ${(() => {
                 // Calculate correct totals from items
@@ -560,31 +570,9 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
             </table>
           </div>
 
-          <!-- Bottom Section: Two-Row Layout as before -->
+          <!-- Bottom Section: Payment Terms and Bank Details -->
           <div style="margin-top: 30px;">
-            <!-- First Row: Specifications (Left) and Bank Details (Right) -->
-            <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
-              <!-- Left Side: Furniture Specifications -->
-              <div style="width: 48%;">
-                <h3 style="font-size: 12px; font-weight: bold; margin: 0 0 8px 0;">Furniture Specifications</h3>
-                <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">- All furniture will be manufactured using Said Materials</p>
-                <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">- All hardware considered of standard make.</p>
-                <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">- Standard laminates considered as per selection.</p>
-                <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">- Any modifications or changes in material selection may result in additional charges.</p>
-              </div>
-              
-              <!-- Right Side: Bank Details -->
-              <div style="width: 48%;">
-                <h3 style="font-size: 12px; font-weight: bold; margin: 0 0 8px 0;">Bank Details</h3>
-                <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">A/C Name: Furnili</p>
-                <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">Bank: ICICI Bank</p>
-                <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">Branch: Nigdi</p>
-                <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">A/C No.: 230505006647</p>
-                <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">IFSC: ICIC0002305</p>
-              </div>
-            </div>
-            
-            <!-- Second Row: Payment Terms (Left) and Signature (Right) -->
+            <!-- Payment Terms (Left) and Bank Details with Signature (Right) -->
             <div style="display: flex; justify-content: space-between;">
               <!-- Left Side: Payment Terms -->
               <div style="width: 48%;">
@@ -594,11 +582,21 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
                 <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">20% Payment on Delivery</p>
               </div>
               
-              <!-- Right Side: Signature Box -->
-              <div style="width: 48%; display: flex; justify-content: center; align-items: center;">
-                <div style="border: 2px solid #000; padding: 20px 30px; text-align: center;">
-                  <p style="font-size: 12px; margin: 0 0 5px 0; font-weight: bold;">Authorised Signatory</p>
-                  <p style="font-size: 12px; margin: 0; font-weight: bold;">for FURNILI</p>
+              <!-- Right Side: Bank Details and Signature -->
+              <div style="width: 48%;">
+                <h3 style="font-size: 12px; font-weight: bold; margin: 0 0 8px 0;">Bank Details</h3>
+                <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">A/C Name: Furnili</p>
+                <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">Bank: ICICI Bank</p>
+                <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">Branch: Nigdi</p>
+                <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">A/C No.: 230505006647</p>
+                <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">IFSC: ICIC0002305</p>
+                
+                <!-- Signature Box -->
+                <div style="margin-top: 20px; display: flex; justify-content: center;">
+                  <div style="border: 2px solid #000; padding: 20px 30px; text-align: center;">
+                    <p style="font-size: 12px; margin: 0 0 5px 0; font-weight: bold;">Authorised Signatory</p>
+                    <p style="font-size: 12px; margin: 0; font-weight: bold;">for FURNILI</p>
+                  </div>
                 </div>
               </div>
             </div>
