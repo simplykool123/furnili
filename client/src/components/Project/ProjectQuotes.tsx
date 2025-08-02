@@ -519,78 +519,82 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
             </tbody>
           </table>
 
-          <!-- Bottom Section with Totals -->
-          <div style="display: flex; justify-content: space-between; margin-top: 20px;">
-            <div style="width: 50%;">
-              <!-- Empty space to push totals to right -->
-            </div>
-            <div style="width: 45%;">
-              <table style="width: 100%; border-collapse: collapse; font-size: 11px; margin-bottom: 20px;">
-                ${(() => {
-                  // Calculate correct totals from items
-                  const itemsTotal = items.reduce((sum: number, item: any) => sum + (item.lineTotal || (item.quantity * item.unitPrice) || 0), 0);
-                  const packagingAmount = Math.round(itemsTotal * 0.02);
-                  const transportationAmount = 5000;
-                  const gstAmount = Math.round(itemsTotal * 0.18);
-                  const grandTotal = itemsTotal + packagingAmount + transportationAmount + gstAmount;
-                  
-                  return `
-                    <tr>
-                      <td style="border: 1px solid #000; padding: 8px; text-align: right; font-weight: bold;">Total</td>
-                      <td style="border: 1px solid #000; padding: 8px; text-align: right; font-weight: bold;">₹${itemsTotal.toLocaleString('en-IN')}</td>
-                    </tr>
-                    <tr>
-                      <td style="border: 1px solid #000; padding: 8px; text-align: right;">Packaging @ 2%</td>
-                      <td style="border: 1px solid #000; padding: 8px; text-align: right;">₹${packagingAmount.toLocaleString('en-IN')}</td>
-                    </tr>
-                    <tr>
-                      <td style="border: 1px solid #000; padding: 8px; text-align: right;">Transportation</td>
-                      <td style="border: 1px solid #000; padding: 8px; text-align: right;">₹${transportationAmount.toLocaleString('en-IN')}</td>
-                    </tr>
-                    <tr>
-                      <td style="border: 1px solid #000; padding: 8px; text-align: right;">GST @ 18%</td>
-                      <td style="border: 1px solid #000; padding: 8px; text-align: right;">₹${gstAmount.toLocaleString('en-IN')}</td>
-                    </tr>
-                    <tr style="font-weight: bold;">
-                      <td style="border: 1px solid #000; padding: 8px; text-align: right; background-color: #f0f0f0;">Grand Total</td>
-                      <td style="border: 1px solid #000; padding: 8px; text-align: right; background-color: #f0f0f0; font-weight: bold;">₹${grandTotal.toLocaleString('en-IN')}</td>
-                    </tr>
-                  `;
-                })()}
-              </table>
-            </div>
+          <!-- Totals Table (Right Aligned) -->
+          <div style="margin-top: 20px; display: flex; justify-content: flex-end;">
+            <table style="width: 300px; border-collapse: collapse; font-size: 11px;">
+              ${(() => {
+                // Calculate correct totals from items
+                const itemsTotal = items.reduce((sum: number, item: any) => sum + (item.lineTotal || (item.quantity * item.unitPrice) || 0), 0);
+                const packagingAmount = Math.round(itemsTotal * 0.02);
+                const transportationAmount = 5000;
+                const gstAmount = Math.round(itemsTotal * 0.18);
+                const grandTotal = itemsTotal + packagingAmount + transportationAmount + gstAmount;
+                
+                return `
+                  <tr>
+                    <td style="border: 1px solid #000; padding: 6px; text-align: right; width: 60%;">Total</td>
+                    <td style="border: 1px solid #000; padding: 6px; text-align: right; width: 40%;">₹${itemsTotal.toLocaleString('en-IN')}</td>
+                  </tr>
+                  <tr>
+                    <td style="border: 1px solid #000; padding: 6px; text-align: right;">Packaging @ 2%</td>
+                    <td style="border: 1px solid #000; padding: 6px; text-align: right;">₹${packagingAmount.toLocaleString('en-IN')}</td>
+                  </tr>
+                  <tr>
+                    <td style="border: 1px solid #000; padding: 6px; text-align: right;">Transportation</td>
+                    <td style="border: 1px solid #000; padding: 6px; text-align: right;">₹${transportationAmount.toLocaleString('en-IN')}</td>
+                  </tr>
+                  <tr>
+                    <td style="border: 1px solid #000; padding: 6px; text-align: right;">GST @ 18%</td>
+                    <td style="border: 1px solid #000; padding: 6px; text-align: right;">₹${gstAmount.toLocaleString('en-IN')}</td>
+                  </tr>
+                  <tr style="font-weight: bold;">
+                    <td style="border: 1px solid #000; padding: 8px; text-align: right; background-color: #f0f0f0;">Grand Total</td>
+                    <td style="border: 1px solid #000; padding: 8px; text-align: right; background-color: #f0f0f0; font-weight: bold;">₹${grandTotal.toLocaleString('en-IN')}</td>
+                  </tr>
+                `;
+              })()}
+            </table>
           </div>
 
-          <!-- Specifications and Terms Section -->
-          <div style="display: flex; justify-content: space-between; margin-top: 30px;">
-            <div style="width: 48%; border: 1px solid #000; padding: 10px;">
-              <h3 style="font-size: 12px; font-weight: bold; margin: 0 0 8px 0; text-decoration: underline;">Furniture Specifications</h3>
-              <p style="font-size: 10px; margin: 2px 0;">• All furniture will be manufactured using Said Materials</p>
-              <p style="font-size: 10px; margin: 2px 0;">• All hardware considered of standard make.</p>
-              <p style="font-size: 10px; margin: 2px 0;">• Standard laminates considered as per selection.</p>
-              <p style="font-size: 10px; margin: 2px 0;">• Any modifications or changes in material selection may result in additional charges.</p>
+          <!-- Bottom Section: Specifications, Terms & Bank Details -->
+          <div style="margin-top: 30px;">
+            <!-- Top Row: Furniture Specifications (Left) and Bank Details (Right) -->
+            <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+              <!-- Furniture Specifications -->
+              <div style="width: 48%;">
+                <h3 style="font-size: 12px; font-weight: bold; margin: 0 0 8px 0; text-decoration: underline;">Furniture Specifications</h3>
+                <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">• All furniture will be manufactured using Said Materials</p>
+                <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">• All hardware considered of standard make.</p>
+                <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">• Standard laminates considered as per selection.</p>
+                <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">• Any modifications or changes in material selection may result in additional charges.</p>
+              </div>
               
-              <h3 style="font-size: 12px; font-weight: bold; margin: 15px 0 8px 0; text-decoration: underline;">Payment Terms</h3>
-              <p style="font-size: 10px; margin: 2px 0;"><strong>30% Advance Payment:</strong> Due upon order confirmation.</p>
-              <p style="font-size: 10px; margin: 2px 0;"><strong>50% Payment Before Delivery:</strong> To be settled prior to dispatch.</p>
-              <p style="font-size: 10px; margin: 2px 0;"><strong>20% Payment on Delivery</strong></p>
-            </div>
-            
-            <div style="width: 48%; border: 1px solid #000; padding: 10px;">
-              <h3 style="font-size: 12px; font-weight: bold; margin: 0 0 8px 0; text-decoration: underline;">Bank Details</h3>
-              <p style="font-size: 10px; margin: 2px 0;"><strong>A/C Name:</strong> Furnili</p>
-              <p style="font-size: 10px; margin: 2px 0;"><strong>Bank:</strong> ICICI Bank</p>
-              <p style="font-size: 10px; margin: 2px 0;"><strong>Branch:</strong> Nigdi</p>
-              <p style="font-size: 10px; margin: 2px 0;"><strong>A/C No.:</strong> 230505006647</p>
-              <p style="font-size: 10px; margin: 2px 0;"><strong>IFSC:</strong> ICIC0002305</p>
-              
-              <div style="margin-top: 15px; text-align: center;">
-                <div style="border: 2px solid #000; padding: 15px;">
-                  <h2 style="font-size: 24px; font-weight: bold; margin: 0; letter-spacing: 3px;">FURNILI</h2>
-                  <p style="font-size: 10px; margin: 5px 0; font-style: italic;">Authorised Signatory</p>
-                  <p style="font-size: 10px; margin: 0; font-weight: bold;">for FURNILI</p>
+              <!-- Bank Details with Signature -->
+              <div style="width: 48%;">
+                <h3 style="font-size: 12px; font-weight: bold; margin: 0 0 8px 0; text-decoration: underline;">Bank Details</h3>
+                <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;"><strong>A/C Name:</strong> Furnili</p>
+                <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;"><strong>Bank:</strong> ICICI Bank</p>
+                <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;"><strong>Branch:</strong> Nigdi</p>
+                <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;"><strong>A/C No.:</strong> 230505006647</p>
+                <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;"><strong>IFSC:</strong> ICIC0002305</p>
+                
+                <!-- Furnili Signature Box -->
+                <div style="margin-top: 20px; text-align: center;">
+                  <div style="border: 2px solid #000; padding: 20px;">
+                    <h2 style="font-size: 20px; font-weight: bold; margin: 0; letter-spacing: 2px;">FURNILI</h2>
+                    <p style="font-size: 9px; margin: 8px 0 2px 0; font-style: italic;">Authorised Signatory</p>
+                    <p style="font-size: 9px; margin: 0; font-weight: bold;">for FURNILI</p>
+                  </div>
                 </div>
               </div>
+            </div>
+            
+            <!-- Bottom Row: Payment Terms (Full Width) -->
+            <div style="width: 100%;">
+              <h3 style="font-size: 12px; font-weight: bold; margin: 0 0 8px 0; text-decoration: underline;">Payment Terms</h3>
+              <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;"><strong>30% Advance Payment:</strong> Due upon order confirmation.</p>
+              <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;"><strong>50% Payment Before Delivery:</strong> To be settled prior to dispatch.</p>
+              <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;"><strong>20% Payment on Delivery</strong></p>
             </div>
           </div>
 
