@@ -687,16 +687,19 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
             </div>
             
             <!-- Right: Authorised Signatory - Matches Rate + Total Amount columns (150px) -->
-            <div style="border: 1px solid #000; border-top: none; padding: 6px; width: 150px; display: flex; flex-direction: column; justify-content: space-between; align-items: center;">
-              <div style="text-align: center;">
+            <div style="border: 1px solid #000; border-top: none; padding: 6px; width: 150px; position: relative; display: flex; flex-direction: column; justify-content: center;">
+              <div style="text-align: center; margin-bottom: 40px;">
                 <p style="font-size: 10px; margin: 0; font-weight: bold;">Authorised</p>
                 <p style="font-size: 10px; margin: 0; font-weight: bold;">Signatory</p>
                 <p style="font-size: 10px; margin: 0; font-weight: bold;">for FURNILI</p>
               </div>
-              <div style="display: flex; flex-direction: column; align-items: center; margin-top: 15px;">
-                <img src="${window.location.origin}/assets/furnili-signature-stamp.png" style="height: 40px; width: auto; margin-bottom: 8px;" alt="Furnili Signature Stamp" onerror="this.style.display='none'" />
-                <div style="width: 120px; border-bottom: 1px solid #000; height: 1px;"></div>
+              
+              <!-- Signature stamp overlaid in center -->
+              <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); opacity: 0.8;">
+                <img src="${window.location.origin}/assets/furnili-signature-stamp.png" style="height: 45px; width: auto;" alt="Furnili Signature Stamp" onerror="this.style.display='none'" />
               </div>
+              
+              <div style="width: 120px; border-bottom: 1px solid #000; height: 1px; margin: 0 auto;"></div>
             </div>
           </div>
 
