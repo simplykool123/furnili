@@ -703,11 +703,10 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
                 <img src="${window.location.origin}/assets/furnili-signature-stamp.png" style="width: 80px; height: auto;" alt="Furnili Signature Stamp" onerror="this.style.display='none'" />
               </div>
               
-              <!-- Text and signature line at bottom -->
+              <!-- Text without signature line -->
               <div style="text-align: center;">
                 <p style="font-size: 9px; margin: 0 0 2px 0; font-weight: bold; line-height: 1.1;">Authorised Signatory</p>
-                <p style="font-size: 9px; margin: 0 0 8px 0; font-weight: bold; line-height: 1.1;">for FURNILI</p>
-                <div style="width: 100px; border-bottom: 1px solid #000; height: 1px; margin: 0 auto;"></div>
+                <p style="font-size: 9px; margin: 0; font-weight: bold; line-height: 1.1;">for FURNILI</p>
               </div>
             </div>
           </div>
