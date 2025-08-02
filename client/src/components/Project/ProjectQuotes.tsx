@@ -446,15 +446,9 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
       const element = document.createElement("div");
       element.innerHTML = `
         <div style="font-family: Arial, sans-serif; font-size: 12px; margin: 0; padding: 20px;">
-          <!-- Header with Logo -->
-          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #000; padding-bottom: 15px; margin-bottom: 20px;">
-            <div style="display: flex; align-items: center;">
-              <img src="${window.location.origin}/assets/furnili-logo.png" style="height: 60px; margin-right: 15px;" alt="Furnili Logo" />
-              <div>
-                <h1 style="font-size: 32px; font-weight: bold; margin: 0; letter-spacing: 2px;">FURNILI</h1>
-                <p style="font-size: 11px; margin: 0; letter-spacing: 1px; color: #666;">BESPOKE MODULAR FURNITURE</p>
-              </div>
-            </div>
+          <!-- Header with Logo Only -->
+          <div style="display: flex; justify-content: flex-start; align-items: center; border-bottom: 2px solid #000; padding-bottom: 15px; margin-bottom: 20px;">
+            <img src="${window.location.origin}/assets/furnili-logo.png" style="height: 60px;" alt="Furnili Logo" />
           </div>
 
           <!-- Quotation Title -->
