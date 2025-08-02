@@ -560,36 +560,42 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
             </table>
           </div>
 
-          <!-- Bottom Section: Side by Side Layout as per Reference PDF -->
-          <div style="display: flex; justify-content: space-between; margin-top: 30px;">
-            <!-- Left Side: Specifications and Payment Terms -->
-            <div style="width: 48%;">
-              <!-- Furniture Specifications -->
-              <h3 style="font-size: 12px; font-weight: bold; margin: 0 0 8px 0;">Furniture Specifications</h3>
-              <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">- All furniture will be manufactured using Said Materials</p>
-              <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">- All hardware considered of standard make.</p>
-              <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">- Standard laminates considered as per selection.</p>
-              <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">- Any modifications or changes in material selection may result in additional charges.</p>
+          <!-- Bottom Section: Two-Row Layout as before -->
+          <div style="margin-top: 30px;">
+            <!-- First Row: Specifications (Left) and Bank Details (Right) -->
+            <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+              <!-- Left Side: Furniture Specifications -->
+              <div style="width: 48%;">
+                <h3 style="font-size: 12px; font-weight: bold; margin: 0 0 8px 0;">Furniture Specifications</h3>
+                <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">- All furniture will be manufactured using Said Materials</p>
+                <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">- All hardware considered of standard make.</p>
+                <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">- Standard laminates considered as per selection.</p>
+                <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">- Any modifications or changes in material selection may result in additional charges.</p>
+              </div>
               
-              <!-- Payment Terms -->
-              <h3 style="font-size: 12px; font-weight: bold; margin: 20px 0 8px 0;">Payment Terms</h3>
-              <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">30% Advance Payment: Due upon order confirmation.</p>
-              <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">50% Payment Before Delivery: To be settled prior to dispatch.</p>
-              <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">20% Payment on Delivery</p>
+              <!-- Right Side: Bank Details -->
+              <div style="width: 48%;">
+                <h3 style="font-size: 12px; font-weight: bold; margin: 0 0 8px 0;">Bank Details</h3>
+                <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">A/C Name: Furnili</p>
+                <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">Bank: ICICI Bank</p>
+                <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">Branch: Nigdi</p>
+                <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">A/C No.: 230505006647</p>
+                <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">IFSC: ICIC0002305</p>
+              </div>
             </div>
             
-            <!-- Right Side: Bank Details and Signature -->
-            <div style="width: 48%;">
-              <!-- Bank Details -->
-              <h3 style="font-size: 12px; font-weight: bold; margin: 0 0 8px 0;">Bank Details</h3>
-              <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">A/C Name: Furnili</p>
-              <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">Bank: ICICI Bank</p>
-              <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">Branch: Nigdi</p>
-              <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">A/C No.: 230505006647</p>
-              <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">IFSC: ICIC0002305</p>
+            <!-- Second Row: Payment Terms (Left) and Signature (Right) -->
+            <div style="display: flex; justify-content: space-between;">
+              <!-- Left Side: Payment Terms -->
+              <div style="width: 48%;">
+                <h3 style="font-size: 12px; font-weight: bold; margin: 0 0 8px 0;">Payment Terms</h3>
+                <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">30% Advance Payment: Due upon order confirmation.</p>
+                <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">50% Payment Before Delivery: To be settled prior to dispatch.</p>
+                <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">20% Payment on Delivery</p>
+              </div>
               
-              <!-- Signature Box -->
-              <div style="margin-top: 20px; display: flex; justify-content: center;">
+              <!-- Right Side: Signature Box -->
+              <div style="width: 48%; display: flex; justify-content: center; align-items: center;">
                 <div style="border: 2px solid #000; padding: 20px 30px; text-align: center;">
                   <p style="font-size: 12px; margin: 0 0 5px 0; font-weight: bold;">Authorised Signatory</p>
                   <p style="font-size: 12px; margin: 0; font-weight: bold;">for FURNILI</p>
