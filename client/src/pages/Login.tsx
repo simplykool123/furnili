@@ -89,6 +89,12 @@ export default function Login() {
                   className="pl-10 border-gray-300 focus:border-blue-500"
                   disabled={isLoading}
                   autoComplete="off"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleSubmit(e as any);
+                    }
+                  }}
                 />
               </div>
             </div>
@@ -105,6 +111,12 @@ export default function Login() {
                   className="pl-10 pr-10 border-gray-300 focus:border-blue-500"
                   disabled={isLoading}
                   autoComplete="off"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleSubmit(e as any);
+                    }
+                  }}
                 />
                 <Button
                   type="button"
