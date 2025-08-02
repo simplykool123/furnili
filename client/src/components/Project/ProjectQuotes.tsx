@@ -687,18 +687,19 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
             </div>
             
             <!-- Right: Authorised Signatory - Matches Rate + Total Amount columns (150px) -->
-            <div style="border: 1px solid #000; border-top: none; padding: 6px; width: 150px; position: relative; display: flex; flex-direction: column; justify-content: center;">
-              <div style="text-align: center; margin-bottom: 40px;">
-                <p style="font-size: 10px; margin: 0; font-weight: bold;">Authorised</p>
-                <p style="font-size: 10px; margin: 0; font-weight: bold;">Signatory</p>
+            <div style="border: 1px solid #000; border-top: none; padding: 6px; width: 150px; display: flex; flex-direction: column; justify-content: space-between; height: 80px;">
+              <!-- Signature stamp at top -->
+              <div style="text-align: center; margin-bottom: 5px;">
+                <img src="${window.location.origin}/assets/furnili-signature-stamp.png" style="height: 35px; width: auto;" alt="Furnili Signature Stamp" onerror="this.style.display='none'" />
+              </div>
+              
+              <!-- Text in middle -->
+              <div style="text-align: center; flex-grow: 1; display: flex; flex-direction: column; justify-content: center;">
+                <p style="font-size: 10px; margin: 0; font-weight: bold;">Authorised Signatory</p>
                 <p style="font-size: 10px; margin: 0; font-weight: bold;">for FURNILI</p>
               </div>
               
-              <!-- Signature stamp overlaid in center -->
-              <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); opacity: 0.8;">
-                <img src="${window.location.origin}/assets/furnili-signature-stamp.png" style="height: 45px; width: auto;" alt="Furnili Signature Stamp" onerror="this.style.display='none'" />
-              </div>
-              
+              <!-- Signature line at bottom -->
               <div style="width: 120px; border-bottom: 1px solid #000; height: 1px; margin: 0 auto;"></div>
             </div>
           </div>
