@@ -693,7 +693,7 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
 
           <!-- Black Footer -->
           <div style="background-color: #000; color: white; padding: 15px; margin-top: 0px; text-align: center;">
-            <h3 style="margin: 0; font-size: 18px; font-weight: bold; letter-spacing: 2px;">Furnili - Bespoke Modular Furniture</h3>
+            <h3 style="margin: 0; font-size: 16px; font-weight: bold; letter-spacing: 2px; color: white;">Furnili - Bespoke Modular Furniture</h3>
             <p style="margin: 8px 0 0 0; font-size: 11px;">Sr.no - 31/1, Pisoli Road, Near Mohan Marbel, Pisoli,, Pune - 411048</p>
             <p style="margin: 5px 0 0 0; font-size: 11px; font-weight: bold;">+91 9823 011 223 &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp; info@furnili.com</p>
           </div>
