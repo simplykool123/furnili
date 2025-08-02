@@ -81,7 +81,7 @@ export default function LoginSimple() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="space-y-4">
+          <form onSubmit={(e) => { e.preventDefault(); handleLogin(); }} className="space-y-4">
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-700">Username</label>
               <div className="relative">
@@ -125,13 +125,13 @@ export default function LoginSimple() {
             </div>
 
             <Button
-              onClick={handleLogin}
+              type="submit"
               className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5"
               disabled={isLoading}
             >
               {isLoading ? "Signing in..." : "Sign In"}
             </Button>
-          </div>
+          </form>
 
           
         </CardContent>
