@@ -491,7 +491,7 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
                 <th style="border: 1px solid #000; padding: 8px; text-align: center; width: 80px;">Size</th>
                 <th style="border: 1px solid #000; padding: 8px; text-align: center; width: 50px;">Qty</th>
                 <th style="border: 1px solid #000; padding: 8px; text-align: center; width: 80px;">Rate</th>
-                <th style="border: 1px solid #000; padding: 8px; text-align: center; width: 80px;">Total Amount</th>
+                <th style="border: 1px solid #000; padding: 8px; text-align: center; width: 90px;">Total Amount</th>
               </tr>
             </thead>
             <tbody>
@@ -535,7 +535,7 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
             </div>
             
             <!-- Right Side: Totals Table -->
-            <table style="width: 210px; border-collapse: collapse; font-size: 11px;">
+            <table style="width: 220px; border-collapse: collapse; font-size: 11px;">
               ${(() => {
                 // Calculate correct totals from items
                 const itemsTotal = items.reduce((sum: number, item: any) => sum + (item.lineTotal || (item.quantity * item.unitPrice) || 0), 0);
@@ -546,8 +546,8 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
                 
                 return `
                   <tr>
-                    <td style="border: 1px solid #000; padding: 6px; text-align: right; width: 70%;">Total</td>
-                    <td style="border: 1px solid #000; padding: 6px; text-align: right; width: 30%;">₹${itemsTotal.toLocaleString('en-IN')}</td>
+                    <td style="border: 1px solid #000; padding: 6px; text-align: right; width: 130px;">Total</td>
+                    <td style="border: 1px solid #000; padding: 6px; text-align: right; width: 90px;">₹${itemsTotal.toLocaleString('en-IN')}</td>
                   </tr>
                   <tr>
                     <td style="border: 1px solid #000; padding: 6px; text-align: right;">Packaging @ 2%</td>
