@@ -539,8 +539,66 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
                     const gstAmount = Math.round(itemsTotal * 0.18);
                     const grandTotal = itemsTotal + packagingAmount + transportationAmount + gstAmount;
                     
-                    // Simple conversion for display
-                    return 'Rupees ' + grandTotal.toLocaleString('en-IN') + '/-';
+                    // Comprehensive number to words conversion
+                    function numberToWords(num) {
+                      if (num === 0) return 'Zero';
+                      
+                      const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine'];
+                      const teens = ['Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
+                      const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+                      
+                      function convertHundreds(n) {
+                        let result = '';
+                        if (n >= 100) {
+                          result += ones[Math.floor(n / 100)] + ' Hundred';
+                          n %= 100;
+                          if (n > 0) result += ' ';
+                        }
+                        if (n >= 20) {
+                          result += tens[Math.floor(n / 10)];
+                          n %= 10;
+                          if (n > 0) result += '-' + ones[n];
+                        } else if (n >= 10) {
+                          result += teens[n - 10];
+                        } else if (n > 0) {
+                          result += ones[n];
+                        }
+                        return result;
+                      }
+                      
+                      let result = '';
+                      
+                      // Handle crores (10,000,000s)
+                      if (num >= 10000000) {
+                        result += convertHundreds(Math.floor(num / 10000000)) + ' Crore';
+                        num %= 10000000;
+                        if (num > 0) result += ' ';
+                      }
+                      
+                      // Handle lakhs (100,000s)
+                      if (num >= 100000) {
+                        result += convertHundreds(Math.floor(num / 100000)) + ' Lakh';
+                        num %= 100000;
+                        if (num > 0) result += ' ';
+                      }
+                      
+                      // Handle thousands
+                      if (num >= 1000) {
+                        result += convertHundreds(Math.floor(num / 1000)) + ' Thousand';
+                        num %= 1000;
+                        if (num > 0) result += ' ';
+                      }
+                      
+                      // Handle remaining hundreds
+                      if (num > 0) {
+                        result += convertHundreds(num);
+                      }
+                      
+                      return result.trim();
+                    }
+                    
+                    const wordsAmount = numberToWords(grandTotal);
+                    return wordsAmount + ' Rupees Only';
                   })()}
                 </span>
               </div>
