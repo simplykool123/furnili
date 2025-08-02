@@ -546,24 +546,24 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
                 
                 return `
                   <tr>
-                    <td style="border: 1px solid #000; padding: 8px; text-align: right; width: 190px;">Total</td>
-                    <td style="border: 1px solid #000; padding: 8px; text-align: right; width: 90px;">₹${itemsTotal.toLocaleString('en-IN')}</td>
+                    <td style="border: 1px solid #000; padding: 4px 8px; text-align: right; width: 190px; font-size: 10px;">Total</td>
+                    <td style="border: 1px solid #000; padding: 4px 8px; text-align: right; width: 90px; font-size: 10px;">₹${itemsTotal.toLocaleString('en-IN')}</td>
                   </tr>
                   <tr>
-                    <td style="border: 1px solid #000; padding: 8px; text-align: right;">Packaging @ 2%</td>
-                    <td style="border: 1px solid #000; padding: 8px; text-align: right;">₹${packagingAmount.toLocaleString('en-IN')}</td>
+                    <td style="border: 1px solid #000; padding: 4px 8px; text-align: right; font-size: 10px;">Packaging @ 2%</td>
+                    <td style="border: 1px solid #000; padding: 4px 8px; text-align: right; font-size: 10px;">₹${packagingAmount.toLocaleString('en-IN')}</td>
                   </tr>
                   <tr>
-                    <td style="border: 1px solid #000; padding: 8px; text-align: right;">Transportation</td>
-                    <td style="border: 1px solid #000; padding: 8px; text-align: right;">₹${transportationAmount.toLocaleString('en-IN')}</td>
+                    <td style="border: 1px solid #000; padding: 4px 8px; text-align: right; font-size: 10px;">Transportation</td>
+                    <td style="border: 1px solid #000; padding: 4px 8px; text-align: right; font-size: 10px;">₹${transportationAmount.toLocaleString('en-IN')}</td>
                   </tr>
                   <tr>
-                    <td style="border: 1px solid #000; padding: 8px; text-align: right;">GST @ 18%</td>
-                    <td style="border: 1px solid #000; padding: 8px; text-align: right;">₹${gstAmount.toLocaleString('en-IN')}</td>
+                    <td style="border: 1px solid #000; padding: 4px 8px; text-align: right; font-size: 10px;">GST @ 18%</td>
+                    <td style="border: 1px solid #000; padding: 4px 8px; text-align: right; font-size: 10px;">₹${gstAmount.toLocaleString('en-IN')}</td>
                   </tr>
                   <tr style="font-weight: bold;">
-                    <td style="border: 1px solid #000; padding: 10px; text-align: right; background-color: #f0f0f0;">Grand Total</td>
-                    <td style="border: 1px solid #000; padding: 10px; text-align: right; background-color: #f0f0f0; font-weight: bold;">₹${grandTotal.toLocaleString('en-IN')}</td>
+                    <td style="border: 1px solid #000; padding: 4px 8px; text-align: right; background-color: #f0f0f0; font-size: 10px; font-weight: bold;">Grand Total</td>
+                    <td style="border: 1px solid #000; padding: 4px 8px; text-align: right; background-color: #f0f0f0; font-size: 10px; font-weight: bold;">₹${grandTotal.toLocaleString('en-IN')}</td>
                   </tr>
                 `;
               })()}
