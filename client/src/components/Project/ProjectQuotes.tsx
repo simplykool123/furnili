@@ -485,13 +485,13 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
           <table style="width: 100%; border-collapse: collapse; margin-bottom: 0px; font-size: 11px;">
             <thead>
               <tr style="background-color: #f0f0f0;">
-                <th style="border: 1px solid #000; padding: 8px; text-align: center; width: 40px;">Sr. No.</th>
-                <th style="border: 1px solid #000; padding: 8px; text-align: center; width: 120px;">Product </th>
-                <th style="border: 1px solid #000; padding: 8px; text-align: center;">Item Description</th>
-                <th style="border: 1px solid #000; padding: 8px; text-align: center; width: 80px;">Size</th>
-                <th style="border: 1px solid #000; padding: 8px; text-align: center; width: 50px;">Qty</th>
-                <th style="border: 1px solid #000; padding: 8px; text-align: center; width: 60px;">Rate</th>
-                <th style="border: 1px solid #000; padding: 8px; text-align: center; width: 90px;">Total Amount</th>
+                <th style="border: 2px solid #000; padding: 8px; text-align: center; width: 40px;">Sr. No.</th>
+                <th style="border: 2px solid #000; padding: 8px; text-align: center; width: 120px;">Product </th>
+                <th style="border: 2px solid #000; padding: 8px; text-align: center;">Item Description</th>
+                <th style="border: 2px solid #000; padding: 8px; text-align: center; width: 80px;">Size</th>
+                <th style="border: 2px solid #000; padding: 8px; text-align: center; width: 50px;">Qty</th>
+                <th style="border: 2px solid #000; padding: 8px; text-align: center; width: 60px;">Rate</th>
+                <th style="border: 2px solid #000; padding: 8px; text-align: center; width: 90px;">Total Amount</th>
               </tr>
             </thead>
             <tbody>
@@ -506,16 +506,16 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
 
                   return `
                 <tr>
-                  <td style="border: 1px solid #000; padding: 8px; text-align: center; vertical-align: top;">${index + 1}</td>
-                  <td style="border: 1px solid #000; padding: 8px; vertical-align: top;">
+                  <td style="border: 2px solid #000; padding: 8px; text-align: center; vertical-align: top;">${index + 1}</td>
+                  <td style="border: 2px solid #000; padding: 8px; vertical-align: top;">
                     <div style="font-weight: bold; margin-bottom: 5px;">${item.itemName || product.name || "Product"}</div>
                     ${productImageUrl ? `<img src="${productImageUrl}" style="width: 80px; height: 60px; object-fit: cover; border: 1px solid #ccc;" onerror="this.style.display='none'" />` : '<div style="width: 80px; height: 60px; background-color: #f5f5f5; border: 1px solid #ccc; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #999;">No Image</div>'}
                   </td>
-                  <td style="border: 1px solid #000; padding: 8px; vertical-align: top;">${item.description || product.description || ""}</td>
-                  <td style="border: 1px solid #000; padding: 8px; text-align: center; vertical-align: top;">${item.size || "-"}</td>
-                  <td style="border: 1px solid #000; padding: 8px; text-align: center; vertical-align: top;">${item.quantity || 0}</td>
-                  <td style="border: 1px solid #000; padding: 8px; text-align: right; vertical-align: top;">₹${(item.unitPrice || 0).toFixed(0)}</td>
-                  <td style="border: 1px solid #000; padding: 8px; text-align: right; vertical-align: top;">₹${((item.quantity || 0) * (item.unitPrice || 0)).toFixed(0)}</td>
+                  <td style="border: 2px solid #000; padding: 8px; vertical-align: top;">${item.description || product.description || ""}</td>
+                  <td style="border: 2px solid #000; padding: 8px; text-align: center; vertical-align: top;">${item.size || "-"}</td>
+                  <td style="border: 2px solid #000; padding: 8px; text-align: center; vertical-align: top;">${item.quantity || 0}</td>
+                  <td style="border: 2px solid #000; padding: 8px; text-align: right; vertical-align: top;">₹${(item.unitPrice || 0).toFixed(0)}</td>
+                  <td style="border: 2px solid #000; padding: 8px; text-align: right; vertical-align: top;">₹${((item.quantity || 0) * (item.unitPrice || 0)).toFixed(0)}</td>
                 </tr>
               `;
                 })
@@ -527,10 +527,10 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
           <table style="width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 0px;">
             <!-- Total Row with Total in Words -->
             <tr>
-              <td style="border: 1px solid #000; padding: 6px 8px; vertical-align: middle; width: calc(100% - 280px); height: 31px;">
-                <div style="display: flex; align-items: center; height: 100%;">
-                  <span style="font-size: 12px; font-weight: bold;">Total in Words:</span>
-                  <span style="font-size: 11px; font-style: italic; text-decoration: underline; margin-left: 8px;">
+              <td style="border: 2px solid #000; padding: 6px 8px; vertical-align: middle; width: calc(100% - 280px); height: 31px;">
+                <div style="display: flex; align-items: center; height: 100%; justify-content: flex-start;">
+                  <span style="font-size: 12px; font-weight: bold;">Total in Words: </span>
+                  <span style="font-size: 11px; font-style: italic; margin-left: 4px; font-weight: bold;">
                   ${(() => {
                     // Calculate grand total for words conversion
                     const itemsTotal = items.reduce((sum: number, item: any) => sum + (item.lineTotal || (item.quantity * item.unitPrice) || 0), 0);
@@ -603,8 +603,8 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
                   </span>
                 </div>
               </td>
-              <td style="border: 1px solid #000; border-left: none; padding: 6px 8px; text-align: right; vertical-align: middle; width: 190px; font-size: 11px;">Total</td>
-              <td style="border: 1px solid #000; border-left: none; padding: 6px 8px; text-align: right; vertical-align: middle; width: 90px; font-size: 11px;">
+              <td style="border: 2px solid #000; border-left: none; padding: 6px 8px; text-align: right; vertical-align: middle; width: 190px; font-size: 11px;">Total</td>
+              <td style="border: 2px solid #000; border-left: none; padding: 6px 8px; text-align: right; vertical-align: middle; width: 90px; font-size: 11px;">
                 ₹${(() => {
                   const itemsTotal = items.reduce((sum: number, item: any) => sum + (item.lineTotal || (item.quantity * item.unitPrice) || 0), 0);
                   return itemsTotal.toLocaleString('en-IN');
@@ -614,15 +614,15 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
             
             <!-- Furniture Specifications Row with Other Calculations -->
             <tr>
-              <td style="border: 1px solid #000; border-top: none; padding: 6px 8px; vertical-align: top; width: calc(100% - 280px);" rowspan="4">
+              <td style="border: 2px solid #000; border-top: none; padding: 6px 8px; vertical-align: top; width: calc(100% - 280px);" rowspan="4">
                 <h3 style="font-size: 12px; font-weight: bold; margin: 0 0 6px 0;">Furniture Specifications</h3>
                 <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">- All furniture will be manufactured using Said Materials</p>
                 <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">- All hardware considered of standard make.</p>
                 <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">- Standard laminates considered as per selection.</p>
                 <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">- Any modifications or changes in material selection may result in additional charges.</p>
               </td>
-              <td style="border: 1px solid #000; border-left: none; border-top: none; padding: 6px 8px; text-align: right; vertical-align: middle; font-size: 11px;">Packaging @ 2%</td>
-              <td style="border: 1px solid #000; border-left: none; border-top: none; padding: 6px 8px; text-align: right; vertical-align: middle; font-size: 11px;">
+              <td style="border: 2px solid #000; border-left: none; border-top: none; padding: 6px 8px; text-align: right; vertical-align: middle; font-size: 11px;">Packaging @ 2%</td>
+              <td style="border: 2px solid #000; border-left: none; border-top: none; padding: 6px 8px; text-align: right; vertical-align: middle; font-size: 11px;">
                 ₹${(() => {
                   const itemsTotal = items.reduce((sum: number, item: any) => sum + (item.lineTotal || (item.quantity * item.unitPrice) || 0), 0);
                   const packagingAmount = Math.round(itemsTotal * 0.02);
@@ -632,13 +632,13 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
             </tr>
             
             <tr>
-              <td style="border: 1px solid #000; border-left: none; border-top: none; padding: 6px 8px; text-align: right; vertical-align: middle; font-size: 11px;">Transportation</td>
-              <td style="border: 1px solid #000; border-left: none; border-top: none; padding: 6px 8px; text-align: right; vertical-align: middle; font-size: 11px;">₹5,000</td>
+              <td style="border: 2px solid #000; border-left: none; border-top: none; padding: 6px 8px; text-align: right; vertical-align: middle; font-size: 11px;">Transportation</td>
+              <td style="border: 2px solid #000; border-left: none; border-top: none; padding: 6px 8px; text-align: right; vertical-align: middle; font-size: 11px;">₹5,000</td>
             </tr>
             
             <tr>
-              <td style="border: 1px solid #000; border-left: none; border-top: none; padding: 6px 8px; text-align: right; vertical-align: middle; font-size: 11px;">GST @ 18%</td>
-              <td style="border: 1px solid #000; border-left: none; border-top: none; padding: 6px 8px; text-align: right; vertical-align: middle; font-size: 11px;">
+              <td style="border: 2px solid #000; border-left: none; border-top: none; padding: 6px 8px; text-align: right; vertical-align: middle; font-size: 11px;">GST @ 18%</td>
+              <td style="border: 2px solid #000; border-left: none; border-top: none; padding: 6px 8px; text-align: right; vertical-align: middle; font-size: 11px;">
                 ₹${(() => {
                   const itemsTotal = items.reduce((sum: number, item: any) => sum + (item.lineTotal || (item.quantity * item.unitPrice) || 0), 0);
                   const gstAmount = Math.round(itemsTotal * 0.18);
@@ -648,8 +648,8 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
             </tr>
             
             <tr style="font-weight: bold;">
-              <td style="border: 1px solid #000; border-left: none; border-top: none; padding: 6px 8px; text-align: right; vertical-align: middle; background-color: #f0f0f0; font-size: 11px; font-weight: bold;">Grand Total</td>
-              <td style="border: 1px solid #000; border-left: none; border-top: none; padding: 6px 8px; text-align: right; vertical-align: middle; background-color: #f0f0f0; font-size: 11px; font-weight: bold;">
+              <td style="border: 2px solid #000; border-left: none; border-top: none; padding: 6px 8px; text-align: right; vertical-align: middle; background-color: #f0f0f0; font-size: 11px; font-weight: bold;">Grand Total</td>
+              <td style="border: 2px solid #000; border-left: none; border-top: none; padding: 6px 8px; text-align: right; vertical-align: middle; background-color: #f0f0f0; font-size: 11px; font-weight: bold;">
                 ₹${(() => {
                   const itemsTotal = items.reduce((sum: number, item: any) => sum + (item.lineTotal || (item.quantity * item.unitPrice) || 0), 0);
                   const packagingAmount = Math.round(itemsTotal * 0.02);
@@ -665,7 +665,7 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
           <!-- Bottom Section: 3-Part Layout with Borders -->
           <div style="margin-top: 0px; display: flex; align-items: stretch;">
             <!-- Left: Payment Terms - Matches Furniture Specifications Width -->
-            <div style="border: 1px solid #000; padding: 8px; flex: 1; border-right: none;">
+            <div style="border: 2px solid #000; border-top: none; padding: 8px; flex: 1; border-right: none;">
               <h3 style="font-size: 12px; font-weight: bold; margin: 0 0 8px 0;">Payment Terms</h3>
               <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">30% Advance Payment: Due upon order confirmation.</p>
               <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">50% Payment Before Delivery: To be settled prior to dispatch.</p>
@@ -673,7 +673,7 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
             </div>
             
             <!-- Middle: Bank Details -->
-            <div style="border: 1px solid #000; padding: 8px; width: 150px; border-right: none;">
+            <div style="border: 2px solid #000; border-top: none; padding: 8px; width: 150px; border-right: none;">
               <h3 style="font-size: 12px; font-weight: bold; margin: 0 0 8px 0;">Bank Details</h3>
               <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">A/C Name: Furnili</p>
               <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">Bank: ICICI Bank</p>
@@ -683,7 +683,7 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
             </div>
             
             <!-- Right: Authorised Signatory -->
-            <div style="border: 1px solid #000; padding: 8px; width: 140px; display: flex; align-items: center; justify-content: center;">
+            <div style="border: 2px solid #000; border-top: none; padding: 8px; width: 140px; display: flex; align-items: center; justify-content: center;">
               <div style="text-align: center;">
                 <p style="font-size: 12px; margin: 0 0 30px 0; font-weight: bold;">Authorised Signatory</p>
                 <p style="font-size: 12px; margin: 30px 0 0 0; font-weight: bold;">for FURNILI</p>
