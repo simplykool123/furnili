@@ -6,12 +6,49 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -124,79 +161,104 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
   const queryClient = useQueryClient();
 
   // Fetch project quotes
-  const { data: quotes = [], isLoading, refetch } = useQuery({
-    queryKey: ['/api/quotes', 'project', projectId, searchTerm, statusFilter],
-    queryFn: () => apiRequest(`/api/quotes?projectId=${projectId}&search=${searchTerm}&status=${statusFilter}`),
+  const {
+    data: quotes = [],
+    isLoading,
+    refetch,
+  } = useQuery({
+    queryKey: ["/api/quotes", "project", projectId, searchTerm, statusFilter],
+    queryFn: () =>
+      apiRequest(
+        `/api/quotes?projectId=${projectId}&search=${searchTerm}&status=${statusFilter}`,
+      ),
   });
 
   // Fetch project client data
   const { data: projectData } = useQuery({
-    queryKey: ['/api/projects', projectId],
+    queryKey: ["/api/projects", projectId],
     queryFn: () => apiRequest(`/api/projects/${projectId}`),
   });
 
   // Fetch sales products for items
   const { data: salesProducts = [] } = useQuery({
-    queryKey: ['/api/quotes/products/list'],
-    queryFn: () => apiRequest('/api/quotes/products/list'),
+    queryKey: ["/api/quotes/products/list"],
+    queryFn: () => apiRequest("/api/quotes/products/list"),
   });
 
   // Create quote mutation
   const createMutation = useMutation({
-    mutationFn: (data: QuoteFormData & { items: QuoteItem[] }) => 
-      apiRequest('/api/quotes', {
-        method: 'POST',
+    mutationFn: (data: QuoteFormData & { items: QuoteItem[] }) =>
+      apiRequest("/api/quotes", {
+        method: "POST",
         body: JSON.stringify({
           ...data,
           projectId: parseInt(projectId),
         }),
       }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/quotes'] });
+      queryClient.invalidateQueries({ queryKey: ["/api/quotes"] });
       setShowCreateDialog(false);
       setQuoteItems([]);
       toast({ title: "Quote created successfully" });
     },
     onError: (error: any) => {
-      toast({ title: "Error creating quote", description: error.message, variant: "destructive" });
+      toast({
+        title: "Error creating quote",
+        description: error.message,
+        variant: "destructive",
+      });
     },
   });
 
   // Update quote mutation
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: QuoteFormData & { items: QuoteItem[] } }) => 
+    mutationFn: ({
+      id,
+      data,
+    }: {
+      id: number;
+      data: QuoteFormData & { items: QuoteItem[] };
+    }) =>
       apiRequest(`/api/quotes/${id}`, {
-        method: 'PUT',
+        method: "PUT",
         body: JSON.stringify({
           ...data,
           projectId: parseInt(projectId),
         }),
       }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/quotes'] });
+      queryClient.invalidateQueries({ queryKey: ["/api/quotes"] });
       setShowEditDialog(false);
       setQuoteItems([]);
       toast({ title: "Quote updated successfully" });
     },
     onError: (error: any) => {
-      toast({ title: "Error updating quote", description: error.message, variant: "destructive" });
+      toast({
+        title: "Error updating quote",
+        description: error.message,
+        variant: "destructive",
+      });
     },
   });
 
   // Delete quote mutation
   const deleteMutation = useMutation({
-    mutationFn: (id: number) => 
+    mutationFn: (id: number) =>
       apiRequest(`/api/quotes/${id}`, {
-        method: 'DELETE',
+        method: "DELETE",
       }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/quotes'] });
+      queryClient.invalidateQueries({ queryKey: ["/api/quotes"] });
       setShowDeleteDialog(false);
       setSelectedQuote(null);
       toast({ title: "Quote deleted successfully" });
     },
     onError: (error: any) => {
-      toast({ title: "Error deleting quote", description: error.message, variant: "destructive" });
+      toast({
+        title: "Error deleting quote",
+        description: error.message,
+        variant: "destructive",
+      });
     },
   });
 
@@ -243,18 +305,25 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
   // Handle product selection from dropdown
   const handleProductSelection = (productId: string) => {
     if (!productId) return;
-    
-    const selectedProduct = salesProducts.find((p: any) => p.id.toString() === productId);
+
+    const selectedProduct = salesProducts.find(
+      (p: any) => p.id.toString() === productId,
+    );
     if (selectedProduct) {
       // Auto-populate product details
-      itemForm.setValue('itemName', selectedProduct.name);
-      itemForm.setValue('description', selectedProduct.description || selectedProduct.specifications || `${selectedProduct.name} - Premium quality furniture product`);
-      itemForm.setValue('unitPrice', selectedProduct.unitPrice || 0);
-      itemForm.setValue('uom', selectedProduct.unit || 'pcs');
-      
+      itemForm.setValue("itemName", selectedProduct.name);
+      itemForm.setValue(
+        "description",
+        selectedProduct.description ||
+          selectedProduct.specifications ||
+          `${selectedProduct.name} - Premium quality furniture product`,
+      );
+      itemForm.setValue("unitPrice", selectedProduct.unitPrice || 0);
+      itemForm.setValue("uom", selectedProduct.unit || "pcs");
+
       // Set default quantity to 1 if not already set
-      if (!itemForm.watch('quantity')) {
-        itemForm.setValue('quantity', 1);
+      if (!itemForm.watch("quantity")) {
+        itemForm.setValue("quantity", 1);
       }
     }
   };
@@ -263,16 +332,23 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
   const handleSaveItem = (data: any) => {
     const newItem: QuoteItem = {
       ...data,
-      discountAmount: (data.quantity * data.unitPrice * data.discountPercentage) / 100,
-      taxAmount: ((data.quantity * data.unitPrice - (data.quantity * data.unitPrice * data.discountPercentage) / 100) * data.taxPercentage) / 100,
+      discountAmount:
+        (data.quantity * data.unitPrice * data.discountPercentage) / 100,
+      taxAmount:
+        ((data.quantity * data.unitPrice -
+          (data.quantity * data.unitPrice * data.discountPercentage) / 100) *
+          data.taxPercentage) /
+        100,
       lineTotal: 0,
     };
     newItem.lineTotal = calculateLineTotal(newItem);
 
     if (editingItem) {
       // Update existing item
-      const itemIndex = quoteItems.findIndex((item, index) => 
-        editingItem.id ? item.id === editingItem.id : index === quoteItems.indexOf(editingItem)
+      const itemIndex = quoteItems.findIndex((item, index) =>
+        editingItem.id
+          ? item.id === editingItem.id
+          : index === quoteItems.indexOf(editingItem),
       );
       if (itemIndex !== -1) {
         const updatedItems = [...quoteItems];
@@ -317,19 +393,22 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
   // Calculate quote totals
   const calculateTotals = () => {
     const subtotal = quoteItems.reduce((sum, item) => {
-      return sum + ((item.quantity || 0) * (item.unitPrice || 0));
+      return sum + (item.quantity || 0) * (item.unitPrice || 0);
     }, 0);
-    
+
     const totalDiscountAmount = quoteItems.reduce((sum, item) => {
       return sum + (item.discountAmount || 0);
     }, 0);
-    
+
     const totalTaxAmount = quoteItems.reduce((sum, item) => {
       return sum + (item.taxAmount || 0);
     }, 0);
-    
-    const total = quoteItems.reduce((sum, item) => sum + (item.lineTotal || 0), 0);
-    
+
+    const total = quoteItems.reduce(
+      (sum, item) => sum + (item.lineTotal || 0),
+      0,
+    );
+
     return {
       subtotal: subtotal || 0,
       totalDiscountAmount: totalDiscountAmount || 0,
@@ -348,18 +427,23 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
   const handleExportPDF = async (quote: Quote) => {
     try {
       // Fetch complete quote details including client and items
-      const quoteDetailsResponse = await apiRequest(`/api/quotes/${quote.id}/details`);
-      
+      const quoteDetailsResponse = await apiRequest(
+        `/api/quotes/${quote.id}/details`,
+      );
+
       // Extract client data from the quote details response
-      const client = quoteDetailsResponse.client || { name: 'Client Name', address: 'Client Address' };
+      const client = quoteDetailsResponse.client || {
+        name: "Client Name",
+        address: "Client Address",
+      };
       const items = quoteDetailsResponse.items || [];
-      
-      console.log('Quote Details:', quoteDetailsResponse);
-      console.log('Client Data:', client);
-      console.log('Items Data:', items);
-      
+
+      console.log("Quote Details:", quoteDetailsResponse);
+      console.log("Client Data:", client);
+      console.log("Items Data:", items);
+
       // Create professional PDF content matching Furnili format
-      const element = document.createElement('div');
+      const element = document.createElement("div");
       element.innerHTML = `
         <div style="font-family: Arial, sans-serif; font-size: 12px; margin: 0; padding: 20px;">
           <!-- Header -->
@@ -379,13 +463,13 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
           <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
             <div style="width: 60%;">
               <p style="margin: 0;"><strong>To,</strong></p>
-              <p style="margin: 0; font-weight: bold;">${client.name || 'Client Name'}</p>
-              <p style="margin: 0;">${client.email || ''}</p>
-              <p style="margin: 0;">${client.mobile || ''}</p>
-              <p style="margin: 0;">${client.city || 'Address'}</p>
+              <p style="margin: 0; font-weight: bold;">${client.name || "Client Name"}</p>
+              <p style="margin: 0;">${client.email || ""}</p>
+              <p style="margin: 0;">${client.mobile || ""}</p>
+              <p style="margin: 0;">${client.city || "Address"}</p>
             </div>
             <div style="width: 35%; text-align: right;">
-              <p style="margin: 0;"><strong>Date :-</strong> ${new Date(quote.createdAt).toLocaleDateString('en-GB')}</p>
+              <p style="margin: 0;"><strong>Date :-</strong> ${new Date(quote.createdAt).toLocaleDateString("en-GB")}</p>
               <p style="margin: 0;"><strong>Est. No. :-</strong> ${quote.quoteNumber}</p>
               <p style="margin: 0;"><strong>GSTN :-</strong> 27AAKFF2192A1ZO</p>
               <p style="margin: 0;"><strong>PAN :-</strong> AAKFF2192A</p>
@@ -398,120 +482,138 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
             <thead>
               <tr style="background-color: #f0f0f0;">
                 <th style="border: 1px solid #000; padding: 8px; text-align: center; width: 40px;">Sr. No.</th>
-                <th style="border: 1px solid #000; padding: 8px; text-align: center; width: 180px;">Image/Product Code/HSN Code</th>
+                <th style="border: 1px solid #000; padding: 8px; text-align: center; width: 180px;">Product </th>
                 <th style="border: 1px solid #000; padding: 8px; text-align: center;">Item Description</th>
-                <th style="border: 1px solid #000; padding: 8px; text-align: center; width: 80px;">SIZE</th>
+                <th style="border: 1px solid #000; padding: 8px; text-align: center; width: 80px;">Size</th>
                 <th style="border: 1px solid #000; padding: 8px; text-align: center; width: 50px;">Qty</th>
                 <th style="border: 1px solid #000; padding: 8px; text-align: center; width: 80px;">Rate</th>
                 <th style="border: 1px solid #000; padding: 8px; text-align: center; width: 80px;">Total Amount</th>
               </tr>
             </thead>
             <tbody>
-              ${items.map((itemData: any, index: number) => {
-                const item = itemData.item || itemData; // Handle both nested and flat structures
-                const product = itemData.salesProduct || {};
-                const productImageUrl = product.imageUrl && product.imageUrl.startsWith('/') 
-                  ? `${window.location.origin}${product.imageUrl}` 
-                  : product.imageUrl;
-                
-                return `
+              ${items
+                .map((itemData: any, index: number) => {
+                  const item = itemData.item || itemData; // Handle both nested and flat structures
+                  const product = itemData.salesProduct || {};
+                  const productImageUrl =
+                    product.imageUrl && product.imageUrl.startsWith("/")
+                      ? `${window.location.origin}${product.imageUrl}`
+                      : product.imageUrl;
+
+                  return `
                 <tr>
                   <td style="border: 1px solid #000; padding: 8px; text-align: center; vertical-align: top;">${index + 1}</td>
                   <td style="border: 1px solid #000; padding: 8px; vertical-align: top;">
-                    <div style="font-weight: bold; margin-bottom: 5px;">${item.itemName || product.name || 'Product'}</div>
+                    <div style="font-weight: bold; margin-bottom: 5px;">${item.itemName || product.name || "Product"}</div>
                     ${productImageUrl ? `<img src="${productImageUrl}" style="width: 80px; height: 60px; object-fit: cover; border: 1px solid #ccc;" onerror="this.style.display='none'" />` : '<div style="width: 80px; height: 60px; background-color: #f5f5f5; border: 1px solid #ccc; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #999;">No Image</div>'}
                   </td>
-                  <td style="border: 1px solid #000; padding: 8px; vertical-align: top;">${item.description || product.description || ''}</td>
-                  <td style="border: 1px solid #000; padding: 8px; text-align: center; vertical-align: top;">${item.size || '-'}</td>
+                  <td style="border: 1px solid #000; padding: 8px; vertical-align: top;">${item.description || product.description || ""}</td>
+                  <td style="border: 1px solid #000; padding: 8px; text-align: center; vertical-align: top;">${item.size || "-"}</td>
                   <td style="border: 1px solid #000; padding: 8px; text-align: center; vertical-align: top;">${item.quantity || 0}</td>
                   <td style="border: 1px solid #000; padding: 8px; text-align: right; vertical-align: top;">₹${(item.unitPrice || 0).toFixed(0)}</td>
                   <td style="border: 1px solid #000; padding: 8px; text-align: right; vertical-align: top;">₹${((item.quantity || 0) * (item.unitPrice || 0)).toFixed(0)}</td>
                 </tr>
-              `;}).join('')}
+              `;
+                })
+                .join("")}
             </tbody>
           </table>
 
-          <!-- Footer Totals -->
+          <!-- Bottom Section with Totals -->
           <div style="display: flex; justify-content: space-between; margin-top: 20px;">
-            <div style="width: 60%;">
-              <h3 style="font-size: 14px; margin-bottom: 10px;">Furniture Specifications</h3>
-              <p style="font-size: 10px; margin: 2px 0;">- All furniture will be manufactured using Said Materials</p>
-              <p style="font-size: 10px; margin: 2px 0;">- All hardware considered of standard make.</p>
-              <p style="font-size: 10px; margin: 2px 0;">- Standard laminates considered as per selection.</p>
-              <p style="font-size: 10px; margin: 2px 0;">- Any modifications or changes in material selection may result in additional charges.</p>
-              
-              <h3 style="font-size: 14px; margin: 20px 0 10px 0;">Payment Terms</h3>
-              <p style="font-size: 10px; margin: 2px 0;"><strong>30%</strong> Advance Payment: Due upon order confirmation.</p>
-              <p style="font-size: 10px; margin: 2px 0;"><strong>50%</strong> Payment Before Delivery: To be settled prior to dispatch.</p>
-              <p style="font-size: 10px; margin: 2px 0;"><strong>20%</strong> Payment on Delivery</p>
+            <div style="width: 50%;">
+              <!-- Empty space to push totals to right -->
             </div>
-            
-            <div style="width: 35%;">
-              <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
+            <div style="width: 45%;">
+              <table style="width: 100%; border-collapse: collapse; font-size: 11px; margin-bottom: 20px;">
                 <tr>
-                  <td style="border-bottom: 1px solid #000; padding: 5px; text-align: right; font-weight: bold;">Total</td>
-                  <td style="border-bottom: 1px solid #000; padding: 5px; text-align: right;">₹${quote.subtotal?.toFixed(0) || quote.totalAmount.toFixed(0)}</td>
+                  <td style="border: 1px solid #000; padding: 8px; text-align: right; font-weight: bold;">Total</td>
+                  <td style="border: 1px solid #000; padding: 8px; text-align: right; font-weight: bold;">₹${(quote.subtotal || quote.totalAmount || 0).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}</td>
                 </tr>
                 <tr>
-                  <td style="border-bottom: 1px solid #000; padding: 5px; text-align: right;">Packaging @ 2%</td>
-                  <td style="border-bottom: 1px solid #000; padding: 5px; text-align: right;">₹${((quote.subtotal || quote.totalAmount) * 0.02).toFixed(0)}</td>
+                  <td style="border: 1px solid #000; padding: 8px; text-align: right;">Packaging @ 2%</td>
+                  <td style="border: 1px solid #000; padding: 8px; text-align: right;">₹${(((quote.subtotal || quote.totalAmount || 0) * 0.02)).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}</td>
                 </tr>
                 <tr>
-                  <td style="border-bottom: 1px solid #000; padding: 5px; text-align: right;">Transportation</td>
-                  <td style="border-bottom: 1px solid #000; padding: 5px; text-align: right;">₹5,000</td>
+                  <td style="border: 1px solid #000; padding: 8px; text-align: right;">Transportation</td>
+                  <td style="border: 1px solid #000; padding: 8px; text-align: right;">₹5,000</td>
                 </tr>
                 <tr>
-                  <td style="border-bottom: 1px solid #000; padding: 5px; text-align: right;">GST @ 18%</td>
-                  <td style="border-bottom: 1px solid #000; padding: 5px; text-align: right;">₹${(quote.taxAmount || ((quote.subtotal || quote.totalAmount) * 0.18)).toFixed(0)}</td>
+                  <td style="border: 1px solid #000; padding: 8px; text-align: right;">GST @ 18%</td>
+                  <td style="border: 1px solid #000; padding: 8px; text-align: right;">₹${((quote.taxAmount || (quote.subtotal || quote.totalAmount || 0) * 0.18)).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}</td>
                 </tr>
-                <tr style="font-weight: bold; font-size: 12px;">
-                  <td style="border-bottom: 2px solid #000; padding: 8px; text-align: right;">Grand Total</td>
-                  <td style="border-bottom: 2px solid #000; padding: 8px; text-align: right;">₹${quote.totalAmount.toFixed(0)}</td>
+                <tr style="font-weight: bold;">
+                  <td style="border: 1px solid #000; padding: 8px; text-align: right; background-color: #f0f0f0;">Grand Total</td>
+                  <td style="border: 1px solid #000; padding: 8px; text-align: right; background-color: #f0f0f0; font-weight: bold;">₹${((quote.totalAmount || 0) + ((quote.subtotal || quote.totalAmount || 0) * 0.02) + 5000).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}</td>
                 </tr>
               </table>
+            </div>
+          </div>
+
+          <!-- Specifications and Terms Section -->
+          <div style="display: flex; justify-content: space-between; margin-top: 30px;">
+            <div style="width: 48%; border: 1px solid #000; padding: 10px;">
+              <h3 style="font-size: 12px; font-weight: bold; margin: 0 0 8px 0; text-decoration: underline;">Furniture Specifications</h3>
+              <p style="font-size: 10px; margin: 2px 0;">• All furniture will be manufactured using Said Materials</p>
+              <p style="font-size: 10px; margin: 2px 0;">• All hardware considered of standard make.</p>
+              <p style="font-size: 10px; margin: 2px 0;">• Standard laminates considered as per selection.</p>
+              <p style="font-size: 10px; margin: 2px 0;">• Any modifications or changes in material selection may result in additional charges.</p>
               
-              <div style="margin-top: 20px;">
-                <h4 style="font-size: 12px; margin-bottom: 10px;">Bank Details</h4>
-                <p style="font-size: 10px; margin: 1px 0;"><strong>A/C Name:</strong> Furnili</p>
-                <p style="font-size: 10px; margin: 1px 0;"><strong>Bank:</strong> ICICI Bank</p>
-                <p style="font-size: 10px; margin: 1px 0;"><strong>Branch:</strong> Nigdi</p>
-                <p style="font-size: 10px; margin: 1px 0;"><strong>A/C No.:</strong> 230505006647</p>
-                <p style="font-size: 10px; margin: 1px 0;"><strong>IFSC:</strong> ICIC0002305</p>
+              <h3 style="font-size: 12px; font-weight: bold; margin: 15px 0 8px 0; text-decoration: underline;">Payment Terms</h3>
+              <p style="font-size: 10px; margin: 2px 0;"><strong>30% Advance Payment:</strong> Due upon order confirmation.</p>
+              <p style="font-size: 10px; margin: 2px 0;"><strong>50% Payment Before Delivery:</strong> To be settled prior to dispatch.</p>
+              <p style="font-size: 10px; margin: 2px 0;"><strong>20% Payment on Delivery</strong></p>
+            </div>
+            
+            <div style="width: 48%; border: 1px solid #000; padding: 10px;">
+              <h3 style="font-size: 12px; font-weight: bold; margin: 0 0 8px 0; text-decoration: underline;">Bank Details</h3>
+              <p style="font-size: 10px; margin: 2px 0;"><strong>A/C Name:</strong> Furnili</p>
+              <p style="font-size: 10px; margin: 2px 0;"><strong>Bank:</strong> ICICI Bank</p>
+              <p style="font-size: 10px; margin: 2px 0;"><strong>Branch:</strong> Nigdi</p>
+              <p style="font-size: 10px; margin: 2px 0;"><strong>A/C No.:</strong> 230505006647</p>
+              <p style="font-size: 10px; margin: 2px 0;"><strong>IFSC:</strong> ICIC0002305</p>
+              
+              <div style="margin-top: 15px; text-align: center;">
+                <div style="border: 2px solid #000; padding: 15px;">
+                  <h2 style="font-size: 24px; font-weight: bold; margin: 0; letter-spacing: 3px;">FURNILI</h2>
+                  <p style="font-size: 10px; margin: 5px 0; font-style: italic;">Authorised Signatory</p>
+                  <p style="font-size: 10px; margin: 0; font-weight: bold;">for FURNILI</p>
+                </div>
               </div>
             </div>
           </div>
 
-          <!-- Company Footer -->
-          <div style="background-color: #2c3e50; color: white; padding: 15px; margin-top: 30px; text-align: center;">
-            <h3 style="margin: 0; font-size: 16px;">Furnili - Bespoke Modular Furniture</h3>
-            <p style="margin: 5px 0; font-size: 10px;">Sr.no - 31/1 , Pisoli Road, Near Mohan Marbel, Pisoli,, Pune - 411048</p>
-            <p style="margin: 5px 0; font-size: 10px;">+91 98231 01223 | info@furnili.com</p>
+          <!-- Black Footer -->
+          <div style="background-color: #000; color: white; padding: 15px; margin-top: 20px; text-align: center;">
+            <h3 style="margin: 0; font-size: 18px; font-weight: bold; letter-spacing: 2px;">Furnili - Bespoke Modular Furniture</h3>
+            <p style="margin: 8px 0 0 0; font-size: 11px;">Sr.no - 31/1, Pisoli Road, Near Mohan Marbel, Pisoli,, Pune - 411048</p>
+            <p style="margin: 5px 0 0 0; font-size: 11px; font-weight: bold;">+91 9823 011 223 &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp; info@furnili.com</p>
           </div>
         </div>
       `;
-      
+
       const opt = {
         margin: [0.5, 0.5, 0.5, 0.5],
         filename: `${quote.quoteNumber}_Furnili_Quote.pdf`,
-        image: { type: 'jpeg', quality: 0.98 },
+        image: { type: "jpeg", quality: 0.98 },
         html2canvas: { scale: 2, useCORS: true },
-        jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+        jsPDF: { unit: "in", format: "a4", orientation: "portrait" },
       };
 
-      // Import html2pdf dynamically  
-      const { default: html2pdf } = await import('html2pdf.js');
+      // Import html2pdf dynamically
+      const { default: html2pdf } = await import("html2pdf.js");
       html2pdf().set(opt).from(element).save();
-      
+
       toast({
         title: "Professional PDF Generated",
-        description: "Furnili branded quote PDF downloaded successfully."
+        description: "Furnili branded quote PDF downloaded successfully.",
       });
     } catch (error) {
-      console.error('PDF generation error:', error);
+      console.error("PDF generation error:", error);
       toast({
         title: "Error",
         description: "Failed to generate PDF. Please try again.",
-        variant: "destructive"
+        variant: "destructive",
       });
     }
   };
@@ -523,7 +625,7 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
         await navigator.share({
           title: `Quote ${quote.quoteNumber}`,
           text: `${quote.title} - ₹${quote.totalAmount.toFixed(2)}`,
-          url: window.location.href
+          url: window.location.href,
         });
       } else {
         // Fallback: copy to clipboard
@@ -531,14 +633,14 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
         await navigator.clipboard.writeText(shareText);
         toast({
           title: "Copied to Clipboard",
-          description: "Quote details copied to clipboard."
+          description: "Quote details copied to clipboard.",
         });
       }
     } catch (error) {
       toast({
         title: "Error",
         description: "Failed to share quote. Please try again.",
-        variant: "destructive"
+        variant: "destructive",
       });
     }
   };
@@ -546,7 +648,10 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
   // Handle form submission
   const handleSubmit = (data: QuoteFormData) => {
     if (quoteItems.length === 0) {
-      toast({ title: "Please add at least one item to the quote", variant: "destructive" });
+      toast({
+        title: "Please add at least one item to the quote",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -572,10 +677,10 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
   const handleEditQuote = (quote: Quote) => {
     setSelectedQuote(quote);
     // Populate form with existing quote data
-    form.setValue('title', quote.title);
-    form.setValue('description', quote.description || '');
-    form.setValue('status', quote.status);
-    
+    form.setValue("title", quote.title);
+    form.setValue("description", quote.description || "");
+    form.setValue("status", quote.status);
+
     // Fetch and set quote items
     fetchQuoteItems(quote.id);
     setShowEditDialog(true);
@@ -587,7 +692,7 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
       const response = await apiRequest(`/api/quotes/${quoteId}/items`);
       setQuoteItems(response || []);
     } catch (error) {
-      console.error('Error fetching quote items:', error);
+      console.error("Error fetching quote items:", error);
       setQuoteItems([]);
     }
   };
@@ -604,20 +709,20 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
         totalDiscount: totals.totalDiscount,
         taxAmount: totals.totalTax,
         totalAmount: totals.grandTotal,
-        items: quoteItems
+        items: quoteItems,
       };
 
       await apiRequest(`/api/quotes/${selectedQuote.id}`, {
-        method: 'PUT',
-        body: JSON.stringify(quoteData)
+        method: "PUT",
+        body: JSON.stringify(quoteData),
       });
 
       // Invalidate and refetch quotes
-      queryClient.invalidateQueries({ queryKey: ['/api/quotes'] });
+      queryClient.invalidateQueries({ queryKey: ["/api/quotes"] });
 
       toast({
         title: "Quote Updated",
-        description: "Quote has been updated successfully."
+        description: "Quote has been updated successfully.",
       });
 
       setShowEditDialog(false);
@@ -627,7 +732,7 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
       toast({
         title: "Error",
         description: "Failed to update quote. Please try again.",
-        variant: "destructive"
+        variant: "destructive",
       });
     }
   };
@@ -649,14 +754,22 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
   };
 
   // Filter quotes based on search and status
-  const filteredQuotes = (quotes || []).filter((quote: Quote) => {
-    const matchesSearch = searchTerm === '' || 
-                         quote.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         quote.quoteNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         (quote.description && quote.description.toLowerCase().includes(searchTerm.toLowerCase()));
-    const matchesStatus = statusFilter === 'all' || quote.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  }).sort((a: Quote, b: Quote) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  const filteredQuotes = (quotes || [])
+    .filter((quote: Quote) => {
+      const matchesSearch =
+        searchTerm === "" ||
+        quote.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        quote.quoteNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (quote.description &&
+          quote.description.toLowerCase().includes(searchTerm.toLowerCase()));
+      const matchesStatus =
+        statusFilter === "all" || quote.status === statusFilter;
+      return matchesSearch && matchesStatus;
+    })
+    .sort(
+      (a: Quote, b: Quote) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    );
 
   if (isLoading) {
     return (
@@ -672,9 +785,11 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
       <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-start sm:items-center justify-between">
         <div>
           <h2 className="text-lg font-semibold">Project Quotes</h2>
-          <p className="text-sm text-muted-foreground">Manage quotes for this project</p>
+          <p className="text-sm text-muted-foreground">
+            Manage quotes for this project
+          </p>
         </div>
-        
+
         <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
           <DialogTrigger asChild>
             <Button className="w-full sm:w-auto h-8 text-xs">
@@ -689,9 +804,12 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
                 Create a new quote for this project
               </DialogDescription>
             </DialogHeader>
-            
+
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-3">
+              <form
+                onSubmit={form.handleSubmit(handleSubmit)}
+                className="space-y-3"
+              >
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <FormField
                     control={form.control}
@@ -700,7 +818,11 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
                       <FormItem>
                         <FormLabel className="text-xs">Quote Title *</FormLabel>
                         <FormControl>
-                          <Input {...field} placeholder="Enter quote title" className="h-8" />
+                          <Input
+                            {...field}
+                            placeholder="Enter quote title"
+                            className="h-8"
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -712,18 +834,27 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
                     name="paymentTerms"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-xs">Payment Terms *</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
+                        <FormLabel className="text-xs">
+                          Payment Terms *
+                        </FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          value={field.value}
+                        >
                           <FormControl>
                             <SelectTrigger className="h-8">
                               <SelectValue placeholder="Select payment terms" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="Immediate Payment">Immediate Payment</SelectItem>
+                            <SelectItem value="Immediate Payment">
+                              Immediate Payment
+                            </SelectItem>
                             <SelectItem value="Net 30">Net 30</SelectItem>
                             <SelectItem value="Net 60">Net 60</SelectItem>
-                            <SelectItem value="50% Advance, 50% on Completion">50% Advance, 50% on Completion</SelectItem>
+                            <SelectItem value="50% Advance, 50% on Completion">
+                              50% Advance, 50% on Completion
+                            </SelectItem>
                           </SelectContent>
                         </Select>
                         <FormMessage />
@@ -739,7 +870,11 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
                     <FormItem>
                       <FormLabel className="text-xs">Description</FormLabel>
                       <FormControl>
-                        <Textarea {...field} placeholder="Quote description" className="min-h-[60px]" />
+                        <Textarea
+                          {...field}
+                          placeholder="Quote description"
+                          className="min-h-[60px]"
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -755,17 +890,38 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
                     <div className="grid grid-cols-1 sm:grid-cols-5 gap-3 items-end">
                       {/* Product Selection */}
                       <div className="sm:col-span-2">
-                        <Label className="text-xs font-medium">Product Name</Label>
-                        <Select 
+                        <Label className="text-xs font-medium">
+                          Product Name
+                        </Label>
+                        <Select
                           onValueChange={(value) => {
-                            const selectedProduct = salesProducts.find((p: any) => p.id.toString() === value);
+                            const selectedProduct = salesProducts.find(
+                              (p: any) => p.id.toString() === value,
+                            );
                             if (selectedProduct) {
-                              itemForm.setValue('salesProductId', selectedProduct.id);
-                              itemForm.setValue('itemName', selectedProduct.name);
-                              itemForm.setValue('description', selectedProduct.description || selectedProduct.specifications || `${selectedProduct.name} - Premium quality`);
-                              itemForm.setValue('unitPrice', selectedProduct.unitPrice || 0);
-                              itemForm.setValue('uom', selectedProduct.unit || 'pcs');
-                              itemForm.setValue('quantity', 1);
+                              itemForm.setValue(
+                                "salesProductId",
+                                selectedProduct.id,
+                              );
+                              itemForm.setValue(
+                                "itemName",
+                                selectedProduct.name,
+                              );
+                              itemForm.setValue(
+                                "description",
+                                selectedProduct.description ||
+                                  selectedProduct.specifications ||
+                                  `${selectedProduct.name} - Premium quality`,
+                              );
+                              itemForm.setValue(
+                                "unitPrice",
+                                selectedProduct.unitPrice || 0,
+                              );
+                              itemForm.setValue(
+                                "uom",
+                                selectedProduct.unit || "pcs",
+                              );
+                              itemForm.setValue("quantity", 1);
                             }
                           }}
                         >
@@ -774,7 +930,10 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
                           </SelectTrigger>
                           <SelectContent>
                             {salesProducts.map((product: any) => (
-                              <SelectItem key={product.id} value={product.id.toString()}>
+                              <SelectItem
+                                key={product.id}
+                                value={product.id.toString()}
+                              >
                                 {product.name} - ₹{product.unitPrice}
                               </SelectItem>
                             ))}
@@ -785,34 +944,48 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
                       {/* Quantity */}
                       <div>
                         <Label className="text-xs font-medium">Qty</Label>
-                        <Input 
-                          type="number" 
-                          placeholder="1" 
+                        <Input
+                          type="number"
+                          placeholder="1"
                           className="h-8"
-                          value={itemForm.watch('quantity') || ''}
-                          onChange={(e) => itemForm.setValue('quantity', parseFloat(e.target.value) || 1)}
+                          value={itemForm.watch("quantity") || ""}
+                          onChange={(e) =>
+                            itemForm.setValue(
+                              "quantity",
+                              parseFloat(e.target.value) || 1,
+                            )
+                          }
                         />
                       </div>
 
                       {/* Rate */}
                       <div>
                         <Label className="text-xs font-medium">Rate</Label>
-                        <Input 
-                          type="number" 
-                          placeholder="0" 
+                        <Input
+                          type="number"
+                          placeholder="0"
                           className="h-8"
-                          value={itemForm.watch('unitPrice') || ''}
-                          onChange={(e) => itemForm.setValue('unitPrice', parseFloat(e.target.value) || 0)}
+                          value={itemForm.watch("unitPrice") || ""}
+                          onChange={(e) =>
+                            itemForm.setValue(
+                              "unitPrice",
+                              parseFloat(e.target.value) || 0,
+                            )
+                          }
                         />
                       </div>
 
                       {/* Add Button */}
                       <div>
-                        <Button 
-                          type="button" 
+                        <Button
+                          type="button"
                           onClick={() => {
                             const formData = itemForm.getValues();
-                            if (formData.itemName && formData.quantity && formData.unitPrice) {
+                            if (
+                              formData.itemName &&
+                              formData.quantity &&
+                              formData.unitPrice
+                            ) {
                               handleSaveItem(formData);
                               itemForm.reset({
                                 itemName: "",
@@ -835,10 +1008,14 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
                     </div>
 
                     {/* Auto-populated Description */}
-                    {itemForm.watch('description') && (
+                    {itemForm.watch("description") && (
                       <div className="mt-3 pt-3 border-t">
-                        <Label className="text-xs font-medium text-green-700">Auto-filled Description:</Label>
-                        <p className="text-xs text-gray-600 mt-1">{itemForm.watch('description')}</p>
+                        <Label className="text-xs font-medium text-green-700">
+                          Auto-filled Description:
+                        </Label>
+                        <p className="text-xs text-gray-600 mt-1">
+                          {itemForm.watch("description")}
+                        </p>
                       </div>
                     )}
                   </div>
@@ -847,11 +1024,17 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
                   {quoteItems.length > 0 && (
                     <div className="border rounded-lg p-4 space-y-2 max-h-48 overflow-y-auto">
                       {quoteItems.map((item, index) => (
-                        <div key={index} className="flex justify-between items-start p-2 border rounded">
+                        <div
+                          key={index}
+                          className="flex justify-between items-start p-2 border rounded"
+                        >
                           <div className="flex-1">
-                            <div className="font-medium text-sm">{item.itemName}</div>
+                            <div className="font-medium text-sm">
+                              {item.itemName}
+                            </div>
                             <div className="text-xs text-gray-600">
-                              {item.quantity} {item.uom} × ₹{item.unitPrice} = ₹{item.lineTotal.toFixed(2)}
+                              {item.quantity} {item.uom} × ₹{item.unitPrice} = ₹
+                              {item.lineTotal.toFixed(2)}
                             </div>
                           </div>
                           <div className="flex gap-1">
@@ -877,7 +1060,7 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
                           </div>
                         </div>
                       ))}
-                      
+
                       {/* Totals */}
                       <div className="border-t pt-2 space-y-1">
                         <div className="flex justify-between text-sm">
@@ -886,11 +1069,15 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
                         </div>
                         <div className="flex justify-between text-sm">
                           <span>Discount:</span>
-                          <span>-₹{(totals.totalDiscountAmount || 0).toFixed(2)}</span>
+                          <span>
+                            -₹{(totals.totalDiscountAmount || 0).toFixed(2)}
+                          </span>
                         </div>
                         <div className="flex justify-between text-sm">
                           <span>Tax:</span>
-                          <span>₹{(totals.totalTaxAmount || 0).toFixed(2)}</span>
+                          <span>
+                            ₹{(totals.totalTaxAmount || 0).toFixed(2)}
+                          </span>
                         </div>
                         <div className="flex justify-between font-bold">
                           <span>Total:</span>
@@ -902,7 +1089,11 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
                 </div>
 
                 <div className="flex gap-2 justify-end pt-4">
-                  <Button type="button" variant="outline" onClick={() => setShowCreateDialog(false)}>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setShowCreateDialog(false)}
+                  >
                     Cancel
                   </Button>
                   <Button type="submit" disabled={createMutation.isPending}>
@@ -927,7 +1118,7 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
           <Card className="p-3">
             <div className="text-center">
               <div className="text-lg font-bold text-green-600">
-                {quotes.filter((q: Quote) => q.status === 'approved').length}
+                {quotes.filter((q: Quote) => q.status === "approved").length}
               </div>
               <div className="text-xs text-muted-foreground">Approved</div>
             </div>
@@ -935,7 +1126,7 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
           <Card className="p-3">
             <div className="text-center">
               <div className="text-lg font-bold text-blue-600">
-                {quotes.filter((q: Quote) => q.status === 'sent').length}
+                {quotes.filter((q: Quote) => q.status === "sent").length}
               </div>
               <div className="text-xs text-muted-foreground">Sent</div>
             </div>
@@ -943,7 +1134,13 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
           <Card className="p-3">
             <div className="text-center">
               <div className="text-lg font-bold">
-                ₹{quotes.reduce((sum: number, q: Quote) => sum + (q.totalAmount || 0), 0).toFixed(0)}
+                ₹
+                {quotes
+                  .reduce(
+                    (sum: number, q: Quote) => sum + (q.totalAmount || 0),
+                    0,
+                  )
+                  .toFixed(0)}
               </div>
               <div className="text-xs text-muted-foreground">Total Value</div>
             </div>
@@ -981,9 +1178,11 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
         {filteredQuotes.length === 0 ? (
           <Card>
             <CardContent className="p-8 text-center">
-              <p className="text-muted-foreground">No quotes found for this project.</p>
-              <Button 
-                className="mt-4" 
+              <p className="text-muted-foreground">
+                No quotes found for this project.
+              </p>
+              <Button
+                className="mt-4"
                 onClick={() => setShowCreateDialog(true)}
               >
                 Create Your First Quote
@@ -996,14 +1195,18 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
               <CardHeader className="pb-2">
                 <div className="flex flex-col sm:flex-row gap-2 sm:gap-0 justify-between items-start">
                   <div className="flex-1">
-                    <CardTitle className="text-base leading-tight">{quote.title}</CardTitle>
+                    <CardTitle className="text-base leading-tight">
+                      {quote.title}
+                    </CardTitle>
                     <p className="text-xs text-muted-foreground mt-1">
                       #{quote.quoteNumber}
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
                     {getStatusBadge(quote.status)}
-                    <span className="text-sm font-medium">₹{(quote.totalAmount || 0).toFixed(0)}</span>
+                    <span className="text-sm font-medium">
+                      ₹{(quote.totalAmount || 0).toFixed(0)}
+                    </span>
                   </div>
                 </div>
               </CardHeader>
@@ -1012,11 +1215,11 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
                   <div className="text-xs text-muted-foreground">
                     Created: {new Date(quote.createdAt).toLocaleDateString()}
                   </div>
-                  
+
                   {/* Mobile-Optimized Actions */}
                   <div className="flex flex-wrap gap-1 w-full sm:w-auto">
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       size="sm"
                       onClick={() => {
                         setSelectedQuote(quote);
@@ -1027,8 +1230,8 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
                       <Eye className="h-3 w-3 mr-1" />
                       View
                     </Button>
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       size="sm"
                       onClick={() => handleExportPDF(quote)}
                       className="flex-1 sm:flex-none h-7 text-xs"
@@ -1036,8 +1239,8 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
                       <Download className="h-3 w-3 mr-1" />
                       PDF
                     </Button>
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       size="sm"
                       onClick={() => handleShareQuote(quote)}
                       className="flex-1 sm:flex-none h-7 text-xs"
@@ -1045,8 +1248,8 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
                       <Share className="h-3 w-3 mr-1" />
                       Share
                     </Button>
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       size="sm"
                       onClick={() => {
                         setSelectedQuote(quote);
@@ -1078,14 +1281,17 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
                       </AlertDialogTrigger>
                       <AlertDialogContent className="max-w-[90vw] sm:max-w-md">
                         <AlertDialogHeader>
-                          <AlertDialogTitle>Are you Freaking Sure?</AlertDialogTitle>
+                          <AlertDialogTitle>
+                            Are you Freaking Sure?
+                          </AlertDialogTitle>
                           <AlertDialogDescription>
-                            This action cannot be undone. This will permanently delete the quote and all its items.
+                            This action cannot be undone. This will permanently
+                            delete the quote and all its items.
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
                           <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction 
+                          <AlertDialogAction
                             onClick={() => deleteMutation.mutate(quote.id)}
                             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                           >
@@ -1109,11 +1315,9 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>View Quote Details</DialogTitle>
-            <DialogDescription>
-              Quote information and items
-            </DialogDescription>
+            <DialogDescription>Quote information and items</DialogDescription>
           </DialogHeader>
-          
+
           {selectedQuote && (
             <div className="space-y-6">
               <div className="grid grid-cols-2 gap-4">
@@ -1131,23 +1335,28 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
                 </div>
                 <div>
                   <Label className="text-xs font-medium">Total Amount</Label>
-                  <p className="text-sm font-bold">₹{(selectedQuote.totalAmount || 0).toFixed(2)}</p>
+                  <p className="text-sm font-bold">
+                    ₹{(selectedQuote.totalAmount || 0).toFixed(2)}
+                  </p>
                 </div>
               </div>
-              
+
               {selectedQuote.description && (
                 <div>
                   <Label className="text-xs font-medium">Description</Label>
                   <p className="text-sm">{selectedQuote.description}</p>
                 </div>
               )}
-              
+
               <div className="flex gap-2">
                 <Button onClick={() => handleExportPDF(selectedQuote)}>
                   <Download className="h-4 w-4 mr-2" />
                   Download PDF
                 </Button>
-                <Button variant="outline" onClick={() => handleShareQuote(selectedQuote)}>
+                <Button
+                  variant="outline"
+                  onClick={() => handleShareQuote(selectedQuote)}
+                >
                   <Share className="h-4 w-4 mr-2" />
                   Share
                 </Button>
@@ -1166,33 +1375,45 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
               Update quote details and items
             </DialogDescription>
           </DialogHeader>
-          
+
           {selectedQuote && (
             <div className="space-y-6">
               <Form {...form}>
-                <form onSubmit={form.handleSubmit(handleUpdateQuote)} className="space-y-4">
+                <form
+                  onSubmit={form.handleSubmit(handleUpdateQuote)}
+                  className="space-y-4"
+                >
                   <div className="grid grid-cols-2 gap-4">
                     <FormField
                       control={form.control}
                       name="title"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-xs">Quote Title *</FormLabel>
+                          <FormLabel className="text-xs">
+                            Quote Title *
+                          </FormLabel>
                           <FormControl>
-                            <Input {...field} placeholder="Enter quote title" className="h-8" />
+                            <Input
+                              {...field}
+                              placeholder="Enter quote title"
+                              className="h-8"
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
-                    
+
                     <FormField
                       control={form.control}
                       name="status"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel className="text-xs">Status</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value}>
+                          <Select
+                            onValueChange={field.onChange}
+                            value={field.value}
+                          >
                             <FormControl>
                               <SelectTrigger className="h-8">
                                 <SelectValue placeholder="Select status" />
@@ -1218,7 +1439,11 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
                       <FormItem>
                         <FormLabel className="text-xs">Description</FormLabel>
                         <FormControl>
-                          <Textarea {...field} placeholder="Quote description" className="min-h-[60px]" />
+                          <Textarea
+                            {...field}
+                            placeholder="Quote description"
+                            className="min-h-[60px]"
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -1226,12 +1451,14 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
                   />
 
                   <div className="flex justify-end gap-2 pt-4">
-                    <Button type="button" variant="outline" onClick={() => setShowCreateDialog(false)}>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setShowCreateDialog(false)}
+                    >
                       Cancel
                     </Button>
-                    <Button type="submit">
-                      Create Quote
-                    </Button>
+                    <Button type="submit">Create Quote</Button>
                   </div>
                 </form>
               </Form>
@@ -1239,7 +1466,6 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
           )}
         </DialogContent>
       </Dialog>
-
     </div>
   );
 }
