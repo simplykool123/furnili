@@ -70,7 +70,7 @@ export default function LoginSimple() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 to-amber-50 p-4">
       <Card className="w-full max-w-md shadow-xl">
         <CardHeader className="space-y-3 text-center pb-6">
-          <div className="w-32 h-16 flex items-center justify-center mx-auto">
+          <div className="w-48 h-24 flex items-center justify-center mx-auto">
             <img 
               src="/attached_assets/furnili%20logo_1754162948403.png" 
               alt="Furnili Logo" 
@@ -81,7 +81,7 @@ export default function LoginSimple() {
             />
           </div>
           
-          <CardDescription className="text-gray-600">Management System</CardDescription>
+          <CardDescription className="text-gray-600">Workforce Management System</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <form onSubmit={(e) => { e.preventDefault(); handleLogin(); }} className="space-y-4">
