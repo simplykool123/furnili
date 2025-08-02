@@ -523,9 +523,9 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
             </tbody>
           </table>
 
-          <!-- Totals Table (Right Aligned to match Size, Qty, Rate columns) -->
+          <!-- Totals Table (Right Aligned to match Size, Qty, Rate, Total Amount columns) -->
           <div style="margin-top: 0px; display: flex; justify-content: flex-end;">
-            <table style="width: 210px; border-collapse: collapse; font-size: 11px;">
+            <table style="width: 290px; border-collapse: collapse; font-size: 11px;">
               ${(() => {
                 // Calculate correct totals from items
                 const itemsTotal = items.reduce((sum: number, item: any) => sum + (item.lineTotal || (item.quantity * item.unitPrice) || 0), 0);
@@ -536,8 +536,8 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
                 
                 return `
                   <tr>
-                    <td style="border: 1px solid #000; padding: 6px; text-align: right; width: 60%;">Total</td>
-                    <td style="border: 1px solid #000; padding: 6px; text-align: right; width: 40%;">₹${itemsTotal.toLocaleString('en-IN')}</td>
+                    <td style="border: 1px solid #000; padding: 6px; text-align: right; width: 70%;">Total</td>
+                    <td style="border: 1px solid #000; padding: 6px; text-align: right; width: 30%;">₹${itemsTotal.toLocaleString('en-IN')}</td>
                   </tr>
                   <tr>
                     <td style="border: 1px solid #000; padding: 6px; text-align: right;">Packaging @ 2%</td>
