@@ -526,11 +526,11 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
           <!-- Totals Section with Aligned Left Content -->
           <div style="margin-top: 0px; display: flex; align-items: flex-start;">
             <!-- Left Side: Total in Words and Furniture Specifications -->
-            <div style="flex: 1; margin-right: 20px;">
+            <div style="flex: 1; margin-right: 0px;">
               <!-- Total in Words (aligned with Total row) -->
-              <div style="border: 1px solid #000; padding: 8px; margin-bottom: 0px;">
-                <h3 style="font-size: 12px; font-weight: bold; margin: 0 0 8px 0;">Total in Words</h3>
-                <p style="font-size: 11px; margin: 0; font-style: italic;">
+              <div style="border: 1px solid #000; border-right: none; padding: 8px; margin-bottom: 0px;">
+                <span style="font-size: 12px; font-weight: bold;">Total in Words:</span>
+                <span style="font-size: 11px; font-style: italic; text-decoration: underline; margin-left: 8px;">
                   ${(() => {
                     // Calculate grand total for words conversion
                     const itemsTotal = items.reduce((sum: number, item: any) => sum + (item.lineTotal || (item.quantity * item.unitPrice) || 0), 0);
@@ -540,13 +540,13 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
                     const grandTotal = itemsTotal + packagingAmount + transportationAmount + gstAmount;
                     
                     // Simple conversion for display
-                    return 'Rupees ' + grandTotal.toLocaleString('en-IN') + ' Only';
+                    return 'Rupees ' + grandTotal.toLocaleString('en-IN') + '/-';
                   })()}
-                </p>
+                </span>
               </div>
               
               <!-- Furniture Specifications (aligned with Packaging row onwards) -->
-              <div style="border: 1px solid #000; border-top: none; padding: 8px;">
+              <div style="border: 1px solid #000; border-top: none; border-right: none; padding: 8px;">
                 <h3 style="font-size: 12px; font-weight: bold; margin: 0 0 8px 0;">Furniture Specifications</h3>
                 <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">- All furniture will be manufactured using Said Materials</p>
                 <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">- All hardware considered of standard make.</p>
