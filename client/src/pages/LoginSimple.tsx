@@ -70,11 +70,11 @@ export default function LoginSimple() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 to-amber-50 p-4">
       <Card className="w-full max-w-md shadow-xl">
         <CardHeader className="space-y-1 text-center pb-6">
-          <div className="w-48 h-24 flex items-center justify-center mx-auto">
+          <div className="w-48 h-auto flex items-center justify-center mx-auto">
             <img 
               src="/attached_assets/furnili%20logo_1754162948403.png" 
               alt="Furnili Logo" 
-              className="w-full h-full object-contain filter contrast-125"
+              className="w-full h-auto object-contain filter contrast-125"
               onError={() => {
                 console.log('Logo failed to load');
               }}
