@@ -480,6 +480,11 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
             </div>
           </div>
 
+          <!-- Subject Line -->
+          <div style="margin: 20px 0; padding: 10px 0; border-bottom: 1px solid #000;">
+            <p style="font-size: 12px; margin: 0; font-weight: bold;">Subject: ${quote.title || "Furniture Quotation"}</p>
+          </div>
+
           <!-- Items Table -->
           <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 11px;">
             <thead>
