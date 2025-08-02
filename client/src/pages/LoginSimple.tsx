@@ -69,7 +69,7 @@ export default function LoginSimple() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 to-amber-50 p-4">
       <Card className="w-full max-w-md shadow-xl">
-        <CardHeader className="space-y-3 text-center pb-6">
+        <CardHeader className="space-y-1 text-center pb-6">
           <div className="w-48 h-24 flex items-center justify-center mx-auto">
             <img 
               src="/attached_assets/furnili%20logo_1754162948403.png" 
