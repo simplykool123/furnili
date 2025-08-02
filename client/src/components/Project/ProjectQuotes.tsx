@@ -570,34 +570,31 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
             </table>
           </div>
 
-          <!-- Bottom Section: Payment Terms and Bank Details -->
-          <div style="margin-top: 30px;">
-            <!-- Payment Terms (Left) and Bank Details with Signature (Right) -->
-            <div style="display: flex; justify-content: space-between;">
-              <!-- Left Side: Payment Terms -->
-              <div style="width: 48%;">
-                <h3 style="font-size: 12px; font-weight: bold; margin: 0 0 8px 0;">Payment Terms</h3>
-                <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">30% Advance Payment: Due upon order confirmation.</p>
-                <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">50% Payment Before Delivery: To be settled prior to dispatch.</p>
-                <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">20% Payment on Delivery</p>
-              </div>
-              
-              <!-- Right Side: Bank Details and Signature -->
-              <div style="width: 48%;">
-                <h3 style="font-size: 12px; font-weight: bold; margin: 0 0 8px 0;">Bank Details</h3>
-                <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">A/C Name: Furnili</p>
-                <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">Bank: ICICI Bank</p>
-                <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">Branch: Nigdi</p>
-                <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">A/C No.: 230505006647</p>
-                <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">IFSC: ICIC0002305</p>
-                
-                <!-- Signature Box -->
-                <div style="margin-top: 20px; display: flex; justify-content: center;">
-                  <div style="border: 2px solid #000; padding: 20px 30px; text-align: center;">
-                    <p style="font-size: 12px; margin: 0 0 5px 0; font-weight: bold;">Authorised Signatory</p>
-                    <p style="font-size: 12px; margin: 0; font-weight: bold;">for FURNILI</p>
-                  </div>
-                </div>
+          <!-- Bottom Section: 3-Part Layout with Borders -->
+          <div style="margin-top: 20px; display: flex; align-items: stretch;">
+            <!-- Left: Payment Terms - Matches Furniture Specifications Width -->
+            <div style="border: 1px solid #000; padding: 8px; flex: 1; border-right: none;">
+              <h3 style="font-size: 12px; font-weight: bold; margin: 0 0 8px 0;">Payment Terms</h3>
+              <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">30% Advance Payment: Due upon order confirmation.</p>
+              <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">50% Payment Before Delivery: To be settled prior to dispatch.</p>
+              <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">20% Payment on Delivery</p>
+            </div>
+            
+            <!-- Middle: Bank Details -->
+            <div style="border: 1px solid #000; padding: 8px; width: 150px; border-right: none;">
+              <h3 style="font-size: 12px; font-weight: bold; margin: 0 0 8px 0;">Bank Details</h3>
+              <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">A/C Name: Furnili</p>
+              <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">Bank: ICICI Bank</p>
+              <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">Branch: Nigdi</p>
+              <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">A/C No.: 230505006647</p>
+              <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">IFSC: ICIC0002305</p>
+            </div>
+            
+            <!-- Right: Authorised Signatory -->
+            <div style="border: 1px solid #000; padding: 8px; width: 140px; display: flex; align-items: center; justify-content: center;">
+              <div style="text-align: center;">
+                <p style="font-size: 12px; margin: 0 0 30px 0; font-weight: bold;">Authorised Signatory</p>
+                <p style="font-size: 12px; margin: 30px 0 0 0; font-weight: bold;">for FURNILI</p>
               </div>
             </div>
           </div>
