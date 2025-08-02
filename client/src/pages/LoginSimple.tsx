@@ -31,7 +31,7 @@ export default function LoginSimple() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          username: username,
+          username: username.toLowerCase(),
           password: password,
         }),
       });
