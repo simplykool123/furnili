@@ -683,15 +683,16 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
             </div>
             
             <!-- Right: Authorised Signatory - Matches Rate + Total Amount columns (150px) -->
-            <div style="border: 1px solid #000; border-top: none; padding: 6px; width: 150px; display: flex; flex-direction: column; justify-content: space-between; align-items: center;">
-              <div style="text-align: center;">
-                <p style="font-size: 10px; margin: 0; font-weight: bold;">Authorised Signatory</p>
+            <div style="border: 1px solid #000; border-top: none; padding: 6px; width: 150px; display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative;">
+              <div style="text-align: center; margin-bottom: 15px;">
+                <p style="font-size: 10px; margin: 0; font-weight: bold;">Authorised</p>
+                <p style="font-size: 10px; margin: 0; font-weight: bold;">Signatory</p>
                 <p style="font-size: 10px; margin: 0; font-weight: bold;">for FURNILI</p>
               </div>
-              <div style="display: flex; flex-direction: column; align-items: center; margin: 8px 0;">
-                <img src="${window.location.origin}/assets/furnili-signature-stamp.png" style="height: 35px; width: auto; margin-bottom: 5px;" alt="Furnili Signature Stamp" onerror="this.style.display='none'" />
-                <div style="height: 20px; width: 120px; border-bottom: 1px solid #000;"></div>
+              <div style="position: absolute; top: 20px; left: 50%; transform: translateX(-50%); opacity: 0.7;">
+                <img src="${window.location.origin}/assets/furnili-signature-stamp.png" style="height: 50px; width: auto;" alt="Furnili Signature Stamp" onerror="this.style.display='none'" />
               </div>
+              <div style="margin-top: 25px; width: 120px; border-bottom: 1px solid #000; height: 1px;"></div>
             </div>
           </div>
 
