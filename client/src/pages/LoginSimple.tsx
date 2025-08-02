@@ -70,14 +70,14 @@ export default function LoginSimple() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 to-amber-50 p-4">
       <Card className="w-full max-w-md shadow-xl">
         <CardHeader className="space-y-3 text-center pb-6">
-          <div className="w-16 h-16 bg-blue-500 rounded-2xl flex items-center justify-center mx-auto">
-            <Package className="w-8 h-8 text-white" />
+          <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto" style={{ backgroundColor: 'hsl(28, 100%, 25%)' }}>
+            <div className="text-white font-bold text-xl">F</div>
           </div>
           <CardTitle className="text-3xl font-bold text-gray-900">
-            Inventory Management
+            Furnili
           </CardTitle>
           <CardDescription className="text-gray-600">
-            Sign in to your account
+            Workforce Management System
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
