@@ -526,26 +526,37 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
             </div>
             <div style="width: 45%;">
               <table style="width: 100%; border-collapse: collapse; font-size: 11px; margin-bottom: 20px;">
-                <tr>
-                  <td style="border: 1px solid #000; padding: 8px; text-align: right; font-weight: bold;">Total</td>
-                  <td style="border: 1px solid #000; padding: 8px; text-align: right; font-weight: bold;">₹${(quote.subtotal || quote.totalAmount || 0).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}</td>
-                </tr>
-                <tr>
-                  <td style="border: 1px solid #000; padding: 8px; text-align: right;">Packaging @ 2%</td>
-                  <td style="border: 1px solid #000; padding: 8px; text-align: right;">₹${(((quote.subtotal || quote.totalAmount || 0) * 0.02)).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}</td>
-                </tr>
-                <tr>
-                  <td style="border: 1px solid #000; padding: 8px; text-align: right;">Transportation</td>
-                  <td style="border: 1px solid #000; padding: 8px; text-align: right;">₹5,000</td>
-                </tr>
-                <tr>
-                  <td style="border: 1px solid #000; padding: 8px; text-align: right;">GST @ 18%</td>
-                  <td style="border: 1px solid #000; padding: 8px; text-align: right;">₹${((quote.taxAmount || (quote.subtotal || quote.totalAmount || 0) * 0.18)).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}</td>
-                </tr>
-                <tr style="font-weight: bold;">
-                  <td style="border: 1px solid #000; padding: 8px; text-align: right; background-color: #f0f0f0;">Grand Total</td>
-                  <td style="border: 1px solid #000; padding: 8px; text-align: right; background-color: #f0f0f0; font-weight: bold;">₹${((quote.totalAmount || 0) + ((quote.subtotal || quote.totalAmount || 0) * 0.02) + 5000).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}</td>
-                </tr>
+                ${(() => {
+                  // Calculate correct totals from items
+                  const itemsTotal = items.reduce((sum, item) => sum + (item.lineTotal || (item.quantity * item.unitPrice) || 0), 0);
+                  const packagingAmount = Math.round(itemsTotal * 0.02);
+                  const transportationAmount = 5000;
+                  const gstAmount = Math.round(itemsTotal * 0.18);
+                  const grandTotal = itemsTotal + packagingAmount + transportationAmount + gstAmount;
+                  
+                  return `
+                    <tr>
+                      <td style="border: 1px solid #000; padding: 8px; text-align: right; font-weight: bold;">Total</td>
+                      <td style="border: 1px solid #000; padding: 8px; text-align: right; font-weight: bold;">₹${itemsTotal.toLocaleString('en-IN')}</td>
+                    </tr>
+                    <tr>
+                      <td style="border: 1px solid #000; padding: 8px; text-align: right;">Packaging @ 2%</td>
+                      <td style="border: 1px solid #000; padding: 8px; text-align: right;">₹${packagingAmount.toLocaleString('en-IN')}</td>
+                    </tr>
+                    <tr>
+                      <td style="border: 1px solid #000; padding: 8px; text-align: right;">Transportation</td>
+                      <td style="border: 1px solid #000; padding: 8px; text-align: right;">₹${transportationAmount.toLocaleString('en-IN')}</td>
+                    </tr>
+                    <tr>
+                      <td style="border: 1px solid #000; padding: 8px; text-align: right;">GST @ 18%</td>
+                      <td style="border: 1px solid #000; padding: 8px; text-align: right;">₹${gstAmount.toLocaleString('en-IN')}</td>
+                    </tr>
+                    <tr style="font-weight: bold;">
+                      <td style="border: 1px solid #000; padding: 8px; text-align: right; background-color: #f0f0f0;">Grand Total</td>
+                      <td style="border: 1px solid #000; padding: 8px; text-align: right; background-color: #f0f0f0; font-weight: bold;">₹${grandTotal.toLocaleString('en-IN')}</td>
+                    </tr>
+                  `;
+                })()}
               </table>
             </div>
           </div>
