@@ -331,38 +331,39 @@ export function QuoteEditor({ quoteId, projectId, clientId, onSave, onCancel }: 
   }
 
   return (
-    <div className="space-y-6 max-w-5xl mx-auto">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-[hsl(28,100%,25%)]">
+    <div className="space-y-3 max-w-[90vw] sm:max-w-5xl mx-auto p-2 sm:p-0">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+        <h2 className="text-lg sm:text-2xl font-bold text-[hsl(28,100%,25%)]">
           {quoteId ? "Edit Quote" : "Create New Quote"}
         </h2>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={onCancel}>
+        <div className="flex flex-wrap gap-2 w-full sm:w-auto">
+          <Button variant="outline" onClick={onCancel} className="flex-1 sm:flex-none h-8 text-xs">
             Cancel
           </Button>
-          <Button variant="outline" onClick={() => setPreviewMode(true)}>
-            <Eye className="h-4 w-4 mr-2" />
+          <Button variant="outline" onClick={() => setPreviewMode(true)} className="flex-1 sm:flex-none h-8 text-xs">
+            <Eye className="h-3 w-3 mr-1" />
             Preview
           </Button>
           <Button 
             onClick={form.handleSubmit((data) => saveMutation.mutate(data))}
             disabled={saveMutation.isPending}
+            className="flex-1 sm:flex-none h-8 text-xs bg-[hsl(28,100%,25%)] hover:bg-[hsl(28,100%,20%)]"
           >
-            <Save className="h-4 w-4 mr-2" />
+            <Save className="h-3 w-3 mr-1" />
             {saveMutation.isPending ? "Saving..." : "Save Quote"}
           </Button>
         </div>
       </div>
 
       <Form {...form}>
-        <form className="space-y-6">
+        <form className="space-y-3">
           {/* Basic Information */}
           <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Basic Information</CardTitle>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base sm:text-lg">Basic Information</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <CardContent className="space-y-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <FormField
                   control={form.control}
                   name="title"
@@ -460,24 +461,24 @@ export function QuoteEditor({ quoteId, projectId, clientId, onSave, onCancel }: 
 
           {/* Quote Items */}
           <Card>
-            <CardHeader>
+            <CardHeader className="pb-2">
               <div className="flex justify-between items-center">
-                <CardTitle className="text-lg">Quote Items</CardTitle>
-                <Button type="button" onClick={addItem} size="sm">
-                  <Plus className="h-4 w-4 mr-2" />
+                <CardTitle className="text-base sm:text-lg">Quote Items</CardTitle>
+                <Button type="button" onClick={addItem} size="sm" className="h-8 text-xs bg-[hsl(28,100%,25%)] hover:bg-[hsl(28,100%,20%)]">
+                  <Plus className="h-3 w-3 mr-1" />
                   Add Item
                 </Button>
               </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-3">
               {items.length === 0 ? (
                 <div className="text-center py-8 text-gray-500">
                   <p>No items added yet. Click "Add Item" to get started.</p>
                 </div>
               ) : (
-                <div className="space-y-4">
+                <div className="space-y-3">
                   {items.map((item, index) => (
-                    <div key={index} className="border rounded-lg p-4 space-y-3">
+                    <div key={index} className="border rounded-lg p-3 space-y-3">
                       <div className="flex justify-between items-start">
                         <h4 className="font-medium text-sm">Item {index + 1}</h4>
                         <Button
@@ -490,7 +491,7 @@ export function QuoteEditor({ quoteId, projectId, clientId, onSave, onCancel }: 
                         </Button>
                       </div>
 
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                         <div>
                           <label className="text-xs font-medium">Select Product (Optional)</label>
                           <Select onValueChange={(value) => selectProduct(index, parseInt(value))}>
@@ -574,7 +575,7 @@ export function QuoteEditor({ quoteId, projectId, clientId, onSave, onCancel }: 
                           />
                         </div>
 
-                        <div className="md:col-span-2">
+                        <div className="sm:col-span-2 lg:col-span-2">
                           <label className="text-xs font-medium">Notes</label>
                           <Input
                             value={item.notes}
@@ -597,10 +598,10 @@ export function QuoteEditor({ quoteId, projectId, clientId, onSave, onCancel }: 
 
           {/* Editable Content Fields */}
           <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Quote Content</CardTitle>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base sm:text-lg">Quote Content</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-3">
               <FormField
                 control={form.control}
                 name="furnitureSpecifications"
@@ -637,7 +638,7 @@ export function QuoteEditor({ quoteId, projectId, clientId, onSave, onCancel }: 
                 )}
               />
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 <FormField
                   control={form.control}
                   name="packingChargesType"
@@ -727,8 +728,8 @@ export function QuoteEditor({ quoteId, projectId, clientId, onSave, onCancel }: 
 
           {/* Financial Summary */}
           <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Financial Summary</CardTitle>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base sm:text-lg">Financial Summary</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-2 text-sm">
