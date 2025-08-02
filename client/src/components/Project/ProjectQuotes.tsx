@@ -528,7 +528,7 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
               <table style="width: 100%; border-collapse: collapse; font-size: 11px; margin-bottom: 20px;">
                 ${(() => {
                   // Calculate correct totals from items
-                  const itemsTotal = items.reduce((sum, item) => sum + (item.lineTotal || (item.quantity * item.unitPrice) || 0), 0);
+                  const itemsTotal = items.reduce((sum: number, item: any) => sum + (item.lineTotal || (item.quantity * item.unitPrice) || 0), 0);
                   const packagingAmount = Math.round(itemsTotal * 0.02);
                   const transportationAmount = 5000;
                   const gstAmount = Math.round(itemsTotal * 0.18);
