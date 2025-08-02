@@ -662,33 +662,35 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
             </tr>
           </table>
 
-          <!-- Bottom Section: 3-Part Layout with Borders -->
+          <!-- Bottom Section: 3-Part Layout with Borders - Compact Height -->
           <div style="margin-top: 0px; display: flex; align-items: stretch;">
             <!-- Left: Payment Terms - Matches Furniture Specifications Width -->
-            <div style="border: 2px solid #000; border-top: none; padding: 8px; flex: 1; border-right: none;">
-              <h3 style="font-size: 12px; font-weight: bold; margin: 0 0 8px 0;">Payment Terms</h3>
-              <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">30% Advance Payment: Due upon order confirmation.</p>
-              <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">50% Payment Before Delivery: To be settled prior to dispatch.</p>
-              <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">20% Payment on Delivery</p>
+            <div style="border: 2px solid #000; border-top: none; padding: 6px; flex: 1; border-right: none;">
+              <h3 style="font-size: 11px; font-weight: bold; margin: 0 0 4px 0;">Payment Terms</h3>
+              <p style="font-size: 9px; margin: 1px 0; line-height: 1.2;">30% Advance Payment: Due upon order confirmation.</p>
+              <p style="font-size: 9px; margin: 1px 0; line-height: 1.2;">50% Payment Before Delivery: To be settled prior to dispatch.</p>
+              <p style="font-size: 9px; margin: 1px 0; line-height: 1.2;">20% Payment on Delivery</p>
             </div>
             
             <!-- Middle: Bank Details - Aligned with Size column width -->
-            <div style="border: 2px solid #000; border-top: none; padding: 8px; width: 200px; border-right: none;">
-              <h3 style="font-size: 12px; font-weight: bold; margin: 0 0 8px 0;">Bank Details</h3>
-              <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">A/C Name: Furnili</p>
-              <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">Bank: ICICI Bank</p>
-              <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">Branch: Nigdi</p>
-              <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">A/C No.: 230505006647</p>
-              <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">IFSC: ICIC0002305</p>
+            <div style="border: 2px solid #000; border-top: none; padding: 6px; width: 200px; border-right: none;">
+              <h3 style="font-size: 11px; font-weight: bold; margin: 0 0 4px 0;">Bank Details</h3>
+              <p style="font-size: 9px; margin: 1px 0; line-height: 1.2;">A/C Name: Furnili</p>
+              <p style="font-size: 9px; margin: 1px 0; line-height: 1.2;">Bank: ICICI Bank</p>
+              <p style="font-size: 9px; margin: 1px 0; line-height: 1.2;">Branch: Nigdi</p>
+              <p style="font-size: 9px; margin: 1px 0; line-height: 1.2;">A/C No.: 230505006647</p>
+              <p style="font-size: 9px; margin: 1px 0; line-height: 1.2;">IFSC: ICIC0002305</p>
             </div>
             
-            <!-- Right: Authorised Signatory -->
-            <div style="border: 2px solid #000; border-top: none; padding: 8px; width: 180px; display: flex; flex-direction: column; justify-content: space-between; align-items: center;">
+            <!-- Right: Authorised Signatory with Stamp -->
+            <div style="border: 2px solid #000; border-top: none; padding: 6px; width: 180px; display: flex; flex-direction: column; justify-content: space-between; align-items: center;">
               <div style="text-align: center;">
-                <p style="font-size: 12px; margin: 0 0 4px 0; font-weight: bold;">Authorised Signatory</p>
-                <p style="font-size: 12px; margin: 0; font-weight: bold;">for FURNILI</p>
+                <p style="font-size: 10px; margin: 0; font-weight: bold;">Authorised Signatory for FURNILI</p>
               </div>
-              <div style="height: 40px; width: 100px; margin: 10px 0; border-bottom: 1px solid #000;"></div>
+              <div style="display: flex; flex-direction: column; align-items: center; margin: 8px 0;">
+                <img src="${window.location.origin}/assets/furnili-signature-stamp.png" style="height: 35px; width: auto; margin-bottom: 5px;" alt="Furnili Signature Stamp" onerror="this.style.display='none'" />
+                <div style="height: 20px; width: 120px; border-bottom: 1px solid #000;"></div>
+              </div>
             </div>
           </div>
 
