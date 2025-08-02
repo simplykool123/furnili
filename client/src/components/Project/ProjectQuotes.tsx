@@ -687,20 +687,18 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
             </div>
             
             <!-- Right: Authorised Signatory - Matches Rate + Total Amount columns (150px) -->
-            <div style="border: 1px solid #000; border-top: none; padding: 6px; width: 150px; display: flex; flex-direction: column; justify-content: space-between; height: 80px;">
-              <!-- Signature stamp at top -->
-              <div style="text-align: center; margin-bottom: 5px;">
-                <img src="${window.location.origin}/assets/furnili-signature-stamp.png" style="height: 35px; width: auto;" alt="Furnili Signature Stamp" onerror="this.style.display='none'" />
+            <div style="border: 1px solid #000; border-top: none; padding: 8px; width: 150px; height: 80px; position: relative;">
+              <!-- Large centered company stamp -->
+              <div style="position: absolute; top: 8px; left: 50%; transform: translateX(-50%); text-align: center;">
+                <img src="${window.location.origin}/assets/furnili-signature-stamp.png" style="height: 42px; width: auto;" alt="Furnili Signature Stamp" onerror="this.style.display='none'" />
               </div>
               
-              <!-- Text in middle -->
-              <div style="text-align: center; flex-grow: 1; display: flex; flex-direction: column; justify-content: center;">
-                <p style="font-size: 10px; margin: 0; font-weight: bold;">Authorised Signatory</p>
-                <p style="font-size: 10px; margin: 0; font-weight: bold;">for FURNILI</p>
+              <!-- Bottom text and signature line -->
+              <div style="position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); text-align: center; width: 130px;">
+                <p style="font-size: 9px; margin: 0 0 2px 0; font-weight: bold; line-height: 1.1;">Authorised Signatory</p>
+                <p style="font-size: 9px; margin: 0 0 8px 0; font-weight: bold; line-height: 1.1;">for FURNILI</p>
+                <div style="width: 100px; border-bottom: 1px solid #000; height: 1px; margin: 0 auto;"></div>
               </div>
-              
-              <!-- Signature line at bottom -->
-              <div style="width: 120px; border-bottom: 1px solid #000; height: 1px; margin: 0 auto;"></div>
             </div>
           </div>
 
