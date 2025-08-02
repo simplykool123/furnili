@@ -675,7 +675,7 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
             </div>
             
             <!-- Middle: Bank Details - Exactly matches Size + Qty column widths (130px) -->
-            <div style="border: 1px solid #000; border-top: none; border-left: none; padding: 6px; width: 130px; border-right: none; display: flex; flex-direction: column; justify-content: center;">
+            <div style="border: 1px solid #000; border-top: none; padding: 6px; width: 130px; border-right: none; display: flex; flex-direction: column; justify-content: center;">
               <div>
                 <h3 style="font-size: 11px; font-weight: bold; margin: 0 0 4px 0;">Bank Details</h3>
                 <p style="font-size: 9px; margin: 1px 0; line-height: 1.2;">A/C Name: Furnili</p>
@@ -687,7 +687,7 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
             </div>
             
             <!-- Right: Authorised Signatory - Matches Rate + Total Amount columns (150px) -->
-            <div style="border: 1px solid #000; border-top: none; border-left: none; padding: 6px; width: 150px; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+            <div style="border: 1px solid #000; border-top: none; padding: 6px; width: 150px; display: flex; flex-direction: column; justify-content: center; align-items: center;">
               <!-- Company stamp at top -->
               <div style="margin-bottom: 8px;">
                 <img src="${window.location.origin}/assets/furnili-signature-stamp.png" style="width: 80px; height: auto;" alt="Furnili Signature Stamp" onerror="this.style.display='none'" />
