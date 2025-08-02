@@ -524,9 +524,9 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
           </table>
 
           <!-- Totals Section with Specifications on Left -->
-          <div style="margin-top: 0px; display: flex; align-items: flex-start;">
+          <div style="margin-top: 0px; display: flex; position: relative;">
             <!-- Left Side: Furniture Specifications with Border -->
-            <div style="border: 1px solid #000; padding: 8px; border-right: none; flex: 1;">
+            <div style="border: 1px solid #000; padding: 8px; border-right: none; width: calc(100% - 190px);">
               <h3 style="font-size: 12px; font-weight: bold; margin: 0 0 8px 0;">Furniture Specifications</h3>
               <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">- All furniture will be manufactured using Said Materials</p>
               <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">- All hardware considered of standard make.</p>
@@ -535,7 +535,7 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
             </div>
             
             <!-- Right Side: Totals Table - Aligned to Size + Qty + Rate columns (190px) -->
-            <table style="width: 190px; border-collapse: collapse; font-size: 11px;">
+            <table style="width: 190px; border-collapse: collapse; font-size: 11px; position: absolute; right: 0; top: 0;">
               ${(() => {
                 // Calculate correct totals from items
                 const itemsTotal = items.reduce((sum: number, item: any) => sum + (item.lineTotal || (item.quantity * item.unitPrice) || 0), 0);
