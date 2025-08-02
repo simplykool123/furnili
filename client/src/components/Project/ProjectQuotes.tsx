@@ -528,7 +528,7 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
             <!-- Left Side: Total in Words and Furniture Specifications -->
             <div style="flex: 1; margin-right: 0px;">
               <!-- Total in Words (aligned with Total row) -->
-              <div style="border: 1px solid #000; border-right: none; padding: 8px; margin-bottom: 0px;">
+              <div style="border: 1px solid #000; border-right: none; padding: 6px 8px; margin-bottom: 0px; height: 31px; display: flex; align-items: center;">
                 <span style="font-size: 12px; font-weight: bold;">Total in Words:</span>
                 <span style="font-size: 11px; font-style: italic; text-decoration: underline; margin-left: 8px;">
                   ${(() => {
