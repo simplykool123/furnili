@@ -445,38 +445,38 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
       // Create professional PDF content matching Furnili format
       const element = document.createElement("div");
       element.innerHTML = `
-        <div style="font-family: Arial, sans-serif; font-size: 12px; margin: 0; padding: 20px;">
+        <div style="font-family: Arial, sans-serif; font-size: 12px; margin: 0; padding: 15px;">
           <!-- Header with Logo Only -->
-          <div style="display: flex; justify-content: flex-start; align-items: center; border-bottom: 2px solid #000; padding-bottom: 15px; margin-bottom: 20px;">
-            <img src="${window.location.origin}/assets/furnili-logo.png" style="height: 60px;" alt="Furnili Logo" />
+          <div style="display: flex; justify-content: flex-start; align-items: center; border-bottom: 2px solid #000; padding-bottom: 8px; margin-bottom: 12px;">
+            <img src="${window.location.origin}/assets/furnili-logo.png" style="height: 45px;" alt="Furnili Logo" />
           </div>
 
           <!-- Quotation Title -->
-          <div style="text-align: center; margin: 20px 0;">
-            <h2 style="font-size: 24px; font-weight: bold; margin: 0; border-bottom: 2px solid #000; display: inline-block; padding-bottom: 5px;">Quotation</h2>
+          <div style="text-align: center; margin: 12px 0;">
+            <h2 style="font-size: 20px; font-weight: bold; margin: 0; border-bottom: 2px solid #000; display: inline-block; padding-bottom: 3px;">Quotation</h2>
           </div>
 
           <!-- Client and Quote Details -->
-          <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
             <div style="width: 60%;">
-              <p style="margin: 0;"><strong>To,</strong></p>
-              <p style="margin: 0; font-weight: bold;">${client.name || "Client Name"}</p>
-              <p style="margin: 0;">${client.email || ""}</p>
-              <p style="margin: 0;">${client.mobile || ""}</p>
-              <p style="margin: 0;">${client.city || "Address"}</p>
+              <p style="margin: 0; line-height: 1.3;"><strong>To,</strong></p>
+              <p style="margin: 0; font-weight: bold; line-height: 1.3;">${client.name || "Client Name"}</p>
+              <p style="margin: 0; line-height: 1.3;">${client.email || ""}</p>
+              <p style="margin: 0; line-height: 1.3;">${client.mobile || ""}</p>
+              <p style="margin: 0; line-height: 1.3;">${client.city || "Address"}</p>
             </div>
             <div style="width: 35%; text-align: right;">
-              <p style="margin: 0;"><strong>Date :-</strong> ${new Date(quote.createdAt).toLocaleDateString("en-GB")}</p>
-              <p style="margin: 0;"><strong>Est. No. :-</strong> ${quote.quoteNumber}</p>
-              <p style="margin: 0;"><strong>GSTN :-</strong> 27AAKFF2192A1ZO</p>
-              <p style="margin: 0;"><strong>PAN :-</strong> AAKFF2192A</p>
-              <p style="margin: 0;"><strong>Contact Person :-</strong> ${client.name}</p>
+              <p style="margin: 0; line-height: 1.3;"><strong>Date :-</strong> ${new Date(quote.createdAt).toLocaleDateString("en-GB")}</p>
+              <p style="margin: 0; line-height: 1.3;"><strong>Est. No. :-</strong> ${quote.quoteNumber}</p>
+              <p style="margin: 0; line-height: 1.3;"><strong>GSTN :-</strong> 27AAKFF2192A1ZO</p>
+              <p style="margin: 0; line-height: 1.3;"><strong>PAN :-</strong> AAKFF2192A</p>
+              <p style="margin: 0; line-height: 1.3;"><strong>Contact Person :-</strong> ${client.name}</p>
             </div>
           </div>
 
           <!-- Subject Line -->
-          <div style="margin: 20px 0; display: flex; justify-content: center;">
-            <div style="width: 75%; padding: 10px 0; border-bottom: 1px solid #000;">
+          <div style="margin: 10px 0; display: flex; justify-content: center;">
+            <div style="width: 75%; padding: 6px 0; border-bottom: 1px solid #000;">
               <p style="font-size: 12px; margin: 0; font-weight: bold;">Subject: ${quote.title || "Furniture Quotation"}</p>
             </div>
           </div>
