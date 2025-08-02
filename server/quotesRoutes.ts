@@ -68,7 +68,97 @@ export function setupQuotesRoutes(app: Express) {
     }
   });
 
-  // Get quote by ID with items
+  // Get clients list for quote creation
+  app.get("/api/quotes/clients/list", authenticateToken, async (req, res) => {
+    try {
+      const clientsList = await db
+        .select({
+          id: clients.id,
+          name: clients.name,
+          email: clients.email,
+        })
+        .from(clients)
+        .where(eq(clients.isActive, true))
+        .orderBy(clients.name);
+
+      res.json(clientsList);
+    } catch (error) {
+      console.error("Error fetching clients:", error);
+      res.status(500).json({ error: "Failed to fetch clients" });
+    }
+  });
+
+  // Get sales products list for quote items
+  app.get("/api/quotes/products/list", authenticateToken, async (req, res) => {
+    try {
+      const productsList = await db
+        .select({
+          id: salesProducts.id,
+          name: salesProducts.name,
+          description: salesProducts.description,
+          unitPrice: salesProducts.unitPrice,
+          taxPercentage: salesProducts.taxPercentage,
+        })
+        .from(salesProducts)
+        .where(eq(salesProducts.isActive, true))
+        .orderBy(salesProducts.name);
+
+      res.json(productsList);
+    } catch (error) {
+      console.error("Error fetching products:", error);
+      res.status(500).json({ error: "Failed to fetch products" });
+    }
+  });
+
+  // Get quote by ID with details and items
+  app.get("/api/quotes/:id/details", authenticateToken, async (req, res) => {
+    try {
+      const quoteId = parseInt(req.params.id);
+
+      // Get quote with client and project details
+      const quoteData = await db
+        .select({
+          quote: quotes,
+          client: clients,
+          project: projects,
+          createdBy: {
+            id: users.id,
+            name: users.name,
+          }
+        })
+        .from(quotes)
+        .leftJoin(clients, eq(quotes.clientId, clients.id))
+        .leftJoin(projects, eq(quotes.projectId, projects.id))
+        .leftJoin(users, eq(quotes.createdBy, users.id))
+        .where(and(eq(quotes.id, quoteId), eq(quotes.isActive, true)))
+        .limit(1);
+
+      if (quoteData.length === 0) {
+        return res.status(404).json({ error: "Quote not found" });
+      }
+
+      // Get quote items with sales product details
+      const items = await db
+        .select({
+          item: quoteItems,
+          salesProduct: salesProducts,
+        })
+        .from(quoteItems)
+        .leftJoin(salesProducts, eq(quoteItems.salesProductId, salesProducts.id))
+        .where(eq(quoteItems.quoteId, quoteId))
+        .orderBy(quoteItems.sortOrder);
+
+      res.json({
+        ...quoteData[0],
+        items: items
+      });
+    } catch (error) {
+      console.error("Error fetching quote:", error);
+      res.status(500).json({ error: "Failed to fetch quote" });
+    }
+  });
+
+  // Get quote by ID (simple)
   app.get("/api/quotes/:id", authenticateToken, async (req, res) => {
     try {
       const quoteId = parseInt(req.params.id);
@@ -146,14 +236,16 @@ export function setupQuotesRoutes(app: Express) {
       // Validate quote data
       const quoteData = insertQuoteSchema.parse({
         ...req.body,
-        quoteNumber,
         createdBy: userId,
       });
 
-      // Create quote
+      // Create quote with generated quote number
       const [newQuote] = await db
         .insert(quotes)
-        .values([quoteData])
+        .values([{
+          ...quoteData,
+          quoteNumber,
+        }])
         .returning();
 
       // Create quote items if provided

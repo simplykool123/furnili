@@ -481,7 +481,12 @@ export const quotes = pgTable("quotes", {
   status: text("status").notNull().default("draft"), // draft, sent, approved, rejected, expired
   validUntil: timestamp("valid_until"),
   expirationDate: timestamp("expiration_date"),
-  paymentTerms: text("payment_terms").default("Immediate Payment"), // Payment terms
+  // Editable quote content fields
+  furnitureSpecifications: text("furniture_specifications").default("To be customized as per your requirements with quality materials and professional finish."), // Editable text block
+  paymentTerms: text("payment_terms").default("30% Advance Payment: Due upon order confirmation.\n50% Payment Before Delivery: To be settled prior to dispatch.\n20% Payment on Delivery"), // Editable payment terms
+  packingChargesType: text("packing_charges_type").default("percentage"), // percentage or fixed
+  packingChargesValue: real("packing_charges_value").default(2), // 2% or fixed amount
+  transportationCharges: real("transportation_charges").default(5000), // Fixed transportation charges
   pricelist: text("pricelist").default("Public Pricelist (EGP)"), // Pricelist type
   terms: text("terms"), // Terms and conditions
   notes: text("notes"), // Additional notes
