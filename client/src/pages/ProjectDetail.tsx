@@ -1457,7 +1457,7 @@ export default function ProjectDetail() {
                       {files.map((file: any) => (
                         <div key={file.id} className="group relative">
                           {/* Image Thumbnail */}
-                          <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden relative">
+                          <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden relative border-2 border-orange-500">
                             {file.mimeType?.includes('image') ? (
                               <img
                                 src={`/${file.filePath}`}
