@@ -88,13 +88,7 @@ export default function Login() {
                   placeholder="admin@demo.com"
                   className="pl-10 border-gray-300 focus:border-blue-500"
                   disabled={isLoading}
-                  autoComplete="off"
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      handleSubmit(e as any);
-                    }
-                  }}
+                  autoComplete="username"
                 />
               </div>
             </div>
@@ -110,13 +104,7 @@ export default function Login() {
                   placeholder="Type: admin123"
                   className="pl-10 pr-10 border-gray-300 focus:border-blue-500"
                   disabled={isLoading}
-                  autoComplete="off"
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      handleSubmit(e as any);
-                    }
-                  }}
+                  autoComplete="current-password"
                 />
                 <Button
                   type="button"
@@ -134,13 +122,13 @@ export default function Login() {
               </div>
             </div>
 
-            <Button
+            <button
               type="submit"
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5"
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 px-4 rounded-md disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               disabled={isLoading}
             >
               {isLoading ? "Signing in..." : "Sign In"}
-            </Button>
+            </button>
           </form>
 
           <div className="bg-gray-50 rounded-lg p-4">
