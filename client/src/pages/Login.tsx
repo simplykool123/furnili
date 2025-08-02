@@ -77,39 +77,44 @@ export default function Login() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4" noValidate>
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Email Address</label>
+              <label htmlFor="username" className="text-sm font-medium text-gray-700">Email Address</label>
               <div className="relative">
                 <User className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
-                <Input
+                <input
+                  id="username"
+                  name="username"
+                  type="email"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   placeholder="admin@demo.com"
-                  className="pl-10 border-gray-300 focus:border-blue-500"
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={isLoading}
                   autoComplete="username"
+                  required
                 />
               </div>
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Password</label>
+              <label htmlFor="password" className="text-sm font-medium text-gray-700">Password</label>
               <div className="relative">
                 <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
-                <Input
+                <input
+                  id="password"
+                  name="password"
+                  type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  type={showPassword ? "text" : "password"}
                   placeholder="Type: admin123"
-                  className="pl-10 pr-10 border-gray-300 focus:border-blue-500"
+                  className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={isLoading}
                   autoComplete="current-password"
+                  required
                 />
-                <Button
+                <button
                   type="button"
-                  variant="ghost"
-                  size="sm"
                   className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                   onClick={() => setShowPassword(!showPassword)}
                 >
@@ -118,7 +123,7 @@ export default function Login() {
                   ) : (
                     <Eye className="h-4 w-4 text-gray-500" />
                   )}
-                </Button>
+                </button>
               </div>
             </div>
 
