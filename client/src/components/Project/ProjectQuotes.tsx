@@ -604,8 +604,8 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
               </div>
               
               <!-- Furniture Specifications (aligned with Packaging row onwards) -->
-              <div style="border: 1px solid #000; border-top: none; border-right: none; padding: 8px;">
-                <h3 style="font-size: 12px; font-weight: bold; margin: 0 0 8px 0;">Furniture Specifications</h3>
+              <div style="border: 1px solid #000; border-top: none; border-right: none; padding: 6px 8px; height: 124px;">
+                <h3 style="font-size: 12px; font-weight: bold; margin: 0 0 6px 0;">Furniture Specifications</h3>
                 <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">- All furniture will be manufactured using Said Materials</p>
                 <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">- All hardware considered of standard make.</p>
                 <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">- Standard laminates considered as per selection.</p>
