@@ -475,8 +475,10 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
           </div>
 
           <!-- Subject Line -->
-          <div style="margin: 20px 0; padding: 10px 0; border-bottom: 1px solid #000;">
-            <p style="font-size: 12px; margin: 0; font-weight: bold;">Subject: ${quote.title || "Furniture Quotation"}</p>
+          <div style="margin: 20px 0; display: flex; justify-content: center;">
+            <div style="width: 75%; padding: 10px 0; border-bottom: 1px solid #000;">
+              <p style="font-size: 12px; margin: 0; font-weight: bold;">Subject: ${quote.title || "Furniture Quotation"}</p>
+            </div>
           </div>
 
           <!-- Items Table -->
