@@ -683,11 +683,12 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
             </div>
             
             <!-- Right: Authorised Signatory -->
-            <div style="border: 2px solid #000; border-top: none; padding: 8px; width: 140px; display: flex; align-items: center; justify-content: center;">
+            <div style="border: 2px solid #000; border-top: none; padding: 8px; width: 140px; display: flex; flex-direction: column; justify-content: space-between; align-items: center;">
               <div style="text-align: center;">
-                <p style="font-size: 12px; margin: 0 0 30px 0; font-weight: bold;">Authorised Signatory</p>
-                <p style="font-size: 12px; margin: 30px 0 0 0; font-weight: bold;">for FURNILI</p>
+                <p style="font-size: 12px; margin: 0 0 4px 0; font-weight: bold;">Authorised Signatory</p>
+                <p style="font-size: 12px; margin: 0; font-weight: bold;">for FURNILI</p>
               </div>
+              <div style="height: 40px; width: 100px; margin: 10px 0; border-bottom: 1px solid #000;"></div>
             </div>
           </div>
 
