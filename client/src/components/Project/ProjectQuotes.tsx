@@ -526,7 +526,7 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
           <!-- Totals Section with Specifications on Left -->
           <div style="margin-top: 0px; display: flex; align-items: flex-start;">
             <!-- Left Side: Furniture Specifications with Border -->
-            <div style="border: 1px solid #000; padding: 8px; border-right: none; width: calc(100% - 190px);">
+            <div style="border: 1px solid #000; padding: 8px; border-right: none; width: calc(100% - 280px);">
               <h3 style="font-size: 12px; font-weight: bold; margin: 0 0 8px 0;">Furniture Specifications</h3>
               <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">- All furniture will be manufactured using Said Materials</p>
               <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">- All hardware considered of standard make.</p>
@@ -534,8 +534,8 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
               <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">- Any modifications or changes in material selection may result in additional charges.</p>
             </div>
             
-            <!-- Right Side: Totals Table - Aligned to Size + Qty + Rate columns (190px) -->
-            <table style="width: 190px; border-collapse: collapse; font-size: 11px;">
+            <!-- Right Side: Totals Table - Aligned to Size + Qty + Rate + Total Amount columns (280px) -->
+            <table style="width: 280px; border-collapse: collapse; font-size: 11px;">
               ${(() => {
                 // Calculate correct totals from items
                 const itemsTotal = items.reduce((sum: number, item: any) => sum + (item.lineTotal || (item.quantity * item.unitPrice) || 0), 0);
@@ -546,7 +546,7 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
                 
                 return `
                   <tr>
-                    <td style="border: 1px solid #000; padding: 8px; text-align: right; width: 100px;">Total</td>
+                    <td style="border: 1px solid #000; padding: 8px; text-align: right; width: 190px;">Total</td>
                     <td style="border: 1px solid #000; padding: 8px; text-align: right; width: 90px;">₹${itemsTotal.toLocaleString('en-IN')}</td>
                   </tr>
                   <tr>
