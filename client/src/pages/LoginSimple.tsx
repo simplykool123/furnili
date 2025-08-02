@@ -81,7 +81,7 @@ export default function LoginSimple() {
             />
           </div>
           
-          <CardDescription className="text-sm text-gray-600 font-normal">Workforce Management System</CardDescription>
+          <CardDescription className="text-sm text-gray-600 font-normal">Management System</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <form onSubmit={(e) => { e.preventDefault(); handleLogin(); }} className="space-y-4">
