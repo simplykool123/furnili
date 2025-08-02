@@ -520,6 +520,16 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
               `;
                 })
                 .join("")}
+              <!-- Blank row to continue table format -->
+              <tr>
+                <td style="border: 1px solid #000; padding: 4px; text-align: center; vertical-align: middle; height: 40px;"></td>
+                <td style="border: 1px solid #000; padding: 4px; vertical-align: middle;"></td>
+                <td style="border: 1px solid #000; padding: 4px; vertical-align: middle;"></td>
+                <td style="border: 1px solid #000; padding: 4px; text-align: center; vertical-align: middle;"></td>
+                <td style="border: 1px solid #000; padding: 4px; text-align: center; vertical-align: middle;"></td>
+                <td style="border: 1px solid #000; padding: 4px; text-align: right; vertical-align: middle;"></td>
+                <td style="border: 1px solid #000; padding: 4px; text-align: right; vertical-align: middle;"></td>
+              </tr>
             </tbody>
           </table>
 
