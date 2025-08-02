@@ -3356,9 +3356,16 @@ class DatabaseStorage implements IStorage {
     return result[0];
   }
 
-  async getQuoteWithItems(id: number): Promise<Quote & { items: (QuoteItem & { salesProduct: SalesProduct })[] } | undefined> {
+  async getQuoteWithItems(id: number): Promise<Quote & { items: (QuoteItem & { salesProduct: SalesProduct })[], client: Client | null } | undefined> {
     const quote = await this.getQuote(id);
     if (!quote) return undefined;
+
+    // Fetch client information
+    let client = null;
+    if (quote.clientId) {
+      const clientResult = await db.select().from(clients).where(eq(clients.id, quote.clientId));
+      client = clientResult[0] || null;
+    }
 
     const items = await db.select({
       id: quoteItems.id,
@@ -3388,6 +3395,7 @@ class DatabaseStorage implements IStorage {
 
     return {
       ...quote,
+      client,
       items: items.map(item => ({
         id: item.id,
         quoteId: item.quoteId,
