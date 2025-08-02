@@ -672,8 +672,8 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
               <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">20% Payment on Delivery</p>
             </div>
             
-            <!-- Middle: Bank Details -->
-            <div style="border: 2px solid #000; border-top: none; padding: 8px; width: 150px; border-right: none;">
+            <!-- Middle: Bank Details - Aligned with Size column width -->
+            <div style="border: 2px solid #000; border-top: none; padding: 8px; width: 200px; border-right: none;">
               <h3 style="font-size: 12px; font-weight: bold; margin: 0 0 8px 0;">Bank Details</h3>
               <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">A/C Name: Furnili</p>
               <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">Bank: ICICI Bank</p>
@@ -683,7 +683,7 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
             </div>
             
             <!-- Right: Authorised Signatory -->
-            <div style="border: 2px solid #000; border-top: none; padding: 8px; width: 140px; display: flex; flex-direction: column; justify-content: space-between; align-items: center;">
+            <div style="border: 2px solid #000; border-top: none; padding: 8px; width: 180px; display: flex; flex-direction: column; justify-content: space-between; align-items: center;">
               <div style="text-align: center;">
                 <p style="font-size: 12px; margin: 0 0 4px 0; font-weight: bold;">Authorised Signatory</p>
                 <p style="font-size: 12px; margin: 0; font-weight: bold;">for FURNILI</p>
