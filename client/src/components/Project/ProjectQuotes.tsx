@@ -560,43 +560,48 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
             </table>
           </div>
 
-          <!-- Bottom Section: Specifications and Bank Details (Side by Side) -->
-          <div style="display: flex; justify-content: space-between; margin-top: 30px; margin-bottom: 20px;">
-            <!-- Left Side: Furniture Specifications -->
-            <div style="width: 48%;">
-              <h3 style="font-size: 12px; font-weight: bold; margin: 0 0 10px 0; text-decoration: underline;">Furniture Specifications</h3>
-              <p style="font-size: 10px; margin: 3px 0; line-height: 1.4;">• All furniture will be manufactured using Said Materials</p>
-              <p style="font-size: 10px; margin: 3px 0; line-height: 1.4;">• All hardware considered of standard make.</p>
-              <p style="font-size: 10px; margin: 3px 0; line-height: 1.4;">• Standard laminates considered as per selection.</p>
-              <p style="font-size: 10px; margin: 3px 0; line-height: 1.4;">• Any modifications or changes in material selection may result in additional charges.</p>
+          <!-- Bottom Section: Three Columns Layout as per PDF -->
+          <div style="margin-top: 30px;">
+            <!-- First Row: Specifications (Left) and Bank Details (Right) -->
+            <div style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+              <!-- Left Side: Furniture Specifications -->
+              <div style="width: 48%;">
+                <h3 style="font-size: 12px; font-weight: bold; margin: 0 0 8px 0;">Furniture Specifications</h3>
+                <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">- All furniture will be manufactured using Said Materials</p>
+                <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">- All hardware considered of standard make.</p>
+                <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">- Standard laminates considered as per selection.</p>
+                <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">- Any modifications or changes in material selection may result in additional charges.</p>
+              </div>
+              
+              <!-- Right Side: Bank Details -->
+              <div style="width: 48%;">
+                <h3 style="font-size: 12px; font-weight: bold; margin: 0 0 8px 0;">Bank Details</h3>
+                <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">A/C Name: Furnili</p>
+                <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">Bank: ICICI Bank</p>
+                <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">Branch: Nigdi</p>
+                <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">A/C No.: 230505006647</p>
+                <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">IFSC: ICIC0002305</p>
+              </div>
             </div>
             
-            <!-- Right Side: Bank Details with Signature Box -->
-            <div style="width: 48%;">
-              <h3 style="font-size: 12px; font-weight: bold; margin: 0 0 10px 0; text-decoration: underline;">Bank Details</h3>
-              <p style="font-size: 10px; margin: 3px 0; line-height: 1.4;"><strong>A/C Name:</strong> Furnili</p>
-              <p style="font-size: 10px; margin: 3px 0; line-height: 1.4;"><strong>Bank:</strong> ICICI Bank</p>
-              <p style="font-size: 10px; margin: 3px 0; line-height: 1.4;"><strong>Branch:</strong> Nigdi</p>
-              <p style="font-size: 10px; margin: 3px 0; line-height: 1.4;"><strong>A/C No.:</strong> 230505006647</p>
-              <p style="font-size: 10px; margin: 3px 0; line-height: 1.4;"><strong>IFSC:</strong> ICIC0002305</p>
+            <!-- Second Row: Payment Terms (Left) and Signature (Right) -->
+            <div style="display: flex; justify-content: space-between;">
+              <!-- Left Side: Payment Terms -->
+              <div style="width: 48%;">
+                <h3 style="font-size: 12px; font-weight: bold; margin: 0 0 8px 0;">Payment Terms</h3>
+                <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">30% Advance Payment: Due upon order confirmation.</p>
+                <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">50% Payment Before Delivery: To be settled prior to dispatch.</p>
+                <p style="font-size: 10px; margin: 2px 0; line-height: 1.3;">20% Payment on Delivery</p>
+              </div>
               
-              <!-- Signature Box -->
-              <div style="margin-top: 25px; display: flex; justify-content: center;">
-                <div style="border: 2px solid #000; padding: 25px 40px; text-align: center; width: 80%;">
-                  <h2 style="font-size: 18px; font-weight: bold; margin: 0; letter-spacing: 3px;">FURNILI</h2>
-                  <p style="font-size: 9px; margin: 8px 0 2px 0; font-style: italic;">Authorised Signatory</p>
-                  <p style="font-size: 9px; margin: 0; font-weight: bold;">for FURNILI</p>
+              <!-- Right Side: Signature Box -->
+              <div style="width: 48%; display: flex; justify-content: center; align-items: center;">
+                <div style="border: 2px solid #000; padding: 20px 30px; text-align: center;">
+                  <p style="font-size: 12px; margin: 0 0 5px 0; font-weight: bold;">Authorised Signatory</p>
+                  <p style="font-size: 12px; margin: 0; font-weight: bold;">for FURNILI</p>
                 </div>
               </div>
             </div>
-          </div>
-          
-          <!-- Payment Terms Section (Full Width at Bottom) -->
-          <div style="margin-top: 20px;">
-            <h3 style="font-size: 12px; font-weight: bold; margin: 0 0 10px 0; text-decoration: underline;">Payment Terms</h3>
-            <p style="font-size: 10px; margin: 3px 0; line-height: 1.4;"><strong>30% Advance Payment:</strong> Due upon order confirmation.</p>
-            <p style="font-size: 10px; margin: 3px 0; line-height: 1.4;"><strong>50% Payment Before Delivery:</strong> To be settled prior to dispatch.</p>
-            <p style="font-size: 10px; margin: 3px 0; line-height: 1.4;"><strong>20% Payment on Delivery</strong></p>
           </div>
 
           <!-- Black Footer -->
