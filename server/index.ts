@@ -22,6 +22,22 @@ app.use('/uploads', express.static('uploads', {
   }
 }));
 
+// Serve attached assets statically with proper MIME type handling
+app.use('/attached_assets', express.static('attached_assets', {
+  setHeaders: (res, path, stat) => {
+    // Set proper MIME types for attached assets
+    if (path.includes('.png')) {
+      res.setHeader('Content-Type', 'image/png');
+    } else if (path.includes('.jpg') || path.includes('.jpeg')) {
+      res.setHeader('Content-Type', 'image/jpeg');
+    } else if (path.includes('.gif')) {
+      res.setHeader('Content-Type', 'image/gif');
+    } else if (path.includes('.pdf')) {
+      res.setHeader('Content-Type', 'application/pdf');
+    }
+  }
+}));
+
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;

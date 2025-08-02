@@ -70,20 +70,15 @@ export default function LoginSimple() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 to-amber-50 p-4">
       <Card className="w-full max-w-md shadow-xl">
         <CardHeader className="space-y-3 text-center pb-6">
-          <div className="w-24 h-16 flex items-center justify-center mx-auto">
+          <div className="w-32 h-16 flex items-center justify-center mx-auto">
             <img 
-              src="/attached_assets/furnili logo_1754162948403.png" 
+              src="/attached_assets/furnili%20logo_1754162948403.png" 
               alt="Furnili Logo" 
               className="w-full h-full object-contain filter contrast-125"
-              onError={(e) => {
-                console.log('Logo failed to load, using fallback');
-                e.currentTarget.style.display = 'none';
-                e.currentTarget.nextElementSibling.style.display = 'block';
+              onError={() => {
+                console.log('Logo failed to load');
               }}
             />
-            <div className="w-16 h-16 rounded-2xl items-center justify-center hidden" style={{ backgroundColor: 'hsl(28, 100%, 25%)' }}>
-              <div className="text-white font-bold text-xl">F</div>
-            </div>
           </div>
           <CardTitle className="text-3xl font-bold text-gray-900">
             Furnili
