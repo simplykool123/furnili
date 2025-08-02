@@ -4,7 +4,7 @@
 This is a professional workforce management platform designed as a modern web application with React frontend and Express backend. It provides comprehensive staff management, project tracking, inventory control, financial management, and role-based access control. The system features a clean, mobile-first design with the Furnili brand identity and optimized performance.
 
 ## Recent Changes (August 2, 2025)
-✓ **PDF QUOTE LAYOUT PERFECTION COMPLETE**: Achieved pixel-perfect PDF quote layout with exact height matching and professional formatting
+✓ **PDF QUOTE LAYOUT PERFECTION COMPLETE**: Achieved pixel-perfect PDF quote layout with seamless unified table structure and professional formatting
 ✓ **TOTAL IN WORDS DYNAMIC CONVERSION**: Implemented comprehensive number-to-words function supporting Indian number system (Crores, Lakhs, Thousands) with real-time calculation updates
 ✓ **PRECISE HEIGHT ALIGNMENT**: "Total in Words" and "Furniture Specifications" sections now perfectly match totals table row heights (31px and 124px respectively)
 ✓ **SEAMLESS BORDER INTEGRATION**: Removed right borders and spacing to create continuous flow between left content and totals table

@@ -661,7 +661,7 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
           </table>
 
           <!-- Bottom Section: 3-Part Layout with Borders -->
-          <div style="margin-top: 20px; display: flex; align-items: stretch;">
+          <div style="margin-top: 0px; display: flex; align-items: stretch;">
             <!-- Left: Payment Terms - Matches Furniture Specifications Width -->
             <div style="border: 1px solid #000; padding: 8px; flex: 1; border-right: none;">
               <h3 style="font-size: 12px; font-weight: bold; margin: 0 0 8px 0;">Payment Terms</h3>
@@ -690,7 +690,7 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
           </div>
 
           <!-- Black Footer -->
-          <div style="background-color: #000; color: white; padding: 15px; margin-top: 20px; text-align: center;">
+          <div style="background-color: #000; color: white; padding: 15px; margin-top: 0px; text-align: center;">
             <h3 style="margin: 0; font-size: 18px; font-weight: bold; letter-spacing: 2px;">Furnili - Bespoke Modular Furniture</h3>
             <p style="margin: 8px 0 0 0; font-size: 11px;">Sr.no - 31/1, Pisoli Road, Near Mohan Marbel, Pisoli,, Pune - 411048</p>
             <p style="margin: 5px 0 0 0; font-size: 11px; font-weight: bold;">+91 9823 011 223 &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp; info@furnili.com</p>
