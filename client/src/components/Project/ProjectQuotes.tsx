@@ -1079,6 +1079,170 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
           ))}
         </div>
       )}
+
+      {/* View Quote Dialog */}
+      <Dialog open={showViewDialog} onOpenChange={setShowViewDialog}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Quote Details - {selectedQuote?.quoteNumber}</DialogTitle>
+            <DialogDescription>
+              View complete quote information and export PDF
+            </DialogDescription>
+          </DialogHeader>
+          {selectedQuote && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-xs font-medium">Title</Label>
+                  <p className="text-sm">{selectedQuote.title}</p>
+                </div>
+                <div>
+                  <Label className="text-xs font-medium">Status</Label>
+                  <p className="text-sm">{selectedQuote.status}</p>
+                </div>
+                <div>
+                  <Label className="text-xs font-medium">Total Amount</Label>
+                  <p className="text-sm">₹{selectedQuote.totalAmount?.toLocaleString() || 0}</p>
+                </div>
+                <div>
+                  <Label className="text-xs font-medium">Payment Terms</Label>
+                  <p className="text-sm">{selectedQuote.paymentTerms}</p>
+                </div>
+              </div>
+              {selectedQuote.description && (
+                <div>
+                  <Label className="text-xs font-medium">Description</Label>
+                  <p className="text-sm">{selectedQuote.description}</p>
+                </div>
+              )}
+              <div className="flex gap-2">
+                <Button onClick={() => handleExportPDF(selectedQuote)}>
+                  <Download className="h-4 w-4 mr-2" />
+                  Download PDF
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    setShowViewDialog(false);
+                    setShowEditDialog(true);
+                  }}
+                >
+                  <Edit className="h-4 w-4 mr-2" />
+                  Edit Quote
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Quote Dialog */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Edit Quote - {selectedQuote?.quoteNumber}</DialogTitle>
+            <DialogDescription>
+              Update quote information
+            </DialogDescription>
+          </DialogHeader>
+          {selectedQuote && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-xs">Title</Label>
+                  <Input 
+                    value={selectedQuote.title}
+                    onChange={(e) => setSelectedQuote({...selectedQuote, title: e.target.value})}
+                    className="h-8"
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs">Status</Label>
+                  <Select 
+                    value={selectedQuote.status} 
+                    onValueChange={(value) => setSelectedQuote({...selectedQuote, status: value})}
+                  >
+                    <SelectTrigger className="h-8">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="draft">Draft</SelectItem>
+                      <SelectItem value="sent">Sent</SelectItem>
+                      <SelectItem value="approved">Approved</SelectItem>
+                      <SelectItem value="rejected">Rejected</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div>
+                <Label className="text-xs">Description</Label>
+                <Textarea 
+                  value={selectedQuote.description || ''}
+                  onChange={(e) => setSelectedQuote({...selectedQuote, description: e.target.value})}
+                  className="min-h-[60px]"
+                />
+              </div>
+              <div className="flex gap-2">
+                <Button 
+                  onClick={() => {
+                    if (selectedQuote) {
+                      updateMutation.mutate({
+                        id: selectedQuote.id,
+                        data: {
+                          title: selectedQuote.title,
+                          description: selectedQuote.description || '',
+                          status: selectedQuote.status,
+                          paymentTerms: selectedQuote.paymentTerms || '',
+                          pricelist: selectedQuote.pricelist || 'Public Pricelist (EGP)',
+                          discountType: selectedQuote.discountType || 'percentage',
+                          discountValue: selectedQuote.discountValue || 0,
+                          terms: selectedQuote.terms || '',
+                          notes: selectedQuote.notes || '',
+                          clientId: selectedQuote.clientId,
+                          items: []
+                        }
+                      });
+                    }
+                  }}
+                  disabled={updateMutation.isPending}
+                >
+                  {updateMutation.isPending ? 'Saving...' : 'Save Changes'}
+                </Button>
+                <Button variant="outline" onClick={() => setShowEditDialog(false)}>
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Quote Dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Quote</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{selectedQuote?.title}" ({selectedQuote?.quoteNumber})? 
+              This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={() => {
+                if (selectedQuote) {
+                  deleteMutation.mutate(selectedQuote.id);
+                }
+              }}
+              disabled={deleteMutation.isPending}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

@@ -61,6 +61,13 @@ The system adheres to a professional and consistent UI/UX based on the "Furnili 
 - Company signature stamp (70px width) without horizontal lines.
 - **CRITICAL**: PDF calculation logic is FINAL and correct - calculates from item line totals with proper packaging (2%), transportation (₹5,000), and GST (18%). Any discrepancies should be fixed in system/database values, NOT PDF calculations.
 
+#### Quote Management Interface
+- **Fixed Quote Action Buttons**: Edit, Delete, and View buttons now fully functional with proper dialog components.
+- **Enhanced Quote Items Creation**: Resolved issue where quote items weren't saving during quote creation.
+- **Database Schema Fix**: Made `sales_product_id` nullable to support manual item entries.
+- **Complete CRUD Operations**: Added PUT and DELETE API routes for quote management with proper authentication.
+- **Mobile-Optimized Dialogs**: All quote management dialogs follow mobile-first design principles.
+
 #### Staff Management & Payroll
 - Comprehensive staff management including attendance tracking, ID details, salary information, and document storage.
 - Admin check-in/out controls and automated payroll calculation with overtime and deductions.

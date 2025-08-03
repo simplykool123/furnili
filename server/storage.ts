@@ -3496,6 +3496,22 @@ class DatabaseStorage implements IStorage {
     }
   }
 
+  // Delete quote
+  async deleteQuote(quoteId: number) {
+    try {
+      // First delete all quote items
+      await db.delete(quoteItems).where(eq(quoteItems.quoteId, quoteId));
+      
+      // Then delete the quote
+      await db.delete(quotes).where(eq(quotes.id, quoteId));
+      
+      return { success: true };
+    } catch (error) {
+      console.error('Error deleting quote:', error);
+      throw error;
+    }
+  }
+
 }
 
 export const storage = new DatabaseStorage();

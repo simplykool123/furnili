@@ -2440,6 +2440,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update quote
+  app.put("/api/quotes/:id", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const quoteId = parseInt(req.params.id);
+      const { items, ...quoteData } = req.body;
+      
+      // Update quote first
+      const updatedQuote = await storage.updateQuote(quoteId, quoteData);
+      
+      // Update quote items if provided
+      if (items && Array.isArray(items)) {
+        await storage.updateQuoteItems(quoteId, items);
+      }
+      
+      res.json(updatedQuote);
+    } catch (error) {
+      console.error("Update quote error:", error);
+      res.status(500).json({ message: "Failed to update quote" });
+    }
+  });
+
+  // Delete quote
+  app.delete("/api/quotes/:id", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const quoteId = parseInt(req.params.id);
+      await storage.deleteQuote(quoteId);
+      res.json({ message: "Quote deleted successfully" });
+    } catch (error) {
+      console.error("Delete quote error:", error);
+      res.status(500).json({ message: "Failed to delete quote" });
+    }
+  });
+
   // Get quote details with items
   app.get("/api/quotes/:id/details", authenticateToken, async (req: AuthRequest, res) => {
     try {
