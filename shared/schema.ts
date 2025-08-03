@@ -485,6 +485,12 @@ export const quotes = pgTable("quotes", {
   pricelist: text("pricelist").default("Public Pricelist (EGP)"), // Pricelist type
   terms: text("terms"), // Terms and conditions
   notes: text("notes"), // Additional notes
+  // Additional calculations fields
+  furnitureSpecifications: text("furniture_specifications").default("All furniture will be manufactured using Said Materials\n- All hardware considered of standard make.\n- Standard laminates considered as per selection.\n- Any modifications or changes in material selection may result in additional charges."),
+  packingChargesType: text("packing_charges_type").default("percentage"), // percentage or fixed
+  packingChargesValue: real("packing_charges_value").default(2), // 2% or fixed amount
+  packingChargesAmount: real("packing_charges_amount").default(0), // calculated amount
+  transportationCharges: real("transportation_charges").default(5000), // fixed transportation cost
   createdBy: integer("created_by").references(() => users.id).notNull(),
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at").defaultNow(),

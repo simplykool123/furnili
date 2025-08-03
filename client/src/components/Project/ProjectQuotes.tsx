@@ -1016,7 +1016,7 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
                         {quote.quoteNumber}
                       </p>
                     </div>
-                    {renderStatusBadge(quote.status)}
+                    {getStatusBadge(quote.status)}
                   </div>
                   {quote.description && (
                     <p className="text-xs text-muted-foreground line-clamp-2">

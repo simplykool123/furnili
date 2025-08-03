@@ -18,6 +18,10 @@ const quoteFormSchema = z.object({
   title: z.string().min(1, "Quote title is required"),
   description: z.string().optional(),
   paymentTerms: z.string().min(1, "Payment terms are required"),
+  furnitureSpecifications: z.string().optional(),
+  packingChargesType: z.enum(["percentage", "fixed"]).default("percentage"),
+  packingChargesValue: z.number().min(0).default(2),
+  transportationCharges: z.number().min(0).default(5000),
 });
 
 const itemFormSchema = z.object({
@@ -68,6 +72,10 @@ export default function CreateQuote() {
       title: "",
       description: "",
       paymentTerms: "50% advance, 50% on delivery",
+      furnitureSpecifications: "All furniture will be manufactured using Said Materials\n- All hardware considered of standard make.\n- Standard laminates considered as per selection.\n- Any modifications or changes in material selection may result in additional charges.",
+      packingChargesType: "percentage",
+      packingChargesValue: 2,
+      transportationCharges: 5000,
     },
   });
 
@@ -506,24 +514,166 @@ export default function CreateQuote() {
                     </div>
                   ))}
 
-                  {/* Totals */}
-                  <div className="border-t pt-2 space-y-1 bg-gray-50 p-3 rounded">
-                    <div className="flex justify-between text-sm">
-                      <span>Subtotal:</span>
-                      <span>₹{(totals.subtotal || 0).toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span>Discount:</span>
-                      <span>-₹{(totals.totalDiscountAmount || 0).toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span>Tax:</span>
-                      <span>₹{(totals.totalTaxAmount || 0).toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between font-bold text-lg border-t pt-2">
-                      <span>Total:</span>
-                      <span>₹{(totals.total || 0).toFixed(2)}</span>
-                    </div>
+                  {/* Enhanced Totals Calculation Section - Matching Image Layout */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 border-t pt-4">
+                    {/* Left Side - Furniture Specifications */}
+                    <Card className="h-fit">
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-sm font-bold">Furniture Specifications</CardTitle>
+                      </CardHeader>
+                      <CardContent className="pt-0">
+                        <FormField
+                          control={form.control}
+                          name="furnitureSpecifications"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormControl>
+                                <Textarea
+                                  {...field}
+                                  className="min-h-[120px] text-xs border-gray-300 resize-none"
+                                  placeholder="Enter furniture specifications..."
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        {/* Payment Terms */}
+                        <div className="mt-4 pt-4 border-t">
+                          <h4 className="font-bold text-sm mb-2">Payment Terms</h4>
+                          <div className="text-xs space-y-1 text-gray-600">
+                            <div><strong>30%</strong> Advance Payment: Due upon order confirmation.</div>
+                            <div><strong>50%</strong> Payment Before Delivery: To be settled prior to dispatch.</div>
+                            <div><strong>20%</strong> Payment on Delivery</div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* Right Side - Calculations */}
+                    <Card className="h-fit">
+                      <CardContent className="p-0">
+                        {/* Total Calculation Table */}
+                        <div className="border rounded-lg overflow-hidden">
+                          {/* Items Subtotal */}
+                          <div className="flex justify-between items-center p-3 bg-gray-50 border-b">
+                            <span className="font-medium text-sm">Total</span>
+                            <span className="font-bold text-lg">
+                              ₹{(totals.subtotal || 0).toLocaleString('en-IN')}
+                            </span>
+                          </div>
+
+                          {/* Packaging Charges */}
+                          <div className="flex justify-between items-center p-3 border-b bg-white">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm">Packaging</span>
+                              <div className="flex items-center gap-1">
+                                <span className="text-xs">@</span>
+                                <Select
+                                  value={form.watch("packingChargesType")}
+                                  onValueChange={(value) => form.setValue("packingChargesType", value as "percentage" | "fixed")}
+                                >
+                                  <SelectTrigger className="h-6 w-16 text-xs border-0 p-0">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="percentage">%</SelectItem>
+                                    <SelectItem value="fixed">₹</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                                <Input
+                                  type="number"
+                                  value={form.watch("packingChargesValue")}
+                                  onChange={(e) => form.setValue("packingChargesValue", parseFloat(e.target.value) || 0)}
+                                  className="h-6 w-16 text-xs border-0 p-1 text-center"
+                                  step="0.01"
+                                />
+                              </div>
+                            </div>
+                            <span className="font-medium text-sm">
+                              ₹{
+                                form.watch("packingChargesType") === "percentage" 
+                                  ? (((totals.subtotal || 0) * (form.watch("packingChargesValue") || 0)) / 100).toLocaleString('en-IN')
+                                  : (form.watch("packingChargesValue") || 0).toLocaleString('en-IN')
+                              }
+                            </span>
+                          </div>
+
+                          {/* Transportation */}
+                          <div className="flex justify-between items-center p-3 border-b bg-white">
+                            <span className="text-sm">Transportation</span>
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs">₹</span>
+                              <Input
+                                type="number"
+                                value={form.watch("transportationCharges")}
+                                onChange={(e) => form.setValue("transportationCharges", parseFloat(e.target.value) || 0)}
+                                className="h-6 w-20 text-xs border-0 p-1 text-center font-medium"
+                                step="1"
+                              />
+                            </div>
+                          </div>
+
+                          {/* GST */}
+                          <div className="flex justify-between items-center p-3 border-b bg-white">
+                            <span className="text-sm">GST @ 18%</span>
+                            <span className="font-medium text-sm">
+                              ₹{(
+                                ((totals.subtotal || 0) + 
+                                 (form.watch("packingChargesType") === "percentage" 
+                                   ? ((totals.subtotal || 0) * (form.watch("packingChargesValue") || 0)) / 100
+                                   : (form.watch("packingChargesValue") || 0)) + 
+                                 (form.watch("transportationCharges") || 0)) * 0.18
+                              ).toLocaleString('en-IN')}
+                            </span>
+                          </div>
+
+                          {/* Grand Total */}
+                          <div className="flex justify-between items-center p-3 bg-[hsl(28,100%,25%)] text-white">
+                            <span className="font-bold text-sm">Grand Total</span>
+                            <span className="font-bold text-lg">
+                              ₹{(
+                                (totals.subtotal || 0) + 
+                                (form.watch("packingChargesType") === "percentage" 
+                                  ? ((totals.subtotal || 0) * (form.watch("packingChargesValue") || 0)) / 100
+                                  : (form.watch("packingChargesValue") || 0)) + 
+                                (form.watch("transportationCharges") || 0) +
+                                (((totals.subtotal || 0) + 
+                                  (form.watch("packingChargesType") === "percentage" 
+                                    ? ((totals.subtotal || 0) * (form.watch("packingChargesValue") || 0)) / 100
+                                    : (form.watch("packingChargesValue") || 0)) + 
+                                  (form.watch("transportationCharges") || 0)) * 0.18)
+                              ).toLocaleString('en-IN')}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Bank Details */}
+                        <div className="mt-4 p-3 bg-gray-50 text-xs">
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <h4 className="font-bold mb-1">Bank Details</h4>
+                              <div className="space-y-0.5 text-gray-600">
+                                <div>A/C Name: Furnili</div>
+                                <div>Bank: ICICI Bank</div>
+                                <div>Branch: Nigdi</div>
+                                <div>A/C No.: 230505006647</div>
+                                <div>IFSC: ICIC0002305</div>
+                              </div>
+                            </div>
+                            <div className="flex items-center justify-center">
+                              <div className="text-center">
+                                <div className="text-[hsl(28,100%,25%)] font-bold text-lg">FURNILI</div>
+                                <div className="text-xs text-gray-500">BESPOKE MODULAR FURNITURE</div>
+                                <div className="text-xs mt-2">Authorised Signatory</div>
+                                <div className="text-xs font-medium">for FURNILI</div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
                   </div>
                 </div>
               )}
