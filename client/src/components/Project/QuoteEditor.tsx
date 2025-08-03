@@ -115,17 +115,18 @@ export function QuoteEditor({ quoteId, projectId, clientId, onSave, onCancel }: 
       // Load items if they exist
       if (quoteData.items && quoteData.items.length > 0) {
         setItems(quoteData.items.map((itemData: any) => {
-          const item = itemData.item;
+          // Handle both direct item object and nested structure
+          const item = itemData.item || itemData;
           const salesProduct = itemData.salesProduct;
           return {
-            salesProductId: item.salesProductId || null,
-            itemName: salesProduct?.name || "Custom Item",
-            description: salesProduct?.description || "",
-            quantity: item.quantity || 1,
-            uom: "Nos",
-            unitPrice: item.unitPrice || 0,
-            taxPercentage: item.taxPercentage || 18,
-            notes: item.notes || "",
+            salesProductId: item?.salesProductId || null,
+            itemName: salesProduct?.name || item?.itemName || "Custom Item",
+            description: salesProduct?.description || item?.description || "",
+            quantity: item?.quantity || 1,
+            uom: item?.uom || "Nos",
+            unitPrice: item?.unitPrice || 0,
+            taxPercentage: item?.taxPercentage || 18,
+            notes: item?.notes || "",
           };
         }));
       }

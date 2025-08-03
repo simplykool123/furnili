@@ -67,6 +67,7 @@ interface Quote {
   description?: string;
   clientId: number;
   clientName?: string;
+  clientPhone?: string;
   projectId?: number;
   subtotal: number;
   discountType: "percentage" | "fixed";
@@ -162,6 +163,86 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // PDF Generation Function
+  const generatePDF = async (quoteId: number) => {
+    try {
+      // Get the HTML content from the server
+      const response = await apiRequest(`/api/quotes/${quoteId}/pdf`);
+      
+      if (response && response.html) {
+        // Create a new window with the HTML content
+        const newWindow = window.open('', '_blank');
+        if (newWindow) {
+          newWindow.document.write(response.html);
+          newWindow.document.close();
+          
+          // Add a small delay then trigger print dialog
+          setTimeout(() => {
+            newWindow.print();
+          }, 500);
+          
+          toast({
+            title: "PDF Ready",
+            description: "Quote PDF opened in new window. Use browser's print to save as PDF.",
+          });
+        }
+      }
+    } catch (error) {
+      console.error('PDF generation error:', error);
+      toast({
+        title: "PDF Generation Failed",
+        description: "Unable to generate PDF. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // WhatsApp Share Function
+  const shareOnWhatsApp = async (quoteId: number, clientPhone?: string) => {
+    try {
+      // Get quote details for WhatsApp message
+      const quoteDetails = await apiRequest(`/api/quotes/${quoteId}/details`);
+      
+      const message = `Hi! Please find the quote for ${quoteDetails.quote?.title || 'your project'}. 
+
+*Quote Details:*
+Quote #: ${quoteDetails.quote?.quoteNumber}
+Total Amount: ₹${quoteDetails.quote?.totalAmount?.toLocaleString()}
+
+You can download the PDF from our system or we can email it to you.
+
+Thank you for choosing Furnili!`;
+      
+      // Format phone number (remove +91 if present, add if not)
+      let phoneNumber = clientPhone || '';
+      if (phoneNumber.startsWith('+91')) {
+        phoneNumber = phoneNumber.substring(3);
+      }
+      if (phoneNumber && !phoneNumber.startsWith('91')) {
+        phoneNumber = '91' + phoneNumber;
+      }
+      
+      // Create WhatsApp URL
+      const whatsappUrl = phoneNumber 
+        ? `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`
+        : `https://wa.me/?text=${encodeURIComponent(message)}`;
+      
+      window.open(whatsappUrl, '_blank');
+      
+      toast({
+        title: "WhatsApp Opened",
+        description: "Quote details shared via WhatsApp. Client can request PDF via the system.",
+      });
+    } catch (error) {
+      console.error('WhatsApp share error:', error);
+      toast({
+        title: "Share Failed",
+        description: "Unable to share quote. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
 
   // Fetch project quotes
   const {
@@ -1101,7 +1182,7 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
                     Total: ₹{quote.totalAmount?.toLocaleString() || "0"}
                   </p>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-1">
                   <Button
                     variant="outline"
                     size="sm"
@@ -1109,13 +1190,28 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
                       setEditingQuoteId(quote.id);
                       setShowQuoteEditor(true);
                     }}
+                    className="h-8 text-xs"
                   >
                     <Edit className="h-3 w-3 mr-1" />
                     Edit
                   </Button>
-                  <Button variant="outline" size="sm">
-                    <Eye className="h-3 w-3 mr-1" />
-                    View
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => generatePDF(quote.id)}
+                    className="h-8 text-xs"
+                  >
+                    <Download className="h-3 w-3 mr-1" />
+                    PDF
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => shareOnWhatsApp(quote.id, quote.clientPhone)}
+                    className="h-8 text-xs bg-green-50 hover:bg-green-100 text-green-700"
+                  >
+                    <Share className="h-3 w-3 mr-1" />
+                    Share
                   </Button>
                 </div>
               </div>

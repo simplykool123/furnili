@@ -475,126 +475,127 @@ export function setupQuotesRoutes(app: Express) {
   });
 }
 
-// HTML template for PDF generation
-function generateQuotePDFHTML(quote: any, items: any[]) {
-  const { quote: quoteData, client, project, createdBy } = quote;
+// Helper function to generate PDF HTML content
+function generateQuotePDFHTML(data: any, items: any[]): string {
+  const { quote, client, project } = data;
   
   return `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <meta charset="utf-8">
-      <title>Quote ${quoteData.quoteNumber}</title>
-      <style>
-        body { font-family: Arial, sans-serif; margin: 20px; color: #333; }
-        .header { display: flex; justify-content: space-between; margin-bottom: 30px; border-bottom: 2px solid #8B4513; padding-bottom: 20px; }
-        .company-info { flex: 1; }
-        .quote-info { flex: 1; text-align: right; }
-        .company-name { font-size: 24px; font-weight: bold; color: #8B4513; margin-bottom: 5px; }
-        .company-details { font-size: 12px; color: #666; }
-        .quote-number { font-size: 20px; font-weight: bold; color: #8B4513; }
-        .client-section { margin: 20px 0; }
-        .client-title { font-weight: bold; color: #8B4513; margin-bottom: 10px; }
-        .client-details { background: #f8f8f8; padding: 15px; border-radius: 5px; }
-        .items-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-        .items-table th, .items-table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        .items-table th { background: #8B4513; color: white; font-weight: bold; }
-        .items-table tr:nth-child(even) { background: #f9f9f9; }
-        .totals-section { margin-top: 20px; text-align: right; }
-        .totals-table { margin-left: auto; }
-        .totals-table td { padding: 5px 10px; }
-        .total-row { font-weight: bold; font-size: 16px; background: #8B4513; color: white; }
-        .terms { margin-top: 30px; font-size: 12px; }
-        .footer { margin-top: 40px; text-align: center; font-size: 12px; color: #666; border-top: 1px solid #ddd; padding-top: 20px; }
-      </style>
-    </head>
-    <body>
-      <div class="header">
-        <div class="company-info">
-          <div class="company-name">FURNILI</div>
-          <div class="company-details">
-            Professional Furniture Solutions<br>
-            Email: info@furnili.com<br>
-            Phone: +91 XXX XXX XXXX
-          </div>
-        </div>
-        <div class="quote-info">
-          <div class="quote-number">Quote ${quoteData.quoteNumber}</div>
-          <div>Date: ${new Date(quoteData.createdAt).toLocaleDateString()}</div>
-          <div>Valid Until: ${quoteData.validUntil ? new Date(quoteData.validUntil).toLocaleDateString() : 'N/A'}</div>
-          <div>Status: ${quoteData.status.charAt(0).toUpperCase() + quoteData.status.slice(1)}</div>
-        </div>
-      </div>
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Quote ${quote.quoteNumber}</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; color: #333; }
+        .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #8B4513; padding-bottom: 20px; }
+        .company-name { font-size: 28px; font-weight: bold; color: #8B4513; margin-bottom: 5px; }
+        .company-tagline { font-size: 14px; color: #666; }
+        .quote-info { display: flex; justify-content: space-between; margin-bottom: 30px; }
+        .quote-details, .client-details { width: 48%; }
+        .section-title { font-size: 16px; font-weight: bold; color: #8B4513; margin-bottom: 10px; border-bottom: 1px solid #ddd; padding-bottom: 5px; }
+        .items-table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
+        .items-table th, .items-table td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        .items-table th { background-color: #8B4513; color: white; font-weight: bold; }
+        .items-table tr:nth-child(even) { background-color: #f9f9f9; }
+        .totals { margin-top: 30px; text-align: right; }
+        .total-row { margin-bottom: 8px; }
+        .final-total { font-size: 18px; font-weight: bold; color: #8B4513; border-top: 2px solid #8B4513; padding-top: 10px; }
+        .terms-section { margin-top: 40px; }
+        .terms-content { background-color: #f8f8f8; padding: 15px; border-left: 4px solid #8B4513; margin-top: 10px; }
+        .footer { margin-top: 50px; text-align: center; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #666; }
+        .text-right { text-align: right; }
+        .text-center { text-align: center; }
+        @media print {
+            body { margin: 0; }
+            .header { page-break-inside: avoid; }
+            .items-table { page-break-inside: avoid; }
+            .totals { page-break-inside: avoid; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="company-name">FURNILI</div>
+        <div class="company-tagline">Premium Furniture Solutions</div>
+    </div>
 
-      <div class="client-section">
-        <div class="client-title">Bill To:</div>
+    <div class="quote-info">
+        <div class="quote-details">
+            <div class="section-title">Quote Details</div>
+            <p><strong>Quote #:</strong> ${quote.quoteNumber}</p>
+            <p><strong>Title:</strong> ${quote.title}</p>
+            <p><strong>Date:</strong> ${new Date(quote.createdAt).toLocaleDateString('en-IN')}</p>
+            <p><strong>Valid Until:</strong> ${quote.validUntil ? new Date(quote.validUntil).toLocaleDateString('en-IN') : 'N/A'}</p>
+            ${project ? `<p><strong>Project:</strong> ${project.name} (${project.code})</p>` : ''}
+        </div>
+        
         <div class="client-details">
-          <strong>${client?.name || 'N/A'}</strong><br>
-          ${client?.email || ''}<br>
-          ${client?.mobile || ''}<br>
-          ${client?.city || ''}
+            <div class="section-title">Client Details</div>
+            <p><strong>Name:</strong> ${client?.name || 'N/A'}</p>
+            <p><strong>Email:</strong> ${client?.email || 'N/A'}</p>
+            <p><strong>Mobile:</strong> ${client?.mobile || 'N/A'}</p>
+            <p><strong>City:</strong> ${client?.city || 'N/A'}</p>
         </div>
-      </div>
+    </div>
 
-      ${project ? `
-        <div class="client-section">
-          <div class="client-title">Project:</div>
-          <div class="client-details">
-            <strong>${project.name}</strong> (${project.code})<br>
-            ${quoteData.description || ''}
-          </div>
-        </div>
-      ` : ''}
-
-      <table class="items-table">
+    <table class="items-table">
         <thead>
-          <tr>
-            <th>Item Details</th>
-            <th>Qty</th>
-            <th>UOM</th>
-            <th>Rate</th>
-            <th>Discount</th>
-            <th>Amount</th>
-          </tr>
+            <tr>
+                <th>Sr. No.</th>
+                <th>Item Description</th>
+                <th>Qty</th>
+                <th>UOM</th>
+                <th>Rate (₹)</th>
+                <th>Amount (₹)</th>
+            </tr>
         </thead>
         <tbody>
-          ${items.map(({ item, salesProduct }) => `
-            <tr>
-              <td>
-                <strong>${item.itemName}</strong>
-                ${item.description ? `<br><small>${item.description}</small>` : ''}
-              </td>
-              <td>${item.quantity}</td>
-              <td>${item.uom}</td>
-              <td>₹${item.unitPrice.toFixed(2)}</td>
-              <td>${item.discountPercentage}%</td>
-              <td>₹${item.lineTotal.toFixed(2)}</td>
-            </tr>
-          `).join('')}
+            ${items.map((item: any, index: number) => `
+                <tr>
+                    <td class="text-center">${index + 1}</td>
+                    <td>
+                        <strong>${item.salesProduct?.name || item.item.itemName}</strong>
+                        ${item.salesProduct?.description || item.item.description ? `<br><small style="color: #666;">${item.salesProduct?.description || item.item.description}</small>` : ''}
+                    </td>
+                    <td class="text-center">${item.item.quantity}</td>
+                    <td class="text-center">${item.item.uom || 'Nos'}</td>
+                    <td class="text-right">₹${item.item.unitPrice.toLocaleString('en-IN')}</td>
+                    <td class="text-right">₹${item.item.lineTotal.toLocaleString('en-IN')}</td>
+                </tr>
+            `).join('')}
         </tbody>
-      </table>
+    </table>
 
-      <div class="totals-section">
-        <table class="totals-table">
-          <tr><td>Sub Total:</td><td>₹${quoteData.subtotal.toFixed(2)}</td></tr>
-          <tr><td>Discount (${quoteData.discountType === 'percentage' ? quoteData.discountValue + '%' : '₹' + quoteData.discountValue}):</td><td>-₹${quoteData.discountAmount.toFixed(2)}</td></tr>
-          <tr><td>GST:</td><td>₹${quoteData.taxAmount.toFixed(2)}</td></tr>
-          <tr class="total-row"><td>Total:</td><td>₹${quoteData.totalAmount.toFixed(2)}</td></tr>
-        </table>
-      </div>
+    <div class="totals">
+        <div class="total-row"><strong>Subtotal: ₹${quote.subtotal?.toLocaleString('en-IN') || '0'}</strong></div>
+        <div class="total-row">Tax Amount: ₹${quote.taxAmount?.toLocaleString('en-IN') || '0'}</div>
+        <div class="total-row">Packing Charges (${quote.packingChargesType === 'percentage' ? `${quote.packingChargesValue}%` : `₹${quote.packingChargesValue}`}): ₹${((quote.packingChargesType === 'percentage' ? quote.subtotal * quote.packingChargesValue / 100 : quote.packingChargesValue) || 0).toLocaleString('en-IN')}</div>
+        <div class="total-row">Transportation Charges: ₹${quote.transportationCharges?.toLocaleString('en-IN') || '0'}</div>
+        <div class="final-total">Total Amount: ₹${quote.totalAmount?.toLocaleString('en-IN') || '0'}</div>
+    </div>
 
-      ${quoteData.terms ? `
-        <div class="terms">
-          <strong>Terms & Conditions:</strong><br>
-          ${quoteData.terms}
-        </div>
-      ` : ''}
+    <div class="terms-section">
+        <div class="section-title">Furniture Specifications</div>
+        <div class="terms-content">${quote.furnitureSpecifications || 'To be customized as per your requirements with quality materials and professional finish.'}</div>
+    </div>
 
-      <div class="footer">
-        Generated by ${createdBy?.name || 'System'} on ${new Date().toLocaleDateString()}<br>
-        This is a computer-generated quote and does not require a signature.
-      </div>
-    </body>
-    </html>
+    <div class="terms-section">
+        <div class="section-title">Payment Terms</div>
+        <div class="terms-content">${(quote.paymentTerms || '').replace(/\n/g, '<br>')}</div>
+    </div>
+
+    ${quote.notes ? `
+    <div class="terms-section">
+        <div class="section-title">Additional Notes</div>
+        <div class="terms-content">${quote.notes.replace(/\n/g, '<br>')}</div>
+    </div>
+    ` : ''}
+
+    <div class="footer">
+        <p>Thank you for choosing Furnili for your furniture needs!</p>
+        <p>This is a system-generated quote. For any queries, please contact us.</p>
+    </div>
+</body>
+</html>
   `;
 }
