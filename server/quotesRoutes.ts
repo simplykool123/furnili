@@ -559,8 +559,8 @@ function generateQuotePDFHTML(data: any, items: any[]): string {
                     </td>
                     <td class="text-center">${item.item.quantity}</td>
                     <td class="text-center">${item.item.uom || 'Nos'}</td>
-                    <td class="text-right">₹${item.item.unitPrice.toLocaleString('en-IN')}</td>
-                    <td class="text-right">₹${item.item.lineTotal.toLocaleString('en-IN')}</td>
+                    <td class="text-right">₹${item.item.unitPrice?.toLocaleString('en-IN')}</td>
+                    <td class="text-right">₹${item.item.lineTotal?.toLocaleString('en-IN')}</td>
                 </tr>
             `).join('')}
         </tbody>

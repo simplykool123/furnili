@@ -33,6 +33,12 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
   Form,
   FormControl,
   FormField,
@@ -239,6 +245,28 @@ Thank you for choosing Furnili!`;
       toast({
         title: "Share Failed",
         description: "Unable to share quote. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Delete quote function
+  const deleteQuote = async (quoteId: number) => {
+    try {
+      await apiRequest(`/api/quotes/${quoteId}`, {
+        method: 'DELETE',
+      });
+      
+      queryClient.invalidateQueries({ queryKey: ["/api/quotes"] });
+      toast({
+        title: "Quote Deleted",
+        description: "Quote has been deleted successfully.",
+      });
+    } catch (error) {
+      console.error('Delete quote error:', error);
+      toast({
+        title: "Delete Failed",
+        description: "Unable to delete quote. Please try again.",
         variant: "destructive",
       });
     }
@@ -1182,37 +1210,98 @@ Thank you for choosing Furnili!`;
                     Total: ₹{quote.totalAmount?.toLocaleString() || "0"}
                   </p>
                 </div>
-                <div className="flex flex-wrap gap-1">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      setEditingQuoteId(quote.id);
-                      setShowQuoteEditor(true);
-                    }}
-                    className="h-8 text-xs"
-                  >
-                    <Edit className="h-3 w-3 mr-1" />
-                    Edit
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => generatePDF(quote.id)}
-                    className="h-8 text-xs"
-                  >
-                    <Download className="h-3 w-3 mr-1" />
-                    PDF
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => shareOnWhatsApp(quote.id, quote.clientPhone)}
-                    className="h-8 text-xs bg-green-50 hover:bg-green-100 text-green-700"
-                  >
-                    <Share className="h-3 w-3 mr-1" />
-                    Share
-                  </Button>
+                <div className="flex items-center gap-1">
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setEditingQuoteId(quote.id);
+                            setShowQuoteEditor(true);
+                          }}
+                          className="h-8 w-8 p-0 hover:bg-blue-50"
+                        >
+                          <Edit className="h-4 w-4 text-blue-600" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Edit</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button 
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => generatePDF(quote.id)}
+                          className="h-8 w-8 p-0 hover:bg-red-50"
+                        >
+                          <Download className="h-4 w-4 text-red-600" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>PDF</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button 
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => shareOnWhatsApp(quote.id, quote.clientPhone)}
+                          className="h-8 w-8 p-0 hover:bg-green-50"
+                        >
+                          <Share className="h-4 w-4 text-green-600" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Share</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+
+                  <AlertDialog>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <AlertDialogTrigger asChild>
+                            <Button 
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0 hover:bg-red-50"
+                            >
+                              <Trash2 className="h-4 w-4 text-red-600" />
+                            </Button>
+                          </AlertDialogTrigger>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Delete</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Quote</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Are you sure you want to delete this quote? This action cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => deleteQuote(quote.id)}>
+                          Delete
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </div>
               </div>
             </Card>
