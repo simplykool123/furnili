@@ -301,8 +301,8 @@ function SalesProductForm({
             </div>
           </div>
 
-          {/* Price & Tax */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          {/* Price, Tax & Size */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
             <div className="space-y-1">
               <Label htmlFor="unitPrice" className="text-xs font-medium text-gray-700">Unit Price *</Label>
               <Input
@@ -332,45 +332,45 @@ function SalesProductForm({
                 <p className="text-xs text-red-600 mt-0.5">{errors.taxPercentage.message}</p>
               )}
             </div>
+
+            <div className="space-y-1">
+              <Label htmlFor="size" className="text-xs font-medium text-gray-700">Size</Label>
+              <Input
+                id="size"
+                {...register("size")}
+                className={`${errors.size ? "border-red-500" : ""} h-8 text-sm`}
+                placeholder="e.g., 120cm x 60cm x 75cm"
+              />
+              {errors.size && (
+                <p className="text-xs text-red-600 mt-0.5">{errors.size.message}</p>
+              )}
+            </div>
           </div>
 
-          {/* Description */}
-          <div className="space-y-1">
-            <Label htmlFor="description" className="text-xs font-medium text-gray-700">Description</Label>
-            <Textarea
-              id="description"
-              {...register("description")}
-              className={`${errors.description ? "border-red-500" : ""} text-sm min-h-[50px] resize-none`}
-              placeholder="L-shaped workstation with overhead storage, premium laminate finish..."
-            />
-            {errors.description && (
-              <p className="text-xs text-red-600 mt-0.5">{errors.description.message}</p>
-            )}
-          </div>
+          {/* Description & Internal Notes */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div className="space-y-1">
+              <Label htmlFor="description" className="text-xs font-medium text-gray-700">Description</Label>
+              <Textarea
+                id="description"
+                {...register("description")}
+                className={`${errors.description ? "border-red-500" : ""} text-sm min-h-[50px] resize-none`}
+                placeholder="L-shaped workstation with overhead storage, premium laminate finish..."
+              />
+              {errors.description && (
+                <p className="text-xs text-red-600 mt-0.5">{errors.description.message}</p>
+              )}
+            </div>
 
-          {/* Size */}
-          <div className="space-y-1">
-            <Label htmlFor="size" className="text-xs font-medium text-gray-700">Size</Label>
-            <Input
-              id="size"
-              {...register("size")}
-              className={`${errors.size ? "border-red-500" : ""} h-8 text-sm`}
-              placeholder="e.g., 120cm x 60cm x 75cm, L-Shape 1200x600mm"
-            />
-            {errors.size && (
-              <p className="text-xs text-red-600 mt-0.5">{errors.size.message}</p>
-            )}
-          </div>
-
-          {/* Internal Notes */}
-          <div className="space-y-1">
-            <Label htmlFor="internalNotes" className="text-xs font-medium text-gray-700">Internal Notes</Label>
-            <Textarea
-              id="internalNotes"
-              {...register("internalNotes")}
-              className={`${errors.internalNotes ? "border-red-500" : ""} text-sm min-h-[40px] resize-none`}
-              placeholder="Cost: ₹18,000, Profit margin: 37%, Lead time: 2-3 weeks..."
-            />
+            <div className="space-y-1">
+              <Label htmlFor="internalNotes" className="text-xs font-medium text-gray-700">Internal Notes</Label>
+              <Textarea
+                id="internalNotes"
+                {...register("internalNotes")}
+                className={`${errors.internalNotes ? "border-red-500" : ""} text-sm min-h-[50px] resize-none`}
+                placeholder="Cost: ₹18,000, Profit margin: 37%, Lead time: 2-3 weeks..."
+              />
+            </div>
           </div>
 
           {/* Enhanced Image Upload with Copy-Paste */}
