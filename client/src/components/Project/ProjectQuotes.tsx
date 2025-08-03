@@ -946,38 +946,30 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
           </div>
         </Card>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-2">
           {filteredQuotes.map((quote: Quote) => (
-            <Card key={quote.id} className="p-3 sm:p-4">
-              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-                <div className="flex-1 space-y-2">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h3 className="font-medium text-sm">{quote.title}</h3>
-                      <p className="text-xs text-muted-foreground">
-                        {quote.quoteNumber}
-                      </p>
-                    </div>
+            <Card key={quote.id} className="p-2">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 text-sm">
+                    <h3 className="font-medium truncate">{quote.title}</h3>
+                    <span className="text-xs text-muted-foreground">{quote.quoteNumber}</span>
                     {getStatusBadge(quote.status)}
                   </div>
-                  {quote.description && (
-                    <p className="text-xs text-muted-foreground line-clamp-2">
-                      {quote.description}
-                    </p>
-                  )}
-                  <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                    <span>₹{quote.totalAmount?.toLocaleString() || 0}</span>
-                    <span>{quote.paymentTerms}</span>
-                    <span>
-                      {new Date(quote.createdAt).toLocaleDateString()}
-                    </span>
+                  <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1">
+                    <span className="font-medium text-black">₹{quote.totalAmount?.toLocaleString() || 0}</span>
+                    <span className="truncate">{quote.paymentTerms}</span>
+                    <span>{new Date(quote.createdAt).toLocaleDateString()}</span>
+                    {quote.description && (
+                      <span className="truncate italic">{quote.description}</span>
+                    )}
                   </div>
                 </div>
-                <div className="flex gap-1">
+                <div className="flex gap-1 flex-shrink-0">
                   <Button
                     variant="outline"
                     size="sm"
-                    className="h-7 w-7 p-0"
+                    className="h-6 w-6 p-0"
                     onClick={() => {
                       setSelectedQuote(quote);
                       setShowViewDialog(true);
@@ -988,57 +980,15 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="h-7 w-7 p-0"
-                    onClick={async () => {
-                      setSelectedQuote(quote);
-                      
-                      // Load existing quote items for duplication
-                      try {
-                        const quoteDetails = await apiRequest(`/api/quotes/${quote.id}/details`);
-                        const existingItems = quoteDetails.items?.map((item: any) => ({
-                          itemName: item.itemName || item.salesProduct?.name || '',
-                          description: item.description || item.salesProduct?.description || '',
-                          quantity: item.quantity || 1,
-                          uom: item.uom || 'pcs',
-                          unitPrice: item.unitPrice || 0,
-                          discountPercentage: item.discountPercentage || 0,
-                          discountAmount: item.discountAmount || 0,
-                          taxPercentage: item.taxPercentage || 18,
-                          taxAmount: item.taxAmount || 0,
-                          lineTotal: item.lineTotal || 0,
-                          size: item.size || '',
-                          salesProductId: item.salesProductId || null,
-                        })) || [];
-                        setQuoteItems(existingItems);
-                        
-                        // Pre-populate form with existing quote data
-                        form.reset({
-                          title: projectData ? `Estimate for ${extractProjectKeyword(projectData.name)}` : 'New Quote',
-                          description: quote.description || '',
-                          paymentTerms: quote.paymentTerms || '100% advance',
-                          pricelist: quote.pricelist || 'Public Pricelist (EGP)',
-                          discountType: quote.discountType || 'percentage',
-                          discountValue: quote.discountValue || 0,
-                          terms: quote.terms || '',
-                          notes: quote.notes || '',
-                          clientId: quote.clientId || 0,
-                        });
-                      } catch (error) {
-                        console.error('Failed to load quote for duplication:', error);
-                        setQuoteItems([]);
-                      }
-                      
-                      console.log('Navigating to edit quote page...');
-                      // Navigate to edit quote page
-                      setLocation(`/projects/${projectId}/quotes/${quote.id}/edit`);
-                    }}
+                    className="h-6 w-6 p-0"
+                    onClick={() => setLocation(`/projects/${projectId}/quotes/${quote.id}/edit`)}
                   >
                     <Edit className="h-3 w-3" />
                   </Button>
                   <Button
                     variant="outline"
                     size="sm"
-                    className="h-7 w-7 p-0"
+                    className="h-6 w-6 p-0"
                     onClick={() => handleExportPDF(quote)}
                   >
                     <Download className="h-3 w-3" />
@@ -1046,7 +996,7 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
                   <Button
                     variant="destructive"
                     size="sm"
-                    className="h-7 w-7 p-0"
+                    className="h-6 w-6 p-0"
                     onClick={() => {
                       setSelectedQuote(quote);
                       setShowDeleteDialog(true);
