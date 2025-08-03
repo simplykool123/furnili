@@ -480,7 +480,7 @@ function generateQuotePDFHTML(data: any, items: any[]): string {
   const { quote, client, project } = data;
   
   // Calculate totals
-  const itemsTotal = items.reduce((sum, item) => sum + ((item.item?.lineTotal || item.item?.quantity * item.item?.unitPrice) || 0), 0);
+  const itemsTotal = items.reduce((sum, item) => sum + (item.item?.lineTotal || ((item.item?.quantity || 0) * (item.item?.unitPrice || 0))), 0);
   const packagingAmount = Math.round(itemsTotal * 0.02);
   const transportationAmount = 5000;
   const gstAmount = Math.round(itemsTotal * 0.18);
@@ -798,12 +798,12 @@ function generateQuotePDFHTML(data: any, items: any[]): string {
       ${items.map((item, index) => `
         <tr>
           <td style="text-align: center;">${index + 1}</td>
-          <td>${item.item?.itemName || item.salesProduct?.name || 'N/A'}</td>
-          <td style="text-align: center;">${item.item?.size || item.salesProduct?.size || '-'}</td>
+          <td>${item.salesProduct?.name || item.item?.itemName || 'N/A'}</td>
+          <td style="text-align: center;">${item.salesProduct?.size || item.item?.size || '-'}</td>
           <td style="text-align: center;">${item.item?.quantity || 0}</td>
           <td style="text-align: center;">${item.item?.uom || 'pcs'}</td>
           <td style="text-align: right;">₹${(item.item?.unitPrice || 0).toLocaleString('en-IN')}</td>
-          <td style="text-align: right;">₹${((item.item?.quantity || 0) * (item.item?.unitPrice || 0)).toLocaleString('en-IN')}</td>
+          <td style="text-align: right;">₹${(item.item?.lineTotal || (item.item?.quantity || 0) * (item.item?.unitPrice || 0)).toLocaleString('en-IN')}</td>
         </tr>
       `).join('')}
       <!-- Blank row to maintain table format -->
@@ -881,7 +881,7 @@ function generateQuotePDFHTML(data: any, items: any[]): string {
     </div>
     <div class="signature-box">
       <div style="margin-bottom: 20px;">
-        <img src="/public/assets/furnili-signature-stamp.png" alt="Furnili Signature" style="max-height: 60px; opacity: 0.8;" />
+        <img src="/assets/furnili-signature-stamp.png" alt="Furnili Signature" style="max-height: 60px; opacity: 0.8;" />
       </div>
       <div class="signature-line">Authorized Signatory<br/>FURNILI</div>
     </div>
