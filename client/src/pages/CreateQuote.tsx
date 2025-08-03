@@ -99,10 +99,46 @@ export default function CreateQuote() {
     }
   };
 
+  // Function to extract meaningful part from project name for title
+  const extractProjectKeyword = (projectName: string): string => {
+    if (!projectName) return 'Project';
+    
+    // Remove client names and common prefixes/suffixes
+    let cleanName = projectName;
+    
+    // Split by common separators and extract meaningful parts
+    const parts = cleanName.split(/[-–—|,\s]+/).map(part => part.trim()).filter(Boolean);
+    
+    // Look for patterns like "2BHK", "3BHK", "Office", "Restaurant", etc.
+    const meaningfulParts = parts.filter(part => {
+      // Match BHK patterns (1BHK, 2BHK, etc.)
+      if (/^\d+\s*BHK$/i.test(part)) return true;
+      // Match room descriptions (Office, Restaurant, Cafe, etc.)
+      if (/^(office|restaurant|cafe|shop|mall|hotel|apartment|villa|house|home|kitchen|bedroom|living|dining)$/i.test(part)) return true;
+      // Match building types (residential, commercial, etc.)
+      if (/^(residential|commercial|retail|corporate)$/i.test(part)) return true;
+      // Exclude common client names or generic terms
+      if (/^(furniture|interior|design|project|work|renovation|furnishing)$/i.test(part)) return false;
+      // If it's a proper noun (capitalized) and not too long, include it
+      if (part.length > 2 && part.length < 20 && /^[A-Z]/.test(part)) return true;
+      return false;
+    });
+    
+    // Return the most meaningful part or the last part if no patterns match
+    if (meaningfulParts.length > 0) {
+      return meaningfulParts[0];
+    }
+    
+    // Fallback: return the last part that's not a common generic term
+    const lastPart = parts[parts.length - 1];
+    return lastPart && lastPart.length > 1 ? lastPart : 'Project';
+  };
+
   // Auto-populate quote title when project data is available
   useEffect(() => {
     if (project && !form.watch("title")) {
-      const autoTitle = `Auto Estimate for ${(project as any)?.name || 'Project'}`;
+      const projectKeyword = extractProjectKeyword((project as any)?.name || '');
+      const autoTitle = `Estimate for ${projectKeyword}`;
       form.setValue("title", autoTitle);
     }
   }, [project, form]);
@@ -273,14 +309,18 @@ export default function CreateQuote() {
                   name="title"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-xs">Quote Title *</FormLabel>
+                      <FormLabel className="text-xs">Quote Title * (Auto-generated)</FormLabel>
                       <FormControl>
                         <Input
                           {...field}
-                          className="h-8 text-xs"
-                          placeholder="Enter quote title"
+                          className="h-8 text-xs bg-gray-50 cursor-not-allowed"
+                          placeholder="Auto-generated from project name"
+                          readOnly
                         />
                       </FormControl>
+                      <div className="text-[10px] text-gray-500 mt-1">
+                        Automatically generated as "Estimate for [Project Type]"
+                      </div>
                       <FormMessage />
                     </FormItem>
                   )}

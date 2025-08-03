@@ -67,6 +67,7 @@ The system adheres to a professional and consistent UI/UX based on the "Furnili 
 - **Database Schema Fix**: Made `sales_product_id` nullable to support manual item entries.
 - **Complete CRUD Operations**: Added PUT and DELETE API routes for quote management with proper authentication.
 - **Mobile-Optimized Dialogs**: All quote management dialogs follow mobile-first design principles.
+- **Automated Quote Title Generation**: Quote titles are now automatically generated based on project names (e.g., "Estimate for 2BHK" where "2BHK" is extracted from project name). The system intelligently identifies meaningful parts like BHK patterns, property types, and business types.
 
 #### Staff Management & Payroll
 - Comprehensive staff management including attendance tracking, ID details, salary information, and document storage.
