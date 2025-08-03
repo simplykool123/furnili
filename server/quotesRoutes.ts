@@ -496,97 +496,102 @@ function generateQuotePDFHTML(data: any, items: any[]): string {
         body {
             font-family: Arial, sans-serif;
             margin: 0;
-            padding: 20px;
+            padding: 15px;
             color: #000;
-            font-size: 12px;
-            line-height: 1.4;
-        }
-        
-        .header-section {
-            text-align: right;
-            margin-bottom: 20px;
+            font-size: 11px;
+            line-height: 1.2;
         }
         
         .quotation-title {
-            font-size: 18px;
+            font-size: 16px;
             font-weight: bold;
             text-align: right;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
+        }
+        
+        .header-info {
+            display: table;
+            width: 100%;
+            margin-bottom: 15px;
         }
         
         .client-info {
-            float: left;
-            width: 300px;
+            display: table-cell;
+            width: 50%;
+            vertical-align: top;
         }
         
         .quote-info {
-            float: right;
+            display: table-cell;
+            width: 50%;
             text-align: right;
-        }
-        
-        .clear {
-            clear: both;
+            vertical-align: top;
         }
         
         .subject-line {
-            margin: 30px 0;
+            margin: 20px 0;
             text-align: center;
         }
         
         .items-table {
             width: 100%;
             border-collapse: collapse;
-            margin: 20px 0;
+            margin: 15px 0;
+            font-size: 10px;
         }
         
         .items-table th {
             border: 1px solid #000;
-            padding: 8px;
+            padding: 6px 4px;
             text-align: center;
             font-weight: bold;
-            font-size: 11px;
+            background: #f5f5f5;
         }
         
         .items-table td {
             border: 1px solid #000;
-            padding: 8px;
+            padding: 6px 4px;
             vertical-align: top;
-            font-size: 11px;
         }
         
-        .description-cell {
-            width: 40%;
-        }
+        .sr-no { width: 60px; text-align: center; }
+        .product { width: 180px; text-align: center; }
+        .description { width: 250px; }
+        .size { width: 100px; text-align: center; }
+        .qty { width: 40px; text-align: center; }
+        .rate { width: 80px; text-align: center; }
+        .amount { width: 100px; text-align: right; }
         
         .totals-section {
             margin-top: 20px;
+            text-align: right;
         }
         
         .bottom-section {
-            display: flex;
-            margin-top: 30px;
+            display: table;
+            width: 100%;
+            margin-top: 25px;
         }
         
         .specs-section {
-            flex: 1;
-            margin-right: 20px;
+            display: table-cell;
+            width: 65%;
+            vertical-align: top;
+            padding-right: 20px;
         }
         
-        .bank-details {
-            width: 200px;
+        .bank-section {
+            display: table-cell;
+            width: 35%;
+            vertical-align: top;
         }
         
         .footer {
             text-align: center;
-            margin-top: 40px;
-            border-top: 1px solid #000;
-            padding-top: 10px;
+            margin-top: 30px;
             font-size: 10px;
-        }
-        
-        .signature-section {
-            text-align: right;
-            margin-top: 20px;
+            border-top: 1px solid #000;
+            padding-top: 8px;
         }
         
         @media print {
@@ -597,21 +602,22 @@ function generateQuotePDFHTML(data: any, items: any[]): string {
 <body>
     <div class="quotation-title">Quotation</div>
     
-    <div class="client-info">
-        To,<br>
-        <strong>${client?.name || 'N/A'}</strong><br>
-        ${client?.address || ''}<br>
-        ${client?.city || ''}<br>
+    <div class="header-info">
+        <div class="client-info">
+            To,<br>
+            <strong>${client?.name || 'Mr. Client'}</strong><br>
+            ${client?.address || 'Address'}<br>
+            ${client?.city || 'City'}
+        </div>
+        
+        <div class="quote-info">
+            Date :- ${new Date(quote.createdAt).toLocaleDateString('en-GB').replace(/\//g, '-')}<br>
+            Est. No. :- ${quote.quoteNumber}<br>
+            ${client?.gstNumber ? `GSTN :- ${client.gstNumber}<br>` : 'GSTN :- 27AAKFF2192A1ZO<br>'}
+            ${client?.panNumber ? `PAN :- ${client.panNumber}<br>` : 'PAN :- AKFF2192A<br>'}
+            Contact Person :- ${client?.name || 'Mr. Client'}
+        </div>
     </div>
-    
-    <div class="quote-info">
-        Date :- ${new Date(quote.createdAt).toLocaleDateString('en-IN')}<br>
-        Est. No. :- ${quote.quoteNumber}<br>
-        ${client?.gstNumber ? `GSTN :- ${client.gstNumber}<br>` : ''}
-        Contact Person :- ${client?.name || 'N/A'}
-    </div>
-    
-    <div class="clear"></div>
     
     <div class="subject-line">
         Subject: _________________________________________________________________________________
@@ -620,36 +626,34 @@ function generateQuotePDFHTML(data: any, items: any[]): string {
     <table class="items-table">
         <thead>
             <tr>
-                <th style="width: 60px;">Sr. No.</th>
-                <th style="width: 150px;">Product</th>
-                <th class="description-cell">Item Description</th>
-                <th style="width: 100px;">SIZE</th>
-                <th style="width: 50px;">Qty</th>
-                <th style="width: 80px;">Rate</th>
-                <th style="width: 100px;">Total Amount</th>
+                <th class="sr-no">Sr. No.</th>
+                <th class="product">Product</th>
+                <th class="description">Item Description</th>
+                <th class="size">SIZE</th>
+                <th class="qty">Qty</th>
+                <th class="rate">Rate</th>
+                <th class="amount">Total Amount</th>
             </tr>
         </thead>
         <tbody>
             ${items.map((item, index) => `
                 <tr>
-                    <td style="text-align: center;">${index + 1}</td>
-                    <td style="text-align: center;">${item.salesProduct?.name || item.item?.itemName || 'N/A'}</td>
-                    <td>${item.salesProduct?.description || item.item?.description || ''}</td>
-                    <td style="text-align: center;">${item.salesProduct?.size || item.item?.size || '-'}</td>
-                    <td style="text-align: center;">${item.item?.quantity || 0}</td>
-                    <td style="text-align: center;">${(item.item?.unitPrice || 0).toLocaleString('en-IN')}</td>
-                    <td style="text-align: right;">${(item.item?.lineTotal || (item.item?.quantity || 0) * (item.item?.unitPrice || 0)).toLocaleString('en-IN')}</td>
+                    <td class="sr-no">${index + 1}</td>
+                    <td class="product">${item.salesProduct?.name || item.item?.itemName || 'Product'}</td>
+                    <td class="description">${item.salesProduct?.description || item.item?.description || ''}</td>
+                    <td class="size">${item.salesProduct?.size || item.item?.size || '-'}</td>
+                    <td class="qty">${item.item?.quantity || 0}</td>
+                    <td class="rate">${(item.item?.unitPrice || 0).toLocaleString('en-IN')}</td>
+                    <td class="amount">${(item.item?.lineTotal || (item.item?.quantity || 0) * (item.item?.unitPrice || 0)).toLocaleString('en-IN')}</td>
                 </tr>
             `).join('')}
             
-            <!-- Empty rows for spacing -->
-            <tr><td colspan="7" style="height: 20px; border: none;"></td></tr>
+            <tr><td colspan="7" style="height: 15px; border: none;"></td></tr>
             
-            <!-- Totals row -->
             <tr>
                 <td colspan="5" style="border: none;"></td>
-                <td style="text-align: right; font-weight: bold;">Total</td>
-                <td style="text-align: right; font-weight: bold;">${itemsTotal.toLocaleString('en-IN')}</td>
+                <td style="text-align: right; font-weight: bold; border: 1px solid #000;">Total</td>
+                <td style="text-align: right; font-weight: bold; border: 1px solid #000;">${itemsTotal.toLocaleString('en-IN')}</td>
             </tr>
         </tbody>
     </table>
@@ -657,7 +661,7 @@ function generateQuotePDFHTML(data: any, items: any[]): string {
     <div class="bottom-section">
         <div class="specs-section">
             <strong>Furniture Specifications</strong><br>
-            - All furniture will be manufactured using Said Materials<br>
+            - All furniture will be manufactured using Said Materails<br>
             - All hardware considered of standard make.<br>
             - Standard laminates considered as per selection.<br>
             - Any modifications or changes in material selection may result in additional charges.<br><br>
@@ -668,12 +672,12 @@ function generateQuotePDFHTML(data: any, items: any[]): string {
             20% Payment on Delivery
         </div>
         
-        <div class="bank-details">
-            <div style="text-align: right;">
+        <div class="bank-section">
+            <div style="text-align: right; margin-bottom: 15px;">
                 Packaging @ 2%&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;${packagingAmount.toLocaleString('en-IN')}<br>
                 Transportation&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;5,000<br>
                 GST @ 18%&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;${gstAmount.toLocaleString('en-IN')}<br>
-                <strong>Grand Total&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;${grandTotal.toLocaleString('en-IN')}</strong><br><br>
+                <strong>Grand Total&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;${grandTotal.toLocaleString('en-IN')}</strong>
             </div>
             
             <strong>Bank Details</strong><br>
@@ -683,7 +687,7 @@ function generateQuotePDFHTML(data: any, items: any[]): string {
             A/C No.: 230505006647<br>
             IFSC: ICIC0002305<br><br>
             
-            <div class="signature-section">
+            <div style="text-align: right;">
                 Authorised Signatory<br>
                 for FURNILI
             </div>
@@ -693,7 +697,7 @@ function generateQuotePDFHTML(data: any, items: any[]): string {
     <div class="footer">
         <strong>Furnili - Bespoke Modular Furniture</strong><br>
         Sr.no - 31/1 , Pisoli Road, Near Mohan Marbel, Pisoli,, Pune - 411048<br>
-        +91 9823 011 223 | info@furnili.com
+        +91 9823 011 223&nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;&nbsp;info@furnili.com
     </div>
 </body>
 </html>`;

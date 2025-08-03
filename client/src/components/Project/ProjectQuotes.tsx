@@ -1,4 +1,24 @@
 import { useState, useEffect } from "react";
+
+// Type declaration for html2pdf
+declare module 'html2pdf.js' {
+  interface Html2PdfOptions {
+    margin?: number | number[];
+    filename?: string;
+    image?: { type: string; quality: number };
+    html2canvas?: Record<string, any>;
+    jsPDF?: { unit: string; format: string; orientation: string };
+  }
+  
+  interface Html2Pdf {
+    set(options: Html2PdfOptions): Html2Pdf;
+    from(element: HTMLElement): Html2Pdf;
+    save(): Promise<void>;
+  }
+  
+  function html2pdf(): Html2Pdf;
+  export = html2pdf;
+}
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Card } from "@/components/ui/card";
@@ -40,7 +60,41 @@ import {
   IndianRupee,
   Calendar
 } from "lucide-react";
-import type { Quote, QuoteItem, SelectClient } from "@/types";
+// Types
+interface Quote {
+  id: number;
+  quoteNumber: string;
+  title: string;
+  description?: string;
+  projectId: number;
+  clientId: number;
+  status: string;
+  totalAmount?: number;
+  createdAt: string;
+  validTill?: string;
+  clientPhone?: string;
+}
+
+interface QuoteItem {
+  id: number;
+  quoteId: number;
+  salesProductId?: number;
+  itemName: string;
+  description?: string;
+  quantity: number;
+  unitPrice: number;
+  lineTotal: number;
+  discountAmount?: number;
+  taxAmount?: number;
+}
+
+interface SelectClient {
+  id: number;
+  name: string;
+  email?: string;
+  mobile?: string;
+  city?: string;
+}
 import { QuoteEditor } from "./QuoteEditor";
 
 interface ProjectQuotesProps {
@@ -119,20 +173,20 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
 
     const items = quoteItems.filter((item: QuoteItem) => item.quoteId === quoteId);
     
-    const subtotal = items.reduce((sum, item) => {
+    const subtotal = items.reduce((sum: number, item: QuoteItem) => {
       return sum + ((item.quantity || 0) * (item.unitPrice || 0));
     }, 0);
 
-    const totalDiscountAmount = items.reduce((sum, item) => {
+    const totalDiscountAmount = items.reduce((sum: number, item: QuoteItem) => {
       return sum + (item.discountAmount || 0);
     }, 0);
 
-    const totalTaxAmount = items.reduce((sum, item) => {
+    const totalTaxAmount = items.reduce((sum: number, item: QuoteItem) => {
       return sum + (item.taxAmount || 0);
     }, 0);
 
     const total = items.reduce(
-      (sum, item) => sum + (item.lineTotal || 0),
+      (sum: number, item: QuoteItem) => sum + (item.lineTotal || 0),
       0,
     );
 
@@ -198,7 +252,7 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
     try {
       console.log("Starting downloadPDFAndShare with quoteId:", quoteId, "clientPhone:", clientPhone);
       
-      const quote = quotes.find(q => q.id === quoteId);
+      const quote = quotes.find((q: Quote) => q.id === quoteId);
       if (!quote) {
         toast({
           title: "Error",
