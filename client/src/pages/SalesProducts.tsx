@@ -617,11 +617,10 @@ export default function SalesProducts() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="w-[35%] md:w-[40%]">Product</TableHead>
-                      <TableHead className="w-[15%] hidden sm:table-cell">Category</TableHead>
+                      <TableHead className="w-[45%] md:w-[50%]">Product</TableHead>
+                      <TableHead className="w-[20%] hidden sm:table-cell">Category</TableHead>
                       <TableHead className="w-[25%] md:w-[20%]">Size</TableHead>
-                      <TableHead className="w-[12%]">Price</TableHead>
-                      <TableHead className="w-[8%] hidden md:table-cell">Tax %</TableHead>
+                      <TableHead className="w-[15%]">Price</TableHead>
                       <TableHead className="w-[5%] text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -644,7 +643,7 @@ export default function SalesProducts() {
                             <div className="min-w-0 flex-1">
                               <p className="font-semibold text-gray-900 truncate text-sm">{product.name}</p>
                               {product.description && (
-                                <p className="text-xs text-gray-500 truncate max-w-[200px] leading-tight">
+                                <p className="text-xs text-gray-500 truncate max-w-[300px] leading-tight">
                                   {product.description}
                                 </p>
                               )}
@@ -674,15 +673,10 @@ export default function SalesProducts() {
                             <span className="font-semibold text-green-600 text-sm">
                               {formatCurrency(product.unitPrice)}
                             </span>
-                            <span className="text-xs text-gray-500 md:hidden">
+                            <span className="text-xs text-gray-500">
                               {product.taxPercentage ? `+${product.taxPercentage}% tax` : "Tax free"}
                             </span>
                           </div>
-                        </TableCell>
-                        <TableCell className="hidden md:table-cell">
-                          <span className="text-sm text-gray-600">
-                            {product.taxPercentage ? `${product.taxPercentage}%` : "-"}
-                          </span>
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex items-center justify-end gap-2">
