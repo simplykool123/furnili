@@ -53,6 +53,14 @@ The system adheres to a professional and consistent UI/UX based on the "Furnili 
 - Role-specific dashboards with key metrics.
 - CSV export for various data types, including category-wise analysis and financial summaries.
 
+#### Professional PDF Quote Generation
+- Fixed and optimized PDF layout with exact specifications.
+- Professional table format with seamless connectivity between sections.
+- Consistent 31px row heights for totals and blank rows.
+- Compact bottom section with 4px padding and 1.1 line-height.
+- Company signature stamp (70px width) without horizontal lines.
+- **CRITICAL**: PDF calculation logic is FINAL and correct - calculates from item line totals with proper packaging (2%), transportation (₹5,000), and GST (18%). Any discrepancies should be fixed in system/database values, NOT PDF calculations.
+
 #### Staff Management & Payroll
 - Comprehensive staff management including attendance tracking, ID details, salary information, and document storage.
 - Admin check-in/out controls and automated payroll calculation with overtime and deductions.
