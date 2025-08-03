@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { Plus, Eye, Edit, Trash2, Download, Share } from "lucide-react";
@@ -155,6 +155,7 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showViewDialog, setShowViewDialog] = useState(false);
   const [quoteItems, setQuoteItems] = useState<QuoteItem[]>([]);
+  const [editQuoteItems, setEditQuoteItems] = useState<QuoteItem[]>([]);
   const [editingItem, setEditingItem] = useState<QuoteItem | null>(null);
   const [showItemDialog, setShowItemDialog] = useState(false);
 
@@ -345,22 +346,27 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
     };
     newItem.lineTotal = calculateLineTotal(newItem);
 
+    // Check if we're in edit mode or create mode
+    const isEditMode = showEditDialog;
+    const targetItems = isEditMode ? editQuoteItems : quoteItems;
+    const setTargetItems = isEditMode ? setEditQuoteItems : setQuoteItems;
+
     if (editingItem) {
       // Update existing item
-      const itemIndex = quoteItems.findIndex((item, index) =>
+      const itemIndex = targetItems.findIndex((item, index) =>
         editingItem.id
           ? item.id === editingItem.id
-          : index === quoteItems.indexOf(editingItem),
+          : index === targetItems.indexOf(editingItem),
       );
       if (itemIndex !== -1) {
-        const updatedItems = [...quoteItems];
+        const updatedItems = [...targetItems];
         updatedItems[itemIndex] = { ...editingItem, ...newItem };
-        setQuoteItems(updatedItems);
+        setTargetItems(updatedItems);
       }
       setEditingItem(null);
     } else {
       // Add new item
-      setQuoteItems([...quoteItems, newItem]);
+      setTargetItems([...targetItems, newItem]);
     }
 
     setShowItemDialog(false);
@@ -423,6 +429,33 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
     const lastPart = parts[parts.length - 1];
     return lastPart && lastPart.length > 1 ? lastPart : 'Project';
   };
+
+  // Calculate edit quote totals
+  const editQuoteTotals = useMemo(() => {
+    const subtotal = editQuoteItems.reduce((sum, item) => {
+      return sum + (item.quantity || 0) * (item.unitPrice || 0);
+    }, 0);
+
+    const totalDiscountAmount = editQuoteItems.reduce((sum, item) => {
+      return sum + (item.discountAmount || 0);
+    }, 0);
+
+    const totalTaxAmount = editQuoteItems.reduce((sum, item) => {
+      return sum + (item.taxAmount || 0);
+    }, 0);
+
+    const total = editQuoteItems.reduce(
+      (sum, item) => sum + (item.lineTotal || 0),
+      0,
+    );
+
+    return {
+      subtotal: subtotal || 0,
+      totalDiscountAmount: totalDiscountAmount || 0,
+      totalTaxAmount: totalTaxAmount || 0,
+      total: total || 0,
+    };
+  }, [editQuoteItems]);
 
   // Calculate quote totals
   const calculateTotals = () => {
@@ -1154,8 +1187,34 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
                 </Button>
                 <Button 
                   variant="outline" 
-                  onClick={() => {
+                  onClick={async () => {
                     setShowViewDialog(false);
+                    
+                    // Load existing quote items
+                    if (selectedQuote) {
+                      try {
+                        const quoteDetails = await apiRequest(`/api/quotes/${selectedQuote.id}/details`);
+                        const existingItems = quoteDetails.items?.map((item: any) => ({
+                          itemName: item.itemName || item.salesProduct?.name || '',
+                          description: item.description || item.salesProduct?.description || '',
+                          quantity: item.quantity || 1,
+                          uom: item.uom || 'pcs',
+                          unitPrice: item.unitPrice || 0,
+                          discountPercentage: item.discountPercentage || 0,
+                          discountAmount: item.discountAmount || 0,
+                          taxPercentage: item.taxPercentage || 18,
+                          taxAmount: item.taxAmount || 0,
+                          lineTotal: item.lineTotal || 0,
+                          size: item.size || '',
+                          salesProductId: item.salesProductId || null,
+                        })) || [];
+                        setEditQuoteItems(existingItems);
+                      } catch (error) {
+                        console.error('Failed to load quote items:', error);
+                        setEditQuoteItems([]);
+                      }
+                    }
+                    
                     setShowEditDialog(true);
                   }}
                 >
@@ -1169,17 +1228,19 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
       </Dialog>
 
       {/* Edit Quote Dialog */}
-      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-        <DialogContent className="max-w-2xl">
+      <Dialog open={showEditDialog} onOpenChange={() => {
+        setShowEditDialog(false);
+        setEditQuoteItems([]);
+      }}>
+        <DialogContent className="max-w-[95vw] max-h-[95vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit Quote - {selectedQuote?.quoteNumber}</DialogTitle>
-            <DialogDescription>
-              Update quote information
-            </DialogDescription>
+            <DialogDescription>Update quote information and items</DialogDescription>
           </DialogHeader>
           {selectedQuote && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-3">
+              {/* Basic Quote Info */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
                   <Label className="text-xs">Title (Auto-generated)</Label>
                   <Input 
@@ -1209,15 +1270,92 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
                   </Select>
                 </div>
               </div>
+
               <div>
                 <Label className="text-xs">Description</Label>
                 <Textarea 
                   value={selectedQuote.description || ''}
                   onChange={(e) => setSelectedQuote({...selectedQuote, description: e.target.value})}
-                  className="min-h-[60px]"
+                  className="min-h-[60px] text-xs"
                 />
               </div>
-              <div className="flex gap-2">
+
+              {/* Quote Items Section */}
+              <div className="border-t pt-3">
+                <div className="flex justify-between items-center mb-3">
+                  <h3 className="text-sm font-semibold">Quote Items</h3>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setEditingItem(null);
+                      setShowItemDialog(true);
+                    }}
+                  >
+                    <Plus className="h-4 w-4 mr-1" />
+                    Add Item
+                  </Button>
+                </div>
+
+                {/* Current Items List */}
+                {editQuoteItems.length > 0 && (
+                  <div className="space-y-2 mb-4">
+                    {editQuoteItems.map((item, index) => (
+                      <div key={index} className="flex items-center justify-between p-2 border rounded-lg bg-gray-50">
+                        <div className="flex-1">
+                          <div className="text-sm font-medium">{item.itemName}</div>
+                          <div className="text-xs text-gray-600">
+                            {item.quantity} {item.uom} × ₹{item.unitPrice.toLocaleString()} = ₹{(item.lineTotal || 0).toLocaleString()}
+                          </div>
+                        </div>
+                        <div className="flex gap-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setEditingItem(item);
+                              setShowItemDialog(true);
+                            }}
+                          >
+                            <Edit className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              const newItems = editQuoteItems.filter((_, i) => i !== index);
+                              setEditQuoteItems(newItems);
+                            }}
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Quote Totals */}
+                {editQuoteItems.length > 0 && (
+                  <div className="bg-gray-50 p-3 rounded-lg space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span>Subtotal:</span>
+                      <span>₹{editQuoteTotals.subtotal.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span>Tax Amount:</span>
+                      <span>₹{editQuoteTotals.totalTaxAmount.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between text-sm font-semibold border-t pt-2">
+                      <span>Total:</span>
+                      <span>₹{editQuoteTotals.total.toLocaleString()}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-2 pt-3 border-t">
                 <Button 
                   onClick={() => {
                     if (selectedQuote) {
@@ -1235,16 +1373,36 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
                           terms: selectedQuote.terms || '',
                           notes: selectedQuote.notes || '',
                           clientId: selectedQuote.clientId,
-                          items: []
+                          items: editQuoteItems.map(item => ({
+                            itemName: item.itemName,
+                            description: item.description,
+                            quantity: item.quantity,
+                            uom: item.uom,
+                            unitPrice: item.unitPrice,
+                            discountPercentage: item.discountPercentage || 0,
+                            discountAmount: item.discountAmount || 0,
+                            taxPercentage: item.taxPercentage || 18,
+                            taxAmount: item.taxAmount || 0,
+                            lineTotal: item.lineTotal || 0,
+                            size: item.size || "",
+                            salesProductId: item.salesProductId || null,
+                          }))
                         }
                       });
                     }
                   }}
                   disabled={updateMutation.isPending}
+                  className="flex-1"
                 >
                   {updateMutation.isPending ? 'Saving...' : 'Save Changes'}
                 </Button>
-                <Button variant="outline" onClick={() => setShowEditDialog(false)}>
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    setShowEditDialog(false);
+                    setEditQuoteItems([]);
+                  }}
+                >
                   Cancel
                 </Button>
               </div>
