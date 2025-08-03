@@ -55,12 +55,6 @@ export default function CreateQuote() {
   const urlParams = new URLSearchParams(location.split('?')[1] || '');
   const duplicateQuoteId = urlParams.get('duplicate');
   
-  console.log('CreateQuote Debug:', {
-    location,
-    urlParams: location.split('?')[1],
-    duplicateQuoteId,
-    hasOriginalQuote: !!originalQuote
-  });
   const [items, setItems] = useState<QuoteItem[]>([]);
   const [editingItem, setEditingItem] = useState<QuoteItem | null>(null);
   const [editingIndex, setEditingIndex] = useState<number>(-1);
@@ -86,6 +80,13 @@ export default function CreateQuote() {
   const { data: originalQuote } = useQuery({
     queryKey: [`/api/quotes/${duplicateQuoteId}/details`],
     enabled: !!duplicateQuoteId,
+  });
+  
+  console.log('CreateQuote Debug:', {
+    location,
+    urlParams: location.split('?')[1],
+    duplicateQuoteId,
+    hasOriginalQuote: !!originalQuote
   });
 
   // Main quote form

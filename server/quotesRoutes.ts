@@ -381,6 +381,74 @@ export function setupQuotesRoutes(app: Express) {
       res.status(500).json({ error: "Failed to fetch products" });
     }
   });
+
+  // Update existing quote
+  app.put("/api/quotes/:id", authenticateToken, async (req, res) => {
+    try {
+      const quoteId = parseInt(req.params.id);
+      const authReq = req as AuthRequest;
+      const updateData = req.body;
+
+      console.log('Updating quote:', quoteId, 'with data:', updateData);
+
+      // Update quote basic data
+      const [updatedQuote] = await db
+        .update(quotes)
+        .set({
+          title: updateData.title,
+          description: updateData.description,
+          paymentTerms: updateData.paymentTerms,
+          furnitureSpecifications: updateData.furnitureSpecifications,
+          packingChargesType: updateData.packingChargesType,
+          packingChargesValue: updateData.packingChargesValue,
+          packingChargesAmount: updateData.packingCharges,
+          transportationCharges: updateData.transportationCharges,
+          subtotal: updateData.subtotal,
+          discountAmount: updateData.totalDiscount,
+          taxAmount: updateData.totalTax,
+          totalAmount: updateData.grandTotal,
+          updatedAt: new Date(),
+        })
+        .where(eq(quotes.id, quoteId))
+        .returning();
+
+      if (!updatedQuote) {
+        return res.status(404).json({ error: "Quote not found" });
+      }
+
+      // Delete existing quote items
+      await db.delete(quoteItems).where(eq(quoteItems.quoteId, quoteId));
+
+      // Insert new quote items
+      if (updateData.items && updateData.items.length > 0) {
+        for (let i = 0; i < updateData.items.length; i++) {
+          const item = updateData.items[i];
+          await db.insert(quoteItems).values({
+            quoteId: quoteId,
+            salesProductId: item.salesProductId,
+            itemName: item.itemName,
+            description: item.description,
+            quantity: item.quantity,
+            uom: item.uom,
+            unitPrice: item.unitPrice,
+            discountPercentage: item.discountPercentage || 0,
+            taxPercentage: item.taxPercentage || 18,
+            lineTotal: item.lineTotal,
+            size: item.size,
+            sortOrder: i + 1,
+          });
+        }
+      }
+
+      res.json({ 
+        message: "Quote updated successfully", 
+        quote: updatedQuote 
+      });
+    } catch (error) {
+      console.error("Error updating quote:", error);
+      res.status(500).json({ error: "Failed to update quote" });
+    }
+  });
 }
 
 // HTML template for PDF generation

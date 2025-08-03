@@ -30,6 +30,7 @@ import Backups from "@/pages/Backups";
 import Projects from "@/pages/Projects";
 import ProjectDetail from "@/pages/ProjectDetail";
 import CreateQuote from "@/pages/CreateQuote";
+import EditQuote from "@/pages/EditQuote";
 import SalesProducts from "@/pages/SalesProducts";
 import Clients from "@/pages/Clients";
 import NotFound from "@/pages/not-found";
@@ -173,6 +174,12 @@ function Router() {
       <Route path="/projects/:projectId/quotes/create">
         <ProtectedRoute>
           <CreateQuote />
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/projects/:projectId/quotes/:quoteId/edit">
+        <ProtectedRoute>
+          <EditQuote />
         </ProtectedRoute>
       </Route>
       

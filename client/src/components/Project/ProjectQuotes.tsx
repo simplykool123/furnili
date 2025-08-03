@@ -1028,9 +1028,9 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
                         setQuoteItems([]);
                       }
                       
-                      console.log('Navigating to create quote page for duplication...');
-                      // Navigate to create quote page with duplicate query parameter
-                      setLocation(`/projects/${projectId}/quotes/create?duplicate=${quote.id}`);
+                      console.log('Navigating to edit quote page...');
+                      // Navigate to edit quote page
+                      setLocation(`/projects/${projectId}/quotes/${quote.id}/edit`);
                     }}
                   >
                     <Edit className="h-3 w-3" />
