@@ -542,8 +542,12 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
                   <span style="font-size: 12px; font-weight: bold;">Total in Words: </span>
                   <span style="font-size: 11px; font-style: italic; margin-left: 4px; font-weight: bold;">
                   ${(() => {
-                    // Use system's stored total amount for consistency
-                    const grandTotal = quote.totalAmount || 0;
+                    // Calculate grand total for words conversion
+                    const itemsTotal = items.reduce((sum: number, item: any) => sum + (item.lineTotal || (item.quantity * item.unitPrice) || 0), 0);
+                    const packagingAmount = Math.round(itemsTotal * 0.02);
+                    const transportationAmount = 5000;
+                    const gstAmount = Math.round(itemsTotal * 0.18);
+                    const grandTotal = itemsTotal + packagingAmount + transportationAmount + gstAmount;
                     
                     // Comprehensive number to words conversion
                     function numberToWords(num) {
@@ -612,7 +616,7 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
               <td style="border: 1px solid #000; border-left: none; border-top: none; padding: 6px 8px; text-align: right; vertical-align: middle; width: 190px; font-size: 11px;">Total</td>
               <td style="border: 1px solid #000; border-left: none; border-top: none; padding: 6px 8px; text-align: right; vertical-align: middle; width: 90px; font-size: 11px;">
                 ₹${(() => {
-                  const itemsTotal = quote.subtotal || 0;
+                  const itemsTotal = items.reduce((sum: number, item: any) => sum + (item.lineTotal || (item.quantity * item.unitPrice) || 0), 0);
                   return itemsTotal.toLocaleString('en-IN');
                 })()}
               </td>
@@ -630,7 +634,7 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
               <td style="border: 1px solid #000; border-left: none; border-top: none; padding: 6px 8px; text-align: right; vertical-align: middle; font-size: 11px;">Packaging @ 2%</td>
               <td style="border: 1px solid #000; border-left: none; border-top: none; padding: 6px 8px; text-align: right; vertical-align: middle; font-size: 11px;">
                 ₹${(() => {
-                  const itemsTotal = quote.subtotal || 0;
+                  const itemsTotal = items.reduce((sum: number, item: any) => sum + (item.lineTotal || (item.quantity * item.unitPrice) || 0), 0);
                   const packagingAmount = Math.round(itemsTotal * 0.02);
                   return packagingAmount.toLocaleString('en-IN');
                 })()}
@@ -646,7 +650,8 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
               <td style="border: 1px solid #000; border-left: none; border-top: none; padding: 6px 8px; text-align: right; vertical-align: middle; font-size: 11px;">GST @ 18%</td>
               <td style="border: 1px solid #000; border-left: none; border-top: none; padding: 6px 8px; text-align: right; vertical-align: middle; font-size: 11px;">
                 ₹${(() => {
-                  const gstAmount = quote.taxAmount || 0;
+                  const itemsTotal = items.reduce((sum: number, item: any) => sum + (item.lineTotal || (item.quantity * item.unitPrice) || 0), 0);
+                  const gstAmount = Math.round(itemsTotal * 0.18);
                   return gstAmount.toLocaleString('en-IN');
                 })()}
               </td>
@@ -656,7 +661,11 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
               <td style="border: 1px solid #000; border-left: none; border-top: none; padding: 6px 8px; text-align: right; vertical-align: middle; background-color: #f0f0f0; font-size: 11px; font-weight: bold;">Grand Total</td>
               <td style="border: 1px solid #000; border-left: none; border-top: none; padding: 6px 8px; text-align: right; vertical-align: middle; background-color: #f0f0f0; font-size: 11px; font-weight: bold;">
                 ₹${(() => {
-                  const grandTotal = quote.totalAmount || 0;
+                  const itemsTotal = items.reduce((sum: number, item: any) => sum + (item.lineTotal || (item.quantity * item.unitPrice) || 0), 0);
+                  const packagingAmount = Math.round(itemsTotal * 0.02);
+                  const transportationAmount = 5000;
+                  const gstAmount = Math.round(itemsTotal * 0.18);
+                  const grandTotal = itemsTotal + packagingAmount + transportationAmount + gstAmount;
                   return grandTotal.toLocaleString('en-IN');
                 })()}
               </td>
