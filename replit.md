@@ -3,13 +3,6 @@
 ## Overview
 This project is a comprehensive workforce management platform, developed as a modern web application with a React frontend and an Express backend. Its primary purpose is to provide robust solutions for staff management, project tracking, inventory control, and financial oversight. Key capabilities include professional PDF export for quotes, mobile-first design, and role-based access control. The system aims to enhance operational efficiency and streamline workflows for businesses, maintaining a consistent Furnili brand identity.
 
-## Recent Updates (August 2025)
-- Implemented icon-only buttons with hover tooltips for Quote actions (Edit, PDF, Share, Delete)
-- Added full delete quote functionality with confirmation dialog and database integration
-- Enhanced PDF generation with professional Furnili template matching finalized format
-- Fixed database column name conflicts between schema and query implementations
-- Maintained mobile-first design principles with proper form spacing and responsive layouts
-
 ## User Preferences
 Preferred communication style: Simple, everyday language.
 Form Layout Requirements: All popup forms must be optimized for screen size with compact layouts - space-y-3 form spacing, h-8 input heights, text-xs labels, max-w-[90vw] mobile width, reduced spacing between rows for maximum space efficiency.

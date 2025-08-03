@@ -68,97 +68,7 @@ export function setupQuotesRoutes(app: Express) {
     }
   });
 
-  // Get clients list for quote creation
-  app.get("/api/quotes/clients/list", authenticateToken, async (req, res) => {
-    try {
-      const clientsList = await db
-        .select({
-          id: clients.id,
-          name: clients.name,
-          email: clients.email,
-        })
-        .from(clients)
-        .where(eq(clients.isActive, true))
-        .orderBy(clients.name);
-
-      res.json(clientsList);
-    } catch (error) {
-      console.error("Error fetching clients:", error);
-      res.status(500).json({ error: "Failed to fetch clients" });
-    }
-  });
-
-  // Get sales products list for quote items
-  app.get("/api/quotes/products/list", authenticateToken, async (req, res) => {
-    try {
-      const productsList = await db
-        .select({
-          id: salesProducts.id,
-          name: salesProducts.name,
-          description: salesProducts.description,
-          unitPrice: salesProducts.unitPrice,
-          taxPercentage: salesProducts.taxPercentage,
-        })
-        .from(salesProducts)
-        .where(eq(salesProducts.isActive, true))
-        .orderBy(salesProducts.name);
-
-      res.json(productsList);
-    } catch (error) {
-      console.error("Error fetching products:", error);
-      res.status(500).json({ error: "Failed to fetch products" });
-    }
-  });
-
-  // Get quote by ID with details and items
-  app.get("/api/quotes/:id/details", authenticateToken, async (req, res) => {
-    try {
-      const quoteId = parseInt(req.params.id);
-
-      // Get quote with client and project details
-      const quoteData = await db
-        .select({
-          quote: quotes,
-          client: clients,
-          project: projects,
-          createdBy: {
-            id: users.id,
-            name: users.name,
-          }
-        })
-        .from(quotes)
-        .leftJoin(clients, eq(quotes.clientId, clients.id))
-        .leftJoin(projects, eq(quotes.projectId, projects.id))
-        .leftJoin(users, eq(quotes.createdBy, users.id))
-        .where(and(eq(quotes.id, quoteId), eq(quotes.isActive, true)))
-        .limit(1);
-
-      if (quoteData.length === 0) {
-        return res.status(404).json({ error: "Quote not found" });
-      }
-
-      // Get quote items with sales product details
-      const items = await db
-        .select({
-          item: quoteItems,
-          salesProduct: salesProducts,
-        })
-        .from(quoteItems)
-        .leftJoin(salesProducts, eq(quoteItems.salesProductId, salesProducts.id))
-        .where(eq(quoteItems.quoteId, quoteId))
-        .orderBy(quoteItems.sortOrder);
-
-      res.json({
-        ...quoteData[0],
-        items: items
-      });
-    } catch (error) {
-      console.error("Error fetching quote:", error);
-      res.status(500).json({ error: "Failed to fetch quote" });
-    }
-  });
-
-  // Get quote by ID (simple)
+  // Get quote by ID with items
   app.get("/api/quotes/:id", authenticateToken, async (req, res) => {
     try {
       const quoteId = parseInt(req.params.id);
@@ -236,16 +146,14 @@ export function setupQuotesRoutes(app: Express) {
       // Validate quote data
       const quoteData = insertQuoteSchema.parse({
         ...req.body,
+        quoteNumber,
         createdBy: userId,
       });
 
-      // Create quote with generated quote number
+      // Create quote
       const [newQuote] = await db
         .insert(quotes)
-        .values([{
-          ...quoteData,
-          quoteNumber,
-        }])
+        .values([quoteData])
         .returning();
 
       // Create quote items if provided
@@ -475,230 +383,126 @@ export function setupQuotesRoutes(app: Express) {
   });
 }
 
-// Helper function to generate PDF HTML content
-function generateQuotePDFHTML(data: any, items: any[]): string {
-  const { quote, client, project } = data;
+// HTML template for PDF generation
+function generateQuotePDFHTML(quote: any, items: any[]) {
+  const { quote: quoteData, client, project, createdBy } = quote;
   
-  // Calculate totals exactly as in the finalized PDF
-  const itemsTotal = items.reduce((sum, item) => sum + (item.item?.lineTotal || ((item.item?.quantity || 0) * (item.item?.unitPrice || 0))), 0);
-  const packagingAmount = Math.round(itemsTotal * 0.02);
-  const transportationAmount = 5000;
-  const gstAmount = Math.round(itemsTotal * 0.18);
-  const grandTotal = itemsTotal + packagingAmount + transportationAmount + gstAmount;
-
   return `
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <title>Quote ${quote.quoteNumber}</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 15px;
-            color: #000;
-            font-size: 11px;
-            line-height: 1.2;
-        }
-        
-        .quotation-title {
-            font-size: 16px;
-            font-weight: bold;
-            text-align: right;
-            margin-bottom: 15px;
-        }
-        
-        .header-info {
-            display: table;
-            width: 100%;
-            margin-bottom: 15px;
-        }
-        
-        .client-info {
-            display: table-cell;
-            width: 50%;
-            vertical-align: top;
-        }
-        
-        .quote-info {
-            display: table-cell;
-            width: 50%;
-            text-align: right;
-            vertical-align: top;
-        }
-        
-        .subject-line {
-            margin: 20px 0;
-            text-align: center;
-        }
-        
-        .items-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 15px 0;
-            font-size: 10px;
-        }
-        
-        .items-table th {
-            border: 1px solid #000;
-            padding: 6px 4px;
-            text-align: center;
-            font-weight: bold;
-            background: #f5f5f5;
-        }
-        
-        .items-table td {
-            border: 1px solid #000;
-            padding: 6px 4px;
-            vertical-align: top;
-        }
-        
-        .sr-no { width: 60px; text-align: center; }
-        .product { width: 180px; text-align: center; }
-        .description { width: 250px; }
-        .size { width: 100px; text-align: center; }
-        .qty { width: 40px; text-align: center; }
-        .rate { width: 80px; text-align: center; }
-        .amount { width: 100px; text-align: right; }
-        
-        .totals-section {
-            margin-top: 20px;
-            text-align: right;
-        }
-        
-        .bottom-section {
-            display: table;
-            width: 100%;
-            margin-top: 25px;
-        }
-        
-        .specs-section {
-            display: table-cell;
-            width: 65%;
-            vertical-align: top;
-            padding-right: 20px;
-        }
-        
-        .bank-section {
-            display: table-cell;
-            width: 35%;
-            vertical-align: top;
-        }
-        
-        .footer {
-            text-align: center;
-            margin-top: 30px;
-            font-size: 10px;
-            border-top: 1px solid #000;
-            padding-top: 8px;
-        }
-        
-        @media print {
-            body { margin: 0; padding: 10px; }
-        }
-    </style>
-</head>
-<body>
-    <div class="quotation-title">Quotation</div>
-    
-    <div class="header-info">
-        <div class="client-info">
-            To,<br>
-            <strong>${client?.name || 'Mr. Client'}</strong><br>
-            ${client?.address || 'Address'}<br>
-            ${client?.city || 'City'}
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <title>Quote ${quoteData.quoteNumber}</title>
+      <style>
+        body { font-family: Arial, sans-serif; margin: 20px; color: #333; }
+        .header { display: flex; justify-content: space-between; margin-bottom: 30px; border-bottom: 2px solid #8B4513; padding-bottom: 20px; }
+        .company-info { flex: 1; }
+        .quote-info { flex: 1; text-align: right; }
+        .company-name { font-size: 24px; font-weight: bold; color: #8B4513; margin-bottom: 5px; }
+        .company-details { font-size: 12px; color: #666; }
+        .quote-number { font-size: 20px; font-weight: bold; color: #8B4513; }
+        .client-section { margin: 20px 0; }
+        .client-title { font-weight: bold; color: #8B4513; margin-bottom: 10px; }
+        .client-details { background: #f8f8f8; padding: 15px; border-radius: 5px; }
+        .items-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        .items-table th, .items-table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        .items-table th { background: #8B4513; color: white; font-weight: bold; }
+        .items-table tr:nth-child(even) { background: #f9f9f9; }
+        .totals-section { margin-top: 20px; text-align: right; }
+        .totals-table { margin-left: auto; }
+        .totals-table td { padding: 5px 10px; }
+        .total-row { font-weight: bold; font-size: 16px; background: #8B4513; color: white; }
+        .terms { margin-top: 30px; font-size: 12px; }
+        .footer { margin-top: 40px; text-align: center; font-size: 12px; color: #666; border-top: 1px solid #ddd; padding-top: 20px; }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <div class="company-info">
+          <div class="company-name">FURNILI</div>
+          <div class="company-details">
+            Professional Furniture Solutions<br>
+            Email: info@furnili.com<br>
+            Phone: +91 XXX XXX XXXX
+          </div>
         </div>
-        
         <div class="quote-info">
-            Date :- ${new Date(quote.createdAt).toLocaleDateString('en-GB').replace(/\//g, '-')}<br>
-            Est. No. :- ${quote.quoteNumber}<br>
-            ${client?.gstNumber ? `GSTN :- ${client.gstNumber}<br>` : 'GSTN :- 27AAKFF2192A1ZO<br>'}
-            ${client?.panNumber ? `PAN :- ${client.panNumber}<br>` : 'PAN :- AKFF2192A<br>'}
-            Contact Person :- ${client?.name || 'Mr. Client'}
+          <div class="quote-number">Quote ${quoteData.quoteNumber}</div>
+          <div>Date: ${new Date(quoteData.createdAt).toLocaleDateString()}</div>
+          <div>Valid Until: ${quoteData.validUntil ? new Date(quoteData.validUntil).toLocaleDateString() : 'N/A'}</div>
+          <div>Status: ${quoteData.status.charAt(0).toUpperCase() + quoteData.status.slice(1)}</div>
         </div>
-    </div>
-    
-    <div class="subject-line">
-        Subject: _________________________________________________________________________________
-    </div>
-    
-    <table class="items-table">
+      </div>
+
+      <div class="client-section">
+        <div class="client-title">Bill To:</div>
+        <div class="client-details">
+          <strong>${client?.name || 'N/A'}</strong><br>
+          ${client?.email || ''}<br>
+          ${client?.mobile || ''}<br>
+          ${client?.city || ''}
+        </div>
+      </div>
+
+      ${project ? `
+        <div class="client-section">
+          <div class="client-title">Project:</div>
+          <div class="client-details">
+            <strong>${project.name}</strong> (${project.code})<br>
+            ${quoteData.description || ''}
+          </div>
+        </div>
+      ` : ''}
+
+      <table class="items-table">
         <thead>
-            <tr>
-                <th class="sr-no">Sr. No.</th>
-                <th class="product">Product</th>
-                <th class="description">Item Description</th>
-                <th class="size">SIZE</th>
-                <th class="qty">Qty</th>
-                <th class="rate">Rate</th>
-                <th class="amount">Total Amount</th>
-            </tr>
+          <tr>
+            <th>Item Details</th>
+            <th>Qty</th>
+            <th>UOM</th>
+            <th>Rate</th>
+            <th>Discount</th>
+            <th>Amount</th>
+          </tr>
         </thead>
         <tbody>
-            ${items.map((item, index) => `
-                <tr>
-                    <td class="sr-no">${index + 1}</td>
-                    <td class="product">${item.salesProduct?.name || item.item?.itemName || 'Product'}</td>
-                    <td class="description">${item.salesProduct?.description || item.item?.description || ''}</td>
-                    <td class="size">${item.salesProduct?.size || item.item?.size || '-'}</td>
-                    <td class="qty">${item.item?.quantity || 0}</td>
-                    <td class="rate">${(item.item?.unitPrice || 0).toLocaleString('en-IN')}</td>
-                    <td class="amount">${(item.item?.lineTotal || (item.item?.quantity || 0) * (item.item?.unitPrice || 0)).toLocaleString('en-IN')}</td>
-                </tr>
-            `).join('')}
-            
-            <tr><td colspan="7" style="height: 15px; border: none;"></td></tr>
-            
+          ${items.map(({ item, salesProduct }) => `
             <tr>
-                <td colspan="5" style="border: none;"></td>
-                <td style="text-align: right; font-weight: bold; border: 1px solid #000;">Total</td>
-                <td style="text-align: right; font-weight: bold; border: 1px solid #000;">${itemsTotal.toLocaleString('en-IN')}</td>
+              <td>
+                <strong>${item.itemName}</strong>
+                ${item.description ? `<br><small>${item.description}</small>` : ''}
+              </td>
+              <td>${item.quantity}</td>
+              <td>${item.uom}</td>
+              <td>₹${item.unitPrice.toFixed(2)}</td>
+              <td>${item.discountPercentage}%</td>
+              <td>₹${item.lineTotal.toFixed(2)}</td>
             </tr>
+          `).join('')}
         </tbody>
-    </table>
-    
-    <div class="bottom-section">
-        <div class="specs-section">
-            <strong>Furniture Specifications</strong><br>
-            - All furniture will be manufactured using Said Materails<br>
-            - All hardware considered of standard make.<br>
-            - Standard laminates considered as per selection.<br>
-            - Any modifications or changes in material selection may result in additional charges.<br><br>
-            
-            <strong>Payment Terms</strong><br>
-            30% Advance Payment: Due upon order confirmation.<br>
-            50% Payment Before Delivery: To be settled prior to dispatch.<br>
-            20% Payment on Delivery
+      </table>
+
+      <div class="totals-section">
+        <table class="totals-table">
+          <tr><td>Sub Total:</td><td>₹${quoteData.subtotal.toFixed(2)}</td></tr>
+          <tr><td>Discount (${quoteData.discountType === 'percentage' ? quoteData.discountValue + '%' : '₹' + quoteData.discountValue}):</td><td>-₹${quoteData.discountAmount.toFixed(2)}</td></tr>
+          <tr><td>GST:</td><td>₹${quoteData.taxAmount.toFixed(2)}</td></tr>
+          <tr class="total-row"><td>Total:</td><td>₹${quoteData.totalAmount.toFixed(2)}</td></tr>
+        </table>
+      </div>
+
+      ${quoteData.terms ? `
+        <div class="terms">
+          <strong>Terms & Conditions:</strong><br>
+          ${quoteData.terms}
         </div>
-        
-        <div class="bank-section">
-            <div style="text-align: right; margin-bottom: 15px;">
-                Packaging @ 2%&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;${packagingAmount.toLocaleString('en-IN')}<br>
-                Transportation&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;5,000<br>
-                GST @ 18%&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;${gstAmount.toLocaleString('en-IN')}<br>
-                <strong>Grand Total&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;${grandTotal.toLocaleString('en-IN')}</strong>
-            </div>
-            
-            <strong>Bank Details</strong><br>
-            A/C Name: Furnili<br>
-            Bank: ICICI Bank<br>
-            Branch: Nigdi<br>
-            A/C No.: 230505006647<br>
-            IFSC: ICIC0002305<br><br>
-            
-            <div style="text-align: right;">
-                Authorised Signatory<br>
-                for FURNILI
-            </div>
-        </div>
-    </div>
-    
-    <div class="footer">
-        <strong>Furnili - Bespoke Modular Furniture</strong><br>
-        Sr.no - 31/1 , Pisoli Road, Near Mohan Marbel, Pisoli,, Pune - 411048<br>
-        +91 9823 011 223&nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;&nbsp;info@furnili.com
-    </div>
-</body>
-</html>`;
+      ` : ''}
+
+      <div class="footer">
+        Generated by ${createdBy?.name || 'System'} on ${new Date().toLocaleDateString()}<br>
+        This is a computer-generated quote and does not require a signature.
+      </div>
+    </body>
+    </html>
+  `;
 }
