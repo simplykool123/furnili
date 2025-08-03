@@ -78,7 +78,7 @@ export default function CreateQuote() {
       title: "",
       description: "",
       paymentTerms: "100% advance",
-      furnitureSpecifications: "All furniture will be manufactured using Said Materials\n- All hardware considered of standard make.\n- Standard laminates considered as per selection.\n- Any modifications or changes in material selection may result in additional charges.\n\nPayment Terms\n100% Advance Payment: Due upon order confirmation.",
+      furnitureSpecifications: "All furniture will be manufactured using Said Materials\n- All hardware considered of standard make.\n- Standard laminates considered as per selection.\n- Any modifications or changes in material selection may result in additional charges.",
       packingChargesType: "percentage",
       packingChargesValue: 2,
       transportationCharges: 5000,
@@ -107,18 +107,14 @@ export default function CreateQuote() {
     }
   }, [project, form]);
 
-  // Update furniture specifications when payment terms change
-  useEffect(() => {
-    const subscription = form.watch((value, { name }) => {
-      if (name === "paymentTerms" && value.paymentTerms) {
-        const paymentTermsText = getPaymentTermsText(value.paymentTerms);
-        const baseSpecs = "All furniture will be manufactured using Said Materials\n- All hardware considered of standard make.\n- Standard laminates considered as per selection.\n- Any modifications or changes in material selection may result in additional charges.";
-        
-        form.setValue("furnitureSpecifications", `${baseSpecs}\n\n${paymentTermsText}`);
-      }
-    });
-    return () => subscription.unsubscribe();
-  }, [form]);
+  // Get current payment terms text for display
+  const currentPaymentTermsText = getPaymentTermsText(form.watch("paymentTerms"));
+  
+  // Parse payment terms text for display
+  const getPaymentTermsLines = (paymentTermsText: string): string[] => {
+    const lines = paymentTermsText.split('\n').slice(1); // Remove "Payment Terms" header
+    return lines.filter(line => line.trim().length > 0);
+  };
 
   // Item form
   const itemForm = useForm<ItemFormData>({
@@ -646,13 +642,13 @@ export default function CreateQuote() {
                           )}
                         />
                         
-                        {/* Payment Terms */}
+                        {/* Dynamic Payment Terms */}
                         <div className="mt-4 pt-4 border-t">
                           <h4 className="font-bold text-sm mb-2">Payment Terms</h4>
                           <div className="text-xs space-y-1 text-gray-600">
-                            <div><strong>30%</strong> Advance Payment: Due upon order confirmation.</div>
-                            <div><strong>50%</strong> Payment Before Delivery: To be settled prior to dispatch.</div>
-                            <div><strong>20%</strong> Payment on Delivery</div>
+                            {getPaymentTermsLines(currentPaymentTermsText).map((line, index) => (
+                              <div key={index}>{line}</div>
+                            ))}
                           </div>
                         </div>
                       </CardContent>
