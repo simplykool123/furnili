@@ -353,12 +353,12 @@ export default function EditQuote() {
                   name="title"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-xs">Quote Title * (Auto-generated)</FormLabel>
+                      <FormLabel className="text-xs">Quote Title * (Editable)</FormLabel>
                       <FormControl>
                         <Input {...field} className="h-8 text-xs" />
                       </FormControl>
                       <p className="text-xs text-gray-400">
-                        Auto-generated
+                        Auto-generated, but you can edit it
                       </p>
                       <FormMessage />
                     </FormItem>

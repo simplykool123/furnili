@@ -390,17 +390,16 @@ export default function CreateQuote() {
                   name="title"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-xs">Quote Title * (Auto-generated)</FormLabel>
+                      <FormLabel className="text-xs">Quote Title * (Editable)</FormLabel>
                       <FormControl>
                         <Input
                           {...field}
-                          className="h-8 text-xs bg-gray-50 cursor-not-allowed"
+                          className="h-8 text-xs"
                           placeholder="Auto-generated from project name"
-                          readOnly
                         />
                       </FormControl>
                       <div className="text-[10px] text-gray-500 mt-1">
-                        Automatically generated as "Estimate for [Project Type]"
+                        Auto-generated, but you can edit it
                       </div>
                       <FormMessage />
                     </FormItem>
