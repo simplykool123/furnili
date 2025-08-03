@@ -525,7 +525,7 @@ export default function SalesProducts() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Package className="w-6 h-6 text-[hsl(28,100%,25%)]" />
-            <h1 className="text-xl font-bold text-gray-900">Products ({filteredProducts.length})</h1>
+            <h1 className="text-xl font-bold text-gray-900">Sales Products</h1>
           </div>
           
           <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
