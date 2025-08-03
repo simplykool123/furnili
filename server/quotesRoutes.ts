@@ -554,24 +554,24 @@ function generateQuotePDFHTML(data: any, items: any[]): string {
                 <tr>
                     <td class="text-center">${index + 1}</td>
                     <td>
-                        <strong>${item.salesProduct?.name || item.item.itemName}</strong>
-                        ${item.salesProduct?.description || item.item.description ? `<br><small style="color: #666;">${item.salesProduct?.description || item.item.description}</small>` : ''}
+                        <strong>${item.salesProduct?.name || item.item?.itemName || 'N/A'}</strong>
+                        ${item.salesProduct?.description || item.item?.description ? `<br><small style="color: #666;">${item.salesProduct?.description || item.item?.description}</small>` : ''}
                     </td>
-                    <td class="text-center">${item.item.quantity}</td>
-                    <td class="text-center">${item.item.uom || 'Nos'}</td>
-                    <td class="text-right">₹${item.item.unitPrice?.toLocaleString('en-IN')}</td>
-                    <td class="text-right">₹${item.item.lineTotal?.toLocaleString('en-IN')}</td>
+                    <td class="text-center">${item.item?.quantity || 0}</td>
+                    <td class="text-center">${item.item?.uom || 'Nos'}</td>
+                    <td class="text-right">₹${(item.item?.unitPrice || 0).toLocaleString('en-IN')}</td>
+                    <td class="text-right">₹${(item.item?.lineTotal || 0).toLocaleString('en-IN')}</td>
                 </tr>
             `).join('')}
         </tbody>
     </table>
 
     <div class="totals">
-        <div class="total-row"><strong>Subtotal: ₹${quote.subtotal?.toLocaleString('en-IN') || '0'}</strong></div>
-        <div class="total-row">Tax Amount: ₹${quote.taxAmount?.toLocaleString('en-IN') || '0'}</div>
-        <div class="total-row">Packing Charges (${quote.packingChargesType === 'percentage' ? `${quote.packingChargesValue}%` : `₹${quote.packingChargesValue}`}): ₹${((quote.packingChargesType === 'percentage' ? quote.subtotal * quote.packingChargesValue / 100 : quote.packingChargesValue) || 0).toLocaleString('en-IN')}</div>
-        <div class="total-row">Transportation Charges: ₹${quote.transportationCharges?.toLocaleString('en-IN') || '0'}</div>
-        <div class="final-total">Total Amount: ₹${quote.totalAmount?.toLocaleString('en-IN') || '0'}</div>
+        <div class="total-row"><strong>Subtotal: ₹${(quote.subtotal || 0).toLocaleString('en-IN')}</strong></div>
+        <div class="total-row">Tax Amount: ₹${(quote.taxAmount || 0).toLocaleString('en-IN')}</div>
+        <div class="total-row">Packing Charges (${quote.packingChargesType === 'percentage' ? `${quote.packingChargesValue || 0}%` : `₹${quote.packingChargesValue || 0}`}): ₹${((quote.packingChargesType === 'percentage' ? (quote.subtotal || 0) * (quote.packingChargesValue || 0) / 100 : (quote.packingChargesValue || 0))).toLocaleString('en-IN')}</div>
+        <div class="total-row">Transportation Charges: ₹${(quote.transportationCharges || 0).toLocaleString('en-IN')}</div>
+        <div class="final-total">Total Amount: ₹${(quote.totalAmount || 0).toLocaleString('en-IN')}</div>
     </div>
 
     <div class="terms-section">
