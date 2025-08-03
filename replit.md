@@ -68,6 +68,9 @@ The system adheres to a professional and consistent UI/UX based on the "Furnili 
 - **Complete CRUD Operations**: Added PUT and DELETE API routes for quote management with proper authentication.
 - **Mobile-Optimized Dialogs**: All quote management dialogs follow mobile-first design principles.
 - **Automated Quote Title Generation**: Quote titles are now automatically generated based on project names (e.g., "Estimate for 2BHK" where "2BHK" is extracted from project name). The system intelligently identifies meaningful parts like BHK patterns, property types, and business types.
+- **Quote Status Management**: Added status editing functionality allowing users to change quote status from "draft" to "sent", "approved", "rejected", "expired" through EditQuote form.
+- **WhatsApp PDF Sharing**: Integrated WhatsApp sharing functionality with PDF generation and professional message formatting.
+- **Size Field Integration**: Added Size column to Sales Products with consistent field name across both Sales Products and Quote modules for seamless data consistency.
 
 #### Staff Management & Payroll
 - Comprehensive staff management including attendance tracking, ID details, salary information, and document storage.

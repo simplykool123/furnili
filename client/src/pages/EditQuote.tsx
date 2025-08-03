@@ -467,6 +467,7 @@ export default function EditQuote() {
                           );
                           itemForm.setValue("unitPrice", selectedProduct.unitPrice || 0);
                           itemForm.setValue("uom", selectedProduct.unit || "pcs");
+                          itemForm.setValue("size", selectedProduct.size || "");
                         }
                       }}
                     >

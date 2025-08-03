@@ -453,6 +453,7 @@ export const salesProducts = pgTable("sales_products", {
   name: text("name").notNull(),
   description: text("description"),
   imageUrl: text("image_url"),
+  size: text("size"), // Product dimensions/size specifications
   unitPrice: real("unit_price").notNull().default(0),
   category: text("category"), // Furniture, Seating, Storage, etc.
   taxPercentage: real("tax_percentage").default(0), // GST/VAT %

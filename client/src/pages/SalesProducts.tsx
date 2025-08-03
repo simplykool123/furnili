@@ -25,6 +25,7 @@ import FurniliButton from "@/components/UI/FurniliButton";
 const salesProductSchema = z.object({
   name: z.string().min(1, "Product name is required"),
   description: z.string().optional(),
+  size: z.string().optional(),
   unitPrice: z.number().min(0, "Unit price must be positive"),
   category: z.string().optional(),
   taxPercentage: z.number().min(0).max(100, "Tax percentage must be between 0-100").optional(),
@@ -68,6 +69,7 @@ function SalesProductForm({
     defaultValues: {
       name: product?.name || "",
       description: product?.description || "",
+      size: product?.size || "",
       unitPrice: product?.unitPrice || 0,
       category: product?.category || "",
       taxPercentage: product?.taxPercentage || 0,
@@ -346,6 +348,20 @@ function SalesProductForm({
             )}
           </div>
 
+          {/* Size */}
+          <div className="space-y-1">
+            <Label htmlFor="size" className="text-xs font-medium text-gray-700">Size</Label>
+            <Input
+              id="size"
+              {...register("size")}
+              className={`${errors.size ? "border-red-500" : ""} h-8 text-sm`}
+              placeholder="e.g., 120cm x 60cm x 75cm, L-Shape 1200x600mm"
+            />
+            {errors.size && (
+              <p className="text-xs text-red-600 mt-0.5">{errors.size.message}</p>
+            )}
+          </div>
+
           {/* Internal Notes */}
           <div className="space-y-1">
             <Label htmlFor="internalNotes" className="text-xs font-medium text-gray-700">Internal Notes</Label>
@@ -603,6 +619,7 @@ export default function SalesProducts() {
                     <TableRow>
                       <TableHead>Product</TableHead>
                       <TableHead>Category</TableHead>
+                      <TableHead>Size</TableHead>
                       <TableHead>Price</TableHead>
                       <TableHead>Tax %</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
@@ -641,6 +658,11 @@ export default function SalesProducts() {
                               {product.category}
                             </Badge>
                           )}
+                        </TableCell>
+                        <TableCell>
+                          <span className="text-sm text-gray-600">
+                            {product.size || "-"}
+                          </span>
                         </TableCell>
                         <TableCell>
                           <span className="font-medium text-green-600">
