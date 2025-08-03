@@ -56,6 +56,26 @@ import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 
+// Type declaration for html2pdf.js
+declare module "html2pdf.js" {
+  interface Html2PdfOptions {
+    margin?: number | number[];
+    filename?: string;
+    image?: { type?: string; quality?: number };
+    html2canvas?: { scale?: number; useCORS?: boolean };
+    jsPDF?: { unit?: string; format?: string; orientation?: string };
+  }
+
+  interface Html2Pdf {
+    from(element: HTMLElement): Html2Pdf;
+    set(options: Html2PdfOptions): Html2Pdf;
+    save(): Promise<void>;
+  }
+
+  function html2pdf(): Html2Pdf;
+  export = html2pdf;
+}
+
 interface ProjectQuotesProps {
   projectId: string;
 }
@@ -558,14 +578,14 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
                     const grandTotal = itemsTotal + packagingAmount + transportationAmount + gstAmount;
                     
                     // Comprehensive number to words conversion
-                    function numberToWords(num) {
+                    function numberToWords(num: number) {
                       if (num === 0) return 'Zero';
                       
                       const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine'];
                       const teens = ['Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
                       const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
                       
-                      function convertHundreds(n) {
+                      function convertHundreds(n: number) {
                         let result = '';
                         if (n >= 100) {
                           result += ones[Math.floor(n / 100)] + ' Hundred';
@@ -802,76 +822,10 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
       items: quoteItems,
     };
 
-    if (selectedQuote) {
-      updateMutation.mutate({ id: selectedQuote.id, data: quoteData });
-    } else {
-      createMutation.mutate(quoteData);
-    }
+    createMutation.mutate(quoteData);
   };
 
-  // Handle edit quote
-  const handleEditQuote = (quote: Quote) => {
-    setSelectedQuote(quote);
-    // Populate form with existing quote data
-    form.setValue("title", quote.title);
-    form.setValue("description", quote.description || "");
-    form.setValue("status", quote.status);
 
-    // Fetch and set quote items
-    fetchQuoteItems(quote.id);
-    setShowEditDialog(true);
-  };
-
-  // Fetch quote items for editing
-  const fetchQuoteItems = async (quoteId: number) => {
-    try {
-      const response = await apiRequest(`/api/quotes/${quoteId}/items`);
-      setQuoteItems(response || []);
-    } catch (error) {
-      console.error("Error fetching quote items:", error);
-      setQuoteItems([]);
-    }
-  };
-
-  // Handle update quote
-  const handleUpdateQuote = async (data: z.infer<typeof quoteSchema>) => {
-    if (!selectedQuote) return;
-
-    try {
-      const totals = calculateTotals();
-      const quoteData = {
-        ...data,
-        subtotal: totals.subtotal,
-        totalDiscount: totals.totalDiscount,
-        taxAmount: totals.totalTax,
-        totalAmount: totals.grandTotal,
-        items: quoteItems,
-      };
-
-      await apiRequest(`/api/quotes/${selectedQuote.id}`, {
-        method: "PUT",
-        body: JSON.stringify(quoteData),
-      });
-
-      // Invalidate and refetch quotes
-      queryClient.invalidateQueries({ queryKey: ["/api/quotes"] });
-
-      toast({
-        title: "Quote Updated",
-        description: "Quote has been updated successfully.",
-      });
-
-      setShowEditDialog(false);
-      setQuoteItems([]);
-      form.reset();
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to update quote. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
 
   const getStatusBadge = (status: string) => {
     const variants = {
