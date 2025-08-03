@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { Plus, Eye, Edit, Trash2, Download, Share } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -159,6 +160,7 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [, setLocation] = useLocation();
 
   // Fetch project quotes
   const {
@@ -918,488 +920,14 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
           </p>
         </div>
 
-        <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-          <DialogTrigger asChild>
-            <Button className="w-full sm:w-auto h-8 text-xs">
-              <Plus className="h-3 w-3 mr-1" />
-              New Quote
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-[95vw] sm:max-w-4xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Create New Quote</DialogTitle>
-              <DialogDescription>
-                Create a new quote for this project
-              </DialogDescription>
-            </DialogHeader>
+        <Button 
+          className="w-full sm:w-auto h-8 text-xs bg-[hsl(28,100%,25%)] hover:bg-[hsl(28,100%,20%)]"
+          onClick={() => setLocation(`/projects/${projectId}/quotes/create`)}
+        >
+          <Plus className="h-3 w-3 mr-1" />
+          New Quote
+        </Button>
 
-            <Form {...form}>
-              <form
-                onSubmit={form.handleSubmit(handleSubmit)}
-                className="space-y-3"
-              >
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <FormField
-                    control={form.control}
-                    name="title"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-xs">Quote Title *</FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            placeholder="Enter quote title"
-                            className="h-8"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="paymentTerms"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-xs">
-                          Payment Terms *
-                        </FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          value={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger className="h-8">
-                              <SelectValue placeholder="Select payment terms" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="Immediate Payment">
-                              Immediate Payment
-                            </SelectItem>
-                            <SelectItem value="Net 30">Net 30</SelectItem>
-                            <SelectItem value="Net 60">Net 60</SelectItem>
-                            <SelectItem value="50% Advance, 50% on Completion">
-                              50% Advance, 50% on Completion
-                            </SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <FormField
-                  control={form.control}
-                  name="description"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-xs">Description</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          {...field}
-                          placeholder="Quote description"
-                          className="min-h-[60px]"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                {/* Quote Items Section */}
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-medium">Quote Items</h3>
-                    <div className="text-xs text-muted-foreground">
-                      Add products matching PDF layout
-                    </div>
-                  </div>
-
-                  {/* Professional Product Addition - PDF Column Layout */}
-                  <div className="border rounded-lg bg-white shadow-sm">
-                    {/* Desktop Header Row */}
-                    <div className="hidden sm:grid grid-cols-12 gap-2 p-3 bg-[hsl(28,100%,25%)] text-white text-xs font-medium rounded-t-lg">
-                      <div className="col-span-1 text-center">Sr. No.</div>
-                      <div className="col-span-3">Product</div>
-                      <div className="col-span-3">Item Description</div>
-                      <div className="col-span-1 text-center">Size</div>
-                      <div className="col-span-1 text-center">Qty</div>
-                      <div className="col-span-1 text-center">Rate</div>
-                      <div className="col-span-1 text-center">Total Amount</div>
-                      <div className="col-span-1 text-center">Action</div>
-                    </div>
-                    
-                    {/* Mobile Header */}
-                    <div className="sm:hidden p-3 bg-[hsl(28,100%,25%)] text-white text-xs font-medium rounded-t-lg">
-                      Add New Product Item
-                    </div>
-                    
-                    {/* Desktop Input Row */}
-                    <div className="hidden sm:grid grid-cols-12 gap-2 p-3 border-b bg-gray-50">
-                      <div className="col-span-1 flex items-center justify-center">
-                        <span className="text-xs text-muted-foreground">
-                          {quoteItems.length + 1}
-                        </span>
-                      </div>
-                      
-                      {/* Product Selection */}
-                      <div className="col-span-3">
-                        <Select
-                          onValueChange={(value) => {
-                            const selectedProduct = salesProducts.find(
-                              (p: any) => p.id.toString() === value,
-                            );
-                            if (selectedProduct) {
-                              itemForm.setValue("salesProductId", selectedProduct.id);
-                              itemForm.setValue("itemName", selectedProduct.name);
-                              itemForm.setValue(
-                                "description",
-                                selectedProduct.description ||
-                                  selectedProduct.specifications ||
-                                  `${selectedProduct.name} - Premium quality`,
-                              );
-                              itemForm.setValue("unitPrice", selectedProduct.unitPrice || 0);
-                              itemForm.setValue("uom", selectedProduct.unit || "pcs");
-                              itemForm.setValue("quantity", 1);
-                            }
-                          }}
-                        >
-                          <SelectTrigger className="h-8 text-xs border-gray-300">
-                            <SelectValue placeholder="Select product" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {salesProducts.map((product: any) => (
-                              <SelectItem key={product.id} value={product.id.toString()}>
-                                <div className="flex flex-col">
-                                  <span className="font-medium">{product.name}</span>
-                                  <span className="text-xs text-muted-foreground">₹{product.unitPrice}</span>
-                                </div>
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      {/* Item Description */}
-                      <div className="col-span-3">
-                        <Input
-                          placeholder="Auto-filled from product"
-                          className="h-8 text-xs border-gray-300"
-                          value={itemForm.watch("description") || ""}
-                          onChange={(e) => itemForm.setValue("description", e.target.value)}
-                        />
-                      </div>
-
-                      {/* Size */}
-                      <div className="col-span-1">
-                        <Input
-                          placeholder="-"
-                          className="h-8 text-xs text-center border-gray-300"
-                          value={itemForm.watch("size") || ""}
-                          onChange={(e) => itemForm.setValue("size", e.target.value)}
-                        />
-                      </div>
-
-                      {/* Quantity */}
-                      <div className="col-span-1">
-                        <Input
-                          type="number"
-                          placeholder="1"
-                          className="h-8 text-xs text-center border-gray-300"
-                          value={itemForm.watch("quantity") || ""}
-                          onChange={(e) =>
-                            itemForm.setValue("quantity", parseFloat(e.target.value) || 1)
-                          }
-                        />
-                      </div>
-
-                      {/* Rate */}
-                      <div className="col-span-1">
-                        <Input
-                          type="number"
-                          placeholder="0"
-                          className="h-8 text-xs text-center border-gray-300"
-                          value={itemForm.watch("unitPrice") || ""}
-                          onChange={(e) =>
-                            itemForm.setValue("unitPrice", parseFloat(e.target.value) || 0)
-                          }
-                        />
-                      </div>
-
-                      {/* Total Amount (Auto-calculated) */}
-                      <div className="col-span-1 flex items-center justify-center">
-                        <span className="text-xs font-medium text-[hsl(28,100%,25%)]">
-                          ₹{((itemForm.watch("quantity") || 0) * (itemForm.watch("unitPrice") || 0)).toLocaleString('en-IN')}
-                        </span>
-                      </div>
-
-                      {/* Add Button */}
-                      <div className="col-span-1">
-                        <Button
-                          type="button"
-                          onClick={() => {
-                            const formData = itemForm.getValues();
-                            if (formData.itemName && formData.quantity && formData.unitPrice) {
-                              handleSaveItem(formData);
-                              itemForm.reset({
-                                itemName: "",
-                                description: "",
-                                quantity: 1,
-                                uom: "pcs",
-                                unitPrice: 0,
-                                discountPercentage: 0,
-                                taxPercentage: 18,
-                                size: "",
-                                salesProductId: 0,
-                              });
-                            }
-                          }}
-                          className="h-8 w-full text-xs bg-[hsl(28,100%,25%)] hover:bg-[hsl(28,100%,20%)]"
-                        >
-                          Add
-                        </Button>
-                      </div>
-                    </div>
-
-                    {/* Mobile Input Layout */}
-                    <div className="sm:hidden p-3 space-y-3 bg-gray-50">
-                      {/* Product Selection */}
-                      <div>
-                        <Label className="text-xs font-medium">Product</Label>
-                        <Select
-                          onValueChange={(value) => {
-                            const selectedProduct = salesProducts.find(
-                              (p: any) => p.id.toString() === value,
-                            );
-                            if (selectedProduct) {
-                              itemForm.setValue("salesProductId", selectedProduct.id);
-                              itemForm.setValue("itemName", selectedProduct.name);
-                              itemForm.setValue(
-                                "description",
-                                selectedProduct.description ||
-                                  selectedProduct.specifications ||
-                                  `${selectedProduct.name} - Premium quality`,
-                              );
-                              itemForm.setValue("unitPrice", selectedProduct.unitPrice || 0);
-                              itemForm.setValue("uom", selectedProduct.unit || "pcs");
-                              itemForm.setValue("quantity", 1);
-                            }
-                          }}
-                        >
-                          <SelectTrigger className="h-8 text-xs">
-                            <SelectValue placeholder="Select product" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {salesProducts.map((product: any) => (
-                              <SelectItem key={product.id} value={product.id.toString()}>
-                                {product.name} - ₹{product.unitPrice}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      {/* Description */}
-                      <div>
-                        <Label className="text-xs font-medium">Description</Label>
-                        <Input
-                          placeholder="Auto-filled from product"
-                          className="h-8 text-xs"
-                          value={itemForm.watch("description") || ""}
-                          onChange={(e) => itemForm.setValue("description", e.target.value)}
-                        />
-                      </div>
-
-                      {/* Row with Size, Qty, Rate */}
-                      <div className="grid grid-cols-3 gap-2">
-                        <div>
-                          <Label className="text-xs font-medium">Size</Label>
-                          <Input
-                            placeholder="-"
-                            className="h-8 text-xs text-center"
-                            value={itemForm.watch("size") || ""}
-                            onChange={(e) => itemForm.setValue("size", e.target.value)}
-                          />
-                        </div>
-                        <div>
-                          <Label className="text-xs font-medium">Qty</Label>
-                          <Input
-                            type="number"
-                            placeholder="1"
-                            className="h-8 text-xs text-center"
-                            value={itemForm.watch("quantity") || ""}
-                            onChange={(e) =>
-                              itemForm.setValue("quantity", parseFloat(e.target.value) || 1)
-                            }
-                          />
-                        </div>
-                        <div>
-                          <Label className="text-xs font-medium">Rate</Label>
-                          <Input
-                            type="number"
-                            placeholder="0"
-                            className="h-8 text-xs text-center"
-                            value={itemForm.watch("unitPrice") || ""}
-                            onChange={(e) =>
-                              itemForm.setValue("unitPrice", parseFloat(e.target.value) || 0)
-                            }
-                          />
-                        </div>
-                      </div>
-
-                      {/* Total and Add Button */}
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <Label className="text-xs font-medium text-[hsl(28,100%,25%)]">Total</Label>
-                          <div className="text-sm font-medium text-[hsl(28,100%,25%)]">
-                            ₹{((itemForm.watch("quantity") || 0) * (itemForm.watch("unitPrice") || 0)).toLocaleString('en-IN')}
-                          </div>
-                        </div>
-                        <Button
-                          type="button"
-                          onClick={() => {
-                            const formData = itemForm.getValues();
-                            if (formData.itemName && formData.quantity && formData.unitPrice) {
-                              handleSaveItem(formData);
-                              itemForm.reset({
-                                itemName: "",
-                                description: "",
-                                quantity: 1,
-                                uom: "pcs",
-                                unitPrice: 0,
-                                discountPercentage: 0,
-                                taxPercentage: 18,
-                                size: "",
-                                salesProductId: 0,
-                              });
-                            }
-                          }}
-                          className="h-8 px-6 text-xs bg-[hsl(28,100%,25%)] hover:bg-[hsl(28,100%,20%)]"
-                        >
-                          Add Item
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Professional Items List - Matching PDF Layout */}
-                  {quoteItems.length > 0 && (
-                    <div className="border rounded-lg bg-white shadow-sm">
-                      {/* Items Header */}
-                      <div className="grid grid-cols-12 gap-2 p-3 bg-gray-100 text-xs font-medium border-b">
-                        <div className="col-span-1 text-center">Sr. No.</div>
-                        <div className="col-span-3">Product</div>
-                        <div className="col-span-3">Item Description</div>
-                        <div className="col-span-1 text-center">Size</div>
-                        <div className="col-span-1 text-center">Qty</div>
-                        <div className="col-span-1 text-center">Rate</div>
-                        <div className="col-span-1 text-center">Total Amount</div>
-                        <div className="col-span-1 text-center">Action</div>
-                      </div>
-                      
-                      {/* Items Rows */}
-                      <div className="max-h-64 overflow-y-auto">
-                        {quoteItems.map((item, index) => (
-                          <div key={index} className="grid grid-cols-12 gap-2 p-3 border-b hover:bg-gray-50">
-                            <div className="col-span-1 text-center text-xs font-medium">
-                              {index + 1}
-                            </div>
-                            <div className="col-span-3">
-                              <div className="text-xs font-medium">{item.itemName}</div>
-                              {item.salesProduct?.imageUrl && (
-                                <div className="text-xs text-muted-foreground mt-1">Image: Yes</div>
-                              )}
-                            </div>
-                            <div className="col-span-3">
-                              <div className="text-xs text-gray-600 line-clamp-2">
-                                {item.description || item.itemName}
-                              </div>
-                            </div>
-                            <div className="col-span-1 text-center text-xs">
-                              {item.size || "-"}
-                            </div>
-                            <div className="col-span-1 text-center text-xs font-medium">
-                              {item.quantity}
-                            </div>
-                            <div className="col-span-1 text-center text-xs font-medium">
-                              ₹{item.unitPrice?.toLocaleString('en-IN')}
-                            </div>
-                            <div className="col-span-1 text-center text-xs font-medium text-[hsl(28,100%,25%)]">
-                              ₹{item.lineTotal?.toLocaleString('en-IN')}
-                            </div>
-                            <div className="col-span-1 flex justify-center gap-1">
-                              <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                className="h-6 w-6 p-0"
-                                onClick={() => {
-                                  setEditingItem(item);
-                                  setShowItemDialog(true);
-                                }}
-                              >
-                                <Edit className="h-3 w-3" />
-                              </Button>
-                              <Button
-                                type="button"
-                                variant="destructive"
-                                size="sm"
-                                className="h-6 w-6 p-0"
-                                onClick={() => removeItem(index)}
-                              >
-                                <Trash2 className="h-3 w-3" />
-                              </Button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-
-                      {/* Totals */}
-                      <div className="border-t pt-2 space-y-1">
-                        <div className="flex justify-between text-sm">
-                          <span>Subtotal:</span>
-                          <span>₹{(totals.subtotal || 0).toFixed(2)}</span>
-                        </div>
-                        <div className="flex justify-between text-sm">
-                          <span>Discount:</span>
-                          <span>
-                            -₹{(totals.totalDiscountAmount || 0).toFixed(2)}
-                          </span>
-                        </div>
-                        <div className="flex justify-between text-sm">
-                          <span>Tax:</span>
-                          <span>
-                            ₹{(totals.totalTaxAmount || 0).toFixed(2)}
-                          </span>
-                        </div>
-                        <div className="flex justify-between font-bold">
-                          <span>Total:</span>
-                          <span>₹{(totals.total || 0).toFixed(2)}</span>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex gap-2 justify-end pt-4">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setShowCreateDialog(false)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button type="submit" disabled={createMutation.isPending}>
-                    {createMutation.isPending ? "Creating..." : "Create Quote"}
-                  </Button>
-                </div>
-              </form>
-            </Form>
-          </DialogContent>
-        </Dialog>
       </div>
 
       {/* Quote Statistics Summary */}
@@ -1430,13 +958,7 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
           <Card className="p-3">
             <div className="text-center">
               <div className="text-lg font-bold">
-                ₹
-                {quotes
-                  .reduce(
-                    (sum: number, q: Quote) => sum + (q.totalAmount || 0),
-                    0,
-                  )
-                  .toFixed(0)}
+                ₹{quotes.reduce((sum: number, q: Quote) => sum + (q.totalAmount || 0), 0).toFixed(0)}
               </div>
               <div className="text-xs text-muted-foreground">Total Value</div>
             </div>
@@ -1470,298 +992,93 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
       </div>
 
       {/* Quotes List */}
-      <div className="grid gap-4">
-        {filteredQuotes.length === 0 ? (
-          <Card>
-            <CardContent className="p-8 text-center">
-              <p className="text-muted-foreground">
-                No quotes found for this project.
-              </p>
-              <Button
-                className="mt-4"
-                onClick={() => setShowCreateDialog(true)}
-              >
-                Create Your First Quote
-              </Button>
-            </CardContent>
-          </Card>
-        ) : (
-          filteredQuotes.map((quote: Quote) => (
-            <Card key={quote.id} className="overflow-hidden">
-              <CardHeader className="pb-2">
-                <div className="flex flex-col sm:flex-row gap-2 sm:gap-0 justify-between items-start">
-                  <div className="flex-1">
-                    <CardTitle className="text-base leading-tight">
-                      {quote.title}
-                    </CardTitle>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      #{quote.quoteNumber}
-                    </p>
+      {filteredQuotes.length === 0 ? (
+        <Card className="p-8 text-center">
+          <div className="text-muted-foreground">
+            <h3 className="text-lg font-medium mb-2">No quotes found</h3>
+            <p className="text-sm">
+              {quotes && quotes.length === 0
+                ? "Get started by creating your first quote"
+                : "Try adjusting your search or filter criteria"}
+            </p>
+          </div>
+        </Card>
+      ) : (
+        <div className="space-y-3">
+          {filteredQuotes.map((quote: Quote) => (
+            <Card key={quote.id} className="p-3 sm:p-4">
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+                <div className="flex-1 space-y-2">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <h3 className="font-medium text-sm">{quote.title}</h3>
+                      <p className="text-xs text-muted-foreground">
+                        {quote.quoteNumber}
+                      </p>
+                    </div>
+                    {renderStatusBadge(quote.status)}
                   </div>
-                  <div className="flex items-center gap-2">
-                    {getStatusBadge(quote.status)}
-                    <span className="text-sm font-medium">
-                      ₹{(quote.totalAmount || 0).toFixed(0)}
+                  {quote.description && (
+                    <p className="text-xs text-muted-foreground line-clamp-2">
+                      {quote.description}
+                    </p>
+                  )}
+                  <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                    <span>₹{quote.totalAmount?.toLocaleString() || 0}</span>
+                    <span>{quote.paymentTerms}</span>
+                    <span>
+                      {new Date(quote.createdAt).toLocaleDateString()}
                     </span>
                   </div>
                 </div>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <div className="flex flex-col sm:flex-row gap-3 sm:gap-0 justify-between items-start sm:items-center">
-                  <div className="text-xs text-muted-foreground">
-                    Created: {new Date(quote.createdAt).toLocaleDateString()}
-                  </div>
-
-                  {/* Mobile-Optimized Actions */}
-                  <div className="flex flex-wrap gap-1 w-full sm:w-auto">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        setSelectedQuote(quote);
-                        setShowViewDialog(true);
-                      }}
-                      className="flex-1 sm:flex-none h-7 text-xs"
-                    >
-                      <Eye className="h-3 w-3 mr-1" />
-                      View
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleExportPDF(quote)}
-                      className="flex-1 sm:flex-none h-7 text-xs"
-                    >
-                      <Download className="h-3 w-3 mr-1" />
-                      PDF
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleShareQuote(quote)}
-                      className="flex-1 sm:flex-none h-7 text-xs"
-                    >
-                      <Share className="h-3 w-3 mr-1" />
-                      Share
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        setSelectedQuote(quote);
-                        const quoteItems = (quote as any).items || [];
-                        setQuoteItems(quoteItems);
-                        form.reset({
-                          title: quote.title,
-                          description: quote.description || "",
-                          paymentTerms: quote.paymentTerms || "Net 30",
-                          pricelist: quote.pricelist || "Standard",
-                          discountType: "percentage",
-                          discountValue: 0,
-                          terms: quote.terms || "",
-                          notes: quote.notes || "",
-                          status: quote.status || "draft",
-                        });
-                        setShowEditDialog(true);
-                      }}
-                      className="flex-1 sm:flex-none h-7 text-xs"
-                    >
-                      <Edit className="h-3 w-3 mr-1" />
-                      Edit
-                    </Button>
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button variant="destructive" size="sm" className="h-7">
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent className="max-w-[90vw] sm:max-w-md">
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>
-                            Are you Freaking Sure?
-                          </AlertDialogTitle>
-                          <AlertDialogDescription>
-                            This action cannot be undone. This will permanently
-                            delete the quote and all its items.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction
-                            onClick={() => deleteMutation.mutate(quote.id)}
-                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                          >
-                            Delete Quote
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  </div>
+                <div className="flex gap-1">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-7 w-7 p-0"
+                    onClick={() => {
+                      setSelectedQuote(quote);
+                      setShowViewDialog(true);
+                    }}
+                  >
+                    <Eye className="h-3 w-3" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-7 w-7 p-0"
+                    onClick={() => {
+                      setSelectedQuote(quote);
+                      setShowEditDialog(true);
+                    }}
+                  >
+                    <Edit className="h-3 w-3" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-7 w-7 p-0"
+                    onClick={() => window.open(`/api/quotes/${quote.id}/pdf`, '_blank')}
+                  >
+                    <Download className="h-3 w-3" />
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    className="h-7 w-7 p-0"
+                    onClick={() => {
+                      setSelectedQuote(quote);
+                      setShowDeleteDialog(true);
+                    }}
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
                 </div>
-              </CardContent>
+              </div>
             </Card>
-          ))
-        )}
-      </div>
-
-      {/* Quote Management Dialogs */}
-
-      {/* View Quote Dialog */}
-      <Dialog open={showViewDialog} onOpenChange={setShowViewDialog}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>View Quote Details</DialogTitle>
-            <DialogDescription>Quote information and items</DialogDescription>
-          </DialogHeader>
-
-          {selectedQuote && (
-            <div className="space-y-6">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label className="text-xs font-medium">Quote Title</Label>
-                  <p className="text-sm">{selectedQuote.title}</p>
-                </div>
-                <div>
-                  <Label className="text-xs font-medium">Quote Number</Label>
-                  <p className="text-sm">{selectedQuote.quoteNumber}</p>
-                </div>
-                <div>
-                  <Label className="text-xs font-medium">Status</Label>
-                  <p className="text-sm">{selectedQuote.status}</p>
-                </div>
-                <div>
-                  <Label className="text-xs font-medium">Total Amount</Label>
-                  <p className="text-sm font-bold">
-                    ₹{(selectedQuote.totalAmount || 0).toFixed(2)}
-                  </p>
-                </div>
-              </div>
-
-              {selectedQuote.description && (
-                <div>
-                  <Label className="text-xs font-medium">Description</Label>
-                  <p className="text-sm">{selectedQuote.description}</p>
-                </div>
-              )}
-
-              <div className="flex gap-2">
-                <Button onClick={() => handleExportPDF(selectedQuote)}>
-                  <Download className="h-4 w-4 mr-2" />
-                  Download PDF
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => handleShareQuote(selectedQuote)}
-                >
-                  <Share className="h-4 w-4 mr-2" />
-                  Share
-                </Button>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
-
-      {/* Edit Quote Dialog */}
-      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Edit Quote</DialogTitle>
-            <DialogDescription>
-              Update quote details and items
-            </DialogDescription>
-          </DialogHeader>
-
-          {selectedQuote && (
-            <div className="space-y-6">
-              <Form {...form}>
-                <form
-                  onSubmit={form.handleSubmit(handleUpdateQuote)}
-                  className="space-y-4"
-                >
-                  <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="title"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-xs">
-                            Quote Title *
-                          </FormLabel>
-                          <FormControl>
-                            <Input
-                              {...field}
-                              placeholder="Enter quote title"
-                              className="h-8"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="status"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-xs">Status</FormLabel>
-                          <Select
-                            onValueChange={field.onChange}
-                            value={field.value}
-                          >
-                            <FormControl>
-                              <SelectTrigger className="h-8">
-                                <SelectValue placeholder="Select status" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="draft">Draft</SelectItem>
-                              <SelectItem value="sent">Sent</SelectItem>
-                              <SelectItem value="approved">Approved</SelectItem>
-                              <SelectItem value="rejected">Rejected</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  <FormField
-                    control={form.control}
-                    name="description"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-xs">Description</FormLabel>
-                        <FormControl>
-                          <Textarea
-                            {...field}
-                            placeholder="Quote description"
-                            className="min-h-[60px]"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <div className="flex justify-end gap-2 pt-4">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setShowCreateDialog(false)}
-                    >
-                      Cancel
-                    </Button>
-                    <Button type="submit">Create Quote</Button>
-                  </div>
-                </form>
-              </Form>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

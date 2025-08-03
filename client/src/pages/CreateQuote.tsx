@@ -1,0 +1,554 @@
+import { useState, useEffect } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useLocation, useRoute } from "wouter";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
+import { ArrowLeft, Plus, Edit, Trash2 } from "lucide-react";
+
+const quoteFormSchema = z.object({
+  title: z.string().min(1, "Quote title is required"),
+  description: z.string().optional(),
+  paymentTerms: z.string().min(1, "Payment terms are required"),
+});
+
+const itemFormSchema = z.object({
+  itemName: z.string().min(1, "Product name is required"),
+  description: z.string().min(1, "Item description is required"),
+  quantity: z.number().min(1, "Quantity must be at least 1"),
+  uom: z.string().min(1, "Unit is required"),
+  unitPrice: z.number().min(0, "Unit price must be positive"),
+  discountPercentage: z.number().min(0).max(100).optional(),
+  taxPercentage: z.number().min(0).max(100).optional(),
+  size: z.string().optional(),
+  salesProductId: z.number().optional(),
+});
+
+type QuoteFormData = z.infer<typeof quoteFormSchema>;
+type ItemFormData = z.infer<typeof itemFormSchema>;
+
+interface QuoteItem extends ItemFormData {
+  lineTotal: number;
+}
+
+export default function CreateQuote() {
+  const [, setLocation] = useLocation();
+  const [match, params] = useRoute("/projects/:projectId/quotes/create");
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const projectId = parseInt(params?.projectId || "0");
+  const [items, setItems] = useState<QuoteItem[]>([]);
+  const [editingItem, setEditingItem] = useState<QuoteItem | null>(null);
+  const [editingIndex, setEditingIndex] = useState<number>(-1);
+
+  // Get project details
+  const { data: project } = useQuery({
+    queryKey: [`/api/projects/${projectId}`],
+    enabled: !!projectId,
+  });
+
+  // Get sales products for dropdown
+  const { data: salesProducts } = useQuery({
+    queryKey: ["/api/quotes/products/list"],
+  });
+
+  // Main quote form
+  const form = useForm<QuoteFormData>({
+    resolver: zodResolver(quoteFormSchema),
+    defaultValues: {
+      title: "",
+      description: "",
+      paymentTerms: "50% advance, 50% on delivery",
+    },
+  });
+
+  // Item form
+  const itemForm = useForm<ItemFormData>({
+    resolver: zodResolver(itemFormSchema),
+    defaultValues: {
+      itemName: "",
+      description: "",
+      quantity: 1,
+      uom: "pcs",
+      unitPrice: 0,
+      discountPercentage: 0,
+      taxPercentage: 18,
+      size: "",
+      salesProductId: 0,
+    },
+  });
+
+  // Calculate totals
+  const totals = items.reduce(
+    (acc, item) => {
+      const lineTotal = item.lineTotal || 0;
+      const discountAmount = (lineTotal * (item.discountPercentage || 0)) / 100;
+      const taxableAmount = lineTotal - discountAmount;
+      const taxAmount = (taxableAmount * (item.taxPercentage || 0)) / 100;
+
+      return {
+        subtotal: acc.subtotal + lineTotal,
+        totalDiscountAmount: acc.totalDiscountAmount + discountAmount,
+        totalTaxAmount: acc.totalTaxAmount + taxAmount,
+        total: acc.total + taxableAmount + taxAmount,
+      };
+    },
+    { subtotal: 0, totalDiscountAmount: 0, totalTaxAmount: 0, total: 0 }
+  );
+
+  // Create quote mutation
+  const createMutation = useMutation({
+    mutationFn: async (data: QuoteFormData) => {
+      const quoteData = {
+        ...data,
+        projectId,
+        items: items.map(item => ({
+          itemName: item.itemName,
+          description: item.description,
+          quantity: item.quantity,
+          uom: item.uom,
+          unitPrice: item.unitPrice,
+          discountPercentage: item.discountPercentage || 0,
+          taxPercentage: item.taxPercentage || 18,
+          size: item.size || "",
+          salesProductId: item.salesProductId || null,
+        })),
+      };
+      return apiRequest(`/api/quotes`, {
+        method: "POST",
+        body: JSON.stringify(quoteData),
+      });
+    },
+    onSuccess: () => {
+      toast({ title: "Quote created successfully!" });
+      queryClient.invalidateQueries({ queryKey: ["/api/quotes"] });
+      setLocation(`/projects/${projectId}`);
+    },
+    onError: (error: any) => {
+      toast({
+        variant: "destructive",
+        title: "Failed to create quote",
+        description: error.message,
+      });
+    },
+  });
+
+  const handleSaveItem = (data: ItemFormData) => {
+    const lineTotal = data.quantity * data.unitPrice;
+    const newItem: QuoteItem = { ...data, lineTotal };
+
+    if (editingIndex >= 0) {
+      const updatedItems = [...items];
+      updatedItems[editingIndex] = newItem;
+      setItems(updatedItems);
+      setEditingIndex(-1);
+    } else {
+      setItems([...items, newItem]);
+    }
+
+    setEditingItem(null);
+    itemForm.reset({
+      itemName: "",
+      description: "",
+      quantity: 1,
+      uom: "pcs",
+      unitPrice: 0,
+      discountPercentage: 0,
+      taxPercentage: 18,
+      size: "",
+      salesProductId: 0,
+    });
+  };
+
+  const removeItem = (index: number) => {
+    setItems(items.filter((_, i) => i !== index));
+  };
+
+  const editItem = (item: QuoteItem, index: number) => {
+    setEditingItem(item);
+    setEditingIndex(index);
+    itemForm.reset(item);
+  };
+
+  const onSubmit = (data: QuoteFormData) => {
+    if (items.length === 0) {
+      toast({
+        variant: "destructive",
+        title: "Add items to quote",
+        description: "Please add at least one item to create a quote.",
+      });
+      return;
+    }
+    createMutation.mutate(data);
+  };
+
+  if (!match) return null;
+
+  return (
+    <div className="container mx-auto p-4 max-w-6xl">
+      {/* Header */}
+      <div className="flex items-center gap-4 mb-6">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setLocation(`/projects/${projectId}`)}
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back to Project
+        </Button>
+        <div>
+          <h1 className="text-2xl font-bold">Create New Quote</h1>
+          <p className="text-muted-foreground">
+            {(project as any)?.name || 'Project'} - {(project as any)?.code || ''}
+          </p>
+        </div>
+      </div>
+
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          {/* Quote Details */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Quote Details</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="title"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs">Quote Title *</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          className="h-8 text-xs"
+                          placeholder="Enter quote title"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="paymentTerms"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs">Payment Terms *</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger className="h-8 text-xs">
+                            <SelectValue placeholder="Select payment terms" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="50% advance, 50% on delivery">
+                            50% advance, 50% on delivery
+                          </SelectItem>
+                          <SelectItem value="100% advance">100% advance</SelectItem>
+                          <SelectItem value="30% advance, 70% on delivery">
+                            30% advance, 70% on delivery
+                          </SelectItem>
+                          <SelectItem value="Net 30">Net 30</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Quote Items */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Quote Items</CardTitle>
+              <p className="text-xs text-muted-foreground">
+                Add products matching PDF layout
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Item Form - Compact Mobile Layout */}
+              <div className="bg-gray-50 p-4 rounded-lg space-y-3">
+                <h4 className="text-sm font-medium">Add New Item</h4>
+                
+                {/* Mobile-first responsive grid */}
+                <div className="grid grid-cols-12 gap-2 items-end">
+                  {/* Product Selection */}
+                  <div className="col-span-12 md:col-span-3">
+                    <label className="text-xs text-gray-600 block mb-1">Product</label>
+                    <Select
+                      onValueChange={(value) => {
+                        const selectedProduct = Array.isArray(salesProducts) ? salesProducts.find(
+                          (p: any) => p.id.toString() === value,
+                        ) : null;
+                        if (selectedProduct) {
+                          itemForm.setValue("salesProductId", selectedProduct.id);
+                          itemForm.setValue("itemName", selectedProduct.name);
+                          itemForm.setValue(
+                            "description",
+                            selectedProduct.description ||
+                              selectedProduct.specifications ||
+                              `${selectedProduct.name} - Premium quality`,
+                          );
+                          itemForm.setValue("unitPrice", selectedProduct.unitPrice || 0);
+                          itemForm.setValue("uom", selectedProduct.unit || "pcs");
+                        }
+                      }}
+                    >
+                      <SelectTrigger className="h-8 text-xs">
+                        <SelectValue placeholder="Select product" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Array.isArray(salesProducts) && salesProducts.map((product: any) => (
+                          <SelectItem key={product.id} value={product.id.toString()}>
+                            <div className="flex flex-col">
+                              <span className="font-medium">{product.name}</span>
+                              <span className="text-xs text-muted-foreground">₹{product.unitPrice}</span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Item Description */}
+                  <div className="col-span-12 md:col-span-3">
+                    <label className="text-xs text-gray-600 block mb-1">Item Description</label>
+                    <Input
+                      placeholder="Auto-filled from product"
+                      className="h-8 text-xs"
+                      value={itemForm.watch("description") || ""}
+                      onChange={(e) => itemForm.setValue("description", e.target.value)}
+                    />
+                  </div>
+
+                  {/* Size */}
+                  <div className="col-span-6 md:col-span-1">
+                    <label className="text-xs text-gray-600 block mb-1">Size</label>
+                    <Input
+                      placeholder="-"
+                      className="h-8 text-xs text-center"
+                      value={itemForm.watch("size") || ""}
+                      onChange={(e) => itemForm.setValue("size", e.target.value)}
+                    />
+                  </div>
+
+                  {/* Quantity */}
+                  <div className="col-span-6 md:col-span-1">
+                    <label className="text-xs text-gray-600 block mb-1">Qty</label>
+                    <Input
+                      type="number"
+                      placeholder="1"
+                      className="h-8 text-xs text-center"
+                      value={itemForm.watch("quantity") || ""}
+                      onChange={(e) =>
+                        itemForm.setValue("quantity", parseFloat(e.target.value) || 1)
+                      }
+                    />
+                  </div>
+
+                  {/* Rate */}
+                  <div className="col-span-6 md:col-span-1">
+                    <label className="text-xs text-gray-600 block mb-1">Rate</label>
+                    <Input
+                      type="number"
+                      placeholder="0"
+                      className="h-8 text-xs text-center"
+                      value={itemForm.watch("unitPrice") || ""}
+                      onChange={(e) =>
+                        itemForm.setValue("unitPrice", parseFloat(e.target.value) || 0)
+                      }
+                    />
+                  </div>
+
+                  {/* Total Amount (Auto-calculated) */}
+                  <div className="col-span-6 md:col-span-1">
+                    <label className="text-xs text-gray-600 block mb-1">Total</label>
+                    <div className="h-8 flex items-center justify-center text-xs font-medium text-[hsl(28,100%,25%)]">
+                      ₹{((itemForm.watch("quantity") || 0) * (itemForm.watch("unitPrice") || 0)).toLocaleString('en-IN')}
+                    </div>
+                  </div>
+
+                  {/* Add Button */}
+                  <div className="col-span-12 md:col-span-1">
+                    <Button
+                      type="button"
+                      onClick={() => {
+                        const formData = itemForm.getValues();
+                        if (formData.itemName && formData.quantity && formData.unitPrice) {
+                          handleSaveItem(formData);
+                        }
+                      }}
+                      className="h-8 w-full text-xs bg-[hsl(28,100%,25%)] hover:bg-[hsl(28,100%,20%)]"
+                    >
+                      {editingIndex >= 0 ? "Update" : "Add"}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Items List */}
+              {items.length > 0 && (
+                <div className="space-y-2">
+                  {/* Desktop Header */}
+                  <div className="hidden md:grid grid-cols-12 gap-2 bg-[hsl(28,100%,25%)] text-white p-2 rounded text-xs font-medium">
+                    <div className="col-span-1 text-center">Sr. No.</div>
+                    <div className="col-span-2 text-center">Product</div>
+                    <div className="col-span-3 text-center">Item Description</div>
+                    <div className="col-span-1 text-center">Size</div>
+                    <div className="col-span-1 text-center">Qty</div>
+                    <div className="col-span-1 text-center">Rate</div>
+                    <div className="col-span-1 text-center">Total</div>
+                    <div className="col-span-2 text-center">Action</div>
+                  </div>
+
+                  {/* Items */}
+                  {items.map((item, index) => (
+                    <div
+                      key={index}
+                      className="border rounded p-2 space-y-2 md:space-y-0"
+                    >
+                      {/* Mobile Card Layout */}
+                      <div className="md:hidden space-y-2">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <div className="font-medium text-sm">{item.itemName}</div>
+                            <div className="text-xs text-gray-600">{item.description}</div>
+                            {item.size && (
+                              <div className="text-xs text-gray-500">Size: {item.size}</div>
+                            )}
+                          </div>
+                          <div className="flex gap-1">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              className="h-6 w-6 p-0"
+                              onClick={() => editItem(item, index)}
+                            >
+                              <Edit className="h-3 w-3" />
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="destructive"
+                              size="sm"
+                              className="h-6 w-6 p-0"
+                              onClick={() => removeItem(index)}
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </div>
+                        <div className="flex justify-between text-xs">
+                          <span>Qty: {item.quantity} | Rate: ₹{item.unitPrice?.toLocaleString('en-IN')}</span>
+                          <span className="font-medium text-[hsl(28,100%,25%)]">
+                            ₹{item.lineTotal?.toLocaleString('en-IN')}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Desktop Grid Layout */}
+                      <div className="hidden md:grid grid-cols-12 gap-2 items-center text-xs">
+                        <div className="col-span-1 text-center font-medium">
+                          {index + 1}
+                        </div>
+                        <div className="col-span-2 text-center">
+                          {item.itemName}
+                        </div>
+                        <div className="col-span-3 text-xs">
+                          {item.description}
+                        </div>
+                        <div className="col-span-1 text-center">
+                          {item.size || "-"}
+                        </div>
+                        <div className="col-span-1 text-center">
+                          {item.quantity}
+                        </div>
+                        <div className="col-span-1 text-center">
+                          ₹{item.unitPrice?.toLocaleString('en-IN')}
+                        </div>
+                        <div className="col-span-1 text-center font-medium text-[hsl(28,100%,25%)]">
+                          ₹{item.lineTotal?.toLocaleString('en-IN')}
+                        </div>
+                        <div className="col-span-2 flex justify-center gap-1">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="h-6 w-6 p-0"
+                            onClick={() => editItem(item, index)}
+                          >
+                            <Edit className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="sm"
+                            className="h-6 w-6 p-0"
+                            onClick={() => removeItem(index)}
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+
+                  {/* Totals */}
+                  <div className="border-t pt-2 space-y-1 bg-gray-50 p-3 rounded">
+                    <div className="flex justify-between text-sm">
+                      <span>Subtotal:</span>
+                      <span>₹{(totals.subtotal || 0).toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span>Discount:</span>
+                      <span>-₹{(totals.totalDiscountAmount || 0).toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span>Tax:</span>
+                      <span>₹{(totals.totalTaxAmount || 0).toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between font-bold text-lg border-t pt-2">
+                      <span>Total:</span>
+                      <span>₹{(totals.total || 0).toFixed(2)}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Form Actions */}
+          <div className="flex gap-2 justify-end pt-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setLocation(`/projects/${projectId}`)}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              disabled={createMutation.isPending || items.length === 0}
+              className="bg-[hsl(28,100%,25%)] hover:bg-[hsl(28,100%,20%)]"
+            >
+              {createMutation.isPending ? "Creating..." : "Create Quote"}
+            </Button>
+          </div>
+        </form>
+      </Form>
+    </div>
+  );
+}
