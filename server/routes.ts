@@ -2407,11 +2407,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/quotes", authenticateToken, async (req: AuthRequest, res) => {
     try {
+      const { items, ...quoteData } = req.body;
+      
       const validatedData = insertQuoteSchema.parse({
-        ...req.body,
+        ...quoteData,
         createdBy: req.user!.id,
       });
+      
+      // Create quote first
       const quote = await storage.createQuote(validatedData);
+      
+      // Create quote items if provided
+      if (items && Array.isArray(items) && items.length > 0) {
+        await storage.updateQuoteItems(quote.id, items);
+      }
+      
       res.json(quote);
     } catch (error) {
       console.error("Create quote error:", error);

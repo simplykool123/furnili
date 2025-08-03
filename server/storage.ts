@@ -3469,11 +3469,21 @@ class DatabaseStorage implements IStorage {
       
       // Insert new items
       if (items.length > 0) {
-        const itemsToInsert = items.map(item => ({
-          ...item,
+        const itemsToInsert = items.map((item, index) => ({
           quoteId,
-          createdAt: new Date(),
-          updatedAt: new Date(),
+          salesProductId: item.salesProductId || null,
+          itemName: item.itemName || 'Unnamed Item',
+          description: item.description || '',
+          quantity: Number(item.quantity) || 1,
+          uom: item.uom || 'pcs',
+          unitPrice: Number(item.unitPrice) || 0,
+          discountPercentage: Number(item.discountPercentage) || 0,
+          discountAmount: Number(item.discountAmount) || 0,
+          taxPercentage: Number(item.taxPercentage) || 0,
+          taxAmount: Number(item.taxAmount) || 0,
+          lineTotal: Number(item.lineTotal) || 0,
+          sortOrder: index,
+          notes: item.notes || null,
         }));
         
         await db.insert(quoteItems).values(itemsToInsert);
