@@ -630,25 +630,46 @@ export default function EditQuote() {
                       <span className="font-bold text-lg">₹{subtotal.toLocaleString()}</span>
                     </div>
 
-                    {/* Packaging Charges */}
+                    {/* Packaging Charges - Editable */}
                     <div className="flex justify-between items-center p-3 border-b bg-white">
                       <div className="flex items-center gap-2">
                         <span className="text-sm">Packaging</span>
                         <div className="flex items-center gap-1">
                           <span className="text-xs">@</span>
-                          <span className="text-xs">{form.watch("packingChargesType") === "percentage" ? "%" : "₹"}</span>
-                          <span className="text-xs">{form.watch("packingChargesValue")}</span>
+                          <Select
+                            value={form.watch("packingChargesType")}
+                            onValueChange={(value) => form.setValue("packingChargesType", value as "percentage" | "fixed")}
+                          >
+                            <SelectTrigger className="h-6 w-16 text-xs border-0 p-0">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="percentage">%</SelectItem>
+                              <SelectItem value="fixed">₹</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <Input
+                            type="number"
+                            value={form.watch("packingChargesValue")}
+                            onChange={(e) => form.setValue("packingChargesValue", parseFloat(e.target.value) || 0)}
+                            className="h-6 w-16 text-xs border-0 p-1 text-center"
+                          />
                         </div>
                       </div>
                       <span className="font-medium text-sm">₹{packingCharges.toLocaleString()}</span>
                     </div>
 
-                    {/* Transportation */}
+                    {/* Transportation - Editable */}
                     <div className="flex justify-between items-center p-3 border-b bg-white">
                       <span className="text-sm">Transportation</span>
                       <div className="flex items-center gap-2">
                         <span className="text-xs">₹</span>
-                        <span className="font-medium text-sm">{transportationCharges.toLocaleString()}</span>
+                        <Input
+                          type="number"
+                          value={form.watch("transportationCharges")}
+                          onChange={(e) => form.setValue("transportationCharges", parseFloat(e.target.value) || 0)}
+                          className="h-6 w-16 text-xs border-0 p-1 text-center"
+                        />
                       </div>
                     </div>
 
@@ -669,77 +690,7 @@ export default function EditQuote() {
             )}
           </div>
 
-          {/* Packing & Transportation */}
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm">Charges & Payment</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2 pt-0">
-              <div className="grid grid-cols-2 gap-2">
-                <FormField
-                  control={form.control}
-                  name="packingChargesType"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-xs">Packing Type</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger className="h-8 text-xs">
-                            <SelectValue />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="percentage">Percentage</SelectItem>
-                          <SelectItem value="fixed">Fixed Amount</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
 
-                <FormField
-                  control={form.control}
-                  name="packingChargesValue"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-xs">
-                        {form.watch("packingChargesType") === "percentage" ? "Percentage" : "Amount"}
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          type="number"
-                          className="h-8 text-xs"
-                          onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <FormField
-                control={form.control}
-                name="transportationCharges"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-xs">Transportation Charges (₹)</FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        type="number"
-                        className="h-8 text-xs"
-                        onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </CardContent>
-          </Card>
 
 
 
