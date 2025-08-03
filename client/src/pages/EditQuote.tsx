@@ -314,34 +314,34 @@ export default function EditQuote() {
 
 
   return (
-    <div className="p-3 max-w-[95vw] mx-auto">
+    <div className="p-2 max-w-[98vw] mx-auto">
       {/* Header */}
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-2">
         <Button
           variant="ghost"
           onClick={() => setLocation(`/projects/${projectId}/quotes`)}
-          className="text-sm"
+          className="text-xs h-7 px-2"
         >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Project
+          <ArrowLeft className="h-3 w-3 mr-1" />
+          Back
         </Button>
-        <div>
-          <h1 className="text-2xl font-bold">Edit Quote</h1>
-          <p className="text-muted-foreground">
+        <div className="text-right">
+          <h1 className="text-lg font-bold">Edit Quote</h1>
+          <p className="text-xs text-muted-foreground">
             {(project as any)?.name || 'Project'} - {(project as any)?.code || ''}
           </p>
         </div>
       </div>
 
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-2">
           {/* Quote Details */}
           <Card>
-            <CardHeader>
-              <CardTitle>Quote Details</CardTitle>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm">Quote Details</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <CardContent className="space-y-2 pt-0">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                 <FormField
                   control={form.control}
                   name="title"
@@ -351,8 +351,8 @@ export default function EditQuote() {
                       <FormControl>
                         <Input {...field} className="h-8 text-xs" />
                       </FormControl>
-                      <p className="text-xs text-gray-500">
-                        Auto: "Estimate for [Project Type]"
+                      <p className="text-xs text-gray-400">
+                        Auto-generated
                       </p>
                       <FormMessage />
                     </FormItem>
@@ -387,15 +387,15 @@ export default function EditQuote() {
 
           {/* Quote Items */}
           <Card>
-            <CardHeader>
-              <CardTitle>Quote Items</CardTitle>
-              <p className="text-sm text-muted-foreground">Add products matching PDF layout</p>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm">Quote Items</CardTitle>
+              <p className="text-xs text-muted-foreground">Add products</p>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-2 pt-0">
               {/* Add New Item Form */}
-              <div className="border rounded-lg p-4 bg-gray-50">
-                <h4 className="font-medium mb-3 text-sm">Add New Item</h4>
-                <div className="grid grid-cols-12 gap-3 items-end">
+              <div className="border rounded p-2 bg-gray-50">
+                <h4 className="font-medium mb-2 text-xs">Add New Item</h4>
+                <div className="grid grid-cols-12 gap-2 items-end">
                   {/* Category Selection */}
                   <div className="col-span-12 md:col-span-2">
                     <label className="text-xs text-gray-600 block mb-1">Category</label>
@@ -578,18 +578,18 @@ export default function EditQuote() {
           {/* Quote Summary */}
           {items.length > 0 && (
             <Card>
-              <CardHeader>
-                <CardTitle>Quote Summary</CardTitle>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm">Quote Summary</CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-2 text-sm">
+              <CardContent className="pt-0">
+                <div className="space-y-1 text-xs">
                   <div className="flex justify-between">
                     <span>Subtotal:</span>
                     <span>₹{subtotal.toLocaleString()}</span>
                   </div>
                   {totalDiscount > 0 && (
                     <div className="flex justify-between text-red-600">
-                      <span>Total Discount:</span>
+                      <span>Discount:</span>
                       <span>-₹{totalDiscount.toLocaleString()}</span>
                     </div>
                   )}
@@ -598,18 +598,18 @@ export default function EditQuote() {
                     <span>₹{afterDiscount.toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span>Total Tax (18%):</span>
+                    <span>Tax (18%):</span>
                     <span>₹{totalTax.toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span>Packing Charges ({form.watch("packingChargesType") === "percentage" ? `${form.watch("packingChargesValue")}%` : "Fixed"}):</span>
+                    <span>Packing ({form.watch("packingChargesType") === "percentage" ? `${form.watch("packingChargesValue")}%` : "Fixed"}):</span>
                     <span>₹{packingCharges.toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span>Transportation:</span>
+                    <span>Transport:</span>
                     <span>₹{transportationCharges.toLocaleString()}</span>
                   </div>
-                  <div className="border-t pt-2 flex justify-between font-bold text-lg">
+                  <div className="border-t pt-1 flex justify-between font-bold text-sm">
                     <span>Grand Total:</span>
                     <span>₹{grandTotal.toLocaleString()}</span>
                   </div>
@@ -619,18 +619,19 @@ export default function EditQuote() {
           )}
 
           {/* Form Actions */}
-          <div className="flex justify-end space-x-4">
+          <div className="flex justify-end space-x-2 pb-2">
             <Button
               type="button"
               variant="outline"
               onClick={() => setLocation(`/projects/${projectId}/quotes`)}
+              className="h-8 text-xs px-3"
             >
               Cancel
             </Button>
             <Button
               type="submit"
               disabled={updateQuoteMutation.isPending || items.length === 0}
-              className="bg-[hsl(28,100%,25%)] hover:bg-[hsl(28,100%,20%)]"
+              className="bg-[hsl(28,100%,25%)] hover:bg-[hsl(28,100%,20%)] h-8 text-xs px-3"
             >
               {updateQuoteMutation.isPending ? "Updating..." : "Update Quote"}
             </Button>
