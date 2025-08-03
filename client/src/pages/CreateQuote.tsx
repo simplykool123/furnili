@@ -189,10 +189,23 @@ export default function CreateQuote() {
   // Create quote mutation
   const createMutation = useMutation({
     mutationFn: async (data: QuoteFormData) => {
+      // Calculate totals for packaging and final amounts
+      const packingChargesAmount = data.packingChargesType === "percentage" 
+        ? (totals.subtotal * data.packingChargesValue) / 100 
+        : data.packingChargesValue;
+      
+      const finalTotal = totals.total + packingChargesAmount + data.transportationCharges;
+      const gstAmount = (finalTotal * 18) / 100; // 18% GST
+      const grandTotal = finalTotal + gstAmount;
+
       const quoteData = {
         ...data,
         projectId,
-        clientId: (project as any)?.clientId || 0, // Get clientId from project data
+        clientId: (project as any)?.clientId || 0,
+        subtotal: totals.subtotal,
+        taxAmount: totals.totalTaxAmount + gstAmount,
+        totalAmount: grandTotal,
+        packingChargesAmount,
         items: items.map(item => ({
           itemName: item.itemName,
           description: item.description,
@@ -200,7 +213,10 @@ export default function CreateQuote() {
           uom: item.uom,
           unitPrice: item.unitPrice,
           discountPercentage: item.discountPercentage || 0,
+          discountAmount: ((item.lineTotal || 0) * (item.discountPercentage || 0)) / 100,
           taxPercentage: item.taxPercentage || 18,
+          taxAmount: (((item.lineTotal || 0) - (((item.lineTotal || 0) * (item.discountPercentage || 0)) / 100)) * (item.taxPercentage || 18)) / 100,
+          lineTotal: item.lineTotal || 0,
           size: item.size || "",
           salesProductId: item.salesProductId || null,
         })),
@@ -212,8 +228,10 @@ export default function CreateQuote() {
     },
     onSuccess: () => {
       toast({ title: "Quote created successfully!" });
+      // Invalidate both general quotes and project-specific quotes
       queryClient.invalidateQueries({ queryKey: ["/api/quotes"] });
-      setLocation(`/projects/${projectId}`);
+      queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/quotes`] });
+      setLocation(`/projects/${projectId}/quotes`);
     },
     onError: (error: any) => {
       toast({
