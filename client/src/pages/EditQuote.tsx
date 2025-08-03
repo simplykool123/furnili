@@ -311,10 +311,12 @@ export default function EditQuote() {
     );
   }
 
+
+
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+    <div className="p-3 max-w-[95vw] mx-auto">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-4">
         <Button
           variant="ghost"
           onClick={() => setLocation(`/projects/${projectId}/quotes`)}
@@ -332,14 +334,14 @@ export default function EditQuote() {
       </div>
 
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
           {/* Quote Details */}
           <Card>
             <CardHeader>
               <CardTitle>Quote Details</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <CardContent className="space-y-3">
+              <div className="grid grid-cols-1 gap-3">
                 <FormField
                   control={form.control}
                   name="title"
