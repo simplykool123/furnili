@@ -56,25 +56,7 @@ import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 
-// Type declaration for html2pdf.js
-declare module "html2pdf.js" {
-  interface Html2PdfOptions {
-    margin?: number | number[];
-    filename?: string;
-    image?: { type?: string; quality?: number };
-    html2canvas?: { scale?: number; useCORS?: boolean };
-    jsPDF?: { unit?: string; format?: string; orientation?: string };
-  }
 
-  interface Html2Pdf {
-    from(element: HTMLElement): Html2Pdf;
-    set(options: Html2PdfOptions): Html2Pdf;
-    save(): Promise<void>;
-  }
-
-  function html2pdf(): Html2Pdf;
-  export = html2pdf;
-}
 
 interface ProjectQuotesProps {
   projectId: string;
@@ -1046,7 +1028,9 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
                         setQuoteItems([]);
                       }
                       
-                      setShowCreateDialog(true);
+                      console.log('Navigating to create quote page for duplication...');
+                      // Navigate to create quote page with duplicate query parameter
+                      setLocation(`/projects/${projectId}/quotes/create?duplicate=${quote.id}`);
                     }}
                   >
                     <Edit className="h-3 w-3" />

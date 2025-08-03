@@ -44,12 +44,16 @@ interface QuoteItem extends ItemFormData {
 }
 
 export default function CreateQuote() {
-  const [, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
   const [match, params] = useRoute("/projects/:projectId/quotes/create");
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const projectId = parseInt(params?.projectId || "0");
+  
+  // Check for duplicate query parameter
+  const urlParams = new URLSearchParams(location.split('?')[1] || '');
+  const duplicateQuoteId = urlParams.get('duplicate');
   const [items, setItems] = useState<QuoteItem[]>([]);
   const [editingItem, setEditingItem] = useState<QuoteItem | null>(null);
   const [editingIndex, setEditingIndex] = useState<number>(-1);
@@ -69,6 +73,12 @@ export default function CreateQuote() {
   // Get sales products for dropdown - filtered by category
   const { data: salesProducts } = useQuery({
     queryKey: [selectedCategory ? `/api/sales-products?category=${selectedCategory}` : "/api/sales-products"],
+  });
+  
+  // Get original quote details for duplication
+  const { data: originalQuote } = useQuery({
+    queryKey: [`/api/quotes/${duplicateQuoteId}/details`],
+    enabled: !!duplicateQuoteId,
   });
 
   // Main quote form
@@ -98,6 +108,41 @@ export default function CreateQuote() {
         return "Payment Terms\n" + selectedTerm;
     }
   };
+
+  // Effect to populate form when duplicating a quote
+  useEffect(() => {
+    if (originalQuote && duplicateQuoteId) {
+      console.log('Loading quote data for duplication:', originalQuote);
+      
+      // Populate form with original quote data
+      form.reset({
+        title: project ? `Estimate for ${extractProjectKeyword(project.name)}` : 'New Quote',
+        description: originalQuote.description || '',
+        paymentTerms: originalQuote.paymentTerms || '100% advance',
+        furnitureSpecifications: originalQuote.furnitureSpecifications || "All furniture will be manufactured using Said Materials\n- All hardware considered of standard make.\n- Standard laminates considered as per selection.\n- Any modifications or changes in material selection may result in additional charges.",
+        packingChargesType: originalQuote.packingChargesType || 'percentage',
+        packingChargesValue: originalQuote.packingChargesValue || 2,
+        transportationCharges: originalQuote.transportationCharges || 5000,
+      });
+      
+      // Populate quote items
+      if (originalQuote.items) {
+        const duplicatedItems = originalQuote.items.map((item: any) => ({
+          itemName: item.itemName || item.salesProduct?.name || '',
+          description: item.description || item.salesProduct?.description || '',
+          quantity: item.quantity || 1,
+          uom: item.uom || 'pcs',
+          unitPrice: item.unitPrice || 0,
+          discountPercentage: item.discountPercentage || 0,
+          taxPercentage: item.taxPercentage || 18,
+          size: item.size || '',
+          salesProductId: item.salesProductId || null,
+          lineTotal: item.lineTotal || 0,
+        }));
+        setItems(duplicatedItems);
+      }
+    }
+  }, [originalQuote, duplicateQuoteId, project, form]);
 
   // Function to extract meaningful part from project name for title
   const extractProjectKeyword = (projectName: string): string => {
@@ -306,7 +351,9 @@ export default function CreateQuote() {
           Back to Project
         </Button>
         <div>
-          <h1 className="text-2xl font-bold">Create New Quote</h1>
+          <h1 className="text-2xl font-bold">
+            {duplicateQuoteId ? 'Duplicate Quote' : 'Create New Quote'}
+          </h1>
           <p className="text-muted-foreground">
             {(project as any)?.name || 'Project'} - {(project as any)?.code || ''}
           </p>
