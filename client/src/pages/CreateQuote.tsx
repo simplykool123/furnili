@@ -78,12 +78,26 @@ export default function CreateQuote() {
       title: "",
       description: "",
       paymentTerms: "100% advance",
-      furnitureSpecifications: "All furniture will be manufactured using Said Materials\n- All hardware considered of standard make.\n- Standard laminates considered as per selection.\n- Any modifications or changes in material selection may result in additional charges.",
+      furnitureSpecifications: "All furniture will be manufactured using Said Materials\n- All hardware considered of standard make.\n- Standard laminates considered as per selection.\n- Any modifications or changes in material selection may result in additional charges.\n\nPayment Terms\n100% Advance Payment: Due upon order confirmation.",
       packingChargesType: "percentage",
       packingChargesValue: 2,
       transportationCharges: 5000,
     },
   });
+
+  // Function to convert payment terms selection to detailed format
+  const getPaymentTermsText = (selectedTerm: string): string => {
+    switch (selectedTerm) {
+      case "100% advance":
+        return "Payment Terms\n100% Advance Payment: Due upon order confirmation.";
+      case "50% advance, 50% on delivery":
+        return "Payment Terms\n50% Advance Payment: Due upon order confirmation.\n50% Payment on Delivery: To be settled upon installation completion.";
+      case "30% advance, 70% on delivery":
+        return "Payment Terms\n30% Advance Payment: Due upon order confirmation.\n50% Payment Before Delivery: To be settled prior to dispatch.\n20% Payment on Delivery";
+      default:
+        return "Payment Terms\n" + selectedTerm;
+    }
+  };
 
   // Auto-populate quote title when project data is available
   useEffect(() => {
@@ -92,6 +106,19 @@ export default function CreateQuote() {
       form.setValue("title", autoTitle);
     }
   }, [project, form]);
+
+  // Update furniture specifications when payment terms change
+  useEffect(() => {
+    const subscription = form.watch((value, { name }) => {
+      if (name === "paymentTerms" && value.paymentTerms) {
+        const paymentTermsText = getPaymentTermsText(value.paymentTerms);
+        const baseSpecs = "All furniture will be manufactured using Said Materials\n- All hardware considered of standard make.\n- Standard laminates considered as per selection.\n- Any modifications or changes in material selection may result in additional charges.";
+        
+        form.setValue("furnitureSpecifications", `${baseSpecs}\n\n${paymentTermsText}`);
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [form]);
 
   // Item form
   const itemForm = useForm<ItemFormData>({
