@@ -168,10 +168,10 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
     isLoading,
     refetch,
   } = useQuery({
-    queryKey: ["/api/quotes", "project", projectId, searchTerm, statusFilter],
+    queryKey: ["/api/projects", projectId, "quotes", searchTerm, statusFilter],
     queryFn: () =>
       apiRequest(
-        `/api/quotes?projectId=${projectId}&search=${searchTerm}&status=${statusFilter}`,
+        `/api/projects/${projectId}/quotes?search=${searchTerm}&status=${statusFilter}`,
       ),
   });
 
@@ -198,7 +198,7 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
         }),
       }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/quotes"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/projects", projectId, "quotes"] });
       setShowCreateDialog(false);
       setQuoteItems([]);
       toast({ title: "Quote created successfully" });
@@ -229,7 +229,7 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
         }),
       }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/quotes"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/projects", projectId, "quotes"] });
       setShowEditDialog(false);
       setQuoteItems([]);
       toast({ title: "Quote updated successfully" });
@@ -250,7 +250,7 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
         method: "DELETE",
       }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/quotes"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/projects", projectId, "quotes"] });
       setShowDeleteDialog(false);
       setSelectedQuote(null);
       toast({ title: "Quote deleted successfully" });
