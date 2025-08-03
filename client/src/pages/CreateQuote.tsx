@@ -156,6 +156,7 @@ export default function CreateQuote() {
       const quoteData = {
         ...data,
         projectId,
+        clientId: (project as any)?.clientId || 0, // Get clientId from project data
         items: items.map(item => ({
           itemName: item.itemName,
           description: item.description,
