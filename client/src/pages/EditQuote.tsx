@@ -581,9 +581,9 @@ export default function EditQuote() {
             </CardContent>
           </Card>
 
-          {/* Furniture Specifications & Payment Terms - Two Column Layout */}
+          {/* Layout matching CreateQuote - Left: Specs & Payment Terms, Right: Summary */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
-            {/* Left Side - Furniture Specifications */}
+            {/* Left Side - Furniture Specifications with Payment Terms below */}
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm">Furniture Specifications</CardTitle>
@@ -597,31 +597,76 @@ export default function EditQuote() {
                       <FormControl>
                         <Textarea
                           {...field}
-                          className="text-xs h-20"
+                          className="text-xs h-16"
                           placeholder="Furniture specifications..."
-                          rows={4}
+                          rows={3}
                         />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-              </CardContent>
-            </Card>
 
-            {/* Right Side - Payment Terms Details */}
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm">Payment Terms Details</CardTitle>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <div className="text-xs space-y-0.5 text-gray-600">
-                  {getPaymentTermsLines(getPaymentTermsText(form.watch("paymentTerms"))).map((line, index) => (
-                    <div key={index}>{line}</div>
-                  ))}
+                {/* Payment Terms section within same card */}
+                <div className="mt-3 pt-3 border-t">
+                  <h4 className="font-bold text-xs mb-1">Payment Terms</h4>
+                  <div className="text-xs space-y-0.5 text-gray-600">
+                    {getPaymentTermsLines(getPaymentTermsText(form.watch("paymentTerms"))).map((line, index) => (
+                      <div key={index}>{line}</div>
+                    ))}
+                  </div>
                 </div>
               </CardContent>
             </Card>
+
+            {/* Right Side - Calculations (will be Quote Summary) */}
+            {items.length > 0 && (
+              <Card>
+                <CardContent className="p-0">
+                  <div className="border rounded-lg overflow-hidden">
+                    {/* Items Subtotal */}
+                    <div className="flex justify-between items-center p-3 bg-gray-50 border-b">
+                      <span className="font-medium text-sm">Total</span>
+                      <span className="font-bold text-lg">₹{subtotal.toLocaleString()}</span>
+                    </div>
+
+                    {/* Packaging Charges */}
+                    <div className="flex justify-between items-center p-3 border-b bg-white">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm">Packaging</span>
+                        <div className="flex items-center gap-1">
+                          <span className="text-xs">@</span>
+                          <span className="text-xs">{form.watch("packingChargesType") === "percentage" ? "%" : "₹"}</span>
+                          <span className="text-xs">{form.watch("packingChargesValue")}</span>
+                        </div>
+                      </div>
+                      <span className="font-medium text-sm">₹{packingCharges.toLocaleString()}</span>
+                    </div>
+
+                    {/* Transportation */}
+                    <div className="flex justify-between items-center p-3 border-b bg-white">
+                      <span className="text-sm">Transportation</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs">₹</span>
+                        <span className="font-medium text-sm">{transportationCharges.toLocaleString()}</span>
+                      </div>
+                    </div>
+
+                    {/* GST */}
+                    <div className="flex justify-between items-center p-3 border-b bg-white">
+                      <span className="text-sm">GST @ 18%</span>
+                      <span className="font-medium text-sm">₹{totalTax.toLocaleString()}</span>
+                    </div>
+
+                    {/* Grand Total */}
+                    <div className="flex justify-between items-center p-3 bg-[hsl(28,100%,25%)] text-white">
+                      <span className="font-bold text-sm">Grand Total</span>
+                      <span className="font-bold text-lg">₹{grandTotal.toLocaleString()}</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </div>
 
           {/* Packing & Transportation */}
@@ -696,48 +741,7 @@ export default function EditQuote() {
             </CardContent>
           </Card>
 
-          {/* Quote Summary */}
-          {items.length > 0 && (
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm">Quote Summary</CardTitle>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <div className="space-y-1 text-xs">
-                  <div className="flex justify-between">
-                    <span>Subtotal:</span>
-                    <span>₹{subtotal.toLocaleString()}</span>
-                  </div>
-                  {totalDiscount > 0 && (
-                    <div className="flex justify-between text-red-600">
-                      <span>Discount:</span>
-                      <span>-₹{totalDiscount.toLocaleString()}</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between">
-                    <span>After Discount:</span>
-                    <span>₹{afterDiscount.toLocaleString()}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Tax (18%):</span>
-                    <span>₹{totalTax.toLocaleString()}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Packing ({form.watch("packingChargesType") === "percentage" ? `${form.watch("packingChargesValue")}%` : "Fixed"}):</span>
-                    <span>₹{packingCharges.toLocaleString()}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Transport:</span>
-                    <span>₹{transportationCharges.toLocaleString()}</span>
-                  </div>
-                  <div className="border-t pt-1 flex justify-between font-bold text-sm">
-                    <span>Grand Total:</span>
-                    <span>₹{grandTotal.toLocaleString()}</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
+
 
           {/* Form Actions */}
           <div className="flex justify-end space-x-2 pb-2">
