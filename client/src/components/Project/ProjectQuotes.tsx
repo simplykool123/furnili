@@ -994,6 +994,14 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
                     <Download className="h-3 w-3" />
                   </Button>
                   <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-6 w-6 p-0"
+                    onClick={() => handleShareQuote(quote)}
+                  >
+                    <Share className="h-3 w-3" />
+                  </Button>
+                  <Button
                     variant="destructive"
                     size="sm"
                     className="h-6 w-6 p-0"
