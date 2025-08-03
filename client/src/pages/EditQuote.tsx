@@ -17,6 +17,7 @@ import { ArrowLeft, Plus, Edit, Trash2 } from "lucide-react";
 const quoteFormSchema = z.object({
   title: z.string().min(1, "Quote title is required"),
   description: z.string().optional(),
+  status: z.enum(["draft", "sent", "approved", "rejected", "expired"]).default("draft"),
   paymentTerms: z.string().min(1, "Payment terms are required"),
   furnitureSpecifications: z.string().optional(),
   packingChargesType: z.enum(["percentage", "fixed"]).default("percentage"),
@@ -85,6 +86,7 @@ export default function EditQuote() {
     defaultValues: {
       title: "",
       description: "",
+      status: "draft",
       paymentTerms: "100% advance",
       furnitureSpecifications: "All furniture will be manufactured using Said Materials\n- All hardware considered of standard make.\n- Standard laminates considered as per selection.\n- Any modifications or changes in material selection may result in additional charges.",
       packingChargesType: "percentage",
@@ -140,6 +142,7 @@ export default function EditQuote() {
       form.reset({
         title: quote.title || '',
         description: quote.description || '',
+        status: quote.status || 'draft',
         paymentTerms: quote.paymentTerms || '100% advance',
         furnitureSpecifications: quote.furnitureSpecifications || "All furniture will be manufactured using Said Materials\n- All hardware considered of standard make.\n- Standard laminates considered as per selection.\n- Any modifications or changes in material selection may result in additional charges.",
         packingChargesType: quote.packingChargesType || 'percentage',
@@ -347,7 +350,7 @@ export default function EditQuote() {
               <CardTitle className="text-sm">Quote Details</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2 pt-0">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
                 <FormField
                   control={form.control}
                   name="title"
@@ -360,6 +363,31 @@ export default function EditQuote() {
                       <p className="text-xs text-gray-400">
                         Auto-generated, but you can edit it
                       </p>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="status"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs">Quote Status *</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger className="h-8 text-xs">
+                            <SelectValue placeholder="Select status" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="draft">Draft</SelectItem>
+                          <SelectItem value="sent">Sent</SelectItem>
+                          <SelectItem value="approved">Approved</SelectItem>
+                          <SelectItem value="rejected">Rejected</SelectItem>
+                          <SelectItem value="expired">Expired</SelectItem>
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
