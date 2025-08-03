@@ -123,6 +123,12 @@ export default function EditQuote() {
     }
   };
 
+  // Parse payment terms text for display
+  const getPaymentTermsLines = (paymentTermsText: string): string[] => {
+    const lines = paymentTermsText.split('\n').slice(1); // Remove "Payment Terms" header
+    return lines.filter(line => line.trim().length > 0);
+  };
+
   // Effect to populate form when quote data is loaded
   useEffect(() => {
     if (existingQuote && !isLoadingQuote) {
@@ -598,6 +604,16 @@ export default function EditQuote() {
                   </FormItem>
                 )}
               />
+
+              {/* Payment Terms Details */}
+              <div className="mt-3 pt-3 border-t">
+                <h4 className="font-bold text-xs mb-1">Payment Terms Details</h4>
+                <div className="text-xs space-y-0.5 text-gray-600">
+                  {getPaymentTermsLines(getPaymentTermsText(form.watch("paymentTerms"))).map((line, index) => (
+                    <div key={index}>{line}</div>
+                  ))}
+                </div>
+              </div>
             </CardContent>
           </Card>
 
