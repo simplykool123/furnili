@@ -80,7 +80,7 @@ import {
   type BOQExtractedItem,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, desc, gte, lte, sql, count } from "drizzle-orm";
+import { eq, and, desc, gte, lte, sql, count, isNotNull } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 
 export interface IStorage {
@@ -3300,8 +3300,29 @@ class DatabaseStorage implements IStorage {
   }
 
   // Sales Products methods
-  async getAllSalesProducts(): Promise<SalesProduct[]> {
-    return await db.select().from(salesProducts).where(eq(salesProducts.isActive, true)).orderBy(desc(salesProducts.createdAt));
+  async getAllSalesProducts(category?: string): Promise<SalesProduct[]> {
+    const conditions = [eq(salesProducts.isActive, true)];
+    
+    if (category) {
+      conditions.push(eq(salesProducts.category, category));
+    }
+    
+    return await db.select().from(salesProducts)
+      .where(and(...conditions))
+      .orderBy(desc(salesProducts.createdAt));
+  }
+
+  async getSalesProductCategories(): Promise<{ category: string; count: number }[]> {
+    const result = await db.select({
+      category: salesProducts.category,
+      count: sql<number>`count(*)::int`
+    })
+    .from(salesProducts)
+    .where(and(eq(salesProducts.isActive, true), isNotNull(salesProducts.category)))
+    .groupBy(salesProducts.category)
+    .orderBy(salesProducts.category);
+    
+    return result.filter(r => r.category !== null && r.category !== '');
   }
 
   async getSalesProduct(id: number): Promise<SalesProduct | undefined> {

@@ -2278,11 +2278,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Sales Products routes
   app.get("/api/sales-products", authenticateToken, async (req: AuthRequest, res) => {
     try {
-      const products = await storage.getAllSalesProducts();
+      const category = req.query.category as string;
+      const products = await storage.getAllSalesProducts(category);
       res.json(products);
     } catch (error) {
       console.error("Get sales products error:", error);
       res.status(500).json({ message: "Failed to fetch sales products" });
+    }
+  });
+
+  // Get unique product categories
+  app.get("/api/sales-products/categories", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const categories = await storage.getSalesProductCategories();
+      res.json(categories);
+    } catch (error) {
+      console.error("Get product categories error:", error);
+      res.status(500).json({ message: "Failed to fetch product categories" });
     }
   });
 

@@ -53,6 +53,7 @@ export default function CreateQuote() {
   const [items, setItems] = useState<QuoteItem[]>([]);
   const [editingItem, setEditingItem] = useState<QuoteItem | null>(null);
   const [editingIndex, setEditingIndex] = useState<number>(-1);
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
 
   // Get project details
   const { data: project } = useQuery({
@@ -60,9 +61,14 @@ export default function CreateQuote() {
     enabled: !!projectId,
   });
 
-  // Get sales products for dropdown
+  // Get product categories
+  const { data: categories } = useQuery({
+    queryKey: ["/api/sales-products/categories"],
+  });
+
+  // Get sales products for dropdown - filtered by category
   const { data: salesProducts } = useQuery({
-    queryKey: ["/api/quotes/products/list"],
+    queryKey: [selectedCategory ? `/api/sales-products?category=${selectedCategory}` : "/api/sales-products"],
   });
 
   // Main quote form
@@ -293,6 +299,38 @@ export default function CreateQuote() {
                 
                 {/* Mobile-first responsive grid */}
                 <div className="grid grid-cols-12 gap-2 items-end">
+                  {/* Category Selection */}
+                  <div className="col-span-12 md:col-span-2">
+                    <label className="text-xs text-gray-600 block mb-1">Category</label>
+                    <Select
+                      value={selectedCategory}
+                      onValueChange={(value) => {
+                        setSelectedCategory(value === "all" ? "" : value);
+                        // Reset product selection when category changes
+                        itemForm.setValue("salesProductId", 0);
+                        itemForm.setValue("itemName", "");
+                        itemForm.setValue("description", "");
+                        itemForm.setValue("unitPrice", 0);
+                        itemForm.setValue("uom", "pcs");
+                      }}
+                    >
+                      <SelectTrigger className="h-8 text-xs">
+                        <SelectValue placeholder="Select category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Categories</SelectItem>
+                        {Array.isArray(categories) && categories.map((cat: any) => (
+                          <SelectItem key={cat.category} value={cat.category}>
+                            <div className="flex justify-between items-center w-full">
+                              <span>{cat.category}</span>
+                              <span className="text-xs text-muted-foreground ml-2">({cat.count})</span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
                   {/* Product Selection */}
                   <div className="col-span-12 md:col-span-3">
                     <label className="text-xs text-gray-600 block mb-1">Product</label>
