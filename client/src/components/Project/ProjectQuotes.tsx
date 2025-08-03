@@ -342,6 +342,12 @@ Thank you for choosing Furnili!`;
     queryFn: () => apiRequest("/api/quotes/products/list"),
   });
 
+  // Fetch clients for quote creation
+  const { data: clients = [] } = useQuery({
+    queryKey: ["/api/clients"],
+    queryFn: () => apiRequest("/api/clients"),
+  });
+
   // Create quote mutation
   const createMutation = useMutation({
     mutationFn: (data: QuoteFormData & { items: QuoteItem[] }) =>
