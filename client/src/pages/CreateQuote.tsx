@@ -469,11 +469,23 @@ export default function CreateQuote() {
                       {/* Mobile Card Layout */}
                       <div className="md:hidden space-y-2">
                         <div className="flex justify-between items-start">
-                          <div>
-                            <div className="font-medium text-sm">{item.itemName}</div>
-                            <div className="text-xs text-gray-600">{item.description}</div>
-                            {item.size && (
-                              <div className="text-xs text-gray-500">Size: {item.size}</div>
+                          <div className="flex gap-3">
+                            <div>
+                              <div className="font-medium text-sm">{item.itemName}</div>
+                              <div className="text-xs text-gray-600">{item.description}</div>
+                              {item.size && (
+                                <div className="text-xs text-gray-500">Size: {item.size}</div>
+                              )}
+                            </div>
+                            {item.salesProductId && (
+                              <img 
+                                src={`/api/sales-products/${item.salesProductId}/image`}
+                                alt={item.itemName}
+                                className="w-12 h-9 object-cover rounded border flex-shrink-0"
+                                onError={(e) => {
+                                  e.currentTarget.style.display = 'none';
+                                }}
+                              />
                             )}
                           </div>
                           <div className="flex gap-1">
@@ -511,7 +523,17 @@ export default function CreateQuote() {
                           {index + 1}
                         </div>
                         <div className="col-span-2 text-center">
-                          {item.itemName}
+                          <div className="font-medium">{item.itemName}</div>
+                          {item.salesProductId && (
+                            <img 
+                              src={`/api/sales-products/${item.salesProductId}/image`}
+                              alt={item.itemName}
+                              className="w-16 h-12 object-cover mx-auto mt-1 rounded border"
+                              onError={(e) => {
+                                e.currentTarget.style.display = 'none';
+                              }}
+                            />
+                          )}
                         </div>
                         <div className="col-span-3 text-xs">
                           {item.description}

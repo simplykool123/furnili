@@ -2298,6 +2298,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get product image endpoint
+  app.get("/api/sales-products/:id/image", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const productId = parseInt(req.params.id);
+      if (isNaN(productId)) {
+        return res.status(400).json({ message: "Invalid product ID" });
+      }
+
+      const product = await storage.getSalesProduct(productId);
+      if (!product) {
+        return res.status(404).json({ message: "Product not found" });
+      }
+
+      // If product has an image URL, redirect to the static file
+      if (product.imageUrl) {
+        // Remove leading slash if present and redirect to uploads route
+        const imagePath = product.imageUrl.startsWith('/') ? product.imageUrl.substring(1) : product.imageUrl;
+        return res.redirect(`/${imagePath}`);
+      }
+
+      // If no image, return 404
+      res.status(404).json({ message: "No image found for this product" });
+    } catch (error) {
+      console.error("Get product image error:", error);
+      res.status(500).json({ message: "Failed to fetch product image" });
+    }
+  });
+
   app.post("/api/sales-products", authenticateToken, async (req: AuthRequest, res) => {
     try {
       const validatedData = insertSalesProductSchema.parse(req.body);
