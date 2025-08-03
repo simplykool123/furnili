@@ -518,17 +518,14 @@ export default function SalesProducts() {
   const isMobile = window.innerWidth < 768;
 
   return (
-    <FurniliLayout
-      title="Sales Products"
-      subtitle="Manage sellable products for quotes and orders"
-    >
-      <div className="space-y-6">
+    <FurniliLayout>
+      <div className="space-y-4">
         
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Sales Products</h1>
-            <p className="text-gray-600">Manage sellable products for quotes and orders</p>
+        {/* Compact Header with inline Add Product */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Package className="w-6 h-6 text-[hsl(28,100%,25%)]" />
+            <h1 className="text-xl font-bold text-gray-900">Products ({filteredProducts.length})</h1>
           </div>
           
           <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
@@ -553,50 +550,41 @@ export default function SalesProducts() {
           </Dialog>
         </div>
 
-        {/* Filters */}
-        <FurniliCard>
-          <CardContent className="pt-6">
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="flex-1">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                  <Input
-                    placeholder="Search products..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-              </div>
-              
-              <div className="sm:w-48">
-                <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="All Categories" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Categories</SelectItem>
-                    {PRODUCT_CATEGORIES.map((category) => (
-                      <SelectItem key={category} value={category}>
-                        {category}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+        {/* Compact Filters - No Card */}
+        <div className="flex flex-col sm:flex-row gap-3 pb-3 border-b border-gray-200">
+          <div className="flex-1">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <Input
+                placeholder="Search products..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 h-9"
+              />
             </div>
-          </CardContent>
-        </FurniliCard>
+          </div>
+          
+          <div className="sm:w-48">
+            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+              <SelectTrigger className="h-9">
+                <SelectValue placeholder="All Categories" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Categories</SelectItem>
+                {PRODUCT_CATEGORIES.map((category) => (
+                  <SelectItem key={category} value={category}>
+                    {category}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
 
         {/* Products List */}
         <FurniliCard>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-2">
-                <Package className="w-5 h-5" />
-                Products ({filteredProducts.length})
-              </CardTitle>
-            </div>
+          <CardHeader className="pb-3">
+            <CardTitle className="sr-only">Products Table</CardTitle>
           </CardHeader>
           <CardContent>
             {isLoading ? (
