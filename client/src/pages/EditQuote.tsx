@@ -341,7 +341,7 @@ export default function EditQuote() {
               <CardTitle>Quote Details</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <div className="grid grid-cols-1 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <FormField
                   control={form.control}
                   name="title"
@@ -352,7 +352,7 @@ export default function EditQuote() {
                         <Input {...field} className="h-8 text-xs" />
                       </FormControl>
                       <p className="text-xs text-gray-500">
-                        Automatically generated as "Estimate for [Project Type]"
+                        Auto: "Estimate for [Project Type]"
                       </p>
                       <FormMessage />
                     </FormItem>
@@ -382,25 +382,6 @@ export default function EditQuote() {
                   )}
                 />
               </div>
-
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-xs">Description</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        {...field}
-                        className="text-xs"
-                        placeholder="Optional quote description"
-                        rows={2}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
             </CardContent>
           </Card>
 
