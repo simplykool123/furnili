@@ -1058,7 +1058,7 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
                     variant="outline"
                     size="sm"
                     className="h-7 w-7 p-0"
-                    onClick={() => window.open(`/api/quotes/${quote.id}/pdf`, '_blank')}
+                    onClick={() => handleExportPDF(quote)}
                   >
                     <Download className="h-3 w-3" />
                   </Button>
