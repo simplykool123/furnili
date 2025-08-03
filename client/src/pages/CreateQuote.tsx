@@ -54,6 +54,13 @@ export default function CreateQuote() {
   // Check for duplicate query parameter
   const urlParams = new URLSearchParams(location.split('?')[1] || '');
   const duplicateQuoteId = urlParams.get('duplicate');
+  
+  console.log('CreateQuote Debug:', {
+    location,
+    urlParams: location.split('?')[1],
+    duplicateQuoteId,
+    hasOriginalQuote: !!originalQuote
+  });
   const [items, setItems] = useState<QuoteItem[]>([]);
   const [editingItem, setEditingItem] = useState<QuoteItem | null>(null);
   const [editingIndex, setEditingIndex] = useState<number>(-1);
@@ -114,20 +121,23 @@ export default function CreateQuote() {
     if (originalQuote && duplicateQuoteId) {
       console.log('Loading quote data for duplication:', originalQuote);
       
+      const quote = originalQuote as any; // Type assertion to avoid TS errors
+      
       // Populate form with original quote data
       form.reset({
-        title: project ? `Estimate for ${extractProjectKeyword(project.name)}` : 'New Quote',
-        description: originalQuote.description || '',
-        paymentTerms: originalQuote.paymentTerms || '100% advance',
-        furnitureSpecifications: originalQuote.furnitureSpecifications || "All furniture will be manufactured using Said Materials\n- All hardware considered of standard make.\n- Standard laminates considered as per selection.\n- Any modifications or changes in material selection may result in additional charges.",
-        packingChargesType: originalQuote.packingChargesType || 'percentage',
-        packingChargesValue: originalQuote.packingChargesValue || 2,
-        transportationCharges: originalQuote.transportationCharges || 5000,
+        title: project ? `Estimate for ${extractProjectKeyword((project as any).name)}` : 'New Quote',
+        description: quote.description || '',
+        paymentTerms: quote.paymentTerms || '100% advance',
+        furnitureSpecifications: quote.furnitureSpecifications || "All furniture will be manufactured using Said Materials\n- All hardware considered of standard make.\n- Standard laminates considered as per selection.\n- Any modifications or changes in material selection may result in additional charges.",
+        packingChargesType: quote.packingChargesType || 'percentage',
+        packingChargesValue: quote.packingChargesValue || 2,
+        transportationCharges: quote.transportationCharges || 5000,
       });
       
       // Populate quote items
-      if (originalQuote.items) {
-        const duplicatedItems = originalQuote.items.map((item: any) => ({
+      if (quote.items && Array.isArray(quote.items)) {
+        console.log('Loading quote items:', quote.items);
+        const duplicatedItems = quote.items.map((item: any) => ({
           itemName: item.itemName || item.salesProduct?.name || '',
           description: item.description || item.salesProduct?.description || '',
           quantity: item.quantity || 1,
@@ -140,7 +150,12 @@ export default function CreateQuote() {
           lineTotal: item.lineTotal || 0,
         }));
         setItems(duplicatedItems);
+        console.log('Duplicated items set:', duplicatedItems);
+      } else {
+        console.log('No items found in original quote');
       }
+    } else {
+      console.log('Missing data for duplication:', { originalQuote: !!originalQuote, duplicateQuoteId });
     }
   }, [originalQuote, duplicateQuoteId, project, form]);
 
