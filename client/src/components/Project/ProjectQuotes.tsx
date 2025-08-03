@@ -402,9 +402,9 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
                         </TooltipContent>
                       </Tooltip>
 
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <AlertDialog>
+                      <AlertDialog>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
                             <AlertDialogTrigger asChild>
                               <Button
                                 variant="ghost"
@@ -414,26 +414,26 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
                                 <Trash2 className="w-4 h-4" />
                               </Button>
                             </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Delete Quote</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Are you sure you want to delete "{quote.title}"? This action cannot be undone.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => deleteQuote(quote.id)}>
-                                  Delete
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Delete Quote</p>
-                        </TooltipContent>
-                      </Tooltip>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Delete Quote</p>
+                          </TooltipContent>
+                        </Tooltip>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Delete Quote</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Are you sure you want to delete "{quote.title}"? This action cannot be undone.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => deleteQuote(quote.id)}>
+                              Delete
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     </TooltipProvider>
                   </div>
                 </div>
