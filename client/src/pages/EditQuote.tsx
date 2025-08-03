@@ -581,41 +581,48 @@ export default function EditQuote() {
             </CardContent>
           </Card>
 
-          {/* Furniture Specifications */}
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm">Furniture Specifications</CardTitle>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <FormField
-                control={form.control}
-                name="furnitureSpecifications"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
-                      <Textarea
-                        {...field}
-                        className="text-xs h-20"
-                        placeholder="Furniture specifications..."
-                        rows={4}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+          {/* Furniture Specifications & Payment Terms - Two Column Layout */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
+            {/* Left Side - Furniture Specifications */}
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm">Furniture Specifications</CardTitle>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <FormField
+                  control={form.control}
+                  name="furnitureSpecifications"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <Textarea
+                          {...field}
+                          className="text-xs h-20"
+                          placeholder="Furniture specifications..."
+                          rows={4}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </CardContent>
+            </Card>
 
-              {/* Payment Terms Details */}
-              <div className="mt-3 pt-3 border-t">
-                <h4 className="font-bold text-xs mb-1">Payment Terms Details</h4>
+            {/* Right Side - Payment Terms Details */}
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm">Payment Terms Details</CardTitle>
+              </CardHeader>
+              <CardContent className="pt-0">
                 <div className="text-xs space-y-0.5 text-gray-600">
                   {getPaymentTermsLines(getPaymentTermsText(form.watch("paymentTerms"))).map((line, index) => (
                     <div key={index}>{line}</div>
                   ))}
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </div>
 
           {/* Packing & Transportation */}
           <Card>
