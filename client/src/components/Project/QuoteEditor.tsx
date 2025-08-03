@@ -93,14 +93,16 @@ export function QuoteEditor({ quoteId, projectId, clientId, onSave, onCancel }: 
 
   // Load quote data when editing
   useEffect(() => {
-    if (quoteData) {
-      const quote = quoteData.quote;
+    console.log("QuoteData received:", quoteData);
+    if (quoteData && (quoteData.quote || quoteData.id)) {
+      // Handle both direct quote object and nested structure
+      const quote = quoteData.quote || quoteData;
       form.reset({
-        title: quote.title,
+        title: quote.title || "",
         description: quote.description || "",
-        clientId: quote.clientId,
+        clientId: quote.clientId || 0,
         projectId: quote.projectId || undefined,
-        status: quote.status,
+        status: quote.status || "draft",
         validUntil: quote.validUntil ? new Date(quote.validUntil).toISOString().split('T')[0] : "",
         furnitureSpecifications: quote.furnitureSpecifications || "To be customized as per your requirements with quality materials and professional finish.",
         paymentTerms: quote.paymentTerms || "30% Advance Payment: Due upon order confirmation.\n50% Payment Before Delivery: To be settled prior to dispatch.\n20% Payment on Delivery",
@@ -110,17 +112,22 @@ export function QuoteEditor({ quoteId, projectId, clientId, onSave, onCancel }: 
         notes: quote.notes || "",
       });
 
-      if ((quoteData as any)?.items && (quoteData as any).items.length > 0) {
-        setItems((quoteData as any).items.map((item: any) => ({
-          salesProductId: item.item.salesProductId,
-          itemName: item.item.itemName,
-          description: item.item.description || "",
-          quantity: item.item.quantity,
-          uom: item.item.uom,
-          unitPrice: item.item.unitPrice,
-          taxPercentage: item.item.taxPercentage,
-          notes: item.item.notes || "",
-        })));
+      // Load items if they exist
+      if (quoteData.items && quoteData.items.length > 0) {
+        setItems(quoteData.items.map((itemData: any) => {
+          const item = itemData.item;
+          const salesProduct = itemData.salesProduct;
+          return {
+            salesProductId: item.salesProductId || null,
+            itemName: salesProduct?.name || "Custom Item",
+            description: salesProduct?.description || "",
+            quantity: item.quantity || 1,
+            uom: "Nos",
+            unitPrice: item.unitPrice || 0,
+            taxPercentage: item.taxPercentage || 18,
+            notes: item.notes || "",
+          };
+        }));
       }
     }
   }, [quoteData, form]);
