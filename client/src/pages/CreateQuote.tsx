@@ -292,16 +292,7 @@ export default function CreateQuote() {
                     <FormItem>
                       <FormLabel className="text-xs">
                         Payment Terms *
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const element = document.getElementById('payment-terms-section');
-                            element?.scrollIntoView({ behavior: 'smooth' });
-                          }}
-                          className="ml-2 text-blue-600 hover:text-blue-800 underline text-xs"
-                        >
-                          (View details below)
-                        </button>
+
                       </FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
@@ -784,31 +775,7 @@ export default function CreateQuote() {
             </CardContent>
           </Card>
 
-          {/* Payment Terms Details Section */}
-          <Card id="payment-terms-section">
-            <CardHeader>
-              <CardTitle className="text-lg">Payment Terms Details</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="p-4 border rounded-lg">
-                  <h4 className="font-semibold text-sm mb-2">100% Advance</h4>
-                  <p className="text-xs text-gray-600">Full payment required before production begins. Suitable for custom orders and new clients.</p>
-                </div>
-                <div className="p-4 border rounded-lg">
-                  <h4 className="font-semibold text-sm mb-2">50% Advance, 50% on Delivery</h4>
-                  <p className="text-xs text-gray-600">Half payment upfront, remaining balance due upon delivery and installation completion.</p>
-                </div>
-                <div className="p-4 border rounded-lg">
-                  <h4 className="font-semibold text-sm mb-2">30% Advance, 70% on Delivery</h4>
-                  <p className="text-xs text-gray-600">Minimal upfront payment with majority due on delivery. Available for established clients only.</p>
-                </div>
-              </div>
-              <div className="text-xs text-gray-500 border-t pt-3">
-                <p><strong>Note:</strong> All payments should be made through bank transfer or UPI. Cash payments are not accepted for amounts above ₹2,00,000. Delivery timeline starts from the date of advance payment receipt.</p>
-              </div>
-            </CardContent>
-          </Card>
+
 
           {/* Form Actions */}
           <div className="flex gap-2 justify-end pt-4">
