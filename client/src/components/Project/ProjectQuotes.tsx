@@ -56,7 +56,134 @@ import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 
+// Quote Items Table Component for PDF Preview
+function QuoteItemsTable({ quoteId }: { quoteId: number }) {
+  const { data: quoteDetails } = useQuery({
+    queryKey: ["/api/quotes", quoteId, "details"],
+    queryFn: () => apiRequest(`/api/quotes/${quoteId}/details`),
+    enabled: !!quoteId,
+  });
 
+  if (!quoteDetails?.items) {
+    return <div style={{ textAlign: 'center', padding: '20px', fontSize: '11px' }}>Loading items...</div>;
+  }
+
+  const items = quoteDetails.items;
+  const subtotal = items.reduce((sum: number, item: any) => sum + (item.lineTotal || 0), 0);
+  const packingCharges = quoteDetails.packingChargesAmount || 0;
+  const transportationCharges = quoteDetails.transportationCharges || 0;
+  const totalBeforeTax = subtotal + packingCharges + transportationCharges;
+  const taxAmount = quoteDetails.taxAmount || 0;
+  const grandTotal = quoteDetails.totalAmount || 0;
+
+  return (
+    <div style={{ fontSize: '10px', marginBottom: '15px' }}>
+      {/* Items Table */}
+      <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #000' }}>
+        <thead>
+          <tr style={{ backgroundColor: '#f0f0f0' }}>
+            <th style={{ border: '1px solid #000', padding: '8px', textAlign: 'left', fontWeight: 'bold' }}>S.No</th>
+            <th style={{ border: '1px solid #000', padding: '8px', textAlign: 'left', fontWeight: 'bold' }}>Item Description</th>
+            <th style={{ border: '1px solid #000', padding: '8px', textAlign: 'center', fontWeight: 'bold' }}>Qty</th>
+            <th style={{ border: '1px solid #000', padding: '8px', textAlign: 'center', fontWeight: 'bold' }}>UOM</th>
+            <th style={{ border: '1px solid #000', padding: '8px', textAlign: 'right', fontWeight: 'bold' }}>Rate</th>
+            <th style={{ border: '1px solid #000', padding: '8px', textAlign: 'right', fontWeight: 'bold' }}>Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          {items.map((item: any, index: number) => (
+            <tr key={index}>
+              <td style={{ border: '1px solid #000', padding: '8px', textAlign: 'center' }}>{index + 1}</td>
+              <td style={{ border: '1px solid #000', padding: '8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  {item.salesProduct?.imageUrl && (
+                    <img 
+                      src={item.salesProduct.imageUrl} 
+                      alt={item.salesProduct?.name || item.itemName} 
+                      style={{ width: '30px', height: '30px', objectFit: 'cover', border: '1px solid #ddd' }}
+                    />
+                  )}
+                  <div>
+                    <div style={{ fontWeight: 'bold' }}>{item.salesProduct?.name || item.itemName}</div>
+                    {(item.salesProduct?.description || item.description) && (
+                      <div style={{ fontSize: '9px', color: '#666', marginTop: '2px' }}>
+                        {item.salesProduct?.description || item.description}
+                      </div>
+                    )}
+                    {item.size && (
+                      <div style={{ fontSize: '9px', fontStyle: 'italic', marginTop: '1px' }}>
+                        Size: {item.size}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </td>
+              <td style={{ border: '1px solid #000', padding: '8px', textAlign: 'center' }}>{item.quantity}</td>
+              <td style={{ border: '1px solid #000', padding: '8px', textAlign: 'center' }}>pcs</td>
+              <td style={{ border: '1px solid #000', padding: '8px', textAlign: 'right' }}>₹{item.unitPrice?.toLocaleString()}</td>
+              <td style={{ border: '1px solid #000', padding: '8px', textAlign: 'right' }}>₹{item.lineTotal?.toLocaleString()}</td>
+            </tr>
+          ))}
+
+          {/* Totals Section */}
+          <tr>
+            <td colSpan={5} style={{ border: '1px solid #000', padding: '8px', textAlign: 'right', fontWeight: 'bold' }}>
+              Sub Total:
+            </td>
+            <td style={{ border: '1px solid #000', padding: '8px', textAlign: 'right', fontWeight: 'bold' }}>
+              ₹{subtotal.toLocaleString()}
+            </td>
+          </tr>
+          
+          <tr>
+            <td colSpan={5} style={{ border: '1px solid #000', padding: '8px', textAlign: 'right' }}>
+              Packaging ({quoteDetails.packingChargesValue}%):
+            </td>
+            <td style={{ border: '1px solid #000', padding: '8px', textAlign: 'right' }}>
+              ₹{packingCharges.toLocaleString()}
+            </td>
+          </tr>
+          
+          <tr>
+            <td colSpan={5} style={{ border: '1px solid #000', padding: '8px', textAlign: 'right' }}>
+              Transportation:
+            </td>
+            <td style={{ border: '1px solid #000', padding: '8px', textAlign: 'right' }}>
+              ₹{transportationCharges.toLocaleString()}
+            </td>
+          </tr>
+          
+          <tr>
+            <td colSpan={5} style={{ border: '1px solid #000', padding: '8px', textAlign: 'right', fontWeight: 'bold' }}>
+              Total Before Tax:
+            </td>
+            <td style={{ border: '1px solid #000', padding: '8px', textAlign: 'right', fontWeight: 'bold' }}>
+              ₹{totalBeforeTax.toLocaleString()}
+            </td>
+          </tr>
+          
+          <tr>
+            <td colSpan={5} style={{ border: '1px solid #000', padding: '8px', textAlign: 'right' }}>
+              GST (18%):
+            </td>
+            <td style={{ border: '1px solid #000', padding: '8px', textAlign: 'right' }}>
+              ₹{taxAmount.toLocaleString()}
+            </td>
+          </tr>
+          
+          <tr style={{ backgroundColor: '#f0f0f0' }}>
+            <td colSpan={5} style={{ border: '1px solid #000', padding: '8px', textAlign: 'right', fontWeight: 'bold', fontSize: '12px' }}>
+              Grand Total:
+            </td>
+            <td style={{ border: '1px solid #000', padding: '8px', textAlign: 'right', fontWeight: 'bold', fontSize: '12px' }}>
+              ₹{grandTotal.toLocaleString()}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  );
+}
 
 interface ProjectQuotesProps {
   projectId: string;
@@ -1019,43 +1146,140 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
         </div>
       )}
 
-      {/* View Quote Dialog */}
+      {/* View Quote Dialog - Exact PDF Layout */}
       <Dialog open={showViewDialog} onOpenChange={setShowViewDialog}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Quote Details - {selectedQuote?.quoteNumber}</DialogTitle>
-            <DialogDescription>
-              View complete quote information and export PDF
+        <DialogContent className="max-w-5xl max-h-[95vh] overflow-y-auto p-2">
+          <DialogHeader className="pb-2">
+            <DialogTitle className="text-lg">Quote Preview - {selectedQuote?.quoteNumber}</DialogTitle>
+            <DialogDescription className="text-sm">
+              Exact PDF layout preview
             </DialogDescription>
           </DialogHeader>
           {selectedQuote && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+            <div className="bg-white text-black p-4 border rounded" style={{ fontFamily: 'Arial, sans-serif' }}>
+              {/* Header Section - Exact PDF Match */}
+              <div style={{ 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'flex-start', 
+                marginBottom: '20px',
+                paddingBottom: '10px',
+                borderBottom: '1px solid #000'
+              }}>
                 <div>
-                  <Label className="text-xs font-medium">Title</Label>
-                  <p className="text-sm">{selectedQuote.title}</p>
+                  <img src="/assets/furnili-logo.png" alt="Furnili Logo" style={{ height: '45px', marginBottom: '8px' }} />
+                  <div style={{ fontSize: '11px', lineHeight: '1.2' }}>
+                    <p style={{ margin: '0', fontWeight: 'bold' }}>Sr.no - 31/1, Pisoli Road, Near Mohan Marbel,</p>
+                    <p style={{ margin: '0', fontWeight: 'bold' }}>Pisoli, Pune - 411048</p>
+                    <p style={{ margin: '2px 0 0 0', fontWeight: 'bold' }}>+91 9823 011 223 | info@furnili.com</p>
+                  </div>
                 </div>
-                <div>
-                  <Label className="text-xs font-medium">Status</Label>
-                  <p className="text-sm">{selectedQuote.status}</p>
-                </div>
-                <div>
-                  <Label className="text-xs font-medium">Total Amount</Label>
-                  <p className="text-sm">₹{selectedQuote.totalAmount?.toLocaleString() || 0}</p>
-                </div>
-                <div>
-                  <Label className="text-xs font-medium">Payment Terms</Label>
-                  <p className="text-sm">{selectedQuote.paymentTerms}</p>
+                <div style={{ textAlign: 'right' }}>
+                  <h1 style={{ fontSize: '22px', fontWeight: 'bold', margin: '0 0 8px 0', color: '#8B4513' }}>QUOTATION</h1>
+                  <div style={{ fontSize: '11px', fontWeight: 'bold' }}>
+                    <p style={{ margin: '0' }}>Quote No: {selectedQuote.quoteNumber}</p>
+                    <p style={{ margin: '2px 0 0 0' }}>Date: {new Date(selectedQuote.createdAt).toLocaleDateString()}</p>
+                  </div>
                 </div>
               </div>
-              {selectedQuote.description && (
-                <div>
-                  <Label className="text-xs font-medium">Description</Label>
-                  <p className="text-sm">{selectedQuote.description}</p>
+
+              {/* Client Information - Exact PDF Match */}
+              <div style={{ marginBottom: '15px' }}>
+                <div style={{ fontSize: '11px', fontWeight: 'bold', lineHeight: '1.3' }}>
+                  <p style={{ margin: '0 0 3px 0' }}>To:</p>
+                  <p style={{ margin: '0' }}>{selectedQuote.client?.name || 'Client Name'}</p>
+                  <p style={{ margin: '0' }}>{selectedQuote.client?.address || 'Client Address'}</p>
+                  <p style={{ margin: '0' }}>{selectedQuote.client?.city || 'City'}</p>
+                  <p style={{ margin: '0' }}>Mobile: {selectedQuote.client?.mobile || 'Mobile'}</p>
                 </div>
-              )}
-              <div className="flex gap-2">
-                <Button onClick={() => handleExportPDF(selectedQuote)}>
+              </div>
+
+              {/* Project Details - Exact PDF Match */}
+              <div style={{ 
+                display: 'grid', 
+                gridTemplateColumns: '1fr 1fr', 
+                gap: '20px', 
+                marginBottom: '15px',
+                fontSize: '11px',
+                fontWeight: 'bold'
+              }}>
+                <div>
+                  <p style={{ margin: '0' }}>Subject: {selectedQuote.title}</p>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <p style={{ margin: '0' }}>Price List: {selectedQuote.pricelist}</p>
+                </div>
+              </div>
+
+              {/* Items Table - Exact PDF Match */}
+              <QuoteItemsTable quoteId={selectedQuote.id} />
+
+              {/* Bottom Section - Exact PDF Match */}
+              <div style={{ marginTop: '15px' }}>
+                {/* Furniture Specifications */}
+                <div style={{ fontSize: '10px', marginBottom: '10px' }}>
+                  <p style={{ margin: '0', fontWeight: 'bold' }}>Furniture Specifications:</p>
+                  <div style={{ whiteSpace: 'pre-line', lineHeight: '1.4', marginTop: '3px' }}>
+                    {selectedQuote.furnitureSpecifications || 'All furniture will be manufactured using Said Materials\n- All hardware considered of standard make.\n- Standard laminates considered as per selection.\n- Any modifications or changes in material selection may result in additional charges.'}
+                  </div>
+                </div>
+
+                {/* Payment Terms Section */}
+                <div style={{ display: 'grid', gridTemplateColumns: '3fr 1fr', gap: '20px', fontSize: '10px' }}>
+                  <div>
+                    <p style={{ margin: '0 0 6px 0', fontWeight: 'bold' }}>Payment Terms: {selectedQuote.paymentTerms}</p>
+                    {selectedQuote.terms && (
+                      <div style={{ marginBottom: '10px', lineHeight: '1.4' }}>
+                        <p style={{ margin: '0', fontWeight: 'bold' }}>Terms & Conditions:</p>
+                        <div style={{ whiteSpace: 'pre-line', marginTop: '3px' }}>{selectedQuote.terms}</div>
+                      </div>
+                    )}
+                    {selectedQuote.notes && (
+                      <div style={{ marginBottom: '10px', lineHeight: '1.4' }}>
+                        <p style={{ margin: '0', fontWeight: 'bold' }}>Notes:</p>
+                        <div style={{ whiteSpace: 'pre-line', marginTop: '3px' }}>{selectedQuote.notes}</div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Signature Section */}
+                  <div style={{ textAlign: 'center', paddingTop: '20px' }}>
+                    <img 
+                      src="/assets/furnili-signature-stamp.png" 
+                      alt="Furnili Signature" 
+                      style={{ width: '70px', height: 'auto', margin: '0 auto 8px auto', display: 'block' }}
+                    />
+                    <div style={{ textAlign: 'center' }}>
+                      <p style={{ fontSize: '9px', margin: '0 0 1px 0', fontWeight: 'bold', lineHeight: '1.0' }}>Authorised Signatory</p>
+                      <p style={{ fontSize: '9px', margin: '0', fontWeight: 'bold', lineHeight: '1.0' }}>for FURNILI</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Black Footer - Exact PDF Match */}
+              <div style={{ 
+                backgroundColor: '#000', 
+                color: 'white', 
+                padding: '8px', 
+                marginTop: '15px',
+                textAlign: 'center',
+                borderRadius: '4px'
+              }}>
+                <h3 style={{ margin: '0', fontSize: '14px', fontWeight: 'bold', letterSpacing: '1px' }}>
+                  Furnili - Bespoke Modular Furniture
+                </h3>
+                <p style={{ margin: '4px 0 0 0', fontSize: '10px' }}>
+                  Sr.no - 31/1, Pisoli Road, Near Mohan Marbel, Pisoli, Pune - 411048
+                </p>
+                <p style={{ margin: '2px 0 0 0', fontSize: '10px', fontWeight: 'bold' }}>
+                  +91 9823 011 223 &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp; info@furnili.com
+                </p>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-2 mt-4 pt-2 border-t">
+                <Button onClick={() => handleExportPDF(selectedQuote)} className="bg-[hsl(28,100%,25%)] hover:bg-[hsl(28,100%,20%)]">
                   <Download className="h-4 w-4 mr-2" />
                   Download PDF
                 </Button>
