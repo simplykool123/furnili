@@ -575,6 +575,104 @@ export default function EditQuote() {
             </CardContent>
           </Card>
 
+          {/* Furniture Specifications */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm">Furniture Specifications</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <FormField
+                control={form.control}
+                name="furnitureSpecifications"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <Textarea
+                        {...field}
+                        className="text-xs h-20"
+                        placeholder="Furniture specifications..."
+                        rows={4}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </CardContent>
+          </Card>
+
+          {/* Packing & Transportation */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm">Charges & Payment</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2 pt-0">
+              <div className="grid grid-cols-2 gap-2">
+                <FormField
+                  control={form.control}
+                  name="packingChargesType"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs">Packing Type</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger className="h-8 text-xs">
+                            <SelectValue />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="percentage">Percentage</SelectItem>
+                          <SelectItem value="fixed">Fixed Amount</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="packingChargesValue"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs">
+                        {form.watch("packingChargesType") === "percentage" ? "Percentage" : "Amount"}
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          type="number"
+                          className="h-8 text-xs"
+                          onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <FormField
+                control={form.control}
+                name="transportationCharges"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs">Transportation Charges (₹)</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        type="number"
+                        className="h-8 text-xs"
+                        onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </CardContent>
+          </Card>
+
           {/* Quote Summary */}
           {items.length > 0 && (
             <Card>
