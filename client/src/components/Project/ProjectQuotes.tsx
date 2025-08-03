@@ -883,25 +883,203 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
     }
   };
 
-  // Share quote function
+  // Share quote function - Generate PDF and share on WhatsApp
   const handleShareQuote = async (quote: Quote) => {
     try {
-      if (navigator.share) {
+      toast({
+        title: "Generating PDF for sharing...",
+        description: "Please wait while we prepare your quote PDF for WhatsApp sharing.",
+      });
+
+      // Load quote details for PDF generation
+      const quoteDetails = await apiRequest(`/api/quotes/${quote.id}/details`);
+      
+      // Generate PDF content (same as handleExportPDF but for sharing)
+      const element = document.createElement('div');
+      element.innerHTML = `
+        <div style="font-family: Arial, sans-serif; background: white; color: black; padding: 20px; max-width: 800px; margin: 0 auto;">
+          <!-- Header Section -->
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #000;">
+            <div>
+              <img src="${window.location.origin}/assets/furnili-logo.png" style="height: 45px; margin-bottom: 8px;" alt="Furnili Logo" />
+              <div style="font-size: 11px; font-weight: bold; line-height: 1.2;">
+                <p style="margin: 0;">Sr.no - 31/1, Pisoli Road, Near Mohan Marbel,</p>
+                <p style="margin: 0;">Pisoli, Pune - 411048</p>
+                <p style="margin: 2px 0 0 0;">+91 9823 011 223 | info@furnili.com</p>
+              </div>
+            </div>
+            <div style="text-align: right;">
+              <h1 style="font-size: 22px; font-weight: bold; margin: 0 0 8px 0; color: #8B4513;">QUOTATION</h1>
+              <div style="font-size: 11px; font-weight: bold;">
+                <p style="margin: 0;">Quote No: ${quote.quoteNumber}</p>
+                <p style="margin: 2px 0 0 0;">Date: ${new Date(quote.createdAt).toLocaleDateString()}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Client Information -->
+          <div style="margin-bottom: 15px; font-size: 11px; font-weight: bold; line-height: 1.3;">
+            <p style="margin: 0 0 3px 0;">To:</p>
+            <p style="margin: 0;">${quoteDetails.client?.name || 'Client Name'}</p>
+            <p style="margin: 0;">${quoteDetails.client?.address || 'Client Address'}</p>
+            <p style="margin: 0;">${quoteDetails.client?.city || 'City'}</p>
+            <p style="margin: 0;">Mobile: ${quoteDetails.client?.mobile || 'Mobile'}</p>
+          </div>
+
+          <!-- Project Details -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 15px; font-size: 11px; font-weight: bold;">
+            <div>Subject: ${quote.title}</div>
+            <div style="text-align: right;">Price List: ${quote.pricelist}</div>
+          </div>
+
+          <!-- Items Table -->
+          <table style="width: 100%; border-collapse: collapse; border: 1px solid #000; font-size: 10px; margin-bottom: 15px;">
+            <thead>
+              <tr style="background-color: #f0f0f0;">
+                <th style="border: 1px solid #000; padding: 8px; text-align: left; font-weight: bold;">S.No</th>
+                <th style="border: 1px solid #000; padding: 8px; text-align: left; font-weight: bold;">Item Description</th>
+                <th style="border: 1px solid #000; padding: 8px; text-align: center; font-weight: bold;">Qty</th>
+                <th style="border: 1px solid #000; padding: 8px; text-align: center; font-weight: bold;">UOM</th>
+                <th style="border: 1px solid #000; padding: 8px; text-align: right; font-weight: bold;">Rate</th>
+                <th style="border: 1px solid #000; padding: 8px; text-align: right; font-weight: bold;">Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${quoteDetails.items?.map((item: any, index: number) => `
+                <tr>
+                  <td style="border: 1px solid #000; padding: 8px; text-align: center;">${index + 1}</td>
+                  <td style="border: 1px solid #000; padding: 8px;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                      ${item.salesProduct?.imageUrl ? `<img src="${item.salesProduct.imageUrl}" style="width: 30px; height: 30px; object-fit: cover; border: 1px solid #ddd;" />` : ''}
+                      <div>
+                        <div style="font-weight: bold;">${item.salesProduct?.name || item.itemName}</div>
+                        ${(item.salesProduct?.description || item.description) ? `<div style="font-size: 9px; color: #666; margin-top: 2px;">${item.salesProduct?.description || item.description}</div>` : ''}
+                        ${item.size ? `<div style="font-size: 9px; font-style: italic; margin-top: 1px;">Size: ${item.size}</div>` : ''}
+                      </div>
+                    </div>
+                  </td>
+                  <td style="border: 1px solid #000; padding: 8px; text-align: center;">${item.quantity}</td>
+                  <td style="border: 1px solid #000; padding: 8px; text-align: center;">pcs</td>
+                  <td style="border: 1px solid #000; padding: 8px; text-align: right;">₹${item.unitPrice?.toLocaleString()}</td>
+                  <td style="border: 1px solid #000; padding: 8px; text-align: right;">₹${item.lineTotal?.toLocaleString()}</td>
+                </tr>
+              `).join('')}
+              
+              <!-- Totals -->
+              <tr>
+                <td colspan="5" style="border: 1px solid #000; padding: 8px; text-align: right; font-weight: bold;">Sub Total:</td>
+                <td style="border: 1px solid #000; padding: 8px; text-align: right; font-weight: bold;">₹${quote.subtotal?.toLocaleString()}</td>
+              </tr>
+              <tr>
+                <td colspan="5" style="border: 1px solid #000; padding: 8px; text-align: right;">Packaging (${quoteDetails.packingChargesValue}%):</td>
+                <td style="border: 1px solid #000; padding: 8px; text-align: right;">₹${quoteDetails.packingChargesAmount?.toLocaleString()}</td>
+              </tr>
+              <tr>
+                <td colspan="5" style="border: 1px solid #000; padding: 8px; text-align: right;">Transportation:</td>
+                <td style="border: 1px solid #000; padding: 8px; text-align: right;">₹${quoteDetails.transportationCharges?.toLocaleString()}</td>
+              </tr>
+              <tr>
+                <td colspan="5" style="border: 1px solid #000; padding: 8px; text-align: right; font-weight: bold;">Total Before Tax:</td>
+                <td style="border: 1px solid #000; padding: 8px; text-align: right; font-weight: bold;">₹${(quote.subtotal + quoteDetails.packingChargesAmount + quoteDetails.transportationCharges)?.toLocaleString()}</td>
+              </tr>
+              <tr>
+                <td colspan="5" style="border: 1px solid #000; padding: 8px; text-align: right;">GST (18%):</td>
+                <td style="border: 1px solid #000; padding: 8px; text-align: right;">₹${quote.taxAmount?.toLocaleString()}</td>
+              </tr>
+              <tr style="background-color: #f0f0f0;">
+                <td colspan="5" style="border: 1px solid #000; padding: 8px; text-align: right; font-weight: bold; font-size: 12px;">Grand Total:</td>
+                <td style="border: 1px solid #000; padding: 8px; text-align: right; font-weight: bold; font-size: 12px;">₹${quote.totalAmount?.toLocaleString()}</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <!-- Bottom Section -->
+          <div style="display: grid; grid-template-columns: 3fr 1fr; gap: 20px; font-size: 10px; margin-bottom: 15px;">
+            <div>
+              <div style="margin-bottom: 10px;">
+                <p style="margin: 0; font-weight: bold;">Furniture Specifications:</p>
+                <div style="white-space: pre-line; line-height: 1.4; margin-top: 3px;">
+                  ${quote.furnitureSpecifications || 'All furniture will be manufactured using Said Materials\\n- All hardware considered of standard make.\\n- Standard laminates considered as per selection.\\n- Any modifications or changes in material selection may result in additional charges.'}
+                </div>
+              </div>
+              <p style="margin: 0; font-weight: bold;">Payment Terms: ${quote.paymentTerms}</p>
+              ${quote.terms ? `<div style="margin-top: 6px;"><p style="margin: 0; font-weight: bold;">Terms & Conditions:</p><div style="white-space: pre-line; margin-top: 3px;">${quote.terms}</div></div>` : ''}
+              ${quote.notes ? `<div style="margin-top: 6px;"><p style="margin: 0; font-weight: bold;">Notes:</p><div style="white-space: pre-line; margin-top: 3px;">${quote.notes}</div></div>` : ''}
+            </div>
+            <div style="text-align: center; padding-top: 20px;">
+              <img src="${window.location.origin}/assets/furnili-signature-stamp.png" style="width: 70px; height: auto; margin-bottom: 8px;" alt="Furnili Signature" />
+              <div>
+                <p style="font-size: 9px; margin: 0 0 1px 0; font-weight: bold;">Authorised Signatory</p>
+                <p style="font-size: 9px; margin: 0; font-weight: bold;">for FURNILI</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Black Footer -->
+          <div style="background-color: #000; color: white; padding: 8px; text-align: center;">
+            <h3 style="margin: 0; font-size: 14px; font-weight: bold; letter-spacing: 1px;">Furnili - Bespoke Modular Furniture</h3>
+            <p style="margin: 4px 0 0 0; font-size: 10px;">Sr.no - 31/1, Pisoli Road, Near Mohan Marbel, Pisoli, Pune - 411048</p>
+            <p style="margin: 2px 0 0 0; font-size: 10px; font-weight: bold;">+91 9823 011 223 &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp; info@furnili.com</p>
+          </div>
+        </div>
+      `;
+
+      const opt = {
+        margin: [0.5, 0.5, 0.5, 0.5],
+        filename: `${quote.quoteNumber}_Furnili_Quote.pdf`,
+        image: { type: "jpeg", quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: "in", format: "a4", orientation: "portrait" },
+      };
+
+      // Generate PDF blob for sharing
+      const { default: html2pdf } = await import("html2pdf.js");
+      
+      // Create a blob instead of directly downloading
+      const pdfBlob = await html2pdf().set(opt).from(element).outputPdf('blob');
+      
+      // Create a File object from the blob
+      const pdfFile = new File([pdfBlob], `${quote.quoteNumber}_Furnili_Quote.pdf`, { type: 'application/pdf' });
+
+      // Check if Web Share API supports files
+      if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
         await navigator.share({
+          files: [pdfFile],
           title: `Quote ${quote.quoteNumber}`,
-          text: `${quote.title} - ₹${quote.totalAmount.toFixed(2)}`,
-          url: window.location.href,
+          text: `${quote.title} - ₹${quote.totalAmount.toLocaleString()}\n\nFurnili - Bespoke Modular Furniture\n+91 9823 011 223`,
+        });
+        
+        toast({
+          title: "PDF Shared Successfully",
+          description: "Quote PDF shared successfully. You can now send it via WhatsApp.",
         });
       } else {
-        // Fallback: copy to clipboard
-        const shareText = `Quote ${quote.quoteNumber}: ${quote.title}\nAmount: ₹${quote.totalAmount.toFixed(2)}\nStatus: ${quote.status}`;
-        await navigator.clipboard.writeText(shareText);
+        // Fallback: Create WhatsApp sharing URL with text and prompt user to attach PDF
+        const whatsappText = encodeURIComponent(
+          `*Quote ${quote.quoteNumber}* 📋\n\n` +
+          `${quote.title}\n` +
+          `Amount: ₹${quote.totalAmount.toLocaleString()}\n` +
+          `Payment Terms: ${quote.paymentTerms}\n\n` +
+          `*Furnili - Bespoke Modular Furniture*\n` +
+          `📞 +91 9823 011 223\n` +
+          `📧 info@furnili.com\n\n` +
+          `_PDF quote attached below_`
+        );
+        
+        // Also download the PDF for manual sharing
+        html2pdf().set(opt).from(element).save();
+        
+        // Open WhatsApp with the message
+        const whatsappUrl = `https://wa.me/?text=${whatsappText}`;
+        window.open(whatsappUrl, '_blank');
+        
         toast({
-          title: "Copied to Clipboard",
-          description: "Quote details copied to clipboard.",
+          title: "WhatsApp Opened & PDF Downloaded",
+          description: "WhatsApp opened with quote details. PDF downloaded - please attach it manually to complete sharing.",
         });
       }
     } catch (error) {
+      console.error("Share error:", error);
       toast({
         title: "Error",
         description: "Failed to share quote. Please try again.",
