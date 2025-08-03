@@ -33,6 +33,14 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
@@ -155,6 +163,8 @@ const quoteItemSchema = z.object({
 
 export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
   const [searchTerm, setSearchTerm] = useState("");
+  const [showShareDialog, setShowShareDialog] = useState(false);
+  const [sharingQuote, setSharingQuote] = useState<Quote | null>(null);
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedQuote, setSelectedQuote] = useState<Quote | null>(null);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
@@ -204,47 +214,82 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
     }
   };
 
-  // WhatsApp Share Function
-  const shareOnWhatsApp = async (quoteId: number, clientPhone?: string) => {
+  // Enhanced WhatsApp Share Function
+  const shareOnWhatsApp = async (quote: Quote) => {
+    setSharingQuote(quote);
+    setShowShareDialog(true);
+  };
+
+  // Download PDF and then open WhatsApp with instructions
+  const downloadPDFAndShare = async (quoteId: number, clientPhone?: string) => {
     try {
-      // Get quote details for WhatsApp message
-      const quoteDetails = await apiRequest(`/api/quotes/${quoteId}/details`);
+      // First generate and download the PDF
+      const response = await apiRequest(`/api/quotes/${quoteId}/pdf`);
       
-      const message = `Hi! Please find the quote for ${quoteDetails.quote?.title || 'your project'}. 
+      if (response && response.html && response.filename) {
+        // Create a blob with the HTML content and convert to PDF
+        const html2pdf = (await import('html2pdf.js')).default;
+        
+        const element = document.createElement('div');
+        element.innerHTML = response.html;
+        
+        // Configure PDF options
+        const opt = {
+          margin: 0.5,
+          filename: response.filename,
+          image: { type: 'jpeg', quality: 0.98 },
+          html2canvas: { scale: 2, useCORS: true },
+          jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+        };
+        
+        // Generate PDF and save it
+        await html2pdf().set(opt).from(element).save();
+        
+        // Get quote details for WhatsApp message
+        const quoteDetails = await apiRequest(`/api/quotes/${quoteId}/details`);
+        
+        const message = `Hi! Please find the quote for ${quoteDetails.quote?.title || 'your project'}. 
 
 *Quote Details:*
 Quote #: ${quoteDetails.quote?.quoteNumber}
 Total Amount: ₹${quoteDetails.quote?.totalAmount?.toLocaleString()}
 
-You can download the PDF from our system or we can email it to you.
+📎 I'm attaching the detailed PDF quote for your review.
 
 Thank you for choosing Furnili!`;
-      
-      // Format phone number (remove +91 if present, add if not)
-      let phoneNumber = clientPhone || '';
-      if (phoneNumber.startsWith('+91')) {
-        phoneNumber = phoneNumber.substring(3);
+        
+        // Format phone number (remove +91 if present, add if not)
+        let phoneNumber = clientPhone || '';
+        if (phoneNumber.startsWith('+91')) {
+          phoneNumber = phoneNumber.substring(3);
+        }
+        if (phoneNumber && !phoneNumber.startsWith('91')) {
+          phoneNumber = '91' + phoneNumber;
+        }
+        
+        // Create WhatsApp URL
+        const whatsappUrl = phoneNumber 
+          ? `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`
+          : `https://wa.me/?text=${encodeURIComponent(message)}`;
+        
+        // Small delay to ensure PDF is downloaded, then open WhatsApp
+        setTimeout(() => {
+          window.open(whatsappUrl, '_blank');
+        }, 2000);
+        
+        toast({
+          title: "PDF Downloaded Successfully",
+          description: "Quote PDF downloaded. WhatsApp opening - please attach the downloaded PDF file.",
+          duration: 6000,
+        });
+        
+        setShowShareDialog(false);
       }
-      if (phoneNumber && !phoneNumber.startsWith('91')) {
-        phoneNumber = '91' + phoneNumber;
-      }
-      
-      // Create WhatsApp URL
-      const whatsappUrl = phoneNumber 
-        ? `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`
-        : `https://wa.me/?text=${encodeURIComponent(message)}`;
-      
-      window.open(whatsappUrl, '_blank');
-      
-      toast({
-        title: "WhatsApp Opened",
-        description: "Quote details shared via WhatsApp. Client can request PDF via the system.",
-      });
     } catch (error) {
-      console.error('WhatsApp share error:', error);
+      console.error('PDF download error:', error);
       toast({
-        title: "Share Failed",
-        description: "Unable to share quote. Please try again.",
+        title: "Download Failed",
+        description: "Unable to download PDF. Please try again.",
         variant: "destructive",
       });
     }
@@ -1256,7 +1301,7 @@ Thank you for choosing Furnili!`;
                         <Button 
                           variant="ghost"
                           size="sm"
-                          onClick={() => shareOnWhatsApp(quote.id, quote.clientPhone)}
+                          onClick={() => shareOnWhatsApp(quote)}
                           className="h-8 w-8 p-0 hover:bg-green-50"
                         >
                           <Share className="h-4 w-4 text-green-600" />
@@ -1308,6 +1353,41 @@ Thank you for choosing Furnili!`;
           ))
         )}
       </div>
+
+      {/* Share Dialog */}
+      <Dialog open={showShareDialog} onOpenChange={setShowShareDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Share Quote</DialogTitle>
+            <DialogDescription>
+              Share quote {sharingQuote?.quoteNumber} via WhatsApp
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between p-4 border rounded-lg">
+              <div>
+                <h4 className="font-medium">{sharingQuote?.title}</h4>
+                <p className="text-sm text-gray-500">₹{sharingQuote?.totalAmount?.toLocaleString()}</p>
+              </div>
+            </div>
+            
+            <div className="space-y-3">
+              <Button 
+                onClick={() => downloadPDFAndShare(sharingQuote?.id!, sharingQuote?.clientPhone)}
+                className="w-full bg-green-600 hover:bg-green-700"
+              >
+                <Download className="w-4 h-4 mr-2" />
+                Download PDF & Open WhatsApp
+              </Button>
+              
+              <p className="text-xs text-gray-500 text-center">
+                PDF will be downloaded to your device. WhatsApp will open with a pre-filled message. 
+                You can then attach the downloaded PDF manually.
+              </p>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
