@@ -617,12 +617,12 @@ export default function SalesProducts() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Product</TableHead>
-                      <TableHead>Category</TableHead>
-                      <TableHead>Size</TableHead>
-                      <TableHead>Price</TableHead>
-                      <TableHead>Tax %</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
+                      <TableHead className="w-[35%] md:w-[40%]">Product</TableHead>
+                      <TableHead className="w-[15%] hidden sm:table-cell">Category</TableHead>
+                      <TableHead className="w-[25%] md:w-[20%]">Size</TableHead>
+                      <TableHead className="w-[12%]">Price</TableHead>
+                      <TableHead className="w-[8%] hidden md:table-cell">Tax %</TableHead>
+                      <TableHead className="w-[5%] text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -634,43 +634,55 @@ export default function SalesProducts() {
                               <img
                                 src={product.imageUrl}
                                 alt={product.name}
-                                className="w-12 h-12 object-cover rounded-lg border"
+                                className="w-10 h-10 object-cover rounded-lg border flex-shrink-0"
                               />
                             ) : (
-                              <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
-                                <Package className="w-6 h-6 text-gray-400" />
+                              <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <Package className="w-5 h-5 text-gray-400" />
                               </div>
                             )}
-                            <div>
-                              <p className="font-medium text-gray-900">{product.name}</p>
+                            <div className="min-w-0 flex-1">
+                              <p className="font-semibold text-gray-900 truncate text-sm">{product.name}</p>
                               {product.description && (
-                                <p className="text-sm text-gray-500 truncate max-w-xs">
+                                <p className="text-xs text-gray-500 truncate max-w-[200px] leading-tight">
                                   {product.description}
                                 </p>
                               )}
                             </div>
                           </div>
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="hidden sm:table-cell">
                           {product.category && (
-                            <Badge variant="secondary">
+                            <Badge variant="secondary" className="text-xs">
                               <Tag className="w-3 h-3 mr-1" />
                               {product.category}
                             </Badge>
                           )}
                         </TableCell>
                         <TableCell>
+                          <div className="flex flex-col gap-1">
+                            <span className="text-xs text-gray-700 font-mono whitespace-nowrap bg-gray-50 px-2 py-1 rounded">
+                              {product.size || "-"}
+                            </span>
+                            <span className="text-xs text-gray-400 sm:hidden truncate">
+                              {product.category}
+                            </span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-col gap-1">
+                            <span className="font-semibold text-green-600 text-sm">
+                              {formatCurrency(product.unitPrice)}
+                            </span>
+                            <span className="text-xs text-gray-500 md:hidden">
+                              {product.taxPercentage ? `+${product.taxPercentage}% tax` : "Tax free"}
+                            </span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell">
                           <span className="text-sm text-gray-600">
-                            {product.size || "-"}
+                            {product.taxPercentage ? `${product.taxPercentage}%` : "-"}
                           </span>
-                        </TableCell>
-                        <TableCell>
-                          <span className="font-medium text-green-600">
-                            {formatCurrency(product.unitPrice)}
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          {product.taxPercentage ? `${product.taxPercentage}%` : "-"}
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex items-center justify-end gap-2">
