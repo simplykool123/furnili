@@ -1007,9 +1007,46 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
                     variant="outline"
                     size="sm"
                     className="h-7 w-7 p-0"
-                    onClick={() => {
+                    onClick={async () => {
                       setSelectedQuote(quote);
-                      setShowEditDialog(true);
+                      
+                      // Load existing quote items for duplication
+                      try {
+                        const quoteDetails = await apiRequest(`/api/quotes/${quote.id}/details`);
+                        const existingItems = quoteDetails.items?.map((item: any) => ({
+                          itemName: item.itemName || item.salesProduct?.name || '',
+                          description: item.description || item.salesProduct?.description || '',
+                          quantity: item.quantity || 1,
+                          uom: item.uom || 'pcs',
+                          unitPrice: item.unitPrice || 0,
+                          discountPercentage: item.discountPercentage || 0,
+                          discountAmount: item.discountAmount || 0,
+                          taxPercentage: item.taxPercentage || 18,
+                          taxAmount: item.taxAmount || 0,
+                          lineTotal: item.lineTotal || 0,
+                          size: item.size || '',
+                          salesProductId: item.salesProductId || null,
+                        })) || [];
+                        setQuoteItems(existingItems);
+                        
+                        // Pre-populate form with existing quote data
+                        form.reset({
+                          title: projectData ? `Estimate for ${extractProjectKeyword(projectData.name)}` : 'New Quote',
+                          description: quote.description || '',
+                          paymentTerms: quote.paymentTerms || '100% advance',
+                          pricelist: quote.pricelist || 'Public Pricelist (EGP)',
+                          discountType: quote.discountType || 'percentage',
+                          discountValue: quote.discountValue || 0,
+                          terms: quote.terms || '',
+                          notes: quote.notes || '',
+                          clientId: quote.clientId || 0,
+                        });
+                      } catch (error) {
+                        console.error('Failed to load quote for duplication:', error);
+                        setQuoteItems([]);
+                      }
+                      
+                      setShowCreateDialog(true);
                     }}
                   >
                     <Edit className="h-3 w-3" />

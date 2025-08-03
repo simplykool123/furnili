@@ -164,6 +164,12 @@ function Router() {
         </ProtectedRoute>
       </Route>
       
+      <Route path="/projects/:projectId/:tab">
+        <ProtectedRoute>
+          <ProjectDetail />
+        </ProtectedRoute>
+      </Route>
+      
       <Route path="/projects/:projectId/quotes/create">
         <ProtectedRoute>
           <CreateQuote />

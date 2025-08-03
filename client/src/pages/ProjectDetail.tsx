@@ -553,8 +553,27 @@ export default function ProjectDetail() {
 
   // Extract project ID from URL
   const projectId = location.split("/")[2];
+  
+  // Determine initial tab from URL
+  const getInitialTab = () => {
+    const pathParts = location.split("/");
+    if (pathParts.length >= 4) {
+      return pathParts[3]; // e.g., /projects/1/quotes -> "quotes"
+    }
+    return "files";
+  };
 
-  const [activeTab, setActiveTab] = useState("files");
+  const [activeTab, setActiveTab] = useState(getInitialTab);
+  
+  // Update URL when tab changes
+  const handleTabChange = (newTab: string) => {
+    setActiveTab(newTab);
+    if (newTab === "files") {
+      setLocation(`/projects/${projectId}`);
+    } else {
+      setLocation(`/projects/${projectId}/${newTab}`);
+    }
+  };
   const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
   const [isNoteDialogOpen, setIsNoteDialogOpen] = useState(false);
   const [isCommunicationDialogOpen, setIsCommunicationDialogOpen] =
@@ -1538,7 +1557,7 @@ export default function ProjectDetail() {
         <div className="px-4 border-b border-gray-100 overflow-x-auto">
           <Tabs
             value={activeTab}
-            onValueChange={setActiveTab}
+            onValueChange={handleTabChange}
             className="w-full"
           >
             <TabsList className="h-auto bg-transparent p-0 space-x-4 min-w-max flex">
@@ -1622,7 +1641,7 @@ export default function ProjectDetail() {
       <div className="p-3">
         <Tabs
           value={activeTab}
-          onValueChange={setActiveTab}
+          onValueChange={handleTabChange}
           className="space-y-3"
         >
           {/* Files Tab - Modern Design with Image Thumbnails */}
