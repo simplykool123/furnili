@@ -735,22 +735,19 @@ export class MemStorage {
     return result[0];
   }
 
-  async getAllProjects(filters?: { status?: string; clientId?: number; projectManager?: string }): Promise<Project[]> {
-    let query = db.select().from(projects);
+  async getAllProjects(filters?: { stage?: string; clientId?: number }): Promise<Project[]> {
+    let query = db.select().from(projects).where(eq(projects.isActive, true));
     
-    if (filters?.status) {
-      query = query.where(eq(projects.status, filters.status));
+    if (filters?.stage && filters.stage !== 'all') {
+      query = query.where(eq(projects.stage, filters.stage));
     }
     
     if (filters?.clientId) {
       query = query.where(eq(projects.clientId, filters.clientId));
     }
     
-    if (filters?.projectManager) {
-      query = query.where(eq(projects.projectManager, filters.projectManager));
-    }
-    
-    return query.where(eq(projects.isActive, true)).orderBy(desc(projects.createdAt));
+    const result = await query.orderBy(desc(projects.createdAt));
+    return result;
   }
 
   async createProject(project: InsertProject): Promise<Project> {
