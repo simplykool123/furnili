@@ -80,7 +80,7 @@ export default function Clients() {
   });
 
   // API Queries
-  const { data: clients = [], isLoading } = useQuery({
+  const { data: clients = [], isLoading } = useQuery<Client[]>({
     queryKey: ["/api/clients"],
   });
 
@@ -183,7 +183,7 @@ export default function Clients() {
   };
 
   // Filter clients
-  const filteredClients = clients.filter((client: Client) =>
+  const filteredClients = clients.filter((client) =>
     client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     client.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
     client.city.toLowerCase().includes(searchTerm.toLowerCase())
