@@ -518,7 +518,7 @@ export default function SalesProducts() {
   const isMobile = window.innerWidth < 768;
 
   return (
-    <FurniliLayout>
+    <FurniliLayout title="Sales Products" subtitle="Manage sellable products for quotes and orders">
       <div className="space-y-4">
         
         {/* Compact Header with inline Add Product */}
