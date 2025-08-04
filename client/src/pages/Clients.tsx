@@ -3,19 +3,21 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Plus, Search, Edit, Trash2, Users, Building } from "lucide-react";
+import { Plus, Search, Edit, Trash2, Users, Building, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
 import FurniliLayout from "@/components/Layout/FurniliLayout";
 import FurniliCard from "@/components/UI/FurniliCard";
 import FurniliStatsCard from "@/components/UI/FurniliStatsCard";
 import { apiRequest } from "@/lib/queryClient";
+import { INDIAN_STATES, getCitiesByState } from "@/data/indianCities";
 
 // Types
 interface Client {
@@ -58,6 +60,8 @@ export default function Clients() {
   const [editingClient, setEditingClient] = useState<Client | null>(null);
   const [clientToDelete, setClientToDelete] = useState<Client | null>(null);
   const [isMobile, setIsMobile] = useState(false);
+  const [selectedState, setSelectedState] = useState("Maharashtra");
+  const [availableCities, setAvailableCities] = useState<string[]>(getCitiesByState("Maharashtra"));
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -82,11 +86,20 @@ export default function Clients() {
       address1: "",
       address2: "",
       city: "",
-      state: "",
+      state: "Maharashtra",
       pinCode: "",
       gstNumber: "",
     },
   });
+
+  // Handle state change and update available cities
+  const handleStateChange = (state: string) => {
+    setSelectedState(state);
+    const cities = getCitiesByState(state);
+    setAvailableCities(cities);
+    // Reset city selection when state changes
+    clientForm.setValue("city", "");
+  };
 
   // API Queries
   const { data: clients = [], isLoading } = useQuery<Client[]>({
@@ -174,6 +187,10 @@ export default function Clients() {
 
   const handleEditClient = (client: Client) => {
     setEditingClient(client);
+    const clientState = client.state || "Maharashtra";
+    setSelectedState(clientState);
+    setAvailableCities(getCitiesByState(clientState));
+    
     clientForm.reset({
       name: client.name,
       email: client.email || "",
@@ -183,7 +200,7 @@ export default function Clients() {
       phone: client.phone || "",
       address1: client.address1 || "",
       address2: client.address2 || "",
-      state: client.state || "",
+      state: clientState,
       pinCode: client.pinCode || "",
       gstNumber: client.gstNumber || "",
     });
@@ -342,8 +359,39 @@ export default function Clients() {
         />
       </div>
 
-      {/* Row 3: City, State, Pin Code */}
+      {/* Row 3: State, City, Pin Code */}
       <div className="grid grid-cols-3 gap-2">
+        <FormField
+          control={clientForm.control}
+          name="state"
+          render={({ field }) => (
+            <FormItem className="space-y-1">
+              <FormLabel className="text-xs font-medium text-gray-700">State</FormLabel>
+              <Select 
+                onValueChange={(value) => {
+                  field.onChange(value);
+                  handleStateChange(value);
+                }} 
+                defaultValue="Maharashtra"
+                value={field.value}
+              >
+                <FormControl>
+                  <SelectTrigger className="h-8 text-sm border-gray-200">
+                    <SelectValue placeholder="Select state" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent className="max-h-[200px]">
+                  {INDIAN_STATES.map((state) => (
+                    <SelectItem key={state} value={state} className="text-sm">
+                      {state}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         <FormField
           control={clientForm.control}
           name="city"
@@ -352,30 +400,20 @@ export default function Clients() {
               <FormLabel className="text-xs font-medium text-gray-700">
                 City <span className="text-red-500">*</span>
               </FormLabel>
-              <FormControl>
-                <Input 
-                  className="h-8 text-sm border-gray-200" 
-                  placeholder="City" 
-                  {...field} 
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={clientForm.control}
-          name="state"
-          render={({ field }) => (
-            <FormItem className="space-y-1">
-              <FormLabel className="text-xs font-medium text-gray-700">State</FormLabel>
-              <FormControl>
-                <Input 
-                  className="h-8 text-sm border-gray-200" 
-                  placeholder="State" 
-                  {...field} 
-                />
-              </FormControl>
+              <Select onValueChange={field.onChange} value={field.value}>
+                <FormControl>
+                  <SelectTrigger className="h-8 text-sm border-gray-200">
+                    <SelectValue placeholder="Select city" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent className="max-h-[200px]">
+                  {availableCities.map((city) => (
+                    <SelectItem key={city} value={city} className="text-sm">
+                      {city}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <FormMessage />
             </FormItem>
           )}
@@ -426,6 +464,9 @@ export default function Clients() {
           } else {
             setIsCreateDialogOpen(false);
           }
+          // Reset to defaults
+          setSelectedState("Maharashtra");
+          setAvailableCities(getCitiesByState("Maharashtra"));
           clientForm.reset();
         }} className="h-8 px-3 text-sm">
           Cancel
