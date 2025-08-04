@@ -214,17 +214,17 @@ export default function Clients() {
           <FurniliStatsCard
             title="Total Clients"
             value={clients.length}
-            icon={<Users className="h-4 w-4" />}
+            icon={Users}
           />
           <FurniliStatsCard
             title="Active Projects"
             value="12"
-            icon={<Building className="h-4 w-4" />}
+            icon={Building}
           />
           <FurniliStatsCard
             title="This Month"
             value="3"
-            icon={<Plus className="h-4 w-4" />}
+            icon={Plus}
           />
         </div>
 
