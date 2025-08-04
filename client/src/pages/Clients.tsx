@@ -21,12 +21,15 @@ import { apiRequest } from "@/lib/queryClient";
 interface Client {
   id: number;
   name: string;
-  email: string;
+  email?: string;
   mobile: string;
   city: string;
   contactPerson?: string;
   phone?: string;
-  address?: string;
+  address1?: string;
+  address2?: string;
+  state?: string;
+  pinCode?: string;
   gstNumber?: string;
   createdAt: string;
 }
@@ -34,12 +37,15 @@ interface Client {
 // Form validation schema
 const clientFormSchema = z.object({
   name: z.string().min(1, "Client name is required"),
-  email: z.string().email("Valid email is required"),
+  email: z.string().email("Valid email is required").optional().or(z.literal("")),
   mobile: z.string().min(10, "Mobile number must be at least 10 digits"),
-  city: z.string().min(1, "City is required"),
   contactPerson: z.string().optional(),
   phone: z.string().optional(),
-  address: z.string().optional(),
+  address1: z.string().optional(),
+  address2: z.string().optional(),
+  city: z.string().min(1, "City is required"),
+  state: z.string().optional(),
+  pinCode: z.string().optional(),
   gstNumber: z.string().optional(),
 });
 
@@ -71,10 +77,13 @@ export default function Clients() {
       name: "",
       email: "",
       mobile: "",
-      city: "",
       contactPerson: "",
       phone: "",
-      address: "",
+      address1: "",
+      address2: "",
+      city: "",
+      state: "",
+      pinCode: "",
       gstNumber: "",
     },
   });
@@ -134,8 +143,8 @@ export default function Clients() {
   });
 
   const deleteClientMutation = useMutation({
-    mutationFn: async (clientId: number) => {
-      const response = await apiRequest(`/api/clients/${clientId}`, {
+    mutationFn: async (id: number) => {
+      const response = await apiRequest(`/api/clients/${id}`, {
         method: "DELETE",
       });
       return response;
@@ -167,12 +176,15 @@ export default function Clients() {
     setEditingClient(client);
     clientForm.reset({
       name: client.name,
-      email: client.email,
+      email: client.email || "",
       mobile: client.mobile,
       city: client.city,
       contactPerson: client.contactPerson || "",
       phone: client.phone || "",
-      address: client.address || "",
+      address1: client.address1 || "",
+      address2: client.address2 || "",
+      state: client.state || "",
+      pinCode: client.pinCode || "",
       gstNumber: client.gstNumber || "",
     });
     setIsEditDialogOpen(true);
@@ -185,8 +197,251 @@ export default function Clients() {
   // Filter clients
   const filteredClients = clients.filter((client) =>
     client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    client.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    client.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     client.city.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  // Compact form component
+  const ClientForm = () => (
+    <form onSubmit={clientForm.handleSubmit(onSubmitClient)} className="space-y-3">
+      {/* Client Name - Full Width */}
+      <FormField
+        control={clientForm.control}
+        name="name"
+        render={({ field }) => (
+          <FormItem className="space-y-1">
+            <FormLabel className="text-xs font-medium text-gray-700">
+              Client Name <span className="text-red-500">*</span>
+            </FormLabel>
+            <FormControl>
+              <Input 
+                className="h-8 text-sm border-gray-200" 
+                placeholder="Enter client name" 
+                {...field} 
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      {/* Row 1: Email and Mobile */}
+      <div className="grid grid-cols-2 gap-2">
+        <FormField
+          control={clientForm.control}
+          name="email"
+          render={({ field }) => (
+            <FormItem className="space-y-1">
+              <FormLabel className="text-xs font-medium text-gray-700">Email</FormLabel>
+              <FormControl>
+                <Input 
+                  type="email" 
+                  className="h-8 text-sm border-gray-200" 
+                  placeholder="Email address" 
+                  {...field} 
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={clientForm.control}
+          name="mobile"
+          render={({ field }) => (
+            <FormItem className="space-y-1">
+              <FormLabel className="text-xs font-medium text-gray-700">
+                Mobile <span className="text-red-500">*</span>
+              </FormLabel>
+              <FormControl>
+                <Input 
+                  className="h-8 text-sm border-gray-200" 
+                  placeholder="Mobile number" 
+                  {...field} 
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </div>
+
+      {/* Row 2: Contact Person and Phone */}
+      <div className="grid grid-cols-2 gap-2">
+        <FormField
+          control={clientForm.control}
+          name="contactPerson"
+          render={({ field }) => (
+            <FormItem className="space-y-1">
+              <FormLabel className="text-xs font-medium text-gray-700">Contact Person</FormLabel>
+              <FormControl>
+                <Input 
+                  className="h-8 text-sm border-gray-200" 
+                  placeholder="Contact person" 
+                  {...field} 
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={clientForm.control}
+          name="phone"
+          render={({ field }) => (
+            <FormItem className="space-y-1">
+              <FormLabel className="text-xs font-medium text-gray-700">Phone</FormLabel>
+              <FormControl>
+                <Input 
+                  className="h-8 text-sm border-gray-200" 
+                  placeholder="Phone number" 
+                  {...field} 
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </div>
+
+      {/* Address Fields */}
+      <div className="grid grid-cols-2 gap-2">
+        <FormField
+          control={clientForm.control}
+          name="address1"
+          render={({ field }) => (
+            <FormItem className="space-y-1">
+              <FormLabel className="text-xs font-medium text-gray-700">Address 1</FormLabel>
+              <FormControl>
+                <Input 
+                  className="h-8 text-sm border-gray-200" 
+                  placeholder="Address line 1" 
+                  {...field} 
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={clientForm.control}
+          name="address2"
+          render={({ field }) => (
+            <FormItem className="space-y-1">
+              <FormLabel className="text-xs font-medium text-gray-700">Address 2</FormLabel>
+              <FormControl>
+                <Input 
+                  className="h-8 text-sm border-gray-200" 
+                  placeholder="Address line 2" 
+                  {...field} 
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </div>
+
+      {/* Row 3: City, State, Pin Code */}
+      <div className="grid grid-cols-3 gap-2">
+        <FormField
+          control={clientForm.control}
+          name="city"
+          render={({ field }) => (
+            <FormItem className="space-y-1">
+              <FormLabel className="text-xs font-medium text-gray-700">
+                City <span className="text-red-500">*</span>
+              </FormLabel>
+              <FormControl>
+                <Input 
+                  className="h-8 text-sm border-gray-200" 
+                  placeholder="City" 
+                  {...field} 
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={clientForm.control}
+          name="state"
+          render={({ field }) => (
+            <FormItem className="space-y-1">
+              <FormLabel className="text-xs font-medium text-gray-700">State</FormLabel>
+              <FormControl>
+                <Input 
+                  className="h-8 text-sm border-gray-200" 
+                  placeholder="State" 
+                  {...field} 
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={clientForm.control}
+          name="pinCode"
+          render={({ field }) => (
+            <FormItem className="space-y-1">
+              <FormLabel className="text-xs font-medium text-gray-700">Pin Code</FormLabel>
+              <FormControl>
+                <Input 
+                  className="h-8 text-sm border-gray-200" 
+                  placeholder="Pin code" 
+                  {...field} 
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </div>
+
+      {/* GST Number - Full Width */}
+      <FormField
+        control={clientForm.control}
+        name="gstNumber"
+        render={({ field }) => (
+          <FormItem className="space-y-1">
+            <FormLabel className="text-xs font-medium text-gray-700">GST Number</FormLabel>
+            <FormControl>
+              <Input 
+                className="h-8 text-sm border-gray-200" 
+                placeholder="Enter GST number" 
+                {...field} 
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <div className="flex items-center justify-end gap-2 pt-3">
+        <Button type="button" variant="outline" onClick={() => {
+          if (editingClient) {
+            setIsEditDialogOpen(false);
+            setEditingClient(null);
+          } else {
+            setIsCreateDialogOpen(false);
+          }
+          clientForm.reset();
+        }} className="h-8 px-3 text-sm">
+          Cancel
+        </Button>
+        <Button 
+          type="submit" 
+          disabled={createClientMutation.isPending || updateClientMutation.isPending} 
+          className="h-8 px-3 text-sm"
+        >
+          {createClientMutation.isPending || updateClientMutation.isPending 
+            ? (editingClient ? "Updating..." : "Creating...") 
+            : (editingClient ? "Update Client" : "Create Client")
+          }
+        </Button>
+      </div>
+    </form>
   );
 
   return (
@@ -260,7 +515,7 @@ export default function Clients() {
                       filteredClients.map((client: Client) => (
                         <TableRow key={client.id}>
                           <TableCell className="font-medium">{client.name}</TableCell>
-                          <TableCell>{client.email}</TableCell>
+                          <TableCell>{client.email || "-"}</TableCell>
                           <TableCell>{client.mobile}</TableCell>
                           <TableCell>{client.city}</TableCell>
                           <TableCell className="text-right">
@@ -307,176 +562,7 @@ export default function Clients() {
           </DialogHeader>
 
           <Form {...clientForm}>
-            <form onSubmit={clientForm.handleSubmit(onSubmitClient)} className="space-y-3">
-              <FormField
-                control={clientForm.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem className="space-y-1">
-                    <FormLabel className="text-xs font-medium text-gray-700">
-                      Client Name <span className="text-red-500">*</span>
-                    </FormLabel>
-                    <FormControl>
-                      <Input 
-                        className="h-8 text-sm border-gray-200" 
-                        placeholder="Enter client name" 
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={clientForm.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem className="space-y-1">
-                    <FormLabel className="text-xs font-medium text-gray-700">
-                      Email <span className="text-red-500">*</span>
-                    </FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="email" 
-                        className="h-8 text-sm border-gray-200" 
-                        placeholder="Enter email address" 
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={clientForm.control}
-                name="mobile"
-                render={({ field }) => (
-                  <FormItem className="space-y-1">
-                    <FormLabel className="text-xs font-medium text-gray-700">
-                      Mobile <span className="text-red-500">*</span>
-                    </FormLabel>
-                    <FormControl>
-                      <Input 
-                        className="h-8 text-sm border-gray-200" 
-                        placeholder="Enter mobile number" 
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={clientForm.control}
-                name="city"
-                render={({ field }) => (
-                  <FormItem className="space-y-1">
-                    <FormLabel className="text-xs font-medium text-gray-700">
-                      City <span className="text-red-500">*</span>
-                    </FormLabel>
-                    <FormControl>
-                      <Input 
-                        className="h-8 text-sm border-gray-200" 
-                        placeholder="Enter city" 
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={clientForm.control}
-                name="contactPerson"
-                render={({ field }) => (
-                  <FormItem className="space-y-1">
-                    <FormLabel className="text-xs font-medium text-gray-700">Contact Person</FormLabel>
-                    <FormControl>
-                      <Input 
-                        className="h-8 text-sm border-gray-200" 
-                        placeholder="Enter contact person name" 
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={clientForm.control}
-                name="phone"
-                render={({ field }) => (
-                  <FormItem className="space-y-1">
-                    <FormLabel className="text-xs font-medium text-gray-700">Phone</FormLabel>
-                    <FormControl>
-                      <Input 
-                        className="h-8 text-sm border-gray-200" 
-                        placeholder="Enter phone number" 
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={clientForm.control}
-                name="address"
-                render={({ field }) => (
-                  <FormItem className="space-y-1">
-                    <FormLabel className="text-xs font-medium text-gray-700">Address</FormLabel>
-                    <FormControl>
-                      <Input 
-                        className="h-8 text-sm border-gray-200" 
-                        placeholder="Enter full address" 
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={clientForm.control}
-                name="gstNumber"
-                render={({ field }) => (
-                  <FormItem className="space-y-1">
-                    <FormLabel className="text-xs font-medium text-gray-700">GST Number</FormLabel>
-                    <FormControl>
-                      <Input 
-                        className="h-8 text-sm border-gray-200" 
-                        placeholder="Enter GST number" 
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div className="flex items-center justify-end gap-2 pt-3">
-                <Button type="button" variant="outline" onClick={() => {
-                  setIsCreateDialogOpen(false);
-                  clientForm.reset();
-                }} className="h-8 px-3 text-sm">
-                  Cancel
-                </Button>
-                <Button 
-                  type="submit" 
-                  disabled={createClientMutation.isPending} 
-                  className="h-8 px-3 text-sm"
-                >
-                  {createClientMutation.isPending ? "Creating..." : "Create Client"}
-                </Button>
-              </div>
-            </form>
+            <ClientForm />
           </Form>
         </DialogContent>
       </Dialog>
@@ -492,177 +578,7 @@ export default function Clients() {
           </DialogHeader>
 
           <Form {...clientForm}>
-            <form onSubmit={clientForm.handleSubmit(onSubmitClient)} className="space-y-3">
-              <FormField
-                control={clientForm.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem className="space-y-1">
-                    <FormLabel className="text-xs font-medium text-gray-700">
-                      Client Name <span className="text-red-500">*</span>
-                    </FormLabel>
-                    <FormControl>
-                      <Input 
-                        className="h-8 text-sm border-gray-200" 
-                        placeholder="Enter client name" 
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={clientForm.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem className="space-y-1">
-                    <FormLabel className="text-xs font-medium text-gray-700">
-                      Email <span className="text-red-500">*</span>
-                    </FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="email" 
-                        className="h-8 text-sm border-gray-200" 
-                        placeholder="Enter email address" 
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={clientForm.control}
-                name="mobile"
-                render={({ field }) => (
-                  <FormItem className="space-y-1">
-                    <FormLabel className="text-xs font-medium text-gray-700">
-                      Mobile <span className="text-red-500">*</span>
-                    </FormLabel>
-                    <FormControl>
-                      <Input 
-                        className="h-8 text-sm border-gray-200" 
-                        placeholder="Enter mobile number" 
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={clientForm.control}
-                name="city"
-                render={({ field }) => (
-                  <FormItem className="space-y-1">
-                    <FormLabel className="text-xs font-medium text-gray-700">
-                      City <span className="text-red-500">*</span>
-                    </FormLabel>
-                    <FormControl>
-                      <Input 
-                        className="h-8 text-sm border-gray-200" 
-                        placeholder="Enter city" 
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={clientForm.control}
-                name="contactPerson"
-                render={({ field }) => (
-                  <FormItem className="space-y-1">
-                    <FormLabel className="text-xs font-medium text-gray-700">Contact Person</FormLabel>
-                    <FormControl>
-                      <Input 
-                        className="h-8 text-sm border-gray-200" 
-                        placeholder="Enter contact person name" 
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={clientForm.control}
-                name="phone"
-                render={({ field }) => (
-                  <FormItem className="space-y-1">
-                    <FormLabel className="text-xs font-medium text-gray-700">Phone</FormLabel>
-                    <FormControl>
-                      <Input 
-                        className="h-8 text-sm border-gray-200" 
-                        placeholder="Enter phone number" 
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={clientForm.control}
-                name="address"
-                render={({ field }) => (
-                  <FormItem className="space-y-1">
-                    <FormLabel className="text-xs font-medium text-gray-700">Address</FormLabel>
-                    <FormControl>
-                      <Input 
-                        className="h-8 text-sm border-gray-200" 
-                        placeholder="Enter full address" 
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={clientForm.control}
-                name="gstNumber"
-                render={({ field }) => (
-                  <FormItem className="space-y-1">
-                    <FormLabel className="text-xs font-medium text-gray-700">GST Number</FormLabel>
-                    <FormControl>
-                      <Input 
-                        className="h-8 text-sm border-gray-200" 
-                        placeholder="Enter GST number" 
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div className="flex items-center justify-end gap-2 pt-3">
-                <Button type="button" variant="outline" onClick={() => {
-                  setIsEditDialogOpen(false);
-                  setEditingClient(null);
-                  clientForm.reset();
-                }} className="h-8 px-3 text-sm">
-                  Cancel
-                </Button>
-                <Button 
-                  type="submit" 
-                  disabled={updateClientMutation.isPending} 
-                  className="h-8 px-3 text-sm"
-                >
-                  {updateClientMutation.isPending ? "Updating..." : "Update Client"}
-                </Button>
-              </div>
-            </form>
+            <ClientForm />
           </Form>
         </DialogContent>
       </Dialog>
@@ -671,18 +587,22 @@ export default function Clients() {
       <AlertDialog open={!!clientToDelete} onOpenChange={() => setClientToDelete(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you Freaking Sure?</AlertDialogTitle>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the client "{clientToDelete?.name}" and all associated data.
+              This will permanently delete "{clientToDelete?.name}". This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={() => clientToDelete && deleteClientMutation.mutate(clientToDelete.id)}
+            <AlertDialogAction
+              onClick={() => {
+                if (clientToDelete) {
+                  deleteClientMutation.mutate(clientToDelete.id);
+                }
+              }}
               className="bg-red-600 hover:bg-red-700"
             >
-              Delete Client
+              Delete
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

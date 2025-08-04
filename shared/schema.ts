@@ -42,12 +42,15 @@ export const categories = pgTable("categories", {
 export const clients = pgTable("clients", {
   id: serial("id").primaryKey(),
   name: text("name").notNull().unique(),
-  email: text("email").notNull(),
+  email: text("email"), // Made optional
   mobile: text("mobile").notNull(),
   city: text("city").notNull(),
-  address: text("address"),
   contactPerson: text("contact_person"),
   phone: text("phone"),
+  address1: text("address1"), // New field
+  address2: text("address2"), // New field
+  state: text("state"), // New field
+  pinCode: text("pin_code"), // New field
   gstNumber: text("gst_number"),
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at").defaultNow(),
