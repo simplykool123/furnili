@@ -558,7 +558,8 @@ export default function Projects() {
                                 <div className="space-y-2">
                                   <h3 className="text-xs font-semibold text-gray-900 border-b pb-1">Basic Information</h3>
                                   
-                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                  {/* Client Name, Contact Person, GST Number in one line */}
+                                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                                     <FormField
                                       control={clientForm.control}
                                       name="name"
@@ -586,9 +587,24 @@ export default function Projects() {
                                         </FormItem>
                                       )}
                                     />
+
+                                    <FormField
+                                      control={clientForm.control}
+                                      name="gstNumber"
+                                      render={({ field }) => (
+                                        <FormItem>
+                                          <FormLabel className="text-xs font-medium text-gray-700">GST Number</FormLabel>
+                                          <FormControl>
+                                            <Input className="h-8" placeholder="Enter GST number" {...field} />
+                                          </FormControl>
+                                          <FormMessage />
+                                        </FormItem>
+                                      )}
+                                    />
                                   </div>
 
-                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                  {/* Mobile, Phone, Email in one line */}
+                                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                                     <FormField
                                       control={clientForm.control}
                                       name="mobile"
@@ -616,21 +632,21 @@ export default function Projects() {
                                         </FormItem>
                                       )}
                                     />
-                                  </div>
 
-                                  <FormField
-                                    control={clientForm.control}
-                                    name="email"
-                                    render={({ field }) => (
-                                      <FormItem>
-                                        <FormLabel className="text-xs font-medium text-gray-700">Email</FormLabel>
-                                        <FormControl>
-                                          <Input className="h-8" type="email" placeholder="Enter email address" {...field} />
-                                        </FormControl>
-                                        <FormMessage />
-                                      </FormItem>
-                                    )}
-                                  />
+                                    <FormField
+                                      control={clientForm.control}
+                                      name="email"
+                                      render={({ field }) => (
+                                        <FormItem>
+                                          <FormLabel className="text-xs font-medium text-gray-700">Email</FormLabel>
+                                          <FormControl>
+                                            <Input className="h-8" type="email" placeholder="Enter email address" {...field} />
+                                          </FormControl>
+                                          <FormMessage />
+                                        </FormItem>
+                                      )}
+                                    />
+                                  </div>
                                 </div>
 
                                 {/* Address Information */}
@@ -667,7 +683,8 @@ export default function Projects() {
                                     />
                                   </div>
 
-                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                  {/* State, City, Pin Code in one line */}
+                                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                                     <FormField
                                       control={clientForm.control}
                                       name="state"
@@ -754,41 +771,24 @@ export default function Projects() {
                                         </FormItem>
                                       )}
                                     />
+
+                                    <FormField
+                                      control={clientForm.control}
+                                      name="pinCode"
+                                      render={({ field }) => (
+                                        <FormItem>
+                                          <FormLabel className="text-xs font-medium text-gray-700">Pin Code</FormLabel>
+                                          <FormControl>
+                                            <Input className="h-8" placeholder="Enter pin code" {...field} />
+                                          </FormControl>
+                                          <FormMessage />
+                                        </FormItem>
+                                      )}
+                                    />
                                   </div>
-
-                                  <FormField
-                                    control={clientForm.control}
-                                    name="pinCode"
-                                    render={({ field }) => (
-                                      <FormItem>
-                                        <FormLabel className="text-xs font-medium text-gray-700">Pin Code</FormLabel>
-                                        <FormControl>
-                                          <Input className="h-8" placeholder="Enter pin code" {...field} />
-                                        </FormControl>
-                                        <FormMessage />
-                                      </FormItem>
-                                    )}
-                                  />
                                 </div>
 
-                                {/* Business Information */}
-                                <div className="space-y-2">
-                                  <h3 className="text-xs font-semibold text-gray-900 border-b pb-1">Business Information</h3>
-                                  
-                                  <FormField
-                                    control={clientForm.control}
-                                    name="gstNumber"
-                                    render={({ field }) => (
-                                      <FormItem>
-                                        <FormLabel className="text-xs font-medium text-gray-700">GST Number</FormLabel>
-                                        <FormControl>
-                                          <Input className="h-8" placeholder="Enter GST number" {...field} />
-                                        </FormControl>
-                                        <FormMessage />
-                                      </FormItem>
-                                    )}
-                                  />
-                                </div>
+
 
                                 <div className="flex justify-end space-x-2 pt-2 border-t">
                                   <Button type="button" variant="outline" onClick={() => setIsCreateClientDialogOpen(false)}>
