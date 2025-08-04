@@ -598,9 +598,11 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
             <div style="width: 60%;">
               <p style="margin: 0; line-height: 1.3;"><strong>To,</strong></p>
               <p style="margin: 0; font-weight: bold; line-height: 1.3;">${client.name || "Client Name"}</p>
-              <p style="margin: 0; line-height: 1.3;">${client.email || ""}</p>
-              <p style="margin: 0; line-height: 1.3;">${client.mobile || ""}</p>
-              <p style="margin: 0; line-height: 1.3;">${client.city || "Address"}</p>
+              ${client.address1 ? `<p style="margin: 0; line-height: 1.3;">${client.address1}</p>` : ''}
+              ${client.address2 ? `<p style="margin: 0; line-height: 1.3;">${client.address2}</p>` : ''}
+              <p style="margin: 0; line-height: 1.3;">${client.city || "City"}, ${client.state || "State"} - ${client.pinCode || "Pin Code"}</p>
+              ${client.mobile ? `<p style="margin: 0; line-height: 1.3;">Mobile: ${client.mobile}</p>` : ''}
+              ${client.email ? `<p style="margin: 0; line-height: 1.3;">Email: ${client.email}</p>` : ''}
             </div>
             <div style="width: 35%; text-align: right;">
               <p style="margin: 0; line-height: 1.3;"><strong>Date :-</strong> ${new Date(quote.createdAt).toLocaleDateString("en-GB")}</p>
@@ -921,8 +923,11 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
           <div style="margin-bottom: 15px; font-size: 11px; font-weight: bold; line-height: 1.3;">
             <p style="margin: 0 0 3px 0;">To:</p>
             <p style="margin: 0;">${quoteDetails.client?.name || 'Client Name'}</p>
-            <p style="margin: 0;">${quoteDetails.client?.address || 'Client Address'}</p>
-            <p style="margin: 0;">${quoteDetails.client?.city || 'City'}</p>
+            ${quoteDetails.client?.address1 ? `<p style="margin: 0;">${quoteDetails.client.address1}</p>` : ''}
+            ${quoteDetails.client?.address2 ? `<p style="margin: 0;">${quoteDetails.client.address2}</p>` : ''}
+            <p style="margin: 0;">${quoteDetails.client?.city || 'City'}, ${quoteDetails.client?.state || 'State'} - ${quoteDetails.client?.pinCode || 'Pin Code'}</p>
+            ${quoteDetails.client?.mobile ? `<p style="margin: 0;">Mobile: ${quoteDetails.client.mobile}</p>` : ''}
+            ${quoteDetails.client?.email ? `<p style="margin: 0;">Email: ${quoteDetails.client.email}</p>` : ''}
             <p style="margin: 0;">Mobile: ${quoteDetails.client?.mobile || 'Mobile'}</p>
           </div>
 

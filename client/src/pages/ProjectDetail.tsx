@@ -3095,21 +3095,45 @@ export default function ProjectDetail() {
                         <label className="text-sm font-medium text-gray-600">
                           Email
                         </label>
-                        <p className="text-gray-900">{client.email}</p>
+                        <p className="text-gray-900">{client.email || "N/A"}</p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-600">
+                          Mobile
+                        </label>
+                        <p className="text-gray-900">{client.mobile}</p>
                       </div>
                       <div>
                         <label className="text-sm font-medium text-gray-600">
                           Phone
                         </label>
-                        <p className="text-gray-900">{client.phone}</p>
+                        <p className="text-gray-900">{client.phone || "N/A"}</p>
                       </div>
                       <div>
                         <label className="text-sm font-medium text-gray-600">
-                          Company
+                          Contact Person
+                        </label>
+                        <p className="text-gray-900">{client.contactPerson || "N/A"}</p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-600">
+                          Address
                         </label>
                         <p className="text-gray-900">
-                          {client.company || "N/A"}
+                          {client.address1 ? (
+                            <>
+                              {client.address1}
+                              {client.address2 && <><br/>{client.address2}</>}
+                              <br/>{client.city}, {client.state} - {client.pinCode}
+                            </>
+                          ) : "N/A"}
                         </p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-600">
+                          GST Number
+                        </label>
+                        <p className="text-gray-900">{client.gstNumber || "N/A"}</p>
                       </div>
                     </>
                   ) : (
