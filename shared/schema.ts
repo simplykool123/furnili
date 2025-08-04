@@ -66,12 +66,14 @@ export const projects = pgTable("projects", {
   clientId: integer("client_id").references(() => clients.id).notNull(),
   stage: text("stage").notNull().default("prospect"), // prospect, recce-done, design-in-progress, design-approved, estimate-given, client-approved, production, installation, handover, completed, on-hold, lost
   budget: real("budget").default(0),
-  addressLine1: text("address_line_1"),
-  addressLine2: text("address_line_2"),
-  state: text("state"),
-  city: text("city"),
-  location: text("location"),
-  pincode: text("pincode"),
+  // Site Address - only used when differentSiteLocation is true
+  differentSiteLocation: boolean("different_site_location").default(false),
+  siteAddressLine1: text("site_address_line_1"),
+  siteAddressLine2: text("site_address_line_2"),
+  siteState: text("site_state"),
+  siteCity: text("site_city"),
+  siteLocation: text("site_location"),
+  sitePincode: text("site_pincode"),
   completionPercentage: integer("completion_percentage").default(0),
   notes: text("notes"),
   files: text("files").array().default([]), // File URLs/paths

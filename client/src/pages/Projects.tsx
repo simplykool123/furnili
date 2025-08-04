@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -32,12 +32,13 @@ const createProjectSchema = z.object({
   clientId: z.number().min(1, "Client is required"),
   stage: z.enum(["prospect", "recce-done", "design-in-progress", "design-approved", "estimate-given", "client-approved", "production", "installation", "handover", "completed", "on-hold", "lost"]).default("prospect"),
   budget: z.number().min(0).default(0),
-  addressLine1: z.string().optional(),
-  addressLine2: z.string().optional(),
-  state: z.string().optional(),
-  city: z.string().optional(),
-  location: z.string().optional(),
-  pincode: z.string().optional(),
+  differentSiteLocation: z.boolean().default(false),
+  siteAddressLine1: z.string().optional(),
+  siteAddressLine2: z.string().optional(),
+  siteState: z.string().optional(),
+  siteCity: z.string().optional(),
+  siteLocation: z.string().optional(),
+  sitePincode: z.string().optional(),
 });
 
 export default function Projects() {
@@ -74,12 +75,13 @@ export default function Projects() {
       clientId: 0,
       stage: "prospect" as const,
       budget: 0,
-      addressLine1: "",
-      addressLine2: "",
-      state: "",
-      city: "",
-      location: "",
-      pincode: "",
+      differentSiteLocation: false,
+      siteAddressLine1: "",
+      siteAddressLine2: "",
+      siteState: "",
+      siteCity: "",
+      siteLocation: "",
+      sitePincode: "",
     },
   });
 
@@ -215,12 +217,13 @@ export default function Projects() {
       clientId: project.clientId,
       stage: project.stage,
       budget: project.budget || 0,
-      addressLine1: project.addressLine1 || "",
-      addressLine2: project.addressLine2 || "",
-      state: project.state || "",
-      city: project.city || "",
-      location: project.location || "",
-      pincode: project.pincode || "",
+      differentSiteLocation: project.differentSiteLocation || false,
+      siteAddressLine1: project.siteAddressLine1 || "",
+      siteAddressLine2: project.siteAddressLine2 || "",
+      siteState: project.siteState || "",
+      siteCity: project.siteCity || "",
+      siteLocation: project.siteLocation || "",
+      sitePincode: project.sitePincode || "",
     });
     setIsEditDialogOpen(true);
   };
@@ -424,7 +427,7 @@ export default function Projects() {
                       {getClientName(project.clientId)}
                     </TableCell>
                     <TableCell className="text-gray-600">
-                      {project.city || 'N/A'}
+                      {project.siteCity || 'N/A'}
                     </TableCell>
                     <TableCell>
                       <Badge variant="secondary" className={getStageColor(project.stage)}>
@@ -918,127 +921,158 @@ export default function Projects() {
                 </div>
               </div>
 
-              {/* Address Details Section */}
+              {/* Site Location Section */}
               <div className="space-y-3">
                 <div className="flex items-center space-x-2">
                   <div className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-medium">
                     3
                   </div>
-                  <h3 className="text-base font-semibold text-gray-900">Address Details</h3>
+                  <h3 className="text-base font-semibold text-gray-900">Site Location</h3>
                 </div>
 
                 <div className="space-y-3">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <FormField
-                      control={projectForm.control}
-                      name="addressLine1"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-xs font-medium text-gray-700 mb-1 block">Address Line 1</FormLabel>
-                          <FormControl>
-                            <Input 
-                              className="h-8 bg-gray-100 border-gray-200 text-sm" 
-                              placeholder="Enter address line 1" 
-                              {...field} 
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={projectForm.control}
-                      name="addressLine2"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-xs font-medium text-gray-700 mb-1 block">Address Line 2</FormLabel>
-                          <FormControl>
-                            <Input 
-                              className="h-8 bg-gray-100 border-gray-200 text-sm" 
-                              placeholder="Enter address line 2" 
-                              {...field} 
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                  <div className="text-xs text-gray-600 bg-blue-50 p-2 rounded border">
+                    <strong>Note:</strong> Site address will use client address details unless you specify a different site location below.
                   </div>
 
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                    <FormField
-                      control={projectForm.control}
-                      name="state"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-xs font-medium text-gray-700 mb-1 block">
-                            State <span className="text-red-500">*</span>
+                  <FormField
+                    control={projectForm.control}
+                    name="differentSiteLocation"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center space-x-2 space-y-0">
+                        <FormControl>
+                          <input
+                            type="checkbox"
+                            checked={field.value}
+                            onChange={field.onChange}
+                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                          />
+                        </FormControl>
+                        <div className="space-y-0">
+                          <FormLabel className="text-sm font-medium text-gray-700">
+                            Different Site Location
                           </FormLabel>
-                          <FormControl>
-                            <Input 
-                              className="h-8 bg-gray-100 border-gray-200 text-sm" 
-                              placeholder="Enter state" 
-                              {...field} 
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={projectForm.control}
-                      name="city"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-xs font-medium text-gray-700 mb-1 block">
-                            City <span className="text-red-500">*</span>
-                          </FormLabel>
-                          <FormControl>
-                            <Input 
-                              className="h-8 bg-gray-100 border-gray-200 text-sm" 
-                              placeholder="Enter city" 
-                              {...field} 
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={projectForm.control}
-                      name="location"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-xs font-medium text-gray-700 mb-1 block">Location</FormLabel>
-                          <FormControl>
-                            <Input 
-                              className="h-8 bg-gray-100 border-gray-200 text-sm" 
-                              placeholder="Enter location" 
-                              {...field} 
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={projectForm.control}
-                      name="pincode"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-xs font-medium text-gray-700 mb-1 block">Pincode</FormLabel>
-                          <FormControl>
-                            <Input 
-                              className="h-8 bg-gray-100 border-gray-200 text-sm" 
-                              placeholder="Enter pincode" 
-                              {...field} 
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
+                          <FormDescription className="text-xs text-gray-500">
+                            Check this if the project site address is different from client address
+                          </FormDescription>
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+
+                  {projectForm.watch("differentSiteLocation") && (
+                    <div className="space-y-3 border-l-2 border-blue-200 pl-4">
+                      <h4 className="text-sm font-medium text-gray-700">Site Address Details</h4>
+                      
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <FormField
+                          control={projectForm.control}
+                          name="siteAddressLine1"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-xs font-medium text-gray-700 mb-1 block">Site Address Line 1</FormLabel>
+                              <FormControl>
+                                <Input 
+                                  className="h-8 bg-gray-100 border-gray-200 text-sm" 
+                                  placeholder="Enter site address line 1" 
+                                  {...field} 
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={projectForm.control}
+                          name="siteAddressLine2"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-xs font-medium text-gray-700 mb-1 block">Site Address Line 2</FormLabel>
+                              <FormControl>
+                                <Input 
+                                  className="h-8 bg-gray-100 border-gray-200 text-sm" 
+                                  placeholder="Enter site address line 2" 
+                                  {...field} 
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        <FormField
+                          control={projectForm.control}
+                          name="siteState"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-xs font-medium text-gray-700 mb-1 block">Site State</FormLabel>
+                              <FormControl>
+                                <Input 
+                                  className="h-8 bg-gray-100 border-gray-200 text-sm" 
+                                  placeholder="Enter site state" 
+                                  {...field} 
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={projectForm.control}
+                          name="siteCity"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-xs font-medium text-gray-700 mb-1 block">Site City</FormLabel>
+                              <FormControl>
+                                <Input 
+                                  className="h-8 bg-gray-100 border-gray-200 text-sm" 
+                                  placeholder="Enter site city" 
+                                  {...field} 
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={projectForm.control}
+                          name="siteLocation"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-xs font-medium text-gray-700 mb-1 block">Site Location</FormLabel>
+                              <FormControl>
+                                <Input 
+                                  className="h-8 bg-gray-100 border-gray-200 text-sm" 
+                                  placeholder="Enter site location" 
+                                  {...field} 
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={projectForm.control}
+                          name="sitePincode"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-xs font-medium text-gray-700 mb-1 block">Site Pincode</FormLabel>
+                              <FormControl>
+                                <Input 
+                                  className="h-8 bg-gray-100 border-gray-200 text-sm" 
+                                  placeholder="Enter site pincode" 
+                                  {...field} 
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
