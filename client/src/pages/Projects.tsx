@@ -543,22 +543,22 @@ export default function Projects() {
                       </DialogTrigger>
                       <DialogContent className="max-w-[90vw] max-h-[90vh] p-0">
                         <div className="flex flex-col max-h-[90vh]">
-                          <DialogHeader className="p-4 border-b flex-shrink-0">
-                            <DialogTitle>Add New Client</DialogTitle>
-                            <DialogDescription>
+                          <DialogHeader className="p-3 border-b flex-shrink-0">
+                            <DialogTitle className="text-base">Add New Client</DialogTitle>
+                            <DialogDescription className="text-xs text-gray-600">
                               Create a new client with complete address information.
                             </DialogDescription>
                           </DialogHeader>
                           
-                          <div className="flex-1 overflow-y-auto p-4">
+                          <div className="flex-1 overflow-y-auto p-3">
                             <Form {...clientForm}>
-                              <form onSubmit={clientForm.handleSubmit(onSubmitClient)} className="space-y-3">
+                              <form onSubmit={clientForm.handleSubmit(onSubmitClient)} className="space-y-2">
                                 
                                 {/* Basic Information */}
-                                <div className="space-y-3">
-                                  <h3 className="text-sm font-medium text-gray-900 border-b pb-1">Basic Information</h3>
+                                <div className="space-y-2">
+                                  <h3 className="text-xs font-semibold text-gray-900 border-b pb-1">Basic Information</h3>
                                   
-                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                     <FormField
                                       control={clientForm.control}
                                       name="name"
@@ -588,7 +588,7 @@ export default function Projects() {
                                     />
                                   </div>
 
-                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                     <FormField
                                       control={clientForm.control}
                                       name="mobile"
@@ -634,10 +634,10 @@ export default function Projects() {
                                 </div>
 
                                 {/* Address Information */}
-                                <div className="space-y-3">
-                                  <h3 className="text-sm font-medium text-gray-900 border-b pb-1">Address Information</h3>
+                                <div className="space-y-2">
+                                  <h3 className="text-xs font-semibold text-gray-900 border-b pb-1">Address Information</h3>
                                   
-                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                     <FormField
                                       control={clientForm.control}
                                       name="address1"
@@ -667,7 +667,7 @@ export default function Projects() {
                                     />
                                   </div>
 
-                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                     <FormField
                                       control={clientForm.control}
                                       name="state"
@@ -772,8 +772,8 @@ export default function Projects() {
                                 </div>
 
                                 {/* Business Information */}
-                                <div className="space-y-3">
-                                  <h3 className="text-sm font-medium text-gray-900 border-b pb-1">Business Information</h3>
+                                <div className="space-y-2">
+                                  <h3 className="text-xs font-semibold text-gray-900 border-b pb-1">Business Information</h3>
                                   
                                   <FormField
                                     control={clientForm.control}
@@ -790,7 +790,7 @@ export default function Projects() {
                                   />
                                 </div>
 
-                                <div className="flex justify-end space-x-2 pt-3 border-t">
+                                <div className="flex justify-end space-x-2 pt-2 border-t">
                                   <Button type="button" variant="outline" onClick={() => setIsCreateClientDialogOpen(false)}>
                                     Cancel
                                   </Button>
