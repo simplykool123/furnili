@@ -2871,7 +2871,7 @@ class DatabaseStorage implements IStorage {
 
   async getStaffBalance(userId: number): Promise<{ received: number; spent: number; balance: number }> {
     const expenses = await db.select().from(pettyCashExpenses)
-      .where(eq(pettyCashExpenses.addedBy, userId));
+      .where(eq(pettyCashExpenses.paidBy, userId));
     
     const received = expenses
       .filter(e => e.status === 'income')
