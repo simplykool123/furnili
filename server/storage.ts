@@ -739,13 +739,28 @@ export class MemStorage {
     try {
       console.log("getAllProjects called with filters:", filters);
       
-      // Start with the most basic query
-      const result = await db.select().from(projects)
-        .where(eq(projects.isActive, true))
-        .orderBy(desc(projects.createdAt));
+      // Use raw SQL to bypass Drizzle ORM issues
+      let query = `
+        SELECT * FROM projects 
+        WHERE is_active = true
+      `;
+      const params: any[] = [];
       
-      console.log("Query executed successfully, result count:", result.length);
-      return result;
+      if (filters?.stage && filters.stage !== 'all') {
+        query += ` AND stage = $${params.length + 1}`;
+        params.push(filters.stage);
+      }
+      
+      if (filters?.clientId) {
+        query += ` AND client_id = $${params.length + 1}`;
+        params.push(filters.clientId);
+      }
+      
+      query += ` ORDER BY created_at DESC`;
+      
+      const result = await db.execute(sql.raw(query, ...params));
+      console.log("Raw SQL query executed successfully, result count:", result.rows?.length);
+      return (result.rows || []) as Project[];
     } catch (error) {
       console.error("Error in getAllProjects:", error);
       throw new Error(`Database query failed: ${error.message}`);
