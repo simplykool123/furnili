@@ -447,7 +447,7 @@ export default function Dashboard() {
                         {/* In/Out times on same line */}
                         {myTodayRecord ? (
                           <div className="text-sm text-gray-700">
-                            <span>In: {formatTime(myTodayRecord.checkInTime)} -- present</span>
+                            <span>In: {formatTime(myTodayRecord.checkInTime)}</span>
                             {myTodayRecord.checkOutTime && (
                               <>
                                 <span className="mx-2 text-gray-400">|</span>
