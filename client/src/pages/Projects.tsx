@@ -264,12 +264,15 @@ export default function Projects() {
 
   const getClientName = (project: any) => {
     // Use client_name from the joined SQL query if available
-    if (project.client_name) {
+    if (project && project.client_name) {
       return project.client_name;
     }
     // Fallback to client lookup if needed
-    const client = clients.find((c: Client) => c.id === project.clientId);
-    return client?.name || "N/A";
+    if (project && project.clientId) {
+      const client = clients.find((c: Client) => c.id === project.clientId);
+      return client?.name || "N/A";
+    }
+    return "N/A";
   };
 
   if (isLoading) {
@@ -432,7 +435,7 @@ export default function Projects() {
                       {getClientName(project)}
                     </TableCell>
                     <TableCell className="text-gray-600">
-                      {project.siteCity || 'N/A'}
+                      {project.site_city || project.siteCity || 'N/A'}
                     </TableCell>
                     <TableCell>
                       <Badge variant="secondary" className={getStageColor(project.stage)}>
