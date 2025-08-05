@@ -178,6 +178,14 @@ export default function Dashboard() {
     cacheTime: 5 * 60 * 1000, // 5 minutes
   });
 
+  // Get personal attendance stats for the current user
+  const { data: personalAttendanceStats } = useQuery({
+    queryKey: ["/api/attendance/stats"],
+    enabled: authService.hasRole(['staff', 'store_incharge']),
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    cacheTime: 5 * 60 * 1000, // 5 minutes
+  });
+
   const { data: recentActivity } = useQuery({
     queryKey: ["/api/dashboard/activity"],
     staleTime: 1 * 60 * 1000, // 1 minute
@@ -404,27 +412,70 @@ export default function Dashboard() {
                     month: 'short'
                   });
                   
+                  // Calculate working days (assuming 6 days per week, excluding Sundays)
+                  const currentDate = new Date();
+                  const year = currentDate.getFullYear();
+                  const month = currentDate.getMonth();
+                  const daysInMonth = new Date(year, month + 1, 0).getDate();
+                  
+                  let workingDays = 0;
+                  for (let day = 1; day <= daysInMonth; day++) {
+                    const date = new Date(year, month, day);
+                    if (date.getDay() !== 0) { // Exclude Sundays (day 0)
+                      workingDays++;
+                    }
+                  }
+                  
+                  // Use actual attendance data from the API
+                  const presentDays = personalAttendanceStats?.presentDays || 0;
+                  const totalWorkingDays = personalAttendanceStats?.totalDays || workingDays;
+                  const attendancePercentage = personalAttendanceStats?.attendancePercentage || Math.round((presentDays / totalWorkingDays) * 100);
+                  
                   return (
-                    <div className="space-y-2">
-                      {myTodayRecord ? (
-                        <div className="text-sm text-gray-700">
-                          <span className="font-medium">{todayDate}</span>
-                          <br />
-                          <span>In: {formatTime(myTodayRecord.checkInTime)} -- present</span>
-                          {myTodayRecord.checkOutTime && (
-                            <>
-                              <br />
-                              <span>Out: {formatTime(myTodayRecord.checkOutTime)}</span>
-                            </>
-                          )}
+                    <div className="space-y-4">
+                      {/* Today's attendance */}
+                      <div className="space-y-2">
+                        {myTodayRecord ? (
+                          <div className="text-sm text-gray-700">
+                            <span className="font-medium">{todayDate}</span>
+                            <br />
+                            <span>In: {formatTime(myTodayRecord.checkInTime)} -- present</span>
+                            {myTodayRecord.checkOutTime && (
+                              <>
+                                <br />
+                                <span>Out: {formatTime(myTodayRecord.checkOutTime)}</span>
+                              </>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="text-sm text-gray-600">
+                            <span className="font-medium">{todayDate}</span>
+                            <br />
+                            <span>Not checked in today</span>
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* Monthly summary */}
+                      <div className="space-y-4 pt-2 border-t">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-gray-600">This Month</span>
+                          <span className="text-2xl font-bold text-orange-600">
+                            {attendancePercentage}%
+                          </span>
                         </div>
-                      ) : (
-                        <div className="text-sm text-gray-600">
-                          <span className="font-medium">{todayDate}</span>
-                          <br />
-                          <span>Not checked in today</span>
+                        <div className="space-y-2">
+                          <div className="flex justify-between text-sm">
+                            <span className="text-gray-600">Present Days</span>
+                            <span className="font-medium">{presentDays}</span>
+                          </div>
+                          <div className="flex justify-between text-sm">
+                            <span className="text-gray-600">Total Days</span>
+                            <span className="font-medium">{totalWorkingDays}</span>
+                          </div>
                         </div>
-                      )}
+                        <Progress value={attendancePercentage} className="h-2" />
+                      </div>
                     </div>
                   ) as React.ReactElement;
                 })()}
