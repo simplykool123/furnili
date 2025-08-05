@@ -1396,48 +1396,35 @@ export class MemStorage {
     // Add sample material requests for project 1
     this.materialRequests.set(1, {
       id: 1,
-      clientName: "kunal",
-      orderNumber: "ORD-001",
+      clientName: "Sunrise Media",
+      orderNumber: "REQ-0001",
       requestedBy: 10,
-      status: "approved",
-      priority: "high",
-      boqReference: "BOQ-Kunal-001",
-      remarks: "Initial material requirement for project start",
-      totalValue: 15000,
-      approvedBy: 10,
-      approvedAt: new Date("2024-01-18"),
+      status: "pending",
+      priority: "medium",
+      boqReference: "BOQ-Sunrise-001",
+      remarks: "Initial material requirement for office setup",
+      totalValue: 1500,
+      approvedBy: null,
+      approvedAt: null,
       issuedBy: null,
       issuedAt: null,
-      createdAt: new Date("2024-01-18"),
-      updatedAt: new Date("2024-01-18"),
-      projectId: 1,
+      createdAt: new Date("2025-01-08"),
+      updatedAt: new Date("2025-01-08"),
+      projectId: 4,
     });
 
     // Add sample request items for the material request
     this.requestItems.set(1, {
       id: 1,
       requestId: 1,
-      productId: 1,
-      quantity: 10,
-      unitPrice: 50,
-      totalPrice: 500,
-      specification: "High quality cement bags",
-      remarks: "Required for foundation work",
-      createdAt: new Date("2024-01-18"),
-      updatedAt: new Date("2024-01-18"),
-    });
-
-    this.requestItems.set(2, {
-      id: 2,
-      requestId: 1,
-      productId: 2,
-      quantity: 20,
-      unitPrice: 25,
-      totalPrice: 500,
-      specification: "TMT steel bars 12mm",
-      remarks: "For reinforcement structure",
-      createdAt: new Date("2024-01-18"),
-      updatedAt: new Date("2024-01-18"),
+      productId: 9, // Calibrated ply
+      quantity: 15,
+      unitPrice: 100,
+      totalPrice: 1500,
+      specification: "High quality calibrated plywood sheets",
+      remarks: "Required for office furniture construction",
+      createdAt: new Date("2025-01-08"),
+      updatedAt: new Date("2025-01-08"),
     });
 
     this.currentId = 20;
@@ -1685,7 +1672,10 @@ export class MemStorage {
     const request = this.materialRequests.get(id);
     if (!request) return undefined;
 
-    const items = this.requestItems.get(id) || [];
+    // Find all items for this request by filtering all request items
+    const allItems = Array.from(this.requestItems.values());
+    const items = allItems.filter(item => item.requestId === id);
+    
     const requestedByUser = await this.getUser(request.requestedBy);
     const approvedByUser = request.approvedBy ? await this.getUser(request.approvedBy) : undefined;
     const issuedByUser = request.issuedBy ? await this.getUser(request.issuedBy) : undefined;
@@ -1693,7 +1683,13 @@ export class MemStorage {
     const itemsWithProducts = await Promise.all(
       items.map(async (item) => {
         const product = await this.getProduct(item.productId);
-        return { ...item, product: product! };
+        return { 
+          ...item, 
+          product: product!,
+          requestedQuantity: item.quantity,
+          unitPrice: item.unitPrice,
+          totalPrice: item.totalPrice
+        };
       })
     );
 
