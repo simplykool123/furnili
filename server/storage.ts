@@ -2442,7 +2442,7 @@ class DatabaseStorage implements IStorage {
         // First, get the current status to check if we need to reverse stock changes
         const [currentRequest] = await tx.select({
           status: materialRequests.status,
-          requestId: materialRequests.requestId
+          orderNumber: materialRequests.orderNumber
         }).from(materialRequests).where(eq(materialRequests.id, id));
         
         if (!currentRequest) {
@@ -2495,7 +2495,7 @@ class DatabaseStorage implements IStorage {
                   quantity: quantityToDeduct,
                   previousStock: currentProduct.currentStock,
                   newStock: newStock,
-                  reference: `Material Request ${updatedRequest.requestId}`,
+                  reference: `Material Request ${updatedRequest.orderNumber}`,
                   performedBy: userId,
                 });
                 
@@ -2549,7 +2549,7 @@ class DatabaseStorage implements IStorage {
                   quantity: quantityToRestore,
                   previousStock: currentProduct.currentStock,
                   newStock: newStock,
-                  reference: `Material Request ${currentRequest.requestId} ${status}`,
+                  reference: `Material Request ${currentRequest.orderNumber} ${status}`,
                   performedBy: userId,
                 });
                 
@@ -3649,7 +3649,7 @@ class DatabaseStorage implements IStorage {
         // First, check if the request was in 'issued' status to restore stock
         const [requestToDelete] = await tx.select({
           status: materialRequests.status,
-          requestId: materialRequests.requestId
+          orderNumber: materialRequests.orderNumber
         }).from(materialRequests).where(eq(materialRequests.id, id));
         
         if (!requestToDelete) {
@@ -3699,7 +3699,7 @@ class DatabaseStorage implements IStorage {
                   quantity: quantityToRestore,
                   previousStock: currentProduct.currentStock,
                   newStock: newStock,
-                  reference: `Material Request ${requestToDelete.requestId} deleted`,
+                  reference: `Material Request ${requestToDelete.orderNumber} deleted`,
                   performedBy: 1, // System operation
                 });
                 
