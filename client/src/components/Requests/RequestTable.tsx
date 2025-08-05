@@ -19,7 +19,8 @@ interface MaterialRequest {
   id: number;
   clientName: string;
   orderNumber: string;
-  requestedByUser: { name: string; email: string };
+  requestedBy: number;
+  requestedByUser?: { name: string; email: string };
   status: string;
   priority: string;
   totalValue: number;
@@ -386,7 +387,7 @@ export default function RequestTable() {
                         <div>
                           <p className="font-medium">REQ-{request.id.toString().padStart(4, '0')}</p>
                           <p className="text-sm text-gray-600">
-                            By: {request.requestedByUser.name}
+                            By: {request.requestedByUser?.name || `User ${request.requestedBy}`}
                           </p>
                           <p className="text-sm text-gray-600">
                             {new Date(request.createdAt).toLocaleDateString()}
@@ -489,7 +490,7 @@ export default function RequestTable() {
                   <div className="space-y-1 text-sm">
                     <p><span className="font-medium">Client:</span> {selectedRequest.clientName}</p>
                     <p><span className="font-medium">Order Number:</span> {selectedRequest.orderNumber}</p>
-                    <p><span className="font-medium">Requested By:</span> {selectedRequest.requestedByUser.name}</p>
+                    <p><span className="font-medium">Requested By:</span> {selectedRequest.requestedByUser?.name || `User ${selectedRequest.requestedBy}`}</p>
                     <p><span className="font-medium">Date:</span> {new Date(selectedRequest.createdAt).toLocaleDateString()}</p>
                     {selectedRequest.boqReference && (
                       <p><span className="font-medium">BOQ Reference:</span> {selectedRequest.boqReference}</p>
