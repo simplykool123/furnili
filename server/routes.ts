@@ -798,14 +798,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/requests/:id", authenticateToken, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
+      console.log(`DEBUG: Fetching request ${id} via API`);
       const request = await storage.getMaterialRequest(id);
       
       if (!request) {
+        console.log(`DEBUG: Request ${id} not found`);
         return res.status(404).json({ message: "Request not found" });
       }
       
+      console.log(`DEBUG: Returning request ${id} with ${request.items?.length || 0} items`);
       res.json(request);
     } catch (error) {
+      console.error(`DEBUG: Error fetching request ${id}:`, error);
       res.status(500).json({ message: "Failed to fetch request", error });
     }
   });

@@ -1716,7 +1716,9 @@ export class MemStorage {
     clientName?: string;
     requestedBy?: number;
   }): Promise<MaterialRequestWithItems[]> {
+    console.log(`DEBUG: getAllMaterialRequests called with filters:`, filters);
     let requests = Array.from(this.materialRequests.values());
+    console.log(`DEBUG: Found ${requests.length} base requests in storage`);
 
     if (filters?.status) {
       requests = requests.filter(r => r.status === filters.status);
@@ -1732,13 +1734,18 @@ export class MemStorage {
       requests = requests.filter(r => r.requestedBy === filters.requestedBy);
     }
 
+    console.log(`DEBUG: After filtering, ${requests.length} requests remain`);
+
     const requestsWithItems = await Promise.all(
       requests.map(async (request) => {
+        console.log(`DEBUG: Processing request ${request.id} in getAllMaterialRequests`);
         const fullRequest = await this.getMaterialRequest(request.id);
+        console.log(`DEBUG: Request ${request.id} has ${fullRequest?.items?.length || 0} items`);
         return fullRequest!;
       })
     );
 
+    console.log(`DEBUG: Returning ${requestsWithItems.length} requests with items`);
     return requestsWithItems.sort((a, b) => 
       new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime()
     );
