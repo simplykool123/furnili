@@ -2437,13 +2437,137 @@ class DatabaseStorage implements IStorage {
     }
 
     try {
-      const result = await db.update(materialRequests)
-        .set(updates)
-        .where(eq(materialRequests.id, id))
-        .returning();
+      // Use transaction to ensure atomicity of status update and stock deduction
+      const result = await db.transaction(async (tx) => {
+        // First, get the current status to check if we need to reverse stock changes
+        const [currentRequest] = await tx.select({
+          status: materialRequests.status,
+          requestId: materialRequests.requestId
+        }).from(materialRequests).where(eq(materialRequests.id, id));
+        
+        if (!currentRequest) {
+          throw new Error(`Material request ${id} not found`);
+        }
+        
+        // Update the request status first
+        const [updatedRequest] = await tx.update(materialRequests)
+          .set(updates)
+          .where(eq(materialRequests.id, id))
+          .returning();
+        
+        // If status is changing to 'issued', deduct stock from inventory
+        if (status === 'issued') {
+          console.log(`DEBUG: Request ${id} marked as issued - deducting stock from inventory`);
+          
+          // Get all items for this request
+          const requestItemsList = await tx.select().from(requestItems)
+            .where(eq(requestItems.requestId, id));
+          
+          console.log(`DEBUG: Found ${requestItemsList.length} items to process for stock deduction`);
+          
+          // Process each item and deduct stock
+          for (const item of requestItemsList) {
+            if (item.productId) {
+              const quantityToDeduct = item.approvedQuantity || item.requestedQuantity;
+              
+              console.log(`DEBUG: Deducting ${quantityToDeduct} units from product ${item.productId}`);
+              
+              // Get current product stock
+              const [currentProduct] = await tx.select({
+                currentStock: products.currentStock,
+                name: products.name
+              }).from(products).where(eq(products.id, item.productId));
+              
+              if (currentProduct) {
+                const newStock = currentProduct.currentStock - quantityToDeduct;
+                
+                console.log(`DEBUG: Product "${currentProduct.name}" stock: ${currentProduct.currentStock} → ${newStock}`);
+                
+                // Update product stock
+                await tx.update(products)
+                  .set({ currentStock: newStock })
+                  .where(eq(products.id, item.productId));
+                
+                // Create stock movement record for audit trail
+                await tx.insert(stockMovements).values({
+                  productId: item.productId,
+                  movementType: 'out',
+                  quantity: quantityToDeduct,
+                  previousStock: currentProduct.currentStock,
+                  newStock: newStock,
+                  reference: `Material Request ${updatedRequest.requestId}`,
+                  performedBy: userId,
+                });
+                
+                console.log(`DEBUG: Stock movement recorded for product ${item.productId}`);
+              } else {
+                console.warn(`DEBUG: Product ${item.productId} not found, skipping stock deduction`);
+              }
+            }
+          }
+          
+          console.log(`DEBUG: Stock deduction completed for request ${id}`);
+        }
+        
+        // If previous status was 'issued' and new status is cancelled/rejected, restore stock
+        else if (currentRequest.status === 'issued' && (status === 'cancelled' || status === 'rejected')) {
+          console.log(`DEBUG: Request ${id} was issued but now ${status} - restoring stock to inventory`);
+          
+          // Get all items for this request
+          const requestItemsList = await tx.select().from(requestItems)
+            .where(eq(requestItems.requestId, id));
+          
+          console.log(`DEBUG: Found ${requestItemsList.length} items to process for stock restoration`);
+          
+          // Process each item and restore stock
+          for (const item of requestItemsList) {
+            if (item.productId) {
+              const quantityToRestore = item.approvedQuantity || item.requestedQuantity;
+              
+              console.log(`DEBUG: Restoring ${quantityToRestore} units to product ${item.productId}`);
+              
+              // Get current product stock
+              const [currentProduct] = await tx.select({
+                currentStock: products.currentStock,
+                name: products.name
+              }).from(products).where(eq(products.id, item.productId));
+              
+              if (currentProduct) {
+                const newStock = currentProduct.currentStock + quantityToRestore;
+                
+                console.log(`DEBUG: Product "${currentProduct.name}" stock: ${currentProduct.currentStock} → ${newStock}`);
+                
+                // Update product stock
+                await tx.update(products)
+                  .set({ currentStock: newStock })
+                  .where(eq(products.id, item.productId));
+                
+                // Create stock movement record for audit trail
+                await tx.insert(stockMovements).values({
+                  productId: item.productId,
+                  movementType: 'in',
+                  quantity: quantityToRestore,
+                  previousStock: currentProduct.currentStock,
+                  newStock: newStock,
+                  reference: `Material Request ${currentRequest.requestId} ${status}`,
+                  performedBy: userId,
+                });
+                
+                console.log(`DEBUG: Stock restoration recorded for product ${item.productId}`);
+              } else {
+                console.warn(`DEBUG: Product ${item.productId} not found, skipping stock restoration`);
+              }
+            }
+          }
+          
+          console.log(`DEBUG: Stock restoration completed for request ${id}`);
+        }
+        
+        return updatedRequest;
+      });
       
-      console.log(`DEBUG: Request ${id} status updated successfully`);
-      return result[0];
+      console.log(`DEBUG: Request ${id} status updated successfully to ${status}`);
+      return result;
     } catch (error) {
       console.error(`DEBUG: Error updating request ${id}:`, error);
       throw error;
@@ -3521,15 +3645,82 @@ class DatabaseStorage implements IStorage {
     try {
       console.log(`DEBUG: DatabaseStorage deleteMaterialRequest called for ID: ${id}`);
       
-      // Delete request items first
-      await db.delete(requestItems).where(eq(requestItems.requestId, id));
-      console.log(`DEBUG: Deleted request items for ID: ${id}`);
+      const result = await db.transaction(async (tx) => {
+        // First, check if the request was in 'issued' status to restore stock
+        const [requestToDelete] = await tx.select({
+          status: materialRequests.status,
+          requestId: materialRequests.requestId
+        }).from(materialRequests).where(eq(materialRequests.id, id));
+        
+        if (!requestToDelete) {
+          console.log(`DEBUG: Request ${id} not found`);
+          return false;
+        }
+        
+        console.log(`DEBUG: Request ${id} has status: ${requestToDelete.status}`);
+        
+        // If the request was issued, restore stock before deletion
+        if (requestToDelete.status === 'issued') {
+          console.log(`DEBUG: Request ${id} was issued - restoring stock before deletion`);
+          
+          // Get all items for this request
+          const requestItemsList = await tx.select().from(requestItems)
+            .where(eq(requestItems.requestId, id));
+          
+          console.log(`DEBUG: Found ${requestItemsList.length} items to restore stock for`);
+          
+          // Process each item and restore stock
+          for (const item of requestItemsList) {
+            if (item.productId) {
+              const quantityToRestore = item.approvedQuantity || item.requestedQuantity;
+              
+              console.log(`DEBUG: Restoring ${quantityToRestore} units to product ${item.productId}`);
+              
+              // Get current product stock
+              const [currentProduct] = await tx.select({
+                currentStock: products.currentStock,
+                name: products.name
+              }).from(products).where(eq(products.id, item.productId));
+              
+              if (currentProduct) {
+                const newStock = currentProduct.currentStock + quantityToRestore;
+                
+                console.log(`DEBUG: Product "${currentProduct.name}" stock: ${currentProduct.currentStock} → ${newStock}`);
+                
+                // Update product stock
+                await tx.update(products)
+                  .set({ currentStock: newStock })
+                  .where(eq(products.id, item.productId));
+                
+                // Create stock movement record for audit trail
+                await tx.insert(stockMovements).values({
+                  productId: item.productId,
+                  movementType: 'in',
+                  quantity: quantityToRestore,
+                  previousStock: currentProduct.currentStock,
+                  newStock: newStock,
+                  reference: `Material Request ${requestToDelete.requestId} deleted`,
+                  performedBy: 1, // System operation
+                });
+                
+                console.log(`DEBUG: Stock restoration recorded for product ${item.productId}`);
+              }
+            }
+          }
+        }
+        
+        // Delete request items first
+        await tx.delete(requestItems).where(eq(requestItems.requestId, id));
+        console.log(`DEBUG: Deleted request items for ID: ${id}`);
+        
+        // Delete the main request  
+        const deleteResult = await tx.delete(materialRequests).where(eq(materialRequests.id, id)).returning();
+        console.log(`DEBUG: Delete result for ID: ${id}, affected rows: ${deleteResult.length}`);
+        
+        return deleteResult.length > 0;
+      });
       
-      // Delete the main request  
-      const result = await db.delete(materialRequests).where(eq(materialRequests.id, id)).returning();
-      console.log(`DEBUG: Delete result for ID: ${id}, affected rows: ${result.length}`);
-      
-      return result.length > 0;
+      return result;
     } catch (error) {
       console.error(`DEBUG: Error deleting material request ${id}:`, error);
       return false;
