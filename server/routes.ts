@@ -814,7 +814,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/requests", authenticateToken, requireRole(["user", "manager", "admin"]), async (req, res) => {
+  app.post("/api/requests", authenticateToken, requireRole(["staff", "user", "manager", "admin"]), async (req, res) => {
     try {
       const { request: requestData, items } = req.body;
       

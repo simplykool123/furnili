@@ -62,10 +62,14 @@ export const requireRole = (allowedRoles: string[]) => {
       return res.status(401).json({ message: "Authentication required" });
     }
 
+    console.log(`Auth role check - User role: "${req.user.role}", Allowed roles: [${allowedRoles.join(', ')}]`);
+    
     if (!allowedRoles.includes(req.user.role)) {
+      console.log(`Auth role check - REJECTED: "${req.user.role}" not in allowed roles`);
       return res.status(403).json({ message: "Insufficient permissions" });
     }
 
+    console.log(`Auth role check - ALLOWED: "${req.user.role}" is in allowed roles`);
     next();
   };
 };
