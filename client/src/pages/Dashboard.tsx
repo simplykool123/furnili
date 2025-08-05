@@ -19,7 +19,8 @@ import {
   AlertCircle,
   ArrowRight,
   LogIn,
-  LogOut
+  LogOut,
+  Briefcase
 } from "lucide-react";
 import { authService } from "@/lib/auth";
 import { useState, useEffect } from "react";
@@ -337,26 +338,14 @@ export default function Dashboard() {
         <>
           {/* Main Action Buttons - 4 in a row */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            {/* Quote Button */}
-            <Card className="hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200 cursor-pointer" onClick={() => setLocation('/projects')}>
-              <CardContent className="p-6 text-center">
-                <div className="flex flex-col items-center space-y-3">
-                  <div className="p-3 bg-blue-500 rounded-full">
-                    <Quote className="h-6 w-6 text-white" />
-                  </div>
-                  <span className="text-sm font-medium text-blue-900">Quote</span>
-                </div>
-              </CardContent>
-            </Card>
-
             {/* Check In/Out Button */}
             <Card className="hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-green-50 to-green-100 border-green-200 cursor-pointer" onClick={handleCheckInOut}>
-              <CardContent className="p-6 text-center">
-                <div className="flex flex-col items-center space-y-3">
-                  <div className="p-3 bg-green-500 rounded-full">
-                    {hasCheckedInToday ? <LogOut className="h-6 w-6 text-white" /> : <LogIn className="h-6 w-6 text-white" />}
+              <CardContent className="p-5 text-center">
+                <div className="flex flex-col items-center space-y-2">
+                  <div className="p-2 bg-green-500 rounded-full">
+                    {hasCheckedInToday ? <LogOut className="h-5 w-5 text-white" /> : <LogIn className="h-5 w-5 text-white" />}
                   </div>
-                  <span className="text-sm font-medium text-green-900">
+                  <span className="text-xs font-medium text-green-900">
                     {hasCheckedInToday ? 'Check Out' : 'Check In'}
                   </span>
                 </div>
@@ -365,24 +354,36 @@ export default function Dashboard() {
 
             {/* New Material Request Button */}
             <Card className="hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200 cursor-pointer" onClick={() => setLocation('/requests')}>
-              <CardContent className="p-6 text-center">
-                <div className="flex flex-col items-center space-y-3">
-                  <div className="p-3 bg-orange-500 rounded-full">
-                    <Package className="h-6 w-6 text-white" />
+              <CardContent className="p-5 text-center">
+                <div className="flex flex-col items-center space-y-2">
+                  <div className="p-2 bg-orange-500 rounded-full">
+                    <Package className="h-5 w-5 text-white" />
                   </div>
-                  <span className="text-sm font-medium text-orange-900">New Material Request</span>
+                  <span className="text-xs font-medium text-orange-900">New Material Request</span>
                 </div>
               </CardContent>
             </Card>
 
             {/* Add New Expense Button */}
             <Card className="hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200 cursor-pointer" onClick={() => setLocation('/petty-cash')}>
-              <CardContent className="p-6 text-center">
-                <div className="flex flex-col items-center space-y-3">
-                  <div className="p-3 bg-purple-500 rounded-full">
-                    <DollarSign className="h-6 w-6 text-white" />
+              <CardContent className="p-5 text-center">
+                <div className="flex flex-col items-center space-y-2">
+                  <div className="p-2 bg-purple-500 rounded-full">
+                    <DollarSign className="h-5 w-5 text-white" />
                   </div>
-                  <span className="text-sm font-medium text-purple-900">Add New Expense</span>
+                  <span className="text-xs font-medium text-purple-900">Add New Expense</span>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Ongoing Projects Button - Moved to last position */}
+            <Card className="hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200 cursor-pointer" onClick={() => setLocation('/projects')}>
+              <CardContent className="p-5 text-center">
+                <div className="flex flex-col items-center space-y-2">
+                  <div className="p-2 bg-blue-500 rounded-full">
+                    <Briefcase className="h-5 w-5 text-white" />
+                  </div>
+                  <span className="text-xs font-medium text-blue-900">Ongoing Projects</span>
                 </div>
               </CardContent>
             </Card>
