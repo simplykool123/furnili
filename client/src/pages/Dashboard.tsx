@@ -45,6 +45,7 @@ interface DashboardStats {
   pendingRequests: number;
   todayAttendance: number;
   monthlyExpenses: number;
+  userExpenses?: number;
   activeTasks: number;
   totalValue: number;
   recentRequests: any[];
@@ -165,6 +166,14 @@ export default function Dashboard() {
   // Optimized queries with caching for better performance
   const { data: stats, isLoading } = useQuery<DashboardStats>({
     queryKey: ["/api/dashboard/stats"],
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    cacheTime: 5 * 60 * 1000, // 5 minutes
+  });
+
+  // Fetch personal expense stats for staff users
+  const { data: personalExpenseStats } = useQuery({
+    queryKey: ["/api/petty-cash/my-stats"],
+    enabled: currentUser?.role === 'staff',
     staleTime: 2 * 60 * 1000, // 2 minutes
     cacheTime: 5 * 60 * 1000, // 5 minutes
   });
@@ -457,9 +466,36 @@ export default function Dashboard() {
               </CardContent>
             </Card>
           </>
+        ) : currentUser?.role === 'staff' ? (
+          <>
+            {/* Staff users see limited stats - no Attendance or Staff & Payroll cards */}
+            <Card className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-indigo-500 bg-gradient-to-br from-card to-indigo-50/20 cursor-pointer" onClick={() => setLocation('/requests')}>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
+                <CardTitle className="text-xs font-semibold text-card-foreground">Requests</CardTitle>
+                <TrendingUp className="h-3 w-3 text-indigo-600" />
+              </CardHeader>
+              <CardContent className="pb-2 pt-1">
+                <div className="text-xl font-bold text-foreground">{stats?.pendingRequests || 0}</div>
+                <p className="text-xs text-muted-foreground mt-0.5">Pending</p>
+              </CardContent>
+            </Card>
+
+            <Card className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-yellow-500 bg-gradient-to-br from-card to-yellow-50/20 cursor-pointer" onClick={() => setLocation('/petty-cash')}>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
+                <CardTitle className="text-xs font-semibold text-card-foreground">My Expenses</CardTitle>
+                <DollarSign className="h-3 w-3 text-yellow-600" />
+              </CardHeader>
+              <CardContent className="pb-2 pt-1">
+                <div className="text-xl font-bold text-foreground">
+                  ₹{personalExpenseStats?.monthlyTotal?.toLocaleString() || 0}
+                </div>
+                <p className="text-xs text-muted-foreground mt-0.5">This month</p>
+              </CardContent>
+            </Card>
+          </>
         ) : (
           <>
-            {/* Regular users see business stats */}
+            {/* Admin/Manager users see full business stats */}
             <Card className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-orange-500 bg-gradient-to-br from-card to-orange-50/20 cursor-pointer" onClick={() => setLocation('/attendance')}>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
                 <CardTitle className="text-xs font-semibold text-card-foreground">Attendance</CardTitle>
