@@ -211,8 +211,11 @@ export default function RequestFormSimplified({ onClose, onSuccess, preSelectedP
   const createClientMutation = useMutation({
     mutationFn: async (clientData: { name: string }) => {
       console.log("Creating client:", clientData);
-      const response = await apiRequest("POST", "/api/clients", clientData);
-      return response.json();
+      const response = await apiRequest("/api/clients", {
+        method: "POST", 
+        body: JSON.stringify(clientData)
+      });
+      return response;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/clients"] });
@@ -225,10 +228,20 @@ export default function RequestFormSimplified({ onClose, onSuccess, preSelectedP
   const createRequestMutation = useMutation({
     mutationFn: async (data: any) => {
       console.log("Creating request:", data);
-      const response = await apiRequest("POST", "/api/requests", data);
-      return response.json();
+      try {
+        const response = await apiRequest("/api/requests", {
+          method: "POST",
+          body: JSON.stringify(data)
+        });
+        console.log("API Response received:", response);
+        return response;
+      } catch (error) {
+        console.error("API Request failed:", error);
+        throw error;
+      }
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log("Request creation successful:", data);
       toast({ 
         title: "Success", 
         description: "Material request created successfully" 
@@ -238,6 +251,7 @@ export default function RequestFormSimplified({ onClose, onSuccess, preSelectedP
       onClose();
     },
     onError: (error: any) => {
+      console.error("Request creation error:", error);
       toast({
         title: "Error",
         description: error.message || "Failed to create request",
