@@ -878,6 +878,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`DEBUG: DELETE route called for request ID: ${id}`);
       console.log(`DEBUG: User role: ${(req as AuthRequest).user?.role}`);
       
+      // Test direct database query first
+      const testQuery = await db.select().from(materialRequests).where(eq(materialRequests.id, id));
+      console.log(`DEBUG: Direct DB query result: ${testQuery.length} records found`);
+      
       const success = await storage.deleteMaterialRequest(id);
       console.log(`DEBUG: Delete operation result: ${success}`);
       
