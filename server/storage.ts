@@ -3474,12 +3474,28 @@ class DatabaseStorage implements IStorage {
   }
 
   async createQuote(quote: InsertQuote): Promise<Quote> {
-    // Generate quote number
-    const year = new Date().getFullYear();
-    const month = String(new Date().getMonth() + 1).padStart(2, '0');
-    const count = await db.select({ count: sql<number>`count(*)` }).from(quotes);
-    const nextNumber = (count[0]?.count || 0) + 1;
-    const quoteNumber = `Q${year.toString().slice(-2)}${month}${String(nextNumber).padStart(3, '0')}`;
+    // Generate unique quote number using the same logic as quotesRoutes.ts
+    const lastQuote = await db
+      .select({ quoteNumber: quotes.quoteNumber })
+      .from(quotes)
+      .orderBy(desc(quotes.createdAt))
+      .limit(1);
+
+    let nextNumber = 1;
+    if (lastQuote.length > 0) {
+      // Extract number from format Q250801, Q250802, etc.
+      const lastQuoteNumber = lastQuote[0].quoteNumber;
+      const lastNumber = parseInt(lastQuoteNumber.substring(1));
+      nextNumber = lastNumber + 1;
+    }
+    
+    // Format: Q + YYMM + DD + sequential number (QYYMMDDNN)
+    const now = new Date();
+    const year = now.getFullYear().toString().substring(2);
+    const month = (now.getMonth() + 1).toString().padStart(2, '0');
+    const day = now.getDate().toString().padStart(2, '0');
+    const seq = nextNumber.toString().padStart(2, '0');
+    const quoteNumber = `Q${year}${month}${day}${seq}`;
 
     const result = await db.insert(quotes).values({
       ...quote,
