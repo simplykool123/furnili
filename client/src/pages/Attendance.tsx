@@ -478,14 +478,11 @@ type StaffFormData = z.infer<typeof staffFormSchema>;
 
 export default function Attendance() {
   const { toast } = useToast();
-  const currentUser = authService.getUser();
-  const admin = authService.hasRole(['admin']);
-  const isStorekeeper = authService.hasRole(['store_incharge']);
+  const user = authService.getUser();
   const isMobile = useIsMobile();
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [isExporting, setIsExporting] = useState(false);
-  const [activeTab, setActiveTab] = useState("dashboard");
   
   // Generate year options from 2024 to 2030
   const yearOptions = Array.from({ length: 7 }, (_, i) => 2024 + i);
@@ -1403,35 +1400,54 @@ export default function Attendance() {
   }
 
   // Get current user's today attendance to show check in/out status
-  const currentUserAttendance = todayAttendance.find((a: any) => a.userId === currentUser?.id);
+  const currentUserAttendance = todayAttendance.find((a: any) => a.userId === user?.id);
   const hasCheckedInToday = currentUserAttendance?.checkInTime;
   const hasCheckedOutToday = currentUserAttendance?.checkOutTime;
 
   return (
     <FurniliLayout
-      title="Staff Attendance & Payroll"
-      subtitle="Complete staff management system"
+      title={user?.role === 'staff' ? "My Attendance" : "Staff Attendance & Payroll"}
+      subtitle={user?.role === 'staff' ? "View your attendance and check in/out" : "Complete staff management system"}
     >
-      {/* Header with Month/Year Selector */}
+      {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Staff Attendance & Payroll</h1>
-          <p className="text-sm text-gray-600">Complete staff management system</p>
         </div>
         
-        {(admin || isStorekeeper) && (
-          <div className="flex gap-2 items-center">
-            {/* Quick Check In button for storekeepers */}
-            <Button
-              size="sm"
-              className="bg-green-600 hover:bg-green-700 text-white"
-              onClick={() => setActiveTab("check-in-out")}
-            >
-              <Clock className="w-4 h-4 mr-2" />
-              Quick Check In
-            </Button>
-            
-            {/* Month/Year Selector */}
+        {/* Quick Check In/Out Button and Month/Year Selector */}
+        <div className="flex gap-3 items-center">
+          {/* Quick Check In/Out Buttons */}
+          <div className="flex gap-2">
+            {!hasCheckedInToday ? (
+              <FurniliButton
+                variant="furnili-primary"
+                size="sm"
+                onClick={() => selfCheckInMutation.mutate({})}
+                disabled={selfCheckInMutation.isPending}
+              >
+                <LogIn className="w-4 h-4 mr-2" />
+                {selfCheckInMutation.isPending ? "Checking In..." : "Quick Check In"}
+              </FurniliButton>
+            ) : !hasCheckedOutToday ? (
+              <FurniliButton
+                variant="furnili-secondary"
+                size="sm"
+                onClick={() => selfCheckOutMutation.mutate()}
+                disabled={selfCheckOutMutation.isPending}
+              >
+                <LogOut className="w-4 h-4 mr-2" />
+                {selfCheckOutMutation.isPending ? "Checking Out..." : "Quick Check Out"}
+              </FurniliButton>
+            ) : (
+              <Badge variant="secondary" className="px-3 py-1">
+                <Check className="w-4 h-4 mr-1" />
+                Completed for today
+              </Badge>
+            )}
+          </div>
+
+          {/* Month/Year Selector */}
+          <div className="flex gap-2">
             <Select value={selectedMonth.toString()} onValueChange={(value) => setSelectedMonth(parseInt(value))}>
               <SelectTrigger className="w-32">
                 <SelectValue placeholder="Month" />
@@ -1457,362 +1473,589 @@ export default function Attendance() {
                 ))}
               </SelectContent>
             </Select>
-            
-            <Select value={`${selectedMonth}-${selectedYear}`}>
-              <SelectTrigger className="w-32">
-                <SelectValue placeholder="August 2025" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={`${selectedMonth}-${selectedYear}`}>
-                  {new Date(selectedYear, selectedMonth - 1).toLocaleString("en-IN", { month: "long", year: "numeric" })}
-                </SelectItem>
-              </SelectContent>
-            </Select>
           </div>
+        </div>
+      </div>
+
+      {/* Compact Quick Stats */}
+      <div className={`grid gap-2 sm:gap-3 ${user?.role === 'staff' ? 'grid-cols-1 max-w-md mx-auto' : 'grid-cols-3 md:grid-cols-6'}`}>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">
+              {user?.role === 'staff' ? "Your Status Today" : "Present Today"}
+            </CardTitle>
+            <UserCheck className="h-4 w-4 text-green-600" />
+          </CardHeader>
+          <CardContent>
+            {user?.role === 'staff' ? (
+              <>
+                {(() => {
+                  const myTodayRecord = todayAttendance.find((a: any) => a.userId === user.id);
+                  return myTodayRecord ? (
+                    <div>
+                      <div className="text-lg font-bold text-green-600">
+                        You are marked present today
+                      </div>
+                      <p className="text-xs text-gray-600">
+                        Check-in: {formatTime(myTodayRecord.checkInTime)}
+                        {myTodayRecord.checkOutTime && ` | Check-out: ${formatTime(myTodayRecord.checkOutTime)}`}
+                      </p>
+                    </div>
+                  ) : (
+                    <div>
+                      <div className="text-lg font-bold text-gray-500">Not checked in</div>
+                      <p className="text-xs text-gray-600">Use Check In/Out tab</p>
+                    </div>
+                  );
+                })()}
+              </>
+            ) : (
+              <>
+                <div className="text-2xl font-bold text-green-600">
+                  {todayAttendance.filter((a: any) => a.status === "present").length}
+                </div>
+                <p className="text-xs text-gray-600">out of {staff.length} staff</p>
+              </>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Hide these cards for staff users */}
+        {user?.role !== 'staff' && (
+          <>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium">Absent Today</CardTitle>
+                <UserX className="h-4 w-4 text-red-600" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-red-600">
+                  {(() => {
+                    // Calculate actual absent staff: total staff - those who checked in today
+                    const checkedInToday = todayAttendance.filter((a: any) => 
+                      a.status === "present" || a.status === "late" || a.status === "half_day"
+                    ).length;
+                    const explicitlyAbsent = todayAttendance.filter((a: any) => a.status === "absent").length;
+                    const totalAbsent = Math.max(staff.length - checkedInToday, explicitlyAbsent);
+                    return totalAbsent;
+                  })()}
+                </div>
+                <p className="text-xs text-gray-600">staff members</p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium">Half Day</CardTitle>
+                <Clock className="h-4 w-4 text-yellow-600" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-yellow-600">
+                  {todayAttendance.filter((a: any) => a.status === "half_day").length}
+                </div>
+                <p className="text-xs text-gray-600">staff members</p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium">Late Entries</CardTitle>
+                <Timer className="h-4 w-4 text-orange-600" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-orange-600">
+                  {todayAttendance.filter((a: any) => a.status === "late").length}
+                </div>
+                <p className="text-xs text-gray-600">staff members</p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium">Attendance %</CardTitle>
+                <Users className="h-4 w-4 text-blue-600" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-blue-600">
+                  {staff.length > 0 ? Math.round((todayAttendance.filter((a: any) => a.status === "present" || a.status === "late").length / staff.length) * 100) : 0}%
+                </div>
+                <p className="text-xs text-gray-600">today</p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium">Working Days</CardTitle>
+                <Calendar className="h-4 w-4 text-blue-600" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-blue-600">
+                  {attendanceStats?.workingDays || attendanceStats?.totalDays || 0}
+                </div>
+                <p className="text-xs text-gray-600">this month</p>
+              </CardContent>
+            </Card>
+          </>
         )}
       </div>
 
-      {/* Dashboard Stats Cards - matching the screenshot layout */}
-      <div className="grid grid-cols-2 md:grid-cols-6 gap-4 mb-6">
-        {/* Present Today */}
-        <Card className="border-green-200 bg-green-50">
-          <CardContent className="pt-4">
-            <div className="flex items-center gap-2">
-              <Users className="h-4 w-4 text-green-600" />
-              <div className="text-xs text-green-700">Present Today</div>
-            </div>
-            <div className="text-2xl font-bold text-green-800">
-              {todayAttendance.filter((a: any) => a.status === "present").length}
-            </div>
-            <div className="text-xs text-green-600">
-              out of {staff.length} staff
-            </div>
-          </CardContent>
-        </Card>
+      {/* Main Tabs */}
+      <Tabs defaultValue="dashboard" className="space-y-4">
+        <TabsList className={`grid w-full ${user?.role === 'staff' ? 'grid-cols-2' : 'grid-cols-5'}`}>
+          <TabsTrigger value="dashboard">{user?.role === 'staff' ? 'My Attendance' : 'Dashboard'}</TabsTrigger>
+          <TabsTrigger value="checkin">Check In/Out</TabsTrigger>
+          {user?.role !== 'staff' && (
+            <>
+              <TabsTrigger value="attendance">Attendance</TabsTrigger>
+              <TabsTrigger value="staff">Staff Management</TabsTrigger>
+              <TabsTrigger value="payroll">Payroll</TabsTrigger>
+            </>
+          )}
+        </TabsList>
 
-        {/* Absent Today */}
-        <Card className="border-red-200 bg-red-50">
-          <CardContent className="pt-4">
-            <div className="flex items-center gap-2">
-              <UserX className="h-4 w-4 text-red-600" />
-              <div className="text-xs text-red-700">Absent Today</div>
-            </div>
-            <div className="text-2xl font-bold text-red-800">
-              {staff.length - todayAttendance.filter((a: any) => a.status === "present").length}
-            </div>
-            <div className="text-xs text-red-600">
-              staff members
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Half Day */}
-        <Card className="border-yellow-200 bg-yellow-50">
-          <CardContent className="pt-4">
-            <div className="flex items-center gap-2">
-              <Timer className="h-4 w-4 text-yellow-600" />
-              <div className="text-xs text-yellow-700">Half Day</div>
-            </div>
-            <div className="text-2xl font-bold text-yellow-800">
-              {todayAttendance.filter((a: any) => a.status === "half_day").length}
-            </div>
-            <div className="text-xs text-yellow-600">
-              staff members
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Late Entries */}
-        <Card className="border-orange-200 bg-orange-50">
-          <CardContent className="pt-4">
-            <div className="flex items-center gap-2">
-              <Clock className="h-4 w-4 text-orange-600" />
-              <div className="text-xs text-orange-700">Late Entries</div>
-            </div>
-            <div className="text-2xl font-bold text-orange-800">
-              {todayAttendance.filter((a: any) => a.status === "late").length}
-            </div>
-            <div className="text-xs text-orange-600">
-              staff members
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Attendance % */}
-        <Card className="border-blue-200 bg-blue-50">
-          <CardContent className="pt-4">
-            <div className="flex items-center gap-2">
-              <Calculator className="h-4 w-4 text-blue-600" />
-              <div className="text-xs text-blue-700">Attendance %</div>
-            </div>
-            <div className="text-2xl font-bold text-blue-800">
-              {attendanceStats ? `${Math.round((attendanceStats.presentDays / attendanceStats.totalDays) * 100)}%` : '0%'}
-            </div>
-            <div className="text-xs text-blue-600">
-              this month
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Working Days */}
-        <Card className="border-purple-200 bg-purple-50">
-          <CardContent className="pt-4">
-            <div className="flex items-center gap-2">
-              <Calendar className="h-4 w-4 text-purple-600" />
-              <div className="text-xs text-purple-700">Working Days</div>
-            </div>
-            <div className="text-2xl font-bold text-purple-800">
-              {attendanceStats?.totalDays || new Date(selectedYear, selectedMonth, 0).getDate()}
-            </div>
-            <div className="text-xs text-purple-600">
-              this month
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Tab Navigation - matching the screenshot */}
-      <div className="mb-6">
-        <nav className="flex space-x-0 border-b border-gray-200 bg-white rounded-t-lg">
-          {[
-            { id: "dashboard", label: "Dashboard", icon: Calculator },
-            { id: "check-in-out", label: "Check In/Out", icon: Clock },
-            { id: "attendance", label: "Attendance", icon: Users },
-            ...(admin ? [{ id: "staff-management", label: "Staff Management", icon: UserPlus }] : []),
-            { id: "payroll", label: "Payroll", icon: CreditCard },
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex-1 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
-                activeTab === tab.id
-                  ? 'border-amber-600 text-amber-700 bg-amber-50'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-            >
-              <tab.icon className="h-4 w-4 inline mr-2" />
-              {tab.label}
-            </button>
-          ))}
-        </nav>
-      </div>
-
-      {/* Tab Content */}
-      {activeTab === "dashboard" && (
-        <div className="space-y-6">
-          {/* Admin Check In/Out Management */}
-          {(admin || isStorekeeper) && (
+        {/* Dashboard Tab */}
+        <TabsContent value="dashboard" className="space-y-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Today's Attendance */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg font-semibold text-foreground flex items-center gap-2">
-                  <Clock className="h-5 w-5" />
-                  Admin Check In/Out Management
+                <CardTitle className="flex items-center gap-2">
+                  <Clock className="w-5 h-5" />
+                  {new Date().toLocaleDateString("en-IN", { 
+                    weekday: 'short',
+                    month: 'short', 
+                    day: 'numeric'
+                  })} Attendance
                 </CardTitle>
-                <p className="text-sm text-gray-600">Manage staff check-in and check-out as admin</p>
               </CardHeader>
               <CardContent>
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Staff Member</TableHead>
-                        <TableHead>Today's Status</TableHead>
-                        <TableHead>Check In Time</TableHead>
-                        <TableHead>Check Out Time</TableHead>
-                        <TableHead>Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {staff.slice(0, 10).map((member: any) => {
-                        const todayRecord = todayAttendance.find((a: any) => a.userId === member.id);
-                        return (
-                          <TableRow key={member.id}>
-                            <TableCell>
-                              <div>
-                                <div className="font-medium">{member.name}</div>
-                                <div className="text-sm text-gray-500">{member.employeeId || 'No ID'}</div>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              {todayRecord ? (
-                                <Badge 
-                                  variant={todayRecord.status === 'present' ? 'default' : 
-                                          todayRecord.status === 'absent' ? 'destructive' :
-                                          todayRecord.status === 'half_day' ? 'secondary' : 'outline'}
-                                >
-                                  {todayRecord.status === 'present' ? 'Present' :
-                                   todayRecord.status === 'absent' ? 'Absent' :
-                                   todayRecord.status === 'half_day' ? 'Half Day' :
-                                   todayRecord.status === 'late' ? 'Late' : 'Unknown'}
-                                </Badge>
-                              ) : (
-                                <Badge variant="outline">Not Marked</Badge>
-                              )}
-                            </TableCell>
-                            <TableCell>
-                              {todayRecord?.checkInTime ? formatTime(todayRecord.checkInTime) : '-'}
-                            </TableCell>
-                            <TableCell>
-                              {todayRecord?.checkOutTime ? formatTime(todayRecord.checkOutTime) : '-'}
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex gap-2">
-                                {!todayRecord?.checkInTime ? (
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => adminCheckInMutation.mutate({ userId: member.id })}
-                                    disabled={adminCheckInMutation.isPending}
-                                  >
-                                    <LogIn className="h-3 w-3 mr-1" />
-                                    Check In
-                                  </Button>
-                                ) : !todayRecord?.checkOutTime ? (
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => adminCheckOutMutation.mutate({ attendanceId: todayRecord.id })}
-                                    disabled={adminCheckOutMutation.isPending}
-                                  >
-                                    <LogOut className="h-3 w-3 mr-1" />
-                                    Check Out
-                                  </Button>
-                                ) : (
-                                  <Badge variant="secondary" className="text-xs">
-                                    <Check className="h-3 w-3 mr-1" />
-                                    Complete
-                                  </Badge>
-                                )}
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })}
-                    </TableBody>
-                  </Table>
+                <div className="space-y-2">
+                  {(() => {
+                    // For staff users, show only their own attendance record
+                    const attendanceToShow = user?.role === 'staff' 
+                      ? todayAttendance.filter((a: any) => a.userId === user.id)
+                      : todayAttendance;
+                    
+                    return attendanceToShow.length > 0 ? (
+                      attendanceToShow.map((attendance: any) => (
+                        <div key={attendance.id} className="flex items-center justify-between p-2 border rounded-md bg-gray-50 hover:bg-gray-100 transition-colors">
+                          <div className="flex items-center gap-2 min-w-0 flex-1">
+                            <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                              <Users className="w-4 h-4 text-blue-600" />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <p className="font-medium text-sm truncate">
+                                {user?.role === 'staff' && attendance.userId === user.id ? 'You' : attendance.user?.name}
+                              </p>
+                              <p className="text-xs text-gray-600">
+                                In: {formatTime(attendance.checkInTime)} 
+                                {attendance.checkOutTime && ` | Out: ${formatTime(attendance.checkOutTime)}`}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex-shrink-0">
+                            {getStatusBadge(attendance.status)}
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-center text-gray-500 py-4 text-sm">
+                        {user?.role === 'staff' ? 'You have not checked in today' : 'No attendance records for today'}
+                      </p>
+                    );
+                  })()}
                 </div>
               </CardContent>
             </Card>
+
+            {/* Quick Actions */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Quick Actions</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {user?.role === 'staff' ? (
+                  /* Staff users see limited actions */
+                  <div className="text-center py-4">
+                    <p className="text-sm text-gray-600 mb-4">Use the Check In/Out tab to manage your attendance</p>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => {
+                        // Navigate to Check In/Out tab
+                        const tabTrigger = document.querySelector('[value="checkin"]') as HTMLElement;
+                        if (tabTrigger) tabTrigger.click();
+                      }}
+                      className="w-full"
+                    >
+                      <Clock className="w-4 h-4 mr-2" />
+                      Go to Check In/Out
+                    </Button>
+                  </div>
+                ) : (
+                  /* Admin/Manager users see all actions */
+                  <>
+                    <Button 
+                      className="w-full justify-start" 
+                      variant="outline"
+                      onClick={() => {
+                        // Generate payroll for all staff
+                        staff.forEach((member: any) => {
+                          generatePayrollMutation.mutate({
+                            userId: member.id,
+                            month: selectedMonth,
+                            year: selectedYear,
+                          });
+                        });
+                      }}
+                    >
+                      <Calculator className="w-4 h-4 mr-2" />
+                      Generate Monthly Payroll
+                    </Button>
+                    
+                    <Button 
+                      className="w-full justify-start" 
+                      variant="outline"
+                      onClick={exportAttendanceReport}
+                      disabled={isExporting}
+                    >
+                      <Download className={`w-4 h-4 mr-2 ${isExporting ? 'animate-spin' : ''}`} />
+                      {isExporting ? 'Exporting...' : 'Export Attendance Report'}
+                    </Button>
+                    
+                    <Button className="w-full justify-start" variant="outline">
+                      <FileText className="w-4 h-4 mr-2" />
+                      Generate Pay Slips
+                    </Button>
+                  </>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        {/* Check In/Out Tab */}
+        <TabsContent value="checkin" className="space-y-4">
+          {user?.role === 'staff' ? (
+            /* Staff Self Check-In/Out */
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Clock className="w-5 h-5" />
+                  My Attendance
+                </CardTitle>
+                <p className="text-sm text-gray-600">Check yourself in and out for today</p>
+              </CardHeader>
+              <CardContent>
+                {(() => {
+                  const myTodayRecord = todayAttendance.find((a: any) => a.userId === user.id);
+                  return (
+                    <div className="space-y-6">
+                      {/* Today's Status Card */}
+                      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-lg border">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h3 className="text-lg font-semibold text-gray-900">Today's Status</h3>
+                            <p className="text-sm text-gray-600">{new Date().toLocaleDateString("en-IN", { 
+                              weekday: 'long',
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric'
+                            })}</p>
+                          </div>
+                          <div className="text-right">
+                            {myTodayRecord ? getStatusBadge(myTodayRecord.status) : (
+                              <Badge variant="outline" className="bg-gray-100">Not Checked In</Badge>
+                            )}
+                          </div>
+                        </div>
+                        
+                        {myTodayRecord && (
+                          <div className="mt-4 grid grid-cols-2 gap-4">
+                            <div>
+                              <p className="text-sm text-gray-600">Check In Time</p>
+                              <p className="font-medium">{formatTime(myTodayRecord.checkInTime)}</p>
+                            </div>
+                            {myTodayRecord.checkOutTime && (
+                              <div>
+                                <p className="text-sm text-gray-600">Check Out Time</p>
+                                <p className="font-medium">{formatTime(myTodayRecord.checkOutTime)}</p>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Action Buttons */}
+                      <div className="flex gap-4 justify-center">
+                        {!myTodayRecord ? (
+                          <Button
+                            size="lg"
+                            className="px-8 py-3 bg-green-600 hover:bg-green-700"
+                            onClick={() => selfCheckInMutation.mutate({})}
+                            disabled={selfCheckInMutation.isPending}
+                          >
+                            <LogIn className="w-5 h-5 mr-2" />
+                            {selfCheckInMutation.isPending ? 'Checking In...' : 'Check In'}
+                          </Button>
+                        ) : !myTodayRecord.checkOutTime ? (
+                          <Button
+                            size="lg"
+                            variant="outline"
+                            className="px-8 py-3 border-red-600 text-red-600 hover:bg-red-50"
+                            onClick={() => selfCheckOutMutation.mutate()}
+                            disabled={selfCheckOutMutation.isPending}
+                          >
+                            <LogOut className="w-5 h-5 mr-2" />
+                            {selfCheckOutMutation.isPending ? 'Checking Out...' : 'Check Out'}
+                          </Button>
+                        ) : (
+                          <div className="text-center">
+                            <div className="flex items-center justify-center gap-2 text-green-600 mb-2">
+                              <CheckCircle className="w-5 h-5" />
+                              <span className="font-medium">Attendance Complete</span>
+                            </div>
+                            <p className="text-sm text-gray-600">You've successfully checked in and out for today</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })()}
+              </CardContent>
+            </Card>
+          ) : (
+            /* Admin Check In/Out Management */
+            <Card>
+              <CardHeader>
+                <CardTitle>Admin Check In/Out Management</CardTitle>
+                <p className="text-sm text-gray-600">Manage staff check-in and check-out as admin</p>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Staff Member</TableHead>
+                      <TableHead>Today's Status</TableHead>
+                      <TableHead>Check In Time</TableHead>
+                      <TableHead>Check Out Time</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {staff.map((member: any) => {
+                      const todayRecord = todayAttendance.find((a: any) => a.userId === member.id);
+                      
+                      return (
+                        <TableRow key={member.id}>
+                          <TableCell>
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                                <Users className="w-4 h-4 text-blue-600" />
+                              </div>
+                              <div>
+                                <p className="font-medium">{member.name}</p>
+                                <p className="text-sm text-gray-600">{member.designation || "Staff"}</p>
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            {todayRecord ? getStatusBadge(todayRecord.status) : (
+                              <Badge variant="outline">Not Marked</Badge>
+                            )}
+                          </TableCell>
+                          <TableCell>{formatTime(todayRecord?.checkInTime)}</TableCell>
+                          <TableCell>{formatTime(todayRecord?.checkOutTime)}</TableCell>
+                          <TableCell>
+                            <div className="flex gap-2">
+                              {!todayRecord ? (
+                                <Button
+                                  size="sm"
+                                  onClick={() => adminCheckInMutation.mutate({ userId: member.id })}
+                                  disabled={adminCheckInMutation.isPending}
+                                >
+                                  Check In
+                                </Button>
+                              ) : !todayRecord.checkOutTime ? (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => adminCheckOutMutation.mutate({ attendanceId: todayRecord.id })}
+                                  disabled={adminCheckOutMutation.isPending}
+                                >
+                                  Check Out
+                                </Button>
+                              ) : (
+                                <span className="text-sm text-gray-500">Completed</span>
+                              )}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
           )}
-        </div>
-      )}
+        </TabsContent>
 
-      {/* Check In/Out Tab Content */}
-      {activeTab === "check-in-out" && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg font-semibold text-foreground flex items-center gap-2">
-              <Clock className="h-5 w-5" />
-              Check In/Out Management
-            </CardTitle>
-            <p className="text-sm text-gray-600">Staff attendance tracking</p>
-          </CardHeader>
-          <CardContent>
-            <div className="text-center py-8">
-              <p className="text-gray-600">Check In/Out functionality coming soon</p>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+        {/* Admin-only tabs: Attendance, Staff Management, Payroll */}
+        {user?.role !== 'staff' && (
+          <>
+            <TabsContent value="attendance" className="space-y-4">
 
-      {/* Attendance Tab Content */}
-      {activeTab === "attendance" && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg font-semibold text-foreground flex items-center gap-2">
-              <Users className="h-5 w-5" />
-              Attendance Records
-            </CardTitle>
-            <p className="text-sm text-gray-600">Monthly attendance tracking</p>
-          </CardHeader>
-          <CardContent>
-            <div className="text-center py-8">
-              <p className="text-gray-600">Attendance records view coming soon</p>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Staff Management Tab Content - Admin Only */}
-      {activeTab === "staff-management" && admin && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg font-semibold text-foreground flex items-center gap-2">
-              <UserPlus className="h-5 w-5" />
-              Staff Management
-            </CardTitle>
-            <p className="text-sm text-gray-600">Add, edit and manage staff members</p>
-          </CardHeader>
-          <CardContent>
-            <div className="text-center py-8">
-              <p className="text-gray-600">Staff management functionality coming soon</p>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Payroll Tab Content */}
-      {activeTab === "payroll" && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg font-semibold text-foreground flex items-center gap-2">
-              <CreditCard className="h-5 w-5" />
-              Payroll Management
-            </CardTitle>
-            <p className="text-sm text-gray-600">Salary processing and payslips</p>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {payrollRecords.length > 0 ? (
+          {/* Compact Attendance Records Display */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                <div>
+                  <div>Attendance Records</div>
+                  <p className="text-sm text-gray-600 font-normal mt-1">
+                    Monthly attendance overview with status codes: P=Present, A=Absent, L=Late, HF=Half Day
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Input
+                    placeholder="Search staff name..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-48"
+                  />
+                </div>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {staff.length > 0 ? (
                 <div className="overflow-x-auto">
-                  <Table>
+                  <Table className="text-sm">
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Employee</TableHead>
-                        <TableHead>Basic Salary</TableHead>
-                        <TableHead>Working Days</TableHead>
-                        <TableHead>Net Salary</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Actions</TableHead>
+                        <TableHead className="w-8">No</TableHead>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Post</TableHead>
+                        {Array.from({ length: new Date(selectedYear, selectedMonth, 0).getDate() }, (_, i) => {
+                          const day = i + 1;
+                          const isEvenDay = day % 2 === 0;
+                          const headerBgClass = isEvenDay ? 'bg-amber-50' : 'bg-gray-50';
+                          return (
+                            <TableHead key={day} className={`w-8 text-center p-1 text-xs ${headerBgClass}`}>
+                              {day}
+                            </TableHead>
+                          );
+                        })}
+                        <TableHead className="w-16">Total</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {payrollRecords.slice(0, 10).map((payroll: any) => {
-                        const employee = staff.find((s: any) => s.id === payroll.userId);
+                      {staff.filter((member: any) => 
+                        member.name.toLowerCase().includes(searchTerm.toLowerCase())
+                      ).map((member: any, index: number) => {
+                        const memberAttendance = attendanceRecords.filter(
+                          (record: any) => record.userId === member.id
+                        );
+                        
+                        const attendanceMap = memberAttendance.reduce((acc: any, record: any) => {
+                          const day = new Date(record.date).getDate();
+                          acc[day] = record.status;
+                          return acc;
+                        }, {});
+
+                        const getStatusCode = (status: string) => {
+                          switch (status) {
+                            case 'present': return 'P';
+                            case 'absent': return 'A';
+                            case 'late': return 'L';
+                            case 'half_day': return 'HF';
+                            case 'on_leave': return 'L';
+                            default: return 'A';
+                          }
+                        };
+
+                        const getStatusColor = (status: string) => {
+                          switch (status) {
+                            case 'present': return 'text-green-700 bg-green-50';
+                            case 'absent': return 'text-red-700 bg-red-50';
+                            case 'late': return 'text-orange-700 bg-orange-50';
+                            case 'half_day': return 'text-yellow-700 bg-yellow-50';
+                            case 'on_leave': return 'text-blue-700 bg-blue-50';
+                            default: return 'text-gray-500 bg-gray-50';
+                          }
+                        };
+
+                        const totalPresent = Object.values(attendanceMap).filter(
+                          (status: any) => status === 'present' || status === 'late'
+                        ).length;
+                        
+                        const totalHalfDays = Object.values(attendanceMap).filter(
+                          (status: any) => status === 'half_day'
+                        ).length;
+
                         return (
-                          <TableRow key={payroll.id}>
-                            <TableCell>
-                              <div>
-                                <div className="font-medium">{employee?.name || 'Unknown'}</div>
-                                <div className="text-sm text-gray-500">{employee?.employeeId || 'No ID'}</div>
-                              </div>
-                            </TableCell>
-                            <TableCell>₹{payroll.basicSalary?.toLocaleString() || '0'}</TableCell>
-                            <TableCell>{payroll.actualWorkingDays || 0}/{payroll.totalWorkingDays || 30}</TableCell>
-                            <TableCell className="font-medium">₹{payroll.netSalary?.toLocaleString() || '0'}</TableCell>
-                            <TableCell>
-                              <Badge 
-                                variant={payroll.status === 'paid' ? 'default' : 
-                                        payroll.status === 'pending' ? 'secondary' : 'outline'}
-                              >
-                                {payroll.status || 'Pending'}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex gap-2">
-                                <Button size="sm" variant="outline">
-                                  <Eye className="h-3 w-3 mr-1" />
-                                  View
-                                </Button>
-                                <Button 
-                                  size="sm" 
-                                  variant="outline"
-                                  onClick={() => generatePaySlip(payroll, employee)}
-                                >
-                                  <Download className="h-3 w-3 mr-1" />
-                                  PDF
-                                </Button>
-                              </div>
+                          <TableRow key={member.id}>
+                            <TableCell className="font-medium">{index + 1}</TableCell>
+                            <TableCell className="font-medium">{member.name}</TableCell>
+                            <TableCell className="text-gray-600">{member.designation || member.role}</TableCell>
+                            {Array.from({ length: new Date(selectedYear, selectedMonth, 0).getDate() }, (_, i) => {
+                              const day = i + 1;
+                              const status = attendanceMap[day];
+                              const statusCode = status ? getStatusCode(status) : 'A';
+                              const colorClass = status ? getStatusColor(status) : 'text-gray-400';
+                              
+                              const isEditing = editingCell?.staffId === member.id && editingCell?.day === day;
+                              const isEvenDay = day % 2 === 0;
+                              const columnBgClass = isEvenDay ? 'bg-amber-50/30' : 'bg-white';
+                              
+                              return (
+                                <TableCell key={day} className={`text-center p-1 ${columnBgClass}`}>
+                                  {isEditing ? (
+                                    <div className="flex flex-col items-center gap-1">
+                                      <Select 
+                                        value={editingCellStatus} 
+                                        onValueChange={setEditingCellStatus}
+                                      >
+                                        <SelectTrigger className="w-16 h-6 text-xs">
+                                          <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          <SelectItem value="present">P</SelectItem>
+                                          <SelectItem value="absent">A</SelectItem>
+                                          <SelectItem value="half-day">HF</SelectItem>
+                                          <SelectItem value="late">L</SelectItem>
+                                          <SelectItem value="on-leave">LV</SelectItem>
+                                        </SelectContent>
+                                      </Select>
+                                      <div className="flex gap-1">
+                                        <Button 
+                                          size="sm" 
+                                          onClick={() => saveCellEdit(member.id, day, editingCellStatus)}
+                                          className="h-4 w-4 p-0"
+                                        >
+                                          <Check className="w-2 h-2" />
+                                        </Button>
+                                        <Button 
+                                          size="sm" 
+                                          variant="outline"
+                                          onClick={cancelCellEdit}
+                                          className="h-4 w-4 p-0"
+                                        >
+                                          <X className="w-2 h-2" />
+                                        </Button>
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    <span 
+                                      className={`inline-block w-6 h-6 rounded text-xs font-medium leading-6 cursor-pointer hover:bg-gray-100 ${colorClass}`}
+                                      onClick={() => handleCellEdit(member.id, day, status)}
+                                      title="Click to edit attendance"
+                                    >
+                                      {statusCode}
+                                    </span>
+                                  )}
+                                </TableCell>
+                              );
+                            })}
+                            <TableCell className="font-medium text-center">
+                              {totalPresent + (totalHalfDays * 0.5)}
                             </TableCell>
                           </TableRow>
                         );
@@ -1821,25 +2064,640 @@ export default function Attendance() {
                   </Table>
                 </div>
               ) : (
-                <div className="text-center py-8">
-                  <p className="text-gray-600">No payroll records found for this month</p>
+                <p className="text-center text-gray-500 py-4">No staff members found</p>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Toggle Button for Detailed Records */}
+          <div className="flex justify-center">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowDetailedRecords(!showDetailedRecords)}
+              className="bg-amber-50 hover:bg-amber-100 border-amber-200 text-amber-900"
+            >
+              {showDetailedRecords ? (
+                <>
+                  <EyeOff className="w-4 h-4 mr-2" />
+                  Hide Detailed Records (with Inline Editing)
+                </>
+              ) : (
+                <>
+                  <Eye className="w-4 h-4 mr-2" />
+                  Show Detailed Records (with Inline Editing)
+                </>
+              )}
+            </Button>
+          </div>
+
+          {/* Detailed Records Table (Collapsible) */}
+          {showDetailedRecords && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Edit className="w-5 h-5" />
+                  Attendance Records with Inline Editing
+                  <Badge variant="secondary" className="ml-2">Click Edit to modify status</Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+              {attendanceRecords.length > 0 ? (
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Date</TableHead>
+                        <TableHead>Staff Member</TableHead>
+                        <TableHead>Check In</TableHead>
+                        <TableHead>Check Out</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Hours</TableHead>
+                        <TableHead>Notes</TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {attendanceRecords.map((record: any) => (
+                        <TableRow key={record.id}>
+                          <TableCell>
+                            {new Date(record.date).toLocaleDateString("en-IN")}
+                          </TableCell>
+                          <TableCell>{record.user?.name}</TableCell>
+                          <TableCell>
+                            {record.checkInTime ? 
+                              new Date(record.checkInTime).toLocaleTimeString("en-IN", {
+                                hour: "2-digit",
+                                minute: "2-digit"
+                              }) : "-"}
+                          </TableCell>
+                          <TableCell>
+                            {record.checkOutTime ? 
+                              new Date(record.checkOutTime).toLocaleTimeString("en-IN", {
+                                hour: "2-digit",
+                                minute: "2-digit"
+                              }) : "-"}
+                          </TableCell>
+                          <TableCell>
+                            {editingAttendance === record.id ? (
+                              <div className="flex items-center gap-2">
+                                <Select value={editingStatus} onValueChange={setEditingStatus}>
+                                  <SelectTrigger className="w-32">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="present">Present</SelectItem>
+                                    <SelectItem value="absent">Absent</SelectItem>
+                                    <SelectItem value="half-day">Half Day</SelectItem>
+                                    <SelectItem value="late">Late</SelectItem>
+                                    <SelectItem value="on-leave">On Leave</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                                <Button 
+                                  size="sm" 
+                                  onClick={() => saveAttendanceEdit(record.id, editingStatus)}
+                                  className="h-8 px-2"
+                                >
+                                  <Check className="w-3 h-3" />
+                                </Button>
+                                <Button 
+                                  size="sm" 
+                                  variant="outline"
+                                  onClick={cancelAttendanceEdit}
+                                  className="h-8 px-2"
+                                >
+                                  <X className="w-3 h-3" />
+                                </Button>
+                              </div>
+                            ) : (
+                              getStatusBadge(record.status)
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            {record.hoursWorked ? `${record.hoursWorked.toFixed(1)}h` : "-"}
+                          </TableCell>
+                          <TableCell>
+                            <span className="text-sm text-gray-600 max-w-xs truncate">
+                              {record.notes || "-"}
+                            </span>
+                          </TableCell>
+                          <TableCell>
+                            {editingAttendance === record.id ? null : (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleAttendanceEdit(record.id, record.status)}
+                                className="h-8 px-2"
+                              >
+                                <Edit className="w-3 h-3" />
+                              </Button>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  No attendance records found for the selected period.
                 </div>
               )}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+            </CardContent>
+          </Card>
+          )}
+            </TabsContent>
+
+            {/* Staff Management Tab - Admin Only */}
+            <TabsContent value="staff" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                Staff Management
+                <Button size="sm" onClick={() => setIsAddStaffOpen(true)}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Staff
+                </Button>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Staff Details</TableHead>
+                    <TableHead>Employee ID</TableHead>
+                    <TableHead>Department</TableHead>
+                    <TableHead>Salary</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {staff.map((member: any) => (
+                    <TableRow key={member.id}>
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold">
+                            {member.name.charAt(0)}
+                          </div>
+                          <div>
+                            <div className="font-semibold text-gray-900">{member.name}</div>
+                            <div className="text-sm text-gray-600">{member.email}</div>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell className="font-mono text-sm">{member.employeeId}</TableCell>
+                      <TableCell>{member.department}</TableCell>
+                      <TableCell className="font-semibold">₹{member.basicSalary?.toLocaleString() || "N/A"}</TableCell>
+                      <TableCell>
+                        <div className="flex gap-1">
+                          <Button size="sm" variant="outline" onClick={() => handleEditStaff(member)}>
+                            <Edit className="w-3 h-3" />
+                          </Button>
+                          <Button size="sm" variant="outline" className="text-red-600 hover:text-red-700" onClick={() => handleDeleteStaff(member.id)}>
+                            <Trash2 className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+            </TabsContent>
+
+            {/* Payroll Tab - Admin Only */}
+            <TabsContent value="payroll" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>
+                Payroll for {new Date(selectedYear, selectedMonth - 1).toLocaleDateString('en-US', { month: 'long' })} {selectedYear.toString().slice(-2)}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Employee</TableHead>
+                    <TableHead>Working Days</TableHead>
+                    <TableHead>Salary</TableHead>
+                    <TableHead>Net Pay</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {payrollRecords.map((payroll: any) => {
+                    // Find the staff member from the staff array
+                    const staffMember = staff.find((s: any) => s.id === payroll.userId);
+                    const staffName = staffMember?.name || `User ${payroll.userId}`;
+                    const employeeId = staffMember?.employeeId || payroll.employeeId || 'N/A';
+                    
+                    // Calculate net pay properly - use basicSalary and other fields correctly
+                    const basicSalary = payroll.basicSalary || payroll.salary || staffMember?.basicSalary || 0;
+                    const allowances = payroll.allowances || 0;
+                    const bonus = payroll.bonus || 0;
+                    const overtimePay = payroll.overtimePay || 0;
+                    const deductions = payroll.deductions || payroll.advance || 0;
+                    
+                    // If no working days, net salary should be 0
+                    const actualWorkingDays = payroll.actualWorkingDays || 0;
+                    const totalWorkingDays = payroll.totalWorkingDays || 30;
+                    
+                    // Calculate proportionate salary based on working days
+                    const proportionateSalary = actualWorkingDays > 0 ? 
+                      Math.round((basicSalary / totalWorkingDays) * actualWorkingDays) : 0;
+                    
+                    const netSalary = payroll.netSalary || (proportionateSalary + allowances + bonus + overtimePay - deductions);
+                    
+                    return (
+                      <TableRow key={payroll.id}>
+                        <TableCell>
+                          <div className="font-semibold">{staffName}</div>
+                          <div className="text-sm text-gray-600">{employeeId}</div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="font-semibold">{payroll.actualWorkingDays || 0}</div>
+                          <div className="text-sm text-gray-600">of {payroll.totalWorkingDays || 30}</div>
+                        </TableCell>
+                        <TableCell className="font-semibold">₹{basicSalary.toLocaleString()}</TableCell>
+                        <TableCell className="font-semibold text-green-600">₹{netSalary.toLocaleString()}</TableCell>
+                        <TableCell>
+                          <Badge variant={payroll.status === "paid" ? "default" : "secondary"}>
+                            {payroll.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex gap-1">
+                            {/* Generate button - always available for regeneration */}
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => generatePayrollMutation.mutate({
+                                userId: payroll.userId,
+                                month: selectedMonth,
+                                year: selectedYear
+                              })}
+                              className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-2 py-1"
+                              disabled={generatePayrollMutation.isPending}
+                              title="Generate"
+                            >
+                              <FileText className="w-3 h-3" />
+                            </Button>
+                            
+                            {/* Status-specific buttons */}
+                            {payroll.status === "generated" && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => processPayrollMutation.mutate(payroll.id)}
+                                className="bg-green-600 hover:bg-green-700 text-white text-xs px-2 py-1"
+                                disabled={processPayrollMutation.isPending}
+                                title="Paid"
+                              >
+                                <CreditCard className="w-3 h-3" />
+                              </Button>
+                            )}
+                            
+                            {payroll.status === "paid" && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => downloadPayslip(payroll.id)}
+                                className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-2 py-1"
+                                title="PDF"
+                              >
+                                <Download className="w-3 h-3" />
+                              </Button>
+                            )}
+                            
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleEditPayroll(payroll)}
+                              style={{ backgroundColor: 'hsl(28, 100%, 25%)', color: 'white' }}
+                              className="text-xs px-2 py-1"
+                              title="Edit"
+                            >
+                              <Edit className="w-3 h-3" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+          </TabsContent>
+          </>
+        )}
+      </Tabs>
+
+      {/* Add Staff Dialog */}
+      <Dialog open={isAddStaffOpen} onOpenChange={setIsAddStaffOpen}>
+        <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <UserPlus className="w-5 h-5" />
+              Add New Staff Member
+            </DialogTitle>
+          </DialogHeader>
+          <Form {...addStaffForm}>
+            <form onSubmit={addStaffForm.handleSubmit(onAddStaffSubmit)} className="space-y-3">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <FormField
+                  control={addStaffForm.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Full Name *</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter full name" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={addStaffForm.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email Address *</FormLabel>
+                      <FormControl>
+                        <Input type="email" placeholder="Enter email address" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={addStaffForm.control}
+                  name="employeeId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Employee ID *</FormLabel>
+                      <FormControl>
+                        <Input placeholder="EMP001" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={addStaffForm.control}
+                  name="department"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Department *</FormLabel>
+                      <FormControl>
+                        <Input placeholder="HR, IT, Sales, etc." {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={addStaffForm.control}
+                  name="basicSalary"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Monthly Salary (₹) *</FormLabel>
+                      <FormControl>
+                        <Input type="number" placeholder="50000" {...field} onChange={(e) => field.onChange(Number(e.target.value))} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={addStaffForm.control}
+                  name="aadharNumber"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Aadhar Number</FormLabel>
+                      <FormControl>
+                        <Input placeholder="1234 5678 9012" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <FormField
+                  control={addStaffForm.control}
+                  name="phone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Phone Number</FormLabel>
+                      <FormControl>
+                        <Input placeholder="+91 98765 43210" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={addStaffForm.control}
+                  name="address"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Address</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Complete address" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-4">
+                <Button type="button" variant="outline" onClick={() => setIsAddStaffOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={createStaffMutation.isPending}>
+                  {createStaffMutation.isPending ? "Adding..." : "Add Staff"}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Staff Dialog */}
+      <Dialog open={isEditStaffOpen} onOpenChange={setIsEditStaffOpen}>
+        <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Edit className="w-5 h-5" />
+              Edit Staff Member
+            </DialogTitle>
+          </DialogHeader>
+          <Form {...editStaffForm}>
+            <form onSubmit={editStaffForm.handleSubmit(onEditStaffSubmit)} className="space-y-3">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <FormField
+                  control={editStaffForm.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Full Name *</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter full name" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={editStaffForm.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email Address *</FormLabel>
+                      <FormControl>
+                        <Input type="email" placeholder="Enter email address" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={editStaffForm.control}
+                  name="employeeId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Employee ID *</FormLabel>
+                      <FormControl>
+                        <Input placeholder="EMP001" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={editStaffForm.control}
+                  name="department"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Department *</FormLabel>
+                      <FormControl>
+                        <Input placeholder="HR, IT, Sales, etc." {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={editStaffForm.control}
+                  name="basicSalary"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Monthly Salary (₹) *</FormLabel>
+                      <FormControl>
+                        <Input type="number" placeholder="50000" {...field} onChange={(e) => field.onChange(Number(e.target.value))} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={editStaffForm.control}
+                  name="aadharNumber"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Aadhar Number</FormLabel>
+                      <FormControl>
+                        <Input placeholder="1234 5678 9012" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <FormField
+                  control={editStaffForm.control}
+                  name="phone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Phone Number</FormLabel>
+                      <FormControl>
+                        <Input placeholder="+91 98765 43210" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={editStaffForm.control}
+                  name="address"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Address</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Complete address" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-4">
+                <Button type="button" variant="outline" onClick={() => setIsEditStaffOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={updateStaffMutation.isPending}>
+                  {updateStaffMutation.isPending ? "Updating..." : "Update Staff"}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Payroll Edit Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Calculator className="w-5 h-5" />
+              Edit Payroll - {editingPayroll?.staff?.name || `User ${editingPayroll?.userId}`}
+            </DialogTitle>
+          </DialogHeader>
+          {editingPayroll && (
+            <PayrollEditForm
+              staff={editingPayroll.staff}
+              payroll={editingPayroll}
+              onSave={handlePayrollSave}
+            />
+          )}
+          <div className="flex justify-end gap-2 pt-4">
+            <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+              Cancel
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </FurniliLayout>
   );
-
-}
-
-// Helper function to format time
-const formatTime = (timeString: string) => {
-  if (!timeString) return '-';
-  return new Date(timeString).toLocaleTimeString('en-IN', { 
-    hour: '2-digit', 
-    minute: '2-digit',
-    hour12: true 
-  });
 };
