@@ -732,7 +732,7 @@ export class MemStorage {
   // Project Management Operations - Phase 1
   async getProject(id: number): Promise<any | undefined> {
     try {
-      console.log("getProject called with id:", id);
+      console.log("DatabaseStorage getProject called with id:", id);
       
       // Use direct pg client to include client information
       const { Pool } = await import('pg');
@@ -754,17 +754,25 @@ export class MemStorage {
         LIMIT 1
       `;
       
+      console.log("DatabaseStorage: About to execute query:", query.trim());
       const result = await pool.query(query, [id]);
       await pool.end();
       
-      console.log("Direct PG getProject query executed successfully, found:", result.rows.length > 0 ? "project" : "none");
+      console.log("DatabaseStorage: getProject query executed, rows returned:", result.rows.length);
       if (result.rows.length > 0) {
-        console.log("getProject result:", JSON.stringify(result.rows[0], null, 2));
+        const project = result.rows[0];
+        console.log("DatabaseStorage: Project client_name:", project.client_name);
+        console.log("DatabaseStorage: Project client_mobile:", project.client_mobile);
+        console.log("DatabaseStorage: Full project data keys:", Object.keys(project));
+        return project;
       }
-      return result.rows[0];
+      return undefined;
     } catch (error) {
-      console.error("Error in getProject:", error);
-      throw new Error(`Database query failed: ${error.message}`);
+      console.error("DatabaseStorage: Error in getProject:", error);
+      // Fall back to the old method if there's an issue
+      const result = await db.select().from(projects).where(eq(projects.id, id)).limit(1);
+      console.log("DatabaseStorage: Fallback to Drizzle query, found:", result.length > 0 ? "project" : "none");
+      return result[0];
     }
   }
 
