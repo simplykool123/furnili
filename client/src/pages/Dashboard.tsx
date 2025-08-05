@@ -583,7 +583,7 @@ export default function Dashboard() {
                       {project.stage}
                     </Badge>
                     <p className="text-xs text-gray-600 truncate">
-                      {project.name} - {project.clientName}
+                      {project.name} - {project.client_name}
                     </p>
                   </div>
                   <ArrowRight className="h-3 w-3 text-gray-400 flex-shrink-0" />
