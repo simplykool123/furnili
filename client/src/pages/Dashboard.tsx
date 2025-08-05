@@ -766,45 +766,88 @@ export default function Dashboard() {
         </>
       )}
 
-      {/* Store Keeper specific section - Material Requests to Process */}
-      {currentUser?.role === 'store_incharge' && stats?.recentRequests && stats.recentRequests.filter((r: any) => ['pending', 'approved'].includes(r.status)).length > 0 && (
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base font-semibold text-foreground flex items-center gap-2">
-              <Package className="h-4 w-4 text-indigo-500" />
-              Material Requests to Process ({stats.recentRequests.filter((r: any) => ['pending', 'approved'].includes(r.status)).length})
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pt-0">
-            <div className="space-y-2 max-h-64 overflow-y-auto">
-              {stats.recentRequests.filter((request: any) => ['pending', 'approved'].includes(request.status)).slice(0, 5).map((request: any) => (
-                <div 
-                  key={request.id}
-                  className="flex items-center justify-between p-2 rounded-lg bg-indigo-50/50 border border-indigo-200/50 hover:bg-indigo-50 cursor-pointer transition-colors"
-                  onClick={() => setLocation(`/requests`)}
-                >
-                  <div className="flex items-start gap-2 flex-1 min-w-0">
-                    <Badge 
-                      variant={
-                        request.status === 'pending' ? 'outline' :
-                        request.status === 'approved' ? 'default' :
-                        request.status === 'issued' ? 'secondary' :
-                        'destructive'
-                      }
-                      className="text-xs min-w-fit"
+      {/* Store Keeper specific sections */}
+      {currentUser?.role === 'store_incharge' && (
+        <div className="space-y-4">
+          {/* Material Requests to Process */}
+          {stats?.recentRequests && stats.recentRequests.filter((r: any) => ['pending', 'approved'].includes(r.status)).length > 0 && (
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base font-semibold text-foreground flex items-center gap-2">
+                  <Package className="h-4 w-4 text-indigo-500" />
+                  Material Requests to Process ({stats.recentRequests.filter((r: any) => ['pending', 'approved'].includes(r.status)).length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="space-y-2 max-h-64 overflow-y-auto">
+                  {stats.recentRequests.filter((request: any) => ['pending', 'approved'].includes(request.status)).slice(0, 5).map((request: any) => (
+                    <div 
+                      key={request.id}
+                      className="flex items-center justify-between p-2 rounded-lg bg-indigo-50/50 border border-indigo-200/50 hover:bg-indigo-50 cursor-pointer transition-colors"
+                      onClick={() => setLocation(`/requests`)}
                     >
-                      {request.status}
-                    </Badge>
-                    <p className="text-xs text-gray-600 truncate">
-                      {request.requestId} - {request.clientName}
-                    </p>
-                  </div>
-                  <ArrowRight className="h-3 w-3 text-gray-400 flex-shrink-0" />
+                      <div className="flex items-start gap-2 flex-1 min-w-0">
+                        <Badge 
+                          variant={
+                            request.status === 'pending' ? 'outline' :
+                            request.status === 'approved' ? 'default' :
+                            request.status === 'issued' ? 'secondary' :
+                            'destructive'
+                          }
+                          className="text-xs min-w-fit"
+                        >
+                          {request.status}
+                        </Badge>
+                        <p className="text-xs text-gray-600 truncate">
+                          {request.requestId} - {request.clientName}
+                        </p>
+                      </div>
+                      <ArrowRight className="h-3 w-3 text-gray-400 flex-shrink-0" />
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Low Stock Alert */}
+          {stats?.lowStockProducts && stats.lowStockProducts.length > 0 && (
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base font-semibold text-foreground flex items-center gap-2">
+                  <AlertTriangle className="h-4 w-4 text-red-500" />
+                  Low Stock Alert ({stats.lowStockProducts.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="space-y-2 max-h-64 overflow-y-auto">
+                  {stats.lowStockProducts.slice(0, 5).map((product: any) => (
+                    <div 
+                      key={product.id}
+                      className="flex items-center justify-between p-2 rounded-lg bg-red-50/50 border border-red-200/50 hover:bg-red-50 cursor-pointer transition-colors"
+                      onClick={() => setLocation(`/products`)}
+                    >
+                      <div className="flex items-start gap-2 flex-1 min-w-0">
+                        <Badge variant="destructive" className="text-xs min-w-fit">
+                          {product.currentStock}/{product.minStock}
+                        </Badge>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs font-medium text-gray-900 truncate">
+                            {product.name}
+                          </p>
+                          <p className="text-xs text-gray-500 truncate">
+                            {product.category}
+                          </p>
+                        </div>
+                      </div>
+                      <ArrowRight className="h-3 w-3 text-gray-400 flex-shrink-0" />
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
       )}
     </FurniliLayout>
   );
