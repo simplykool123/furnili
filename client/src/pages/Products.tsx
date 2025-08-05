@@ -18,7 +18,7 @@ interface Product {
   size?: string;
   thickness?: string;
   sku?: string;
-  price: number;
+  pricePerUnit: number;
   currentStock: number;
   minStock: number;
   unit: string;
@@ -63,7 +63,7 @@ export default function Products() {
     <FurniliLayout
       title="Product Management"
       subtitle="Manage your inventory products and stock levels"
-      showAddButton={canManageProducts}
+      showAddButton={canManageProducts || false}
       onAddClick={() => setShowAddProduct(true)}
     >
       {/* Bulk Operations - Mobile Optimized */}

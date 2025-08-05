@@ -47,8 +47,9 @@ export default function ProductTable() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Check if user can see pricing information
+  // Check if user can see pricing information and perform actions
   const canSeePricing = user && ['admin', 'manager'].includes(user.role);
+  const canEditProducts = user && ['admin', 'manager', 'store_incharge'].includes(user.role);
 
   const { data: products, isLoading } = useQuery({
     queryKey: ['/api/products', filters],
@@ -267,26 +268,28 @@ export default function ProductTable() {
                 {getStockStatusBadge(product.stockStatus)}
               </div>
               
-              {/* Actions */}
-              <div className="flex items-center gap-1">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleEdit(product)}
-                  className="flex-1 h-7 text-xs"
-                >
-                  <Edit className="w-3 h-3 mr-1" />
-                  Edit
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setProductToDelete(product)}
-                  className="h-7 px-2"
-                >
-                  <Trash2 className="w-3 h-3 text-red-600" />
-                </Button>
-              </div>
+              {/* Actions - Only show for users with edit permissions */}
+              {canEditProducts && (
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleEdit(product)}
+                    className="flex-1 h-7 text-xs"
+                  >
+                    <Edit className="w-3 h-3 mr-1" />
+                    Edit
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setProductToDelete(product)}
+                    className="h-7 px-2"
+                  >
+                    <Trash2 className="w-3 h-3 text-red-600" />
+                  </Button>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -306,8 +309,7 @@ export default function ProductTable() {
             <TableHead>Thk.</TableHead>
             <TableHead>Stock</TableHead>
             {canSeePricing && <TableHead>Price</TableHead>}
-            <TableHead>Status</TableHead>
-            <TableHead className="w-[80px]">Actions</TableHead>
+            {canEditProducts && <TableHead className="w-[80px]">Actions</TableHead>}
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -347,31 +349,28 @@ export default function ProductTable() {
               {canSeePricing && (
                 <TableCell className="text-xs font-medium">₹{(product.pricePerUnit || 0).toFixed(0)}</TableCell>
               )}
-              <TableCell>
-                <Badge variant={product.isActive ? "default" : "secondary"}>
-                  {product.isActive ? "Active" : "Inactive"}
-                </Badge>
-              </TableCell>
-              <TableCell>
-                <div className="flex items-center space-x-1">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleEdit(product)}
-                    className="h-6 w-6 p-0"
-                  >
-                    <Edit className="w-3 h-3" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setProductToDelete(product)}
-                    className="h-6 w-6 p-0"
-                  >
-                    <Trash2 className="w-3 h-3 text-red-600" />
-                  </Button>
-                </div>
-              </TableCell>
+              {canEditProducts && (
+                <TableCell>
+                  <div className="flex items-center space-x-1">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleEdit(product)}
+                      className="h-6 w-6 p-0"
+                    >
+                      <Edit className="w-3 h-3" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setProductToDelete(product)}
+                      className="h-6 w-6 p-0"
+                    >
+                      <Trash2 className="w-3 h-3 text-red-600" />
+                    </Button>
+                  </div>
+                </TableCell>
+              )}
             </TableRow>
           ))}
         </TableBody>
@@ -439,7 +438,7 @@ export default function ProductTable() {
           data={filteredProducts}
           columns={mobileColumns}
           emptyMessage="No products found"
-          itemActions={(product) => [
+          itemActions={canEditProducts ? (product) => [
             {
               label: 'Edit',
               icon: Edit,
@@ -451,7 +450,7 @@ export default function ProductTable() {
               onClick: () => setProductToDelete(product),
               destructive: true,
             },
-          ]}
+          ] : undefined}
         />
       ) : (
         /* Desktop Products Display */
