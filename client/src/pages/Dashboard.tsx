@@ -167,7 +167,7 @@ export default function Dashboard() {
   const { data: stats, isLoading } = useQuery<DashboardStats>({
     queryKey: ["/api/dashboard/stats"],
     staleTime: 2 * 60 * 1000, // 2 minutes
-    cacheTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 5 * 60 * 1000, // 5 minutes
   });
 
   // Fetch personal expense stats for staff users
@@ -175,21 +175,25 @@ export default function Dashboard() {
     queryKey: ["/api/petty-cash/my-stats"],
     enabled: currentUser?.role === 'staff',
     staleTime: 2 * 60 * 1000, // 2 minutes
-    cacheTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 5 * 60 * 1000, // 5 minutes
   });
 
   // Get personal attendance stats for the current user
-  const { data: personalAttendanceStats } = useQuery({
+  const { data: personalAttendanceStats } = useQuery<{
+    totalDays: number;
+    presentDays: number;
+    attendancePercentage: number;
+  }>({
     queryKey: ["/api/attendance/stats"],
     enabled: authService.hasRole(['staff', 'store_incharge']),
     staleTime: 2 * 60 * 1000, // 2 minutes
-    cacheTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 5 * 60 * 1000, // 5 minutes
   });
 
   const { data: recentActivity } = useQuery({
     queryKey: ["/api/dashboard/activity"],
     staleTime: 1 * 60 * 1000, // 1 minute
-    cacheTime: 3 * 60 * 1000, // 3 minutes
+    gcTime: 3 * 60 * 1000, // 3 minutes
   });
 
   // Fetch ongoing projects (not completed)
@@ -204,7 +208,7 @@ export default function Dashboard() {
   const { data: pendingTasks = [] } = useQuery<DashboardTask[]>({
     queryKey: ["/api/dashboard/tasks"],
     staleTime: 30 * 1000, // 30 seconds
-    cacheTime: 2 * 60 * 1000, // 2 minutes
+    gcTime: 2 * 60 * 1000, // 2 minutes
   });
 
   const { toast } = useToast();
@@ -213,13 +217,13 @@ export default function Dashboard() {
   const { data: todayAttendance = [] } = useQuery({
     queryKey: ["/api/attendance/today"],
     queryFn: () => authenticatedApiRequest('GET', "/api/attendance/today"),
-    enabled: currentUser?.role === 'staff',
+    enabled: authService.hasRole(['staff', 'store_incharge']),
   });
 
   // Mark task as done mutation
   const markTaskDoneMutation = useMutation({
     mutationFn: async (taskId: number) => {
-      return apiRequest(`/api/tasks/${taskId}/status`, "PATCH", { status: "done" });
+      return authenticatedApiRequest("PATCH", `/api/tasks/${taskId}/status`, { status: "done" });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/tasks"] });
@@ -275,12 +279,12 @@ export default function Dashboard() {
     if (hasCheckedInToday) {
       selfCheckOutMutation.mutate();
     } else {
-      selfCheckInMutation.mutate({});
+      selfCheckInMutation.mutate({} as any);
     }
   };
 
   // Check if user has checked in today (for button state)
-  const myTodayRecord = todayAttendance.find((a: any) => a.userId === currentUser.id);
+  const myTodayRecord = todayAttendance.find((a: any) => a.userId === currentUser?.id);
   const hasCheckedInToday = myTodayRecord && !myTodayRecord.checkOutTime;
 
   if (isLoading) {
@@ -396,7 +400,7 @@ export default function Dashboard() {
               </CardHeader>
               <CardContent>
                 {(() => {
-                  const myTodayRecord = todayAttendance.find((a: any) => a.userId === currentUser.id);
+                  const myTodayRecord = todayAttendance.find((a: any) => a.userId === currentUser?.id);
                   const formatTime = (timeString: string | null) => {
                     if (!timeString) return "-";
                     return new Date(timeString).toLocaleTimeString("en-IN", {
