@@ -2343,7 +2343,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/inventory/movements", authenticateToken, async (req: AuthRequest, res) => {
     try {
-      // Map frontend fields to database fields
+      // Map frontend fields to database fields including enhanced fields
       const movementData = {
         productId: parseInt(req.body.productId),
         movementType: req.body.type, // Map 'type' to 'movementType'
@@ -2351,7 +2351,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         previousStock: 0, // Will be calculated
         newStock: 0, // Will be calculated
         reference: req.body.reference || null,
-        notes: req.body.notes || req.body.reason || null,
+        notes: req.body.notes || null,
+        // Enhanced fields for better tracking
+        projectId: req.body.projectId ? parseInt(req.body.projectId) : null,
+        reason: req.body.reason || 'General',
+        destination: req.body.destination || null,
+        vendor: req.body.vendor || null,
+        invoiceNumber: req.body.invoiceNumber || null,
+        costPerUnit: req.body.costPerUnit ? parseFloat(req.body.costPerUnit) : null,
+        totalCost: null, // Will be calculated if costPerUnit is provided
         performedBy: req.user!.id,
       };
 
@@ -2362,14 +2370,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       movementData.previousStock = product.currentStock;
-      if (movementData.movementType === 'inward') {
+      if (movementData.movementType === 'in') {
         movementData.newStock = product.currentStock + movementData.quantity;
       } else {
         movementData.newStock = product.currentStock - movementData.quantity;
       }
 
+      // Calculate total cost if cost per unit is provided
+      if (movementData.costPerUnit) {
+        movementData.totalCost = movementData.costPerUnit * movementData.quantity;
+      }
+
       // Update product stock first
-      const stockChange = movementData.movementType === 'inward' ? movementData.quantity : -movementData.quantity;
+      const stockChange = movementData.movementType === 'in' ? movementData.quantity : -movementData.quantity;
       await storage.updateProduct(movementData.productId, { 
         currentStock: Math.max(0, product.currentStock + stockChange) 
       });

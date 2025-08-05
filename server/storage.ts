@@ -3754,6 +3754,7 @@ class DatabaseStorage implements IStorage {
   }
   async deleteBOQUpload(id: number): Promise<boolean> { return false; }
   async getStockMovements(productId?: number): Promise<StockMovement[]> {
+    console.log('Fetching stock movements...');
     let query = db.select({
       id: stockMovements.id,
       productId: stockMovements.productId,
@@ -3770,16 +3771,29 @@ class DatabaseStorage implements IStorage {
       createdAt: stockMovements.createdAt,
       productName: products.name,
       performedByName: users.name,
+      // Enhanced fields for better tracking (if they exist in DB)
+      projectId: stockMovements.projectId,
+      projectName: projects.name,
+      materialRequestId: stockMovements.materialRequestId,
+      reason: stockMovements.reason,
+      destination: stockMovements.destination,
+      invoiceNumber: stockMovements.invoiceNumber,
+      batchNumber: stockMovements.batchNumber,
+      expiryDate: stockMovements.expiryDate,
+      location: stockMovements.location,
+      approvedBy: stockMovements.approvedBy,
     })
     .from(stockMovements)
     .leftJoin(products, eq(stockMovements.productId, products.id))
-    .leftJoin(users, eq(stockMovements.performedBy, users.id));
+    .leftJoin(users, eq(stockMovements.performedBy, users.id))
+    .leftJoin(projects, eq(stockMovements.projectId, projects.id));
 
     if (productId) {
       query = query.where(eq(stockMovements.productId, productId));
     }
 
     const result = await query.orderBy(desc(stockMovements.createdAt));
+    console.log(`Found ${result.length} movements`);
     return result;
   }
 

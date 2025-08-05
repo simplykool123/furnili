@@ -319,7 +319,7 @@ export const boqUploads = pgTable("boq_uploads", {
 export const stockMovements = pgTable("stock_movements", {
   id: serial("id").primaryKey(),
   productId: integer("product_id").references(() => products.id).notNull(),
-  movementType: text("movement_type").notNull(), // inward, outward, adjustment
+  movementType: text("movement_type").notNull(), // in, out, adjustment
   quantity: integer("quantity").notNull(),
   previousStock: integer("previous_stock").notNull(),
   newStock: integer("new_stock").notNull(),
@@ -329,6 +329,16 @@ export const stockMovements = pgTable("stock_movements", {
   totalCost: real("total_cost"), // Total cost for the movement
   notes: text("notes"),
   performedBy: integer("performed_by").references(() => users.id).notNull(),
+  // Enhanced tracking fields
+  projectId: integer("project_id").references(() => projects.id), // Which project this movement is for
+  materialRequestId: integer("material_request_id").references(() => materialRequests.id), // Associated material request
+  reason: text("reason").notNull().default("General"), // Purchase, Sale, Issue, Return, Adjustment, Damage, etc.
+  destination: text("destination"), // Workshop, Site, Storage, Client, etc.
+  invoiceNumber: text("invoice_number"), // For purchase/sales movements
+  batchNumber: text("batch_number"), // For quality tracking
+  expiryDate: timestamp("expiry_date"), // For perishable items
+  location: text("location"), // Specific storage location
+  approvedBy: integer("approved_by").references(() => users.id), // Who approved this movement
   createdAt: timestamp("created_at").defaultNow(),
 });
 

@@ -25,6 +25,11 @@ const movementSchema = z.object({
   reason: z.string().min(1, "Reason is required"),
   reference: z.string().optional(),
   notes: z.string().optional(),
+  projectId: z.string().optional(),
+  destination: z.string().optional(),
+  vendor: z.string().optional(),
+  invoiceNumber: z.string().optional(),
+  costPerUnit: z.coerce.number().optional(),
 });
 
 type MovementFormData = z.infer<typeof movementSchema>;
@@ -57,6 +62,14 @@ export default function InventoryMovement() {
     queryKey: ['/api/products'],
     queryFn: async () => {
       return await authenticatedApiRequest('GET', '/api/products');
+    },
+  });
+  
+  // Fetch projects for dropdown
+  const { data: projects } = useQuery({
+    queryKey: ['/api/projects'],
+    queryFn: async () => {
+      return await authenticatedApiRequest('GET', '/api/projects');
     },
   });
 
@@ -379,6 +392,79 @@ export default function InventoryMovement() {
               />
             </div>
 
+            {/* Enhanced Context Fields */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="projectId">Project (Optional)</Label>
+                <Select 
+                  value={watch("projectId")}
+                  onValueChange={(value) => setValue("projectId", value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select project" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {projects?.map((project: any) => (
+                      <SelectItem key={project.id} value={project.id.toString()}>
+                        {project.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="destination">Destination (Optional)</Label>
+                <Select 
+                  value={watch("destination")}
+                  onValueChange={(value) => setValue("destination", value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select destination" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Workshop">Workshop</SelectItem>
+                    <SelectItem value="Site">Site</SelectItem>
+                    <SelectItem value="Storage">Storage</SelectItem>
+                    <SelectItem value="Client">Client</SelectItem>
+                    <SelectItem value="Vendor">Vendor</SelectItem>
+                    <SelectItem value="Other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {watch("type") === "in" && (
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="vendor">Vendor (Optional)</Label>
+                  <Input 
+                    {...register("vendor")}
+                    placeholder="Vendor name"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="invoiceNumber">Invoice Number (Optional)</Label>
+                  <Input 
+                    {...register("invoiceNumber")}
+                    placeholder="Invoice/PO number"
+                  />
+                </div>
+              </div>
+            )}
+
+            {watch("type") === "in" && (
+              <div>
+                <Label htmlFor="costPerUnit">Cost per Unit (Optional)</Label>
+                <Input 
+                  {...register("costPerUnit")}
+                  type="number"
+                  step="0.01"
+                  placeholder="Cost per unit in ₹"
+                />
+              </div>
+            )}
+
             <div className="flex items-center justify-end space-x-4 pt-4">
               <Button type="button" variant="outline" onClick={() => setShowAddMovement(false)}>
                 Cancel
@@ -454,6 +540,45 @@ export default function InventoryMovement() {
                   </div>
                 )}
 
+                {/* Enhanced Movement Context */}
+                {(selectedMovement.reason || selectedMovement.projectName || selectedMovement.materialRequestId) && (
+                  <div className="border-t pt-3">
+                    <Label className="text-xs font-medium text-gray-600">Movement Context</Label>
+                    <div className="mt-2 space-y-2">
+                      {selectedMovement.reason && (
+                        <div className="flex justify-between">
+                          <span className="text-sm">Reason:</span>
+                          <span className="text-sm font-medium">{selectedMovement.reason}</span>
+                        </div>
+                      )}
+                      {selectedMovement.projectName && (
+                        <div className="flex justify-between">
+                          <span className="text-sm">Project:</span>
+                          <span className="text-sm font-medium">{selectedMovement.projectName}</span>
+                        </div>
+                      )}
+                      {selectedMovement.materialRequestId && (
+                        <div className="flex justify-between">
+                          <span className="text-sm">Material Request:</span>
+                          <span className="text-sm font-medium">#{selectedMovement.materialRequestId}</span>
+                        </div>
+                      )}
+                      {selectedMovement.destination && (
+                        <div className="flex justify-between">
+                          <span className="text-sm">Destination:</span>
+                          <span className="text-sm font-medium">{selectedMovement.destination}</span>
+                        </div>
+                      )}
+                      {selectedMovement.location && (
+                        <div className="flex justify-between">
+                          <span className="text-sm">Storage Location:</span>
+                          <span className="text-sm font-medium">{selectedMovement.location}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
                 {selectedMovement.notes && (
                   <div>
                     <Label className="text-xs font-medium text-gray-600">Notes</Label>
@@ -461,7 +586,7 @@ export default function InventoryMovement() {
                   </div>
                 )}
 
-                {(selectedMovement.vendor || selectedMovement.costPerUnit || selectedMovement.totalCost) && (
+                {(selectedMovement.vendor || selectedMovement.costPerUnit || selectedMovement.totalCost || selectedMovement.invoiceNumber) && (
                   <div className="border-t pt-3">
                     <Label className="text-xs font-medium text-gray-600">Financial Details</Label>
                     <div className="mt-2 space-y-2">
@@ -469,6 +594,12 @@ export default function InventoryMovement() {
                         <div className="flex justify-between">
                           <span className="text-sm">Vendor:</span>
                           <span className="text-sm font-medium">{selectedMovement.vendor}</span>
+                        </div>
+                      )}
+                      {selectedMovement.invoiceNumber && (
+                        <div className="flex justify-between">
+                          <span className="text-sm">Invoice:</span>
+                          <span className="text-sm font-medium">{selectedMovement.invoiceNumber}</span>
                         </div>
                       )}
                       {selectedMovement.costPerUnit && (
@@ -481,6 +612,33 @@ export default function InventoryMovement() {
                         <div className="flex justify-between font-medium">
                           <span className="text-sm">Total Cost:</span>
                           <span className="text-sm">₹{selectedMovement.totalCost}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Quality & Traceability Details */}
+                {(selectedMovement.batchNumber || selectedMovement.expiryDate || selectedMovement.approvedByName) && (
+                  <div className="border-t pt-3">
+                    <Label className="text-xs font-medium text-gray-600">Quality & Traceability</Label>
+                    <div className="mt-2 space-y-2">
+                      {selectedMovement.batchNumber && (
+                        <div className="flex justify-between">
+                          <span className="text-sm">Batch Number:</span>
+                          <span className="text-sm font-medium">{selectedMovement.batchNumber}</span>
+                        </div>
+                      )}
+                      {selectedMovement.expiryDate && (
+                        <div className="flex justify-between">
+                          <span className="text-sm">Expiry Date:</span>
+                          <span className="text-sm font-medium">{formatDate(selectedMovement.expiryDate)}</span>
+                        </div>
+                      )}
+                      {selectedMovement.approvedByName && (
+                        <div className="flex justify-between">
+                          <span className="text-sm">Approved By:</span>
+                          <span className="text-sm font-medium">{selectedMovement.approvedByName}</span>
                         </div>
                       )}
                     </div>
