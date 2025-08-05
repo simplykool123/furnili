@@ -2286,12 +2286,69 @@ class DatabaseStorage implements IStorage {
 
   // Material Request operations
   async getAllMaterialRequests(): Promise<MaterialRequestWithItems[]> {
+    console.log('DEBUG: DatabaseStorage.getAllMaterialRequests called');
     const requests = await db.select().from(materialRequests);
+    console.log(`DEBUG: Found ${requests.length} requests in database`);
+    
     const requestsWithItems = await Promise.all(requests.map(async (request) => {
-      const items = await db.select().from(requestItems).where(eq(requestItems.requestId, request.id));
-      return { ...request, items };
+      console.log(`DEBUG: Processing request ${request.id}`);
+      
+      // Get request items with product details
+      const items = await db.select({
+        id: requestItems.id,
+        requestId: requestItems.requestId,
+        productId: requestItems.productId,
+        requestedQuantity: requestItems.requestedQuantity,
+        approvedQuantity: requestItems.approvedQuantity,
+        unitPrice: requestItems.unitPrice,
+        totalPrice: requestItems.totalPrice,
+        notes: requestItems.notes,
+        // Include product details
+        product: {
+          id: products.id,
+          name: products.name,
+          sku: products.sku,
+          unit: products.unit,
+          pricePerUnit: products.pricePerUnit,
+          currentStock: products.currentStock,
+        }
+      }).from(requestItems)
+        .leftJoin(products, eq(requestItems.productId, products.id))
+        .where(eq(requestItems.requestId, request.id));
+      
+      console.log(`DEBUG: Request ${request.id} has ${items.length} items with products`);
+      
+      // Get user information
+      const requestedByUser = await db.select({
+        name: users.name,
+        email: users.email
+      }).from(users).where(eq(users.id, request.requestedBy)).limit(1);
+      
+      const approvedByUser = request.approvedBy ? 
+        await db.select({
+          name: users.name,
+          email: users.email
+        }).from(users).where(eq(users.id, request.approvedBy)).limit(1) : [];
+        
+      const issuedByUser = request.issuedBy ? 
+        await db.select({
+          name: users.name,
+          email: users.email
+        }).from(users).where(eq(users.id, request.issuedBy)).limit(1) : [];
+
+      return {
+        ...request,
+        items,
+        requestedByUser: requestedByUser[0] || null,
+        approvedByUser: approvedByUser[0] || null,
+        issuedByUser: issuedByUser[0] || null,
+      };
     }));
-    return requestsWithItems;
+    
+    console.log(`DEBUG: Returning ${requestsWithItems.length} requests with full details`);
+    return requestsWithItems.sort((a, b) => 
+      new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime()
+    );
   }
 
   async getMaterialRequestsByProject(projectId: number): Promise<MaterialRequestWithItems[]> {
