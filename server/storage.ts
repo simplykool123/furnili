@@ -730,9 +730,39 @@ export class MemStorage {
   }
 
   // Project Management Operations - Phase 1
-  async getProject(id: number): Promise<Project | undefined> {
-    const result = await db.select().from(projects).where(eq(projects.id, id)).limit(1);
-    return result[0];
+  async getProject(id: number): Promise<any | undefined> {
+    try {
+      console.log("getProject called with id:", id);
+      
+      // Use direct pg client to include client information
+      const { Pool } = await import('pg');
+      const pool = new Pool({
+        connectionString: process.env.DATABASE_URL,
+      });
+      
+      const query = `
+        SELECT 
+          p.*,
+          c.name as client_name,
+          c.email as client_email,
+          c.mobile as client_mobile,
+          c.phone as client_phone,
+          TO_CHAR(p.created_at, 'DD/MM/YYYY') as formatted_created_at
+        FROM projects p
+        LEFT JOIN clients c ON p.client_id = c.id
+        WHERE p.id = $1 AND p.is_active = true
+        LIMIT 1
+      `;
+      
+      const result = await pool.query(query, [id]);
+      await pool.end();
+      
+      console.log("Direct PG getProject query executed successfully, found:", result.rows.length > 0 ? "project" : "none");
+      return result.rows[0];
+    } catch (error) {
+      console.error("Error in getProject:", error);
+      throw new Error(`Database query failed: ${error.message}`);
+    }
   }
 
   async getAllProjects(filters?: { stage?: string; clientId?: number }): Promise<any[]> {

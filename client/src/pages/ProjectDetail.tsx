@@ -1509,7 +1509,7 @@ export default function ProjectDetail() {
                   </div>
                   <div className="flex items-center space-x-1">
                     <Phone className="h-4 w-4" />
-                    <span>{client?.phone || "9500638851"}</span>
+                    <span>{project.client_mobile || project.client_phone || client?.mobile || client?.phone || "No Contact"}</span>
                   </div>
                 </div>
               </div>
