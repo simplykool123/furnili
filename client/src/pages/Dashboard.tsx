@@ -379,15 +379,15 @@ export default function Dashboard() {
               </CardContent>
             </Card>
 
-            {/* Update Stock Button - Only for store keepers */}
+            {/* Inventory Movement Button - Only for store keepers */}
             {currentUser?.role === 'store_incharge' && (
-              <Card className="hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-teal-50 to-teal-100 border-teal-200 cursor-pointer" onClick={() => setLocation('/products')}>
+              <Card className="hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-teal-50 to-teal-100 border-teal-200 cursor-pointer" onClick={() => setLocation('/inventory-movement')}>
                 <CardContent className="p-5 text-center">
                   <div className="flex flex-col items-center space-y-2">
                     <div className="p-2 bg-teal-500 rounded-full">
                       <BarChart3 className="h-5 w-5 text-white" />
                     </div>
-                    <span className="text-xs font-medium text-teal-900">Update Stock</span>
+                    <span className="text-xs font-medium text-teal-900">Inventory Movement</span>
                   </div>
                 </CardContent>
               </Card>

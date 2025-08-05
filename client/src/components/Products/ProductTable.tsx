@@ -719,7 +719,7 @@ export default function ProductTable() {
               onClick={handleStockUpdate}
               disabled={stockAdjustMutation.isPending}
             >
-              {stockAdjustMutation.isPending ? "Updating..." : "Update Stock"}
+              {stockAdjustMutation.isPending ? "Processing..." : "Record Movement"}
             </Button>
           </DialogFooter>
         </DialogContent>
