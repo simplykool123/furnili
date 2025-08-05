@@ -316,14 +316,25 @@ export default function RequestFormSimplified({ onClose, onSuccess, preSelectedP
   };
 
   const handleProductSelect = (productId: string, index: number) => {
+    console.log("HandleProductSelect called:", { productId, index });
+    console.log("Available products:", products);
     const product = products.find(p => p.id === parseInt(productId));
+    console.log("Selected product:", product);
     if (product) {
+      console.log("Setting values for product:", {
+        size: product.size,
+        thickness: product.thickness,
+        brand: product.brand,
+        name: product.name
+      });
       setValue(`items.${index}.productId`, product.id);
       setValue(`items.${index}.description`, product.name);
       setValue(`items.${index}.brand`, product.brand || "");
       setValue(`items.${index}.size`, product.size || "");
       setValue(`items.${index}.thickness`, product.thickness || "");
       setValue(`items.${index}.unit`, product.unit || "pcs");
+    } else {
+      console.log("Product not found for productId:", productId);
     }
   };
 
