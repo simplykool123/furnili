@@ -389,8 +389,9 @@ export default function Dashboard() {
             </Card>
           </div>
 
-          {/* My Attendance - Full width */}
-          <div className="mb-6">
+          {/* My Attendance & Tasks - Side by Side */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            {/* My Attendance */}
             <Card className="hover:shadow-md transition-all duration-200">
               <CardHeader className="pb-3">
                 <CardTitle className="text-lg font-semibold text-foreground flex items-center gap-2">
@@ -471,6 +472,46 @@ export default function Dashboard() {
                     </div>
                   ) as React.ReactElement;
                 })()}
+              </CardContent>
+            </Card>
+
+            {/* My Tasks */}
+            <Card className="hover:shadow-md transition-all duration-200">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg font-semibold text-foreground flex items-center gap-2">
+                  <CheckCircle className="h-5 w-5 text-blue-500" />
+                  My Tasks
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {pendingTasks && pendingTasks.length > 0 ? (
+                  <div className="space-y-3">
+                    {pendingTasks.slice(0, 3).map((task) => (
+                      <div key={task.id} className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-gray-900 truncate">{task.title}</p>
+                          <p className="text-xs text-gray-600">
+                            Priority: {task.priority} | Due: {task.dueDate ? new Date(task.dueDate).toLocaleDateString() : 'No due date'}
+                          </p>
+                        </div>
+                        <Badge variant={task.priority === 'high' ? 'destructive' : 'default'} className="text-xs">
+                          {task.status}
+                        </Badge>
+                      </div>
+                    ))}
+                    {pendingTasks.length > 3 && (
+                      <Button variant="outline" size="sm" className="w-full" onClick={() => setLocation('/tasks')}>
+                        View All {pendingTasks.length} Tasks
+                      </Button>
+                    )}
+                  </div>
+                ) : (
+                  <div className="text-center py-6">
+                    <CheckCircle2 className="h-12 w-12 mx-auto text-green-500 mb-3" />
+                    <p className="text-sm font-medium text-green-900">All caught up!</p>
+                    <p className="text-xs text-green-700">No pending tasks.</p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
