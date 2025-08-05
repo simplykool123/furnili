@@ -36,6 +36,7 @@ import {
 const navigation = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard, roles: ['admin', 'manager', 'staff', 'store_incharge'] },
   { name: 'Products', href: '/products', icon: Package, roles: ['admin', 'manager', 'staff', 'store_incharge'] }, // Store keepers have read-only access
+  { name: 'Inventory Movement', href: '/inventory-movement', icon: ArrowUpDown, roles: ['admin', 'manager', 'store_incharge'] }, // Store keeper needs inventory access
   { name: 'Material Requests', href: '/requests', icon: PackageSearch, roles: ['admin', 'manager', 'staff', 'store_incharge'] },
   { name: 'Staff Attendance', href: '/attendance', icon: UserRoundPen, roles: ['admin', 'manager', 'staff', 'store_incharge'] },
   { name: 'Petty Cash', href: '/petty-cash', icon: CircleDollarSign, roles: ['admin', 'manager', 'staff', 'store_incharge'] }, // Store keeper can access user-specific petty cash
@@ -51,7 +52,6 @@ const navigation = [
     roles: ['admin', 'manager', 'staff', 'store_incharge'],
     isCollapsible: true,
     subItems: [
-      { name: 'Inventory Movement', href: '/inventory-movement', icon: ArrowUpDown, roles: ['admin', 'manager', 'store_incharge'] }, // Store keeper needs inventory access
       { name: 'OCR Wizard', href: '/ocr-wizard', icon: Brain, roles: ['admin', 'manager', 'staff'] }, // Store keeper doesn't need OCR
       { name: 'Price Comparison', href: '/price-comparison', icon: TrendingUp, roles: ['admin', 'manager'] },
       { name: 'Display Settings', href: '/display-settings', icon: Settings, roles: ['admin', 'manager', 'staff', 'store_incharge'] },
