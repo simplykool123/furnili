@@ -118,6 +118,12 @@ function Router() {
         </ProtectedRoute>
       </Route>
       
+      <Route path="/material-requests">
+        <ProtectedRoute>
+          <MaterialRequests />
+        </ProtectedRoute>
+      </Route>
+      
       <Route path="/inventory-movement">
         <ProtectedRoute>
           <InventoryMovement />

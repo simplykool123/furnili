@@ -1676,6 +1676,8 @@ export class MemStorage {
     const allItems = Array.from(this.requestItems.values());
     const items = allItems.filter(item => item.requestId === id);
     
+    console.log(`DEBUG: Getting request ${id}, found ${items.length} items`, items);
+    
     const requestedByUser = await this.getUser(request.requestedBy);
     const approvedByUser = request.approvedBy ? await this.getUser(request.approvedBy) : undefined;
     const issuedByUser = request.issuedBy ? await this.getUser(request.issuedBy) : undefined;
@@ -1683,6 +1685,7 @@ export class MemStorage {
     const itemsWithProducts = await Promise.all(
       items.map(async (item) => {
         const product = await this.getProduct(item.productId);
+        console.log(`DEBUG: Item ${item.id} with product:`, product?.name);
         return { 
           ...item, 
           product: product!,
@@ -1692,6 +1695,12 @@ export class MemStorage {
         };
       })
     );
+
+    console.log(`DEBUG: Final result for request ${id}:`, {
+      requestId: request.id,
+      itemsCount: itemsWithProducts.length,
+      totalValue: request.totalValue
+    });
 
     return {
       ...request,
