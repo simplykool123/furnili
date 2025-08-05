@@ -29,7 +29,8 @@ import {
   Download,
   FolderOpen,
   PanelLeftClose,
-  PanelLeftOpen
+  PanelLeftOpen,
+  GitBranch
 } from "lucide-react";
 
 const navigation = [
@@ -54,6 +55,7 @@ const navigation = [
       { name: 'OCR Wizard', href: '/ocr-wizard', icon: Brain, roles: ['admin', 'manager', 'staff'] },
       { name: 'Price Comparison', href: '/price-comparison', icon: TrendingUp, roles: ['admin', 'manager'] }, // Manager can access for supervision
       { name: 'Display Settings', href: '/display-settings', icon: Settings, roles: ['admin', 'manager', 'staff'] },
+      { name: 'System Flowchart', href: '/system-flowchart', icon: GitBranch, roles: ['admin', 'manager', 'staff'] },
       { name: 'Backups', href: '/backups', icon: Download, roles: ['admin'] }, // Admin only - core settings
     ]
   },

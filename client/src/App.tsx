@@ -26,6 +26,7 @@ import WhatsAppExport from "@/pages/WhatsAppExport";
 import InventoryMovement from "@/pages/InventoryMovement";
 import DisplaySettings from "@/pages/DisplaySettings";
 import Backups from "@/pages/Backups";
+import SystemFlowchart from "@/pages/SystemFlowchart";
 
 import Projects from "@/pages/Projects";
 import ProjectDetail from "@/pages/ProjectDetail";
@@ -228,6 +229,12 @@ function Router() {
       <Route path="/backups">
         <ProtectedRoute>
           <Backups />
+        </ProtectedRoute>
+      </Route>
+
+      <Route path="/system-flowchart">
+        <ProtectedRoute>
+          <SystemFlowchart />
         </ProtectedRoute>
       </Route>
 

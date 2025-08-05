@@ -1,0 +1,243 @@
+<svg width="1400" height="1200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      .title { font: bold 24px sans-serif; fill: #1f2937; }
+      .subtitle { font: bold 18px sans-serif; fill: #374151; }
+      .module-title { font: bold 14px sans-serif; fill: #111827; }
+      .text { font: 12px sans-serif; fill: #374151; }
+      .small-text { font: 10px sans-serif; fill: #6b7280; }
+      .auth-box { fill: #fef3c7; stroke: #f59e0b; stroke-width: 2; }
+      .dashboard-box { fill: #dbeafe; stroke: #3b82f6; stroke-width: 2; }
+      .product-box { fill: #d1fae5; stroke: #10b981; stroke-width: 2; }
+      .request-box { fill: #fed7d7; stroke: #ef4444; stroke-width: 2; }
+      .project-box { fill: #e0e7ff; stroke: #8b5cf6; stroke-width: 2; }
+      .staff-box { fill: #fce7f3; stroke: #ec4899; stroke-width: 2; }
+      .finance-box { fill: #f0fdf4; stroke: #22c55e; stroke-width: 2; }
+      .workflow-arrow { stroke: #6b7280; stroke-width: 2; fill: none; marker-end: url(#arrowhead); }
+      .process-arrow { stroke: #3b82f6; stroke-width: 3; fill: none; marker-end: url(#arrowhead); }
+    </style>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" 
+            refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#6b7280" />
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1400" height="1200" fill="#f9fafb" stroke="#e5e7eb"/>
+
+  <!-- Title -->
+  <text x="700" y="30" text-anchor="middle" class="title">Furnili Workforce Management System - Architecture Flow</text>
+  <text x="700" y="55" text-anchor="middle" class="subtitle">Complete Application Workflow & Module Integration</text>
+
+  <!-- Authentication Layer -->
+  <rect x="50" y="80" width="300" height="120" rx="10" class="auth-box"/>
+  <text x="200" y="105" text-anchor="middle" class="module-title">🔐 Authentication & Authorization</text>
+  <text x="60" y="125" class="text">• JWT Token-based Authentication</text>
+  <text x="60" y="140" class="text">• Role-based Access Control (RBAC)</text>
+  <text x="60" y="155" class="text">• Roles: Admin, Manager, Staff, Store Incharge</text>
+  <text x="60" y="170" class="text">• Protected Routes & UI Components</text>
+  <text x="60" y="185" class="text">• Session Management</text>
+
+  <!-- User Roles -->
+  <rect x="400" y="80" width="250" height="120" rx="10" class="auth-box"/>
+  <text x="525" y="105" text-anchor="middle" class="module-title">👥 User Roles & Permissions</text>
+  <text x="410" y="125" class="text">• Admin: Full system access</text>
+  <text x="410" y="140" class="text">• Manager: Approve requests, view reports</text>
+  <text x="410" y="155" class="text">• Staff: Create requests, view assigned</text>
+  <text x="410" y="170" class="text">• Store Incharge: Issue materials</text>
+  <text x="410" y="185" class="text">• Dynamic permission checking</text>
+
+  <!-- Dashboard Module -->
+  <rect x="700" y="80" width="320" height="120" rx="10" class="dashboard-box"/>
+  <text x="860" y="105" text-anchor="middle" class="module-title">📊 Dashboard & Analytics</text>
+  <text x="710" y="125" class="text">• Real-time Statistics & KPIs</text>
+  <text x="710" y="140" class="text">• Role-specific Dashboard Views</text>
+  <text x="710" y="155" class="text">• Activity Timeline & Notifications</text>
+  <text x="710" y="170" class="text">• Quick Actions & Task Management</text>
+  <text x="710" y="185" class="text">• Mobile-responsive Design</text>
+
+  <!-- Core Modules Section -->
+  <text x="700" y="250" text-anchor="middle" class="subtitle">Core Business Modules</text>
+
+  <!-- Product Management -->
+  <rect x="50" y="280" width="280" height="160" rx="10" class="product-box"/>
+  <text x="190" y="305" text-anchor="middle" class="module-title">📦 Product Management</text>
+  <text x="60" y="325" class="text">• Product Catalog & Categories</text>
+  <text x="60" y="340" class="text">• SKU Management & Specifications</text>
+  <text x="60" y="355" class="text">• Real-time Stock Tracking</text>
+  <text x="60" y="370" class="text">• Low Stock Alerts</text>
+  <text x="60" y="385" class="text">• Image Upload & Management</text>
+  <text x="60" y="400" class="text">• Stock Movement Audit Trail</text>
+  <text x="60" y="415" class="text">• Brand & Supplier Management</text>
+  <text x="60" y="430" class="text">• Bulk Import/Export</text>
+
+  <!-- Material Request Workflow -->
+  <rect x="360" y="280" width="300" height="160" rx="10" class="request-box"/>
+  <text x="510" y="305" text-anchor="middle" class="module-title">📋 Material Request Workflow</text>
+  <text x="370" y="325" class="text">• Request Creation & Submission</text>
+  <text x="370" y="340" class="text">• BOQ Processing with OCR</text>
+  <text x="370" y="355" class="text">• Automated Product Matching</text>
+  <text x="370" y="370" class="text">• Multi-stage Approval Process:</text>
+  <text x="380" y="385" class="small-text">1. Pending → 2. Approved → 3. Issued → 4. Completed</text>
+  <text x="370" y="400" class="text">• Priority & Quantity Validation</text>
+  <text x="370" y="415" class="text">• Stock Availability Checking</text>
+  <text x="370" y="430" class="text">• Role-based Action Buttons</text>
+
+  <!-- Project Management -->
+  <rect x="690" y="280" width="300" height="160" rx="10" class="project-box"/>
+  <text x="840" y="305" text-anchor="middle" class="module-title">🏗️ Project Management</text>
+  <text x="700" y="325" class="text">• Project Creation & Tracking</text>
+  <text x="700" y="340" class="text">• Client Database Integration</text>
+  <text x="700" y="355" class="text">• Auto-generated Project Codes</text>
+  <text x="700" y="370" class="text">• Project Stage Management:</text>
+  <text x="710" y="385" class="small-text">Prospect → Recce → Design → Estimate → Production</text>
+  <text x="700" y="400" class="text">• Quote Integration & Management</text>
+  <text x="700" y="415" class="text">• Timeline & Milestone Tracking</text>
+  <text x="700" y="430" class="text">• Document Management</text>
+
+  <!-- Quote Management -->
+  <rect x="1020" y="280" width="300" height="160" rx="10" class="project-box"/>
+  <text x="1170" y="305" text-anchor="middle" class="module-title">💰 Quote & Sales Management</text>
+  <text x="1030" y="325" class="text">• Professional PDF Quote Generation</text>
+  <text x="1030" y="340" class="text">• Automated Title Generation</text>
+  <text x="1030" y="355" class="text">• Comprehensive Calculations:</text>
+  <text x="1040" y="370" class="small-text">Items + Packaging (2%) + Transport (₹5K) + GST (18%)</text>
+  <text x="1030" y="385" class="text">• WhatsApp PDF Sharing</text>
+  <text x="1030" y="400" class="text">• Status Management & Tracking</text>
+  <text x="1030" y="415" class="text">• Sales Product Integration</text>
+  <text x="1030" y="430" class="text">• Mobile-optimized Forms</text>
+
+  <!-- Staff Management -->
+  <rect x="50" y="480" width="280" height="140" rx="10" class="staff-box"/>
+  <text x="190" y="505" text-anchor="middle" class="module-title">👨‍💼 Staff Management</text>
+  <text x="60" y="525" class="text">• Employee Database & Profiles</text>
+  <text x="60" y="540" class="text">• Attendance Tracking System</text>
+  <text x="60" y="555" class="text">• Check-in/Check-out Controls</text>
+  <text x="60" y="570" class="text">• Salary & Payroll Management</text>
+  <text x="60" y="585" class="text">• Overtime & Deduction Calculation</text>
+  <text x="60" y="600" class="text">• Document Storage & Management</text>
+
+  <!-- Financial Management -->
+  <rect x="360" y="480" width="300" height="140" rx="10" class="finance-box"/>
+  <text x="510" y="505" text-anchor="middle" class="module-title">💳 Petty Cash Management</text>
+  <text x="370" y="525" class="text">• Manual Expense Entry</text>
+  <text x="370" y="540" class="text">• UPI Screenshot OCR Processing</text>
+  <text x="370" y="555" class="text">• Individual Staff Balance Tracking</text>
+  <text x="370" y="570" class="text">• Category-wise Expense Analysis</text>
+  <text x="370" y="585" class="text">• Financial Dashboard & Reports</text>
+  <text x="370" y="600" class="text">• Debit/Credit Balance Indicators</text>
+
+  <!-- Technical Architecture -->
+  <rect x="690" y="480" width="630" height="140" rx="10" class="dashboard-box"/>
+  <text x="1005" y="505" text-anchor="middle" class="module-title">⚙️ Technical Architecture & Infrastructure</text>
+  <text x="700" y="525" class="text">Frontend: React + TypeScript + Wouter + TanStack Query + shadcn/ui + Tailwind CSS</text>
+  <text x="700" y="540" class="text">Backend: Node.js + Express.js + TypeScript + Drizzle ORM</text>
+  <text x="700" y="555" class="text">Database: Supabase PostgreSQL with automated migrations</text>
+  <text x="700" y="570" class="text">File Processing: Tesseract.js OCR + Multer + Google Cloud Storage</text>
+  <text x="700" y="585" class="text">PDF Generation: html2pdf.js with professional templates</text>
+  <text x="700" y="600" class="text">Mobile: Responsive design with mobile-first approach</text>
+
+  <!-- Workflow Process -->
+  <text x="700" y="680" text-anchor="middle" class="subtitle">Material Request Approval Workflow</text>
+
+  <!-- Workflow boxes -->
+  <rect x="150" y="710" width="120" height="60" rx="8" fill="#fef3c7" stroke="#f59e0b" stroke-width="2"/>
+  <text x="210" y="735" text-anchor="middle" class="module-title">1. PENDING</text>
+  <text x="210" y="750" text-anchor="middle" class="small-text">Request Submitted</text>
+
+  <rect x="320" y="710" width="120" height="60" rx="8" fill="#dcfce7" stroke="#22c55e" stroke-width="2"/>
+  <text x="380" y="735" text-anchor="middle" class="module-title">2. APPROVED</text>
+  <text x="380" y="750" text-anchor="middle" class="small-text">Manager Approved</text>
+
+  <rect x="490" y="710" width="120" height="60" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+  <text x="550" y="735" text-anchor="middle" class="module-title">3. ISSUED</text>
+  <text x="550" y="750" text-anchor="middle" class="small-text">Materials Issued</text>
+
+  <rect x="660" y="710" width="120" height="60" rx="8" fill="#f3e8ff" stroke="#8b5cf6" stroke-width="2"/>
+  <text x="720" y="735" text-anchor="middle" class="module-title">4. COMPLETED</text>
+  <text x="720" y="750" text-anchor="middle" class="small-text">Request Fulfilled</text>
+
+  <!-- Workflow arrows -->
+  <path d="M270 740 L310 740" class="process-arrow"/>
+  <path d="M440 740 L480 740" class="process-arrow"/>
+  <path d="M610 740 L650 740" class="process-arrow"/>
+
+  <!-- Role permissions for workflow -->
+  <text x="210" y="790" text-anchor="middle" class="small-text">Any Role</text>
+  <text x="380" y="790" text-anchor="middle" class="small-text">Manager/Admin</text>
+  <text x="550" y="790" text-anchor="middle" class="small-text">Store Incharge</text>
+  <text x="720" y="790" text-anchor="middle" class="small-text">Manager/Admin</text>
+
+  <!-- Data Flow Connections -->
+  <text x="700" y="850" text-anchor="middle" class="subtitle">System Integration & Data Flow</text>
+
+  <!-- Integration flow -->
+  <rect x="50" y="880" width="200" height="80" rx="8" fill="#f0f9ff" stroke="#0ea5e9" stroke-width="2"/>
+  <text x="150" y="905" text-anchor="middle" class="module-title">User Authentication</text>
+  <text x="150" y="920" text-anchor="middle" class="small-text">JWT Token Validation</text>
+  <text x="150" y="935" text-anchor="middle" class="small-text">Role-based Access</text>
+
+  <rect x="280" y="880" width="200" height="80" rx="8" fill="#fef7ed" stroke="#f97316" stroke-width="2"/>
+  <text x="380" y="905" text-anchor="middle" class="module-title">Database Layer</text>
+  <text x="380" y="920" text-anchor="middle" class="small-text">Supabase PostgreSQL</text>
+  <text x="380" y="935" text-anchor="middle" class="small-text">Drizzle ORM</text>
+
+  <rect x="510" y="880" width="200" height="80" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="2"/>
+  <text x="610" y="905" text-anchor="middle" class="module-title">Business Logic</text>
+  <text x="610" y="920" text-anchor="middle" class="small-text">Express.js APIs</text>
+  <text x="610" y="935" text-anchor="middle" class="small-text">Validation & Processing</text>
+
+  <rect x="740" y="880" width="200" height="80" rx="8" fill="#fdf2f8" stroke="#ec4899" stroke-width="2"/>
+  <text x="840" y="905" text-anchor="middle" class="module-title">File Processing</text>
+  <text x="840" y="920" text-anchor="middle" class="small-text">OCR + PDF Generation</text>
+  <text x="840" y="935" text-anchor="middle" class="small-text">Image Upload</text>
+
+  <rect x="970" y="880" width="200" height="80" rx="8" fill="#f8fafc" stroke="#64748b" stroke-width="2"/>
+  <text x="1070" y="905" text-anchor="middle" class="module-title">External Integrations</text>
+  <text x="1070" y="920" text-anchor="middle" class="small-text">WhatsApp Sharing</text>
+  <text x="1070" y="935" text-anchor="middle" class="small-text">Cloud Storage</text>
+
+  <!-- Connection arrows -->
+  <path d="M250 920 L270 920" class="workflow-arrow"/>
+  <path d="M480 920 L500 920" class="workflow-arrow"/>
+  <path d="M710 920 L730 920" class="workflow-arrow"/>
+  <path d="M940 920 L960 920" class="workflow-arrow"/>
+
+  <!-- Key Features -->
+  <text x="700" y="1020" text-anchor="middle" class="subtitle">Key System Features</text>
+
+  <rect x="50" y="1040" width="300" height="120" rx="8" fill="#f0f9ff" stroke="#0ea5e9" stroke-width="2"/>
+  <text x="200" y="1065" text-anchor="middle" class="module-title">🎯 Key Features</text>
+  <text x="60" y="1085" class="text">• Mobile-first responsive design</text>
+  <text x="60" y="1100" class="text">• Professional PDF generation</text>
+  <text x="60" y="1115" class="text">• Real-time notifications</text>
+  <text x="60" y="1130" class="text">• OCR document processing</text>
+  <text x="60" y="1145" class="text">• Multi-role access control</text>
+
+  <rect x="380" y="1040" width="300" height="120" rx="8" fill="#fefce8" stroke="#eab308" stroke-width="2"/>
+  <text x="530" y="1065" text-anchor="middle" class="module-title">🔄 Workflow Automation</text>
+  <text x="390" y="1085" class="text">• Automated status transitions</text>
+  <text x="390" y="1100" class="text">• Stock validation & alerts</text>
+  <text x="390" y="1115" class="text">• Project code generation</text>
+  <text x="390" y="1130" class="text">• Quote title generation</text>
+  <text x="390" y="1145" class="text">• Payroll calculations</text>
+
+  <rect x="710" y="1040" width="300" height="120" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="2"/>
+  <text x="860" y="1065" text-anchor="middle" class="module-title">📊 Data & Analytics</text>
+  <text x="720" y="1085" class="text">• Real-time dashboard metrics</text>
+  <text x="720" y="1100" class="text">• Financial tracking & reports</text>
+  <text x="720" y="1115" class="text">• Staff performance analytics</text>
+  <text x="720" y="1130" class="text">• Inventory movement tracking</text>
+  <text x="720" y="1145" class="text">• Project progress monitoring</text>
+
+  <rect x="1040" y="1040" width="300" height="120" rx="8" fill="#fdf2f8" stroke="#ec4899" stroke-width="2"/>
+  <text x="1190" y="1065" text-anchor="middle" class="module-title">🔒 Security & Compliance</text>
+  <text x="1050" y="1085" class="text">• JWT-based authentication</text>
+  <text x="1050" y="1100" class="text">• Role-based permissions</text>
+  <text x="1050" y="1115" class="text">• Audit trail maintenance</text>
+  <text x="1050" y="1130" class="text">• Data validation & sanitization</text>
+  <text x="1050" y="1145" class="text">• Secure file uploads</text>
+
+  <!-- Footer -->
+  <text x="700" y="1190" text-anchor="middle" class="small-text">Furnili Workforce Management System - Complete Architecture & Workflow Diagram</text>
+</svg>
