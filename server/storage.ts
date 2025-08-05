@@ -3830,6 +3830,39 @@ class DatabaseStorage implements IStorage {
           };
         } else {
           // Handle cases where "Material Request" is mentioned but no order number is provided
+          // Try to find recent material requests without order numbers
+          try {
+            const recentRequests = await db.select({
+              id: materialRequests.id,
+              clientName: materialRequests.clientName,
+              orderNumber: materialRequests.orderNumber,
+              status: materialRequests.status,
+              projectName: projects.name,
+              createdAt: materialRequests.createdAt,
+            })
+            .from(materialRequests)
+            .leftJoin(projects, eq(materialRequests.projectId, projects.id))
+            .where(eq(materialRequests.orderNumber, ''))
+            .orderBy(desc(materialRequests.createdAt))
+            .limit(3);
+            
+            // If we find recent requests without order numbers, use the most recent one
+            if (recentRequests.length > 0) {
+              const request = recentRequests[0];
+              return {
+                ...movement,
+                clientName: request.clientName,
+                projectName: request.projectName,
+                requestOrderNumber: request.orderNumber || null,
+                requestStatus: request.status,
+                extractedOrderNumber: null,
+                noOrderNumber: true
+              };
+            }
+          } catch (error) {
+            console.log('Could not fetch material request without order number:', error);
+          }
+          
           return {
             ...movement,
             extractedOrderNumber: null,
