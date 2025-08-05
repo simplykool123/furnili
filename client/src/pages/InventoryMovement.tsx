@@ -55,8 +55,7 @@ export default function InventoryMovement() {
   const { data: products } = useQuery({
     queryKey: ['/api/products'],
     queryFn: async () => {
-      const response = await authenticatedApiRequest('GET', '/api/products');
-      return response.json();
+      return await authenticatedApiRequest('GET', '/api/products');
     },
   });
 
@@ -65,13 +64,8 @@ export default function InventoryMovement() {
     queryKey: ['/api/inventory/movements'],
     queryFn: async () => {
       try {
-        const response = await authenticatedApiRequest('GET', '/api/inventory/movements');
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const data = await response.json();
+        const data = await authenticatedApiRequest('GET', '/api/inventory/movements');
         console.log('Movements API Response:', {
-          status: response.status,
           dataLength: Array.isArray(data) ? data.length : 'Not an array',
           firstItem: Array.isArray(data) && data.length > 0 ? data[0] : 'No items',
           data: data
@@ -87,8 +81,7 @@ export default function InventoryMovement() {
   // Create movement mutation
   const createMovementMutation = useMutation({
     mutationFn: async (data: MovementFormData) => {
-      const response = await authenticatedApiRequest('POST', '/api/inventory/movements', data);
-      return response.json();
+      return await authenticatedApiRequest('POST', '/api/inventory/movements', data);
     },
     onSuccess: () => {
       toast({
