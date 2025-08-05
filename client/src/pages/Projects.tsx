@@ -72,7 +72,7 @@ export default function Projects() {
     defaultValues: {
       name: "",
       description: "",
-      clientId: 0,
+      clientId: "",
       stage: "prospect" as const,
       budget: 0,
       differentSiteLocation: false,
@@ -145,7 +145,7 @@ export default function Projects() {
       queryClient.invalidateQueries({ queryKey: ['/api/clients'] });
       
       // Auto-select the new client in the project form
-      projectForm.setValue("clientId", newClient.id);
+      projectForm.setValue("clientId", newClient.id.toString());
     },
     onError: (error: any) => {
       toast({
@@ -214,7 +214,7 @@ export default function Projects() {
     projectForm.reset({
       name: project.name,
       description: project.description || "",
-      clientId: project.clientId,
+      clientId: project.clientId?.toString() || "",
       stage: project.stage,
       budget: project.budget || 0,
       differentSiteLocation: project.differentSiteLocation || false,
@@ -521,7 +521,7 @@ export default function Projects() {
                             <FormLabel className="text-xs font-medium text-gray-700 mb-1 block">
                               Client <span className="text-red-500">*</span>
                             </FormLabel>
-                            <Select value={field.value.toString()} onValueChange={(value) => field.onChange(parseInt(value))}>
+                            <Select value={field.value?.toString() || ""} onValueChange={(value) => field.onChange(parseInt(value))}>
                               <FormControl>
                                 <SelectTrigger className="h-8 bg-gray-100 border-gray-200">
                                   <SelectValue placeholder="Select a client" />
