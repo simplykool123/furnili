@@ -27,11 +27,6 @@ const movementSchema = z.object({
   reason: z.string().min(1, "Reason is required"),
   reference: z.string().optional(),
   notes: z.string().optional(),
-  projectId: z.string().optional(),
-  destination: z.string().optional(),
-  vendor: z.string().optional(),
-  invoiceNumber: z.string().optional(),
-  costPerUnit: z.coerce.number().optional(),
 });
 
 type MovementFormData = z.infer<typeof movementSchema>;
@@ -67,13 +62,7 @@ export default function InventoryMovement() {
     },
   });
   
-  // Fetch projects for dropdown
-  const { data: projects } = useQuery({
-    queryKey: ['/api/projects'],
-    queryFn: async () => {
-      return await authenticatedApiRequest('GET', '/api/projects');
-    },
-  });
+
 
   // Fetch movements
   const { data: movements, isLoading, error } = useQuery({
@@ -474,78 +463,7 @@ export default function InventoryMovement() {
               />
             </div>
 
-            {/* Enhanced Context Fields */}
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="projectId">Project (Optional)</Label>
-                <Select 
-                  value={watch("projectId")}
-                  onValueChange={(value) => setValue("projectId", value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select project" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {projects?.map((project: any) => (
-                      <SelectItem key={project.id} value={project.id.toString()}>
-                        {project.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
 
-              <div>
-                <Label htmlFor="destination">Destination (Optional)</Label>
-                <Select 
-                  value={watch("destination")}
-                  onValueChange={(value) => setValue("destination", value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select destination" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Workshop">Workshop</SelectItem>
-                    <SelectItem value="Site">Site</SelectItem>
-                    <SelectItem value="Storage">Storage</SelectItem>
-                    <SelectItem value="Client">Client</SelectItem>
-                    <SelectItem value="Vendor">Vendor</SelectItem>
-                    <SelectItem value="Other">Other</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            {watch("type") === "in" && (
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="vendor">Vendor (Optional)</Label>
-                  <Input 
-                    {...register("vendor")}
-                    placeholder="Vendor name"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="invoiceNumber">Invoice Number (Optional)</Label>
-                  <Input 
-                    {...register("invoiceNumber")}
-                    placeholder="Invoice/PO number"
-                  />
-                </div>
-              </div>
-            )}
-
-            {watch("type") === "in" && (
-              <div>
-                <Label htmlFor="costPerUnit">Cost per Unit (Optional)</Label>
-                <Input 
-                  {...register("costPerUnit")}
-                  type="number"
-                  step="0.01"
-                  placeholder="Cost per unit in ₹"
-                />
-              </div>
-            )}
 
             <div className="flex items-center justify-end space-x-4 pt-4">
               <Button type="button" variant="outline" onClick={() => setShowAddMovement(false)}>

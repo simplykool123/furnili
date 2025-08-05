@@ -45,6 +45,7 @@ The system adheres to a professional and consistent UI/UX based on the "Furnili 
 - **Dashboard Layout RBAC**: Staff and store keeper users have a streamlined dashboard with side-by-side "My Attendance | My Tasks" layout and optimized action buttons, while admin/manager users retain the full comprehensive dashboard.
 - **Store Keeper Sidebar Access**: Store keepers (`store_incharge`) have access to Petty Cash (user-specific view) and Project Management tabs in addition to their standard permissions for Products, Material Requests, and Inventory Movement.
 - **Inventory Movement Delete**: Admin-only delete functionality for inventory movement history with automatic stock reversal and comprehensive confirmation dialogs.
+- **Simplified Movement Form**: Inventory movement form simplified to essential fields only (Product, Type, Quantity, Reason, Reference, Notes) removing complex fields like Project, Destination, Vendor, Invoice Number, and Cost per Unit for better usability.
 
 #### Product Management
 - Comprehensive product catalog including categories, brands, specifications, image upload, real-time stock tracking, SKU management, and low-stock alerts.
