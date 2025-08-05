@@ -47,7 +47,7 @@ export function CategoryTable({ categories, isLoading }: CategoryTableProps) {
 
   const deleteMutation = useMutation({
     mutationFn: async (categoryId: number) => {
-      return apiRequest(`/api/categories/${categoryId}`, "DELETE");
+      return apiRequest(`/api/categories/${categoryId}`, { method: "DELETE" });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/categories"] });
