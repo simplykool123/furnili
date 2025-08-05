@@ -435,7 +435,7 @@ export default function Projects() {
                       {getClientName(project)}
                     </TableCell>
                     <TableCell className="text-gray-600">
-                      {project.site_city || project.siteCity || 'N/A'}
+                      {project.site_city || project.siteCity || project.client_city || 'N/A'}
                     </TableCell>
                     <TableCell>
                       <Badge variant="secondary" className={getStageColor(project.stage)}>

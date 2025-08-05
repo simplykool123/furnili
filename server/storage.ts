@@ -3007,7 +3007,7 @@ class DatabaseStorage implements IStorage {
       });
       
       let query = `
-        SELECT p.*, c.name as client_name 
+        SELECT p.*, c.name as client_name, c.city as client_city 
         FROM projects p 
         LEFT JOIN clients c ON p.client_id = c.id
         WHERE p.is_active = true
