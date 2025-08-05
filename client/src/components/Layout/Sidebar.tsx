@@ -62,12 +62,12 @@ const navigation = [
   { 
     name: 'Master Data', 
     icon: Settings, 
-    roles: ['admin', 'manager', 'staff'],
+    roles: ['admin', 'manager'], // Hidden from staff and store_incharge users
     isCollapsible: true,
     subItems: [
       { name: 'Clients', href: '/clients', icon: Users, roles: ['admin', 'manager'] },
       { name: 'Users', href: '/users', icon: Users, roles: ['admin'] },
-      { name: 'Sales Products', href: '/sales-products', icon: Package, roles: ['admin', 'manager', 'staff'] }, // Store keeper doesn't need sales products
+      { name: 'Sales Products', href: '/sales-products', icon: Package, roles: ['admin', 'manager'] }, // Removed staff access
       { name: 'Categories', href: '/categories', icon: Tag, roles: ['admin'] },
     ]
   },

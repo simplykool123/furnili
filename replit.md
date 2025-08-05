@@ -37,6 +37,7 @@ The system adheres to a professional and consistent UI/UX based on the "Furnili 
 - **Project Management RBAC**: Regular users (staff/store_incharge) have read-only access - New Project button and Edit/Delete actions are hidden for non-admin/manager roles.
 - **Product Management RBAC**: Regular users have read-only access with hidden status columns and restricted edit/delete actions.
 - **Material Request Creation**: All authenticated users can create material requests with proper role validation.
+- **Master Data RBAC**: Master Data section in sidebar is completely hidden from staff and store_incharge users - only admin and manager can access Clients, Users, Sales Products, and Categories.
 
 #### Product Management
 - Comprehensive product catalog including categories, brands, specifications, image upload, real-time stock tracking, SKU management, and low-stock alerts.
