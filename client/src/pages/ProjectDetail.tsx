@@ -1578,13 +1578,15 @@ export default function ProjectDetail() {
                 <span className="text-base">🎨</span>
                 <span className="font-medium text-sm">Moodboard</span>
               </TabsTrigger>
-              <TabsTrigger
-                value="notes"
-                className="flex items-center space-x-2 px-0 py-3 border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent bg-transparent hover:bg-gray-50 text-gray-600 data-[state=active]:text-blue-600 rounded-none transition-all duration-200"
-              >
-                <span className="text-base">🗒️</span>
-                <span className="font-medium text-sm">Notes</span>
-              </TabsTrigger>
+              {canViewFinances && (
+                <TabsTrigger
+                  value="notes"
+                  className="flex items-center space-x-2 px-0 py-3 border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent bg-transparent hover:bg-gray-50 text-gray-600 data-[state=active]:text-blue-600 rounded-none transition-all duration-200"
+                >
+                  <span className="text-base">🗒️</span>
+                  <span className="font-medium text-sm">Notes</span>
+                </TabsTrigger>
+              )}
               <TabsTrigger
                 value="tasks"
                 className="flex items-center space-x-2 px-0 py-3 border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent bg-transparent hover:bg-gray-50 text-gray-600 data-[state=active]:text-blue-600 rounded-none transition-all duration-200"
@@ -1632,13 +1634,15 @@ export default function ProjectDetail() {
                   <span className="font-medium text-sm">Finances</span>
                 </TabsTrigger>
               )}
-              <TabsTrigger
-                value="details"
-                className="flex items-center space-x-2 px-0 py-3 border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent bg-transparent hover:bg-transparent text-gray-600 data-[state=active]:text-blue-600 rounded-none"
-              >
-                <ExternalLink className="h-4 w-4" />
-                <span className="font-medium">Details</span>
-              </TabsTrigger>
+              {canViewFinances && (
+                <TabsTrigger
+                  value="details"
+                  className="flex items-center space-x-2 px-0 py-3 border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent bg-transparent hover:bg-transparent text-gray-600 data-[state=active]:text-blue-600 rounded-none"
+                >
+                  <ExternalLink className="h-4 w-4" />
+                  <span className="font-medium">Details</span>
+                </TabsTrigger>
+              )}
             </TabsList>
           </Tabs>
         </div>
@@ -2150,7 +2154,8 @@ export default function ProjectDetail() {
           </TabsContent>
 
           {/* Project Notes Tab */}
-          <TabsContent value="notes" className="p-6 bg-gray-50">
+          {canViewFinances && (
+            <TabsContent value="notes" className="p-6 bg-gray-50">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
               {/* Left Column - Add Note Form */}
               <div className="space-y-4">
@@ -2636,7 +2641,8 @@ export default function ProjectDetail() {
                 </div>
               </div>
             </div>
-          </TabsContent>
+            </TabsContent>
+          )}
 
           {/* Task Management Tab */}
           <TabsContent value="tasks" className="space-y-6">
@@ -3051,7 +3057,8 @@ export default function ProjectDetail() {
             </TabsContent>
           )}
 
-          <TabsContent value="details" className="p-6 bg-gray-50">
+          {canViewFinances && (
+            <TabsContent value="details" className="p-6 bg-gray-50">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Card>
                 <CardHeader>
@@ -3157,7 +3164,8 @@ export default function ProjectDetail() {
                 </CardContent>
               </Card>
             </div>
-          </TabsContent>
+            </TabsContent>
+          )}
         </Tabs>
       </div>
 
