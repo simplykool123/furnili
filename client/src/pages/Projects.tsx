@@ -26,6 +26,7 @@ import FurniliLayout from "@/components/Layout/FurniliLayout";
 import FurniliCard from "@/components/UI/FurniliCard";
 import FurniliButton from "@/components/UI/FurniliButton";
 import { useIsMobile } from "@/components/Mobile/MobileOptimizer";
+import { authService } from "@/lib/auth";
 
 const createProjectSchema = z.object({
   name: z.string().min(1, "Project name is required"),
@@ -59,6 +60,10 @@ export default function Projects() {
   const [activeTab, setActiveTab] = useState("client");
   const [selectedState, setSelectedState] = useState("Maharashtra");
   const [availableCities, setAvailableCities] = useState<string[]>(getCitiesByState("Maharashtra"));
+  
+  // Authentication and role-based permissions
+  const user = authService.getUser();
+  const canManageProjects = user && ['admin', 'manager'].includes(user.role);
 
   const { data: projects = [], isLoading, error: projectsError } = useQuery<Project[]>({
     queryKey: ['/api/projects'],
@@ -387,14 +392,16 @@ export default function Projects() {
                 </SelectContent>
               </Select>
 
-              {/* New Project Button */}
-              <Button 
-                onClick={() => setIsCreateDialogOpen(true)}
-                className="bg-[hsl(28,100%,25%)] hover:bg-[hsl(28,100%,20%)] text-white px-4 py-2 rounded-lg transition-colors duration-200 flex items-center space-x-2"
-              >
-                <Plus className="w-4 h-4" />
-                <span>New Project</span>
-              </Button>
+              {/* New Project Button - Only for admin and manager */}
+              {canManageProjects && (
+                <Button 
+                  onClick={() => setIsCreateDialogOpen(true)}
+                  className="bg-[hsl(28,100%,25%)] hover:bg-[hsl(28,100%,20%)] text-white px-4 py-2 rounded-lg transition-colors duration-200 flex items-center space-x-2"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>New Project</span>
+                </Button>
+              )}
             </div>
           </div>
 
@@ -457,30 +464,35 @@ export default function Projects() {
                         >
                           <Eye className="h-4 w-4 text-gray-500" />
                         </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="h-8 w-8 p-0"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleEditProject(project);
-                          }}
-                          title="Edit Project"
-                        >
-                          <Edit className="h-4 w-4 text-blue-500" />
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="h-8 w-8 p-0"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteProject(project);
-                          }}
-                          title="Delete Project"
-                        >
-                          <Trash2 className="h-4 w-4 text-red-500" />
-                        </Button>
+                        {/* Edit and Delete buttons - Only for admin and manager */}
+                        {canManageProjects && (
+                          <>
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="h-8 w-8 p-0"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleEditProject(project);
+                              }}
+                              title="Edit Project"
+                            >
+                              <Edit className="h-4 w-4 text-blue-500" />
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="h-8 w-8 p-0"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteProject(project);
+                              }}
+                              title="Delete Project"
+                            >
+                              <Trash2 className="h-4 w-4 text-red-500" />
+                            </Button>
+                          </>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>
