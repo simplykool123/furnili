@@ -2978,49 +2978,68 @@ class DatabaseStorage implements IStorage {
   }
 
   // Project Management Operations - Phase 1 Implementation
-  async getProject(id: number): Promise<Project | undefined> {
-    const result = await db.select().from(projects).where(eq(projects.id, id)).limit(1);
-    return result[0];
+  async getProject(id: number): Promise<any | undefined> {
+    try {
+      // Use direct pg client to completely bypass Drizzle
+      const { Pool } = await import('pg');
+      const pool = new Pool({
+        connectionString: process.env.DATABASE_URL,
+      });
+      
+      const result = await pool.query('SELECT * FROM projects WHERE id = $1', [id]);
+      await pool.end();
+      
+      return result.rows[0];
+    } catch (error) {
+      console.error("Error in DatabaseStorage getProject:", error);
+      return undefined;
+    }
   }
 
-  async getAllProjects(filters?: { status?: string; clientId?: number; projectManager?: string }): Promise<(Project & { clientName: string })[]> {
-    let query = db.select({
-      id: projects.id,
-      code: projects.code,
-      name: projects.name,
-      description: projects.description,
-      clientId: projects.clientId,
-      clientName: clients.name,
-      stage: projects.stage,
-      budget: projects.budget,
-      addressLine1: projects.addressLine1,
-      addressLine2: projects.addressLine2,
-      state: projects.state,
-      city: projects.city,
-      location: projects.location,
-      pincode: projects.pincode,
-      completionPercentage: projects.completionPercentage,
-      notes: projects.notes,
-      files: projects.files,
-      isActive: projects.isActive,
-      createdAt: projects.createdAt,
-      updatedAt: projects.updatedAt
-    }).from(projects)
-    .leftJoin(clients, eq(projects.clientId, clients.id));
-    
-    if (filters?.status) {
-      query = query.where(eq(projects.status, filters.status));
+  async getAllProjects(filters?: { status?: string; clientId?: number; projectManager?: string }): Promise<any[]> {
+    try {
+      console.log("DatabaseStorage getAllProjects called with filters:", filters);
+      
+      // Use direct pg client to completely bypass Drizzle
+      const { Pool } = await import('pg');
+      const pool = new Pool({
+        connectionString: process.env.DATABASE_URL,
+      });
+      
+      let query = `
+        SELECT p.*, c.name as client_name 
+        FROM projects p 
+        LEFT JOIN clients c ON p.client_id = c.id
+        WHERE p.is_active = true
+      `;
+      const params: any[] = [];
+      
+      if (filters?.status && filters.status !== 'all') {
+        query += ` AND p.stage = $${params.length + 1}`;
+        params.push(filters.status);
+      }
+      
+      if (filters?.clientId) {
+        query += ` AND p.client_id = $${params.length + 1}`;
+        params.push(filters.clientId);
+      }
+      
+      if (filters?.projectManager) {
+        query += ` AND p.project_manager = $${params.length + 1}`;
+        params.push(filters.projectManager);
+      }
+      
+      query += ` ORDER BY p.created_at DESC`;
+      
+      const result = await pool.query(query, params);
+      await pool.end();
+      
+      console.log("DatabaseStorage Direct PG query executed successfully, result count:", result.rows.length);
+      return result.rows;
+    } catch (error) {
+      console.error("Error in DatabaseStorage getAllProjects:", error);
+      throw new Error(`Database query failed: ${error.message}`);
     }
-    
-    if (filters?.clientId) {
-      query = query.where(eq(projects.clientId, filters.clientId));
-    }
-    
-    if (filters?.projectManager) {
-      query = query.where(eq(projects.projectManager, filters.projectManager));
-    }
-    
-    return query.where(eq(projects.isActive, true)).orderBy(desc(projects.createdAt));
   }
 
   async createProject(project: InsertProject): Promise<Project> {
