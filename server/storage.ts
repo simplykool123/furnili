@@ -2356,6 +2356,37 @@ class DatabaseStorage implements IStorage {
     return result[0];
   }
 
+  async updateMaterialRequestStatus(
+    id: number,
+    status: string,
+    userId: number
+  ): Promise<MaterialRequest | undefined> {
+    console.log(`DEBUG: Updating request ${id} to status ${status} by user ${userId}`);
+    
+    const updates: Partial<MaterialRequest> = { status };
+    
+    if (status === 'approved') {
+      updates.approvedBy = userId;
+      updates.approvedAt = new Date();
+    } else if (status === 'issued') {
+      updates.issuedBy = userId;
+      updates.issuedAt = new Date();
+    }
+
+    try {
+      const result = await db.update(materialRequests)
+        .set(updates)
+        .where(eq(materialRequests.id, id))
+        .returning();
+      
+      console.log(`DEBUG: Request ${id} status updated successfully`);
+      return result[0];
+    } catch (error) {
+      console.error(`DEBUG: Error updating request ${id}:`, error);
+      throw error;
+    }
+  }
+
   // Client operations - Database implementations
   async getClient(id: number): Promise<Client | undefined> {
     const result = await db.select().from(clients).where(eq(clients.id, id)).limit(1);
