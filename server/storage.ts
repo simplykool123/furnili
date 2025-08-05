@@ -3037,6 +3037,7 @@ class DatabaseStorage implements IStorage {
       const query = `
         SELECT 
           p.*,
+          p.client_id as clientId,
           c.name as client_name,
           c.email as client_email,
           c.mobile as client_mobile,
