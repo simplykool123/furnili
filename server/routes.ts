@@ -1650,8 +1650,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = req.user!;
       const filters: any = {};
       
-      // Role-based filtering: Staff only sees their own tasks, Admin sees all
-      if (user.role === 'staff') {
+      // Role-based filtering: Staff and Store Keepers only see their own tasks, Admin/Manager see all
+      if (user.role === 'staff' || user.role === 'store_incharge') {
         filters.assignedTo = user.id;
       }
       
