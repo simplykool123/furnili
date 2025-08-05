@@ -12,7 +12,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowUpCircle, ArrowDownCircle, Package, Calendar, User, Hash } from "lucide-react";
+import { ArrowUpCircle, ArrowDownCircle, Package, Calendar, User, Hash, Trash2, Eye } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { authService } from "@/lib/auth";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -116,9 +118,39 @@ export default function InventoryMovement() {
     },
   });
 
+  // Delete movement mutation (Admin only)
+  const deleteMovementMutation = useMutation({
+    mutationFn: async (movementId: number) => {
+      return await authenticatedApiRequest('DELETE', `/api/inventory/movements/${movementId}`);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Movement deleted successfully. Stock has been adjusted accordingly.",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/inventory/movements'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/products'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete movement",
+        variant: "destructive",
+      });
+    },
+  });
+
   const onSubmit = (data: MovementFormData) => {
     createMovementMutation.mutate(data);
   };
+
+  const handleDeleteMovement = (movementId: number) => {
+    deleteMovementMutation.mutate(movementId);
+  };
+
+  // Get current user to check admin access
+  const currentUser = authService.getUser();
+  const isAdmin = currentUser?.role === 'admin';
 
   const getMovementTypeIcon = (type: string) => {
     return (type === 'in' || type === 'inward') ? (
@@ -237,6 +269,7 @@ export default function InventoryMovement() {
                   <TableHead>Reference</TableHead>
                   <TableHead>Date</TableHead>
                   <TableHead>User</TableHead>
+                  <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -267,11 +300,60 @@ export default function InventoryMovement() {
                       <TableCell>{movement.reference || '-'}</TableCell>
                       <TableCell>{formatDate(movement.createdAt)}</TableCell>
                       <TableCell>{movement.performedByName || 'System'}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center space-x-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedMovement(movement);
+                            }}
+                          >
+                            <Eye className="w-4 h-4" />
+                          </Button>
+                          {isAdmin && (
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Delete Movement</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Are you sure you want to delete this movement? This will reverse the stock change and cannot be undone.
+                                    <br /><br />
+                                    <strong>Product:</strong> {movement.productName}<br />
+                                    <strong>Type:</strong> {movement.movementType}<br />
+                                    <strong>Quantity:</strong> {movement.quantity}
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    onClick={() => handleDeleteMovement(movement.id)}
+                                    className="bg-red-600 hover:bg-red-700"
+                                  >
+                                    Delete
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          )}
+                        </div>
+                      </TableCell>
                     </TableRow>
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8 text-gray-500">
+                    <TableCell colSpan={8} className="text-center py-8 text-gray-500">
                       No movements recorded yet
                     </TableCell>
                   </TableRow>

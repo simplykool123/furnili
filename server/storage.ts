@@ -3796,6 +3796,16 @@ class DatabaseStorage implements IStorage {
     const result = await db.insert(stockMovements).values(movement).returning();
     return result[0];
   }
+
+  async getStockMovement(id: number): Promise<StockMovement | undefined> {
+    const result = await db.select().from(stockMovements).where(eq(stockMovements.id, id));
+    return result[0];
+  }
+
+  async deleteStockMovement(id: number): Promise<boolean> {
+    const result = await db.delete(stockMovements).where(eq(stockMovements.id, id)).returning();
+    return result.length > 0;
+  }
   async updateStock(productId: number, quantity: number, type: 'in' | 'out', reason: string): Promise<void> {
     const product = await this.getProduct(productId);
     if (!product) return;

@@ -2400,6 +2400,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Delete inventory movement (Admin only)
+  app.delete("/api/inventory/movements/:id", authenticateToken, requireRole(['admin']), async (req: AuthRequest, res) => {
+    try {
+      const movementId = parseInt(req.params.id);
+      
+      // Get the movement details first to reverse the stock change
+      const movement = await storage.getStockMovement(movementId);
+      if (!movement) {
+        return res.status(404).json({ message: "Movement not found" });
+      }
+
+      // Get the product to update stock
+      const product = await storage.getProduct(movement.productId);
+      if (!product) {
+        return res.status(404).json({ message: "Product not found" });
+      }
+
+      // Reverse the stock change
+      let reversedStock;
+      if (movement.movementType === 'in' || movement.movementType === 'inward') {
+        // If it was an inward movement, subtract the quantity back
+        reversedStock = product.currentStock - movement.quantity;
+      } else {
+        // If it was an outward movement, add the quantity back
+        reversedStock = product.currentStock + movement.quantity;
+      }
+
+      // Update product stock
+      await storage.updateProduct(movement.productId, { 
+        currentStock: Math.max(0, reversedStock)
+      });
+
+      // Delete the movement record
+      await storage.deleteStockMovement(movementId);
+
+      res.json({ 
+        message: "Movement deleted successfully", 
+        reversedStock: Math.max(0, reversedStock) 
+      });
+    } catch (error) {
+      console.error('Delete stock movement API error:', error);
+      res.status(500).json({ message: "Failed to delete movement", error: error.message });
+    }
+  });
+
   // Sales Products routes
   app.get("/api/sales-products", authenticateToken, async (req: AuthRequest, res) => {
     try {
