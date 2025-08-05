@@ -3466,7 +3466,12 @@ class DatabaseStorage implements IStorage {
   }
 
   async getQuotesByProject(projectId: number): Promise<Quote[]> {
-    return await db.select().from(quotes).where(eq(quotes.projectId, projectId)).orderBy(desc(quotes.createdAt));
+    return await db.select().from(quotes)
+      .where(and(
+        eq(quotes.projectId, projectId),
+        eq(quotes.isActive, true)
+      ))
+      .orderBy(desc(quotes.createdAt));
   }
 
   async getQuote(id: number): Promise<Quote | undefined> {

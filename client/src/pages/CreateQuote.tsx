@@ -268,7 +268,10 @@ export default function CreateQuote() {
       toast({ title: "Quote created successfully!" });
       // Invalidate both general quotes and project-specific quotes
       queryClient.invalidateQueries({ queryKey: ["/api/quotes"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/projects", projectId, "quotes"] });
       queryClient.invalidateQueries({ queryKey: [`/api/projects/${projectId}/quotes`] });
+      // Force refetch by clearing all quote-related queries
+      queryClient.removeQueries({ queryKey: ["/api/projects", projectId, "quotes"] });
       setLocation(`/projects/${projectId}/quotes`);
     },
     onError: (error: any) => {
