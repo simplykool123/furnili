@@ -875,15 +875,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete("/api/requests/:id", authenticateToken, requireRole(["admin", "manager"]), async (req, res) => {
     try {
       const id = parseInt(req.params.id);
+      console.log(`DEBUG: DELETE route called for request ID: ${id}`);
+      console.log(`DEBUG: User role: ${(req as AuthRequest).user?.role}`);
       
       const success = await storage.deleteMaterialRequest(id);
+      console.log(`DEBUG: Delete operation result: ${success}`);
       
       if (!success) {
+        console.log(`DEBUG: Delete failed, returning 404`);
         return res.status(404).json({ message: "Request not found" });
       }
       
+      console.log(`DEBUG: Delete successful, returning success message`);
       res.json({ message: "Request deleted successfully" });
     } catch (error) {
+      console.error(`DEBUG: Delete route error:`, error);
       res.status(500).json({ message: "Failed to delete request", error });
     }
   });
