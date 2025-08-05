@@ -438,23 +438,25 @@ export default function Dashboard() {
                   return (
                     <div className="space-y-4">
                       {/* Today's attendance */}
-                      <div className="space-y-2">
+                      <div className="space-y-3">
+                        {/* Date in bubble format */}
+                        <div className="inline-block bg-orange-100 text-orange-800 px-3 py-1 rounded-full text-sm font-medium">
+                          {todayDate}
+                        </div>
+                        
+                        {/* In/Out times on same line */}
                         {myTodayRecord ? (
                           <div className="text-sm text-gray-700">
-                            <span className="font-medium">{todayDate}</span>
-                            <br />
                             <span>In: {formatTime(myTodayRecord.checkInTime)} -- present</span>
                             {myTodayRecord.checkOutTime && (
                               <>
-                                <br />
+                                <span className="mx-2 text-gray-400">|</span>
                                 <span>Out: {formatTime(myTodayRecord.checkOutTime)}</span>
                               </>
                             )}
                           </div>
                         ) : (
                           <div className="text-sm text-gray-600">
-                            <span className="font-medium">{todayDate}</span>
-                            <br />
                             <span>Not checked in today</span>
                           </div>
                         )}
