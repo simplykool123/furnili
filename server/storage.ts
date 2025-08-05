@@ -3828,6 +3828,13 @@ class DatabaseStorage implements IStorage {
             ...movement,
             extractedOrderNumber: orderNumber
           };
+        } else {
+          // Handle cases where "Material Request" is mentioned but no order number is provided
+          return {
+            ...movement,
+            extractedOrderNumber: null,
+            noOrderNumber: true
+          };
         }
       }
       return movement;
