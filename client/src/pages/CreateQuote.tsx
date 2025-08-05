@@ -126,7 +126,7 @@ export default function CreateQuote() {
       
       // Populate form with original quote data
       form.reset({
-        title: project ? `Estimate for ${extractProjectKeyword((project as any).name)}` : 'New Quote',
+        title: project ? generateQuoteTitle((project as any).name) : 'New Quote',
         description: quote.description || '',
         paymentTerms: quote.paymentTerms || '100% advance',
         furnitureSpecifications: quote.furnitureSpecifications || "All furniture will be manufactured using Said Materials\n- All hardware considered of standard make.\n- Standard laminates considered as per selection.\n- Any modifications or changes in material selection may result in additional charges.",
@@ -160,46 +160,17 @@ export default function CreateQuote() {
     }
   }, [originalQuote, duplicateQuoteId, project, form]);
 
-  // Function to extract meaningful part from project name for title
-  const extractProjectKeyword = (projectName: string): string => {
-    if (!projectName) return 'Project';
-    
-    // Remove client names and common prefixes/suffixes
-    let cleanName = projectName;
-    
-    // Split by common separators and extract meaningful parts
-    const parts = cleanName.split(/[-–—|,\s]+/).map(part => part.trim()).filter(Boolean);
-    
-    // Look for patterns like "2BHK", "3BHK", "Office", "Restaurant", etc.
-    const meaningfulParts = parts.filter(part => {
-      // Match BHK patterns (1BHK, 2BHK, etc.)
-      if (/^\d+\s*BHK$/i.test(part)) return true;
-      // Match room descriptions (Office, Restaurant, Cafe, etc.)
-      if (/^(office|restaurant|cafe|shop|mall|hotel|apartment|villa|house|home|kitchen|bedroom|living|dining)$/i.test(part)) return true;
-      // Match building types (residential, commercial, etc.)
-      if (/^(residential|commercial|retail|corporate)$/i.test(part)) return true;
-      // Exclude common client names or generic terms
-      if (/^(furniture|interior|design|project|work|renovation|furnishing)$/i.test(part)) return false;
-      // If it's a proper noun (capitalized) and not too long, include it
-      if (part.length > 2 && part.length < 20 && /^[A-Z]/.test(part)) return true;
-      return false;
-    });
-    
-    // Return the most meaningful part or the last part if no patterns match
-    if (meaningfulParts.length > 0) {
-      return meaningfulParts[0];
-    }
-    
-    // Fallback: return the last part that's not a common generic term
-    const lastPart = parts[parts.length - 1];
-    return lastPart && lastPart.length > 1 ? lastPart : 'Project';
+  // Function to generate quote title from project name
+  const generateQuoteTitle = (projectName: string): string => {
+    if (!projectName) return 'Estimate for Project';
+    // Use the full project name as requested by the user
+    return `Estimate for ${projectName}`;
   };
 
   // Auto-populate quote title when project data is available
   useEffect(() => {
     if (project && !form.watch("title")) {
-      const projectKeyword = extractProjectKeyword((project as any)?.name || '');
-      const autoTitle = `Estimate for ${projectKeyword}`;
+      const autoTitle = generateQuoteTitle((project as any)?.name || '');
       form.setValue("title", autoTitle);
     }
   }, [project, form]);

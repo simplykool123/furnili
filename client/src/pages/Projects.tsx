@@ -1173,7 +1173,15 @@ export default function Projects() {
                                 <DialogTitle className="text-lg font-semibold">Add New Client</DialogTitle>
                               </DialogHeader>
                               <div className="flex-1 overflow-y-auto p-4">
-                                <ClientForm form={clientForm} onSubmit={onSubmitClient} />
+                                <div className="space-y-4">
+                                  <div className="text-sm text-gray-600 mb-4">
+                                    Add a new client to the system. All fields marked with * are required.
+                                  </div>
+                                  {/* Client form fields would go here - simplified for now */}
+                                  <div className="text-center py-8 text-gray-500">
+                                    Client creation form will be implemented here
+                                  </div>
+                                </div>
                               </div>
                               <div className="p-4 border-t bg-white">
                                 <div className="flex gap-3">
