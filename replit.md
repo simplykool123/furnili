@@ -46,7 +46,7 @@ The system adheres to a professional and consistent UI/UX based on the "Furnili 
 
 #### Product Management
 - Comprehensive product catalog including categories, brands, specifications, image upload, real-time stock tracking, SKU management, and low-stock alerts.
-- Stock movement tracking with audit trails.
+- **Unified Stock Management**: Stock adjustments from Product Management are now integrated with the centralized Inventory Movement system for complete audit trails and simplified database architecture.
 
 #### BOQ Processing System
 - PDF upload with OCR (Tesseract.js) for automated text extraction.

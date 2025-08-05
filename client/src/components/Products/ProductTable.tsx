@@ -45,7 +45,7 @@ export default function ProductTable() {
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
   const [stockAdjustProduct, setStockAdjustProduct] = useState<Product | null>(null);
   const [newStockValue, setNewStockValue] = useState("");
-  const [movementType, setMovementType] = useState<"inward" | "outward">("inward");
+  // Remove movementType state since it's now calculated automatically
   const [reference, setReference] = useState("");
   const { isMobile } = useIsMobile();
   const user = authService.getUser();
@@ -97,31 +97,37 @@ export default function ProductTable() {
   });
 
   const stockAdjustMutation = useMutation({
-    mutationFn: async ({ productId, newStock, movementType, reference }: {
+    mutationFn: async ({ productId, quantity, movementType, reference, notes }: {
       productId: number;
-      newStock: number;
+      quantity: number;
       movementType: string;
       reference: string;
+      notes?: string;
     }) => {
-      return await authenticatedApiRequest('POST', `/api/products/${productId}/stock`, {
-        newStock,
-        movementType,
-        reference
+      // Use the unified Inventory Movement API instead of the old stock API
+      return await authenticatedApiRequest('POST', `/api/inventory/movements`, {
+        productId: productId.toString(),
+        type: movementType,
+        quantity,
+        reason: "Adjustment",
+        reference,
+        notes
       });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/products'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/inventory/movements'] });
       setStockAdjustProduct(null);
       setNewStockValue("");
       setReference("");
       toast({
-        title: "Stock updated",
-        description: "Product stock has been successfully updated.",
+        title: "Stock adjusted",
+        description: "Stock movement has been recorded and product stock updated.",
       });
     },
     onError: (error) => {
       toast({
-        title: "Stock update failed",
+        title: "Stock adjustment failed",
         description: error.message,
         variant: "destructive",
       });
@@ -154,11 +160,30 @@ export default function ProductTable() {
       return;
     }
 
+    // Calculate the difference to determine movement quantity
+    const currentStock = stockAdjustProduct.currentStock;
+    const difference = newStock - currentStock;
+    
+    if (difference === 0) {
+      toast({
+        title: "No change needed",
+        description: "The new stock value is the same as the current stock.",
+        variant: "default",
+      });
+      setStockAdjustProduct(null);
+      return;
+    }
+
+    // Determine movement type based on whether stock is increasing or decreasing
+    const adjustmentType = difference > 0 ? "in" : "out";
+    const quantity = Math.abs(difference);
+
     stockAdjustMutation.mutate({
       productId: stockAdjustProduct.id,
-      newStock,
-      movementType,
-      reference: reference || `Stock adjustment by ${user?.name}`
+      quantity,
+      movementType: adjustmentType,
+      reference: reference || `Stock adjustment by ${user?.name}`,
+      notes: `Stock adjusted from ${currentStock} to ${newStock} (${difference > 0 ? '+' : ''}${difference})`
     });
   };
 
@@ -643,16 +668,36 @@ export default function ProductTable() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="movementType">Movement Type</Label>
-              <Select value={movementType} onValueChange={(value: "inward" | "outward") => setMovementType(value)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="inward">Stock In (Purchase/Return)</SelectItem>
-                  <SelectItem value="outward">Stock Out (Sale/Issue)</SelectItem>
-                </SelectContent>
-              </Select>
+              <Label>Movement Preview</Label>
+              <div className="text-sm p-2 bg-gray-50 rounded">
+                {stockAdjustProduct && newStockValue ? (
+                  (() => {
+                    const currentStock = stockAdjustProduct.currentStock;
+                    const newStock = parseInt(newStockValue);
+                    const difference = newStock - currentStock;
+                    
+                    if (isNaN(newStock)) {
+                      return "Enter a valid stock quantity to see movement preview";
+                    }
+                    
+                    if (difference === 0) {
+                      return "No stock movement needed";
+                    }
+                    
+                    return (
+                      <span className={difference > 0 ? 'text-green-600' : 'text-red-600'}>
+                        {difference > 0 ? 'Stock In' : 'Stock Out'}: {Math.abs(difference)} {stockAdjustProduct.unit}
+                        <br />
+                        <span className="text-gray-600">
+                          {currentStock} → {newStock} {stockAdjustProduct.unit}
+                        </span>
+                      </span>
+                    );
+                  })()
+                ) : (
+                  "Enter new stock quantity to see movement preview"
+                )}
+              </div>
             </div>
 
             <div className="space-y-2">

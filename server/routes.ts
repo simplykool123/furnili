@@ -594,28 +594,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/products/:id/stock", authenticateToken, requireRole(["admin", "store_incharge"]), async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      const { newStock, movementType, reference } = req.body;
-      
-      const success = await storage.updateProductStock(
-        id,
-        newStock,
-        movementType,
-        reference,
-        (req as AuthRequest).user?.id
-      );
-      
-      if (!success) {
-        return res.status(404).json({ message: "Product not found" });
-      }
-      
-      res.json({ message: "Stock updated successfully" });
-    } catch (error) {
-      res.status(500).json({ message: "Failed to update stock", error });
-    }
-  });
+  // Stock adjustment API removed - now handled by unified Inventory Movement system at /api/inventory/movements
 
   // Bulk import/export routes
   app.post("/api/products/bulk-import", authenticateToken, requireRole(["admin", "manager"]), csvFileUpload.single("file"), async (req, res) => {
