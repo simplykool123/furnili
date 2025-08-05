@@ -594,7 +594,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/products/:id/stock", authenticateToken, requireRole(["admin", "storekeeper"]), async (req, res) => {
+  app.post("/api/products/:id/stock", authenticateToken, requireRole(["admin", "store_incharge"]), async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const { newStock, movementType, reference } = req.body;

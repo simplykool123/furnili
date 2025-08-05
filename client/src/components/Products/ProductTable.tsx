@@ -11,6 +11,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Edit, Trash2, Search, Grid3X3, List, Package } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import { useIsMobile } from "@/components/Mobile/MobileOptimizer";
 import MobileTable from "@/components/Mobile/MobileTable";
 import MobileFilters from "@/components/Mobile/MobileFilters";
@@ -41,6 +43,10 @@ export default function ProductTable() {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
+  const [stockAdjustProduct, setStockAdjustProduct] = useState<Product | null>(null);
+  const [newStockValue, setNewStockValue] = useState("");
+  const [movementType, setMovementType] = useState<"inward" | "outward">("inward");
+  const [reference, setReference] = useState("");
   const { isMobile } = useIsMobile();
   const user = authService.getUser();
 
@@ -50,6 +56,7 @@ export default function ProductTable() {
   // Check if user can see pricing information and perform actions
   const canSeePricing = user && ['admin', 'manager'].includes(user.role);
   const canEditProducts = user && ['admin', 'manager'].includes(user.role);
+  const canAdjustStock = user && ['admin', 'manager', 'store_incharge'].includes(user.role);
 
   const { data: products, isLoading } = useQuery({
     queryKey: ['/api/products', filters],
@@ -89,12 +96,70 @@ export default function ProductTable() {
     },
   });
 
+  const stockAdjustMutation = useMutation({
+    mutationFn: async ({ productId, newStock, movementType, reference }: {
+      productId: number;
+      newStock: number;
+      movementType: string;
+      reference: string;
+    }) => {
+      return await authenticatedApiRequest('POST', `/api/products/${productId}/stock`, {
+        newStock,
+        movementType,
+        reference
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/products'] });
+      setStockAdjustProduct(null);
+      setNewStockValue("");
+      setReference("");
+      toast({
+        title: "Stock updated",
+        description: "Product stock has been successfully updated.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Stock update failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
 
 
   const handleEdit = (product: Product) => {
     setEditingProduct(product);
     // Trigger the global edit product modal
     window.dispatchEvent(new CustomEvent('openEditProductModal', { detail: product }));
+  };
+
+  const handleStockAdjust = (product: Product) => {
+    setStockAdjustProduct(product);
+    setNewStockValue(product.currentStock.toString());
+  };
+
+  const handleStockUpdate = () => {
+    if (!stockAdjustProduct) return;
+    
+    const newStock = parseInt(newStockValue);
+    if (isNaN(newStock) || newStock < 0) {
+      toast({
+        title: "Invalid stock value",
+        description: "Please enter a valid positive number.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    stockAdjustMutation.mutate({
+      productId: stockAdjustProduct.id,
+      newStock,
+      movementType,
+      reference: reference || `Stock adjustment by ${user?.name}`
+    });
   };
 
   const getStockStatusBadge = (status: string) => {
@@ -268,26 +333,41 @@ export default function ProductTable() {
                 {getStockStatusBadge(product.stockStatus)}
               </div>
               
-              {/* Actions - Only show for users with edit permissions */}
-              {canEditProducts && (
+              {/* Actions - Show based on user permissions */}
+              {(canEditProducts || canAdjustStock) && (
                 <div className="flex items-center gap-1">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleEdit(product)}
-                    className="flex-1 h-7 text-xs"
-                  >
-                    <Edit className="w-3 h-3 mr-1" />
-                    Edit
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setProductToDelete(product)}
-                    className="h-7 px-2"
-                  >
-                    <Trash2 className="w-3 h-3 text-red-600" />
-                  </Button>
+                  {canEditProducts && (
+                    <>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEdit(product)}
+                        className="flex-1 h-7 text-xs"
+                      >
+                        <Edit className="w-3 h-3 mr-1" />
+                        Edit
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setProductToDelete(product)}
+                        className="h-7 px-2"
+                      >
+                        <Trash2 className="w-3 h-3 text-red-600" />
+                      </Button>
+                    </>
+                  )}
+                  {canAdjustStock && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleStockAdjust(product)}
+                      className={`${canEditProducts ? 'h-7 px-2' : 'flex-1 h-7 text-xs'}`}
+                    >
+                      <Package className="w-3 h-3 mr-1 text-blue-600" />
+                      {canEditProducts ? '' : 'Stock'}
+                    </Button>
+                  )}
                 </div>
               )}
             </div>
@@ -309,7 +389,7 @@ export default function ProductTable() {
             <TableHead>Thk.</TableHead>
             <TableHead>Stock</TableHead>
             {canSeePricing && <TableHead>Price</TableHead>}
-            {canEditProducts && <TableHead className="w-[80px]">Actions</TableHead>}
+            {(canEditProducts || canAdjustStock) && <TableHead className="w-[80px]">Actions</TableHead>}
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -349,25 +429,40 @@ export default function ProductTable() {
               {canSeePricing && (
                 <TableCell className="text-xs font-medium">₹{(product.pricePerUnit || 0).toFixed(0)}</TableCell>
               )}
-              {canEditProducts && (
+              {(canEditProducts || canAdjustStock) && (
                 <TableCell>
                   <div className="flex items-center space-x-1">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleEdit(product)}
-                      className="h-6 w-6 p-0"
-                    >
-                      <Edit className="w-3 h-3" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setProductToDelete(product)}
-                      className="h-6 w-6 p-0"
-                    >
-                      <Trash2 className="w-3 h-3 text-red-600" />
-                    </Button>
+                    {canEditProducts && (
+                      <>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleEdit(product)}
+                          className="h-6 w-6 p-0"
+                        >
+                          <Edit className="w-3 h-3" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setProductToDelete(product)}
+                          className="h-6 w-6 p-0"
+                        >
+                          <Trash2 className="w-3 h-3 text-red-600" />
+                        </Button>
+                      </>
+                    )}
+                    {canAdjustStock && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleStockAdjust(product)}
+                        className="h-6 w-6 p-0"
+                        title="Adjust Stock"
+                      >
+                        <Package className="w-3 h-3 text-blue-600" />
+                      </Button>
+                    )}
                   </div>
                 </TableCell>
               )}
@@ -438,19 +533,32 @@ export default function ProductTable() {
           data={filteredProducts}
           columns={mobileColumns}
           emptyMessage="No products found"
-          itemActions={canEditProducts ? (product) => [
-            {
-              label: 'Edit',
-              icon: Edit,
-              onClick: () => handleEdit(product),
-            },
-            {
-              label: 'Delete',
-              icon: Trash2,
-              onClick: () => setProductToDelete(product),
-              destructive: true,
-            },
-          ] : undefined}
+          itemActions={(canEditProducts || canAdjustStock) ? (product) => {
+            const actions = [];
+            if (canEditProducts) {
+              actions.push(
+                {
+                  label: 'Edit',
+                  icon: Edit,
+                  onClick: () => handleEdit(product),
+                },
+                {
+                  label: 'Delete',
+                  icon: Trash2,
+                  onClick: () => setProductToDelete(product),
+                  destructive: true,
+                }
+              );
+            }
+            if (canAdjustStock) {
+              actions.push({
+                label: 'Adjust Stock',
+                icon: Package,
+                onClick: () => handleStockAdjust(product),
+              });
+            }
+            return actions;
+          } : undefined}
         />
       ) : (
         /* Desktop Products Display */
@@ -507,6 +615,70 @@ export default function ProductTable() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Stock Adjustment Dialog */}
+      <Dialog open={!!stockAdjustProduct} onOpenChange={() => setStockAdjustProduct(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Adjust Stock - {stockAdjustProduct?.name}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="currentStock">Current Stock</Label>
+              <div className="text-sm font-medium text-gray-600">
+                {stockAdjustProduct?.currentStock} {stockAdjustProduct?.unit}
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="newStock">New Stock Quantity</Label>
+              <Input
+                id="newStock"
+                type="number"
+                value={newStockValue}
+                onChange={(e) => setNewStockValue(e.target.value)}
+                placeholder="Enter new stock quantity"
+                min="0"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="movementType">Movement Type</Label>
+              <Select value={movementType} onValueChange={(value: "inward" | "outward") => setMovementType(value)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="inward">Stock In (Purchase/Return)</SelectItem>
+                  <SelectItem value="outward">Stock Out (Sale/Issue)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="reference">Reference (Optional)</Label>
+              <Input
+                id="reference"
+                value={reference}
+                onChange={(e) => setReference(e.target.value)}
+                placeholder="Purchase order, issue reference, etc."
+              />
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setStockAdjustProduct(null)}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleStockUpdate}
+              disabled={stockAdjustMutation.isPending}
+            >
+              {stockAdjustMutation.isPending ? "Updating..." : "Update Stock"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
     </div>
   );

@@ -35,7 +35,7 @@ The system adheres to a professional and consistent UI/UX based on the "Furnili 
 - JWT token-based authentication with four distinct user roles: Admin, Manager, Staff, and Store Incharge.
 - Role-based access control governs route and UI component visibility.
 - **Project Management RBAC**: Regular users (staff/store_incharge) have read-only access - New Project button and Edit/Delete actions are hidden for non-admin/manager roles.
-- **Product Management RBAC**: Store keepers and regular users have read-only access with hidden edit/delete/add buttons and restricted management actions. Only admin and manager can add, edit, or delete products.
+- **Product Management RBAC**: Store keepers have read-only access to product details with restricted add/edit/delete actions, but can perform stock adjustments through dedicated Stock Adjustment dialog. Regular users have full read-only access. Only admin and manager can add, edit, or delete products.
 - **Material Request Creation**: All authenticated users can create material requests with proper role validation.
 - **Master Data RBAC**: Master Data section in sidebar is completely hidden from staff and store_incharge users - only admin and manager can access Clients, Users, Sales Products, and Categories.
 - **Project Details RBAC**: Quotes and Finances tabs are hidden from regular users (staff/store_incharge) in Project Detail view - only admin and manager can access financial modules.
