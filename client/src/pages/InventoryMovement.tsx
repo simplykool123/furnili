@@ -20,7 +20,7 @@ import FurniliLayout from "@/components/Layout/FurniliLayout";
 
 const movementSchema = z.object({
   productId: z.string().min(1, "Product is required"),
-  type: z.enum(["inward", "outward"]),
+  type: z.enum(["in", "out"]),
   quantity: z.coerce.number().positive("Quantity must be positive"),
   reason: z.string().min(1, "Reason is required"),
   reference: z.string().optional(),
@@ -46,7 +46,7 @@ export default function InventoryMovement() {
   } = useForm<MovementFormData>({
     resolver: zodResolver(movementSchema),
     defaultValues: {
-      type: "inward",
+      type: "in",
       quantity: 1,
     },
   });
@@ -107,7 +107,7 @@ export default function InventoryMovement() {
   };
 
   const getMovementTypeIcon = (type: string) => {
-    return type === 'inward' ? (
+    return type === 'in' ? (
       <ArrowUpCircle className="w-4 h-4 text-green-600" />
     ) : (
       <ArrowDownCircle className="w-4 h-4 text-red-600" />
@@ -116,8 +116,8 @@ export default function InventoryMovement() {
 
   const getMovementTypeBadge = (type: string) => {
     return (
-      <Badge variant={type === 'inward' ? 'default' : 'destructive'}>
-        {type === 'inward' ? 'Inward' : 'Outward'}
+      <Badge variant={type === 'in' ? 'default' : 'destructive'}>
+        {type === 'in' ? 'Inward' : 'Outward'}
       </Badge>
     );
   };
@@ -175,7 +175,7 @@ export default function InventoryMovement() {
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
               {movements?.filter((m: any) => 
-                m.movementType === 'inward' && 
+                m.movementType === 'in' && 
                 new Date(m.createdAt).toDateString() === new Date().toDateString()
               ).length || 0}
             </div>
@@ -191,7 +191,7 @@ export default function InventoryMovement() {
           <CardContent>
             <div className="text-2xl font-bold text-red-600">
               {movements?.filter((m: any) => 
-                m.movementType === 'outward' && 
+                m.movementType === 'out' && 
                 new Date(m.createdAt).toDateString() === new Date().toDateString()
               ).length || 0}
             </div>
@@ -240,9 +240,9 @@ export default function InventoryMovement() {
                       </TableCell>
                       <TableCell>
                         <span className={`font-medium ${
-                          movement.movementType === 'inward' ? 'text-green-600' : 'text-red-600'
+                          movement.movementType === 'in' ? 'text-green-600' : 'text-red-600'
                         }`}>
-                          {movement.movementType === 'inward' ? '+' : '-'}{movement.quantity}
+                          {movement.movementType === 'in' ? '+' : '-'}{movement.quantity}
                         </span>
                       </TableCell>
                       <TableCell>{movement.notes || '-'}</TableCell>
@@ -297,14 +297,14 @@ export default function InventoryMovement() {
               <Label htmlFor="type">Movement Type *</Label>
               <Select 
                 value={watch("type")}
-                onValueChange={(value) => setValue("type", value as "inward" | "outward")}
+                onValueChange={(value) => setValue("type", value as "in" | "out")}
               >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="inward">Inward (Stock In)</SelectItem>
-                  <SelectItem value="outward">Outward (Stock Out)</SelectItem>
+                  <SelectItem value="in">Inward (Stock In)</SelectItem>
+                  <SelectItem value="out">Outward (Stock Out)</SelectItem>
                 </SelectContent>
               </Select>
               {errors.type && (
@@ -335,7 +335,7 @@ export default function InventoryMovement() {
                   <SelectValue placeholder="Select a reason" />
                 </SelectTrigger>
                 <SelectContent>
-                  {watch("type") === "inward" ? (
+                  {watch("type") === "in" ? (
                     <>
                       <SelectItem value="Purchase">Purchase</SelectItem>
                       <SelectItem value="Return">Return</SelectItem>
