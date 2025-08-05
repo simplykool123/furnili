@@ -2944,9 +2944,11 @@ export default function ProjectDetail() {
                           </p>
                         </div>
                         <div className="text-right">
-                          <div className="text-sm font-medium text-gray-900 mb-1">
-                            ₹{order.totalValue?.toLocaleString() || "0"}
-                          </div>
+                          {canViewFinances && (
+                            <div className="text-sm font-medium text-gray-900 mb-1">
+                              ₹{order.totalValue?.toLocaleString() || "0"}
+                            </div>
+                          )}
                           <Badge
                             variant={
                               order.status === "completed"
