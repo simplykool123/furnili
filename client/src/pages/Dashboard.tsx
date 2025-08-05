@@ -476,7 +476,7 @@ export default function Dashboard() {
                             <span className="font-medium">{presentDays}</span>
                           </div>
                           <div className="flex justify-between text-sm">
-                            <span className="text-gray-600">Total Days</span>
+                            <span className="text-gray-600">Total Working Days</span>
                             <span className="font-medium">{totalWorkingDays}</span>
                           </div>
                         </div>
