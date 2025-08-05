@@ -2450,6 +2450,32 @@ class DatabaseStorage implements IStorage {
     }
   }
 
+  async deleteMaterialRequest(id: number): Promise<boolean> {
+    try {
+      console.log(`DEBUG: Deleting material request ${id} and its items`);
+      
+      // Use transaction to ensure data consistency
+      const result = await db.transaction(async (tx) => {
+        // First delete all request items
+        await tx.delete(requestItems).where(eq(requestItems.requestId, id));
+        console.log(`DEBUG: Deleted request items for request ${id}`);
+        
+        // Then delete the material request
+        const deletedRequest = await tx.delete(materialRequests)
+          .where(eq(materialRequests.id, id))
+          .returning();
+        
+        console.log(`DEBUG: Deleted material request ${id}, affected rows: ${deletedRequest.length}`);
+        return deletedRequest.length > 0;
+      });
+      
+      return result;
+    } catch (error) {
+      console.error('Error deleting material request:', error);
+      throw error;
+    }
+  }
+
   // Client operations - Database implementations
   async getClient(id: number): Promise<Client | undefined> {
     const result = await db.select().from(clients).where(eq(clients.id, id)).limit(1);

@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Eye, Check, X, Truck, FileText, Download, Search, CheckCircle, XCircle, Package, CheckCircle2, Loader2 } from "lucide-react";
+import { Eye, Check, X, Truck, FileText, Download, Search, CheckCircle, XCircle, Package, CheckCircle2, Loader2, Trash2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useIsMobile } from "@/components/Mobile/MobileOptimizer";
 import MobileTable from "@/components/Mobile/MobileTable";
@@ -71,6 +71,27 @@ export default function RequestTable() {
     onError: (error) => {
       toast({
         title: "Update failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: number) => {
+      return await authenticatedApiRequest('DELETE', `/api/requests/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/requests'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/dashboard/stats'] });
+      toast({
+        title: "Request deleted",
+        description: "Material request has been deleted successfully.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Delete failed",
         description: error.message,
         variant: "destructive",
       });
@@ -459,6 +480,26 @@ export default function RequestTable() {
                               className="text-blue-600 hover:text-blue-700"
                             >
                               <Truck className="w-4 h-4" />
+                            </Button>
+                          )}
+                          
+                          {(user?.role === 'admin' || user?.role === 'manager') && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                if (confirm('Are you sure you want to delete this material request? This action cannot be undone.')) {
+                                  deleteMutation.mutate(request.id);
+                                }
+                              }}
+                              className="text-red-600 hover:text-red-700"
+                              disabled={deleteMutation.isPending}
+                            >
+                              {deleteMutation.isPending ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                              ) : (
+                                <Trash2 className="w-4 h-4" />
+                              )}
                             </Button>
                           )}
                         </div>

@@ -871,6 +871,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Delete material request
+  app.delete("/api/requests/:id", authenticateToken, requireRole(["admin", "manager"]), async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      const success = await storage.deleteMaterialRequest(id);
+      
+      if (!success) {
+        return res.status(404).json({ message: "Request not found" });
+      }
+      
+      res.json({ message: "Request deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete request", error });
+    }
+  });
+
   // Get projects eligible for material requests
   app.get("/api/eligible-projects", authenticateToken, async (req, res) => {
     try {
