@@ -234,7 +234,7 @@ export default function ProductTable() {
                   <img 
                     src={product.imageUrl} 
                     alt={product.name}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-contain p-1"
                   />
                 ) : (
                   <div className="w-full h-full bg-gray-200 flex items-center justify-center">
@@ -319,7 +319,7 @@ export default function ProductTable() {
                       <img 
                         src={product.imageUrl} 
                         alt={product.name}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-contain p-0.5"
                       />
                     ) : (
                       <div className="w-full h-full bg-gray-300 flex items-center justify-center">

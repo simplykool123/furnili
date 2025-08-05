@@ -382,7 +382,7 @@ function SalesProductForm({
                   <img 
                     src={imagePreview} 
                     alt="Preview" 
-                    className="w-24 h-24 object-cover rounded-lg border"
+                    className="w-24 h-24 object-contain rounded-lg border bg-gray-50 p-1"
                   />
                   <Button
                     type="button"
@@ -621,7 +621,7 @@ export default function SalesProducts() {
                               <img
                                 src={product.imageUrl}
                                 alt={product.name}
-                                className="w-10 h-10 object-cover rounded-lg border flex-shrink-0"
+                                className="w-10 h-10 object-contain rounded-lg border flex-shrink-0 bg-gray-50 p-1"
                               />
                             ) : (
                               <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">

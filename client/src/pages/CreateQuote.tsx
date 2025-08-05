@@ -608,7 +608,7 @@ export default function CreateQuote() {
                               <img 
                                 src={`/api/sales-products/${item.salesProductId}/image`}
                                 alt={item.itemName}
-                                className="w-12 h-9 object-cover rounded border flex-shrink-0"
+                                className="w-12 h-9 object-contain rounded border flex-shrink-0 bg-gray-50"
                                 onError={(e) => {
                                   e.currentTarget.style.display = 'none';
                                 }}
@@ -655,7 +655,7 @@ export default function CreateQuote() {
                             <img 
                               src={`/api/sales-products/${item.salesProductId}/image`}
                               alt={item.itemName}
-                              className="w-16 h-12 object-cover mx-auto mt-1 rounded border"
+                              className="w-16 h-12 object-contain mx-auto mt-1 rounded border bg-gray-50"
                               onError={(e) => {
                                 e.currentTarget.style.display = 'none';
                               }}

@@ -442,7 +442,7 @@ export default function ProductForm({ product, onClose, isMobile = false }: Prod
                   <img 
                     src={imagePreview} 
                     alt="Preview" 
-                    className={`object-cover rounded-lg border ${isMobile ? "w-24 h-24" : "w-32 h-32"}`}
+                    className={`object-contain rounded-lg border bg-gray-50 p-1 ${isMobile ? "w-24 h-24" : "w-32 h-32"}`}
                   />
                   <Button
                     type="button"
