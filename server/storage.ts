@@ -239,6 +239,7 @@ export interface IStorage {
   getStockMovements(productId?: number): Promise<StockMovement[]>;
   getAllStockMovements(): Promise<StockMovement[]>;
   createStockMovement(movement: InsertStockMovement): Promise<StockMovement>;
+  updateProductStock(productId: number, quantityChange: number, type: string, reason: string): Promise<void>;
   
   // Dashboard/Analytics
   getDashboardStats(userRole?: string): Promise<{
@@ -1898,6 +1899,10 @@ export class MemStorage {
     this.stockMovements.set(movement.productId, productMovements);
 
     return newMovement;
+  }
+
+  async updateProductStock(productId: number, quantityChange: number, type: string, reason: string): Promise<void> {
+    // No-op for memory storage - this will be handled properly in DatabaseStorage
   }
 
   // Dashboard/Analytics
@@ -3786,7 +3791,23 @@ class DatabaseStorage implements IStorage {
     const result = await db.insert(stockMovements).values(movement).returning();
     return result[0];
   }
-  async updateStock(productId: number, quantity: number, type: 'in' | 'out', reason: string): Promise<void> {}
+  async updateStock(productId: number, quantity: number, type: 'in' | 'out', reason: string): Promise<void> {
+    const product = await this.getProduct(productId);
+    if (!product) return;
+    
+    const newStock = type === 'in' ? product.currentStock + quantity : product.currentStock - quantity;
+    await this.updateProduct(productId, { currentStock: Math.max(0, newStock) });
+  }
+
+  async updateProductStock(productId: number, quantityChange: number, type: string, reason: string): Promise<void> {
+    const product = await this.getProduct(productId);
+    if (!product) throw new Error('Product not found');
+    
+    const newStock = product.currentStock + quantityChange;
+    await db.update(products)
+      .set({ currentStock: Math.max(0, newStock) })
+      .where(eq(products.id, productId));
+  }
 
   // Dashboard specific methods
   async getAttendanceByDate(date: string): Promise<Attendance[]> {

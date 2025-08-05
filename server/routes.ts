@@ -2364,10 +2364,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/inventory/movements", authenticateToken, async (req: AuthRequest, res) => {
     try {
-      const movement = await storage.createStockMovement({
-        ...req.body,
-        performedBy: req.user!.id, // Fixed field name
+      // Map frontend fields to database fields
+      const movementData = {
+        productId: parseInt(req.body.productId),
+        movementType: req.body.type, // Map 'type' to 'movementType'
+        quantity: req.body.quantity,
+        previousStock: 0, // Will be calculated
+        newStock: 0, // Will be calculated
+        reference: req.body.reference || null,
+        notes: req.body.notes || req.body.reason || null,
+        performedBy: req.user!.id,
+      };
+
+      // Get current product stock and calculate new stock
+      const product = await storage.getProduct(movementData.productId);
+      if (!product) {
+        return res.status(404).json({ message: "Product not found" });
+      }
+
+      movementData.previousStock = product.currentStock;
+      if (movementData.movementType === 'inward') {
+        movementData.newStock = product.currentStock + movementData.quantity;
+      } else {
+        movementData.newStock = product.currentStock - movementData.quantity;
+      }
+
+      // Update product stock first
+      const stockChange = movementData.movementType === 'inward' ? movementData.quantity : -movementData.quantity;
+      await storage.updateProduct(movementData.productId, { 
+        currentStock: Math.max(0, product.currentStock + stockChange) 
       });
+
+      // Create movement record
+      const movement = await storage.createStockMovement(movementData);
       res.json(movement);
     } catch (error) {
       console.error('Create stock movement API error:', error);  
