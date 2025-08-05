@@ -1510,10 +1510,12 @@ export default function ProjectDetail() {
                     <User className="h-4 w-4" />
                     <span>{project.client_name || client?.name || "No Client"}</span>
                   </div>
-                  <div className="flex items-center space-x-1">
-                    <Phone className="h-4 w-4" />
-                    <span>{project.client_mobile || project.client_phone || client?.mobile || client?.phone || "No Contact"}</span>
-                  </div>
+                  {canViewFinances && (
+                    <div className="flex items-center space-x-1">
+                      <Phone className="h-4 w-4" />
+                      <span>{project.client_mobile || project.client_phone || client?.mobile || client?.phone || "No Contact"}</span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

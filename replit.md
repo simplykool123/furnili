@@ -41,6 +41,7 @@ The system adheres to a professional and consistent UI/UX based on the "Furnili 
 - **Project Details RBAC**: Quotes and Finances tabs are hidden from regular users (staff/store_incharge) in Project Detail view - only admin and manager can access financial modules.
 - **Material Order Cost RBAC**: Material order cost information is hidden from regular users in the Orders tab - only admin and manager can view cost details while all users can see order status and information.
 - **Project Information RBAC**: Notes and Details tabs are hidden from regular users (staff/store_incharge) - only admin and manager can access detailed project information and notes.
+- **Client Contact RBAC**: Client contact information (phone numbers) in project headers is hidden from regular users - only admin and manager can view client contact details.
 
 #### Product Management
 - Comprehensive product catalog including categories, brands, specifications, image upload, real-time stock tracking, SKU management, and low-stock alerts.
