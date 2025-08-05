@@ -122,6 +122,21 @@ export function setupQuotesRoutes(app: Express) {
       const authReq = req as AuthRequest;
       const userId = authReq.user?.id;
       
+      console.log("Creating quote with data:", {
+        clientId: req.body.clientId,
+        projectId: req.body.projectId,
+        title: req.body.title,
+        itemsCount: req.body.items?.length || 0
+      });
+      
+      // Validate required fields
+      if (!req.body.clientId) {
+        return res.status(400).json({ 
+          error: "Client ID is required", 
+          details: "Quote must be associated with a client" 
+        });
+      }
+      
       // Generate quote number
       const lastQuote = await db
         .select({ quoteNumber: quotes.quoteNumber })

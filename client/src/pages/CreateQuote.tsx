@@ -230,10 +230,16 @@ export default function CreateQuote() {
       const gstAmount = (finalTotal * 18) / 100; // 18% GST
       const grandTotal = finalTotal + gstAmount;
 
+      // Ensure we have a valid clientId - this is required
+      const clientId = (project as any)?.clientId || (project as any)?.client_id;
+      if (!clientId) {
+        throw new Error("Client ID is required. Please ensure the project has an associated client.");
+      }
+
       const quoteData = {
         ...data,
         projectId,
-        clientId: (project as any)?.clientId || (project as any)?.client_id || 0,
+        clientId,
         subtotal: totals.subtotal,
         taxAmount: totals.totalTaxAmount + gstAmount,
         totalAmount: grandTotal,
