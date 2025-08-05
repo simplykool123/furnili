@@ -1126,74 +1126,122 @@ export default function Projects() {
                     </div>
 
                     <div className="space-y-3">
-                      <FormField
-                        control={projectForm.control}
-                        name="clientId"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-xs font-medium text-gray-700 mb-1 block">
-                              Select Client <span className="text-red-500">*</span>
-                            </FormLabel>
-                            <Select value={field.value?.toString()} onValueChange={(value) => field.onChange(parseInt(value))}>
-                              <FormControl>
-                                <SelectTrigger className="h-8 bg-gray-100 border-gray-200">
-                                  <SelectValue placeholder="Select a client" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                {clients.map((client: Client) => (
-                                  <SelectItem key={client.id} value={client.id.toString()}>
-                                    {client.name}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                      <div className="flex items-end space-x-3">
+                        <div className="flex-1">
+                          <FormField
+                            control={projectForm.control}
+                            name="clientId"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="text-xs font-medium text-gray-700 mb-1 block">
+                                  Client <span className="text-red-500">*</span>
+                                </FormLabel>
+                                <Select value={field.value?.toString() || ""} onValueChange={(value) => field.onChange(parseInt(value))}>
+                                  <FormControl>
+                                    <SelectTrigger className="h-8 bg-gray-100 border-gray-200">
+                                      <SelectValue placeholder="Select a client" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    {clients.map((client: Client) => (
+                                      <SelectItem key={client.id} value={client.id.toString()}>
+                                        {client.name}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+
+                        <Dialog open={isCreateClientDialogOpen} onOpenChange={setIsCreateClientDialogOpen}>
+                          <DialogTrigger asChild>
+                            <Button 
+                              type="button"
+                              size="sm"
+                              className="bg-blue-500 hover:bg-blue-600 text-white h-8 px-3 text-xs"
+                            >
+                              <User className="h-3 w-3 mr-1" />
+                              New Client
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="max-w-[90vw] max-h-[90vh] p-0">
+                            <div className="flex flex-col max-h-[90vh]">
+                              <DialogHeader className="p-4 border-b">
+                                <DialogTitle className="text-lg font-semibold">Add New Client</DialogTitle>
+                              </DialogHeader>
+                              <div className="flex-1 overflow-y-auto p-4">
+                                <ClientForm form={clientForm} onSubmit={onSubmitClient} />
+                              </div>
+                              <div className="p-4 border-t bg-white">
+                                <div className="flex gap-3">
+                                  <Button 
+                                    type="button" 
+                                    variant="outline" 
+                                    onClick={() => setIsCreateClientDialogOpen(false)}
+                                    className="flex-1 h-9 text-sm"
+                                  >
+                                    Cancel
+                                  </Button>
+                                  <Button 
+                                    type="submit" 
+                                    disabled={createClientMutation.isPending}
+                                    onClick={clientForm.handleSubmit(onSubmitClient)}
+                                    className="bg-blue-500 hover:bg-blue-600 text-white flex-1 h-9 text-sm"
+                                  >
+                                    {createClientMutation.isPending ? "Creating..." : "Create Client"}
+                                  </Button>
+                                </div>
+                              </div>
+                            </div>
+                          </DialogContent>
+                        </Dialog>
+                      </div>
                     </div>
                   </div>
 
-                  {/* Project Details Section */}
+                  {/* Project Information Section */}
                   <div className="space-y-3">
                     <div className="flex items-center space-x-2">
                       <div className="w-5 h-5 rounded-full bg-amber-900 flex items-center justify-center text-white text-xs font-medium">
                         2
                       </div>
-                      <h3 className="text-base font-semibold text-gray-900">Project Details</h3>
+                      <h3 className="text-base font-semibold text-gray-900">Project Information</h3>
                     </div>
 
                     <div className="space-y-3">
-                      <FormField
-                        control={projectForm.control}
-                        name="name"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-xs font-medium text-gray-700 mb-1 block">
-                              Project Name <span className="text-red-500">*</span>
-                            </FormLabel>
-                            <FormControl>
-                              <Input className="h-8 bg-gray-100 border-gray-200 text-sm" placeholder="Enter project name" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <FormField
+                          control={projectForm.control}
+                          name="name"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-xs font-medium text-gray-700 mb-1 block">
+                                Project Name <span className="text-red-500">*</span>
+                              </FormLabel>
+                              <FormControl>
+                                <Input 
+                                  className="h-8 bg-gray-100 border-gray-200 text-sm" 
+                                  placeholder="Enter project name" 
+                                  {...field} 
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
                         <FormField
                           control={projectForm.control}
                           name="stage"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel className="text-xs font-medium text-gray-700 mb-1 block">
-                                Project Stage <span className="text-red-500">*</span>
-                              </FormLabel>
-                              <Select value={field.value} onValueChange={field.onChange}>
+                              <FormLabel className="text-xs font-medium text-gray-700 mb-1 block">Stage</FormLabel>
+                              <Select onValueChange={field.onChange} value={field.value}>
                                 <FormControl>
-                                  <SelectTrigger className="h-8 bg-gray-100 border-gray-200 text-sm">
-                                    <SelectValue placeholder="Select stage" />
+                                  <SelectTrigger className="h-8 bg-gray-100 border-gray-200">
+                                    <SelectValue placeholder="Select project stage" />
                                   </SelectTrigger>
                                 </FormControl>
                                 <SelectContent>
@@ -1215,28 +1263,6 @@ export default function Projects() {
                             </FormItem>
                           )}
                         />
-
-                        <FormField
-                          control={projectForm.control}
-                          name="budget"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-xs font-medium text-gray-700 mb-1 block">
-                                Budget <span className="text-red-500">*</span>
-                              </FormLabel>
-                              <FormControl>
-                                <Input 
-                                  type="number" 
-                                  className="h-8 bg-gray-100 border-gray-200 text-sm" 
-                                  placeholder="Enter budget" 
-                                  {...field} 
-                                  onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)} 
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
                       </div>
 
                       <FormField
@@ -1246,7 +1272,31 @@ export default function Projects() {
                           <FormItem>
                             <FormLabel className="text-xs font-medium text-gray-700 mb-1 block">Description</FormLabel>
                             <FormControl>
-                              <Textarea className="min-h-16 bg-gray-100 border-gray-200 text-sm resize-none" placeholder="Enter project description" {...field} />
+                              <Textarea 
+                                className="min-h-[60px] bg-gray-100 border-gray-200 text-sm resize-none" 
+                                placeholder="Enter project description" 
+                                {...field} 
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={projectForm.control}
+                        name="budget"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-xs font-medium text-gray-700 mb-1 block">Budget (₹)</FormLabel>
+                            <FormControl>
+                              <Input 
+                                type="number" 
+                                className="h-8 bg-gray-100 border-gray-200 text-sm" 
+                                placeholder="Enter project budget" 
+                                {...field} 
+                                onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -1255,124 +1305,156 @@ export default function Projects() {
                     </div>
                   </div>
 
-                  {/* Address Details Section */}
+                  {/* Site Location Section */}
                   <div className="space-y-3">
                     <div className="flex items-center space-x-2">
-                      <div className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-medium">
+                      <div className="w-5 h-5 rounded-full bg-amber-900 flex items-center justify-center text-white text-xs font-medium">
                         3
                       </div>
-                      <h3 className="text-base font-semibold text-gray-900">Address Details</h3>
+                      <h3 className="text-base font-semibold text-gray-900">Site Location</h3>
                     </div>
 
-                    <div className="space-y-3">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <FormField
-                          control={projectForm.control}
-                          name="addressLine1"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-xs font-medium text-gray-700 mb-1 block">Address Line 1</FormLabel>
-                              <FormControl>
-                                <Input className="h-8 bg-gray-100 border-gray-200 text-sm" placeholder="Enter address line 1" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={projectForm.control}
-                          name="addressLine2"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-xs font-medium text-gray-700 mb-1 block">Address Line 2</FormLabel>
-                              <FormControl>
-                                <Input className="h-8 bg-gray-100 border-gray-200 text-sm" placeholder="Enter address line 2" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
+                    <FormField
+                      control={projectForm.control}
+                      name="differentSiteLocation"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-center space-x-3 space-y-0">
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                          <FormLabel className="text-xs font-medium text-gray-700">
+                            Different site location than client address
+                          </FormLabel>
+                        </FormItem>
+                      )}
+                    />
 
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                        <FormField
-                          control={projectForm.control}
-                          name="state"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-xs font-medium text-gray-700 mb-1 block">
-                                State <span className="text-red-500">*</span>
-                              </FormLabel>
-                              <FormControl>
-                                <Input className="h-8 bg-gray-100 border-gray-200 text-sm" placeholder="Enter state" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={projectForm.control}
-                          name="city"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-xs font-medium text-gray-700 mb-1 block">
-                                City <span className="text-red-500">*</span>
-                              </FormLabel>
-                              <FormControl>
-                                <Input className="h-8 bg-gray-100 border-gray-200 text-sm" placeholder="Enter city" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={projectForm.control}
-                          name="location"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-xs font-medium text-gray-700 mb-1 block">Location</FormLabel>
-                              <FormControl>
-                                <Input className="h-8 bg-gray-100 border-gray-200 text-sm" placeholder="Enter location" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={projectForm.control}
-                          name="pincode"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-xs font-medium text-gray-700 mb-1 block">Pincode</FormLabel>
-                              <FormControl>
-                                <Input className="h-8 bg-gray-100 border-gray-200 text-sm" placeholder="Enter pincode" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+                    {projectForm.watch("differentSiteLocation") && (
+                      <div className="space-y-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <FormField
+                            control={projectForm.control}
+                            name="siteAddressLine1"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="text-xs font-medium text-gray-700 mb-1 block">Site Address Line 1</FormLabel>
+                                <FormControl>
+                                  <Input 
+                                    className="h-8 bg-gray-100 border-gray-200 text-sm" 
+                                    placeholder="Enter site address line 1" 
+                                    {...field} 
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={projectForm.control}
+                            name="siteAddressLine2"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="text-xs font-medium text-gray-700 mb-1 block">Site Address Line 2</FormLabel>
+                                <FormControl>
+                                  <Input 
+                                    className="h-8 bg-gray-100 border-gray-200 text-sm" 
+                                    placeholder="Enter site address line 2" 
+                                    {...field} 
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                          <FormField
+                            control={projectForm.control}
+                            name="siteState"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="text-xs font-medium text-gray-700 mb-1 block">Site State</FormLabel>
+                                <FormControl>
+                                  <Input 
+                                    className="h-8 bg-gray-100 border-gray-200 text-sm" 
+                                    placeholder="Enter site state" 
+                                    {...field} 
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={projectForm.control}
+                            name="siteCity"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="text-xs font-medium text-gray-700 mb-1 block">Site City</FormLabel>
+                                <FormControl>
+                                  <Input 
+                                    className="h-8 bg-gray-100 border-gray-200 text-sm" 
+                                    placeholder="Enter site city" 
+                                    {...field} 
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={projectForm.control}
+                            name="siteLocation"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="text-xs font-medium text-gray-700 mb-1 block">Site Location</FormLabel>
+                                <FormControl>
+                                  <Input 
+                                    className="h-8 bg-gray-100 border-gray-200 text-sm" 
+                                    placeholder="Enter site location" 
+                                    {...field} 
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={projectForm.control}
+                            name="sitePincode"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="text-xs font-medium text-gray-700 mb-1 block">Site Pincode</FormLabel>
+                                <FormControl>
+                                  <Input 
+                                    className="h-8 bg-gray-100 border-gray-200 text-sm" 
+                                    placeholder="Enter site pincode" 
+                                    {...field} 
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
                       </div>
-                    </div>
+                    )}
                   </div>
+
                 </form>
               </Form>
             </div>
             
             <div className="p-4 border-t bg-white flex-shrink-0">
               <div className="flex gap-3">
-                <Button type="button" variant="outline" onClick={() => {
-                  setIsEditDialogOpen(false);
-                  setEditingProject(null);
-                  projectForm.reset();
-                }} className="flex-1 h-9 text-sm">
+                <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)} className="flex-1 h-9 text-sm">
                   Cancel
                 </Button>
-                <Button 
-                  type="submit" 
-                  disabled={updateProjectMutation.isPending} 
-                  onClick={projectForm.handleSubmit(onSubmitProject)}
-                  className="furnili-gradient hover:opacity-90 text-white flex-1 h-9 text-sm"
-                >
+                <Button type="submit" disabled={updateProjectMutation.isPending} onClick={projectForm.handleSubmit(onSubmitProject)} className="furnili-gradient hover:opacity-90 text-white flex-1 h-9 text-sm">
                   {updateProjectMutation.isPending ? "Updating..." : "Update Project"}
                 </Button>
               </div>
