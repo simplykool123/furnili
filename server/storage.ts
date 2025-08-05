@@ -2810,7 +2810,7 @@ class DatabaseStorage implements IStorage {
     const overtimeHours = records.reduce((sum, r) => sum + (r.overtimeHours || 0), 0);
     
     return {
-      totalDays: daysInMonth,
+      totalDays: workingDays, // Return working days as totalDays
       presentDays,
       absentDays,
       totalHours,

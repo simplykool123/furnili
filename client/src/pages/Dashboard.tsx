@@ -416,24 +416,10 @@ export default function Dashboard() {
                     month: 'short'
                   });
                   
-                  // Calculate working days (assuming 6 days per week, excluding Sundays)
-                  const currentDate = new Date();
-                  const year = currentDate.getFullYear();
-                  const month = currentDate.getMonth();
-                  const daysInMonth = new Date(year, month + 1, 0).getDate();
-                  
-                  let workingDays = 0;
-                  for (let day = 1; day <= daysInMonth; day++) {
-                    const date = new Date(year, month, day);
-                    if (date.getDay() !== 0) { // Exclude Sundays (day 0)
-                      workingDays++;
-                    }
-                  }
-                  
-                  // Use actual attendance data from the API
+                  // Use actual attendance data from the API (backend returns working days as totalDays)
                   const presentDays = personalAttendanceStats?.presentDays || 0;
-                  const totalWorkingDays = personalAttendanceStats?.totalDays || workingDays;
-                  const attendancePercentage = personalAttendanceStats?.attendancePercentage || Math.round((presentDays / totalWorkingDays) * 100);
+                  const totalWorkingDays = personalAttendanceStats?.totalDays || 0;
+                  const attendancePercentage = personalAttendanceStats?.attendancePercentage || (totalWorkingDays > 0 ? Math.round((presentDays / totalWorkingDays) * 100) : 0);
                   
                   return (
                     <div className="space-y-4">
