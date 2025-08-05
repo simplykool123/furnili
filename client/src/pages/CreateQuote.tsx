@@ -233,7 +233,7 @@ export default function CreateQuote() {
       const quoteData = {
         ...data,
         projectId,
-        clientId: (project as any)?.clientId || null,
+        clientId: (project as any)?.clientId || (project as any)?.client_id || 0,
         subtotal: totals.subtotal,
         taxAmount: totals.totalTaxAmount + gstAmount,
         totalAmount: grandTotal,

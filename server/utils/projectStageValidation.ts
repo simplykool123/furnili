@@ -1,6 +1,11 @@
 // Project stage validation utilities for material requests
 
 export const MATERIAL_REQUEST_ALLOWED_STAGES = [
+  'prospect',
+  'recce-done',
+  'design-in-progress',
+  'design-approved',
+  'estimate-given',
   'client-approved',
   'production', 
   'installation',
