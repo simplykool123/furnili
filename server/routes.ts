@@ -1883,12 +1883,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/projects/:id", authenticateToken, async (req: AuthRequest, res) => {
     try {
       const projectId = parseInt(req.params.id);
+      console.log("API Route: Fetching project with ID:", projectId);
       const project = await storage.getProject(projectId);
       
       if (!project) {
+        console.log("API Route: Project not found for ID:", projectId);
         return res.status(404).json({ message: "Project not found" });
       }
       
+      console.log("API Route: Project found, client_name:", project.client_name, "client_mobile:", project.client_mobile);
       res.json(project);
     } catch (error) {
       console.error("Failed to fetch project:", error);

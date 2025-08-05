@@ -720,8 +720,8 @@ export default function ProjectDetail() {
       if (!response.ok) throw new Error("Failed to fetch project");
       return response.json();
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes
+    staleTime: 0, // Force refresh to get latest data
+    gcTime: 0, // Don't cache to ensure fresh data
   });
 
   const { data: client } = useQuery({
