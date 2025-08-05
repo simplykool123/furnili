@@ -31,6 +31,7 @@ type MovementFormData = z.infer<typeof movementSchema>;
 
 export default function InventoryMovement() {
   const [showAddMovement, setShowAddMovement] = useState(false);
+  const [selectedMovement, setSelectedMovement] = useState<any>(null);
   const { isMobile } = useIsMobile();
   const [activeTab, setActiveTab] = useState("recent");
   const { toast } = useToast();
@@ -107,7 +108,7 @@ export default function InventoryMovement() {
   };
 
   const getMovementTypeIcon = (type: string) => {
-    return type === 'in' ? (
+    return (type === 'in' || type === 'inward') ? (
       <ArrowUpCircle className="w-4 h-4 text-green-600" />
     ) : (
       <ArrowDownCircle className="w-4 h-4 text-red-600" />
@@ -116,8 +117,8 @@ export default function InventoryMovement() {
 
   const getMovementTypeBadge = (type: string) => {
     return (
-      <Badge variant={type === 'in' ? 'default' : 'destructive'}>
-        {type === 'in' ? 'Inward' : 'Outward'}
+      <Badge variant={(type === 'in' || type === 'inward') ? 'default' : 'destructive'}>
+        {(type === 'in' || type === 'inward') ? 'Inward' : 'Outward'}
       </Badge>
     );
   };
@@ -175,7 +176,7 @@ export default function InventoryMovement() {
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
               {movements?.filter((m: any) => 
-                m.movementType === 'in' && 
+                (m.movementType === 'in' || m.movementType === 'inward') && 
                 new Date(m.createdAt).toDateString() === new Date().toDateString()
               ).length || 0}
             </div>
@@ -191,7 +192,7 @@ export default function InventoryMovement() {
           <CardContent>
             <div className="text-2xl font-bold text-red-600">
               {movements?.filter((m: any) => 
-                m.movementType === 'out' && 
+                (m.movementType === 'out' || m.movementType === 'outward') && 
                 new Date(m.createdAt).toDateString() === new Date().toDateString()
               ).length || 0}
             </div>
@@ -228,7 +229,11 @@ export default function InventoryMovement() {
               <TableBody>
                 {movements && movements.length > 0 ? (
                   movements.map((movement: any) => (
-                    <TableRow key={movement.id}>
+                    <TableRow 
+                      key={movement.id} 
+                      className="cursor-pointer hover:bg-gray-50"
+                      onClick={() => setSelectedMovement(movement)}
+                    >
                       <TableCell>
                         <div className="flex items-center space-x-2">
                           {getMovementTypeIcon(movement.movementType)}
@@ -240,9 +245,9 @@ export default function InventoryMovement() {
                       </TableCell>
                       <TableCell>
                         <span className={`font-medium ${
-                          movement.movementType === 'in' ? 'text-green-600' : 'text-red-600'
+                          (movement.movementType === 'in' || movement.movementType === 'inward') ? 'text-green-600' : 'text-red-600'
                         }`}>
-                          {movement.movementType === 'in' ? '+' : '-'}{movement.quantity}
+                          {(movement.movementType === 'in' || movement.movementType === 'inward') ? '+' : '-'}{movement.quantity}
                         </span>
                       </TableCell>
                       <TableCell>{movement.notes || '-'}</TableCell>
@@ -383,6 +388,107 @@ export default function InventoryMovement() {
               </Button>
             </div>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Movement Details Dialog */}
+      <Dialog open={!!selectedMovement} onOpenChange={() => setSelectedMovement(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Movement Details</DialogTitle>
+          </DialogHeader>
+          {selectedMovement && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div className="flex items-center space-x-2">
+                  {getMovementTypeIcon(selectedMovement.movementType)}
+                  {getMovementTypeBadge(selectedMovement.movementType)}
+                </div>
+                <div className="text-right">
+                  <div className="text-sm text-gray-600">Movement ID</div>
+                  <div className="font-mono text-sm">#{selectedMovement.id}</div>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <div>
+                  <Label className="text-xs font-medium text-gray-600">Product</Label>
+                  <p className="font-medium">{selectedMovement.productName || 'Unknown Product'}</p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-xs font-medium text-gray-600">Quantity</Label>
+                    <p className={`font-bold text-lg ${
+                      (selectedMovement.movementType === 'in' || selectedMovement.movementType === 'inward') ? 'text-green-600' : 'text-red-600'
+                    }`}>
+                      {(selectedMovement.movementType === 'in' || selectedMovement.movementType === 'inward') ? '+' : '-'}{selectedMovement.quantity}
+                    </p>
+                  </div>
+                  <div>
+                    <Label className="text-xs font-medium text-gray-600">Date</Label>
+                    <p className="text-sm">{formatDate(selectedMovement.createdAt)}</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-xs font-medium text-gray-600">Previous Stock</Label>
+                    <p className="font-medium">{selectedMovement.previousStock || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <Label className="text-xs font-medium text-gray-600">New Stock</Label>
+                    <p className="font-medium">{selectedMovement.newStock || 'N/A'}</p>
+                  </div>
+                </div>
+
+                <div>
+                  <Label className="text-xs font-medium text-gray-600">Performed By</Label>
+                  <p className="font-medium">{selectedMovement.performedByName || 'System'}</p>
+                </div>
+
+                {selectedMovement.reference && (
+                  <div>
+                    <Label className="text-xs font-medium text-gray-600">Reference</Label>
+                    <p className="font-medium">{selectedMovement.reference}</p>
+                  </div>
+                )}
+
+                {selectedMovement.notes && (
+                  <div>
+                    <Label className="text-xs font-medium text-gray-600">Notes</Label>
+                    <p className="text-sm bg-gray-50 p-2 rounded">{selectedMovement.notes}</p>
+                  </div>
+                )}
+
+                {(selectedMovement.vendor || selectedMovement.costPerUnit || selectedMovement.totalCost) && (
+                  <div className="border-t pt-3">
+                    <Label className="text-xs font-medium text-gray-600">Financial Details</Label>
+                    <div className="mt-2 space-y-2">
+                      {selectedMovement.vendor && (
+                        <div className="flex justify-between">
+                          <span className="text-sm">Vendor:</span>
+                          <span className="text-sm font-medium">{selectedMovement.vendor}</span>
+                        </div>
+                      )}
+                      {selectedMovement.costPerUnit && (
+                        <div className="flex justify-between">
+                          <span className="text-sm">Cost per Unit:</span>
+                          <span className="text-sm font-medium">₹{selectedMovement.costPerUnit}</span>
+                        </div>
+                      )}
+                      {selectedMovement.totalCost && (
+                        <div className="flex justify-between font-medium">
+                          <span className="text-sm">Total Cost:</span>
+                          <span className="text-sm">₹{selectedMovement.totalCost}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
       </div>
