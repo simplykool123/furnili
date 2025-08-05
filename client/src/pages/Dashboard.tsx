@@ -290,8 +290,8 @@ export default function Dashboard() {
         </FurniliCard>
       )}
 
-      {/* Staff Check-In/Out Widget - Compact Version for staff users */}
-      {currentUser?.role === 'staff' && (
+      {/* Staff Check-In/Out Widget - Compact Version for staff and store keeper users */}
+      {(currentUser?.role === 'staff' || currentUser?.role === 'store_incharge') && (
         <Card className="shadow-md border border-green-200 bg-gradient-to-r from-green-50 to-emerald-50">
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-green-800 text-base">
@@ -423,51 +423,104 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        <Card className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-orange-500 bg-gradient-to-br from-card to-orange-50/20 cursor-pointer" onClick={() => setLocation('/attendance')}>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
-            <CardTitle className="text-xs font-semibold text-card-foreground">Attendance</CardTitle>
-            <Clock className="h-3 w-3 text-orange-600" />
-          </CardHeader>
-          <CardContent className="pb-2 pt-1">
-            <div className="text-xl font-bold text-foreground">{stats?.todayAttendance || 0}</div>
-            <p className="text-xs text-muted-foreground mt-0.5">Staff today</p>
-          </CardContent>
-        </Card>
+        {/* Different stats based on user role */}
+        {currentUser?.role === 'store_incharge' ? (
+          <>
+            {/* Store Keeper sees attendance and inventory-focused stats */}
+            <Card className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-orange-500 bg-gradient-to-br from-card to-orange-50/20 cursor-pointer" onClick={() => setLocation('/attendance')}>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
+                <CardTitle className="text-xs font-semibold text-card-foreground">My Attendance</CardTitle>
+                <Clock className="h-3 w-3 text-orange-600" />
+              </CardHeader>
+              <CardContent className="pb-2 pt-1">
+                <div className="text-xl font-bold text-foreground">{stats?.todayAttendance || 0}</div>
+                <p className="text-xs text-muted-foreground mt-0.5">Check in/out</p>
+              </CardContent>
+            </Card>
 
-        <Card className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-purple-500 bg-gradient-to-br from-card to-purple-50/20 cursor-pointer" onClick={() => setLocation('/attendance')}>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
-            <CardTitle className="text-xs font-semibold text-card-foreground">Staff & Payroll</CardTitle>
-            <CheckCircle className="h-3 w-3 text-purple-600" />
-          </CardHeader>
-          <CardContent className="pb-2 pt-1">
-            <div className="text-xl font-bold text-foreground">{stats?.activeTasks || 0}</div>
-            <p className="text-xs text-muted-foreground mt-0.5">Manage staff</p>
-          </CardContent>
-        </Card>
+            <Card className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-indigo-500 bg-gradient-to-br from-card to-indigo-50/20 cursor-pointer" onClick={() => setLocation('/requests')}>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
+                <CardTitle className="text-xs font-semibold text-card-foreground">Material Requests</CardTitle>
+                <TrendingUp className="h-3 w-3 text-indigo-600" />
+              </CardHeader>
+              <CardContent className="pb-2 pt-1">
+                <div className="text-xl font-bold text-foreground">{stats?.pendingRequests || 0}</div>
+                <p className="text-xs text-muted-foreground mt-0.5">Pending</p>
+              </CardContent>
+            </Card>
 
-        <Card className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-indigo-500 bg-gradient-to-br from-card to-indigo-50/20 cursor-pointer" onClick={() => setLocation('/requests')}>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
-            <CardTitle className="text-xs font-semibold text-card-foreground">Requests</CardTitle>
-            <TrendingUp className="h-3 w-3 text-indigo-600" />
-          </CardHeader>
-          <CardContent className="pb-2 pt-1">
-            <div className="text-xl font-bold text-foreground">{stats?.pendingRequests || 0}</div>
-            <p className="text-xs text-muted-foreground mt-0.5">Pending</p>
-          </CardContent>
-        </Card>
+            <Card className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-green-500 bg-gradient-to-br from-card to-green-50/20 cursor-pointer" onClick={() => setLocation('/inventory-movement')}>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
+                <CardTitle className="text-xs font-semibold text-card-foreground">Stock Movements</CardTitle>
+                <CheckCircle className="h-3 w-3 text-green-600" />
+              </CardHeader>
+              <CardContent className="pb-2 pt-1">
+                <div className="text-xl font-bold text-foreground">{stats?.activeTasks || 0}</div>
+                <p className="text-xs text-muted-foreground mt-0.5">Track inventory</p>
+              </CardContent>
+            </Card>
 
-        <Card className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-yellow-500 bg-gradient-to-br from-card to-yellow-50/20 cursor-pointer" onClick={() => setLocation('/petty-cash')}>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
-            <CardTitle className="text-xs font-semibold text-card-foreground">Expenses</CardTitle>
-            <DollarSign className="h-3 w-3 text-yellow-600" />
-          </CardHeader>
-          <CardContent className="pb-2 pt-1">
-            <div className="text-xl font-bold text-foreground">
-              ₹{stats?.monthlyExpenses?.toLocaleString() || 0}
-            </div>
-            <p className="text-xs text-muted-foreground mt-0.5">This month</p>
-          </CardContent>
-        </Card>
+            <Card className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-teal-500 bg-gradient-to-br from-card to-teal-50/20 cursor-pointer" onClick={() => setLocation('/tasks')}>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
+                <CardTitle className="text-xs font-semibold text-card-foreground">My Tasks</CardTitle>
+                <CheckCircle className="h-3 w-3 text-teal-600" />
+              </CardHeader>
+              <CardContent className="pb-2 pt-1">
+                <div className="text-xl font-bold text-foreground">{pendingTasks?.length || 0}</div>
+                <p className="text-xs text-muted-foreground mt-0.5">Assigned to me</p>
+              </CardContent>
+            </Card>
+          </>
+        ) : (
+          <>
+            {/* Regular users see business stats */}
+            <Card className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-orange-500 bg-gradient-to-br from-card to-orange-50/20 cursor-pointer" onClick={() => setLocation('/attendance')}>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
+                <CardTitle className="text-xs font-semibold text-card-foreground">Attendance</CardTitle>
+                <Clock className="h-3 w-3 text-orange-600" />
+              </CardHeader>
+              <CardContent className="pb-2 pt-1">
+                <div className="text-xl font-bold text-foreground">{stats?.todayAttendance || 0}</div>
+                <p className="text-xs text-muted-foreground mt-0.5">Staff today</p>
+              </CardContent>
+            </Card>
+
+            <Card className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-purple-500 bg-gradient-to-br from-card to-purple-50/20 cursor-pointer" onClick={() => setLocation('/attendance')}>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
+                <CardTitle className="text-xs font-semibold text-card-foreground">Staff & Payroll</CardTitle>
+                <CheckCircle className="h-3 w-3 text-purple-600" />
+              </CardHeader>
+              <CardContent className="pb-2 pt-1">
+                <div className="text-xl font-bold text-foreground">{stats?.activeTasks || 0}</div>
+                <p className="text-xs text-muted-foreground mt-0.5">Manage staff</p>
+              </CardContent>
+            </Card>
+
+            <Card className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-indigo-500 bg-gradient-to-br from-card to-indigo-50/20 cursor-pointer" onClick={() => setLocation('/requests')}>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
+                <CardTitle className="text-xs font-semibold text-card-foreground">Requests</CardTitle>
+                <TrendingUp className="h-3 w-3 text-indigo-600" />
+              </CardHeader>
+              <CardContent className="pb-2 pt-1">
+                <div className="text-xl font-bold text-foreground">{stats?.pendingRequests || 0}</div>
+                <p className="text-xs text-muted-foreground mt-0.5">Pending</p>
+              </CardContent>
+            </Card>
+
+            <Card className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-yellow-500 bg-gradient-to-br from-card to-yellow-50/20 cursor-pointer" onClick={() => setLocation('/petty-cash')}>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
+                <CardTitle className="text-xs font-semibold text-card-foreground">Expenses</CardTitle>
+                <DollarSign className="h-3 w-3 text-yellow-600" />
+              </CardHeader>
+              <CardContent className="pb-2 pt-1">
+                <div className="text-xl font-bold text-foreground">
+                  ₹{stats?.monthlyExpenses?.toLocaleString() || 0}
+                </div>
+                <p className="text-xs text-muted-foreground mt-0.5">This month</p>
+              </CardContent>
+            </Card>
+          </>
+        )}
       </div>
 
       {/* Removed animated "New Messages" section - keeping only clean "Pending Tasks" section below */}
@@ -550,46 +603,49 @@ export default function Dashboard() {
         </Card>
       )}
 
-      {/* Ongoing Projects Section */}
-      {ongoingProjects && ongoingProjects.length > 0 && (
-        <Card className="hover:shadow-md transition-all duration-200">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base font-semibold text-foreground flex items-center gap-2">
-              <Package className="h-4 w-4" />
-              Ongoing Projects
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pt-0">
-            <div className="space-y-1 max-h-40 overflow-y-auto">
-              {ongoingProjects.slice(0, 8).map((project: any) => (
-                <div 
-                  key={project.id} 
-                  className="flex items-center justify-between p-2 rounded-md bg-gray-50/50 border border-gray-100/50 hover:bg-gray-100/50 cursor-pointer transition-colors"
-                  onClick={() => setLocation(`/projects/${project.id}`)}
-                >
-                  <div className="flex items-center gap-3 min-w-0 flex-1">
-                    <p className="text-sm font-medium text-gray-900 min-w-fit">
-                      {project.code}
-                    </p>
-                    <Badge 
-                      variant={
-                        project.stage === 'Production' ? 'default' :
-                        project.stage === 'Installation' ? 'secondary' :
-                        project.stage === 'Client Approved' ? 'destructive' :
-                        'outline'
-                      }
-                      className="text-xs min-w-fit"
+      {/* Hide project information from store keepers */}
+      {currentUser?.role !== 'store_incharge' && (
+        <>
+          {/* Ongoing Projects Section */}
+          {ongoingProjects && ongoingProjects.length > 0 && (
+            <Card className="hover:shadow-md transition-all duration-200">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base font-semibold text-foreground flex items-center gap-2">
+                  <Package className="h-4 w-4" />
+                  Ongoing Projects
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="space-y-1 max-h-40 overflow-y-auto">
+                  {ongoingProjects.slice(0, 8).map((project: any) => (
+                    <div 
+                      key={project.id} 
+                      className="flex items-center justify-between p-2 rounded-md bg-gray-50/50 border border-gray-100/50 hover:bg-gray-100/50 cursor-pointer transition-colors"
+                      onClick={() => setLocation(`/projects/${project.id}`)}
                     >
-                      {project.stage}
-                    </Badge>
-                    <p className="text-xs text-gray-600 truncate">
-                      {project.name} - {project.client_name}
-                    </p>
-                  </div>
-                  <ArrowRight className="h-3 w-3 text-gray-400 flex-shrink-0" />
+                      <div className="flex items-center gap-3 min-w-0 flex-1">
+                        <p className="text-sm font-medium text-gray-900 min-w-fit">
+                          {project.code}
+                        </p>
+                        <Badge 
+                          variant={
+                            project.stage === 'Production' ? 'default' :
+                            project.stage === 'Installation' ? 'secondary' :
+                            project.stage === 'Client Approved' ? 'destructive' :
+                            'outline'
+                          }
+                          className="text-xs min-w-fit"
+                        >
+                          {project.stage}
+                        </Badge>
+                        <p className="text-xs text-gray-600 truncate">
+                          {project.name} - {project.client_name}
+                        </p>
+                      </div>
+                      <ArrowRight className="h-3 w-3 text-gray-400 flex-shrink-0" />
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
             {ongoingProjects.length > 8 && (
               <div className="mt-2 pt-2 border-t border-gray-200">
                 <Button
@@ -606,16 +662,59 @@ export default function Dashboard() {
         </Card>
       )}
 
-      {/* No Ongoing Projects Message */}
-      {ongoingProjects && ongoingProjects.length === 0 && (
-        <Card className="bg-blue-50/50 border-blue-200">
-          <CardContent className="pt-4 pb-4">
-            <div className="flex items-center gap-3">
-              <CheckCircle2 className="h-5 w-5 text-blue-600" />
-              <div>
-                <p className="text-sm font-medium text-blue-900">All projects completed!</p>
-                <p className="text-xs text-blue-700">No ongoing projects at the moment.</p>
-              </div>
+          {/* No Ongoing Projects Message */}
+          {ongoingProjects && ongoingProjects.length === 0 && (
+            <Card className="bg-blue-50/50 border-blue-200">
+              <CardContent className="pt-4 pb-4">
+                <div className="flex items-center gap-3">
+                  <CheckCircle2 className="h-5 w-5 text-blue-600" />
+                  <div>
+                    <p className="text-sm font-medium text-blue-900">All projects completed!</p>
+                    <p className="text-xs text-blue-700">No ongoing projects at the moment.</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </>
+      )}
+
+      {/* Store Keeper specific section - Material Requests to Process */}
+      {currentUser?.role === 'store_incharge' && stats?.recentRequests && stats.recentRequests.length > 0 && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base font-semibold text-foreground flex items-center gap-2">
+              <Package className="h-4 w-4 text-indigo-500" />
+              Material Requests to Process ({stats.recentRequests.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <div className="space-y-2 max-h-64 overflow-y-auto">
+              {stats.recentRequests.slice(0, 5).map((request: any) => (
+                <div 
+                  key={request.id}
+                  className="flex items-center justify-between p-2 rounded-lg bg-indigo-50/50 border border-indigo-200/50 hover:bg-indigo-50 cursor-pointer transition-colors"
+                  onClick={() => setLocation(`/requests`)}
+                >
+                  <div className="flex items-start gap-2 flex-1 min-w-0">
+                    <Badge 
+                      variant={
+                        request.status === 'pending' ? 'outline' :
+                        request.status === 'approved' ? 'default' :
+                        request.status === 'issued' ? 'secondary' :
+                        'destructive'
+                      }
+                      className="text-xs min-w-fit"
+                    >
+                      {request.status}
+                    </Badge>
+                    <p className="text-xs text-gray-600 truncate">
+                      {request.requestId} - {request.clientName}
+                    </p>
+                  </div>
+                  <ArrowRight className="h-3 w-3 text-gray-400 flex-shrink-0" />
+                </div>
+              ))}
             </div>
           </CardContent>
         </Card>

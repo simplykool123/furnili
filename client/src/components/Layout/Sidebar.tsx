@@ -34,29 +34,29 @@ import {
 } from "lucide-react";
 
 const navigation = [
-  { name: 'Dashboard', href: '/', icon: LayoutDashboard, roles: ['admin', 'manager', 'staff'] },
-  { name: 'Products', href: '/products', icon: Package, roles: ['admin', 'manager', 'staff'] },
-  { name: 'Material Requests', href: '/requests', icon: PackageSearch, roles: ['admin', 'manager', 'staff'] },
-  { name: 'Staff Attendance', href: '/attendance', icon: UserRoundPen, roles: ['admin', 'manager', 'staff'] },
-  { name: 'Petty Cash', href: '/petty-cash', icon: CircleDollarSign, roles: ['admin', 'manager', 'staff'] },
-  { name: 'Project Management', href: '/projects', icon: ProjectManagementIcon, roles: ['admin', 'manager', 'staff'] },
-  { name: 'Task Management', href: '/tasks', icon: CheckSquare, roles: ['admin', 'manager', 'staff'] },
-  { name: 'Product Comparison', href: '/product-comparison', icon: GitCompare, roles: ['admin', 'manager'] }, // Manager can access for team supervision
-  { name: 'WhatsApp Export', href: '/whatsapp', icon: MessageCircle, roles: ['admin', 'manager', 'staff'] },
+  { name: 'Dashboard', href: '/', icon: LayoutDashboard, roles: ['admin', 'manager', 'staff', 'store_incharge'] },
+  { name: 'Products', href: '/products', icon: Package, roles: ['admin', 'manager', 'staff', 'store_incharge'] },
+  { name: 'Material Requests', href: '/requests', icon: PackageSearch, roles: ['admin', 'manager', 'staff', 'store_incharge'] },
+  { name: 'Staff Attendance', href: '/attendance', icon: UserRoundPen, roles: ['admin', 'manager', 'staff', 'store_incharge'] },
+  { name: 'Petty Cash', href: '/petty-cash', icon: CircleDollarSign, roles: ['admin', 'manager', 'staff'] }, // Store keeper doesn't need petty cash access
+  { name: 'Project Management', href: '/projects', icon: ProjectManagementIcon, roles: ['admin', 'manager', 'staff'] }, // Store keeper doesn't need project management
+  { name: 'Task Management', href: '/tasks', icon: CheckSquare, roles: ['admin', 'manager', 'staff', 'store_incharge'] },
+  { name: 'Product Comparison', href: '/product-comparison', icon: GitCompare, roles: ['admin', 'manager'] },
+  { name: 'WhatsApp Export', href: '/whatsapp', icon: MessageCircle, roles: ['admin', 'manager', 'staff'] }, // Store keeper doesn't need WhatsApp export
 
-  { name: 'Reports', href: '/reports', icon: BarChart3, roles: ['admin', 'manager'] }, // Manager can access for team supervision
+  { name: 'Reports', href: '/reports', icon: BarChart3, roles: ['admin', 'manager'] },
   { 
     name: 'System Settings', 
     icon: Database, 
-    roles: ['admin', 'manager', 'staff'], // Show System Settings section with role-based items
+    roles: ['admin', 'manager', 'staff', 'store_incharge'],
     isCollapsible: true,
     subItems: [
-      { name: 'Inventory Movement', href: '/inventory-movement', icon: ArrowUpDown, roles: ['admin', 'manager'] }, // Manager can supervise inventory
-      { name: 'OCR Wizard', href: '/ocr-wizard', icon: Brain, roles: ['admin', 'manager', 'staff'] },
-      { name: 'Price Comparison', href: '/price-comparison', icon: TrendingUp, roles: ['admin', 'manager'] }, // Manager can access for supervision
-      { name: 'Display Settings', href: '/display-settings', icon: Settings, roles: ['admin', 'manager', 'staff'] },
-      { name: 'System Flowchart', href: '/system-flowchart', icon: GitBranch, roles: ['admin', 'manager', 'staff'] },
-      { name: 'Backups', href: '/backups', icon: Download, roles: ['admin'] }, // Admin only - core settings
+      { name: 'Inventory Movement', href: '/inventory-movement', icon: ArrowUpDown, roles: ['admin', 'manager', 'store_incharge'] }, // Store keeper needs inventory access
+      { name: 'OCR Wizard', href: '/ocr-wizard', icon: Brain, roles: ['admin', 'manager', 'staff'] }, // Store keeper doesn't need OCR
+      { name: 'Price Comparison', href: '/price-comparison', icon: TrendingUp, roles: ['admin', 'manager'] },
+      { name: 'Display Settings', href: '/display-settings', icon: Settings, roles: ['admin', 'manager', 'staff', 'store_incharge'] },
+      { name: 'System Flowchart', href: '/system-flowchart', icon: GitBranch, roles: ['admin', 'manager', 'staff'] }, // Store keeper doesn't need flowchart
+      { name: 'Backups', href: '/backups', icon: Download, roles: ['admin'] },
     ]
   },
   { 
@@ -65,10 +65,10 @@ const navigation = [
     roles: ['admin', 'manager', 'staff'],
     isCollapsible: true,
     subItems: [
-      { name: 'Clients', href: '/clients', icon: Users, roles: ['admin', 'manager'] }, // Manager can manage clients for projects
-      { name: 'Users', href: '/users', icon: Users, roles: ['admin'] }, // Admin only - user management
-      { name: 'Sales Products', href: '/sales-products', icon: Package, roles: ['admin', 'manager', 'staff'] },
-      { name: 'Categories', href: '/categories', icon: Tag, roles: ['admin'] }, // Admin only - core settings
+      { name: 'Clients', href: '/clients', icon: Users, roles: ['admin', 'manager'] },
+      { name: 'Users', href: '/users', icon: Users, roles: ['admin'] },
+      { name: 'Sales Products', href: '/sales-products', icon: Package, roles: ['admin', 'manager', 'staff'] }, // Store keeper doesn't need sales products
+      { name: 'Categories', href: '/categories', icon: Tag, roles: ['admin'] },
     ]
   },
 ];
