@@ -746,22 +746,27 @@ export class MemStorage {
       });
       
       let query = `
-        SELECT * FROM projects 
-        WHERE is_active = true
+        SELECT 
+          p.*,
+          c.name as client_name,
+          TO_CHAR(p.created_at, 'DD/MM/YYYY') as formatted_created_at
+        FROM projects p
+        LEFT JOIN clients c ON p.client_id = c.id
+        WHERE p.is_active = true
       `;
       const params: any[] = [];
       
       if (filters?.stage && filters.stage !== 'all') {
-        query += ` AND stage = $${params.length + 1}`;
+        query += ` AND p.stage = $${params.length + 1}`;
         params.push(filters.stage);
       }
       
       if (filters?.clientId) {
-        query += ` AND client_id = $${params.length + 1}`;
+        query += ` AND p.client_id = $${params.length + 1}`;
         params.push(filters.clientId);
       }
       
-      query += ` ORDER BY created_at DESC`;
+      query += ` ORDER BY p.created_at DESC`;
       
       const result = await pool.query(query, params);
       await pool.end();

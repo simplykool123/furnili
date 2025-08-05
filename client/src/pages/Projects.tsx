@@ -419,11 +419,11 @@ export default function Projects() {
                     onClick={() => setLocation(`/projects/${project.id}`)}
                   >
                     <TableCell className="text-gray-600">
-                      {project.createdAt ? new Date(project.createdAt).toLocaleDateString('en-GB', {
+                      {project.formatted_created_at || (project.createdAt ? new Date(project.createdAt).toLocaleDateString('en-GB', {
                         day: '2-digit',
                         month: '2-digit', 
                         year: 'numeric'
-                      }) : 'N/A'}
+                      }) : 'N/A')}
                     </TableCell>
                     <TableCell className="font-medium text-amber-900">
                       {project.code}
