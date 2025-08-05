@@ -279,7 +279,7 @@ export const materialRequests = pgTable("material_requests", {
   id: serial("id").primaryKey(),
   projectId: integer("project_id").references(() => projects.id).notNull(),
   clientName: text("client_name").notNull(),
-  orderNumber: text("order_number").default(""), // Make optional with default empty string
+  orderNumber: text("order_number").notNull().default(""), // Auto-generated if not provided
   requestedBy: integer("requested_by").references(() => users.id).notNull(),
   status: text("status").notNull().default("pending"), // pending, approved, issued, completed, rejected
   priority: text("priority").notNull().default("medium"), // high, medium, low
@@ -557,6 +557,8 @@ export const insertMaterialRequestSchema = createInsertSchema(materialRequests).
   approvedAt: true,
   issuedBy: true,
   issuedAt: true,
+}).extend({
+  orderNumber: z.string().optional(), // Make orderNumber optional for frontend
 });
 
 export const insertRequestItemSchema = createInsertSchema(requestItems).omit({

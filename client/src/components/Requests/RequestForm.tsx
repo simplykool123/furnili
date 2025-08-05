@@ -16,7 +16,6 @@ import { Plus, Trash2 } from "lucide-react";
 
 const requestSchema = z.object({
   clientName: z.string().min(1, "Client name is required"),
-  orderNumber: z.string().min(1, "Order number is required"),
   priority: z.enum(["high", "medium", "low"]),
   remarks: z.string().optional(),
   items: z.array(z.object({
@@ -92,7 +91,6 @@ export default function RequestForm({ onClose }: RequestFormProps) {
       const requestData = {
         request: {
           clientName: data.clientName,
-          orderNumber: data.orderNumber,
           priority: data.priority,
           remarks: data.remarks || undefined,
         },
@@ -189,16 +187,14 @@ export default function RequestForm({ onClose }: RequestFormProps) {
             </div>
 
             <div>
-              <Label htmlFor="orderNumber">Order Number *</Label>
+              <Label>Order Number</Label>
               <Input
-                id="orderNumber"
-                {...register("orderNumber")}
-                className={errors.orderNumber ? "border-red-500" : ""}
-                placeholder="e.g., ORD-2024-001"
+                value="Auto-generated"
+                disabled
+                className="bg-gray-50 text-gray-500"
+                placeholder="Auto-generated"
               />
-              {errors.orderNumber && (
-                <p className="text-sm text-red-600 mt-1">{errors.orderNumber.message}</p>
-              )}
+              <p className="text-xs text-gray-500 mt-1">Order number will be automatically assigned</p>
             </div>
           </div>
 

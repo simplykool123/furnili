@@ -2366,9 +2366,23 @@ class DatabaseStorage implements IStorage {
     
     // Start a transaction for consistency
     const result = await db.transaction(async (tx) => {
+      // Auto-generate order number if not provided
+      let orderNumber = request.orderNumber;
+      if (!orderNumber) {
+        // Generate format: REQ-YYYY-### (e.g., REQ-2025-001)
+        const year = new Date().getFullYear();
+        const countResult = await tx.select({ count: sql<number>`count(*)` })
+          .from(materialRequests)
+          .where(sql`DATE_PART('year', created_at) = ${year}`);
+        const count = countResult[0]?.count || 0;
+        orderNumber = `REQ-${year}-${String(count + 1).padStart(3, '0')}`;
+        console.log(`DEBUG: Auto-generated order number: ${orderNumber}`);
+      }
+
       // Create the material request first with totalValue = 0
       const [newRequest] = await tx.insert(materialRequests).values({
         ...request,
+        orderNumber,
         totalValue: 0, // Will be calculated from items
       }).returning();
       
