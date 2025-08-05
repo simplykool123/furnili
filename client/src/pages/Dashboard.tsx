@@ -767,17 +767,17 @@ export default function Dashboard() {
       )}
 
       {/* Store Keeper specific section - Material Requests to Process */}
-      {currentUser?.role === 'store_incharge' && stats?.recentRequests && stats.recentRequests.length > 0 && (
+      {currentUser?.role === 'store_incharge' && stats?.recentRequests && stats.recentRequests.filter((r: any) => ['pending', 'approved'].includes(r.status)).length > 0 && (
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-base font-semibold text-foreground flex items-center gap-2">
               <Package className="h-4 w-4 text-indigo-500" />
-              Material Requests to Process ({stats.recentRequests.length})
+              Material Requests to Process ({stats.recentRequests.filter((r: any) => ['pending', 'approved'].includes(r.status)).length})
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-0">
             <div className="space-y-2 max-h-64 overflow-y-auto">
-              {stats.recentRequests.slice(0, 5).map((request: any) => (
+              {stats.recentRequests.filter((request: any) => ['pending', 'approved'].includes(request.status)).slice(0, 5).map((request: any) => (
                 <div 
                   key={request.id}
                   className="flex items-center justify-between p-2 rounded-lg bg-indigo-50/50 border border-indigo-200/50 hover:bg-indigo-50 cursor-pointer transition-colors"

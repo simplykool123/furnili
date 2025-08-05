@@ -1919,7 +1919,14 @@ export class MemStorage {
     const lowStockProducts = await this.getLowStockProducts();
     
     const pendingRequests = allRequests.filter(r => r.status === 'pending');
-    const recentRequests = allRequests.slice(0, 5);
+    
+    // Filter recentRequests based on user role
+    let recentRequests = allRequests.slice(0, 10); // Get more initially for filtering
+    if (userRole === 'store_incharge') {
+      // Store keepers should only see pending and approved requests, not issued ones
+      recentRequests = recentRequests.filter(r => ['pending', 'approved'].includes(r.status));
+    }
+    recentRequests = recentRequests.slice(0, 5); // Take final 5 after filtering
     
     const totalValue = allProducts.reduce((sum, p) => sum + (p.price * p.currentStock), 0);
 
@@ -2262,7 +2269,7 @@ class DatabaseStorage implements IStorage {
     return true;
   }
 
-  async getDashboardStats(): Promise<{
+  async getDashboardStats(userRole: string = 'staff'): Promise<{
     totalProducts: number;
     pendingRequests: number;
     lowStockItems: number;
@@ -2277,12 +2284,20 @@ class DatabaseStorage implements IStorage {
     const pendingRequests = allRequests.filter(r => r.status === 'pending');
     const totalValue = allProducts.reduce((sum, p) => sum + (p.pricePerUnit * p.currentStock), 0);
 
+    // Filter recentRequests based on user role
+    let recentRequests = allRequests.slice(0, 10); // Get more initially for filtering
+    if (userRole === 'store_incharge') {
+      // Store keepers should only see pending and approved requests, not issued ones
+      recentRequests = recentRequests.filter(r => ['pending', 'approved'].includes(r.status));
+    }
+    recentRequests = recentRequests.slice(0, 5); // Take final 5 after filtering
+
     return {
       totalProducts: allProducts.length,
       pendingRequests: pendingRequests.length,
       lowStockItems: lowStockProducts.length,
       totalValue,
-      recentRequests: allRequests.slice(0, 5),
+      recentRequests,
       lowStockProducts: lowStockProducts.slice(0, 5).map(product => ({
         id: product.id,
         name: product.name,

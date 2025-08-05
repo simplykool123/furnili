@@ -100,8 +100,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Dashboard stats
   app.get("/api/dashboard/stats", authenticateToken, async (req: AuthRequest, res) => {
     try {
-      // Get basic dashboard stats
-      const basicStats = await storage.getDashboardStats();
+      // Get user info for role-based filtering
+      const currentUser = await storage.getUser(req.user!.id);
+      const userRole = currentUser?.role || 'staff';
+      
+      // Get basic dashboard stats with role-based filtering
+      const basicStats = await storage.getDashboardStats(userRole);
       
       // Initialize default values
       let todayAttendanceCount = 0;
