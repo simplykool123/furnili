@@ -61,13 +61,26 @@ export default function InventoryMovement() {
   });
 
   // Fetch movements
-  const { data: movements, isLoading } = useQuery({
+  const { data: movements, isLoading, error } = useQuery({
     queryKey: ['/api/inventory/movements'],
     queryFn: async () => {
-      const response = await authenticatedApiRequest('GET', '/api/inventory/movements');
-      const data = await response.json();
-      console.log('Movements data:', data); // Debug log
-      return data;
+      try {
+        const response = await authenticatedApiRequest('GET', '/api/inventory/movements');
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        console.log('Movements API Response:', {
+          status: response.status,
+          dataLength: Array.isArray(data) ? data.length : 'Not an array',
+          firstItem: Array.isArray(data) && data.length > 0 ? data[0] : 'No items',
+          data: data
+        });
+        return data;
+      } catch (error: any) {
+        console.error('Error fetching movements:', error);
+        throw error;
+      }
     },
   });
 
@@ -141,6 +154,13 @@ export default function InventoryMovement() {
       subtitle="Track and manage stock movements"
     >
       <div className="space-y-6">
+        {/* Debug Info */}
+        {error && (
+          <div className="mb-4 p-3 bg-red-100 border border-red-300 rounded text-red-700">
+            Error: {error instanceof Error ? error.message : 'Unknown error'}
+          </div>
+        )}
+        
         {/* Header Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card>
