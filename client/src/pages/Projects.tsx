@@ -236,7 +236,7 @@ export default function Projects() {
   const filteredProjects = projects.filter((project: Project) => {
     const matchesSearch = project.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          project.code?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         getClientName(project.clientId).toLowerCase().includes(searchTerm.toLowerCase());
+                         getClientName(project).toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesStage = stageFilter === "all" || project.stage === stageFilter;
     const matchesClient = clientFilter === "all" || project.clientId.toString() === clientFilter;
@@ -262,8 +262,13 @@ export default function Projects() {
     return stageColors[stage as keyof typeof stageColors] || "bg-gray-100 text-gray-800";
   };
 
-  const getClientName = (clientId: number) => {
-    const client = clients.find((c: Client) => c.id === clientId);
+  const getClientName = (project: any) => {
+    // Use client_name from the joined SQL query if available
+    if (project.client_name) {
+      return project.client_name;
+    }
+    // Fallback to client lookup if needed
+    const client = clients.find((c: Client) => c.id === project.clientId);
     return client?.name || "N/A";
   };
 
@@ -424,7 +429,7 @@ export default function Projects() {
                       {project.name}
                     </TableCell>
                     <TableCell className="text-gray-600">
-                      {getClientName(project.clientId)}
+                      {getClientName(project)}
                     </TableCell>
                     <TableCell className="text-gray-600">
                       {project.siteCity || 'N/A'}
