@@ -878,6 +878,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`DEBUG: DELETE route called for request ID: ${id}`);
       console.log(`DEBUG: User role: ${(req as AuthRequest).user?.role}`);
       
+      console.log(`DEBUG: About to call storage.deleteMaterialRequest(${id})`);
+      console.log(`DEBUG: Storage method type: ${typeof storage.deleteMaterialRequest}`);
+      
       const success = await storage.deleteMaterialRequest(id);
       console.log(`DEBUG: Delete operation result: ${success}`);
       

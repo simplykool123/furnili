@@ -2451,23 +2451,38 @@ class DatabaseStorage implements IStorage {
   }
 
   async deleteMaterialRequest(id: number): Promise<boolean> {
+    console.log(`DEBUG: deleteMaterialRequest called with id: ${id}`);
+    
     try {
       console.log(`DEBUG: Starting deletion of material request ${id}`);
       
+      // Test database connectivity first
+      console.log(`DEBUG: Testing database connection...`);
+      const dbTest = await db.select().from(materialRequests).limit(1);
+      console.log(`DEBUG: Database connection test - found ${dbTest.length} records`);
+      
       // First check if the request exists
+      console.log(`DEBUG: Checking if request ${id} exists...`);
       const existingRequest = await db.select().from(materialRequests).where(eq(materialRequests.id, id)).limit(1);
       console.log(`DEBUG: Found existing request:`, existingRequest.length > 0 ? 'YES' : 'NO');
+      console.log(`DEBUG: Existing request data:`, JSON.stringify(existingRequest, null, 2));
       
       if (existingRequest.length === 0) {
         console.log(`DEBUG: Request ${id} not found, returning false`);
         return false;
       }
       
+      console.log(`DEBUG: Starting transaction to delete request ${id}...`);
+      
       // Use transaction to ensure data consistency
       const result = await db.transaction(async (tx) => {
+        console.log(`DEBUG: Inside transaction - deleting request items for ${id}...`);
+        
         // First delete all request items
         const deletedItems = await tx.delete(requestItems).where(eq(requestItems.requestId, id)).returning();
         console.log(`DEBUG: Deleted ${deletedItems.length} request items for request ${id}`);
+        
+        console.log(`DEBUG: Inside transaction - deleting main request ${id}...`);
         
         // Then delete the material request
         const deletedRequest = await tx.delete(materialRequests)
@@ -2475,13 +2490,16 @@ class DatabaseStorage implements IStorage {
           .returning();
         
         console.log(`DEBUG: Deleted material request ${id}, affected rows: ${deletedRequest.length}`);
+        console.log(`DEBUG: Deleted request data:`, JSON.stringify(deletedRequest, null, 2));
+        
         return deletedRequest.length > 0;
       });
       
       console.log(`DEBUG: Transaction completed, result: ${result}`);
       return result;
     } catch (error) {
-      console.error('DEBUG: Error deleting material request:', error);
+      console.error('DEBUG: Error in deleteMaterialRequest:', error);
+      console.error('DEBUG: Error stack:', error.stack);
       throw error;
     }
   }
