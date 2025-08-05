@@ -279,7 +279,7 @@ export const materialRequests = pgTable("material_requests", {
   id: serial("id").primaryKey(),
   projectId: integer("project_id").references(() => projects.id).notNull(),
   clientName: text("client_name").notNull(),
-  orderNumber: text("order_number").notNull(),
+  orderNumber: text("order_number").default(""), // Make optional with default empty string
   requestedBy: integer("requested_by").references(() => users.id).notNull(),
   status: text("status").notNull().default("pending"), // pending, approved, issued, completed, rejected
   priority: text("priority").notNull().default("medium"), // high, medium, low
