@@ -3026,18 +3026,42 @@ class DatabaseStorage implements IStorage {
   // Project Management Operations - Phase 1 Implementation
   async getProject(id: number): Promise<any | undefined> {
     try {
-      // Use direct pg client to completely bypass Drizzle
+      console.log("DatabaseStorage getProject (FINAL) called with id:", id);
+      
+      // Use direct pg client to include client information
       const { Pool } = await import('pg');
       const pool = new Pool({
         connectionString: process.env.DATABASE_URL,
       });
       
-      const result = await pool.query('SELECT * FROM projects WHERE id = $1', [id]);
+      const query = `
+        SELECT 
+          p.*,
+          c.name as client_name,
+          c.email as client_email,
+          c.mobile as client_mobile,
+          c.phone as client_phone,
+          TO_CHAR(p.created_at, 'DD/MM/YYYY') as formatted_created_at
+        FROM projects p
+        LEFT JOIN clients c ON p.client_id = c.id
+        WHERE p.id = $1 AND p.is_active = true
+        LIMIT 1
+      `;
+      
+      console.log("DatabaseStorage FINAL: About to execute query for id:", id);
+      const result = await pool.query(query, [id]);
       await pool.end();
       
-      return result.rows[0];
+      console.log("DatabaseStorage FINAL: Query executed, rows returned:", result.rows.length);
+      if (result.rows.length > 0) {
+        const project = result.rows[0];
+        console.log("DatabaseStorage FINAL: Project client_name:", project.client_name);
+        console.log("DatabaseStorage FINAL: Project client_mobile:", project.client_mobile);
+        return project;
+      }
+      return undefined;
     } catch (error) {
-      console.error("Error in DatabaseStorage getProject:", error);
+      console.error("DatabaseStorage FINAL: Error in getProject:", error);
       return undefined;
     }
   }
