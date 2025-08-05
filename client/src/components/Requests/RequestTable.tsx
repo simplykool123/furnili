@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Eye, Check, X, Truck, FileText, Download, Search } from "lucide-react";
+import { Eye, Check, X, Truck, FileText, Download, Search, CheckCircle, XCircle, Package, CheckCircle2, Loader2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useIsMobile } from "@/components/Mobile/MobileOptimizer";
 import MobileTable from "@/components/Mobile/MobileTable";
@@ -553,6 +553,122 @@ export default function RequestTable() {
                   </TableBody>
                 </Table>
               </div>
+
+              {/* Action Buttons for Managers/Admins */}
+              {selectedRequest && selectedRequest.status === 'pending' && user?.role !== 'staff' && (
+                <div className="border-t pt-4">
+                  <h4 className="font-medium mb-3">Actions</h4>
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <Button
+                      onClick={() => {
+                        updateStatusMutation.mutate({ 
+                          id: selectedRequest.id, 
+                          status: 'approved' 
+                        });
+                        setShowDetails(false);
+                      }}
+                      disabled={updateStatusMutation.isPending}
+                      className="bg-green-600 hover:bg-green-700 text-white flex-1"
+                    >
+                      {updateStatusMutation.isPending ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Processing...
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle className="mr-2 h-4 w-4" />
+                          Approve Request
+                        </>
+                      )}
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        updateStatusMutation.mutate({ 
+                          id: selectedRequest.id, 
+                          status: 'rejected' 
+                        });
+                        setShowDetails(false);
+                      }}
+                      disabled={updateStatusMutation.isPending}
+                      variant="destructive"
+                      className="flex-1"
+                    >
+                      {updateStatusMutation.isPending ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Processing...
+                        </>
+                      ) : (
+                        <>
+                          <XCircle className="mr-2 h-4 w-4" />
+                          Reject Request
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {/* Issue Button for Store Keepers when Approved */}
+              {selectedRequest && selectedRequest.status === 'approved' && user?.role === 'store_incharge' && (
+                <div className="border-t pt-4">
+                  <h4 className="font-medium mb-3">Issue Materials</h4>
+                  <Button
+                    onClick={() => {
+                      updateStatusMutation.mutate({ 
+                        id: selectedRequest.id, 
+                        status: 'issued' 
+                      });
+                      setShowDetails(false);
+                    }}
+                    disabled={updateStatusMutation.isPending}
+                    className="bg-blue-600 hover:bg-blue-700 text-white w-full sm:w-auto"
+                  >
+                    {updateStatusMutation.isPending ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Processing...
+                      </>
+                    ) : (
+                      <>
+                        <Package className="mr-2 h-4 w-4" />
+                        Issue Materials
+                      </>
+                    )}
+                  </Button>
+                </div>
+              )}
+
+              {/* Complete Button for any authorized role when Issued */}
+              {selectedRequest && selectedRequest.status === 'issued' && user?.role !== 'staff' && (
+                <div className="border-t pt-4">
+                  <h4 className="font-medium mb-3">Complete Request</h4>
+                  <Button
+                    onClick={() => {
+                      updateStatusMutation.mutate({ 
+                        id: selectedRequest.id, 
+                        status: 'completed' 
+                      });
+                      setShowDetails(false);
+                    }}
+                    disabled={updateStatusMutation.isPending}
+                    className="bg-gray-600 hover:bg-gray-700 text-white w-full sm:w-auto"
+                  >
+                    {updateStatusMutation.isPending ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Processing...
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle2 className="mr-2 h-4 w-4" />
+                        Mark as Completed
+                      </>
+                    )}
+                  </Button>
+                </div>
+              )}
             </div>
           )}
         </DialogContent>
