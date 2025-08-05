@@ -2352,10 +2352,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Inventory Movement routes
   app.get("/api/inventory/movements", authenticateToken, async (req: AuthRequest, res) => {
     try {
+      console.log('Fetching stock movements...');
       const movements = await storage.getAllStockMovements();
+      console.log(`Found ${movements.length} movements`);
       res.json(movements);
     } catch (error) {
-      res.status(500).json({ message: "Failed to fetch movements", error });
+      console.error('Stock movements API error:', error);
+      res.status(500).json({ message: "Failed to fetch movements", error: error.message });
     }
   });
 
@@ -2363,11 +2366,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const movement = await storage.createStockMovement({
         ...req.body,
-        recordedBy: req.user!.id,
+        performedBy: req.user!.id, // Fixed field name
       });
       res.json(movement);
     } catch (error) {
-      res.status(500).json({ message: "Failed to record movement", error });
+      console.error('Create stock movement API error:', error);  
+      res.status(500).json({ message: "Failed to record movement", error: error.message });
     }
   });
 

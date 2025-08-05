@@ -237,6 +237,7 @@ export interface IStorage {
   
   // Stock movement operations
   getStockMovements(productId?: number): Promise<StockMovement[]>;
+  getAllStockMovements(): Promise<StockMovement[]>;
   createStockMovement(movement: InsertStockMovement): Promise<StockMovement>;
   
   // Dashboard/Analytics
@@ -1878,6 +1879,10 @@ export class MemStorage {
     return allMovements.sort((a, b) => 
       new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime()
     );
+  }
+
+  async getAllStockMovements(): Promise<StockMovement[]> {
+    return this.getStockMovements();
   }
 
   async createStockMovement(movement: InsertStockMovement): Promise<StockMovement> {
@@ -3743,8 +3748,44 @@ class DatabaseStorage implements IStorage {
     return result[0];
   }
   async deleteBOQUpload(id: number): Promise<boolean> { return false; }
-  async getStockMovements(productId: number): Promise<StockMovement[]> { return []; }
-  async createStockMovement(movement: InsertStockMovement): Promise<StockMovement> { throw new Error("Not implemented"); }
+  async getStockMovements(productId?: number): Promise<StockMovement[]> {
+    let query = db.select({
+      id: stockMovements.id,
+      productId: stockMovements.productId,
+      movementType: stockMovements.movementType,
+      quantity: stockMovements.quantity,
+      previousStock: stockMovements.previousStock,
+      newStock: stockMovements.newStock,
+      reference: stockMovements.reference,
+      vendor: stockMovements.vendor,
+      costPerUnit: stockMovements.costPerUnit,
+      totalCost: stockMovements.totalCost,
+      notes: stockMovements.notes,
+      performedBy: stockMovements.performedBy,
+      createdAt: stockMovements.createdAt,
+      productName: products.name,
+      performedByName: users.name,
+    })
+    .from(stockMovements)
+    .leftJoin(products, eq(stockMovements.productId, products.id))
+    .leftJoin(users, eq(stockMovements.performedBy, users.id));
+
+    if (productId) {
+      query = query.where(eq(stockMovements.productId, productId));
+    }
+
+    const result = await query.orderBy(desc(stockMovements.createdAt));
+    return result;
+  }
+
+  async getAllStockMovements(): Promise<StockMovement[]> {
+    return this.getStockMovements();
+  }
+
+  async createStockMovement(movement: InsertStockMovement): Promise<StockMovement> {
+    const result = await db.insert(stockMovements).values(movement).returning();
+    return result[0];
+  }
   async updateStock(productId: number, quantity: number, type: 'in' | 'out', reason: string): Promise<void> {}
 
   // Dashboard specific methods

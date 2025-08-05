@@ -160,7 +160,7 @@ export default function InventoryMovement() {
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
               {movements?.filter((m: any) => 
-                m.type === 'inward' && 
+                m.movementType === 'inward' && 
                 new Date(m.createdAt).toDateString() === new Date().toDateString()
               ).length || 0}
             </div>
@@ -176,7 +176,7 @@ export default function InventoryMovement() {
           <CardContent>
             <div className="text-2xl font-bold text-red-600">
               {movements?.filter((m: any) => 
-                m.type === 'outward' && 
+                m.movementType === 'outward' && 
                 new Date(m.createdAt).toDateString() === new Date().toDateString()
               ).length || 0}
             </div>
@@ -215,24 +215,24 @@ export default function InventoryMovement() {
                   <TableRow key={movement.id}>
                     <TableCell>
                       <div className="flex items-center space-x-2">
-                        {getMovementTypeIcon(movement.type)}
-                        {getMovementTypeBadge(movement.type)}
+                        {getMovementTypeIcon(movement.movementType)}
+                        {getMovementTypeBadge(movement.movementType)}
                       </div>
                     </TableCell>
                     <TableCell className="font-medium">
-                      {getProductName(movement.productId)}
+                      {movement.productName || 'Unknown Product'}
                     </TableCell>
                     <TableCell>
                       <span className={`font-medium ${
-                        movement.type === 'inward' ? 'text-green-600' : 'text-red-600'
+                        movement.movementType === 'inward' ? 'text-green-600' : 'text-red-600'
                       }`}>
-                        {movement.type === 'inward' ? '+' : '-'}{movement.quantity}
+                        {movement.movementType === 'inward' ? '+' : '-'}{movement.quantity}
                       </span>
                     </TableCell>
-                    <TableCell>{movement.reason}</TableCell>
+                    <TableCell>{movement.notes || '-'}</TableCell>
                     <TableCell>{movement.reference || '-'}</TableCell>
                     <TableCell>{formatDate(movement.createdAt)}</TableCell>
-                    <TableCell>{movement.userName || 'System'}</TableCell>
+                    <TableCell>{movement.performedByName || 'System'}</TableCell>
                   </TableRow>
                 )) || (
                   <TableRow>
