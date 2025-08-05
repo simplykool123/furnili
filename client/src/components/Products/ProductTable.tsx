@@ -29,6 +29,7 @@ interface Product {
   unit: string;
   imageUrl?: string;
   stockStatus: 'in-stock' | 'low-stock' | 'out-of-stock';
+  isActive: boolean;
 }
 
 export default function ProductTable() {
@@ -346,7 +347,11 @@ export default function ProductTable() {
               {canSeePricing && (
                 <TableCell className="text-xs font-medium">₹{(product.pricePerUnit || 0).toFixed(0)}</TableCell>
               )}
-              <TableCell>{getStockStatusBadge(product.stockStatus)}</TableCell>
+              <TableCell>
+                <Badge variant={product.isActive ? "default" : "secondary"}>
+                  {product.isActive ? "Active" : "Inactive"}
+                </Badge>
+              </TableCell>
               <TableCell>
                 <div className="flex items-center space-x-1">
                   <Button
