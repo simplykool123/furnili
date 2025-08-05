@@ -2351,9 +2351,72 @@ class DatabaseStorage implements IStorage {
     );
   }
 
-  async createMaterialRequest(request: InsertMaterialRequest): Promise<MaterialRequest> {
-    const result = await db.insert(materialRequests).values(request).returning();
-    return result[0];
+  async createMaterialRequest(request: InsertMaterialRequest, items: InsertRequestItem[] = []): Promise<MaterialRequest> {
+    console.log(`DEBUG: Creating material request with ${items.length} items`);
+    
+    // Start a transaction for consistency
+    const result = await db.transaction(async (tx) => {
+      // Create the material request first with totalValue = 0
+      const [newRequest] = await tx.insert(materialRequests).values({
+        ...request,
+        totalValue: 0, // Will be calculated from items
+      }).returning();
+      
+      if (items.length === 0) {
+        console.log(`DEBUG: No items to process, returning request with totalValue: 0`);
+        return newRequest;
+      }
+      
+      // Process each item and fetch current product prices
+      let totalValue = 0;
+      const enrichedItems: any[] = [];
+      
+      for (const item of items) {
+        let unitPrice = 0;
+        
+        if (item.productId) {
+          // Fetch current product price from database
+          const [product] = await tx.select({
+            pricePerUnit: products.pricePerUnit
+          }).from(products).where(eq(products.id, item.productId)).limit(1);
+          
+          if (product) {
+            unitPrice = product.pricePerUnit;
+            console.log(`DEBUG: Product ${item.productId} current price: ₹${unitPrice}`);
+          } else {
+            console.log(`DEBUG: Product ${item.productId} not found, using price: ₹0`);
+          }
+        }
+        
+        const totalPrice = item.requestedQuantity * unitPrice;
+        totalValue += totalPrice;
+        
+        // Insert the request item with current prices
+        const enrichedItem = {
+          ...item,
+          requestId: newRequest.id,
+          unitPrice,
+          totalPrice,
+          approvedQuantity: null,
+        };
+        
+        await tx.insert(requestItems).values(enrichedItem);
+        enrichedItems.push(enrichedItem);
+        
+        console.log(`DEBUG: Item ${item.productId}: ${item.requestedQuantity} × ₹${unitPrice} = ₹${totalPrice}`);
+      }
+      
+      // Update the request with calculated total value
+      const [updatedRequest] = await tx.update(materialRequests)
+        .set({ totalValue })
+        .where(eq(materialRequests.id, newRequest.id))
+        .returning();
+      
+      console.log(`DEBUG: Material request created with total value: ₹${totalValue}`);
+      return updatedRequest;
+    });
+    
+    return result;
   }
 
   async updateMaterialRequestStatus(
