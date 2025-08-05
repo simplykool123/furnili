@@ -65,7 +65,9 @@ export default function InventoryMovement() {
     queryKey: ['/api/inventory/movements'],
     queryFn: async () => {
       const response = await authenticatedApiRequest('GET', '/api/inventory/movements');
-      return response.json();
+      const data = await response.json();
+      console.log('Movements data:', data); // Debug log
+      return data;
     },
   });
 
@@ -211,30 +213,32 @@ export default function InventoryMovement() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {movements?.map((movement: any) => (
-                  <TableRow key={movement.id}>
-                    <TableCell>
-                      <div className="flex items-center space-x-2">
-                        {getMovementTypeIcon(movement.movementType)}
-                        {getMovementTypeBadge(movement.movementType)}
-                      </div>
-                    </TableCell>
-                    <TableCell className="font-medium">
-                      {movement.productName || 'Unknown Product'}
-                    </TableCell>
-                    <TableCell>
-                      <span className={`font-medium ${
-                        movement.movementType === 'inward' ? 'text-green-600' : 'text-red-600'
-                      }`}>
-                        {movement.movementType === 'inward' ? '+' : '-'}{movement.quantity}
-                      </span>
-                    </TableCell>
-                    <TableCell>{movement.notes || '-'}</TableCell>
-                    <TableCell>{movement.reference || '-'}</TableCell>
-                    <TableCell>{formatDate(movement.createdAt)}</TableCell>
-                    <TableCell>{movement.performedByName || 'System'}</TableCell>
-                  </TableRow>
-                )) || (
+                {movements && movements.length > 0 ? (
+                  movements.map((movement: any) => (
+                    <TableRow key={movement.id}>
+                      <TableCell>
+                        <div className="flex items-center space-x-2">
+                          {getMovementTypeIcon(movement.movementType)}
+                          {getMovementTypeBadge(movement.movementType)}
+                        </div>
+                      </TableCell>
+                      <TableCell className="font-medium">
+                        {movement.productName || 'Unknown Product'}
+                      </TableCell>
+                      <TableCell>
+                        <span className={`font-medium ${
+                          movement.movementType === 'inward' ? 'text-green-600' : 'text-red-600'
+                        }`}>
+                          {movement.movementType === 'inward' ? '+' : '-'}{movement.quantity}
+                        </span>
+                      </TableCell>
+                      <TableCell>{movement.notes || '-'}</TableCell>
+                      <TableCell>{movement.reference || '-'}</TableCell>
+                      <TableCell>{formatDate(movement.createdAt)}</TableCell>
+                      <TableCell>{movement.performedByName || 'System'}</TableCell>
+                    </TableRow>
+                  ))
+                ) : (
                   <TableRow>
                     <TableCell colSpan={7} className="text-center py-8 text-gray-500">
                       No movements recorded yet
