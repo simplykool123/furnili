@@ -389,9 +389,8 @@ export default function Dashboard() {
             </Card>
           </div>
 
-          {/* My Attendance & Tasks - Side by Side */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            {/* My Attendance */}
+          {/* My Attendance - Full width */}
+          <div className="mb-6">
             <Card className="hover:shadow-md transition-all duration-200">
               <CardHeader className="pb-3">
                 <CardTitle className="text-lg font-semibold text-foreground flex items-center gap-2">
@@ -472,46 +471,6 @@ export default function Dashboard() {
                     </div>
                   ) as React.ReactElement;
                 })()}
-              </CardContent>
-            </Card>
-
-            {/* My Tasks */}
-            <Card className="hover:shadow-md transition-all duration-200">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg font-semibold text-foreground flex items-center gap-2">
-                  <CheckCircle className="h-5 w-5 text-blue-500" />
-                  My Tasks
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {pendingTasks && pendingTasks.length > 0 ? (
-                  <div className="space-y-3">
-                    {pendingTasks.slice(0, 3).map((task) => (
-                      <div key={task.id} className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
-                        <div className="flex-1">
-                          <p className="text-sm font-medium text-gray-900 truncate">{task.title}</p>
-                          <p className="text-xs text-gray-600">
-                            Priority: {task.priority} | Due: {task.dueDate ? new Date(task.dueDate).toLocaleDateString() : 'No due date'}
-                          </p>
-                        </div>
-                        <Badge variant={task.priority === 'high' ? 'destructive' : 'default'} className="text-xs">
-                          {task.status}
-                        </Badge>
-                      </div>
-                    ))}
-                    {pendingTasks.length > 3 && (
-                      <Button variant="outline" size="sm" className="w-full" onClick={() => setLocation('/tasks')}>
-                        View All {pendingTasks.length} Tasks
-                      </Button>
-                    )}
-                  </div>
-                ) : (
-                  <div className="text-center py-6">
-                    <CheckCircle2 className="h-12 w-12 mx-auto text-green-500 mb-3" />
-                    <p className="text-sm font-medium text-green-900">All caught up!</p>
-                    <p className="text-xs text-green-700">No pending tasks.</p>
-                  </div>
-                )}
               </CardContent>
             </Card>
           </div>
@@ -595,8 +554,8 @@ export default function Dashboard() {
 
       {/* Removed animated "New Messages" section - keeping only clean "Pending Tasks" section below */}
 
-      {/* Pending Tasks Section - Similar to Recent Activity */}
-      {pendingTasks && pendingTasks.length > 0 && (
+      {/* Admin/Manager Only: Pending Tasks Section - Similar to Recent Activity */}
+      {!authService.hasRole(['staff', 'store_incharge']) && pendingTasks && pendingTasks.length > 0 && (
         <Card className="hover:shadow-md transition-all duration-200">
           <CardHeader className="pb-2">
             <CardTitle className="text-base font-semibold text-foreground flex items-center gap-2">
@@ -658,8 +617,8 @@ export default function Dashboard() {
         </Card>
       )}
 
-      {/* No Tasks Message */}
-      {pendingTasks && pendingTasks.length === 0 && (
+      {/* Admin/Manager Only: No Tasks Message */}
+      {!authService.hasRole(['staff', 'store_incharge']) && pendingTasks && pendingTasks.length === 0 && (
         <Card className="bg-green-50/50 border-green-200">
           <CardContent className="pt-4 pb-4">
             <div className="flex items-center gap-3">
@@ -673,8 +632,8 @@ export default function Dashboard() {
         </Card>
       )}
 
-      {/* Hide project information from store keepers */}
-      {currentUser?.role !== 'store_incharge' && (
+      {/* Admin/Manager Only: Hide project information from store keepers */}
+      {!authService.hasRole(['staff', 'store_incharge']) && currentUser?.role !== 'store_incharge' && (
         <>
           {/* Ongoing Projects Section */}
           {ongoingProjects && ongoingProjects.length > 0 && (
