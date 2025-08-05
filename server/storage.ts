@@ -535,7 +535,9 @@ export class MemStorage {
     // Include user and project information
     const expensesWithUsers = await Promise.all(
       allExpenses.map(async (expense) => {
-        const user = await this.getUser(expense.addedBy);
+        // Fetch the user who paid (paidBy), not who added the expense (addedBy)
+        const paidByUser = expense.paidBy ? await this.getUser(expense.paidBy) : null;
+        const addedByUser = await this.getUser(expense.addedBy);
         let project = null;
         
         if (expense.projectId) {
@@ -548,7 +550,8 @@ export class MemStorage {
         
         return {
           ...expense,
-          user: user ? { id: user.id, name: user.name, email: user.email, username: user.username } : null,
+          user: paidByUser ? { id: paidByUser.id, name: paidByUser.name, email: paidByUser.email, username: paidByUser.username } : null,
+          addedByUser: addedByUser ? { id: addedByUser.id, name: addedByUser.name, email: addedByUser.email, username: addedByUser.username } : null,
           project: project ? { id: project.id, code: project.code, name: project.name } : null,
         };
       })
@@ -2823,7 +2826,9 @@ class DatabaseStorage implements IStorage {
     // Add user and project information
     const expensesWithRelatedData = await Promise.all(
       expenses.map(async (expense) => {
-        const user = await this.getUser(expense.addedBy);
+        // Fetch the user who paid (paidBy), not who added the expense (addedBy)
+        const paidByUser = expense.paidBy ? await this.getUser(expense.paidBy) : null;
+        const addedByUser = await this.getUser(expense.addedBy);
         let project = null;
         
         if (expense.projectId) {
@@ -2836,7 +2841,8 @@ class DatabaseStorage implements IStorage {
         
         return {
           ...expense,
-          user: user ? { id: user.id, name: user.name, email: user.email, username: user.username } : null,
+          user: paidByUser ? { id: paidByUser.id, name: paidByUser.name, email: paidByUser.email, username: paidByUser.username } : null,
+          addedByUser: addedByUser ? { id: addedByUser.id, name: addedByUser.name, email: addedByUser.email, username: addedByUser.username } : null,
           project: project ? { id: project.id, code: project.code, name: project.name, client_name: project.client_name } : null,
         };
       })
