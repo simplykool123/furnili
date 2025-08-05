@@ -840,9 +840,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/eligible-projects", authenticateToken, async (req, res) => {
     try {
       const allProjects = await storage.getAllProjects();
+      console.log("Eligible Projects Query - Total projects:", allProjects.length);
+      
+      if (allProjects.length > 0) {
+        const sampleProject = allProjects[0];
+        console.log("Sample project structure:", {
+          id: sampleProject.id,
+          name: sampleProject.name,
+          stage: sampleProject.stage,
+          isActive: sampleProject.isActive,
+          is_active: sampleProject.is_active,
+          client_name: sampleProject.client_name,
+          projectCode: sampleProject.code,
+          clientId: sampleProject.clientId,
+          client_id: sampleProject.client_id
+        });
+      }
+      
       const eligibleProjects = getMaterialRequestEligibleProjects(allProjects);
-      res.json(eligibleProjects);
+      console.log("Eligible Projects Query - Filtered result count:", eligibleProjects.length);
+      
+      // Transform projects to match frontend interface
+      const transformedProjects = eligibleProjects.map(project => ({
+        id: project.id,
+        projectCode: project.code,
+        name: project.name,
+        stage: project.stage,
+        client_name: project.client_name,
+        clientId: project.client_id
+      }));
+      
+      console.log("Sending transformed projects:", transformedProjects.length);
+      res.json(transformedProjects);
     } catch (error) {
+      console.error("Error fetching eligible projects:", error);
+      res.status(500).json({ message: "Failed to fetch eligible projects", error });
+    }
+  });
+
+  // Debug endpoint for testing eligible projects (temporary)
+  app.get("/debug", async (req, res) => {
+    try {
+      const allProjects = await storage.getAllProjects();
+      console.log("DEBUG: All projects for eligibility check:", allProjects.length);
+      console.log("DEBUG: First project data:", JSON.stringify(allProjects[0], null, 2));
+      
+      const eligibleProjects = getMaterialRequestEligibleProjects(allProjects);
+      console.log("DEBUG: Eligible projects after filtering:", eligibleProjects.length);
+      
+      res.json({
+        allProjectsCount: allProjects.length,
+        eligibleProjectsCount: eligibleProjects.length,
+        sampleProject: allProjects[0],
+        debug: true
+      });
+    } catch (error) {
+      console.error("DEBUG: Error fetching eligible projects:", error);
       res.status(500).json({ message: "Failed to fetch eligible projects", error });
     }
   });

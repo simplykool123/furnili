@@ -117,6 +117,8 @@ export default function RequestFormSimplified({ onClose, onSuccess, preSelectedP
 
   // Debug projects loading
   useEffect(() => {
+    console.log("Projects debug - eligibleProjects:", eligibleProjects);
+    console.log("Projects debug - projectsError:", projectsError);
     if (projectsError) {
       console.error("Failed to fetch eligible projects:", projectsError);
     }

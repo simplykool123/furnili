@@ -46,7 +46,17 @@ export function getStageDisplayName(stage: string): string {
 }
 
 export function getMaterialRequestEligibleProjects(projects: any[]): any[] {
-  return projects.filter(project => 
-    canOrderMaterials(project.stage) && project.isActive
-  );
+  console.log("getMaterialRequestEligibleProjects called with projects:", projects.length);
+  
+  const filtered = projects.filter(project => {
+    const stageAllowed = canOrderMaterials(project.stage);
+    const isActiveProject = project.isActive || project.is_active; // Handle both naming conventions
+    
+    console.log(`Project ${project.id} (${project.name}): stage="${project.stage}", stageAllowed=${stageAllowed}, isActive=${isActiveProject}`);
+    
+    return stageAllowed && isActiveProject;
+  });
+  
+  console.log("Filtered eligible projects:", filtered.length);
+  return filtered;
 }
