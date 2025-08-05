@@ -510,10 +510,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         unit: z.string().min(1, "Unit is required"),
       });
       
-      const productData = formDataSchema.parse(req.body);
+      const validatedData = formDataSchema.parse(req.body);
+      
+      // Map 'price' to 'pricePerUnit' to match schema
+      const productData = {
+        ...validatedData,
+        pricePerUnit: validatedData.price,
+      };
+      delete (productData as any).price;
       
       if (req.file) {
-        (productData as any).imageUrl = `/uploads/products/${req.file.filename}`;
+        productData.imageUrl = `/uploads/products/${req.file.filename}`;
       }
       
       const product = await storage.createProduct(productData);
@@ -536,6 +543,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         category: z.string().min(1, "Category is required").optional(),
         brand: z.string().optional(),
         size: z.string().optional(),
+        thickness: z.string().optional(),
         sku: z.string().optional(),
         price: z.string().transform((val) => parseFloat(val)).pipe(z.number().min(0, "Price must be positive")).optional(),
         currentStock: z.string().transform((val) => parseInt(val, 10)).pipe(z.number().int().min(0, "Stock must be non-negative")).optional(),
@@ -543,10 +551,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         unit: z.string().min(1, "Unit is required").optional(),
       });
       
-      const updates = formDataSchema.parse(req.body);
+      const validatedUpdates = formDataSchema.parse(req.body);
+      
+      // Map 'price' to 'pricePerUnit' to match schema
+      const updates: any = { ...validatedUpdates };
+      if (validatedUpdates.price !== undefined) {
+        updates.pricePerUnit = validatedUpdates.price;
+        delete updates.price;
+      }
       
       if (req.file) {
-        (updates as any).imageUrl = `/uploads/products/${req.file.filename}`;
+        updates.imageUrl = `/uploads/products/${req.file.filename}`;
       }
       
       const product = await storage.updateProduct(id, updates);
