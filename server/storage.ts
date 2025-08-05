@@ -735,11 +735,16 @@ export class MemStorage {
     return result[0];
   }
 
-  async getAllProjects(filters?: { stage?: string; clientId?: number }): Promise<Project[]> {
+  async getAllProjects(filters?: { stage?: string; clientId?: number }): Promise<any[]> {
     try {
       console.log("getAllProjects called with filters:", filters);
       
-      // Use raw SQL to bypass Drizzle ORM issues
+      // Use direct pg client to completely bypass Drizzle
+      const { Pool } = await import('pg');
+      const pool = new Pool({
+        connectionString: process.env.DATABASE_URL,
+      });
+      
       let query = `
         SELECT * FROM projects 
         WHERE is_active = true
@@ -758,9 +763,11 @@ export class MemStorage {
       
       query += ` ORDER BY created_at DESC`;
       
-      const result = await db.execute(sql.raw(query, ...params));
-      console.log("Raw SQL query executed successfully, result count:", result.rows?.length);
-      return (result.rows || []) as Project[];
+      const result = await pool.query(query, params);
+      await pool.end();
+      
+      console.log("Direct PG query executed successfully, result count:", result.rows.length);
+      return result.rows;
     } catch (error) {
       console.error("Error in getAllProjects:", error);
       throw new Error(`Database query failed: ${error.message}`);
