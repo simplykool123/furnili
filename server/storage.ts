@@ -2452,13 +2452,22 @@ class DatabaseStorage implements IStorage {
 
   async deleteMaterialRequest(id: number): Promise<boolean> {
     try {
-      console.log(`DEBUG: Deleting material request ${id} and its items`);
+      console.log(`DEBUG: Starting deletion of material request ${id}`);
+      
+      // First check if the request exists
+      const existingRequest = await db.select().from(materialRequests).where(eq(materialRequests.id, id)).limit(1);
+      console.log(`DEBUG: Found existing request:`, existingRequest.length > 0 ? 'YES' : 'NO');
+      
+      if (existingRequest.length === 0) {
+        console.log(`DEBUG: Request ${id} not found, returning false`);
+        return false;
+      }
       
       // Use transaction to ensure data consistency
       const result = await db.transaction(async (tx) => {
         // First delete all request items
-        await tx.delete(requestItems).where(eq(requestItems.requestId, id));
-        console.log(`DEBUG: Deleted request items for request ${id}`);
+        const deletedItems = await tx.delete(requestItems).where(eq(requestItems.requestId, id)).returning();
+        console.log(`DEBUG: Deleted ${deletedItems.length} request items for request ${id}`);
         
         // Then delete the material request
         const deletedRequest = await tx.delete(materialRequests)
@@ -2469,9 +2478,10 @@ class DatabaseStorage implements IStorage {
         return deletedRequest.length > 0;
       });
       
+      console.log(`DEBUG: Transaction completed, result: ${result}`);
       return result;
     } catch (error) {
-      console.error('Error deleting material request:', error);
+      console.error('DEBUG: Error deleting material request:', error);
       throw error;
     }
   }
