@@ -3771,18 +3771,10 @@ class DatabaseStorage implements IStorage {
       createdAt: stockMovements.createdAt,
       productName: products.name,
       performedByName: users.name,
-      // Material Request info for outward movements
-      materialRequestId: stockMovements.materialRequestId,
-      clientName: materialRequests.clientName,
-      projectName: projects.name,
-      requestOrderNumber: materialRequests.orderNumber,
-      requestStatus: materialRequests.status,
     })
     .from(stockMovements)
     .leftJoin(products, eq(stockMovements.productId, products.id))
     .leftJoin(users, eq(stockMovements.performedBy, users.id))
-    .leftJoin(materialRequests, eq(stockMovements.materialRequestId, materialRequests.id))
-    .leftJoin(projects, eq(materialRequests.projectId, projects.id))
 
     if (productId) {
       query = query.where(eq(stockMovements.productId, productId));
@@ -3791,16 +3783,47 @@ class DatabaseStorage implements IStorage {
     const result = await query.orderBy(desc(stockMovements.createdAt));
     console.log(`Found ${result.length} movements`);
     
-    // Process the results to extract material request details from reference when not linked
-    const enhancedResults = result.map(movement => {
-      // If there's a reference like "Material Request TEST-002" but no materialRequestId
-      if (movement.reference && movement.reference.includes('Material Request') && !movement.materialRequestId) {
+    // Process the results to extract material request details from reference for outward movements
+    const enhancedResults = await Promise.all(result.map(async (movement) => {
+      // Only process outward movements with Material Request references
+      if ((movement.movementType === 'out' || movement.movementType === 'outward') && 
+          movement.reference && movement.reference.includes('Material Request')) {
+        
         // Extract the order number from reference (e.g., "TEST-002" from "Material Request TEST-002")
         const match = movement.reference.match(/Material Request\s+([A-Z0-9-]+)/i);
         if (match) {
           const orderNumber = match[1];
-          // This would need to be enhanced to fetch actual material request data
-          // For now, we'll just include the extracted order number
+          
+          // Try to find the actual material request by order number
+          try {
+            const materialRequest = await db.select({
+              id: materialRequests.id,
+              clientName: materialRequests.clientName,
+              orderNumber: materialRequests.orderNumber,
+              status: materialRequests.status,
+              projectName: projects.name,
+            })
+            .from(materialRequests)
+            .leftJoin(projects, eq(materialRequests.projectId, projects.id))
+            .where(eq(materialRequests.orderNumber, orderNumber))
+            .limit(1);
+            
+            if (materialRequest.length > 0) {
+              const request = materialRequest[0];
+              return {
+                ...movement,
+                clientName: request.clientName,
+                projectName: request.projectName,
+                requestOrderNumber: request.orderNumber,
+                requestStatus: request.status,
+                extractedOrderNumber: orderNumber
+              };
+            }
+          } catch (error) {
+            console.log('Could not fetch material request details:', error);
+          }
+          
+          // Fallback to just the extracted order number
           return {
             ...movement,
             extractedOrderNumber: orderNumber
@@ -3808,7 +3831,7 @@ class DatabaseStorage implements IStorage {
         }
       }
       return movement;
-    });
+    }));
     
     return enhancedResults;
   }
