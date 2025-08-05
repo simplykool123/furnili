@@ -1505,7 +1505,7 @@ export default function ProjectDetail() {
                 <div className="flex items-center space-x-4 mt-2 text-sm text-gray-600">
                   <div className="flex items-center space-x-1">
                     <User className="h-4 w-4" />
-                    <span>{client?.name || "Loading..."}</span>
+                    <span>{project.client_name || client?.name || "No Client"}</span>
                   </div>
                   <div className="flex items-center space-x-1">
                     <Phone className="h-4 w-4" />
