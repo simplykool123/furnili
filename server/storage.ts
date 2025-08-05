@@ -2837,7 +2837,7 @@ class DatabaseStorage implements IStorage {
         return {
           ...expense,
           user: user ? { id: user.id, name: user.name, email: user.email, username: user.username } : null,
-          project: project ? { id: project.id, code: project.code, name: project.name } : null,
+          project: project ? { id: project.id, code: project.code, name: project.name, client_name: project.client_name } : null,
         };
       })
     );

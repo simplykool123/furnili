@@ -996,7 +996,7 @@ export default function PettyCash() {
                   <TableHead className="py-2 px-3 w-20">Paid By</TableHead>
                   <TableHead className="py-2 px-3 min-w-[150px]">Purpose</TableHead>
                   <TableHead className="py-2 px-3 w-20">Category</TableHead>
-                  <TableHead className="py-2 px-3 w-24">Project ID</TableHead>
+                  <TableHead className="py-2 px-3 w-32">Project & Client</TableHead>
                   <TableHead className="py-2 px-3 w-16">Receipt</TableHead>
                   <TableHead className="py-2 px-3 w-20 text-right">Actions</TableHead>
                 </TableRow>
@@ -1043,8 +1043,9 @@ export default function PettyCash() {
                     </TableCell>
                     <TableCell className="py-2 px-3 text-gray-700 text-xs">
                       {expense.projectId && expense.project ? (
-                        <div className="text-center" title={expense.project.name}>
-                          {expense.project.code}
+                        <div className="text-center" title={`${expense.project.name} - Client: ${expense.project.client_name || 'N/A'}`}>
+                          <div className="font-medium">{expense.project.code}</div>
+                          <div className="text-[10px] text-gray-500 truncate">{expense.project.client_name || 'No Client'}</div>
                         </div>
                       ) : expense.projectId ? (
                         <div className="text-center">{expense.projectId}</div>
@@ -1248,7 +1249,7 @@ export default function PettyCash() {
                   <SelectContent>
                     {projects.map((project: any) => (
                       <SelectItem key={project.id} value={project.id.toString()}>
-                        {project.code} - {project.name}
+                        {project.code} - {project.name} ({project.client_name || 'No Client'})
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -1451,7 +1452,7 @@ export default function PettyCash() {
                   <SelectContent>
                     {projects.map((project: any) => (
                       <SelectItem key={project.id} value={project.id.toString()}>
-                        {project.code} - {project.name}
+                        {project.code} - {project.name} ({project.client_name || 'No Client'})
                       </SelectItem>
                     ))}
                   </SelectContent>
