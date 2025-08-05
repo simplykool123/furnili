@@ -758,6 +758,9 @@ export class MemStorage {
       await pool.end();
       
       console.log("Direct PG getProject query executed successfully, found:", result.rows.length > 0 ? "project" : "none");
+      if (result.rows.length > 0) {
+        console.log("getProject result:", JSON.stringify(result.rows[0], null, 2));
+      }
       return result.rows[0];
     } catch (error) {
       console.error("Error in getProject:", error);
