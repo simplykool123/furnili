@@ -334,7 +334,7 @@ export default function Dashboard() {
       <StockWarnings />
 
       {/* NEW DASHBOARD DESIGN FOR USERS & STOREKEEPERS */}
-      {authService.hasRole(['staff', 'store_incharge']) ? (
+      {authService.hasRole(['staff', 'store_incharge']) && !authService.hasRole(['admin', 'manager']) ? (
         <>
           {/* Main Action Buttons - 4 in a row */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
