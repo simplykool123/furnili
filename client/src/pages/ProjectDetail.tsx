@@ -95,6 +95,7 @@ import FurniliLayout from "@/components/Layout/FurniliLayout";
 import FurniliCard from "@/components/UI/FurniliCard";
 import FurniliButton from "@/components/UI/FurniliButton";
 import ProjectQuotes from "@/components/Project/ProjectQuotes";
+import { authService } from "@/lib/auth";
 
 // Schemas for various forms
 const taskSchema = z.object({
@@ -550,6 +551,8 @@ export default function ProjectDetail() {
   const [location, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const currentUser = authService.getUser();
+  const canViewFinances = authService.hasRole(['admin', 'manager']);
 
   // Extract project ID from URL
   const projectId = location.split("/")[2];
@@ -1589,13 +1592,15 @@ export default function ProjectDetail() {
                 <span className="text-base">✅</span>
                 <span className="font-medium text-sm">Tasks</span>
               </TabsTrigger>
-              <TabsTrigger
-                value="quotes"
-                className="flex items-center space-x-2 px-0 py-3 border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent bg-transparent hover:bg-gray-50 text-gray-600 data-[state=active]:text-blue-600 rounded-none transition-all duration-200"
-              >
-                <span className="text-base">💸</span>
-                <span className="font-medium text-sm">Quotes</span>
-              </TabsTrigger>
+              {canViewFinances && (
+                <TabsTrigger
+                  value="quotes"
+                  className="flex items-center space-x-2 px-0 py-3 border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent bg-transparent hover:bg-gray-50 text-gray-600 data-[state=active]:text-blue-600 rounded-none transition-all duration-200"
+                >
+                  <span className="text-base">💸</span>
+                  <span className="font-medium text-sm">Quotes</span>
+                </TabsTrigger>
+              )}
               <TabsTrigger
                 value="orders"
                 className="flex items-center space-x-2 px-0 py-3 border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent bg-transparent hover:bg-gray-50 text-gray-600 data-[state=active]:text-blue-600 rounded-none transition-all duration-200"
@@ -1618,13 +1623,15 @@ export default function ProjectDetail() {
                 <span className="font-medium text-sm">Progress</span>
               </TabsTrigger>
 
-              <TabsTrigger
-                value="financials"
-                className="flex items-center space-x-2 px-0 py-3 border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent bg-transparent hover:bg-gray-50 text-gray-600 data-[state=active]:text-blue-600 rounded-none transition-all duration-200"
-              >
-                <span className="text-base">💰</span>
-                <span className="font-medium text-sm">Finances</span>
-              </TabsTrigger>
+              {canViewFinances && (
+                <TabsTrigger
+                  value="financials"
+                  className="flex items-center space-x-2 px-0 py-3 border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent bg-transparent hover:bg-gray-50 text-gray-600 data-[state=active]:text-blue-600 rounded-none transition-all duration-200"
+                >
+                  <span className="text-base">💰</span>
+                  <span className="font-medium text-sm">Finances</span>
+                </TabsTrigger>
+              )}
               <TabsTrigger
                 value="details"
                 className="flex items-center space-x-2 px-0 py-3 border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent bg-transparent hover:bg-transparent text-gray-600 data-[state=active]:text-blue-600 rounded-none"
@@ -3030,13 +3037,17 @@ export default function ProjectDetail() {
             </div>
           </TabsContent>
 
-          <TabsContent value="quotes" className="p-6 bg-gray-50">
-            <ProjectQuotes projectId={projectId} />
-          </TabsContent>
+          {canViewFinances && (
+            <TabsContent value="quotes" className="p-6 bg-gray-50">
+              <ProjectQuotes projectId={projectId} />
+            </TabsContent>
+          )}
 
-          <TabsContent value="financials" className="p-6 bg-gray-50">
-            <ProjectFinancials projectId={projectId} />
-          </TabsContent>
+          {canViewFinances && (
+            <TabsContent value="financials" className="p-6 bg-gray-50">
+              <ProjectFinancials projectId={projectId} />
+            </TabsContent>
+          )}
 
           <TabsContent value="details" className="p-6 bg-gray-50">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
