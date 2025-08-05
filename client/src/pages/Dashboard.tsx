@@ -315,95 +315,7 @@ export default function Dashboard() {
         </FurniliCard>
       )}
 
-      {/* Staff Check-In/Out Widget - Compact Version for staff and store keeper users */}
-      {(currentUser?.role === 'staff' || currentUser?.role === 'store_incharge') && (
-        <Card className="shadow-md border border-green-200 bg-gradient-to-r from-green-50 to-emerald-50">
-          <CardHeader className="pb-1 pt-3">
-            <CardTitle className="flex items-center gap-2 text-green-800 text-sm">
-              <Clock className="w-4 h-4" />
-              My Attendance
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pt-0 pb-3">
-            {(() => {
-              const myTodayRecord = todayAttendance.find((a: any) => a.userId === currentUser.id);
-              const formatTime = (timeString: string | null) => {
-                if (!timeString) return "-";
-                return new Date(timeString).toLocaleTimeString("en-IN", {
-                  hour: "2-digit",
-                  minute: "2-digit"
-                });
-              };
-              
-              return (
-                /* Ultra Compact Single Line Display */
-                <div className="bg-white/60 rounded-lg p-2 border border-green-200">
-                  <div className="flex items-center justify-between gap-2">
-                    {/* Left side - Date, Time and Status */}
-                    <div className="flex items-center gap-2 text-xs">
-                      <span className="text-green-800 font-medium">
-                        {new Date().toLocaleDateString("en-IN", { 
-                          weekday: 'short',
-                          day: 'numeric',
-                          month: 'short'
-                        })}
-                      </span>
-                      {myTodayRecord && (
-                        <>
-                          <span className="text-green-600">In: {formatTime(myTodayRecord.checkInTime)}</span>
-                          {myTodayRecord.checkOutTime && (
-                            <span className="text-green-600">Out: {formatTime(myTodayRecord.checkOutTime)}</span>
-                          )}
-                        </>
-                      )}
-                      {myTodayRecord ? (
-                        <Badge className="bg-green-100 text-green-800 border-green-300 text-xs px-1 py-0 h-4">
-                          Present
-                        </Badge>
-                      ) : (
-                        <Badge variant="outline" className="bg-gray-100 border-gray-300 text-xs px-1 py-0 h-4">
-                          Not Checked In
-                        </Badge>
-                      )}
-                    </div>
-                    
-                    {/* Right side - Action Button */}
-                    <div className="flex-shrink-0">
-                      {!myTodayRecord ? (
-                        <Button
-                          size="sm"
-                          className="px-2 py-1 h-6 bg-green-600 hover:bg-green-700 text-white text-xs"
-                          onClick={() => selfCheckInMutation.mutate({})}
-                          disabled={selfCheckInMutation.isPending}
-                        >
-                          <LogIn className="w-3 h-3 mr-1" />
-                          {selfCheckInMutation.isPending ? 'Checking In...' : 'Check In'}
-                        </Button>
-                      ) : !myTodayRecord.checkOutTime ? (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="px-2 py-1 h-6 border-red-600 text-red-600 hover:bg-red-50 text-xs"
-                          onClick={() => selfCheckOutMutation.mutate()}
-                          disabled={selfCheckOutMutation.isPending}
-                        >
-                          <LogOut className="w-3 h-3 mr-1" />
-                          {selfCheckOutMutation.isPending ? 'Checking Out...' : 'Check Out'}
-                        </Button>
-                      ) : (
-                        <div className="flex items-center gap-1 text-green-600 text-xs">
-                          <CheckCircle2 className="w-3 h-3" />
-                          <span className="font-medium">Complete</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ) as React.ReactElement;
-            })()}
-          </CardContent>
-        </Card>
-      )}
+
 
       {/* Stock Warnings */}
       <StockWarnings />
@@ -475,25 +387,47 @@ export default function Dashboard() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">This Month</span>
-                    <span className="text-2xl font-bold text-orange-600">
-                      {Math.round((todayAttendance.length / 31) * 100) || 0}%
-                    </span>
-                  </div>
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Present Days</span>
-                      <span className="font-medium">{todayAttendance.length || 0}</span>
+                {(() => {
+                  const myTodayRecord = todayAttendance.find((a: any) => a.userId === currentUser.id);
+                  const formatTime = (timeString: string | null) => {
+                    if (!timeString) return "-";
+                    return new Date(timeString).toLocaleTimeString("en-IN", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      hour12: true
+                    });
+                  };
+                  
+                  const todayDate = new Date().toLocaleDateString("en-IN", { 
+                    weekday: 'short',
+                    day: 'numeric',
+                    month: 'short'
+                  });
+                  
+                  return (
+                    <div className="space-y-2">
+                      {myTodayRecord ? (
+                        <div className="text-sm text-gray-700">
+                          <span className="font-medium">{todayDate}</span>
+                          <br />
+                          <span>In: {formatTime(myTodayRecord.checkInTime)} -- present</span>
+                          {myTodayRecord.checkOutTime && (
+                            <>
+                              <br />
+                              <span>Out: {formatTime(myTodayRecord.checkOutTime)}</span>
+                            </>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="text-sm text-gray-600">
+                          <span className="font-medium">{todayDate}</span>
+                          <br />
+                          <span>Not checked in today</span>
+                        </div>
+                      )}
                     </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Total Days</span>
-                      <span className="font-medium">31</span>
-                    </div>
-                  </div>
-                  <Progress value={Math.round((todayAttendance.length / 31) * 100) || 0} className="h-2" />
-                </div>
+                  ) as React.ReactElement;
+                })()}
               </CardContent>
             </Card>
 
