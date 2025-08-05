@@ -48,6 +48,8 @@ The system adheres to a professional and consistent UI/UX based on the "Furnili 
 - Lifecycle management: Submit → Pending → Approved → Issued → Completed.
 - Supports multi-item requests with quantity validation and priority levels.
 - BOQ reference linking for traceability and stock validation.
+- **Dynamic Pricing**: New requests automatically use current product prices from inventory.
+- **Fixed Cost Recording**: Once projects are completed, material costs are frozen in Project Finance for accurate historical tracking and profitability analysis.
 
 #### Reporting & Analytics
 - Role-specific dashboards with key metrics.
