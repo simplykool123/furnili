@@ -359,6 +359,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/categories/:id", authenticateToken, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const category = await storage.getCategory(id);
+      
+      if (!category) {
+        return res.status(404).json({ message: "Category not found" });
+      }
+      
+      res.json(category);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch category", error });
+    }
+  });
+
   app.delete("/api/categories/:id", authenticateToken, requireRole(["admin", "manager"]), async (req, res) => {
     try {
       const id = parseInt(req.params.id);
@@ -878,27 +893,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Debug endpoint for testing eligible projects (temporary)
-  app.get("/debug", async (req, res) => {
-    try {
-      const allProjects = await storage.getAllProjects();
-      console.log("DEBUG: All projects for eligibility check:", allProjects.length);
-      console.log("DEBUG: First project data:", JSON.stringify(allProjects[0], null, 2));
-      
-      const eligibleProjects = getMaterialRequestEligibleProjects(allProjects);
-      console.log("DEBUG: Eligible projects after filtering:", eligibleProjects.length);
-      
-      res.json({
-        allProjectsCount: allProjects.length,
-        eligibleProjectsCount: eligibleProjects.length,
-        sampleProject: allProjects[0],
-        debug: true
-      });
-    } catch (error) {
-      console.error("DEBUG: Error fetching eligible projects:", error);
-      res.status(500).json({ message: "Failed to fetch eligible projects", error });
-    }
-  });
+
 
   // BOQ routes
   app.get("/api/boq", authenticateToken, requireRole(["manager", "admin", "staff"]), async (req, res) => {
