@@ -3771,13 +3771,18 @@ class DatabaseStorage implements IStorage {
       createdAt: stockMovements.createdAt,
       productName: products.name,
       performedByName: users.name,
-      // Additional fields if they exist in DB (currently not in schema)
-      // These will be null until schema is updated
+      // Material Request info for outward movements
+      materialRequestId: stockMovements.materialRequestId,
+      clientName: materialRequests.clientName,
+      projectName: projects.name,
+      requestOrderNumber: materialRequests.orderNumber,
+      requestStatus: materialRequests.status,
     })
     .from(stockMovements)
     .leftJoin(products, eq(stockMovements.productId, products.id))
     .leftJoin(users, eq(stockMovements.performedBy, users.id))
-    // .leftJoin(projects, eq(stockMovements.projectId, projects.id)) // Commented until schema updated
+    .leftJoin(materialRequests, eq(stockMovements.materialRequestId, materialRequests.id))
+    .leftJoin(projects, eq(materialRequests.projectId, projects.id))
 
     if (productId) {
       query = query.where(eq(stockMovements.productId, productId));
@@ -3785,7 +3790,27 @@ class DatabaseStorage implements IStorage {
 
     const result = await query.orderBy(desc(stockMovements.createdAt));
     console.log(`Found ${result.length} movements`);
-    return result;
+    
+    // Process the results to extract material request details from reference when not linked
+    const enhancedResults = result.map(movement => {
+      // If there's a reference like "Material Request TEST-002" but no materialRequestId
+      if (movement.reference && movement.reference.includes('Material Request') && !movement.materialRequestId) {
+        // Extract the order number from reference (e.g., "TEST-002" from "Material Request TEST-002")
+        const match = movement.reference.match(/Material Request\s+([A-Z0-9-]+)/i);
+        if (match) {
+          const orderNumber = match[1];
+          // This would need to be enhanced to fetch actual material request data
+          // For now, we'll just include the extracted order number
+          return {
+            ...movement,
+            extractedOrderNumber: orderNumber
+          };
+        }
+      }
+      return movement;
+    });
+    
+    return enhancedResults;
   }
 
   async getAllStockMovements(): Promise<StockMovement[]> {

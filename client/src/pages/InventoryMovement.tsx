@@ -540,6 +540,52 @@ export default function InventoryMovement() {
                   </div>
                 )}
 
+                {/* Material Request Details for Outward Movements */}
+                {(selectedMovement.movementType === 'out' || selectedMovement.movementType === 'outward') && 
+                 (selectedMovement.clientName || selectedMovement.extractedOrderNumber) && (
+                  <div className="border-t pt-3">
+                    <Label className="text-xs font-medium text-gray-600">Material Request Details</Label>
+                    <div className="mt-2 space-y-2 bg-blue-50 p-3 rounded-lg">
+                      {selectedMovement.clientName && (
+                        <div className="flex justify-between">
+                          <span className="text-sm font-medium">Client:</span>
+                          <span className="text-sm font-semibold text-blue-700">{selectedMovement.clientName}</span>
+                        </div>
+                      )}
+                      {selectedMovement.projectName && (
+                        <div className="flex justify-between">
+                          <span className="text-sm font-medium">Project:</span>
+                          <span className="text-sm font-semibold">{selectedMovement.projectName}</span>
+                        </div>
+                      )}
+                      {(selectedMovement.requestOrderNumber || selectedMovement.extractedOrderNumber) && (
+                        <div className="flex justify-between">
+                          <span className="text-sm font-medium">Order Number:</span>
+                          <span className="text-sm font-semibold text-blue-700">
+                            {selectedMovement.requestOrderNumber || selectedMovement.extractedOrderNumber}
+                          </span>
+                        </div>
+                      )}
+                      {selectedMovement.requestStatus && (
+                        <div className="flex justify-between">
+                          <span className="text-sm font-medium">Request Status:</span>
+                          <span className={`text-sm font-semibold px-2 py-1 rounded text-xs ${
+                            selectedMovement.requestStatus === 'approved' ? 'bg-green-100 text-green-700' :
+                            selectedMovement.requestStatus === 'issued' ? 'bg-blue-100 text-blue-700' :
+                            selectedMovement.requestStatus === 'completed' ? 'bg-gray-100 text-gray-700' :
+                            'bg-yellow-100 text-yellow-700'
+                          }`}>
+                            {selectedMovement.requestStatus?.toUpperCase()}
+                          </span>
+                        </div>
+                      )}
+                      <div className="text-xs text-blue-600 mt-2">
+                        This stock movement is related to a material request for the above client.
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Enhanced Movement Context */}
                 {(selectedMovement.reason || selectedMovement.projectName || selectedMovement.materialRequestId) && (
                   <div className="border-t pt-3">
