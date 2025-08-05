@@ -311,81 +311,67 @@ export default function Dashboard() {
               };
               
               return (
-                <div className="space-y-2">
-                  {/* Compact Status Display */}
-                  <div className="bg-white/60 rounded-lg p-2 border border-green-200">
-                    <div className="flex items-center justify-between mb-1">
-                      <div>
-                        <h4 className="font-medium text-green-800 text-xs">Today's Status</h4>
-                        <p className="text-xs text-green-600">
-                          {new Date().toLocaleDateString("en-IN", { 
-                            weekday: 'short',
-                            day: 'numeric',
-                            month: 'short'
-                          })}
-                        </p>
-                      </div>
-                      <div>
-                        {myTodayRecord ? (
-                          <Badge className="bg-green-100 text-green-800 border-green-300 text-xs px-2 py-0">
-                            Present
-                          </Badge>
-                        ) : (
-                          <Badge variant="outline" className="bg-gray-100 border-gray-300 text-xs px-2 py-0">
-                            Not Checked In
-                          </Badge>
-                        )}
-                      </div>
+                /* Ultra Compact Single Line Display */
+                <div className="bg-white/60 rounded-lg p-2 border border-green-200">
+                  <div className="flex items-center justify-between gap-2">
+                    {/* Left side - Date, Time and Status */}
+                    <div className="flex items-center gap-2 text-xs">
+                      <span className="text-green-800 font-medium">
+                        {new Date().toLocaleDateString("en-IN", { 
+                          weekday: 'short',
+                          day: 'numeric',
+                          month: 'short'
+                        })}
+                      </span>
+                      {myTodayRecord && (
+                        <>
+                          <span className="text-green-600">In: {formatTime(myTodayRecord.checkInTime)}</span>
+                          {myTodayRecord.checkOutTime && (
+                            <span className="text-green-600">Out: {formatTime(myTodayRecord.checkOutTime)}</span>
+                          )}
+                        </>
+                      )}
+                      {myTodayRecord ? (
+                        <Badge className="bg-green-100 text-green-800 border-green-300 text-xs px-1 py-0 h-4">
+                          Present
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="bg-gray-100 border-gray-300 text-xs px-1 py-0 h-4">
+                          Not Checked In
+                        </Badge>
+                      )}
                     </div>
                     
-                    {/* Compact Time Display */}
-                    {myTodayRecord && (
-                      <div className="flex items-center gap-3 text-xs">
-                        <div className="flex items-center gap-1">
-                          <span className="text-green-600">In:</span>
-                          <span className="font-semibold">{formatTime(myTodayRecord.checkInTime)}</span>
-                        </div>
-                        {myTodayRecord.checkOutTime && (
-                          <div className="flex items-center gap-1">
-                            <span className="text-green-600">Out:</span>
-                            <span className="font-semibold">{formatTime(myTodayRecord.checkOutTime)}</span>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Compact Action Button */}
-                  <div className="flex justify-center">
-                    {!myTodayRecord ? (
-                      <Button
-                        size="sm"
-                        className="px-3 py-1 h-7 bg-green-600 hover:bg-green-700 text-white text-xs"
-                        onClick={() => selfCheckInMutation.mutate({})}
-                        disabled={selfCheckInMutation.isPending}
-                      >
-                        <LogIn className="w-3 h-3 mr-1" />
-                        {selfCheckInMutation.isPending ? 'Checking In...' : 'Check In'}
-                      </Button>
-                    ) : !myTodayRecord.checkOutTime ? (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="px-3 py-1 h-7 border-red-600 text-red-600 hover:bg-red-50 text-xs"
-                        onClick={() => selfCheckOutMutation.mutate()}
-                        disabled={selfCheckOutMutation.isPending}
-                      >
-                        <LogOut className="w-3 h-3 mr-1" />
-                        {selfCheckOutMutation.isPending ? 'Checking Out...' : 'Check Out'}
-                      </Button>
-                    ) : (
-                      <div className="text-center">
-                        <div className="flex items-center justify-center gap-1 text-green-600 text-xs">
+                    {/* Right side - Action Button */}
+                    <div className="flex-shrink-0">
+                      {!myTodayRecord ? (
+                        <Button
+                          size="sm"
+                          className="px-2 py-1 h-6 bg-green-600 hover:bg-green-700 text-white text-xs"
+                          onClick={() => selfCheckInMutation.mutate({})}
+                          disabled={selfCheckInMutation.isPending}
+                        >
+                          <LogIn className="w-3 h-3 mr-1" />
+                          {selfCheckInMutation.isPending ? 'Checking In...' : 'Check In'}
+                        </Button>
+                      ) : !myTodayRecord.checkOutTime ? (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="px-2 py-1 h-6 border-red-600 text-red-600 hover:bg-red-50 text-xs"
+                          onClick={() => selfCheckOutMutation.mutate()}
+                          disabled={selfCheckOutMutation.isPending}
+                        >
+                          <LogOut className="w-3 h-3 mr-1" />
+                          {selfCheckOutMutation.isPending ? 'Checking Out...' : 'Check Out'}
+                        </Button>
+                      ) : (
+                        <div className="flex items-center gap-1 text-green-600 text-xs">
                           <CheckCircle2 className="w-3 h-3" />
                           <span className="font-medium">Complete</span>
                         </div>
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </div>
                 </div>
               ) as React.ReactElement;
