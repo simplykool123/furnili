@@ -1406,8 +1406,8 @@ export default function Attendance() {
 
   return (
     <FurniliLayout
-      title={user?.role === 'staff' ? "My Attendance" : "Staff Attendance & Payroll"}
-      subtitle={user?.role === 'staff' ? "View your attendance and check in/out" : "Complete staff management system"}
+      title={user?.role === 'staff' || user?.role === 'store_incharge' ? "My Attendance" : "Staff Attendance & Payroll"}
+      subtitle={user?.role === 'staff' || user?.role === 'store_incharge' ? "View your attendance and check in/out" : "Complete staff management system"}
     >
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
@@ -1478,16 +1478,16 @@ export default function Attendance() {
       </div>
 
       {/* Compact Quick Stats */}
-      <div className={`grid gap-2 sm:gap-3 ${user?.role === 'staff' ? 'grid-cols-1 max-w-md mx-auto' : 'grid-cols-3 md:grid-cols-6'}`}>
+      <div className={`grid gap-2 sm:gap-3 ${user?.role === 'staff' || user?.role === 'store_incharge' ? 'grid-cols-1 max-w-md mx-auto' : 'grid-cols-3 md:grid-cols-6'}`}>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">
-              {user?.role === 'staff' ? "Your Status Today" : "Present Today"}
+              {user?.role === 'staff' || user?.role === 'store_incharge' ? "Your Status Today" : "Present Today"}
             </CardTitle>
             <UserCheck className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            {user?.role === 'staff' ? (
+            {user?.role === 'staff' || user?.role === 'store_incharge' ? (
               <>
                 {(() => {
                   const myTodayRecord = todayAttendance.find((a: any) => a.userId === user.id);
@@ -1520,8 +1520,8 @@ export default function Attendance() {
           </CardContent>
         </Card>
 
-        {/* Hide these cards for staff users */}
-        {user?.role !== 'staff' && (
+        {/* Hide these cards for staff and store keeper users */}
+        {user?.role !== 'staff' && user?.role !== 'store_incharge' && (
           <>
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -1601,10 +1601,10 @@ export default function Attendance() {
 
       {/* Main Tabs */}
       <Tabs defaultValue="dashboard" className="space-y-4">
-        <TabsList className={`grid w-full ${user?.role === 'staff' ? 'grid-cols-2' : 'grid-cols-5'}`}>
-          <TabsTrigger value="dashboard">{user?.role === 'staff' ? 'My Attendance' : 'Dashboard'}</TabsTrigger>
+        <TabsList className={`grid w-full ${user?.role === 'staff' || user?.role === 'store_incharge' ? 'grid-cols-2' : 'grid-cols-5'}`}>
+          <TabsTrigger value="dashboard">{user?.role === 'staff' || user?.role === 'store_incharge' ? 'My Attendance' : 'Dashboard'}</TabsTrigger>
           <TabsTrigger value="checkin">Check In/Out</TabsTrigger>
-          {user?.role !== 'staff' && (
+          {user?.role !== 'staff' && user?.role !== 'store_incharge' && (
             <>
               <TabsTrigger value="attendance">Attendance</TabsTrigger>
               <TabsTrigger value="staff">Staff Management</TabsTrigger>
@@ -1631,8 +1631,8 @@ export default function Attendance() {
               <CardContent>
                 <div className="space-y-2">
                   {(() => {
-                    // For staff users, show only their own attendance record
-                    const attendanceToShow = user?.role === 'staff' 
+                    // For staff and store_incharge users, show only their own attendance record
+                    const attendanceToShow = user?.role === 'staff' || user?.role === 'store_incharge'
                       ? todayAttendance.filter((a: any) => a.userId === user.id)
                       : todayAttendance;
                     
@@ -1645,7 +1645,7 @@ export default function Attendance() {
                             </div>
                             <div className="min-w-0 flex-1">
                               <p className="font-medium text-sm truncate">
-                                {user?.role === 'staff' && attendance.userId === user.id ? 'You' : attendance.user?.name}
+                                {(user?.role === 'staff' || user?.role === 'store_incharge') && attendance.userId === user.id ? 'You' : attendance.user?.name}
                               </p>
                               <p className="text-xs text-gray-600">
                                 In: {formatTime(attendance.checkInTime)} 
@@ -1660,7 +1660,7 @@ export default function Attendance() {
                       ))
                     ) : (
                       <p className="text-center text-gray-500 py-4 text-sm">
-                        {user?.role === 'staff' ? 'You have not checked in today' : 'No attendance records for today'}
+                        {user?.role === 'staff' || user?.role === 'store_incharge' ? 'You have not checked in today' : 'No attendance records for today'}
                       </p>
                     );
                   })()}
@@ -1674,8 +1674,8 @@ export default function Attendance() {
                 <CardTitle>Quick Actions</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                {user?.role === 'staff' ? (
-                  /* Staff users see limited actions */
+                {user?.role === 'staff' || user?.role === 'store_incharge' ? (
+                  /* Staff and store keepers see limited actions */
                   <div className="text-center py-4">
                     <p className="text-sm text-gray-600 mb-4">Use the Check In/Out tab to manage your attendance</p>
                     <Button 
