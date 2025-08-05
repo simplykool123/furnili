@@ -3077,7 +3077,8 @@ class DatabaseStorage implements IStorage {
       });
       
       let query = `
-        SELECT p.*, c.name as client_name, c.city as client_city 
+        SELECT p.*, c.name as client_name, c.city as client_city,
+        TO_CHAR(p.created_at, 'DD/MM/YYYY') as formatted_created_at
         FROM projects p 
         LEFT JOIN clients c ON p.client_id = c.id
         WHERE p.is_active = true
