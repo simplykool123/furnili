@@ -304,6 +304,7 @@ export default function RequestFormSimplified({ onClose, onSuccess, preSelectedP
     setValue(`items.${index}.category`, categoryName);
     setValue(`items.${index}.brand`, "");
     setValue(`items.${index}.description`, "");
+    setValue(`items.${index}.productId`, undefined);
     setValue(`items.${index}.size`, "");
     setValue(`items.${index}.thickness`, "");
   };
@@ -311,31 +312,79 @@ export default function RequestFormSimplified({ onClose, onSuccess, preSelectedP
   const handleBrandChange = (brand: string, index: number) => {
     setValue(`items.${index}.brand`, brand);
     setValue(`items.${index}.description`, "");
+    setValue(`items.${index}.productId`, undefined);
     setValue(`items.${index}.size`, "");
     setValue(`items.${index}.thickness`, "");
   };
 
   const handleProductSelect = (productId: string, index: number) => {
-    console.log("HandleProductSelect called:", { productId, index });
-    console.log("Available products:", products);
     const product = products.find(p => p.id === parseInt(productId));
-    console.log("Selected product:", product);
     if (product) {
-      console.log("Setting values for product:", {
-        size: product.size,
-        thickness: product.thickness,
-        brand: product.brand,
-        name: product.name
-      });
       setValue(`items.${index}.productId`, product.id);
       setValue(`items.${index}.description`, product.name);
-      setValue(`items.${index}.brand`, product.brand || "");
-      setValue(`items.${index}.size`, product.size || "");
-      setValue(`items.${index}.thickness`, product.thickness || "");
       setValue(`items.${index}.unit`, product.unit || "pcs");
-    } else {
-      console.log("Product not found for productId:", productId);
+      
+      // Handle size selection
+      const availableSizes = getAvailableSizes(index);
+      if (availableSizes.length === 1) {
+        setValue(`items.${index}.size`, availableSizes[0]);
+      } else {
+        setValue(`items.${index}.size`, "");
+      }
+      
+      // Handle thickness selection
+      const availableThickness = getAvailableThickness(index);
+      if (availableThickness.length === 1) {
+        setValue(`items.${index}.thickness`, availableThickness[0]);
+      } else {
+        setValue(`items.${index}.thickness`, "");
+      }
     }
+  };
+
+  const handleSizeChange = (size: string, index: number) => {
+    setValue(`items.${index}.size`, size);
+    
+    // Auto-select thickness if only one option available
+    const availableThickness = getAvailableThickness(index);
+    if (availableThickness.length === 1) {
+      setValue(`items.${index}.thickness`, availableThickness[0]);
+    } else {
+      setValue(`items.${index}.thickness`, "");
+    }
+  };
+
+  const handleThicknessChange = (thickness: string, index: number) => {
+    setValue(`items.${index}.thickness`, thickness);
+  };
+
+  // Get available sizes for current category/brand/product selection
+  const getAvailableSizes = (index: number): string[] => {
+    const formValues = watch();
+    const item = formValues.items?.[index];
+    if (!item?.category || !item?.brand) return [];
+    
+    const filteredProducts = products.filter(p => 
+      p.category === item.category && 
+      p.brand === item.brand &&
+      p.size
+    );
+    return Array.from(new Set(filteredProducts.map(p => p.size).filter(Boolean))) as string[];
+  };
+
+  // Get available thickness for current category/brand/size selection
+  const getAvailableThickness = (index: number): string[] => {
+    const formValues = watch();
+    const item = formValues.items?.[index];
+    if (!item?.category || !item?.brand) return [];
+    
+    const filteredProducts = products.filter(p => 
+      p.category === item.category && 
+      p.brand === item.brand &&
+      (!item.size || p.size === item.size) &&
+      p.thickness
+    );
+    return Array.from(new Set(filteredProducts.map(p => p.thickness).filter(Boolean))) as string[];
   };
 
   const handleKeyDown = (e: React.KeyboardEvent, index: number, field: string) => {
@@ -499,8 +548,8 @@ export default function RequestFormSimplified({ onClose, onSuccess, preSelectedP
             <div className="grid grid-cols-12 bg-gray-50 border-b text-sm font-medium text-gray-700">
               <div className="px-2 py-2 border-r text-center">#</div>
               <div className="px-2 py-2 border-r col-span-2">Category</div>
-              <div className="px-2 py-2 border-r col-span-2">Product</div>
               <div className="px-2 py-2 border-r col-span-2">Brand</div>
+              <div className="px-2 py-2 border-r col-span-2">Product</div>
               <div className="px-2 py-2 border-r">Size</div>
               <div className="px-2 py-2 border-r">Thk.</div>
               <div className="px-2 py-2 border-r">Qty</div>
@@ -525,7 +574,10 @@ export default function RequestFormSimplified({ onClose, onSuccess, preSelectedP
                   
                   {/* Category Selection */}
                   <div className="px-1 py-1 border-r col-span-2">
-                    <Select onValueChange={(value) => handleCategoryChange(value, index)}>
+                    <Select 
+                      value={watchedCategory || ""}
+                      onValueChange={(value) => handleCategoryChange(value, index)}
+                    >
                       <SelectTrigger className="border-0 h-8 text-xs focus:ring-1 focus:ring-blue-500">
                         <SelectValue placeholder="Select category..." />
                       </SelectTrigger>
@@ -539,25 +591,13 @@ export default function RequestFormSimplified({ onClose, onSuccess, preSelectedP
                     </Select>
                   </div>
                   
-                  {/* Product Selection */}
-                  <div className="px-1 py-1 border-r col-span-2">
-                    <Select onValueChange={(value) => handleProductSelect(value, index)}>
-                      <SelectTrigger className="border-0 h-8 text-xs focus:ring-1 focus:ring-blue-500">
-                        <SelectValue placeholder="Select product..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {getFilteredProducts(watchedCategory, watchedBrand).map((product) => (
-                          <SelectItem key={product.id} value={product.id.toString()}>
-                            {product.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
                   {/* Brand Selection */}
                   <div className="px-1 py-1 border-r col-span-2">
-                    <Select onValueChange={(value) => handleBrandChange(value, index)}>
+                    <Select 
+                      value={watchedBrand || ""}
+                      onValueChange={(value) => handleBrandChange(value, index)}
+                      disabled={!watchedCategory}
+                    >
                       <SelectTrigger className="border-0 h-8 text-xs focus:ring-1 focus:ring-blue-500">
                         <SelectValue placeholder="Select brand..." />
                       </SelectTrigger>
@@ -571,24 +611,100 @@ export default function RequestFormSimplified({ onClose, onSuccess, preSelectedP
                     </Select>
                   </div>
                   
-                  {/* Size (Auto-filled from product) */}
-                  <div className="px-1 py-1 border-r">
-                    <Input
-                      {...register(`items.${index}.size`)}
-                      placeholder="8x4"
-                      className="border-0 h-8 text-xs focus:ring-1 focus:ring-blue-500"
-                      readOnly
-                    />
+                  {/* Product Selection */}
+                  <div className="px-1 py-1 border-r col-span-2">
+                    <Select 
+                      value={watchedProductId?.toString() || ""}
+                      onValueChange={(value) => handleProductSelect(value, index)}
+                      disabled={!watchedCategory || !watchedBrand}
+                    >
+                      <SelectTrigger className="border-0 h-8 text-xs focus:ring-1 focus:ring-blue-500">
+                        <SelectValue placeholder="Select product..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {getFilteredProducts(watchedCategory, watchedBrand).map((product) => (
+                          <SelectItem key={product.id} value={product.id.toString()}>
+                            {product.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                   
-                  {/* Thickness (Auto-filled from product) */}
+                  {/* Size Selection */}
                   <div className="px-1 py-1 border-r">
-                    <Input
-                      {...register(`items.${index}.thickness`)}
-                      placeholder="18mm"
-                      className="border-0 h-8 text-xs focus:ring-1 focus:ring-blue-500"
-                      readOnly
-                    />
+                    {(() => {
+                      const availableSizes = getAvailableSizes(index);
+                      const currentSize = formValues.items?.[index]?.size;
+                      
+                      if (availableSizes.length <= 1) {
+                        return (
+                          <Input
+                            value={currentSize || ""}
+                            placeholder="Auto"
+                            className="border-0 h-8 text-xs focus:ring-1 focus:ring-blue-500"
+                            readOnly
+                          />
+                        );
+                      } else {
+                        return (
+                          <Select 
+                            value={currentSize || ""}
+                            onValueChange={(value) => handleSizeChange(value, index)}
+                            disabled={!watchedCategory || !watchedBrand}
+                          >
+                            <SelectTrigger className="border-0 h-8 text-xs focus:ring-1 focus:ring-blue-500">
+                              <SelectValue placeholder="Size..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {availableSizes.map((size) => (
+                                <SelectItem key={size} value={size}>
+                                  {size}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        );
+                      }
+                    })()}
+                  </div>
+                  
+                  {/* Thickness Selection */}
+                  <div className="px-1 py-1 border-r">
+                    {(() => {
+                      const availableThickness = getAvailableThickness(index);
+                      const currentThickness = formValues.items?.[index]?.thickness;
+                      
+                      if (availableThickness.length <= 1) {
+                        return (
+                          <Input
+                            value={currentThickness || ""}
+                            placeholder="Auto"
+                            className="border-0 h-8 text-xs focus:ring-1 focus:ring-blue-500"
+                            readOnly
+                          />
+                        );
+                      } else {
+                        return (
+                          <Select 
+                            value={currentThickness || ""}
+                            onValueChange={(value) => handleThicknessChange(value, index)}
+                            disabled={!watchedCategory || !watchedBrand}
+                          >
+                            <SelectTrigger className="border-0 h-8 text-xs focus:ring-1 focus:ring-blue-500">
+                              <SelectValue placeholder="Thk..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {availableThickness.map((thickness) => (
+                                <SelectItem key={thickness} value={thickness}>
+                                  {thickness}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        );
+                      }
+                    })()}
                   </div>
                   
                   {/* Quantity with Stock Warning */}
