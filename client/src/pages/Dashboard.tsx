@@ -538,52 +538,7 @@ export default function Dashboard() {
             </Card>
           </div>
 
-          {/* Ongoing Projects */}
-          <Card className="hover:shadow-md transition-all duration-200">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg font-semibold text-foreground flex items-center gap-2">
-                <TrendingUp className="h-5 w-5 text-indigo-500" />
-                Ongoing Projects
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {ongoingProjects && ongoingProjects.length > 0 ? (
-                <div className="space-y-4">
-                  {ongoingProjects
-                    .filter((project: any) => !['completed', 'on-hold', 'lost'].includes(project.stage))
-                    .slice(0, 5)
-                    .map((project: any) => (
-                      <div 
-                        key={project.id} 
-                        className="flex items-center justify-between p-4 bg-indigo-50 rounded-lg cursor-pointer hover:bg-indigo-100 transition-colors"
-                        onClick={() => setLocation(`/projects/${project.id}`)}
-                      >
-                        <div className="flex-1">
-                          <h4 className="font-medium text-gray-900">{project.name}</h4>
-                          <p className="text-sm text-gray-600">Code: {project.code}</p>
-                          <p className="text-sm text-gray-600">Client: {project.client_name || 'No client'}</p>
-                        </div>
-                        <div className="text-right">
-                          <Badge variant="outline" className="mb-2">
-                            {project.stage.replace('-', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}
-                          </Badge>
-                          <ArrowRight className="h-4 w-4 text-gray-400" />
-                        </div>
-                      </div>
-                    ))}
-                  <Button variant="outline" className="w-full" onClick={() => setLocation('/projects')}>
-                    View All Projects
-                  </Button>
-                </div>
-              ) : (
-                <div className="text-center py-6">
-                  <Package className="h-12 w-12 mx-auto text-gray-300 mb-3" />
-                  <p className="text-sm font-medium text-gray-900">No ongoing projects</p>
-                  <p className="text-xs text-gray-600">Projects will appear here once they're started.</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+
         </>
       ) : (
         /* ADMIN/MANAGER DASHBOARD - Keep existing layout */
