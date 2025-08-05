@@ -293,13 +293,13 @@ export default function Dashboard() {
       {/* Staff Check-In/Out Widget - Compact Version for staff and store keeper users */}
       {(currentUser?.role === 'staff' || currentUser?.role === 'store_incharge') && (
         <Card className="shadow-md border border-green-200 bg-gradient-to-r from-green-50 to-emerald-50">
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-green-800 text-base">
+          <CardHeader className="pb-1 pt-3">
+            <CardTitle className="flex items-center gap-2 text-green-800 text-sm">
               <Clock className="w-4 h-4" />
               My Attendance
             </CardTitle>
           </CardHeader>
-          <CardContent className="pt-0">
+          <CardContent className="pt-0 pb-3">
             {(() => {
               const myTodayRecord = todayAttendance.find((a: any) => a.userId === currentUser.id);
               const formatTime = (timeString: string | null) => {
@@ -311,12 +311,12 @@ export default function Dashboard() {
               };
               
               return (
-                <div className="space-y-3">
+                <div className="space-y-2">
                   {/* Compact Status Display */}
-                  <div className="bg-white/60 rounded-lg p-3 border border-green-200">
-                    <div className="flex items-center justify-between mb-2">
+                  <div className="bg-white/60 rounded-lg p-2 border border-green-200">
+                    <div className="flex items-center justify-between mb-1">
                       <div>
-                        <h4 className="font-medium text-green-800 text-sm">Today's Status</h4>
+                        <h4 className="font-medium text-green-800 text-xs">Today's Status</h4>
                         <p className="text-xs text-green-600">
                           {new Date().toLocaleDateString("en-IN", { 
                             weekday: 'short',
@@ -327,11 +327,11 @@ export default function Dashboard() {
                       </div>
                       <div>
                         {myTodayRecord ? (
-                          <Badge className="bg-green-100 text-green-800 border-green-300 text-xs">
+                          <Badge className="bg-green-100 text-green-800 border-green-300 text-xs px-2 py-0">
                             Present
                           </Badge>
                         ) : (
-                          <Badge variant="outline" className="bg-gray-100 border-gray-300 text-xs">
+                          <Badge variant="outline" className="bg-gray-100 border-gray-300 text-xs px-2 py-0">
                             Not Checked In
                           </Badge>
                         )}
@@ -340,14 +340,14 @@ export default function Dashboard() {
                     
                     {/* Compact Time Display */}
                     {myTodayRecord && (
-                      <div className="flex items-center gap-4 text-xs">
+                      <div className="flex items-center gap-3 text-xs">
                         <div className="flex items-center gap-1">
-                          <span className="text-green-600">Check In:</span>
+                          <span className="text-green-600">In:</span>
                           <span className="font-semibold">{formatTime(myTodayRecord.checkInTime)}</span>
                         </div>
                         {myTodayRecord.checkOutTime && (
                           <div className="flex items-center gap-1">
-                            <span className="text-green-600">Check Out:</span>
+                            <span className="text-green-600">Out:</span>
                             <span className="font-semibold">{formatTime(myTodayRecord.checkOutTime)}</span>
                           </div>
                         )}
@@ -360,29 +360,29 @@ export default function Dashboard() {
                     {!myTodayRecord ? (
                       <Button
                         size="sm"
-                        className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white"
+                        className="px-3 py-1 h-7 bg-green-600 hover:bg-green-700 text-white text-xs"
                         onClick={() => selfCheckInMutation.mutate({})}
                         disabled={selfCheckInMutation.isPending}
                       >
-                        <LogIn className="w-4 h-4 mr-1" />
+                        <LogIn className="w-3 h-3 mr-1" />
                         {selfCheckInMutation.isPending ? 'Checking In...' : 'Check In'}
                       </Button>
                     ) : !myTodayRecord.checkOutTime ? (
                       <Button
                         size="sm"
                         variant="outline"
-                        className="px-4 py-2 border-red-600 text-red-600 hover:bg-red-50"
+                        className="px-3 py-1 h-7 border-red-600 text-red-600 hover:bg-red-50 text-xs"
                         onClick={() => selfCheckOutMutation.mutate()}
                         disabled={selfCheckOutMutation.isPending}
                       >
-                        <LogOut className="w-4 h-4 mr-1" />
+                        <LogOut className="w-3 h-3 mr-1" />
                         {selfCheckOutMutation.isPending ? 'Checking Out...' : 'Check Out'}
                       </Button>
                     ) : (
                       <div className="text-center">
-                        <div className="flex items-center justify-center gap-1 text-green-600 text-sm">
-                          <CheckCircle2 className="w-4 h-4" />
-                          <span className="font-medium">Attendance Complete</span>
+                        <div className="flex items-center justify-center gap-1 text-green-600 text-xs">
+                          <CheckCircle2 className="w-3 h-3" />
+                          <span className="font-medium">Complete</span>
                         </div>
                       </div>
                     )}
