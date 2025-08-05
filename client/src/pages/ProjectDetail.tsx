@@ -1813,7 +1813,7 @@ export default function ProjectDetail() {
                               <img
                                 src={`/${file.filePath}`}
                                 alt={file.originalName}
-                                className="w-full h-full object-cover cursor-pointer hover:scale-105 transition-transform"
+                                className="w-full h-full object-contain cursor-pointer hover:scale-105 transition-transform p-1 bg-white"
                                 onClick={() => {
                                   setPreviewImage({
                                     src: `/${file.filePath}`,
@@ -1991,7 +1991,7 @@ export default function ProjectDetail() {
                               key={index}
                               src={url}
                               alt={`Moodboard ${index + 1}`}
-                              className="w-full h-full object-cover rounded"
+                              className="w-full h-full object-contain rounded bg-white p-0.5"
                               onError={(e) => {
                                 console.log("Image failed to load:", url);
                                 e.currentTarget.src =
@@ -2074,7 +2074,7 @@ export default function ProjectDetail() {
                       <img
                         src={`/${file.filePath}`}
                         alt={file.originalName}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-contain p-1 bg-white"
                         onError={(e) => {
                           e.currentTarget.src =
                             "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik04NyA3NEg2M0M2MS4zNDMxIDc0IDYwIDc1LjM0MzEgNjAgNzdWMTIzQzYwIDEyNC42NTcgNjEuMzQzMSAxMjYgNjMgMTI2SDEzN0MxMzguNjU3IDEyNiAxNDAgMTI0LjY1NyAxNDAgMTIzVjc3QzE0MCA3NS4zNDMxIDEzOC42NTcgNzQgMTM3IDc0SDExM001IDkxSDE0MIIgc3Ryb2tlPSIjOTlBM0E0IiBzdHJva2Utd2lkdGg9IjIiLz4KPC9zdmc+";
