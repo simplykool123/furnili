@@ -651,33 +651,68 @@ export default function RequestTable() {
                 </div>
               )}
 
-              {/* Issue Button for Store Keepers when Approved */}
-              {selectedRequest && selectedRequest.status === 'approved' && user?.role === 'store_incharge' && (
+              {/* Actions for Approved Requests */}
+              {selectedRequest && selectedRequest.status === 'approved' && (
                 <div className="border-t pt-4">
-                  <h4 className="font-medium mb-3">Issue Materials</h4>
-                  <Button
-                    onClick={() => {
-                      updateStatusMutation.mutate({ 
-                        id: selectedRequest.id, 
-                        status: 'issued' 
-                      });
-                      setShowDetails(false);
-                    }}
-                    disabled={updateStatusMutation.isPending}
-                    className="bg-blue-600 hover:bg-blue-700 text-white w-full sm:w-auto"
-                  >
-                    {updateStatusMutation.isPending ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Processing...
-                      </>
-                    ) : (
-                      <>
-                        <Package className="mr-2 h-4 w-4" />
-                        Issue Materials
-                      </>
+                  <h4 className="font-medium mb-3">Actions</h4>
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    {/* Issue Materials - Store Incharge */}
+                    {user?.role === 'store_incharge' && (
+                      <Button
+                        onClick={() => {
+                          updateStatusMutation.mutate({ 
+                            id: selectedRequest.id, 
+                            status: 'issued' 
+                          });
+                          setShowDetails(false);
+                        }}
+                        disabled={updateStatusMutation.isPending}
+                        className="bg-blue-600 hover:bg-blue-700 text-white flex-1"
+                      >
+                        {updateStatusMutation.isPending ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Processing...
+                          </>
+                        ) : (
+                          <>
+                            <Package className="mr-2 h-4 w-4" />
+                            Issue Materials
+                          </>
+                        )}
+                      </Button>
                     )}
-                  </Button>
+                    
+                    {/* Reject Approved Request - Admin/Manager */}
+                    {(user?.role === 'admin' || user?.role === 'manager') && (
+                      <Button
+                        onClick={() => {
+                          if (confirm('Are you sure you want to reject this approved request?')) {
+                            updateStatusMutation.mutate({ 
+                              id: selectedRequest.id, 
+                              status: 'rejected' 
+                            });
+                            setShowDetails(false);
+                          }
+                        }}
+                        disabled={updateStatusMutation.isPending}
+                        variant="destructive"
+                        className="flex-1"
+                      >
+                        {updateStatusMutation.isPending ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Processing...
+                          </>
+                        ) : (
+                          <>
+                            <XCircle className="mr-2 h-4 w-4" />
+                            Reject Request
+                          </>
+                        )}
+                      </Button>
+                    )}
+                  </div>
                 </div>
               )}
 
