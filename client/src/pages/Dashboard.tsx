@@ -20,7 +20,8 @@ import {
   ArrowRight,
   LogIn,
   LogOut,
-  Briefcase
+  Briefcase,
+  BarChart3
 } from "lucide-react";
 import { authService } from "@/lib/auth";
 import { useState, useEffect } from "react";
@@ -336,8 +337,8 @@ export default function Dashboard() {
       {/* NEW DASHBOARD DESIGN FOR USERS & STOREKEEPERS */}
       {authService.hasRole(['staff', 'store_incharge']) && !authService.hasRole(['admin', 'manager']) ? (
         <>
-          {/* Main Action Buttons - 4 in a row */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          {/* Main Action Buttons - 4 in a row (5 for store keepers) */}
+          <div className={`grid grid-cols-2 gap-4 mb-6 ${currentUser?.role === 'store_incharge' ? 'lg:grid-cols-5' : 'lg:grid-cols-4'}`}>
             {/* Check In/Out Button */}
             <Card className="hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-green-50 to-green-100 border-green-200 cursor-pointer" onClick={handleCheckInOut}>
               <CardContent className="p-5 text-center">
@@ -352,14 +353,16 @@ export default function Dashboard() {
               </CardContent>
             </Card>
 
-            {/* New Material Request Button */}
+            {/* Material Request/Issue Button */}
             <Card className="hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200 cursor-pointer" onClick={() => setLocation('/requests')}>
               <CardContent className="p-5 text-center">
                 <div className="flex flex-col items-center space-y-2">
                   <div className="p-2 bg-orange-500 rounded-full">
                     <Package className="h-5 w-5 text-white" />
                   </div>
-                  <span className="text-xs font-medium text-orange-900">New Material Request</span>
+                  <span className="text-xs font-medium text-orange-900">
+                    {currentUser?.role === 'store_incharge' ? 'Material Issue' : 'New Material Request'}
+                  </span>
                 </div>
               </CardContent>
             </Card>
@@ -375,6 +378,20 @@ export default function Dashboard() {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Update Stock Button - Only for store keepers */}
+            {currentUser?.role === 'store_incharge' && (
+              <Card className="hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-teal-50 to-teal-100 border-teal-200 cursor-pointer" onClick={() => setLocation('/products')}>
+                <CardContent className="p-5 text-center">
+                  <div className="flex flex-col items-center space-y-2">
+                    <div className="p-2 bg-teal-500 rounded-full">
+                      <BarChart3 className="h-5 w-5 text-white" />
+                    </div>
+                    <span className="text-xs font-medium text-teal-900">Update Stock</span>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Ongoing Projects Button - Moved to last position */}
             <Card className="hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200 cursor-pointer" onClick={() => setLocation('/projects')}>
