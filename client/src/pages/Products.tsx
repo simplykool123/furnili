@@ -9,21 +9,7 @@ import { Plus } from "lucide-react";
 import { authService } from "@/lib/auth";
 import MobileProductTable from "@/components/Mobile/MobileProductTable";
 import { useIsMobile } from "@/components/Mobile/MobileOptimizer";
-
-interface Product {
-  id: number;
-  name: string;
-  category: string;
-  brand?: string;
-  size?: string;
-  thickness?: string;
-  sku?: string;
-  pricePerUnit: number;
-  currentStock: number;
-  minStock: number;
-  unit: string;
-  imageUrl?: string;
-}
+import type { Product } from "@shared/schema";
 import FurniliLayout from "@/components/Layout/FurniliLayout";
 import FurniliCard from "@/components/UI/FurniliCard";
 import FurniliButton from "@/components/UI/FurniliButton";
@@ -89,7 +75,12 @@ export default function Products() {
       {isMobile ? (
         <MobileProductTable 
           onEdit={(product) => {
-            setEditingProduct(product);
+            // Transform product for form compatibility
+            const formProduct = {
+              ...product,
+              price: product.pricePerUnit
+            };
+            setEditingProduct(formProduct as any);
             setShowAddProduct(true);
           }}
           onDelete={(product) => {
@@ -119,7 +110,10 @@ export default function Products() {
           </DialogHeader>
           <div className={`${isMobile ? 'flex-1 overflow-y-auto' : 'flex-1 overflow-y-auto px-6'}`}>
             <ProductForm 
-              product={editingProduct} 
+              product={editingProduct ? {
+                ...editingProduct,
+                price: editingProduct.pricePerUnit || editingProduct.price || 0
+              } as any : null} 
               onClose={() => {
                 setShowAddProduct(false);
                 setEditingProduct(null);
