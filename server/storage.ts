@@ -2293,28 +2293,17 @@ class DatabaseStorage implements IStorage {
     const requestsWithItems = await Promise.all(requests.map(async (request) => {
       console.log(`DEBUG: Processing request ${request.id}`);
       
-      // Get request items with product details
-      const items = await db.select({
-        id: requestItems.id,
-        requestId: requestItems.requestId,
-        productId: requestItems.productId,
-        requestedQuantity: requestItems.requestedQuantity,
-        approvedQuantity: requestItems.approvedQuantity,
-        unitPrice: requestItems.unitPrice,
-        totalPrice: requestItems.totalPrice,
-        notes: requestItems.notes,
-        // Include product details
-        product: {
-          id: products.id,
-          name: products.name,
-          sku: products.sku,
-          unit: products.unit,
-          pricePerUnit: products.pricePerUnit,
-          currentStock: products.currentStock,
-        }
-      }).from(requestItems)
-        .leftJoin(products, eq(requestItems.productId, products.id))
-        .where(eq(requestItems.requestId, request.id));
+      // Get request items first
+      const rawItems = await db.select().from(requestItems).where(eq(requestItems.requestId, request.id));
+      
+      // Then get product details for each item
+      const items = await Promise.all(rawItems.map(async (item) => {
+        const product = await db.select().from(products).where(eq(products.id, item.productId)).limit(1);
+        return {
+          ...item,
+          product: product[0] || null
+        };
+      }));
       
       console.log(`DEBUG: Request ${request.id} has ${items.length} items with products`);
       
