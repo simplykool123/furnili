@@ -736,18 +736,27 @@ export class MemStorage {
   }
 
   async getAllProjects(filters?: { stage?: string; clientId?: number }): Promise<Project[]> {
-    let query = db.select().from(projects).where(eq(projects.isActive, true));
-    
-    if (filters?.stage && filters.stage !== 'all') {
-      query = query.where(eq(projects.stage, filters.stage));
+    try {
+      let whereConditions = [eq(projects.isActive, true)];
+      
+      if (filters?.stage && filters.stage !== 'all') {
+        whereConditions.push(eq(projects.stage, filters.stage));
+      }
+      
+      if (filters?.clientId) {
+        whereConditions.push(eq(projects.clientId, filters.clientId));
+      }
+      
+      const result = await db.select()
+        .from(projects)
+        .where(and(...whereConditions))
+        .orderBy(desc(projects.createdAt));
+      
+      return result;
+    } catch (error) {
+      console.error("Error in getAllProjects:", error);
+      throw error;
     }
-    
-    if (filters?.clientId) {
-      query = query.where(eq(projects.clientId, filters.clientId));
-    }
-    
-    const result = await query.orderBy(desc(projects.createdAt));
-    return result;
   }
 
   async createProject(project: InsertProject): Promise<Project> {

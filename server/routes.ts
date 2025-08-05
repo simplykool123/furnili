@@ -1852,12 +1852,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Project Management Routes - Phase 1
   app.get("/api/projects", authenticateToken, async (req: AuthRequest, res) => {
     try {
-      const { status, clientId, projectManager } = req.query;
+      const { stage, clientId } = req.query;
       const filters: any = {};
       
-      if (status) filters.status = status as string;
+      if (stage) filters.stage = stage as string;
       if (clientId) filters.clientId = parseInt(clientId as string);
-      if (projectManager) filters.projectManager = projectManager as string;
       
       const projects = await storage.getAllProjects(filters);
       res.json(projects);
