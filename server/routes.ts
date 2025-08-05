@@ -502,6 +502,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         category: z.string().min(1, "Category is required"),
         brand: z.string().optional(),
         size: z.string().optional(),
+        thickness: z.string().optional(),
         sku: z.string().optional(),
         price: z.string().transform((val) => parseFloat(val)).pipe(z.number().min(0, "Price must be positive")),
         currentStock: z.string().transform((val) => parseInt(val, 10)).pipe(z.number().int().min(0, "Stock must be non-negative")),
