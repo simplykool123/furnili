@@ -65,7 +65,7 @@ interface Project {
   projectCode: string;
   name: string;
   stage: string;
-  clientName: string;
+  client_name: string;
   clientId: number;
 }
 
@@ -195,7 +195,7 @@ export default function RequestFormSimplified({ onClose, onSuccess, preSelectedP
       const selectedProject = eligibleProjects.find(p => p.id === preSelectedProjectId);
       if (selectedProject) {
         setValue('projectId', preSelectedProjectId);
-        setValue('clientName', selectedProject.clientName, { 
+        setValue('clientName', selectedProject.client_name, { 
           shouldValidate: true, 
           shouldDirty: true 
         });
