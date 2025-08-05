@@ -3771,22 +3771,13 @@ class DatabaseStorage implements IStorage {
       createdAt: stockMovements.createdAt,
       productName: products.name,
       performedByName: users.name,
-      // Enhanced fields for better tracking (if they exist in DB)
-      projectId: stockMovements.projectId,
-      projectName: projects.name,
-      materialRequestId: stockMovements.materialRequestId,
-      reason: stockMovements.reason,
-      destination: stockMovements.destination,
-      invoiceNumber: stockMovements.invoiceNumber,
-      batchNumber: stockMovements.batchNumber,
-      expiryDate: stockMovements.expiryDate,
-      location: stockMovements.location,
-      approvedBy: stockMovements.approvedBy,
+      // Additional fields if they exist in DB (currently not in schema)
+      // These will be null until schema is updated
     })
     .from(stockMovements)
     .leftJoin(products, eq(stockMovements.productId, products.id))
     .leftJoin(users, eq(stockMovements.performedBy, users.id))
-    .leftJoin(projects, eq(stockMovements.projectId, projects.id));
+    // .leftJoin(projects, eq(stockMovements.projectId, projects.id)) // Commented until schema updated
 
     if (productId) {
       query = query.where(eq(stockMovements.productId, productId));

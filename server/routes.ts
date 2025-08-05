@@ -2370,11 +2370,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       movementData.previousStock = product.currentStock;
+      
+      // Calculate new stock based on movement type
+      let newStock;
       if (movementData.movementType === 'in') {
-        movementData.newStock = product.currentStock + movementData.quantity;
+        newStock = product.currentStock + movementData.quantity;
       } else {
-        movementData.newStock = product.currentStock - movementData.quantity;
+        newStock = Math.max(0, product.currentStock - movementData.quantity);
       }
+      
+      movementData.newStock = newStock;
 
       // Calculate total cost if cost per unit is provided
       if (movementData.costPerUnit) {
@@ -2382,9 +2387,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Update product stock first
-      const stockChange = movementData.movementType === 'in' ? movementData.quantity : -movementData.quantity;
       await storage.updateProduct(movementData.productId, { 
-        currentStock: Math.max(0, product.currentStock + stockChange) 
+        currentStock: newStock
       });
 
       // Create movement record
