@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Menu, X, Home, Package, FileText, Users, DollarSign, BarChart3 } from "lucide-react";
+import { Menu, X, Home, Package, FileText, Users, DollarSign, BarChart3, Folder } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "./MobileOptimizer";
@@ -18,6 +18,7 @@ const navigationItems = [
   { icon: FileText, label: "Requests", href: "/requests", roles: ['admin', 'manager', 'staff', 'store_incharge'] },
   { icon: Users, label: "Staff", href: "/attendance", roles: ['admin', 'manager', 'staff', 'store_incharge'] },
   { icon: DollarSign, label: "Petty Cash", href: "/petty-cash", roles: ['admin', 'manager', 'staff', 'store_incharge'] },
+  { icon: Folder, label: "Projects", href: "/projects", roles: ['admin', 'manager', 'staff', 'store_incharge'] }, // Store keeper can access projects
   { icon: BarChart3, label: "Reports", href: "/reports", roles: ['admin', 'manager'] }, // Admin and Manager access
 ];
 

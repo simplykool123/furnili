@@ -38,8 +38,8 @@ const navigation = [
   { name: 'Products', href: '/products', icon: Package, roles: ['admin', 'manager', 'staff', 'store_incharge'] }, // Store keepers have read-only access
   { name: 'Material Requests', href: '/requests', icon: PackageSearch, roles: ['admin', 'manager', 'staff', 'store_incharge'] },
   { name: 'Staff Attendance', href: '/attendance', icon: UserRoundPen, roles: ['admin', 'manager', 'staff', 'store_incharge'] },
-  { name: 'Petty Cash', href: '/petty-cash', icon: CircleDollarSign, roles: ['admin', 'manager', 'staff'] }, // Store keeper doesn't need petty cash access
-  { name: 'Project Management', href: '/projects', icon: ProjectManagementIcon, roles: ['admin', 'manager', 'staff'] }, // Store keeper doesn't need project management
+  { name: 'Petty Cash', href: '/petty-cash', icon: CircleDollarSign, roles: ['admin', 'manager', 'staff', 'store_incharge'] }, // Store keeper can access user-specific petty cash
+  { name: 'Project Management', href: '/projects', icon: ProjectManagementIcon, roles: ['admin', 'manager', 'staff', 'store_incharge'] }, // Store keeper can access project management
   { name: 'Task Management', href: '/tasks', icon: CheckSquare, roles: ['admin', 'manager', 'staff', 'store_incharge'] },
   { name: 'Product Comparison', href: '/product-comparison', icon: GitCompare, roles: ['admin', 'manager'] },
   { name: 'WhatsApp Export', href: '/whatsapp', icon: MessageCircle, roles: ['admin', 'manager', 'staff'] }, // Store keeper doesn't need WhatsApp export

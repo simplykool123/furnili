@@ -43,6 +43,7 @@ The system adheres to a professional and consistent UI/UX based on the "Furnili 
 - **Project Information RBAC**: Notes and Details tabs are hidden from regular users (staff/store_incharge) - only admin and manager can access detailed project information and notes.
 - **Client Contact RBAC**: Client contact information (phone numbers) in project headers is hidden from regular users - only admin and manager can view client contact details.
 - **Dashboard Layout RBAC**: Staff and store keeper users have a streamlined dashboard with side-by-side "My Attendance | My Tasks" layout and optimized action buttons, while admin/manager users retain the full comprehensive dashboard.
+- **Store Keeper Sidebar Access**: Store keepers (`store_incharge`) have access to Petty Cash (user-specific view) and Project Management tabs in addition to their standard permissions for Products, Material Requests, and Inventory Movement.
 
 #### Product Management
 - Comprehensive product catalog including categories, brands, specifications, image upload, real-time stock tracking, SKU management, and low-stock alerts.
