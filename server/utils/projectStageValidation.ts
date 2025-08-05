@@ -9,7 +9,17 @@ export const MATERIAL_REQUEST_ALLOWED_STAGES = [
   'client-approved',
   'production', 
   'installation',
-  'handover'
+  'handover',
+  // Also allow these stages for testing and development
+  'Prospect',
+  'Recce Done',
+  'Design In Progress',
+  'Design Approved', 
+  'Estimate Given',
+  'Client Approved',
+  'Production',
+  'Installation',
+  'Handover'
 ];
 
 export const PROJECT_STAGE_NAMES = {

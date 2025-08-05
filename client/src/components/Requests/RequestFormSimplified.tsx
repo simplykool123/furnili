@@ -110,7 +110,9 @@ export default function RequestFormSimplified({ onClose, onSuccess, preSelectedP
 
   const { data: eligibleProjects = [], error: projectsError } = useQuery<Project[]>({
     queryKey: ["/api/eligible-projects"],
-    retry: false
+    retry: false,
+    staleTime: 0, // Always fetch fresh data
+    refetchOnMount: true // Ensure fresh data on mount
   });
 
   // Debug projects loading
@@ -380,7 +382,7 @@ export default function RequestFormSimplified({ onClose, onSuccess, preSelectedP
                       // Auto-fill client name based on selected project
                       const selectedProject = eligibleProjects.find(p => p.id === projectId);
                       if (selectedProject) {
-                        setValue("clientName", selectedProject.clientName, { 
+                        setValue("clientName", selectedProject.client_name, { 
                           shouldValidate: true, 
                           shouldDirty: true 
                         });
@@ -399,8 +401,8 @@ export default function RequestFormSimplified({ onClose, onSuccess, preSelectedP
                     eligibleProjects.map((project) => (
                       <SelectItem key={project.id} value={project.id.toString()}>
                         <div className="flex flex-col">
-                          <span className="font-medium">Project ID: {project.code}</span>
-                          <span className="text-xs text-gray-500">{project.name} | {project.clientName} | {project.stage}</span>
+                          <span className="font-medium">Project ID: {project.projectCode}</span>
+                          <span className="text-xs text-gray-500">{project.name} | {project.client_name} | {project.stage}</span>
                         </div>
                       </SelectItem>
                     ))
