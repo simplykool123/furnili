@@ -4,7 +4,7 @@ import { quotes, quoteItems, clients, salesProducts, users, projects } from "@sh
 import { eq, desc, and, like, or } from "drizzle-orm";
 import { insertQuoteSchema, insertQuoteItemSchema } from "@shared/schema";
 import { z } from "zod";
-import { authenticateToken } from "./middleware/auth";
+import { authenticateToken, type AuthRequest } from "./middleware/auth";
 
 export function setupQuotesRoutes(app: Express) {
   // Get all quotes with client and project details
@@ -119,7 +119,8 @@ export function setupQuotesRoutes(app: Express) {
   // Create new quote
   app.post("/api/quotes", authenticateToken, async (req, res) => {
     try {
-      const userId = (req as any).user.userId;
+      const authReq = req as AuthRequest;
+      const userId = authReq.user?.id;
       
       // Generate quote number
       const lastQuote = await db
@@ -153,7 +154,7 @@ export function setupQuotesRoutes(app: Express) {
       // Create quote
       const [newQuote] = await db
         .insert(quotes)
-        .values([quoteData])
+        .values([{ ...quoteData, quoteNumber }])
         .returning();
 
       // Create quote items if provided
@@ -387,6 +388,7 @@ export function setupQuotesRoutes(app: Express) {
     try {
       const quoteId = parseInt(req.params.id);
       const authReq = req as AuthRequest;
+      const userId = authReq.user?.id;
       const updateData = req.body;
 
       console.log('Updating quote:', quoteId, 'with data:', updateData);
@@ -434,7 +436,7 @@ export function setupQuotesRoutes(app: Express) {
             discountPercentage: item.discountPercentage || 0,
             taxPercentage: item.taxPercentage || 18,
             lineTotal: item.lineTotal,
-            size: item.size,
+            // size: item.size, // Removed as it's not in the schema
             sortOrder: i + 1,
           });
         }
