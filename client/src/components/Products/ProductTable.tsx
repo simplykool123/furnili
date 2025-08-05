@@ -49,7 +49,7 @@ export default function ProductTable() {
 
   // Check if user can see pricing information and perform actions
   const canSeePricing = user && ['admin', 'manager'].includes(user.role);
-  const canEditProducts = user && ['admin', 'manager', 'store_incharge'].includes(user.role);
+  const canEditProducts = user && ['admin', 'manager'].includes(user.role);
 
   const { data: products, isLoading } = useQuery({
     queryKey: ['/api/products', filters],

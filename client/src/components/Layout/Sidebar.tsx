@@ -35,7 +35,7 @@ import {
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard, roles: ['admin', 'manager', 'staff', 'store_incharge'] },
-  { name: 'Products', href: '/products', icon: Package, roles: ['admin', 'manager', 'staff', 'store_incharge'] },
+  { name: 'Products', href: '/products', icon: Package, roles: ['admin', 'manager', 'staff', 'store_incharge'] }, // Store keepers have read-only access
   { name: 'Material Requests', href: '/requests', icon: PackageSearch, roles: ['admin', 'manager', 'staff', 'store_incharge'] },
   { name: 'Staff Attendance', href: '/attendance', icon: UserRoundPen, roles: ['admin', 'manager', 'staff', 'store_incharge'] },
   { name: 'Petty Cash', href: '/petty-cash', icon: CircleDollarSign, roles: ['admin', 'manager', 'staff'] }, // Store keeper doesn't need petty cash access

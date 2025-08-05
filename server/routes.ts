@@ -853,7 +853,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/requests/:id/status", authenticateToken, requireRole(["storekeeper", "admin"]), async (req, res) => {
+  app.patch("/api/requests/:id/status", authenticateToken, requireRole(["store_incharge", "admin"]), async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       const { status } = req.body;
