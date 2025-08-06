@@ -567,7 +567,6 @@ export default function RequestTable() {
                       <TableHead>Requested Qty</TableHead>
                       <TableHead>Unit Price</TableHead>
                       <TableHead>Total</TableHead>
-                      <TableHead>Availability</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -582,13 +581,6 @@ export default function RequestTable() {
                         <TableCell>{item.requestedQuantity} {item.product.unit}</TableCell>
                         <TableCell>₹{item.unitPrice.toFixed(2)}</TableCell>
                         <TableCell>₹{item.totalPrice.toFixed(2)}</TableCell>
-                        <TableCell>
-                          {item.product.currentStock >= item.requestedQuantity ? (
-                            <Badge className="bg-green-100 text-green-800">Available</Badge>
-                          ) : (
-                            <Badge className="bg-red-100 text-red-800">Insufficient Stock</Badge>
-                          )}
-                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
