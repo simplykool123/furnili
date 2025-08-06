@@ -2379,11 +2379,55 @@ class DatabaseStorage implements IStorage {
   }
 
   async getMaterialRequestsByProject(projectId: number): Promise<MaterialRequestWithItems[]> {
+    console.log('DEBUG: DatabaseStorage.getMaterialRequestsByProject called with projectId:', projectId);
     const requests = await db.select().from(materialRequests).where(eq(materialRequests.projectId, projectId));
+    console.log(`DEBUG: Found ${requests.length} requests for project ${projectId}`);
+    
     const requestsWithItems = await Promise.all(requests.map(async (request) => {
-      const items = await db.select().from(requestItems).where(eq(requestItems.requestId, request.id));
-      return { ...request, items };
+      console.log(`DEBUG: Processing request ${request.id} for project ${projectId}`);
+      
+      // Get request items first
+      const rawItems = await db.select().from(requestItems).where(eq(requestItems.requestId, request.id));
+      
+      // Then get product details for each item
+      const items = await Promise.all(rawItems.map(async (item) => {
+        const product = await db.select().from(products).where(eq(products.id, item.productId)).limit(1);
+        return {
+          ...item,
+          product: product[0] || null
+        };
+      }));
+      
+      console.log(`DEBUG: Request ${request.id} has ${items.length} items with products`);
+      
+      // Get user information
+      const requestedByUser = await db.select({
+        name: users.name,
+        email: users.email
+      }).from(users).where(eq(users.id, request.requestedBy)).limit(1);
+      
+      const approvedByUser = request.approvedBy ? 
+        await db.select({
+          name: users.name,
+          email: users.email
+        }).from(users).where(eq(users.id, request.approvedBy)).limit(1) : [];
+        
+      const issuedByUser = request.issuedBy ? 
+        await db.select({
+          name: users.name,
+          email: users.email
+        }).from(users).where(eq(users.id, request.issuedBy)).limit(1) : [];
+
+      return {
+        ...request,
+        items,
+        requestedByUser: requestedByUser[0] || null,
+        approvedByUser: approvedByUser[0] || null,
+        issuedByUser: issuedByUser[0] || null,
+      };
     }));
+    
+    console.log(`DEBUG: Returning ${requestsWithItems.length} requests with full details for project ${projectId}`);
     return requestsWithItems.sort((a, b) => 
       new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime()
     );
