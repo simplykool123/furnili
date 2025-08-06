@@ -557,12 +557,6 @@ export default function ProjectDetail() {
   const queryClient = useQueryClient();
   const currentUser = authService.getUser();
   const canViewFinances = authService.hasRole(['admin', 'manager']);
-  console.log('User role check:', { 
-    currentRole: authService.getUser()?.role, 
-    canViewFinances, 
-    hasAdminRole: authService.hasRole(['admin']),
-    hasManagerRole: authService.hasRole(['manager'])
-  });
 
   // Extract project ID from URL
   const projectId = location.split("/")[2];
@@ -816,9 +810,7 @@ export default function ProjectDetail() {
   const { data: projectOrders = [], isLoading: ordersLoading } = useQuery({
     queryKey: ["/api/requests", "project", projectId],
     queryFn: async () => {
-      const data = await authenticatedApiRequest('GET', `/api/requests?projectId=${projectId}`);
-      console.log('Raw project orders data:', data);
-      return data;
+      return await authenticatedApiRequest('GET', `/api/requests?projectId=${projectId}`);
     },
     enabled: !!projectId,
   });
@@ -2972,15 +2964,7 @@ export default function ProjectDetail() {
                         </div>
                         <div className="text-right">
                           <div className="text-sm font-medium text-gray-900 mb-1">
-                            {(() => {
-                              console.log('Rendering order amount:', { 
-                                orderId: order.id, 
-                                totalValue: order.totalValue, 
-                                canViewFinances, 
-                                result: canViewFinances ? (order.totalValue || 0).toLocaleString() : "0" 
-                              });
-                              return `₹${canViewFinances ? (order.totalValue || 0).toLocaleString() : "0"}`;
-                            })()}
+                            ₹{canViewFinances ? (order.totalValue || 0).toLocaleString() : "0"}
                           </div>
                           <Badge
                             variant={
