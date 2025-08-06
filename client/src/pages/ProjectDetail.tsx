@@ -95,7 +95,7 @@ import FurniliLayout from "@/components/Layout/FurniliLayout";
 import FurniliCard from "@/components/UI/FurniliCard";
 import FurniliButton from "@/components/UI/FurniliButton";
 import ProjectQuotes from "@/components/Project/ProjectQuotes";
-import { authService } from "@/lib/auth";
+import { authService, authenticatedApiRequest } from "@/lib/auth";
 
 // Schemas for various forms
 const taskSchema = z.object({
@@ -812,20 +812,11 @@ export default function ProjectDetail() {
     enabled: !!projectId,
   });
 
-  // Query for project material requests (orders)
+  // Query for project material requests (orders) - using same method as RequestTable
   const { data: projectOrders = [], isLoading: ordersLoading } = useQuery({
     queryKey: ["/api/requests", "project", projectId],
     queryFn: async () => {
-      const token =
-        localStorage.getItem("authToken") || localStorage.getItem("token");
-      const response = await fetch(`/api/requests?projectId=${projectId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-      if (!response.ok) throw new Error("Failed to fetch project orders");
-      const data = await response.json();
+      const data = await authenticatedApiRequest('GET', `/api/requests?projectId=${projectId}`);
       console.log('Raw project orders data:', data);
       return data;
     },
