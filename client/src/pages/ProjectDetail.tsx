@@ -930,7 +930,7 @@ export default function ProjectDetail() {
   // Mutations for database operations
   const createLogMutation = useMutation({
     mutationFn: async (logData: any) => {
-      return apiRequest("POST", `/api/projects/${projectId}/logs`, logData);
+      return apiRequest("POST", `/api/projects/${projectId}/logs`, { body: JSON.stringify(logData) });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -1067,7 +1067,7 @@ export default function ProjectDetail() {
       return apiRequest(
         "PUT",
         `/api/projects/${projectId}/logs/${id}`,
-        logData,
+        { body: JSON.stringify(logData) },
       );
     },
     onSuccess: () => {
@@ -1104,7 +1104,7 @@ export default function ProjectDetail() {
   // Note deletion mutation
   const deleteLogMutation = useMutation({
     mutationFn: async (logId: number) => {
-      return apiRequest("DELETE", `/api/projects/${projectId}/logs/${logId}`);
+      return apiRequest("DELETE", `/api/projects/${projectId}/logs/${logId}`, {});
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -1123,7 +1123,7 @@ export default function ProjectDetail() {
       fileId: number;
       comment: string;
     }) => {
-      return apiRequest("PUT", `/api/files/${fileId}/comment`, { comment });
+      return apiRequest("PUT", `/api/files/${fileId}/comment`, { body: JSON.stringify({ comment }) });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -1431,8 +1431,8 @@ export default function ProjectDetail() {
   // Stage update mutation
   const stageUpdateMutation = useMutation({
     mutationFn: async (newStage: string) => {
-      return apiRequest("PATCH", `/api/projects/${projectId}`, {
-        stage: newStage,
+      return apiRequest("PATCH", `/api/projects/${projectId}`, { 
+        body: JSON.stringify({ stage: newStage })
       });
     },
     onSuccess: () => {
@@ -2000,7 +2000,7 @@ export default function ProjectDetail() {
                                 type="text"
                                 value={
                                   editingComment?.fileId === file.id
-                                    ? editingComment.comment
+                                    ? editingComment?.comment
                                     : file.comment || ""
                                 }
                                 placeholder="Comment"
@@ -2455,7 +2455,7 @@ export default function ProjectDetail() {
                     </div>
                   ) : (
                     <div className="space-y-4">
-                      {(projectLogsQuery.data || []).map((log) => (
+                      {(projectLogsQuery.data || []).map((log: any) => (
                         <Card
                           key={log.id}
                           className="bg-white border border-gray-200"
@@ -2468,7 +2468,7 @@ export default function ProjectDetail() {
                                   {log.author
                                     ? log.author
                                         .split(" ")
-                                        .map((n) => n[0])
+                                        .map((n: any) => n[0])
                                         .join("")
                                         .toUpperCase()
                                     : "TU"}
@@ -2635,7 +2635,7 @@ export default function ProjectDetail() {
                                       log.attachments.length > 0 && (
                                         <div className="mt-3 flex flex-wrap gap-2">
                                           {log.attachments.map(
-                                            (attachment, index) => (
+                                            (attachment: any, index: number) => (
                                               <div
                                                 key={index}
                                                 className="flex items-center space-x-1 bg-gray-100 px-2 py-1 rounded cursor-pointer hover:bg-gray-200"
@@ -3014,8 +3014,9 @@ export default function ProjectDetail() {
                   className="bg-amber-900 hover:bg-amber-800 text-white"
                   style={{
                     backgroundColor: "hsl(28, 100%, 25%)",
-                    "&:hover": { backgroundColor: "hsl(28, 100%, 20%)" },
                   }}
+                  onMouseOver={(e) => e.currentTarget.style.backgroundColor = "hsl(28, 100%, 20%)"}
+                  onMouseOut={(e) => e.currentTarget.style.backgroundColor = "hsl(28, 100%, 25%)"}
                 >
                   <Plus className="h-4 w-4 mr-2" />
                   New Order
@@ -3133,8 +3134,9 @@ export default function ProjectDetail() {
                     className="bg-amber-900 hover:bg-amber-800 text-white"
                     style={{
                       backgroundColor: "hsl(28, 100%, 25%)",
-                      "&:hover": { backgroundColor: "hsl(28, 100%, 20%)" },
                     }}
+                    onMouseOver={(e) => e.currentTarget.style.backgroundColor = "hsl(28, 100%, 20%)"}
+                    onMouseOut={(e) => e.currentTarget.style.backgroundColor = "hsl(28, 100%, 25%)"}
                   >
                     <Plus className="h-4 w-4 mr-2" />
                     New Order
@@ -3207,7 +3209,7 @@ export default function ProjectDetail() {
                     <p className="text-gray-900">
                       {project.stage
                         .replace("-", " ")
-                        .replace(/\b\w/g, (l) => l.toUpperCase())}
+                        .replace(/\b\w/g, (l: string) => l.toUpperCase())}
                     </p>
                   </div>
                 </CardContent>
