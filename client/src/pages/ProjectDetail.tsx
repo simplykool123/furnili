@@ -825,7 +825,9 @@ export default function ProjectDetail() {
         },
       });
       if (!response.ok) throw new Error("Failed to fetch project orders");
-      return response.json();
+      const data = await response.json();
+      console.log('Raw project orders data:', data);
+      return data;
     },
     enabled: !!projectId,
   });
