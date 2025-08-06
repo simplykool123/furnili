@@ -557,6 +557,12 @@ export default function ProjectDetail() {
   const queryClient = useQueryClient();
   const currentUser = authService.getUser();
   const canViewFinances = authService.hasRole(['admin', 'manager']);
+  console.log('User role check:', { 
+    currentRole: authService.getUser()?.role, 
+    canViewFinances, 
+    hasAdminRole: authService.hasRole(['admin']),
+    hasManagerRole: authService.hasRole(['manager'])
+  });
 
   // Extract project ID from URL
   const projectId = location.split("/")[2];
