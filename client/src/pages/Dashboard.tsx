@@ -692,78 +692,129 @@ export default function Dashboard() {
 
       {/* Admin/Manager Only: Hide project information from store keepers */}
       {!authService.hasRole(['staff', 'store_incharge']) && currentUser?.role !== 'store_incharge' && (
-        <>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Ongoing Projects Section */}
-          {ongoingProjects && ongoingProjects.length > 0 && (
-            <Card className="hover:shadow-md transition-all duration-200">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base font-semibold text-foreground flex items-center gap-2">
-                  <Package className="h-4 w-4" />
-                  Ongoing Projects
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <div className="space-y-1 max-h-40 overflow-y-auto">
-                  {ongoingProjects.slice(0, 8).map((project: any) => (
-                    <div 
-                      key={project.id} 
-                      className="flex items-center justify-between p-2 rounded-md bg-gray-50/50 border border-gray-100/50 hover:bg-gray-100/50 cursor-pointer transition-colors"
-                      onClick={() => setLocation(`/projects/${project.id}`)}
-                    >
-                      <div className="flex items-center gap-3 min-w-0 flex-1">
-                        <p className="text-sm font-medium text-gray-900 min-w-fit">
-                          {project.code}
-                        </p>
-                        <Badge 
-                          variant={
-                            project.stage === 'Production' ? 'default' :
-                            project.stage === 'Installation' ? 'secondary' :
-                            project.stage === 'Client Approved' ? 'destructive' :
-                            'outline'
-                          }
-                          className="text-xs min-w-fit"
-                        >
-                          {project.stage}
-                        </Badge>
-                        <p className="text-xs text-gray-600 truncate">
-                          {project.name} - {project.client_name}
-                        </p>
+          <Card className="hover:shadow-md transition-all duration-200">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base font-semibold text-foreground flex items-center gap-2">
+                <Package className="h-4 w-4" />
+                Ongoing Projects
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0">
+              {ongoingProjects && ongoingProjects.length > 0 ? (
+                <>
+                  <div className="space-y-1 max-h-64 overflow-y-auto">
+                    {ongoingProjects.slice(0, 8).map((project: any) => (
+                      <div 
+                        key={project.id} 
+                        className="flex items-center justify-between p-2 rounded-md bg-gray-50/50 border border-gray-100/50 hover:bg-gray-100/50 cursor-pointer transition-colors"
+                        onClick={() => setLocation(`/projects/${project.id}`)}
+                      >
+                        <div className="flex items-center gap-3 min-w-0 flex-1">
+                          <p className="text-sm font-medium text-gray-900 min-w-fit">
+                            {project.code}
+                          </p>
+                          <Badge 
+                            variant={
+                              project.stage === 'Production' ? 'default' :
+                              project.stage === 'Installation' ? 'secondary' :
+                              project.stage === 'Client Approved' ? 'destructive' :
+                              'outline'
+                            }
+                            className="text-xs min-w-fit"
+                          >
+                            {project.stage}
+                          </Badge>
+                          <p className="text-xs text-gray-600 truncate">
+                            {project.name} - {project.client_name}
+                          </p>
+                        </div>
+                        <ArrowRight className="h-3 w-3 text-gray-400 flex-shrink-0" />
                       </div>
-                      <ArrowRight className="h-3 w-3 text-gray-400 flex-shrink-0" />
-                    </div>
-                  ))}
-                </div>
-            {ongoingProjects.length > 8 && (
-              <div className="mt-2 pt-2 border-t border-gray-200">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full text-xs"
-                  onClick={() => setLocation('/projects')}
-                >
-                  View All {ongoingProjects.length} Ongoing Projects
-                </Button>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
-
-          {/* No Ongoing Projects Message */}
-          {ongoingProjects && ongoingProjects.length === 0 && (
-            <Card className="bg-blue-50/50 border-blue-200">
-              <CardContent className="pt-4 pb-4">
-                <div className="flex items-center gap-3">
-                  <CheckCircle2 className="h-5 w-5 text-blue-600" />
-                  <div>
-                    <p className="text-sm font-medium text-blue-900">All projects completed!</p>
-                    <p className="text-xs text-blue-700">No ongoing projects at the moment.</p>
+                    ))}
                   </div>
+                  {ongoingProjects.length > 8 && (
+                    <div className="mt-2 pt-2 border-t border-gray-200">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full text-xs"
+                        onClick={() => setLocation('/projects')}
+                      >
+                        View All {ongoingProjects.length} Ongoing Projects
+                      </Button>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="text-center py-6">
+                  <CheckCircle2 className="h-12 w-12 mx-auto text-blue-500 mb-3" />
+                  <p className="text-sm font-medium text-blue-900">All projects completed!</p>
+                  <p className="text-xs text-blue-700">No ongoing projects at the moment.</p>
                 </div>
-              </CardContent>
-            </Card>
-          )}
-        </>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Low Stock Products Section */}
+          <Card className="hover:shadow-md transition-all duration-200">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base font-semibold text-foreground flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4 text-red-500" />
+                Low Stock Products
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0">
+              {stats?.lowStockProducts && stats.lowStockProducts.length > 0 ? (
+                <>
+                  <div className="space-y-2 max-h-64 overflow-y-auto">
+                    {stats.lowStockProducts.slice(0, 8).map((product: any) => (
+                      <div 
+                        key={product.id}
+                        className="flex items-center justify-between p-2 rounded-lg bg-red-50/50 border border-red-200/50 hover:bg-red-50 cursor-pointer transition-colors"
+                        onClick={() => setLocation(`/products?filter=low-stock`)}
+                      >
+                        <div className="flex items-start gap-2 flex-1 min-w-0">
+                          <Badge variant="destructive" className="text-xs min-w-fit">
+                            {product.currentStock}/{product.minStock}
+                          </Badge>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-medium text-gray-900 truncate">
+                              {product.name}
+                            </p>
+                            <p className="text-xs text-gray-500 truncate">
+                              {product.category}
+                            </p>
+                          </div>
+                        </div>
+                        <ArrowRight className="h-3 w-3 text-gray-400 flex-shrink-0" />
+                      </div>
+                    ))}
+                  </div>
+                  {stats.lowStockProducts.length > 8 && (
+                    <div className="mt-2 pt-2 border-t border-gray-200">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full text-xs"
+                        onClick={() => setLocation('/products?filter=low-stock')}
+                      >
+                        View All {stats.lowStockProducts.length} Low Stock Items
+                      </Button>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="text-center py-6">
+                  <CheckCircle2 className="h-12 w-12 mx-auto text-green-500 mb-3" />
+                  <p className="text-sm font-medium text-green-900">All stock levels are healthy</p>
+                  <p className="text-xs text-green-700">No items need restocking.</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
       )}
 
       {/* Store Keeper specific sections */}
