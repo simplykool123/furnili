@@ -2979,7 +2979,15 @@ export default function ProjectDetail() {
                         </div>
                         <div className="text-right">
                           <div className="text-sm font-medium text-gray-900 mb-1">
-                            ₹{canViewFinances ? (order.totalValue || 0).toLocaleString() : "0"}
+                            {(() => {
+                              console.log('Rendering order amount:', { 
+                                orderId: order.id, 
+                                totalValue: order.totalValue, 
+                                canViewFinances, 
+                                result: canViewFinances ? (order.totalValue || 0).toLocaleString() : "0" 
+                              });
+                              return `₹${canViewFinances ? (order.totalValue || 0).toLocaleString() : "0"}`;
+                            })()}
                           </div>
                           <Badge
                             variant={
