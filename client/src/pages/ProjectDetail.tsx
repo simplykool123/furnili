@@ -382,7 +382,7 @@ function ProjectFinancials({ projectId }: { projectId: string }) {
                     </div>
                     <div className="text-right">
                       <p className="text-sm font-bold text-green-600">
-                        ₹{(order.totalAmount || 0).toLocaleString()}
+                        ₹{(order.totalValue || 0).toLocaleString()}
                       </p>
                       <Badge
                         variant={
