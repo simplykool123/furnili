@@ -2959,10 +2959,8 @@ export default function ProjectDetail() {
               </div>
             ) : projectOrders.length > 0 ? (
               <div className="space-y-4">
-                {projectOrders.map((order: any) => {
-                  console.log('Order data:', order);
-                  return (
-                    <Card key={order.id} className="bg-white">
+                {projectOrders.map((order: any) => (
+                  <Card key={order.id} className="bg-white">
                     <CardContent className="p-4">
                       <div className="flex justify-between items-start mb-3">
                         <div>
@@ -2975,10 +2973,7 @@ export default function ProjectDetail() {
                         </div>
                         <div className="text-right">
                           <div className="text-sm font-medium text-gray-900 mb-1">
-                            {canViewFinances 
-                              ? `₹${(order.totalValue || order.total_value || 0).toLocaleString()}`
-                              : "₹0"
-                            }
+                            ₹{canViewFinances ? (order.totalValue || 0).toLocaleString() : "0"}
                           </div>
                           <Badge
                             variant={
@@ -3026,9 +3021,8 @@ export default function ProjectDetail() {
                         </div>
                       )}
                     </CardContent>
-                    </Card>
-                  );
-                })}
+                  </Card>
+                ))}
               </div>
             ) : (
               <div className="text-center py-12">
