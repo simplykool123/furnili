@@ -185,10 +185,8 @@ function ProjectFinancials({ projectId }: { projectId: string }) {
     materialOrders?.reduce((sum: number, order: any) => {
       // Only include issued/completed orders, exclude cancelled/rejected orders
       if (order.status === 'cancelled' || order.status === 'rejected') {
-        console.log(`Excluding ${order.status} order ${order.orderNumber}: ₹${order.totalValue || 0}`);
         return sum;
       }
-      console.log(`Including ${order.status} order ${order.orderNumber}: ₹${order.totalValue || 0}`);
       return sum + (order.totalValue || 0);
     }, 0) || 0;
 
