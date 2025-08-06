@@ -375,6 +375,7 @@ export class MemStorage {
     const newAttendance: Attendance = {
       id,
       ...attendance,
+      status: attendance.status || "present",
       createdAt: now,
       updatedAt: now,
     };
@@ -559,7 +560,7 @@ export class MemStorage {
       })
     );
     
-    return expensesWithUsers.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+    return expensesWithUsers.sort((a, b) => (b.createdAt?.getTime() || 0) - (a.createdAt?.getTime() || 0));
   }
 
   async createPettyCashExpense(expense: InsertPettyCashExpense): Promise<PettyCashExpense> {
@@ -692,7 +693,7 @@ export class MemStorage {
       allTasks = allTasks.filter(t => t.assignedBy === filters.assignedBy);
     }
     
-    return allTasks.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+    return allTasks.sort((a, b) => (b.createdAt?.getTime() || 0) - (a.createdAt?.getTime() || 0));
   }
 
   async createTask(task: InsertTask): Promise<Task> {
@@ -700,6 +701,7 @@ export class MemStorage {
     const newTask: Task = {
       id,
       ...task,
+      status: task.status || "pending",
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -821,7 +823,7 @@ export class MemStorage {
       return result.rows;
     } catch (error) {
       console.error("Error in getAllProjects:", error);
-      throw new Error(`Database query failed: ${error.message}`);
+      throw new Error(`Database query failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -1120,7 +1122,7 @@ export class MemStorage {
     
     return allComparisons
       .filter(p => p.isActive)
-      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+      .sort((a, b) => (b.createdAt?.getTime() || 0) - (a.createdAt?.getTime() || 0));
   }
 
   async createPriceComparison(comparison: InsertPriceComparison): Promise<PriceComparison> {
@@ -3504,7 +3506,7 @@ class DatabaseStorage implements IStorage {
       return result.rows;
     } catch (error) {
       console.error("Error in DatabaseStorage getAllProjects:", error);
-      throw new Error(`Database query failed: ${error.message}`);
+      throw new Error(`Database query failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
