@@ -314,10 +314,10 @@ export default function Dashboard() {
       {dailyQuote && (
         <FurniliCard variant="gradient" className="border-l-4 border-l-primary">
           <div className="flex items-center space-x-4">
-            <div className="furnili-gradient p-3 rounded-lg flex-shrink-0">
+            <div className="furnili-gradient p-3 rounded-lg flex-shrink-0 self-center">
               <Quote className="h-6 w-6 text-white" />
             </div>
-            <div className="flex-1">
+            <div className="flex-1 flex flex-col justify-center">
               <blockquote className="text-base font-medium text-foreground leading-relaxed">
                 "{dailyQuote.text}"
               </blockquote>
