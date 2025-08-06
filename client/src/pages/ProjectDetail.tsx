@@ -463,7 +463,7 @@ function ProjectFinancials({ projectId }: { projectId: string }) {
                         : "text-red-600"
                     }`}
                   >
-                    {selectedExpense.status === "income" ? "+" : "-"}₹
+                    {selectedExpense.status === "income" ? "+" : ""}₹
                     {selectedExpense.amount.toLocaleString()}
                   </div>
                 </div>
