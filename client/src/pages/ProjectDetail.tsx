@@ -140,6 +140,7 @@ function ProjectFinancials({ projectId }: { projectId: string }) {
   const [dateFilter, setDateFilter] = useState("all");
   const [showAddExpense, setShowAddExpense] = useState(false);
   const [selectedExpense, setSelectedExpense] = useState<any>(null);
+  const [selectedOrder, setSelectedOrder] = useState<any>(null);
 
   // Fetch project petty cash expenses
   const { data: projectExpenses, isLoading: expensesLoading } = useQuery({
@@ -318,7 +319,7 @@ function ProjectFinancials({ projectId }: { projectId: string }) {
                         </p>
                       </div>
                       <p className="text-xs font-semibold text-red-600 ml-2">
-                        -₹{expense.amount.toLocaleString()}
+                        ₹{expense.amount.toLocaleString()}
                       </p>
                     </div>
                   ))}
@@ -367,32 +368,21 @@ function ProjectFinancials({ projectId }: { projectId: string }) {
                 {materialOrders.slice(0, 5).map((order: any) => (
                   <div
                     key={order.id}
-                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                    className="flex items-center justify-between py-2 px-2 rounded hover:bg-gray-50 cursor-pointer transition-colors"
+                    onClick={() => setSelectedOrder(order)}
                   >
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-gray-900">
-                        Request #{order.id}
-                      </p>
-                      <p className="text-xs text-gray-600">
-                        {order.items?.length || 0} items
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        {new Date(order.createdAt).toLocaleDateString("en-GB")}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs text-gray-900 truncate">
+                        Request #{order.id} - {order.items?.length || 0} items - {new Date(order.createdAt).toLocaleDateString("en-GB")}
                       </p>
                     </div>
-                    <div className="text-right">
-                      <p className="text-sm font-bold text-green-600">
-                        ₹{(order.totalValue || 0).toLocaleString()}
-                      </p>
-                      <Badge
-                        variant={
-                          order.status === "completed" ? "default" : "secondary"
-                        }
-                        className="text-xs"
-                      >
-                        {order.status}
-                      </Badge>
-                    </div>
+                    <p className={`text-xs font-semibold ml-2 ${
+                      order.status === 'cancelled' || order.status === 'rejected' 
+                        ? 'text-red-600' 
+                        : 'text-green-600'
+                    }`}>
+                      ₹{(order.totalValue || 0).toLocaleString()}
+                    </p>
                   </div>
                 ))}
                 {materialOrders.length > 5 && (
@@ -540,6 +530,75 @@ function ProjectFinancials({ projectId }: { projectId: string }) {
                         );
                       }}
                     />
+                  </div>
+                </div>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Order Detail Modal */}
+      {selectedOrder && (
+        <Dialog
+          open={!!selectedOrder}
+          onOpenChange={() => setSelectedOrder(null)}
+        >
+          <DialogContent className="sm:max-w-[600px]">
+            <DialogHeader>
+              <DialogTitle>Material Order Details - Request #{selectedOrder.id}</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              {/* Order Summary */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <div className="text-sm font-medium text-gray-600">Status</div>
+                  <Badge 
+                    variant={selectedOrder.status === 'cancelled' ? 'destructive' : 'default'}
+                    className={selectedOrder.status === 'cancelled' ? 'bg-red-100 text-red-800' : ''}
+                  >
+                    {selectedOrder.status}
+                  </Badge>
+                </div>
+                <div>
+                  <div className="text-sm font-medium text-gray-600">Total Value</div>
+                  <div className={`text-sm font-bold ${
+                    selectedOrder.status === 'cancelled' ? 'text-red-600' : 'text-green-600'
+                  }`}>
+                    ₹{(selectedOrder.totalValue || 0).toLocaleString()}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-sm font-medium text-gray-600">Created Date</div>
+                  <div className="text-sm">
+                    {new Date(selectedOrder.createdAt).toLocaleDateString("en-GB")}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-sm font-medium text-gray-600">Items Count</div>
+                  <div className="text-sm">{selectedOrder.items?.length || 0} items</div>
+                </div>
+              </div>
+
+              {/* Order Items */}
+              {selectedOrder.items && selectedOrder.items.length > 0 && (
+                <div>
+                  <h4 className="text-sm font-medium text-gray-900 mb-3">Ordered Items</h4>
+                  <div className="space-y-2 max-h-60 overflow-y-auto">
+                    {selectedOrder.items.map((item: any, index: number) => (
+                      <div key={index} className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                        <div className="flex-1">
+                          <p className="text-sm font-medium">{item.productName || 'Unknown Product'}</p>
+                          <p className="text-xs text-gray-600">
+                            Qty: {item.quantity} {item.unit || ''} 
+                            {item.rate && ` • Rate: ₹${item.rate}`}
+                          </p>
+                        </div>
+                        <div className="text-sm font-medium">
+                          ₹{(item.amount || 0).toLocaleString()}
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}
