@@ -549,6 +549,14 @@ function ProjectFinancials({ projectId }: { projectId: string }) {
               <DialogTitle>Request Details - REQ-{selectedOrder.id.toString().padStart(4, '0')}</DialogTitle>
             </DialogHeader>
             
+            {/* Temporary debug - show data structure */}
+            {process.env.NODE_ENV === 'development' && (
+              <details className="text-xs bg-gray-100 p-2 mb-4">
+                <summary>Debug: API Data Structure</summary>
+                <pre className="overflow-auto max-h-40 mt-2">{JSON.stringify(selectedOrder, null, 2)}</pre>
+              </details>
+            )}
+            
             <div className="space-y-6">
               {/* Request Information & Status Information */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -563,7 +571,7 @@ function ProjectFinancials({ projectId }: { projectId: string }) {
                       <span className="font-medium">Order Number:</span>
                     </div>
                     <div>
-                      <span className="font-medium">Requested By:</span> {selectedOrder.requestedBy || 'N/A'}
+                      <span className="font-medium">Requested By:</span> {selectedOrder.requestedByName || selectedOrder.requestedBy || 'N/A'}
                     </div>
                     <div>
                       <span className="font-medium">Date:</span> {new Date(selectedOrder.createdAt).toLocaleDateString("en-GB")}
@@ -625,13 +633,13 @@ function ProjectFinancials({ projectId }: { projectId: string }) {
                           {item.product?.name || item.productName || item.description || 'Unknown Product'}
                         </div>
                         <div>
-                          {item.quantity || 0} {item.unit || 'pieces'}
+                          {item.requestedQuantity || item.quantity || 0} {item.unit || 'pieces'}
                         </div>
                         <div>
-                          ₹{(item.rate || 0).toLocaleString()}
+                          ₹{(item.unitPrice || item.rate || item.price || 0).toLocaleString()}
                         </div>
                         <div className="font-medium">
-                          ₹{((item.amount || item.total || (item.quantity * item.rate)) || 0).toLocaleString()}
+                          ₹{(item.totalAmount || item.amount || item.total || ((item.requestedQuantity || item.quantity || 0) * (item.unitPrice || item.rate || item.price || 0)) || 0).toLocaleString()}
                         </div>
                         <div>
                           <Badge 
