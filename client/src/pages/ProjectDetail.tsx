@@ -538,74 +538,126 @@ function ProjectFinancials({ projectId }: { projectId: string }) {
         </Dialog>
       )}
 
-      {/* Order Detail Modal */}
+      {/* Order Detail Modal - Matching Material Request View Format */}
       {selectedOrder && (
         <Dialog
           open={!!selectedOrder}
           onOpenChange={() => setSelectedOrder(null)}
         >
-          <DialogContent className="sm:max-w-[600px]">
+          <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Material Order Details - Request #{selectedOrder.id}</DialogTitle>
+              <DialogTitle>Request Details - REQ-{selectedOrder.id.toString().padStart(4, '0')}</DialogTitle>
             </DialogHeader>
-            {/* Debug: Show actual order data structure */}
-            {process.env.NODE_ENV === 'development' && (
-              <div className="text-xs bg-gray-100 p-2 overflow-auto max-h-20">
-                <pre>{JSON.stringify(selectedOrder, null, 2)}</pre>
-              </div>
-            )}
-            <div className="space-y-4">
-              {/* Order Summary */}
-              <div className="grid grid-cols-2 gap-4">
+            
+            <div className="space-y-6">
+              {/* Request Information & Status Information */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Request Information */}
                 <div>
-                  <div className="text-sm font-medium text-gray-600">Status</div>
-                  <Badge 
-                    variant={selectedOrder.status === 'cancelled' ? 'destructive' : 'default'}
-                    className={selectedOrder.status === 'cancelled' ? 'bg-red-100 text-red-800' : ''}
-                  >
-                    {selectedOrder.status}
-                  </Badge>
-                </div>
-                <div>
-                  <div className="text-sm font-medium text-gray-600">Total Value</div>
-                  <div className={`text-sm font-bold ${
-                    selectedOrder.status === 'cancelled' ? 'text-red-600' : 'text-green-600'
-                  }`}>
-                    ₹{(selectedOrder.totalValue || 0).toLocaleString()}
+                  <h3 className="text-lg font-semibold mb-3">Request Information</h3>
+                  <div className="space-y-2 text-sm">
+                    <div>
+                      <span className="font-medium">Client:</span> {selectedOrder.clientName || 'N/A'}
+                    </div>
+                    <div>
+                      <span className="font-medium">Order Number:</span>
+                    </div>
+                    <div>
+                      <span className="font-medium">Requested By:</span> {selectedOrder.requestedBy || 'N/A'}
+                    </div>
+                    <div>
+                      <span className="font-medium">Date:</span> {new Date(selectedOrder.createdAt).toLocaleDateString("en-GB")}
+                    </div>
                   </div>
                 </div>
+
+                {/* Status Information */}
                 <div>
-                  <div className="text-sm font-medium text-gray-600">Created Date</div>
-                  <div className="text-sm">
-                    {new Date(selectedOrder.createdAt).toLocaleDateString("en-GB")}
+                  <h3 className="text-lg font-semibold mb-3">Status Information</h3>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">Status:</span>
+                      <Badge 
+                        variant={selectedOrder.status === 'cancelled' ? 'destructive' : 'default'}
+                        className={`${
+                          selectedOrder.status === 'issued' ? 'bg-blue-100 text-blue-800' :
+                          selectedOrder.status === 'cancelled' ? 'bg-red-100 text-red-800' :
+                          'bg-gray-100 text-gray-800'
+                        }`}
+                      >
+                        {selectedOrder.status}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">Priority:</span>
+                      <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                        {selectedOrder.priority || 'Medium'}
+                      </Badge>
+                    </div>
+                    <div>
+                      <span className="font-medium">Total Value:</span> ₹{(selectedOrder.totalValue || 0).toLocaleString()}
+                    </div>
                   </div>
-                </div>
-                <div>
-                  <div className="text-sm font-medium text-gray-600">Items Count</div>
-                  <div className="text-sm">{selectedOrder.items?.length || 0} items</div>
                 </div>
               </div>
 
-              {/* Order Items */}
+              {/* Requested Items */}
               {selectedOrder.items && selectedOrder.items.length > 0 && (
                 <div>
-                  <h4 className="text-sm font-medium text-gray-900 mb-3">Ordered Items</h4>
-                  <div className="space-y-2 max-h-60 overflow-y-auto">
+                  <h3 className="text-lg font-semibold mb-4">Requested Items</h3>
+                  
+                  {/* Table Header */}
+                  <div className="bg-gray-50 rounded-t-lg border">
+                    <div className="grid grid-cols-5 gap-4 p-3 text-sm font-medium text-gray-600">
+                      <div>Product</div>
+                      <div>Requested Qty</div>
+                      <div>Unit Price</div>
+                      <div>Total</div>
+                      <div>Availability</div>
+                    </div>
+                  </div>
+
+                  {/* Table Body */}
+                  <div className="border-x border-b rounded-b-lg">
                     {selectedOrder.items.map((item: any, index: number) => (
-                      <div key={index} className="flex justify-between items-center p-2 bg-gray-50 rounded">
-                        <div className="flex-1">
-                          <p className="text-sm font-medium">{item.product?.name || item.productName || item.description || 'Unknown Product'}</p>
-                          <p className="text-xs text-gray-600">
-                            Qty: {item.quantity || 0} {item.unit || ''} 
-                            {item.rate && ` • Rate: ₹${item.rate.toLocaleString()}`}
-                          </p>
+                      <div key={index} className="grid grid-cols-5 gap-4 p-3 text-sm border-b last:border-b-0">
+                        <div className="font-medium">
+                          {item.product?.name || item.productName || item.description || 'Unknown Product'}
                         </div>
-                        <div className="text-sm font-medium">
+                        <div>
+                          {item.quantity || 0} {item.unit || 'pieces'}
+                        </div>
+                        <div>
+                          ₹{(item.rate || 0).toLocaleString()}
+                        </div>
+                        <div className="font-medium">
                           ₹{((item.amount || item.total || (item.quantity * item.rate)) || 0).toLocaleString()}
+                        </div>
+                        <div>
+                          <Badge 
+                            variant="secondary" 
+                            className="bg-green-100 text-green-800"
+                          >
+                            Available
+                          </Badge>
                         </div>
                       </div>
                     ))}
                   </div>
+                </div>
+              )}
+
+              {/* Complete Request Section (only show if status allows) */}
+              {selectedOrder.status !== 'completed' && selectedOrder.status !== 'cancelled' && (
+                <div>
+                  <h3 className="text-lg font-semibold mb-3">Complete Request</h3>
+                  <Button 
+                    className="bg-gray-600 hover:bg-gray-700" 
+                    disabled
+                  >
+                    <CheckCircle className="h-4 w-4 mr-2" />
+                    Mark as Completed
+                  </Button>
                 </div>
               )}
             </div>
