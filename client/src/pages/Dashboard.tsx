@@ -537,7 +537,7 @@ export default function Dashboard() {
         </>
       ) : (
         /* ADMIN/MANAGER DASHBOARD - Keep existing layout */
-        <div className="grid gap-3 sm:gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-6">
+        <div className="grid gap-3 sm:gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
           <Card className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-blue-500 bg-gradient-to-br from-card to-blue-50/20 cursor-pointer" onClick={() => setLocation('/products')}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
               <CardTitle className="text-xs font-semibold text-card-foreground">Products</CardTitle>
@@ -549,40 +549,44 @@ export default function Dashboard() {
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-red-500 bg-gradient-to-br from-card to-red-50/20 cursor-pointer" onClick={() => setLocation('/products?filter=low-stock')}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
-              <CardTitle className="text-xs font-semibold text-card-foreground">Low Stock</CardTitle>
-              <AlertTriangle className="h-3 w-3 text-red-600" />
+          <Card className="hover:shadow-lg hover:scale-[1.02] transition-all duration-300 border-l-4 border-l-red-500 bg-gradient-to-br from-red-50 to-red-100 border-red-200 cursor-pointer group" onClick={() => setLocation('/products?filter=low-stock')}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-bold text-red-900 group-hover:text-red-700">Low Stock Alert</CardTitle>
+              <div className="p-2 bg-red-500 rounded-full group-hover:bg-red-600 transition-colors">
+                <AlertTriangle className="h-4 w-4 text-white animate-pulse" />
+              </div>
             </CardHeader>
-            <CardContent className="pb-2 pt-1">
-              <div className="text-xl font-bold text-red-600">
+            <CardContent className="pb-3 pt-1">
+              <div className="text-2xl font-bold text-red-600 mb-1">
                 {Array.isArray(stats?.lowStockProducts) ? stats.lowStockProducts.length : 0}
               </div>
-              <p className="text-xs text-muted-foreground mt-0.5">Need restocking</p>
+              <p className="text-xs font-medium text-red-700">Items need restocking</p>
+              {Array.isArray(stats?.lowStockProducts) && stats.lowStockProducts.length > 0 && (
+                <div className="mt-2 text-xs text-red-600 bg-red-200/50 px-2 py-1 rounded">
+                  Action required!
+                </div>
+              )}
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-orange-500 bg-gradient-to-br from-card to-orange-50/20 cursor-pointer" onClick={() => setLocation('/attendance')}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
-              <CardTitle className="text-xs font-semibold text-card-foreground">Attendance</CardTitle>
-              <Clock className="h-3 w-3 text-orange-600" />
+          <Card className="hover:shadow-lg hover:scale-[1.02] transition-all duration-300 border-l-4 border-l-orange-500 bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200 cursor-pointer group" onClick={() => setLocation('/attendance')}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-bold text-orange-900 group-hover:text-orange-700">Today's Attendance</CardTitle>
+              <div className="p-2 bg-orange-500 rounded-full group-hover:bg-orange-600 transition-colors">
+                <Clock className="h-4 w-4 text-white" />
+              </div>
             </CardHeader>
-            <CardContent className="pb-2 pt-1">
-              <div className="text-xl font-bold text-foreground">{stats?.todayAttendance || 0}</div>
-              <p className="text-xs text-muted-foreground mt-0.5">Staff today</p>
+            <CardContent className="pb-3 pt-1">
+              <div className="text-2xl font-bold text-orange-600 mb-1">{stats?.todayAttendance || 0}</div>
+              <p className="text-xs font-medium text-orange-700">Staff present today</p>
+              <div className="mt-2 flex items-center space-x-1">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                <span className="text-xs text-orange-600">Live tracking</span>
+              </div>
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-purple-500 bg-gradient-to-br from-card to-purple-50/20 cursor-pointer" onClick={() => setLocation('/attendance')}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
-              <CardTitle className="text-xs font-semibold text-card-foreground">Staff & Payroll</CardTitle>
-              <CheckCircle className="h-3 w-3 text-purple-600" />
-            </CardHeader>
-            <CardContent className="pb-2 pt-1">
-              <div className="text-xl font-bold text-foreground">{stats?.activeTasks || 0}</div>
-              <p className="text-xs text-muted-foreground mt-0.5">Manage staff</p>
-            </CardContent>
-          </Card>
+
 
           <Card className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-indigo-500 bg-gradient-to-br from-card to-indigo-50/20 cursor-pointer" onClick={() => setLocation('/requests')}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
@@ -595,16 +599,21 @@ export default function Dashboard() {
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-yellow-500 bg-gradient-to-br from-card to-yellow-50/20 cursor-pointer" onClick={() => setLocation('/petty-cash')}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
-              <CardTitle className="text-xs font-semibold text-card-foreground">Expenses</CardTitle>
-              <DollarSign className="h-3 w-3 text-yellow-600" />
+          <Card className="hover:shadow-lg hover:scale-[1.02] transition-all duration-300 border-l-4 border-l-yellow-500 bg-gradient-to-br from-yellow-50 to-yellow-100 border-yellow-200 cursor-pointer group" onClick={() => setLocation('/petty-cash')}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-bold text-yellow-900 group-hover:text-yellow-700">Monthly Expenses</CardTitle>
+              <div className="p-2 bg-yellow-500 rounded-full group-hover:bg-yellow-600 transition-colors">
+                <DollarSign className="h-4 w-4 text-white" />
+              </div>
             </CardHeader>
-            <CardContent className="pb-2 pt-1">
-              <div className="text-xl font-bold text-foreground">
+            <CardContent className="pb-3 pt-1">
+              <div className="text-2xl font-bold text-yellow-600 mb-1">
                 ₹{stats?.monthlyExpenses?.toLocaleString() || 0}
               </div>
-              <p className="text-xs text-muted-foreground mt-0.5">This month</p>
+              <p className="text-xs font-medium text-yellow-700">Total this month</p>
+              <div className="mt-2 text-xs text-yellow-600 bg-yellow-200/50 px-2 py-1 rounded">
+                Track & manage
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -757,59 +766,88 @@ export default function Dashboard() {
             </CardContent>
           </Card>
 
-          {/* Low Stock Products Section */}
-          <Card className="hover:shadow-md transition-all duration-200">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base font-semibold text-foreground flex items-center gap-2">
-                <AlertTriangle className="h-4 w-4 text-red-500" />
-                Low Stock Products
+          {/* Low Stock Products Section - Enhanced */}
+          <Card className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-red-500 bg-gradient-to-br from-red-50/20 to-red-50/50">
+            <CardHeader className="pb-3 bg-gradient-to-r from-red-50 to-red-100/50">
+              <CardTitle className="text-lg font-bold text-red-900 flex items-center gap-3">
+                <div className="p-2 bg-red-500 rounded-full animate-pulse">
+                  <AlertTriangle className="h-5 w-5 text-white" />
+                </div>
+                Critical Stock Alerts
+                <Badge variant="destructive" className="ml-auto">
+                  {stats?.lowStockProducts?.length || 0}
+                </Badge>
               </CardTitle>
+              <CardDescription className="text-red-700 font-medium">
+                Products requiring immediate attention
+              </CardDescription>
             </CardHeader>
             <CardContent className="pt-0">
               {stats?.lowStockProducts && stats.lowStockProducts.length > 0 ? (
                 <>
-                  <div className="space-y-2 max-h-64 overflow-y-auto">
-                    {stats.lowStockProducts.slice(0, 8).map((product: any) => (
+                  <div className="space-y-3 max-h-80 overflow-y-auto">
+                    {stats.lowStockProducts.slice(0, 6).map((product: any) => (
                       <div 
                         key={product.id}
-                        className="flex items-center justify-between p-2 rounded-lg bg-red-50/50 border border-red-200/50 hover:bg-red-50 cursor-pointer transition-colors"
+                        className="group flex items-center justify-between p-4 rounded-xl bg-white border-2 border-red-100 hover:border-red-300 hover:shadow-md cursor-pointer transition-all duration-300 hover:scale-[1.02]"
                         onClick={() => setLocation(`/products?filter=low-stock`)}
                       >
-                        <div className="flex items-start gap-2 flex-1 min-w-0">
-                          <Badge variant="destructive" className="text-xs min-w-fit">
-                            {product.currentStock}/{product.minStock}
-                          </Badge>
+                        <div className="flex items-center gap-4 flex-1 min-w-0">
+                          <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center group-hover:bg-red-200 transition-colors">
+                            <Package className="h-6 w-6 text-red-600" />
+                          </div>
                           <div className="min-w-0 flex-1">
-                            <p className="text-sm font-medium text-gray-900 truncate">
+                            <p className="text-sm font-bold text-gray-900 truncate">
                               {product.name}
                             </p>
-                            <p className="text-xs text-gray-500 truncate">
+                            <p className="text-xs text-gray-600 truncate mb-1">
                               {product.category}
                             </p>
+                            <div className="flex items-center gap-2">
+                              <div className="text-xs font-medium text-red-700 bg-red-100 px-2 py-1 rounded-full">
+                                Stock: {product.currentStock}
+                              </div>
+                              <div className="text-xs text-gray-500">
+                                Min: {product.minStock}
+                              </div>
+                            </div>
                           </div>
                         </div>
-                        <ArrowRight className="h-3 w-3 text-gray-400 flex-shrink-0" />
+                        <div className="flex items-center gap-3">
+                          <div className="text-right">
+                            <Badge variant="destructive" className="mb-1">
+                              Critical
+                            </Badge>
+                            <div className="text-xs text-red-600 font-medium">
+                              {Math.max(0, product.minStock - product.currentStock)} needed
+                            </div>
+                          </div>
+                          <ArrowRight className="h-4 w-4 text-red-400 group-hover:text-red-600 flex-shrink-0" />
+                        </div>
                       </div>
                     ))}
                   </div>
-                  {stats.lowStockProducts.length > 8 && (
-                    <div className="mt-2 pt-2 border-t border-gray-200">
+                  {stats.lowStockProducts.length > 6 && (
+                    <div className="mt-4 pt-3 border-t border-red-200">
                       <Button
-                        variant="outline"
+                        variant="destructive"
                         size="sm"
-                        className="w-full text-xs"
+                        className="w-full font-medium hover:bg-red-600"
                         onClick={() => setLocation('/products?filter=low-stock')}
                       >
-                        View All {stats.lowStockProducts.length} Low Stock Items
+                        View All {stats.lowStockProducts.length} Critical Items
+                        <ArrowRight className="h-4 w-4 ml-2" />
                       </Button>
                     </div>
                   )}
                 </>
               ) : (
-                <div className="text-center py-6">
-                  <CheckCircle2 className="h-12 w-12 mx-auto text-green-500 mb-3" />
-                  <p className="text-sm font-medium text-green-900">All stock levels are healthy</p>
-                  <p className="text-xs text-green-700">No items need restocking.</p>
+                <div className="text-center py-8">
+                  <div className="w-16 h-16 mx-auto bg-green-100 rounded-full flex items-center justify-center mb-4">
+                    <CheckCircle2 className="h-8 w-8 text-green-600" />
+                  </div>
+                  <p className="text-base font-bold text-green-900 mb-1">Excellent Stock Levels!</p>
+                  <p className="text-sm text-green-700">All products are properly stocked</p>
                 </div>
               )}
             </CardContent>
