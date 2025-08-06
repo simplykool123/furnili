@@ -548,6 +548,12 @@ function ProjectFinancials({ projectId }: { projectId: string }) {
             <DialogHeader>
               <DialogTitle>Material Order Details - Request #{selectedOrder.id}</DialogTitle>
             </DialogHeader>
+            {/* Debug: Show actual order data structure */}
+            {process.env.NODE_ENV === 'development' && (
+              <div className="text-xs bg-gray-100 p-2 overflow-auto max-h-20">
+                <pre>{JSON.stringify(selectedOrder, null, 2)}</pre>
+              </div>
+            )}
             <div className="space-y-4">
               {/* Order Summary */}
               <div className="grid grid-cols-2 gap-4">
@@ -588,14 +594,14 @@ function ProjectFinancials({ projectId }: { projectId: string }) {
                     {selectedOrder.items.map((item: any, index: number) => (
                       <div key={index} className="flex justify-between items-center p-2 bg-gray-50 rounded">
                         <div className="flex-1">
-                          <p className="text-sm font-medium">{item.productName || 'Unknown Product'}</p>
+                          <p className="text-sm font-medium">{item.product?.name || item.productName || item.description || 'Unknown Product'}</p>
                           <p className="text-xs text-gray-600">
-                            Qty: {item.quantity} {item.unit || ''} 
-                            {item.rate && ` • Rate: ₹${item.rate}`}
+                            Qty: {item.quantity || 0} {item.unit || ''} 
+                            {item.rate && ` • Rate: ₹${item.rate.toLocaleString()}`}
                           </p>
                         </div>
                         <div className="text-sm font-medium">
-                          ₹{(item.amount || 0).toLocaleString()}
+                          ₹{((item.amount || item.total || (item.quantity * item.rate)) || 0).toLocaleString()}
                         </div>
                       </div>
                     ))}
