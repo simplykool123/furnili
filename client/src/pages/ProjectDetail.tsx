@@ -2928,19 +2928,21 @@ export default function ProjectDetail() {
               </Link>
             </div>
 
-            <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mb-4">
-              <div className="flex">
-                <div className="flex-shrink-0">
-                  <ExternalLink className="h-5 w-5 text-blue-400" />
-                </div>
-                <div className="ml-3">
-                  <p className="text-sm text-blue-700">
-                    <strong>Note:</strong> Individual order costs are not displayed in this tab for security. 
-                    To view Material Orders total (₹23,100), click the <strong>💰 Finances</strong> tab.
-                  </p>
+            {!canViewFinances && (
+              <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mb-4">
+                <div className="flex">
+                  <div className="flex-shrink-0">
+                    <ExternalLink className="h-5 w-5 text-blue-400" />
+                  </div>
+                  <div className="ml-3">
+                    <p className="text-sm text-blue-700">
+                      <strong>Note:</strong> Individual order costs are not displayed in this tab for security. 
+                      To view Material Orders total, click the <strong>💰 Finances</strong> tab.
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
             {ordersLoading ? (
               <div className="space-y-4">
@@ -2970,11 +2972,12 @@ export default function ProjectDetail() {
                           </p>
                         </div>
                         <div className="text-right">
-                          {canViewFinances && (
-                            <div className="text-sm font-medium text-gray-900 mb-1">
-                              ₹{order.totalValue?.toLocaleString() || "0"}
-                            </div>
-                          )}
+                          <div className="text-sm font-medium text-gray-900 mb-1">
+                            {canViewFinances 
+                              ? `₹${order.totalValue?.toLocaleString() || "0"}`
+                              : "₹0"
+                            }
+                          </div>
                           <Badge
                             variant={
                               order.status === "completed"
