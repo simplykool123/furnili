@@ -647,19 +647,7 @@ function ProjectFinancials({ projectId }: { projectId: string }) {
                 </div>
               )}
 
-              {/* Complete Request Section (only show if status allows) */}
-              {selectedOrder.status !== 'completed' && selectedOrder.status !== 'cancelled' && (
-                <div>
-                  <h3 className="text-lg font-semibold mb-3">Complete Request</h3>
-                  <Button 
-                    className="bg-gray-600 hover:bg-gray-700" 
-                    disabled
-                  >
-                    <CheckCircle className="h-4 w-4 mr-2" />
-                    Mark as Completed
-                  </Button>
-                </div>
-              )}
+
             </div>
           </DialogContent>
         </Dialog>
