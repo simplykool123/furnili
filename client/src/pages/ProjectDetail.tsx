@@ -2928,6 +2928,20 @@ export default function ProjectDetail() {
               </Link>
             </div>
 
+            <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mb-4">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <ExternalLink className="h-5 w-5 text-blue-400" />
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm text-blue-700">
+                    <strong>Note:</strong> Individual order costs are not displayed in this tab for security. 
+                    To view Material Orders total (₹23,100), click the <strong>💰 Finances</strong> tab.
+                  </p>
+                </div>
+              </div>
+            </div>
+
             {ordersLoading ? (
               <div className="space-y-4">
                 {Array.from({ length: 3 }).map((_, i) => (
