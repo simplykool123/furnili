@@ -2309,6 +2309,19 @@ class DatabaseStorage implements IStorage {
     };
   }
 
+  async getLowStockProducts(): Promise<ProductWithStock[]> {
+    const allProducts = await this.getAllProducts();
+    const lowStockProducts = allProducts.filter(p => p.currentStock <= p.minStock);
+    return lowStockProducts.map(product => ({
+      id: product.id,
+      name: product.name,
+      category: product.category,
+      currentStock: product.currentStock,
+      minStock: product.minStock,
+      stockStatus: 'low-stock' as const
+    }));
+  }
+
   // Material Request operations
   async getAllMaterialRequests(): Promise<MaterialRequestWithItems[]> {
     console.log('DEBUG: DatabaseStorage.getAllMaterialRequests called');
