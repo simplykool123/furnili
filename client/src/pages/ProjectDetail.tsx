@@ -571,7 +571,7 @@ function ProjectFinancials({ projectId }: { projectId: string }) {
                       <span className="font-medium">Order Number:</span>
                     </div>
                     <div>
-                      <span className="font-medium">Requested By:</span> {selectedOrder.requestedByName || selectedOrder.requestedBy || 'N/A'}
+                      <span className="font-medium">Requested By:</span> {selectedOrder.requestedByUser?.name || selectedOrder.requestedByName || selectedOrder.requestedBy || 'N/A'}
                     </div>
                     <div>
                       <span className="font-medium">Date:</span> {new Date(selectedOrder.createdAt).toLocaleDateString("en-GB")}
@@ -616,19 +616,18 @@ function ProjectFinancials({ projectId }: { projectId: string }) {
                   
                   {/* Table Header */}
                   <div className="bg-gray-50 rounded-t-lg border">
-                    <div className="grid grid-cols-5 gap-4 p-3 text-sm font-medium text-gray-600">
+                    <div className="grid grid-cols-4 gap-4 p-3 text-sm font-medium text-gray-600">
                       <div>Product</div>
                       <div>Requested Qty</div>
                       <div>Unit Price</div>
                       <div>Total</div>
-                      <div>Availability</div>
                     </div>
                   </div>
 
                   {/* Table Body */}
                   <div className="border-x border-b rounded-b-lg">
                     {selectedOrder.items.map((item: any, index: number) => (
-                      <div key={index} className="grid grid-cols-5 gap-4 p-3 text-sm border-b last:border-b-0">
+                      <div key={index} className="grid grid-cols-4 gap-4 p-3 text-sm border-b last:border-b-0">
                         <div className="font-medium">
                           {item.product?.name || item.productName || item.description || 'Unknown Product'}
                         </div>
@@ -640,14 +639,6 @@ function ProjectFinancials({ projectId }: { projectId: string }) {
                         </div>
                         <div className="font-medium">
                           ₹{(item.totalAmount || item.amount || item.total || ((item.requestedQuantity || item.quantity || 0) * (item.unitPrice || item.rate || item.price || 0)) || 0).toLocaleString()}
-                        </div>
-                        <div>
-                          <Badge 
-                            variant="secondary" 
-                            className="bg-green-100 text-green-800"
-                          >
-                            Available
-                          </Badge>
                         </div>
                       </div>
                     ))}
