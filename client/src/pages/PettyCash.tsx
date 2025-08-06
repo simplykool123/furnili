@@ -1655,7 +1655,7 @@ export default function PettyCash() {
                   <div className={`text-sm font-bold ${
                     selectedExpenseDetails.status === 'income' ? 'text-green-600' : 'text-red-600'
                   }`}>
-                    {selectedExpenseDetails.status === 'income' ? '+' : '-'}₹{selectedExpenseDetails.amount.toLocaleString()}
+                    {selectedExpenseDetails.status === 'income' ? '+' : ''}₹{selectedExpenseDetails.amount.toLocaleString()}
                   </div>
                 </div>
               </div>
