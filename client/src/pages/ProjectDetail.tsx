@@ -357,44 +357,108 @@ function ProjectFinancials({ projectId }: { projectId: string }) {
         {/* Material Orders */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg flex items-center">
-              <BarChart3 className="h-5 w-5 mr-2 text-green-600" />
-              Material Orders
+            <CardTitle className="text-lg flex items-center justify-between">
+              <div className="flex items-center">
+                <BarChart3 className="h-5 w-5 mr-2 text-green-600" />
+                Material Orders ({materialOrders?.length || 0})
+              </div>
+              <Link href={`/requests?projectId=${projectId}`}>
+                <Button
+                  className="text-green-600 hover:bg-green-50"
+                  variant="outline"
+                  size="sm"
+                >
+                  View All Orders
+                </Button>
+              </Link>
             </CardTitle>
           </CardHeader>
           <CardContent>
             {materialOrders && materialOrders.length > 0 ? (
-              <div className="space-y-3">
-                {materialOrders.slice(0, 5).map((order: any) => (
-                  <div
-                    key={order.id}
-                    className="flex items-center justify-between py-2 px-2 rounded hover:bg-gray-50 cursor-pointer transition-colors"
-                    onClick={() => setSelectedOrder(order)}
-                  >
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs text-gray-900 truncate">
-                        Request #{order.id} - {order.items?.length || 0} items - {new Date(order.createdAt).toLocaleDateString("en-GB")}
-                      </p>
-                    </div>
-                    <p className={`text-xs font-semibold ml-2 ${
-                      order.status === 'cancelled' || order.status === 'rejected' 
-                        ? 'text-red-600' 
-                        : 'text-green-600'
-                    }`}>
-                      ₹{(order.totalValue || 0).toLocaleString()}
-                    </p>
+              <div className="overflow-hidden">
+                {/* Table Header */}
+                <div className="bg-gray-50 rounded-t-lg border border-b-0">
+                  <div className="grid grid-cols-7 gap-2 p-3 text-xs font-medium text-gray-600">
+                    <div>Request Details</div>
+                    <div>Client Info</div>
+                    <div>Items</div>
+                    <div>Status</div>
+                    <div>Priority</div>
+                    <div>Value</div>
+                    <div>Actions</div>
                   </div>
-                ))}
-                {materialOrders.length > 5 && (
-                  <Link href={`/requests?projectId=${projectId}`}>
-                    <Button
-                      variant="outline"
-                      className="w-full text-green-600 border-green-200 hover:bg-green-50"
-                    >
-                      View All Orders
-                    </Button>
-                  </Link>
-                )}
+                </div>
+                
+                {/* Table Body */}
+                <div className="border-x border-b rounded-b-lg">
+                  {materialOrders.map((order: any, index: number) => (
+                    <div key={order.id} className="grid grid-cols-7 gap-2 p-3 text-xs border-b last:border-b-0 hover:bg-gray-50 transition-colors">
+                      <div>
+                        <div className="font-medium text-gray-900">REQ-{order.id.toString().padStart(4, '0')}</div>
+                        <div className="text-gray-500">By: {order.requestedByUser?.name || 'Unknown'}</div>
+                        <div className="text-gray-500">{new Date(order.createdAt).toLocaleDateString("en-GB")}</div>
+                      </div>
+                      
+                      <div>
+                        <div className="font-medium text-gray-900">{order.clientName}</div>
+                        <div className="text-gray-500">{order.orderNumber || '-'}</div>
+                      </div>
+                      
+                      <div>
+                        <div className="font-medium text-gray-900">{order.items?.length || 0} items</div>
+                        <div className="text-gray-500">
+                          {order.items?.[0]?.product?.name || order.items?.[0]?.description || '-'}
+                          {order.items?.length > 1 && ` +${order.items.length - 1} more`}
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <Badge 
+                          variant="secondary" 
+                          className={`text-xs ${
+                            order.status === 'completed' ? 'bg-green-100 text-green-800' :
+                            order.status === 'approved' ? 'bg-blue-100 text-blue-800' :
+                            order.status === 'issued' ? 'bg-purple-100 text-purple-800' :
+                            order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                            order.status === 'cancelled' || order.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                            'bg-gray-100 text-gray-800'
+                          }`}
+                        >
+                          {order.status}
+                        </Badge>
+                      </div>
+                      
+                      <div>
+                        <Badge 
+                          variant="secondary" 
+                          className={`text-xs ${
+                            order.priority === 'high' ? 'bg-red-100 text-red-800' :
+                            order.priority === 'medium' ? 'bg-blue-100 text-blue-800' :
+                            'bg-green-100 text-green-800'
+                          }`}
+                        >
+                          {order.priority}
+                        </Badge>
+                      </div>
+                      
+                      <div className="font-semibold text-gray-900">
+                        ₹{(order.totalValue || 0).toLocaleString()}
+                      </div>
+                      
+                      <div className="flex gap-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 w-6 p-0 text-gray-500 hover:text-gray-700"
+                          onClick={() => setSelectedOrder(order)}
+                          title="View Details"
+                        >
+                          <Eye className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             ) : (
               <div className="text-center py-8">
