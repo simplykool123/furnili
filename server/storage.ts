@@ -275,15 +275,20 @@ class DatabaseStorage implements IStorage {
   }
 
   async getAllMaterialRequests(): Promise<MaterialRequestWithItems[]> {
+    console.log(`*** getAllMaterialRequests called ***`);
     const requests = await db.select().from(materialRequests).orderBy(desc(materialRequests.createdAt));
+    console.log(`*** Found ${requests.length} base requests ***`);
     
     const requestsWithItems = await Promise.all(
       requests.map(async (request) => {
+        console.log(`*** Processing request ${request.id} ***`);
         const fullRequest = await this.getMaterialRequest(request.id);
+        console.log(`*** Request ${request.id} returned with ${fullRequest?.items?.length || 0} items ***`);
         return fullRequest!;
       })
     );
 
+    console.log(`*** getAllMaterialRequests returning ${requestsWithItems.length} requests ***`);
     return requestsWithItems;
   }
 
