@@ -650,11 +650,7 @@ class DatabaseStorage implements IStorage {
 
   // Payroll methods
   async getAllPayrolls(month?: number, year?: number, userId?: number): Promise<any[]> {
-    let query = db.select()
-      .from(payroll)
-      .leftJoin(users, eq(payroll.userId, users.id));
-
-    // Build where conditions
+    // Build where conditions array
     const whereConditions = [];
     if (month !== undefined) {
       whereConditions.push(eq(payroll.month, month));
@@ -666,23 +662,18 @@ class DatabaseStorage implements IStorage {
       whereConditions.push(eq(payroll.userId, userId));
     }
 
+    // Build the query
+    let query = db.select()
+      .from(payroll)
+      .leftJoin(users, eq(payroll.userId, users.id));
+
+    // Apply combined where conditions if any exist
     if (whereConditions.length > 0) {
-      // Apply where conditions
-      let finalQuery = query;
-      for (const condition of whereConditions) {
-        finalQuery = finalQuery.where(condition) as any;
-      }
-      const results = await finalQuery;
-      
-      return results.map((row: any) => ({
-        ...row.payroll,
-        userName: row.users?.name || row.users?.username || 'Unknown User',
-        userEmail: row.users?.email || '',
-        userRole: row.users?.role || ''
-      }));
+      query = query.where(and(...whereConditions));
     }
 
     const results = await query;
+    
     return results.map((row: any) => ({
       ...row.payroll,
       userName: row.users?.name || row.users?.username || 'Unknown User',
