@@ -270,19 +270,22 @@ class DatabaseStorage implements IStorage {
   }
 
   async getAllMaterialRequests(): Promise<MaterialRequestWithItems[]> {
+    // FORCE CRITICAL DEBUG LOGS
+    console.error(`*** EMERGENCY DEBUG: getAllMaterialRequests() ENTRY POINT ***`);
+    
     try {
       const requests = await db.select().from(materialRequests).orderBy(desc(materialRequests.createdAt));
-      console.log(`DEBUG Storage: Found ${requests.length} requests in getAllMaterialRequests`);
+      console.error(`*** EMERGENCY DEBUG: Found ${requests.length} base requests ***`);
       
       const requestsWithItems = await Promise.all(
         requests.map(async (request) => {
-          console.log(`DEBUG Storage: Processing request ${request.id} for items`);
+          console.error(`*** EMERGENCY DEBUG: Processing request ${request.id} for items ***`);
           try {
             const fullRequest = await this.getMaterialRequest(request.id);
-            console.log(`DEBUG Storage: Request ${request.id} has ${fullRequest?.items?.length || 0} items`);
+            console.error(`*** EMERGENCY DEBUG: Request ${request.id} has ${fullRequest?.items?.length || 0} items after getMaterialRequest ***`);
             return fullRequest!;
           } catch (error) {
-            console.error(`DEBUG Storage: Error processing request ${request.id}:`, error);
+            console.error(`*** EMERGENCY DEBUG: Error processing request ${request.id}:`, error);
             return {
               ...request,
               items: [], 
@@ -294,10 +297,10 @@ class DatabaseStorage implements IStorage {
         })
       );
 
-      console.log(`DEBUG Storage: Returning ${requestsWithItems.length} requests with items`);
+      console.error(`*** EMERGENCY DEBUG: getAllMaterialRequests() RETURNING ${requestsWithItems.length} requests ***`);
       return requestsWithItems;
     } catch (error) {
-      console.error(`DEBUG Storage: Error in getAllMaterialRequests:`, error);
+      console.error(`*** EMERGENCY DEBUG: FATAL ERROR in getAllMaterialRequests:`, error);
       return [];
     }
   }

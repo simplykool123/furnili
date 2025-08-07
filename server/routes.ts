@@ -776,6 +776,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } else {
         // Get all requests with filters
         console.log(`DEBUG: About to call storage.getAllMaterialRequests()`);
+        
+        // FORCE EMERGENCY TEST: Also test getMaterialRequest directly 
+        console.error(`*** ROUTES EMERGENCY: Testing direct storage.getMaterialRequest(2) ***`);
+        const testRequest = await storage.getMaterialRequest(2);
+        console.error(`*** ROUTES EMERGENCY: Direct test returned request with ${testRequest?.items?.length || 0} items ***`);
+        
         requests = await storage.getAllMaterialRequests();
         console.log(`DEBUG: storage.getAllMaterialRequests() returned:`, requests?.length, 'requests');
       }
