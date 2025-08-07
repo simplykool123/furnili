@@ -581,14 +581,50 @@ class DatabaseStorage implements IStorage {
     const expenses = await db.select().from(pettyCashExpenses);
     const totalSpent = expenses.filter(e => e.amount < 0).reduce((sum, e) => sum + Math.abs(e.amount), 0);
     const totalReceived = expenses.filter(e => e.amount > 0).reduce((sum, e) => sum + e.amount, 0);
-    return { totalSpent, totalReceived, balance: totalReceived - totalSpent };
+    
+    // Calculate current month expenses
+    const currentDate = new Date();
+    const currentMonthStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+    const currentMonthEnd = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0, 23, 59, 59);
+    
+    const currentMonthExpenses = expenses
+      .filter(e => {
+        const expenseDate = new Date(e.expenseDate);
+        return expenseDate >= currentMonthStart && expenseDate <= currentMonthEnd && e.amount < 0;
+      })
+      .reduce((sum, e) => sum + Math.abs(e.amount), 0);
+    
+    return { 
+      totalExpenses: totalSpent,
+      totalIncome: totalReceived, 
+      balance: totalReceived - totalSpent,
+      currentMonthExpenses
+    };
   }
 
   async getPersonalPettyCashStats(userId: number): Promise<any> {
     const expenses = await db.select().from(pettyCashExpenses).where(eq(pettyCashExpenses.addedBy, userId));
     const totalSpent = expenses.filter(e => e.amount < 0).reduce((sum, e) => sum + Math.abs(e.amount), 0);
     const totalReceived = expenses.filter(e => e.amount > 0).reduce((sum, e) => sum + e.amount, 0);
-    return { totalSpent, totalReceived, balance: totalReceived - totalSpent };
+    
+    // Calculate current month expenses for this user
+    const currentDate = new Date();
+    const currentMonthStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+    const currentMonthEnd = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0, 23, 59, 59);
+    
+    const thisMonth = expenses
+      .filter(e => {
+        const expenseDate = new Date(e.expenseDate);
+        return expenseDate >= currentMonthStart && expenseDate <= currentMonthEnd && e.amount < 0;
+      })
+      .reduce((sum, e) => sum + Math.abs(e.amount), 0);
+    
+    return { 
+      myExpenses: totalSpent,
+      cashGivenToMe: totalReceived, 
+      myBalance: totalReceived - totalSpent,
+      thisMonth
+    };
   }
 
   async getAllStaffBalances(): Promise<any[]> {
