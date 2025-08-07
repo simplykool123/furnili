@@ -930,7 +930,7 @@ export default function ProjectDetail() {
   // Mutations for database operations
   const createLogMutation = useMutation({
     mutationFn: async (logData: any) => {
-      return apiRequest("POST", `/api/projects/${projectId}/logs`, logData);
+      return apiRequest(`/api/projects/${projectId}/logs`, { method: "POST", body: JSON.stringify(logData) });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -1064,7 +1064,7 @@ export default function ProjectDetail() {
   // Note update mutation
   const updateLogMutation = useMutation({
     mutationFn: async ({ id, ...logData }: any) => {
-      return apiRequest("PUT", `/api/projects/${projectId}/logs/${id}`, logData);
+      return apiRequest(`/api/projects/${projectId}/logs/${id}`, { method: "PUT", body: JSON.stringify(logData) });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -1100,7 +1100,7 @@ export default function ProjectDetail() {
   // Note deletion mutation
   const deleteLogMutation = useMutation({
     mutationFn: async (logId: number) => {
-      return apiRequest("DELETE", `/api/projects/${projectId}/logs/${logId}`);
+      return apiRequest(`/api/projects/${projectId}/logs/${logId}`, { method: "DELETE" });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -1119,7 +1119,7 @@ export default function ProjectDetail() {
       fileId: number;
       comment: string;
     }) => {
-      return apiRequest("PUT", `/api/files/${fileId}/comment`, { comment });
+      return apiRequest(`/api/files/${fileId}/comment`, { method: "PUT", body: JSON.stringify({ comment }) });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -1427,7 +1427,7 @@ export default function ProjectDetail() {
   // Stage update mutation
   const stageUpdateMutation = useMutation({
     mutationFn: async (newStage: string) => {
-      return apiRequest("PATCH", `/api/projects/${projectId}`, { stage: newStage });
+      return apiRequest(`/api/projects/${projectId}`, { method: "PATCH", body: JSON.stringify({ stage: newStage }) });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/projects", projectId] });
