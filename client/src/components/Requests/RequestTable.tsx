@@ -45,7 +45,7 @@ export default function RequestTable() {
   const user = authService.getUser();
 
   const { data: requests, isLoading } = useQuery({
-    queryKey: ['/api/requests', filters, Date.now()], // Force fresh data
+    queryKey: ['/api/requests', filters], // Revert to stable cache key
     queryFn: async () => {
       const params = new URLSearchParams();
       Object.entries(filters).forEach(([key, value]) => {

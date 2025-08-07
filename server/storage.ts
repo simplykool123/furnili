@@ -227,11 +227,17 @@ class DatabaseStorage implements IStorage {
 
   // Material Request operations
   async getMaterialRequest(id: number): Promise<MaterialRequestWithItems | undefined> {
+    console.log(`DEBUG Storage: getMaterialRequest called for ID ${id}`);
     const requestResult = await db.select().from(materialRequests).where(eq(materialRequests.id, id)).limit(1);
-    if (!requestResult[0]) return undefined;
+    if (!requestResult[0]) {
+      console.log(`DEBUG Storage: No request found for ID ${id}`);
+      return undefined;
+    }
 
     const request = requestResult[0];
+    console.log(`DEBUG Storage: Found request ${id}, now fetching items`);
     const items = await db.select().from(requestItems).where(eq(requestItems.requestId, id));
+    console.log(`DEBUG Storage: Found ${items.length} items for request ${id}`);
     
     const itemsWithProducts = await Promise.all(
       items.map(async (item) => {
@@ -246,6 +252,7 @@ class DatabaseStorage implements IStorage {
       })
     );
 
+    console.log(`DEBUG Storage: Returning request ${id} with ${itemsWithProducts.length} items`);
     return {
       ...request,
       requestedByUser: undefined,
@@ -256,20 +263,36 @@ class DatabaseStorage implements IStorage {
   }
 
   async getAllMaterialRequests(): Promise<MaterialRequestWithItems[]> {
-    const requests = await db.select().from(materialRequests).orderBy(desc(materialRequests.createdAt));
-    console.log(`DEBUG: Found ${requests.length} requests in getAllMaterialRequests`);
-    
-    const requestsWithItems = await Promise.all(
-      requests.map(async (request) => {
-        console.log(`DEBUG: Processing request ${request.id} for items`);
-        const fullRequest = await this.getMaterialRequest(request.id);
-        console.log(`DEBUG: Request ${request.id} has ${fullRequest?.items?.length || 0} items`);
-        return fullRequest!;
-      })
-    );
+    try {
+      const requests = await db.select().from(materialRequests).orderBy(desc(materialRequests.createdAt));
+      console.log(`DEBUG Storage: Found ${requests.length} requests in getAllMaterialRequests`);
+      
+      const requestsWithItems = await Promise.all(
+        requests.map(async (request) => {
+          console.log(`DEBUG Storage: Processing request ${request.id} for items`);
+          try {
+            const fullRequest = await this.getMaterialRequest(request.id);
+            console.log(`DEBUG Storage: Request ${request.id} has ${fullRequest?.items?.length || 0} items`);
+            return fullRequest!;
+          } catch (error) {
+            console.error(`DEBUG Storage: Error processing request ${request.id}:`, error);
+            return {
+              ...request,
+              items: [], 
+              requestedByUser: undefined,
+              approvedByUser: undefined,
+              issuedByUser: undefined,
+            };
+          }
+        })
+      );
 
-    console.log(`DEBUG: Returning ${requestsWithItems.length} requests with items`);
-    return requestsWithItems;
+      console.log(`DEBUG Storage: Returning ${requestsWithItems.length} requests with items`);
+      return requestsWithItems;
+    } catch (error) {
+      console.error(`DEBUG Storage: Error in getAllMaterialRequests:`, error);
+      return [];
+    }
   }
 
   async createMaterialRequest(request: InsertMaterialRequest): Promise<MaterialRequest> {
