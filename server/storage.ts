@@ -401,8 +401,40 @@ class DatabaseStorage implements IStorage {
   }
 
   // Stock Movement operations
-  async getAllStockMovements(): Promise<StockMovement[]> {
-    return db.select().from(stockMovements).orderBy(desc(stockMovements.createdAt));
+  async getAllStockMovements(): Promise<any[]> {
+    const movements = await db
+      .select({
+        id: stockMovements.id,
+        productId: stockMovements.productId,
+        productName: products.name,
+        movementType: stockMovements.movementType,
+        quantity: stockMovements.quantity,
+        previousStock: stockMovements.previousStock,
+        newStock: stockMovements.newStock,
+        reference: stockMovements.reference,
+        vendor: stockMovements.vendor,
+        costPerUnit: stockMovements.costPerUnit,
+        totalCost: stockMovements.totalCost,
+        notes: stockMovements.notes,
+        performedBy: stockMovements.performedBy,
+        performedByName: users.username,
+        projectId: stockMovements.projectId,
+        materialRequestId: stockMovements.materialRequestId,
+        reason: stockMovements.reason,
+        destination: stockMovements.destination,
+        invoiceNumber: stockMovements.invoiceNumber,
+        batchNumber: stockMovements.batchNumber,
+        expiryDate: stockMovements.expiryDate,
+        location: stockMovements.location,
+        approvedBy: stockMovements.approvedBy,
+        createdAt: stockMovements.createdAt,
+      })
+      .from(stockMovements)
+      .leftJoin(products, eq(stockMovements.productId, products.id))
+      .leftJoin(users, eq(stockMovements.performedBy, users.id))
+      .orderBy(desc(stockMovements.createdAt));
+
+    return movements;
   }
 
   // Request Item operations
