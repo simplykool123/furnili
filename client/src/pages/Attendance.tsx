@@ -1478,43 +1478,43 @@ export default function Attendance() {
       </div>
 
       {/* Compact Quick Stats */}
-      <div className={`grid gap-2 sm:gap-3 ${user?.role === 'staff' || user?.role === 'store_incharge' ? 'grid-cols-1 max-w-md mx-auto' : 'grid-cols-3 md:grid-cols-6'}`}>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">
+      <div className={`grid gap-1.5 sm:gap-2 mb-4 ${user?.role === 'staff' || user?.role === 'store_incharge' ? 'grid-cols-1 max-w-md mx-auto' : 'grid-cols-3 md:grid-cols-6'}`}>
+        <Card className="border border-gray-200">
+          <CardHeader className="flex flex-row items-center justify-between pb-1 px-3 pt-2">
+            <CardTitle className="text-xs font-medium text-gray-700">
               {user?.role === 'staff' || user?.role === 'store_incharge' ? "Your Status Today" : "Present Today"}
             </CardTitle>
-            <UserCheck className="h-4 w-4 text-green-600" />
+            <UserCheck className="h-3 w-3 text-green-600" />
           </CardHeader>
-          <CardContent>
+          <CardContent className="px-3 pb-2">
             {user?.role === 'staff' || user?.role === 'store_incharge' ? (
               <>
                 {(() => {
                   const myTodayRecord = todayAttendance.find((a: any) => a.userId === user.id);
                   return myTodayRecord ? (
                     <div>
-                      <div className="text-lg font-bold text-green-600">
-                        You are marked present today
+                      <div className="text-sm font-bold text-green-600">
+                        Present
                       </div>
-                      <p className="text-xs text-gray-600">
-                        Check-in: {formatTime(myTodayRecord.checkInTime)}
-                        {myTodayRecord.checkOutTime && ` | Check-out: ${formatTime(myTodayRecord.checkOutTime)}`}
+                      <p className="text-[10px] text-gray-500 leading-tight">
+                        In: {formatTime(myTodayRecord.checkInTime)}
+                        {myTodayRecord.checkOutTime && ` | Out: ${formatTime(myTodayRecord.checkOutTime)}`}
                       </p>
                     </div>
                   ) : (
                     <div>
-                      <div className="text-lg font-bold text-gray-500">Not checked in</div>
-                      <p className="text-xs text-gray-600">Use Check In/Out tab</p>
+                      <div className="text-sm font-bold text-gray-500">Not checked in</div>
+                      <p className="text-[10px] text-gray-500">Use Check In/Out tab</p>
                     </div>
                   );
                 })()}
               </>
             ) : (
               <>
-                <div className="text-2xl font-bold text-green-600">
+                <div className="text-xl font-bold text-green-600">
                   {todayAttendance.filter((a: any) => a.status === "present").length}
                 </div>
-                <p className="text-xs text-gray-600">out of {staff.length} staff</p>
+                <p className="text-[10px] text-gray-500">out of {staff.length} staff</p>
               </>
             )}
           </CardContent>
@@ -1523,13 +1523,13 @@ export default function Attendance() {
         {/* Hide these cards for staff and store keeper users */}
         {user?.role !== 'staff' && user?.role !== 'store_incharge' && (
           <>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">Absent Today</CardTitle>
-                <UserX className="h-4 w-4 text-red-600" />
+            <Card className="border border-gray-200">
+              <CardHeader className="flex flex-row items-center justify-between pb-1 px-3 pt-2">
+                <CardTitle className="text-xs font-medium text-gray-700">Absent Today</CardTitle>
+                <UserX className="h-3 w-3 text-red-600" />
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-red-600">
+              <CardContent className="px-3 pb-2">
+                <div className="text-xl font-bold text-red-600">
                   {(() => {
                     // Calculate actual absent staff: total staff - those who checked in today
                     const checkedInToday = todayAttendance.filter((a: any) => 
@@ -1540,59 +1540,59 @@ export default function Attendance() {
                     return totalAbsent;
                   })()}
                 </div>
-                <p className="text-xs text-gray-600">staff members</p>
+                <p className="text-[10px] text-gray-500">staff members</p>
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">Half Day</CardTitle>
-                <Clock className="h-4 w-4 text-yellow-600" />
+            <Card className="border border-gray-200">
+              <CardHeader className="flex flex-row items-center justify-between pb-1 px-3 pt-2">
+                <CardTitle className="text-xs font-medium text-gray-700">Half Day</CardTitle>
+                <Clock className="h-3 w-3 text-yellow-600" />
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-yellow-600">
+              <CardContent className="px-3 pb-2">
+                <div className="text-xl font-bold text-yellow-600">
                   {todayAttendance.filter((a: any) => a.status === "half_day").length}
                 </div>
-                <p className="text-xs text-gray-600">staff members</p>
+                <p className="text-[10px] text-gray-500">staff members</p>
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">Late Entries</CardTitle>
-                <Timer className="h-4 w-4 text-orange-600" />
+            <Card className="border border-gray-200">
+              <CardHeader className="flex flex-row items-center justify-between pb-1 px-3 pt-2">
+                <CardTitle className="text-xs font-medium text-gray-700">Late Entries</CardTitle>
+                <Timer className="h-3 w-3 text-orange-600" />
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-orange-600">
+              <CardContent className="px-3 pb-2">
+                <div className="text-xl font-bold text-orange-600">
                   {todayAttendance.filter((a: any) => a.status === "late").length}
                 </div>
-                <p className="text-xs text-gray-600">staff members</p>
+                <p className="text-[10px] text-gray-500">staff members</p>
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">Attendance %</CardTitle>
-                <Users className="h-4 w-4 text-blue-600" />
+            <Card className="border border-gray-200">
+              <CardHeader className="flex flex-row items-center justify-between pb-1 px-3 pt-2">
+                <CardTitle className="text-xs font-medium text-gray-700">Attendance %</CardTitle>
+                <Users className="h-3 w-3 text-blue-600" />
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-blue-600">
+              <CardContent className="px-3 pb-2">
+                <div className="text-xl font-bold text-blue-600">
                   {staff.length > 0 ? Math.round((todayAttendance.filter((a: any) => a.status === "present" || a.status === "late").length / staff.length) * 100) : 0}%
                 </div>
-                <p className="text-xs text-gray-600">today</p>
+                <p className="text-[10px] text-gray-500">today</p>
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">Working Days</CardTitle>
-                <Calendar className="h-4 w-4 text-blue-600" />
+            <Card className="border border-gray-200">
+              <CardHeader className="flex flex-row items-center justify-between pb-1 px-3 pt-2">
+                <CardTitle className="text-xs font-medium text-gray-700">Working Days</CardTitle>
+                <Calendar className="h-3 w-3 text-blue-600" />
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-blue-600">
+              <CardContent className="px-3 pb-2">
+                <div className="text-xl font-bold text-blue-600">
                   {attendanceStats?.workingDays || attendanceStats?.totalDays || 0}
                 </div>
-                <p className="text-xs text-gray-600">this month</p>
+                <p className="text-[10px] text-gray-500">this month</p>
               </CardContent>
             </Card>
           </>
