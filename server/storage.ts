@@ -227,32 +227,88 @@ class DatabaseStorage implements IStorage {
 
   // Material Request operations
   async getMaterialRequest(id: number): Promise<MaterialRequestWithItems | undefined> {
-    const requestResult = await db.select().from(materialRequests).where(eq(materialRequests.id, id)).limit(1);
-    if (!requestResult[0]) {
+    // Direct JOIN query to get request with items in one go
+    const results = await db
+      .select({
+        // Request fields
+        id: materialRequests.id,
+        clientName: materialRequests.clientName,
+        orderNumber: materialRequests.orderNumber,
+        requestedBy: materialRequests.requestedBy,
+        status: materialRequests.status,
+        priority: materialRequests.priority,
+        boqReference: materialRequests.boqReference,
+        remarks: materialRequests.remarks,
+        totalValue: materialRequests.totalValue,
+        approvedBy: materialRequests.approvedBy,
+        approvedAt: materialRequests.approvedAt,
+        issuedBy: materialRequests.issuedBy,
+        issuedAt: materialRequests.issuedAt,
+        createdAt: materialRequests.createdAt,
+        projectId: materialRequests.projectId,
+        // Item fields
+        itemId: requestItems.id,
+        itemProductId: requestItems.productId,
+        itemRequestedQuantity: requestItems.requestedQuantity,
+        itemApprovedQuantity: requestItems.approvedQuantity,
+        itemUnitPrice: requestItems.unitPrice,
+        itemTotalPrice: requestItems.totalPrice,
+        // Product fields
+        productName: products.name,
+        productCategory: products.category,
+        productBrand: products.brand,
+        productCurrentStock: products.currentStock,
+      })
+      .from(materialRequests)
+      .leftJoin(requestItems, eq(materialRequests.id, requestItems.requestId))
+      .leftJoin(products, eq(requestItems.productId, products.id))
+      .where(eq(materialRequests.id, id));
+
+    if (!results || results.length === 0) {
       return undefined;
     }
 
-    const request = requestResult[0];
-    
-    // Simple direct query for items
-    const items = await db.select().from(requestItems).where(eq(requestItems.requestId, id));
-    
-    const itemsWithProducts = await Promise.all(
-      items.map(async (item) => {
-        const product = await this.getProduct(item.productId);
-        return { 
-          ...item, 
-          product: product!,
-        };
-      })
-    );
+    // Group items for the request
+    const request = results[0];
+    const items = results
+      .filter(r => r.itemId !== null)
+      .map(r => ({
+        id: r.itemId!,
+        requestId: request.id,
+        productId: r.itemProductId!,
+        requestedQuantity: r.itemRequestedQuantity!,
+        approvedQuantity: r.itemApprovedQuantity,
+        unitPrice: r.itemUnitPrice!,
+        totalPrice: r.itemTotalPrice!,
+        product: {
+          id: r.itemProductId!,
+          name: r.productName!,
+          category: r.productCategory!,
+          brand: r.productBrand,
+          currentStock: r.productCurrentStock!,
+        }
+      }));
 
     return {
-      ...request,
+      id: request.id,
+      clientName: request.clientName,
+      orderNumber: request.orderNumber,
+      requestedBy: request.requestedBy,
+      status: request.status,
+      priority: request.priority,
+      boqReference: request.boqReference,
+      remarks: request.remarks,
+      totalValue: request.totalValue,
+      approvedBy: request.approvedBy,
+      approvedAt: request.approvedAt,
+      issuedBy: request.issuedBy,
+      issuedAt: request.issuedAt,
+      createdAt: request.createdAt,
+      projectId: request.projectId,
       requestedByUser: undefined,
       approvedByUser: undefined,
       issuedByUser: undefined,
-      items: itemsWithProducts,
+      items,
     };
   }
 
