@@ -2314,12 +2314,10 @@ export default function Attendance() {
                       return (
                         <TableRow key={payroll.id} className="h-10">
                           <TableCell className="py-1 px-2">
-                            <div className="text-sm font-medium">{staffName}</div>
-                            <div className="text-xs text-gray-500">{employeeId}</div>
+                            <div className="text-sm font-medium">{staffName} - {employeeId}</div>
                           </TableCell>
                           <TableCell className="py-1 px-2">
-                            <div className="text-sm font-medium">{payroll.actualWorkingDays || 0}</div>
-                            <div className="text-xs text-gray-500">of {payroll.totalWorkingDays || 30}</div>
+                            <div className="text-sm font-medium">{payroll.actualWorkingDays || 0} of {payroll.totalWorkingDays || 30}</div>
                           </TableCell>
                           <TableCell className="py-1 px-2 text-sm font-medium">₹{basicSalary.toLocaleString()}</TableCell>
                           <TableCell className="py-1 px-2 text-sm font-medium text-green-600">₹{netSalary.toLocaleString()}</TableCell>
