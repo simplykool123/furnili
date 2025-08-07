@@ -778,7 +778,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         requests = await storage.getAllMaterialRequests();
       }
       
-
+      // SIMPLE TEST: Check if items are in the response
+      console.log(`TEST: First request has ${requests?.[0]?.items?.length || 0} items`);
       
       res.json(requests);
     } catch (error) {
