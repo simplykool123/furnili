@@ -433,10 +433,24 @@ class DatabaseStorage implements IStorage {
         location: stockMovements.location,
         approvedBy: stockMovements.approvedBy,
         createdAt: stockMovements.createdAt,
+        // Material Request details
+        requestOrderNumber: materialRequests.orderNumber,
+        requestStatus: materialRequests.status,
+        clientName: materialRequests.clientName,
+        projectName: projects.name,
+        // Extract order number from reference field if material request is not linked
+        extractedOrderNumber: sql<string>`CASE 
+          WHEN ${materialRequests.orderNumber} IS NOT NULL THEN ${materialRequests.orderNumber}
+          WHEN ${stockMovements.reference} ~ 'Material Request [A-Z0-9-]+' THEN 
+            regexp_replace(${stockMovements.reference}, '.*Material Request ([A-Z0-9-]+).*', '\\1', 'g')
+          ELSE NULL 
+        END`,
       })
       .from(stockMovements)
       .leftJoin(products, eq(stockMovements.productId, products.id))
       .leftJoin(users, eq(stockMovements.performedBy, users.id))
+      .leftJoin(materialRequests, eq(stockMovements.materialRequestId, materialRequests.id))
+      .leftJoin(projects, eq(materialRequests.projectId, projects.id))
       .orderBy(desc(stockMovements.createdAt));
 
     return movements;
