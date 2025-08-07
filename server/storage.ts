@@ -668,22 +668,33 @@ class DatabaseStorage implements IStorage {
     const requests = await db.select().from(materialRequests)
       .where(conditions.length > 0 ? and(...conditions) : undefined);
     
-    return requests.map(r => ({ 
-      ...r, 
-      items: [],
-      requestedByUser: { name: 'User', email: '' },
-      approvedByUser: r.approvedBy ? { name: 'Approver', email: '' } : undefined
-    }));
+    // Load items for each request
+    const requestsWithItems = await Promise.all(
+      requests.map(async (request) => {
+        const items = await this.getRequestItems(request.id);
+        return {
+          ...request,
+          items,
+          requestedByUser: { name: 'User', email: '' },
+          approvedByUser: request.approvedBy ? { name: 'Approver', email: '' } : undefined
+        };
+      })
+    );
+    
+    return requestsWithItems;
   }
 
   async getMaterialRequest(id: number): Promise<MaterialRequestWithItems | undefined> {
     const result = await db.select().from(materialRequests).where(eq(materialRequests.id, id)).limit(1);
-    return result[0] ? { 
+    if (!result[0]) return undefined;
+    
+    const items = await this.getRequestItems(id);
+    return { 
       ...result[0], 
-      items: [],
+      items,
       requestedByUser: { name: 'User', email: '' },
       approvedByUser: result[0].approvedBy ? { name: 'Approver', email: '' } : undefined
-    } : undefined;
+    };
   }
 
   async updateMaterialRequest(id: number, updates: Partial<InsertMaterialRequest>): Promise<MaterialRequest | undefined> {

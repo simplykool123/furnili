@@ -993,7 +993,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = req.user!;
       
       // Fetch all tasks assigned to the current user, then filter for pending and in_progress
-      const allTasks = await storage.getAllTasks({ assignedTo: user.id });
+      const allTasks = await storage.getAllTasks(user.id);
       
       // Filter for pending and in_progress tasks only
       const activeTasks = allTasks.filter(task => 
