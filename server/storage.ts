@@ -846,7 +846,7 @@ class DatabaseStorage implements IStorage {
   async createProject(project: InsertProject): Promise<Project> {
     const projectData = {
       name: project.name,
-      client_id: project.clientId,
+      clientId: project.clientId,
       description: project.description,
       notes: project.notes,
       stage: project.stage || 'prospect',
@@ -867,31 +867,7 @@ class DatabaseStorage implements IStorage {
   }
 
   async getAllProjects(): Promise<any[]> {
-    // Simplified query to avoid Drizzle schema issues
-    const allProjects = await db.select().from(projects).orderBy(desc(projects.createdAt));
-    
-    // Manually enrich with client data
-    const enrichedProjects = await Promise.all(
-      allProjects.map(async (project) => {
-        let clientName = null;
-        try {
-          if (project.client_id) {
-            const client = await this.getClient(project.client_id);
-            clientName = client?.name || null;
-          }
-        } catch (error) {
-          console.warn(`Failed to fetch client ${project.client_id}:`, error);
-        }
-        
-        return {
-          ...project,
-          clientId: project.client_id,
-          clientName
-        };
-      })
-    );
-    
-    return enrichedProjects;
+    return db.select().from(projects).orderBy(desc(projects.createdAt));
   }
 
   async getProject(id: number): Promise<Project | undefined> {
@@ -919,7 +895,7 @@ class DatabaseStorage implements IStorage {
   }
 
   async getProjectsByClient(clientId: number): Promise<Project[]> {
-    return db.select().from(projects).where(eq(projects.client_id, clientId));
+    return db.select().from(projects).where(eq(projects.clientId, clientId));
   }
 
   async createProjectLog(log: InsertProjectLog): Promise<ProjectLog> {
