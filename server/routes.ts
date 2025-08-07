@@ -778,9 +778,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         requests = await storage.getAllMaterialRequests();
       }
       
-      // TEST: Log items count
-      console.log(`API: Request 2 has ${requests.find(r => r.id === 2)?.items?.length || 0} items`);
-      console.log(`API: Request 3 has ${requests.find(r => r.id === 3)?.items?.length || 0} items`);
+      // FINAL TEST: Check complete structure
+      const req2 = requests.find(r => r.id === 2);
+      const req3 = requests.find(r => r.id === 3);
+      console.log(`FINAL: Request 2 has ${req2?.items?.length || 0} items, requested by: ${req2?.requestedByUser?.username || 'Unknown'}`);
+      console.log(`FINAL: Request 3 has ${req3?.items?.length || 0} items, requested by: ${req3?.requestedByUser?.username || 'Unknown'}`);
       
       res.json(requests);
     } catch (error) {

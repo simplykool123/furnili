@@ -241,6 +241,8 @@ class DatabaseStorage implements IStorage {
       WHERE ri.request_id = ${id}
     `);
 
+    console.log(`DEBUG: Found ${itemsRaw.length} raw items for request ${id}`);
+
     const items = itemsRaw.map((row: any) => ({
       id: row.id,
       requestId: row.request_id,
@@ -258,11 +260,16 @@ class DatabaseStorage implements IStorage {
       }
     }));
 
+    // Get user names for request
+    const requestedByUser = request[0].requestedBy ? await this.getUser(request[0].requestedBy) : undefined;
+    const approvedByUser = request[0].approvedBy ? await this.getUser(request[0].approvedBy) : undefined;
+    const issuedByUser = request[0].issuedBy ? await this.getUser(request[0].issuedBy) : undefined;
+
     return {
       ...request[0],
-      requestedByUser: undefined,
-      approvedByUser: undefined,
-      issuedByUser: undefined,
+      requestedByUser,
+      approvedByUser,
+      issuedByUser,
       items,
     };
   }
