@@ -2393,17 +2393,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const movements = await storage.getAllStockMovements(filters);
       console.log(`Found ${movements.length} movements`);
       
-      // Transform the data to match the frontend expectations
-      const transformedMovements = movements.map(movement => ({
-        ...movement,
-        product: {
-          id: movement.productId,
-          name: movement.productName || 'Unknown Product',
-          category: movement.productCategory || 'Unknown Category'
-        },
-        user: {
-          name: 'System'  // You can enhance this by joining with users table if needed
+      // Transform the data to match the frontend expectations and get actual user names
+      const transformedMovements = await Promise.all(movements.map(async (movement) => {
+        let userName = 'System';
+        
+        // Try to get the actual user who performed the movement
+        if (movement.createdBy || movement.performedBy) {
+          try {
+            const userId = movement.createdBy || movement.performedBy;
+            const user = await storage.getUser(userId);
+            if (user) {
+              userName = user.name || user.username || 'Unknown User';
+            }
+          } catch (error) {
+            console.warn(`Failed to fetch user for movement ${movement.id}:`, error);
+          }
         }
+        
+        return {
+          ...movement,
+          product: {
+            id: movement.productId,
+            name: movement.productName || 'Unknown Product',
+            category: movement.productCategory || 'Unknown Category'
+          },
+          user: {
+            name: userName
+          }
+        };
       }));
       
       res.json(transformedMovements);

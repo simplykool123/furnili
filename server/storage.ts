@@ -668,15 +668,38 @@ class DatabaseStorage implements IStorage {
     const requests = await db.select().from(materialRequests)
       .where(conditions.length > 0 ? and(...conditions) : undefined);
     
-    // Load items for each request
+    // Load items and user information for each request
     const requestsWithItems = await Promise.all(
       requests.map(async (request) => {
         const items = await this.getRequestItems(request.id);
+        
+        // Get actual user names
+        let requestedByUser = { name: 'Unknown User', email: '' };
+        let approvedByUser = undefined;
+        
+        try {
+          if (request.requestedBy) {
+            const user = await this.getUser(request.requestedBy);
+            if (user) {
+              requestedByUser = { name: user.name || user.username, email: user.email || '' };
+            }
+          }
+          
+          if (request.approvedBy) {
+            const approver = await this.getUser(request.approvedBy);
+            if (approver) {
+              approvedByUser = { name: approver.name || approver.username, email: approver.email || '' };
+            }
+          }
+        } catch (error) {
+          console.warn(`Failed to fetch user info for request ${request.id}:`, error);
+        }
+        
         return {
           ...request,
           items,
-          requestedByUser: { name: 'User', email: '' },
-          approvedByUser: request.approvedBy ? { name: 'Approver', email: '' } : undefined
+          requestedByUser,
+          approvedByUser
         };
       })
     );
@@ -689,11 +712,34 @@ class DatabaseStorage implements IStorage {
     if (!result[0]) return undefined;
     
     const items = await this.getRequestItems(id);
+    
+    // Get actual user names
+    let requestedByUser = { name: 'Unknown User', email: '' };
+    let approvedByUser = undefined;
+    
+    try {
+      if (result[0].requestedBy) {
+        const user = await this.getUser(result[0].requestedBy);
+        if (user) {
+          requestedByUser = { name: user.name || user.username, email: user.email || '' };
+        }
+      }
+      
+      if (result[0].approvedBy) {
+        const approver = await this.getUser(result[0].approvedBy);
+        if (approver) {
+          approvedByUser = { name: approver.name || approver.username, email: approver.email || '' };
+        }
+      }
+    } catch (error) {
+      console.warn(`Failed to fetch user info for request ${id}:`, error);
+    }
+    
     return { 
       ...result[0], 
       items,
-      requestedByUser: { name: 'User', email: '' },
-      approvedByUser: result[0].approvedBy ? { name: 'Approver', email: '' } : undefined
+      requestedByUser,
+      approvedByUser
     };
   }
 
@@ -781,8 +827,36 @@ class DatabaseStorage implements IStorage {
     return result[0];
   }
 
-  async getAllProjects(): Promise<Project[]> {
-    return db.select().from(projects).orderBy(desc(projects.createdAt));
+  async getAllProjects(): Promise<any[]> {
+    // Join with clients table to get client names
+    const projectsWithClients = await db.select({
+      id: projects.id,
+      code: projects.code,
+      name: projects.name,
+      clientId: projects.clientId,
+      clientName: clients.name,
+      description: projects.description,
+      notes: projects.notes,
+      stage: projects.stage,
+      budget: projects.budget,
+      differentSiteLocation: projects.differentSiteLocation,
+      siteAddressLine1: projects.siteAddressLine1,
+      siteAddressLine2: projects.siteAddressLine2,
+      siteState: projects.siteState,
+      siteCity: projects.siteCity,
+      siteLocation: projects.siteLocation,
+      sitePincode: projects.sitePincode,
+      completionPercentage: projects.completionPercentage,
+      files: projects.files,
+      isActive: projects.isActive,
+      createdAt: projects.createdAt,
+      updatedAt: projects.updatedAt
+    })
+    .from(projects)
+    .leftJoin(clients, eq(projects.clientId, clients.id))
+    .orderBy(desc(projects.createdAt));
+    
+    return projectsWithClients;
   }
 
   async getProject(id: number): Promise<Project | undefined> {
