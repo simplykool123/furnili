@@ -80,7 +80,7 @@ import {
   type BOQExtractedItem,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, desc, gte, lte, sql, count, isNotNull } from "drizzle-orm";
+import { eq, and, desc, gte, lte, sql, count, isNotNull, inArray } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 
 export interface IStorage {

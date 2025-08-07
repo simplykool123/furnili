@@ -10,6 +10,9 @@ import { exportProductsCSV, exportRequestsCSV, exportLowStockCSV } from "./utils
 import { createBackupZip } from "./utils/backupExport";
 import { canOrderMaterials, getMaterialRequestEligibleProjects, getStageDisplayName } from "./utils/projectStageValidation";
 import { setupQuotesRoutes } from "./quotesRoutes";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
+import { projectFiles } from "@shared/schema";
 
 // OpenAI client removed - AI functionality simplified
 import {
@@ -2174,7 +2177,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "description is required" });
       }
 
-      const success = await storage.batchUpdateFileDescriptions(fileIds, description);
+      // Temporary workaround - update files individually
+      let successCount = 0;
+      for (const fileId of fileIds) {
+        const result = await db.update(projectFiles)
+          .set({ description, updatedAt: new Date() })
+          .where(eq(projectFiles.id, fileId));
+        if (result.rowCount && result.rowCount > 0) {
+          successCount++;
+        }
+      }
+      const success = successCount > 0;
       if (!success) {
         return res.status(404).json({ message: "Files not found or update failed" });
       }
