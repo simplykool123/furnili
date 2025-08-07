@@ -766,8 +766,36 @@ class DatabaseStorage implements IStorage {
     return result[0];
   }
 
-  async getRequestItems(requestId: number): Promise<RequestItem[]> {
-    return db.select().from(requestItems).where(eq(requestItems.requestId, requestId));
+  async getRequestItems(requestId: number): Promise<any[]> {
+    // Join with products table to get product information for each item
+    const itemsWithProducts = await db.select({
+      id: requestItems.id,
+      requestId: requestItems.requestId,
+      productId: requestItems.productId,
+      requestedQuantity: requestItems.requestedQuantity,
+      unitPrice: requestItems.unitPrice,
+      totalPrice: requestItems.totalPrice,
+      approvedQuantity: requestItems.approvedQuantity,
+      productName: products.name,
+      productCategory: products.category,
+      productUnit: products.unit,
+      productCurrentStock: products.currentStock
+    })
+    .from(requestItems)
+    .leftJoin(products, eq(requestItems.productId, products.id))
+    .where(eq(requestItems.requestId, requestId));
+    
+    // Transform to include product object for frontend compatibility
+    return itemsWithProducts.map(item => ({
+      ...item,
+      product: {
+        id: item.productId,
+        name: item.productName || 'Unknown Product',
+        category: item.productCategory || 'Unknown Category',
+        unit: item.productUnit || 'pcs',
+        currentStock: item.productCurrentStock || 0
+      }
+    }));
   }
 
   async updateRequestItem(id: number, updates: Partial<InsertRequestItem>): Promise<RequestItem | undefined> {
