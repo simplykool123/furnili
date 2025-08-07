@@ -247,12 +247,12 @@ class DatabaseStorage implements IStorage {
         createdAt: materialRequests.createdAt,
         projectId: materialRequests.projectId,
         // Item fields
-        itemId: requestItems.id,
-        itemProductId: requestItems.productId,
-        itemRequestedQuantity: requestItems.requestedQuantity,
-        itemApprovedQuantity: requestItems.approvedQuantity,
-        itemUnitPrice: requestItems.unitPrice,
-        itemTotalPrice: requestItems.totalPrice,
+        itemId: sql`request_items.id`,
+        itemProductId: sql`request_items.product_id`,
+        itemRequestedQuantity: sql`request_items.requested_quantity`,
+        itemApprovedQuantity: sql`request_items.approved_quantity`,
+        itemUnitPrice: sql`request_items.unit_price`,
+        itemTotalPrice: sql`request_items.total_price`,
         // Product fields
         productName: products.name,
         productCategory: products.category,
@@ -260,8 +260,8 @@ class DatabaseStorage implements IStorage {
         productCurrentStock: products.currentStock,
       })
       .from(materialRequests)
-      .leftJoin(requestItems, eq(materialRequests.id, requestItems.requestId))
-      .leftJoin(products, eq(requestItems.productId, products.id))
+      .leftJoin(requestItems, eq(materialRequests.id, sql`request_items.request_id`))
+      .leftJoin(products, eq(sql`request_items.product_id`, products.id))
       .where(eq(materialRequests.id, id));
 
     if (!results || results.length === 0) {
