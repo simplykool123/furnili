@@ -1043,9 +1043,9 @@ export default function PettyCash() {
                     </TableCell>
                     <TableCell className="py-2 px-3 text-gray-700 text-xs">
                       {expense.projectId && expense.project ? (
-                        <div className="text-center" title={`${expense.project.name} - Client: ${expense.project.client_name || 'N/A'}`}>
+                        <div className="text-center" title={`${expense.project.name}`}>
                           <div className="font-medium">{expense.project.code}</div>
-                          <div className="text-[10px] text-gray-500 truncate">{expense.project.client_name || 'No Client'}</div>
+                          <div className="text-[10px] text-gray-500 truncate">{expense.project.name}</div>
                         </div>
                       ) : expense.projectId ? (
                         <div className="text-center">{expense.projectId}</div>
@@ -1625,18 +1625,22 @@ export default function PettyCash() {
         </DialogContent>
       </Dialog>
 
-      {/* Expense Details Dialog - Optimized Layout */}
+      {/* Transaction Details Dialog - Optimized Layout for Both Credit and Expense */}
       <Dialog open={showExpenseDetailsDialog} onOpenChange={setShowExpenseDetailsDialog}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
-            <DialogTitle>Expense Details</DialogTitle>
+            <DialogTitle>
+              {selectedExpenseDetails?.status === 'income' ? 'Credit Details' : 'Expense Details'}
+            </DialogTitle>
           </DialogHeader>
           {selectedExpenseDetails && (
             <div className="space-y-4">
               {/* Two columns layout for better space utilization */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <div className="text-sm font-medium text-gray-600">Paid By</div>
+                  <div className="text-sm font-medium text-gray-600">
+                    {selectedExpenseDetails.status === 'income' ? 'Received By' : 'Paid By'}
+                  </div>
                   <div className="text-sm">{selectedExpenseDetails.user?.name || selectedExpenseDetails.user?.username || 'N/A'}</div>
                 </div>
                 <div>
@@ -1647,7 +1651,9 @@ export default function PettyCash() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <div className="text-sm font-medium text-gray-600">Vendor</div>
+                  <div className="text-sm font-medium text-gray-600">
+                    {selectedExpenseDetails.status === 'income' ? 'Source' : 'Vendor'}
+                  </div>
                   <div className="text-sm">{selectedExpenseDetails.vendor}</div>
                 </div>
                 <div>
@@ -1677,7 +1683,9 @@ export default function PettyCash() {
               </div>
 
               <div>
-                <div className="text-sm font-medium text-gray-600">Description</div>
+                <div className="text-sm font-medium text-gray-600">
+                  {selectedExpenseDetails.status === 'income' ? 'Purpose' : 'Description'}
+                </div>
                 <div className="text-sm">{selectedExpenseDetails.description || '-'}</div>
               </div>
 
