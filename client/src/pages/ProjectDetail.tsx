@@ -1862,16 +1862,18 @@ export default function ProjectDetail() {
                     return groups;
                   }, {}),
                 ).map(([category, files]: [string, any]) => {
-                  // Check if we have a single file with meaningful originalName to display as title
+                  // Check if we have a single file with title (stored in description) or meaningful originalName
                   const singleFile = files.length === 1 ? files[0] : null;
+                  const hasTitle = singleFile?.description && singleFile.description.trim().length > 0;
                   const hasOriginalName = singleFile?.originalName && 
                     !singleFile.originalName.match(/^(image|file|document|IMG_|DSC_)$/i) &&
-                    singleFile.originalName.length > 8; // Must be longer than generic names
+                    singleFile.originalName.length > 8;
                   
-                  const shouldShowFileAsTitle = singleFile && hasOriginalName;
-                  const displayTitle = shouldShowFileAsTitle ? 
-                    singleFile.originalName.replace(/\.[^/.]+$/, '') : // Remove file extension
-                    null;
+                  const shouldShowFileAsTitle = singleFile && (hasTitle || hasOriginalName);
+                  const displayTitle = shouldShowFileAsTitle ? (
+                    hasTitle ? singleFile.description : 
+                    singleFile.originalName.replace(/\.[^/.]+$/, '')
+                  ) : null;
                     
                   return (
                   <div
