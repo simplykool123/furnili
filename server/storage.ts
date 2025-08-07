@@ -636,8 +636,10 @@ class DatabaseStorage implements IStorage {
   // Missing Petty Cash methods
   async getPettyCashStats(): Promise<any> {
     const expenses = await db.select().from(pettyCashExpenses);
-    const totalSpent = expenses.filter(e => e.amount < 0).reduce((sum, e) => sum + Math.abs(e.amount), 0);
-    const totalReceived = expenses.filter(e => e.amount > 0).reduce((sum, e) => sum + e.amount, 0);
+    
+    // Filter by status instead of amount sign
+    const totalSpent = expenses.filter(e => e.status === 'expense').reduce((sum, e) => sum + e.amount, 0);
+    const totalReceived = expenses.filter(e => e.status === 'income').reduce((sum, e) => sum + e.amount, 0);
     
     // Calculate current month expenses
     const currentDate = new Date();
@@ -647,9 +649,9 @@ class DatabaseStorage implements IStorage {
     const currentMonthExpenses = expenses
       .filter(e => {
         const expenseDate = new Date(e.expenseDate);
-        return expenseDate >= currentMonthStart && expenseDate <= currentMonthEnd && e.amount < 0;
+        return expenseDate >= currentMonthStart && expenseDate <= currentMonthEnd && e.status === 'expense';
       })
-      .reduce((sum, e) => sum + Math.abs(e.amount), 0);
+      .reduce((sum, e) => sum + e.amount, 0);
     
     return { 
       totalExpenses: totalSpent,
@@ -661,8 +663,10 @@ class DatabaseStorage implements IStorage {
 
   async getPersonalPettyCashStats(userId: number): Promise<any> {
     const expenses = await db.select().from(pettyCashExpenses).where(eq(pettyCashExpenses.addedBy, userId));
-    const totalSpent = expenses.filter(e => e.amount < 0).reduce((sum, e) => sum + Math.abs(e.amount), 0);
-    const totalReceived = expenses.filter(e => e.amount > 0).reduce((sum, e) => sum + e.amount, 0);
+    
+    // Filter by status instead of amount sign
+    const totalSpent = expenses.filter(e => e.status === 'expense').reduce((sum, e) => sum + e.amount, 0);
+    const totalReceived = expenses.filter(e => e.status === 'income').reduce((sum, e) => sum + e.amount, 0);
     
     // Calculate current month expenses for this user
     const currentDate = new Date();
@@ -672,9 +676,9 @@ class DatabaseStorage implements IStorage {
     const thisMonth = expenses
       .filter(e => {
         const expenseDate = new Date(e.expenseDate);
-        return expenseDate >= currentMonthStart && expenseDate <= currentMonthEnd && e.amount < 0;
+        return expenseDate >= currentMonthStart && expenseDate <= currentMonthEnd && e.status === 'expense';
       })
-      .reduce((sum, e) => sum + Math.abs(e.amount), 0);
+      .reduce((sum, e) => sum + e.amount, 0);
     
     return { 
       myExpenses: totalSpent,
