@@ -288,7 +288,7 @@ export default function InventoryMovement() {
                       <TableCell>{movement.notes || '-'}</TableCell>
                       <TableCell>{movement.reference || '-'}</TableCell>
                       <TableCell>{formatDate(movement.createdAt)}</TableCell>
-                      <TableCell>{movement.performedByUser || 'System'}</TableCell>
+                      <TableCell>{movement.performedByName || 'System'}</TableCell>
                       <TableCell>
                         <div className="flex items-center space-x-2">
                           <Button
@@ -530,7 +530,7 @@ export default function InventoryMovement() {
 
                 <div>
                   <Label className="text-xs font-medium text-gray-600">Performed By</Label>
-                  <p className="font-medium">{selectedMovement.performedByUser || 'System'}</p>
+                  <p className="font-medium">{selectedMovement.performedByName || 'System'}</p>
                 </div>
 
                 {selectedMovement.reference && (

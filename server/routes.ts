@@ -896,8 +896,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           name: sampleProject.name,
           stage: sampleProject.stage,
           isActive: sampleProject.isActive,
+          is_active: sampleProject.is_active,
+          client_name: sampleProject.client_name,
           projectCode: sampleProject.code,
-          clientId: sampleProject.clientId
+          clientId: sampleProject.clientId,
+          client_id: sampleProject.client_id
         });
       }
       
@@ -910,7 +913,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         projectCode: project.code,
         name: project.name,
         stage: project.stage,
-        clientId: project.clientId
+        client_name: project.client_name,
+        clientId: project.client_id
       }));
       
       console.log("Sending transformed projects:", transformedProjects.length);
@@ -993,7 +997,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = req.user!;
       
       // Fetch all tasks assigned to the current user, then filter for pending and in_progress
-      const allTasks = await storage.getAllTasks(user.id);
+      const allTasks = await storage.getAllTasks({ assignedTo: user.id });
       
       // Filter for pending and in_progress tasks only
       const activeTasks = allTasks.filter(task => 
@@ -1355,7 +1359,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         filters.addedBy = parseInt(userId as string);
       }
       
-      const expenses = await storage.getAllPettyCash(filters);
+      const expenses = await storage.getAllPettyCashExpenses(filters);
       res.json(expenses);
     } catch (error) {
       console.error("Failed to fetch expenses:", error);
@@ -1691,7 +1695,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/tasks/my", authenticateToken, async (req: AuthRequest, res) => {
     try {
       const user = req.user!;
-      const tasks = await storage.getAllTasks(user.id);
+      const tasks = await storage.getAllTasks({ assignedTo: user.id });
       
       // Include assigned user information
       const tasksWithUsers = await Promise.all(
@@ -1720,7 +1724,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const tomorrow = new Date(today);
       tomorrow.setDate(tomorrow.getDate() + 1);
       
-      const allTasks = await storage.getAllTasks(user.id);
+      const allTasks = await storage.getAllTasks({ assignedTo: user.id });
       
       // Filter tasks due today
       const todayTasks = allTasks.filter(task => {
@@ -1967,7 +1971,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Project not found" });
       }
       
-      console.log("API Route: Project found, clientId:", project.clientId);
+      console.log("API Route: Project found, client_name:", project.client_name, "client_mobile:", project.client_mobile);
       res.json(project);
     } catch (error) {
       console.error("Failed to fetch project:", error);
@@ -2381,49 +2385,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/inventory/movements", authenticateToken, async (req: AuthRequest, res) => {
     try {
       console.log('Fetching stock movements...');
-      
-      const { productId, type, startDate, endDate } = req.query;
-      const filters: any = {};
-      
-      if (productId) filters.productId = parseInt(productId as string);
-      if (type) filters.type = type as string;
-      if (startDate) filters.startDate = new Date(startDate as string);
-      if (endDate) filters.endDate = new Date(endDate as string);
-      
-      const movements = await storage.getAllStockMovements(filters);
+      const movements = await storage.getAllStockMovements();
       console.log(`Found ${movements.length} movements`);
-      
-      // Transform the data to match the frontend expectations and get actual user names
-      const transformedMovements = await Promise.all(movements.map(async (movement) => {
-        let userName = 'System';
-        
-        // Try to get the actual user who performed the movement
-        if (movement.createdBy || movement.performedBy) {
-          try {
-            const userId = movement.createdBy || movement.performedBy;
-            const user = await storage.getUser(userId);
-            if (user) {
-              userName = user.name || user.username || 'Unknown User';
-            }
-          } catch (error) {
-            console.warn(`Failed to fetch user for movement ${movement.id}:`, error);
-          }
-        }
-        
-        return {
-          ...movement,
-          product: {
-            id: movement.productId,
-            name: movement.productName || 'Unknown Product',
-            category: movement.productCategory || 'Unknown Category'
-          },
-          user: {
-            name: userName
-          }
-        };
-      }));
-      
-      res.json(transformedMovements);
+      res.json(movements);
     } catch (error) {
       console.error('Stock movements API error:', error);
       res.status(500).json({ message: "Failed to fetch movements", error: error instanceof Error ? error.message : String(error) });

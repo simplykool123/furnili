@@ -428,7 +428,7 @@ export default function RequestTable() {
                         <div>
                           <p className="font-medium">{request.items?.length || 0} items</p>
                           <p className="text-sm text-gray-600">
-                            {request.items?.slice(0, 2).map(item => item.product?.name || 'Unknown Product').join(', ')}
+                            {request.items?.slice(0, 2).map(item => item.product.name).join(', ')}
                             {(request.items?.length || 0) > 2 && '...'}
                           </p>
                         </div>
