@@ -1130,6 +1130,33 @@ export default function ProjectDetail() {
     },
   });
 
+  // Mutation for updating group titles (description field for all files in a group)
+  const updateGroupTitleMutation = useMutation({
+    mutationFn: async ({ fileIds, newTitle }: { fileIds: number[]; newTitle: string }) => {
+      return apiRequest(`/api/projects/${projectId}/files/batch-update-title`, {
+        method: "PUT",
+        body: JSON.stringify({ fileIds, description: newTitle }),
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["/api/projects", projectId, "files"],
+      });
+      toast({
+        title: "Success",
+        description: "Title updated for all files in group",
+      });
+    },
+    onError: (error) => {
+      console.error("Failed to update group title:", error);
+      toast({
+        title: "Error", 
+        description: "Failed to update group title",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleMoodboardCreate = (data: any) => {
     console.log("Creating moodboard with data:", data);
     console.log("Form errors:", moodboardForm.formState.errors);
@@ -1887,12 +1914,48 @@ export default function ProjectDetail() {
                       {/* Title Groups within Category */}
                       {Object.entries(titleGroups).map(([title, files]: [string, any]) => (
                         <div key={`${category}-${title}`} className="bg-white rounded border border-gray-200 p-3">
-                          {/* Title Header - Compact */}
+                          {/* Title Header - Compact with Edit Functionality */}
                           <div className="flex items-center justify-between mb-2">
                             <div className="flex items-center gap-2">
-                              <h3 className="text-base font-medium text-gray-900 cursor-pointer hover:text-blue-600">
-                                {title}
-                              </h3>
+                              {editingGroupTitle === `${category}-${title}` ? (
+                                <input
+                                  type="text"
+                                  value={groupTitles[`${category}-${title}`] || title}
+                                  onChange={(e) =>
+                                    setGroupTitles({
+                                      ...groupTitles,
+                                      [`${category}-${title}`]: e.target.value,
+                                    })
+                                  }
+                                  onBlur={() => {
+                                    const newTitle = groupTitles[`${category}-${title}`] || title;
+                                    const fileIds = files.map((f: any) => f.id);
+                                    if (newTitle !== title) {
+                                      updateGroupTitleMutation.mutate({ fileIds, newTitle });
+                                    }
+                                    setEditingGroupTitle(null);
+                                  }}
+                                  onKeyDown={(e) => {
+                                    if (e.key === "Enter") {
+                                      const newTitle = groupTitles[`${category}-${title}`] || title;
+                                      const fileIds = files.map((f: any) => f.id);
+                                      if (newTitle !== title) {
+                                        updateGroupTitleMutation.mutate({ fileIds, newTitle });
+                                      }
+                                      setEditingGroupTitle(null);
+                                    }
+                                  }}
+                                  className="text-base font-medium text-gray-900 bg-transparent border-b border-gray-300 focus:border-blue-500 outline-none min-w-[120px]"
+                                  autoFocus
+                                />
+                              ) : (
+                                <h3 
+                                  className="text-base font-medium text-gray-900 cursor-pointer hover:text-blue-600"
+                                  onClick={() => setEditingGroupTitle(`${category}-${title}`)}
+                                >
+                                  {groupTitles[`${category}-${title}`] || title}
+                                </h3>
+                              )}
                               <Badge variant="secondary" className="text-xs px-1.5 py-0.5">
                                 {files.length}
                               </Badge>

@@ -2160,6 +2160,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Batch update file titles (descriptions)
+  app.put("/api/projects/:projectId/files/batch-update-title", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const projectId = parseInt(req.params.projectId);
+      const { fileIds, description } = req.body;
+
+      if (!fileIds || !Array.isArray(fileIds) || fileIds.length === 0) {
+        return res.status(400).json({ message: "fileIds array is required" });
+      }
+
+      if (!description || typeof description !== 'string') {
+        return res.status(400).json({ message: "description is required" });
+      }
+
+      const success = await storage.batchUpdateFileDescriptions(fileIds, description);
+      if (!success) {
+        return res.status(404).json({ message: "Files not found or update failed" });
+      }
+
+      res.json({ message: "File descriptions updated successfully" });
+    } catch (error) {
+      console.error("Error batch updating file descriptions:", error);
+      res.status(500).json({ message: "Failed to update file descriptions", error: String(error) });
+    }
+  });
+
   // Project Log Routes
   app.get("/api/projects/:id/logs", authenticateToken, async (req: AuthRequest, res) => {
     try {
