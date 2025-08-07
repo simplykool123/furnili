@@ -546,43 +546,45 @@ export default function InventoryMovement() {
                   (selectedMovement.reference && selectedMovement.reference.includes('Material Request'))) && (
                   <div className="border-t pt-3">
                     <Label className="text-xs font-medium text-gray-600">Material Request Details</Label>
-                    <div className="mt-2 space-y-2">
+                    <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
                       {selectedMovement.clientName && (
-                        <div className="flex justify-between">
-                          <span className="text-sm">Client:</span>
-                          <span className="text-sm font-semibold text-blue-700">{selectedMovement.clientName}</span>
-                        </div>
+                        <>
+                          <span className="text-gray-600">Client:</span>
+                          <span className="font-semibold text-blue-700 text-right">{selectedMovement.clientName}</span>
+                        </>
                       )}
                       {selectedMovement.projectName && (
-                        <div className="flex justify-between">
-                          <span className="text-sm">Project:</span>
-                          <span className="text-sm font-semibold">{selectedMovement.projectName}</span>
-                        </div>
+                        <>
+                          <span className="text-gray-600">Project:</span>
+                          <span className="font-semibold text-right">{selectedMovement.projectName}</span>
+                        </>
                       )}
                       {(selectedMovement.requestOrderNumber || selectedMovement.extractedOrderNumber) && (
-                        <div className="flex justify-between">
-                          <span className="text-sm">Order Number:</span>
-                          <span className="text-sm font-semibold text-blue-700">
+                        <>
+                          <span className="text-gray-600">Order Number:</span>
+                          <span className="font-semibold text-blue-700 text-right">
                             {selectedMovement.requestOrderNumber || selectedMovement.extractedOrderNumber}
                           </span>
-                        </div>
+                        </>
                       )}
                       {selectedMovement.requestStatus && (
-                        <div className="flex justify-between">
-                          <span className="text-sm">Request Status:</span>
-                          <span className={`text-sm font-semibold px-2 py-1 rounded text-xs ${
-                            selectedMovement.requestStatus === 'approved' ? 'bg-green-100 text-green-700' :
-                            selectedMovement.requestStatus === 'issued' ? 'bg-blue-100 text-blue-700' :
-                            selectedMovement.requestStatus === 'completed' ? 'bg-gray-100 text-gray-700' :
-                            'bg-yellow-100 text-yellow-700'
-                          }`}>
-                            {selectedMovement.requestStatus?.toUpperCase()}
+                        <>
+                          <span className="text-gray-600">Request Status:</span>
+                          <span className="text-right">
+                            <span className={`inline-block font-semibold px-2 py-1 rounded text-xs ${
+                              selectedMovement.requestStatus === 'approved' ? 'bg-green-100 text-green-700' :
+                              selectedMovement.requestStatus === 'issued' ? 'bg-blue-100 text-blue-700' :
+                              selectedMovement.requestStatus === 'completed' ? 'bg-gray-100 text-gray-700' :
+                              'bg-yellow-100 text-yellow-700'
+                            }`}>
+                              {selectedMovement.requestStatus?.toUpperCase()}
+                            </span>
                           </span>
-                        </div>
+                        </>
                       )}
-                      <div className="text-xs text-blue-600 mt-2">
-                        This stock movement is related to material request{selectedMovement.clientName ? ' for the above client' : ''}.
-                      </div>
+                    </div>
+                    <div className="text-xs text-blue-600 mt-2">
+                      This stock movement is related to material request{selectedMovement.clientName ? ' for the above client' : ''}.
                     </div>
                   </div>
                 )}
