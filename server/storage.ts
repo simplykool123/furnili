@@ -303,40 +303,55 @@ export interface IStorage {
 
 // MemStorage class removed - using DatabaseStorage with PostgreSQL
 
-  // Enhanced Attendance operations  
-  async checkIn(userId: number, checkInBy?: number, location?: string, notes?: string): Promise<Attendance> {
-    const id = this.currentId++;
-    const now = new Date();
-    
-    const attendance: Attendance = {
-      id,
-      userId,
-      date: now,
-      checkInTime: now,
-      checkOutTime: null,
-      workingHours: 0,
-      overtimeHours: 0,
-      status: "present",
-      leaveType: null,
-      checkInBy: checkInBy || null,
-      checkOutBy: null,
-      location: location || null,
-      notes: notes || null,
-      isManualEntry: !!checkInBy,
-      createdAt: now,
-      updatedAt: now,
-    };
-    
-    this.attendance.set(id, attendance);
-    return attendance;
+// Database imports moved to top to avoid duplicates
+
+// Database storage implementation starts here
+import { db } from "../db";
+import { eq, desc, and, sql, gte, lte, asc, inArray } from "drizzle-orm";
+
+class DatabaseStorage implements IStorage {
+  // User operations
+  async getUser(id: number): Promise<User | undefined> {
+    const result = await db.select().from(users).where(eq(users.id, id)).limit(1);
+    return result[0];
   }
 
-  async checkOut(attendanceId: number, checkOutBy?: number): Promise<Attendance | undefined> {
-    const attendance = this.attendance.get(attendanceId);
-    if (!attendance) return undefined;
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const result = await db.select().from(users).where(eq(users.email, email)).limit(1);
+    return result[0];
+  }
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const result = await db.select().from(users).where(eq(users.username, username)).limit(1);
+    return result[0];
+  }
+
+  async createUser(user: InsertUser): Promise<User> {
+    // Auto-generate employee ID if not provided
+    if (!user.employeeId) {
+      // Get the next available employee number
+      const lastUser = await db.select({ id: users.id }).from(users).orderBy(desc(users.id)).limit(1);
+      const nextId = lastUser[0] ? lastUser[0].id + 1 : 1;
+      user.employeeId = `FUN-${nextId.toString().padStart(3, '0')}`;
+    }
     
-    const checkOutTime = new Date();
-    const workingHours = (checkOutTime.getTime() - attendance.checkInTime!.getTime()) / (1000 * 60 * 60);
+    const result = await db.insert(users).values(user).returning();
+    return result[0];
+  }
+
+  async updateUser(id: number, updates: Partial<InsertUser>): Promise<User | undefined> {
+    const result = await db.update(users).set(updates).where(eq(users.id, id)).returning();
+    return result[0];
+  }
+
+  async getAllUsers(): Promise<User[]> {
+    return db.select().from(users).where(eq(users.isActive, true));
+  }
+
+  async deleteUser(id: number): Promise<boolean> {
+    const result = await db.delete(users).where(eq(users.id, id));
+    return true;
+  }
     const overtimeHours = workingHours > 8 ? workingHours - 8 : 0;
     
     const updatedAttendance: Attendance = {
