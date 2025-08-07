@@ -993,7 +993,7 @@ export default function PettyCash() {
                   <TableHead className="py-2 px-3 w-16">Type</TableHead>
                   <TableHead className="py-2 px-3 w-20 text-right">Amount</TableHead>
                   <TableHead className="py-2 px-3 min-w-[120px]">Paid To/Source</TableHead>
-                  <TableHead className="py-2 px-3 w-20">Paid By</TableHead>
+                  <TableHead className="py-2 px-3 w-20">Paid / Received By</TableHead>
                   <TableHead className="py-2 px-3 min-w-[150px]">Purpose</TableHead>
                   <TableHead className="py-2 px-3 w-20">Category</TableHead>
                   <TableHead className="py-2 px-3 w-32">Project & Client</TableHead>
