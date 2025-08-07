@@ -85,7 +85,7 @@ export default function Clients() {
       phone: "",
       address1: "",
       address2: "",
-      city: "",
+      city: "Pune",
       state: "Maharashtra",
       pinCode: "",
       gstNumber: "",
@@ -97,8 +97,12 @@ export default function Clients() {
     setSelectedState(state);
     const cities = getCitiesByState(state);
     setAvailableCities(cities);
-    // Reset city selection when state changes
-    clientForm.setValue("city", "");
+    // Set default city based on state
+    if (state === "Maharashtra") {
+      clientForm.setValue("city", "Pune");
+    } else {
+      clientForm.setValue("city", "");
+    }
   };
 
   // API Queries
