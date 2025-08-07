@@ -479,33 +479,33 @@ export default function InventoryMovement() {
 
       {/* Movement Details Dialog */}
       <Dialog open={!!selectedMovement} onOpenChange={() => setSelectedMovement(null)}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Movement Details</DialogTitle>
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+          <DialogHeader className="pb-2">
+            <DialogTitle className="text-lg">Movement Details</DialogTitle>
           </DialogHeader>
           {selectedMovement && (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between p-2 bg-gray-50 rounded">
                 <div className="flex items-center space-x-2">
                   {getMovementTypeIcon(selectedMovement.movementType)}
                   {getMovementTypeBadge(selectedMovement.movementType)}
                 </div>
                 <div className="text-right">
-                  <div className="text-sm text-gray-600">Movement ID</div>
+                  <div className="text-xs text-gray-600">Movement ID</div>
                   <div className="font-mono text-sm">#{selectedMovement.id}</div>
                 </div>
               </div>
 
-              <div className="space-y-3">
+              <div className="space-y-2">
                 <div>
                   <Label className="text-xs font-medium text-gray-600">Product</Label>
-                  <p className="font-medium">{selectedMovement.productName || 'Unknown Product'}</p>
+                  <p className="font-medium text-sm">{selectedMovement.productName || 'Unknown Product'}</p>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-3">
                   <div>
                     <Label className="text-xs font-medium text-gray-600">Quantity</Label>
-                    <p className={`font-bold text-lg ${
+                    <p className={`font-bold ${
                       (selectedMovement.movementType === 'in' || selectedMovement.movementType === 'inward') ? 'text-green-600' : 'text-red-600'
                     }`}>
                       {(selectedMovement.movementType === 'in' || selectedMovement.movementType === 'inward') ? '+' : '-'}{selectedMovement.quantity}
@@ -513,30 +513,30 @@ export default function InventoryMovement() {
                   </div>
                   <div>
                     <Label className="text-xs font-medium text-gray-600">Date</Label>
-                    <p className="text-sm">{formatDate(selectedMovement.createdAt)}</p>
+                    <p className="text-xs">{formatDate(selectedMovement.createdAt)}</p>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-3">
                   <div>
                     <Label className="text-xs font-medium text-gray-600">Previous Stock</Label>
-                    <p className="font-medium">{selectedMovement.previousStock || 'N/A'}</p>
+                    <p className="text-sm font-medium">{selectedMovement.previousStock || 'N/A'}</p>
                   </div>
                   <div>
                     <Label className="text-xs font-medium text-gray-600">New Stock</Label>
-                    <p className="font-medium">{selectedMovement.newStock || 'N/A'}</p>
+                    <p className="text-sm font-medium">{selectedMovement.newStock || 'N/A'}</p>
                   </div>
                 </div>
 
                 <div>
                   <Label className="text-xs font-medium text-gray-600">Performed By</Label>
-                  <p className="font-medium">{selectedMovement.performedByName || 'System'}</p>
+                  <p className="text-sm font-medium">{selectedMovement.performedByName || 'System'}</p>
                 </div>
 
                 {selectedMovement.reference && (
                   <div>
                     <Label className="text-xs font-medium text-gray-600">Reference</Label>
-                    <p className="font-medium">{selectedMovement.reference}</p>
+                    <p className="text-sm font-medium">{selectedMovement.reference}</p>
                   </div>
                 )}
 
@@ -544,9 +544,9 @@ export default function InventoryMovement() {
                 {(selectedMovement.movementType === 'out' || selectedMovement.movementType === 'outward') && 
                  (selectedMovement.clientName || selectedMovement.requestOrderNumber || selectedMovement.extractedOrderNumber || 
                   (selectedMovement.reference && selectedMovement.reference.includes('Material Request'))) && (
-                  <div className="border-t pt-3">
+                  <div className="border-t pt-2">
                     <Label className="text-xs font-medium text-gray-600">Material Request Details</Label>
-                    <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+                    <div className="mt-1 grid grid-cols-2 gap-x-3 gap-y-0 text-xs">
                       {selectedMovement.clientName && (
                         <>
                           <span className="text-gray-600">Client:</span>
@@ -571,7 +571,7 @@ export default function InventoryMovement() {
                         <>
                           <span className="text-gray-600">Request Status:</span>
                           <span className="text-right">
-                            <span className={`inline-block font-semibold px-2 py-1 rounded text-xs ${
+                            <span className={`inline-block font-semibold px-1 py-0.5 rounded text-xs ${
                               selectedMovement.requestStatus === 'approved' ? 'bg-green-100 text-green-700' :
                               selectedMovement.requestStatus === 'issued' ? 'bg-blue-100 text-blue-700' :
                               selectedMovement.requestStatus === 'completed' ? 'bg-gray-100 text-gray-700' :
@@ -583,113 +583,38 @@ export default function InventoryMovement() {
                         </>
                       )}
                     </div>
-                    <div className="text-xs text-blue-600 mt-2">
+                    <div className="text-xs text-blue-600 mt-1">
                       This stock movement is related to material request{selectedMovement.clientName ? ' for the above client' : ''}.
                     </div>
                   </div>
                 )}
 
                 {/* Enhanced Movement Context */}
-                {(selectedMovement.reason || selectedMovement.projectName || selectedMovement.materialRequestId) && (
-                  <div className="border-t pt-3">
+                {(selectedMovement.reason || selectedMovement.materialRequestId) && (
+                  <div className="border-t pt-2">
                     <Label className="text-xs font-medium text-gray-600">Movement Context</Label>
-                    <div className="mt-2 space-y-2">
+                    <div className="mt-1 grid grid-cols-2 gap-x-3 gap-y-0 text-xs">
                       {selectedMovement.reason && (
-                        <div className="flex justify-between">
-                          <span className="text-sm">Reason:</span>
-                          <span className="text-sm font-medium">{selectedMovement.reason}</span>
-                        </div>
-                      )}
-                      {selectedMovement.projectName && (
-                        <div className="flex justify-between">
-                          <span className="text-sm">Project:</span>
-                          <span className="text-sm font-medium">{selectedMovement.projectName}</span>
-                        </div>
+                        <>
+                          <span className="text-gray-600">Reason:</span>
+                          <span className="font-medium text-right">{selectedMovement.reason}</span>
+                        </>
                       )}
                       {selectedMovement.materialRequestId && (
-                        <div className="flex justify-between">
-                          <span className="text-sm">Material Request:</span>
-                          <span className="text-sm font-medium">#{selectedMovement.materialRequestId}</span>
-                        </div>
-                      )}
-                      {selectedMovement.destination && (
-                        <div className="flex justify-between">
-                          <span className="text-sm">Destination:</span>
-                          <span className="text-sm font-medium">{selectedMovement.destination}</span>
-                        </div>
-                      )}
-                      {selectedMovement.location && (
-                        <div className="flex justify-between">
-                          <span className="text-sm">Storage Location:</span>
-                          <span className="text-sm font-medium">{selectedMovement.location}</span>
-                        </div>
+                        <>
+                          <span className="text-gray-600">Material Request:</span>
+                          <span className="font-medium text-right">#{selectedMovement.materialRequestId}</span>
+                        </>
                       )}
                     </div>
                   </div>
                 )}
 
                 {selectedMovement.notes && (
-                  <div>
+                  <div className="border-t pt-2">
                     <Label className="text-xs font-medium text-gray-600">Notes</Label>
-                    <p className="text-sm bg-gray-50 p-2 rounded">{selectedMovement.notes}</p>
-                  </div>
-                )}
-
-                {(selectedMovement.vendor || selectedMovement.costPerUnit || selectedMovement.totalCost || selectedMovement.invoiceNumber) && (
-                  <div className="border-t pt-3">
-                    <Label className="text-xs font-medium text-gray-600">Financial Details</Label>
-                    <div className="mt-2 space-y-2">
-                      {selectedMovement.vendor && (
-                        <div className="flex justify-between">
-                          <span className="text-sm">Vendor:</span>
-                          <span className="text-sm font-medium">{selectedMovement.vendor}</span>
-                        </div>
-                      )}
-                      {selectedMovement.invoiceNumber && (
-                        <div className="flex justify-between">
-                          <span className="text-sm">Invoice:</span>
-                          <span className="text-sm font-medium">{selectedMovement.invoiceNumber}</span>
-                        </div>
-                      )}
-                      {selectedMovement.costPerUnit && (
-                        <div className="flex justify-between">
-                          <span className="text-sm">Cost per Unit:</span>
-                          <span className="text-sm font-medium">₹{selectedMovement.costPerUnit}</span>
-                        </div>
-                      )}
-                      {selectedMovement.totalCost && (
-                        <div className="flex justify-between font-medium">
-                          <span className="text-sm">Total Cost:</span>
-                          <span className="text-sm">₹{selectedMovement.totalCost}</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {/* Quality & Traceability Details */}
-                {(selectedMovement.batchNumber || selectedMovement.expiryDate || selectedMovement.approvedByName) && (
-                  <div className="border-t pt-3">
-                    <Label className="text-xs font-medium text-gray-600">Quality & Traceability</Label>
-                    <div className="mt-2 space-y-2">
-                      {selectedMovement.batchNumber && (
-                        <div className="flex justify-between">
-                          <span className="text-sm">Batch Number:</span>
-                          <span className="text-sm font-medium">{selectedMovement.batchNumber}</span>
-                        </div>
-                      )}
-                      {selectedMovement.expiryDate && (
-                        <div className="flex justify-between">
-                          <span className="text-sm">Expiry Date:</span>
-                          <span className="text-sm font-medium">{formatDate(selectedMovement.expiryDate)}</span>
-                        </div>
-                      )}
-                      {selectedMovement.approvedByName && (
-                        <div className="flex justify-between">
-                          <span className="text-sm">Approved By:</span>
-                          <span className="text-sm font-medium">{selectedMovement.approvedByName}</span>
-                        </div>
-                      )}
+                    <div className="mt-1">
+                      <p className="text-xs text-gray-700">{selectedMovement.notes}</p>
                     </div>
                   </div>
                 )}
