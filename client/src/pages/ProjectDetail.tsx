@@ -1110,16 +1110,22 @@ export default function ProjectDetail() {
     },
   });
 
-  // Comment update mutation
+  // Comment update mutation (also handles description updates)
   const updateCommentMutation = useMutation({
     mutationFn: async ({
       fileId,
       comment,
+      newDescription,
     }: {
       fileId: number;
       comment: string;
+      newDescription?: string;
     }) => {
-      return apiRequest(`/api/files/${fileId}/comment`, { method: "PUT", body: JSON.stringify({ comment }) });
+      const updateData: any = { comment };
+      if (newDescription !== undefined) {
+        updateData.description = newDescription;
+      }
+      return apiRequest(`/api/files/${fileId}/comment`, { method: "PUT", body: JSON.stringify(updateData) });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -1130,32 +1136,31 @@ export default function ProjectDetail() {
     },
   });
 
-  // Mutation for updating group titles (description field for all files in a group)
-  const updateGroupTitleMutation = useMutation({
-    mutationFn: async ({ fileIds, newTitle }: { fileIds: number[]; newTitle: string }) => {
-      return apiRequest(`/api/projects/${projectId}/files/batch-update-title`, {
-        method: "PUT",
-        body: JSON.stringify({ fileIds, description: newTitle }),
+  // Function to handle group title updates directly in frontend
+  const updateGroupTitle = (category: string, oldTitle: string, newTitle: string) => {
+    if (newTitle === oldTitle || !newTitle.trim()) return;
+
+    // Update the local state to reflect the change immediately
+    setGroupTitles(prev => ({
+      ...prev,
+      [`${category}-${oldTitle}`]: newTitle,
+      [`${category}-${newTitle}`]: newTitle, // Add new mapping
+    }));
+
+    // Update all files in this group individually via API
+    const filesToUpdate = projectFiles?.filter(
+      (file: any) => file.category === category && file.description === oldTitle
+    ) || [];
+
+    // Update each file individually with new description
+    filesToUpdate.forEach((file: any) => {
+      updateCommentMutation.mutate({
+        fileId: file.id,
+        comment: file.comment || '',
+        newDescription: newTitle
       });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["/api/projects", projectId, "files"],
-      });
-      toast({
-        title: "Success",
-        description: "Title updated for all files in group",
-      });
-    },
-    onError: (error) => {
-      console.error("Failed to update group title:", error);
-      toast({
-        title: "Error", 
-        description: "Failed to update group title",
-        variant: "destructive",
-      });
-    },
-  });
+    });
+  };
 
   const handleMoodboardCreate = (data: any) => {
     console.log("Creating moodboard with data:", data);
@@ -1929,18 +1934,16 @@ export default function ProjectDetail() {
                                   }
                                   onBlur={() => {
                                     const newTitle = groupTitles[`${category}-${title}`] || title;
-                                    const fileIds = files.map((f: any) => f.id);
                                     if (newTitle !== title) {
-                                      updateGroupTitleMutation.mutate({ fileIds, newTitle });
+                                      updateGroupTitle(category, title, newTitle);
                                     }
                                     setEditingGroupTitle(null);
                                   }}
                                   onKeyDown={(e) => {
                                     if (e.key === "Enter") {
                                       const newTitle = groupTitles[`${category}-${title}`] || title;
-                                      const fileIds = files.map((f: any) => f.id);
                                       if (newTitle !== title) {
-                                        updateGroupTitleMutation.mutate({ fileIds, newTitle });
+                                        updateGroupTitle(category, title, newTitle);
                                       }
                                       setEditingGroupTitle(null);
                                     }

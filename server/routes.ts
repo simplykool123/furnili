@@ -2145,21 +2145,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Update file comment
+  // Update file comment and/or description
   app.put("/api/files/:fileId/comment", authenticateToken, async (req: AuthRequest, res) => {
     try {
       const fileId = parseInt(req.params.fileId);
-      const { comment } = req.body;
+      const { comment, description } = req.body;
       
-      const success = await storage.updateFileComment(fileId, comment);
-      if (!success) {
+      // Build update object based on what fields are provided
+      const updateData: any = { updatedAt: new Date() };
+      if (comment !== undefined) updateData.comment = comment;
+      if (description !== undefined) updateData.description = description;
+      
+      // Direct database update for flexibility
+      const result = await db.update(projectFiles)
+        .set(updateData)
+        .where(eq(projectFiles.id, fileId));
+        
+      if (!result.rowCount || result.rowCount === 0) {
         return res.status(404).json({ message: "File not found or update failed" });
       }
       
-      res.json({ message: "Comment updated successfully" });
+      res.json({ message: "File updated successfully" });
     } catch (error) {
-      console.error("Error updating comment:", error);
-      res.status(500).json({ message: "Failed to update comment", error: String(error) });
+      console.error("Error updating file:", error);
+      res.status(500).json({ message: "Failed to update file", error: String(error) });
     }
   });
 
