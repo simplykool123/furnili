@@ -497,48 +497,49 @@ export default function InventoryMovement() {
               </div>
 
               <div className="space-y-2">
+                {/* Product, Quantity, Date in one line */}
                 <div>
                   <Label className="text-xs font-medium text-gray-600">Product</Label>
-                  <p className="font-medium text-sm">{selectedMovement.productName || 'Unknown Product'}</p>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <Label className="text-xs font-medium text-gray-600">Quantity</Label>
-                    <p className={`font-bold ${
-                      (selectedMovement.movementType === 'in' || selectedMovement.movementType === 'inward') ? 'text-green-600' : 'text-red-600'
-                    }`}>
-                      {(selectedMovement.movementType === 'in' || selectedMovement.movementType === 'inward') ? '+' : '-'}{selectedMovement.quantity}
-                    </p>
-                  </div>
-                  <div>
-                    <Label className="text-xs font-medium text-gray-600">Date</Label>
-                    <p className="text-xs">{formatDate(selectedMovement.createdAt)}</p>
+                  <div className="grid grid-cols-3 gap-2 mt-1">
+                    <div>
+                      <p className="font-medium text-xs">{selectedMovement.productName || 'Unknown Product'}</p>
+                    </div>
+                    <div className="text-center">
+                      <p className={`font-bold text-xs ${
+                        (selectedMovement.movementType === 'in' || selectedMovement.movementType === 'inward') ? 'text-green-600' : 'text-red-600'
+                      }`}>
+                        {(selectedMovement.movementType === 'in' || selectedMovement.movementType === 'inward') ? '+' : '-'}{selectedMovement.quantity}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs">{formatDate(selectedMovement.createdAt)}</p>
+                    </div>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <Label className="text-xs font-medium text-gray-600">Previous Stock</Label>
-                    <p className="text-sm font-medium">{selectedMovement.previousStock || 'N/A'}</p>
+                    <p className="text-xs font-medium">{selectedMovement.previousStock || 'N/A'}</p>
                   </div>
                   <div>
                     <Label className="text-xs font-medium text-gray-600">New Stock</Label>
-                    <p className="text-sm font-medium">{selectedMovement.newStock || 'N/A'}</p>
+                    <p className="text-xs font-medium">{selectedMovement.newStock || 'N/A'}</p>
                   </div>
                 </div>
 
+                {/* Performed By and Reference in one line */}
                 <div>
-                  <Label className="text-xs font-medium text-gray-600">Performed By</Label>
-                  <p className="text-sm font-medium">{selectedMovement.performedByName || 'System'}</p>
-                </div>
-
-                {selectedMovement.reference && (
-                  <div>
-                    <Label className="text-xs font-medium text-gray-600">Reference</Label>
-                    <p className="text-sm font-medium">{selectedMovement.reference}</p>
+                  <Label className="text-xs font-medium text-gray-600">Performed By & Reference</Label>
+                  <div className="grid grid-cols-2 gap-3 mt-1">
+                    <div>
+                      <p className="text-xs font-medium">{selectedMovement.performedByName || 'System'}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs font-medium">{selectedMovement.reference || 'N/A'}</p>
+                    </div>
                   </div>
-                )}
+                </div>
 
                 {/* Material Request Details for Outward Movements */}
                 {(selectedMovement.movementType === 'out' || selectedMovement.movementType === 'outward') && 
