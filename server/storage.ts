@@ -346,7 +346,8 @@ class DatabaseStorage implements IStorage {
       client_name: row.clients?.name || null,
       client_mobile: row.clients?.mobile || null,
       client_email: row.clients?.email || null,
-      client_address: row.clients?.address1 || null
+      client_address: row.clients?.address1 || null,
+      city: row.projects.siteCity || row.clients?.city || null
     }));
   }
 

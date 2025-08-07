@@ -25,7 +25,7 @@ const userSchema = z.object({
   email: z.string().email("Invalid email address"),
   password: z.string().min(6, "Password must be at least 6 characters"),
   name: z.string().min(1, "Name is required"),
-  role: z.enum(["admin", "staff", "store_incharge"]),
+  role: z.enum(["admin", "manager", "staff", "store_incharge"]),
 });
 
 const editUserSchema = z.object({
@@ -33,7 +33,7 @@ const editUserSchema = z.object({
   email: z.string().email("Invalid email address"),
   password: z.string().optional(), // Password is optional for editing
   name: z.string().min(1, "Name is required"),
-  role: z.enum(["admin", "staff", "store_incharge"]),
+  role: z.enum(["admin", "manager", "staff", "store_incharge"]),
   resetPassword: z.boolean().optional(),
 });
 
@@ -516,6 +516,7 @@ export default function Users() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="admin">🔑 Admin (Full Access)</SelectItem>
+                    <SelectItem value="manager">👔 Manager (Project Management)</SelectItem>
                     <SelectItem value="staff">👷 Staff (Daily Operations)</SelectItem>
                     <SelectItem value="store_incharge">🧰 Store Incharge (Inventory Manager)</SelectItem>
                   </SelectContent>
@@ -592,6 +593,7 @@ export default function Users() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="admin">🔑 Admin (Full Access)</SelectItem>
+                    <SelectItem value="manager">👔 Manager (Project Management)</SelectItem>
                     <SelectItem value="staff">👷 Staff (Daily Operations)</SelectItem>
                     <SelectItem value="store_incharge">🧰 Store Incharge (Inventory Manager)</SelectItem>
                   </SelectContent>
