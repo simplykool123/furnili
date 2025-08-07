@@ -648,9 +648,47 @@ class DatabaseStorage implements IStorage {
     return result[0];
   }
 
-  // Missing payroll methods
-  async getAllPayrolls(): Promise<any[]> {
-    return db.select().from(payroll);
+  // Payroll methods
+  async getAllPayrolls(month?: number, year?: number, userId?: number): Promise<any[]> {
+    let query = db.select()
+      .from(payroll)
+      .leftJoin(users, eq(payroll.userId, users.id));
+
+    // Build where conditions
+    const whereConditions = [];
+    if (month !== undefined) {
+      whereConditions.push(eq(payroll.month, month));
+    }
+    if (year !== undefined) {
+      whereConditions.push(eq(payroll.year, year));
+    }
+    if (userId !== undefined) {
+      whereConditions.push(eq(payroll.userId, userId));
+    }
+
+    if (whereConditions.length > 0) {
+      // Apply where conditions
+      let finalQuery = query;
+      for (const condition of whereConditions) {
+        finalQuery = finalQuery.where(condition) as any;
+      }
+      const results = await finalQuery;
+      
+      return results.map((row: any) => ({
+        ...row.payroll,
+        userName: row.users?.name || row.users?.username || 'Unknown User',
+        userEmail: row.users?.email || '',
+        userRole: row.users?.role || ''
+      }));
+    }
+
+    const results = await query;
+    return results.map((row: any) => ({
+      ...row.payroll,
+      userName: row.users?.name || row.users?.username || 'Unknown User',
+      userEmail: row.users?.email || '',
+      userRole: row.users?.role || ''
+    }));
   }
 
   async generatePayroll(data: any): Promise<any> {
