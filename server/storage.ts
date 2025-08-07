@@ -115,6 +115,11 @@ export interface IStorage {
   // Request Item operations
   createRequestItem(item: InsertRequestItem): Promise<RequestItem>;
   getRequestItems(requestId: number): Promise<RequestItem[]>;
+
+  // Client operations
+  getAllClients(): Promise<Client[]>;
+  getClient(id: number): Promise<Client | undefined>;
+  createClient(client: InsertClient): Promise<Client>;
 }
 
 class DatabaseStorage implements IStorage {
@@ -445,6 +450,21 @@ class DatabaseStorage implements IStorage {
 
   async getRequestItems(requestId: number): Promise<RequestItem[]> {
     return db.select().from(requestItems).where(eq(requestItems.requestId, requestId));
+  }
+
+  // Client operations
+  async getAllClients(): Promise<Client[]> {
+    return db.select().from(clients).where(eq(clients.isActive, true)).orderBy(asc(clients.name));
+  }
+
+  async getClient(id: number): Promise<Client | undefined> {
+    const result = await db.select().from(clients).where(eq(clients.id, id)).limit(1);
+    return result[0];
+  }
+
+  async createClient(client: InsertClient): Promise<Client> {
+    const result = await db.insert(clients).values(client).returning();
+    return result[0];
   }
 }
 
