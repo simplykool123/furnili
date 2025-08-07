@@ -106,6 +106,14 @@ The system adheres to a professional and consistent UI/UX based on the "Furnili 
 
 ## Recent Changes
 
+### January 8, 2025 - Inventory Movement Display Fix  ✅ COMPLETED
+- **MAJOR FIX: Product and User Name Display**: Resolved "Unknown Product" and "System" display issues in Inventory Movement
+- **Database Query Enhancement**: Added proper LEFT JOIN queries in `getAllStockMovements()` to fetch product names and user names
+- **Backend Storage Optimization**: Enhanced `server/storage.ts` with complete product and user information retrieval
+- **Client API Fix**: Added missing client operations (`getAllClients`, `getClient`, `createClient`) to resolve "Failed to fetch clients" error
+- **Data Integrity**: Inventory movements now show actual product names ("Calibrated ply") and real usernames ("keeper")
+- **System Status**: Complete resolution of data display issues with proper database relationship handling
+
 ### January 6, 2025 - Critical TypeScript Error Resolution  ✅ COMPLETED
 - **MAJOR ACHIEVEMENT: Complete TypeScript Error Resolution**: Successfully resolved 116+ critical TypeScript/LSP errors across all server and client files
 - **Server Stability**: Fixed critical errors in server/routes.ts, server/storage.ts preventing proper functionality
