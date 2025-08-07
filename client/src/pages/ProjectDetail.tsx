@@ -1862,13 +1862,7 @@ export default function ProjectDetail() {
                     return groups;
                   }, {}),
                 ).map(([category, files]: [string, any]) => {
-                  // Debug log to see what's in each category
-                  console.log(`Category: ${category}, Files count: ${files.length}`);
-                  files.forEach((f: any, i: number) => {
-                    console.log(`  File ${i + 1}: description="${f.description}", originalName="${f.originalName}"`);
-                  });
-                  
-                  // Check if we have a single file with title (stored in description) or meaningful originalName
+                  // For single files, prioritize showing user-entered title (description) or meaningful filename
                   const singleFile = files.length === 1 ? files[0] : null;
                   const hasTitle = singleFile?.description && singleFile.description.trim().length > 0;
                   const hasOriginalName = singleFile?.originalName && 
@@ -2022,8 +2016,15 @@ export default function ProjectDetail() {
                             </div>
                           </div>
 
-                          {/* Inline Editable Comment Section */}
+                          {/* File Title and Comment Section */}
                           <div className="mt-2">
+                            {/* Show user-entered title from description field */}
+                            {file.description && file.description.trim() && (
+                              <div className="text-sm font-medium text-gray-900 mb-1 truncate" title={file.description}>
+                                {file.description}
+                              </div>
+                            )}
+                            
                             <div className="bg-gray-50 rounded p-2 min-h-[40px] flex items-center">
                               <input
                                 type="text"
