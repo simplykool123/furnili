@@ -2274,120 +2274,122 @@ export default function Attendance() {
                 Payroll for {new Date(selectedYear, selectedMonth - 1).toLocaleDateString('en-US', { month: 'long' })} {selectedYear.toString().slice(-2)}
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Employee</TableHead>
-                    <TableHead>Working Days</TableHead>
-                    <TableHead>Salary</TableHead>
-                    <TableHead>Net Pay</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {payrollRecords.map((payroll: any) => {
-                    // Find the staff member from the staff array
-                    const staffMember = staff.find((s: any) => s.id === payroll.userId);
-                    const staffName = staffMember?.name || `User ${payroll.userId}`;
-                    const employeeId = staffMember?.employeeId || payroll.employeeId || 'N/A';
-                    
-                    // Calculate net pay properly - use basicSalary and other fields correctly
-                    const basicSalary = payroll.basicSalary || payroll.salary || staffMember?.basicSalary || 0;
-                    const allowances = payroll.allowances || 0;
-                    const bonus = payroll.bonus || 0;
-                    const overtimePay = payroll.overtimePay || 0;
-                    const deductions = payroll.deductions || payroll.advance || 0;
-                    
-                    // If no working days, net salary should be 0
-                    const actualWorkingDays = payroll.actualWorkingDays || 0;
-                    const totalWorkingDays = payroll.totalWorkingDays || 30;
-                    
-                    // Calculate proportionate salary based on working days
-                    const proportionateSalary = actualWorkingDays > 0 ? 
-                      Math.round((basicSalary / totalWorkingDays) * actualWorkingDays) : 0;
-                    
-                    const netSalary = payroll.netSalary || (proportionateSalary + allowances + bonus + overtimePay - deductions);
-                    
-                    return (
-                      <TableRow key={payroll.id}>
-                        <TableCell>
-                          <div className="font-semibold">{staffName}</div>
-                          <div className="text-sm text-gray-600">{employeeId}</div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="font-semibold">{payroll.actualWorkingDays || 0}</div>
-                          <div className="text-sm text-gray-600">of {payroll.totalWorkingDays || 30}</div>
-                        </TableCell>
-                        <TableCell className="font-semibold">₹{basicSalary.toLocaleString()}</TableCell>
-                        <TableCell className="font-semibold text-green-600">₹{netSalary.toLocaleString()}</TableCell>
-                        <TableCell>
-                          <Badge variant={payroll.status === "paid" ? "default" : "secondary"}>
-                            {payroll.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex gap-1">
-                            {/* Generate button - always available for regeneration */}
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => generatePayrollMutation.mutate({
-                                userId: payroll.userId,
-                                month: selectedMonth,
-                                year: selectedYear
-                              })}
-                              className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-2 py-1"
-                              disabled={generatePayrollMutation.isPending}
-                              title="Generate"
-                            >
-                              <FileText className="w-3 h-3" />
-                            </Button>
-                            
-                            {/* Status-specific buttons */}
-                            {payroll.status === "generated" && (
+            <CardContent className="p-3">
+              <div className="overflow-x-auto">
+                <Table className="text-sm">
+                  <TableHeader>
+                    <TableRow className="h-8">
+                      <TableHead className="text-xs py-1 px-2">Employee</TableHead>
+                      <TableHead className="text-xs py-1 px-2">Working Days</TableHead>
+                      <TableHead className="text-xs py-1 px-2">Salary</TableHead>
+                      <TableHead className="text-xs py-1 px-2">Net Pay</TableHead>
+                      <TableHead className="text-xs py-1 px-2">Status</TableHead>
+                      <TableHead className="text-xs py-1 px-2">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {payrollRecords.map((payroll: any) => {
+                      // Find the staff member from the staff array
+                      const staffMember = staff.find((s: any) => s.id === payroll.userId);
+                      const staffName = staffMember?.name || `User ${payroll.userId}`;
+                      const employeeId = staffMember?.employeeId || payroll.employeeId || 'N/A';
+                      
+                      // Calculate net pay properly - use basicSalary and other fields correctly
+                      const basicSalary = payroll.basicSalary || payroll.salary || staffMember?.basicSalary || 0;
+                      const allowances = payroll.allowances || 0;
+                      const bonus = payroll.bonus || 0;
+                      const overtimePay = payroll.overtimePay || 0;
+                      const deductions = payroll.deductions || payroll.advance || 0;
+                      
+                      // If no working days, net salary should be 0
+                      const actualWorkingDays = payroll.actualWorkingDays || 0;
+                      const totalWorkingDays = payroll.totalWorkingDays || 30;
+                      
+                      // Calculate proportionate salary based on working days
+                      const proportionateSalary = actualWorkingDays > 0 ? 
+                        Math.round((basicSalary / totalWorkingDays) * actualWorkingDays) : 0;
+                      
+                      const netSalary = payroll.netSalary || (proportionateSalary + allowances + bonus + overtimePay - deductions);
+                      
+                      return (
+                        <TableRow key={payroll.id} className="h-10">
+                          <TableCell className="py-1 px-2">
+                            <div className="text-sm font-medium">{staffName}</div>
+                            <div className="text-xs text-gray-500">{employeeId}</div>
+                          </TableCell>
+                          <TableCell className="py-1 px-2">
+                            <div className="text-sm font-medium">{payroll.actualWorkingDays || 0}</div>
+                            <div className="text-xs text-gray-500">of {payroll.totalWorkingDays || 30}</div>
+                          </TableCell>
+                          <TableCell className="py-1 px-2 text-sm font-medium">₹{basicSalary.toLocaleString()}</TableCell>
+                          <TableCell className="py-1 px-2 text-sm font-medium text-green-600">₹{netSalary.toLocaleString()}</TableCell>
+                          <TableCell className="py-1 px-2">
+                            <Badge variant={payroll.status === "paid" ? "default" : "secondary"} className="text-xs px-1.5 py-0.5">
+                              {payroll.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="py-1 px-2">
+                            <div className="flex gap-0.5">
+                              {/* Generate button - always available for regeneration */}
                               <Button
                                 size="sm"
                                 variant="outline"
-                                onClick={() => processPayrollMutation.mutate(payroll.id)}
-                                className="bg-green-600 hover:bg-green-700 text-white text-xs px-2 py-1"
-                                disabled={processPayrollMutation.isPending}
-                                title="Paid"
+                                onClick={() => generatePayrollMutation.mutate({
+                                  userId: payroll.userId,
+                                  month: selectedMonth,
+                                  year: selectedYear
+                                })}
+                                className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-1.5 py-1 h-6"
+                                disabled={generatePayrollMutation.isPending}
+                                title="Generate"
                               >
-                                <CreditCard className="w-3 h-3" />
+                                <FileText className="w-3 h-3" />
                               </Button>
-                            )}
-                            
-                            {payroll.status === "paid" && (
+                              
+                              {/* Status-specific buttons */}
+                              {payroll.status === "generated" && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => processPayrollMutation.mutate(payroll.id)}
+                                  className="bg-green-600 hover:bg-green-700 text-white text-xs px-1.5 py-1 h-6"
+                                  disabled={processPayrollMutation.isPending}
+                                  title="Paid"
+                                >
+                                  <CreditCard className="w-3 h-3" />
+                                </Button>
+                              )}
+                              
+                              {payroll.status === "paid" && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => downloadPayslip(payroll.id)}
+                                  className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-1.5 py-1 h-6"
+                                  title="PDF"
+                                >
+                                  <Download className="w-3 h-3" />
+                                </Button>
+                              )}
+                              
                               <Button
                                 size="sm"
                                 variant="outline"
-                                onClick={() => downloadPayslip(payroll.id)}
-                                className="bg-blue-600 hover:bg-blue-700 text-white text-xs px-2 py-1"
-                                title="PDF"
+                                onClick={() => handleEditPayroll(payroll)}
+                                style={{ backgroundColor: 'hsl(28, 100%, 25%)', color: 'white' }}
+                                className="text-xs px-1.5 py-1 h-6"
+                                title="Edit"
                               >
-                                <Download className="w-3 h-3" />
+                                <Edit className="w-3 h-3" />
                               </Button>
-                            )}
-                            
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleEditPayroll(payroll)}
-                              style={{ backgroundColor: 'hsl(28, 100%, 25%)', color: 'white' }}
-                              className="text-xs px-2 py-1"
-                              title="Edit"
-                            >
-                              <Edit className="w-3 h-3" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
             </CardContent>
           </Card>
           </TabsContent>
