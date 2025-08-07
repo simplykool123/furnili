@@ -930,7 +930,7 @@ export default function ProjectDetail() {
   // Mutations for database operations
   const createLogMutation = useMutation({
     mutationFn: async (logData: any) => {
-      return apiRequest("POST", `/api/projects/${projectId}/logs`, { body: JSON.stringify(logData) });
+      return apiRequest("POST", `/api/projects/${projectId}/logs`, logData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -1064,11 +1064,7 @@ export default function ProjectDetail() {
   // Note update mutation
   const updateLogMutation = useMutation({
     mutationFn: async ({ id, ...logData }: any) => {
-      return apiRequest(
-        "PUT",
-        `/api/projects/${projectId}/logs/${id}`,
-        { body: JSON.stringify(logData) },
-      );
+      return apiRequest("PUT", `/api/projects/${projectId}/logs/${id}`, logData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -1104,7 +1100,7 @@ export default function ProjectDetail() {
   // Note deletion mutation
   const deleteLogMutation = useMutation({
     mutationFn: async (logId: number) => {
-      return apiRequest("DELETE", `/api/projects/${projectId}/logs/${logId}`, {});
+      return apiRequest("DELETE", `/api/projects/${projectId}/logs/${logId}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -1123,7 +1119,7 @@ export default function ProjectDetail() {
       fileId: number;
       comment: string;
     }) => {
-      return apiRequest("PUT", `/api/files/${fileId}/comment`, { body: JSON.stringify({ comment }) });
+      return apiRequest("PUT", `/api/files/${fileId}/comment`, { comment });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -1431,9 +1427,7 @@ export default function ProjectDetail() {
   // Stage update mutation
   const stageUpdateMutation = useMutation({
     mutationFn: async (newStage: string) => {
-      return apiRequest("PATCH", `/api/projects/${projectId}`, { 
-        body: JSON.stringify({ stage: newStage })
-      });
+      return apiRequest("PATCH", `/api/projects/${projectId}`, { stage: newStage });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/projects", projectId] });
@@ -1868,6 +1862,13 @@ export default function ProjectDetail() {
                     return groups;
                   }, {}),
                 ).map(([category, files]: [string, any]) => {
+                  // Debug logging to see what's in the files
+                  console.log(`Category: ${category}, Files:`, files.map(f => ({ 
+                    title: f.title, 
+                    originalName: f.originalName,
+                    fileName: f.fileName 
+                  })));
+                  
                   // Check if we have a single file with meaningful content to display as title
                   const shouldShowFileAsTitle = files.length === 1 && (
                     files[0].title || 
