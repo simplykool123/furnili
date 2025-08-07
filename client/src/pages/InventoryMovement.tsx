@@ -542,7 +542,7 @@ export default function InventoryMovement() {
 
                 {/* Material Request Details for Outward Movements */}
                 {(selectedMovement.movementType === 'out' || selectedMovement.movementType === 'outward') && 
-                 (selectedMovement.clientName || selectedMovement.extractedOrderNumber || 
+                 (selectedMovement.clientName || selectedMovement.requestOrderNumber || selectedMovement.extractedOrderNumber || 
                   (selectedMovement.reference && selectedMovement.reference.includes('Material Request'))) && (
                   <div className="border-t pt-3">
                     <Label className="text-xs font-medium text-gray-600">Material Request Details</Label>
@@ -583,6 +583,8 @@ export default function InventoryMovement() {
                       <div className="text-xs text-blue-600 mt-2">
                         {selectedMovement.clientName ? 
                           "This stock movement is related to a material request for the above client." :
+                          (selectedMovement.requestOrderNumber || selectedMovement.extractedOrderNumber) ?
+                          `This stock movement is related to material request ${selectedMovement.requestOrderNumber || selectedMovement.extractedOrderNumber}.` :
                           "This stock movement is related to a material request (order number not specified)."
                         }
                       </div>
