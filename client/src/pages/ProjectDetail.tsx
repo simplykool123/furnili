@@ -1872,37 +1872,52 @@ export default function ProjectDetail() {
                     key={category}
                     className="bg-white rounded-lg border border-gray-200 p-4"
                   >
-                    {/* Editable Group Title */}
+                    {/* File Title and Category Display */}
                     <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center gap-3">
-                        {editingGroupTitle === category ? (
-                          <input
-                            type="text"
-                            value={groupTitles[category] || category}
-                            onChange={(e) =>
-                              setGroupTitles({
-                                ...groupTitles,
-                                [category]: e.target.value,
-                              })
-                            }
-                            onBlur={() => setEditingGroupTitle(null)}
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter") setEditingGroupTitle(null);
-                            }}
-                            className="text-lg font-semibold text-gray-900 bg-transparent border-b border-gray-300 focus:border-blue-500 outline-none"
-                            autoFocus
-                          />
-                        ) : (
-                          <h3
-                            className="text-lg font-semibold text-gray-900 cursor-pointer hover:text-blue-600"
-                            onClick={() => setEditingGroupTitle(category)}
-                          >
+                      <div className="flex flex-col gap-1">
+                        {/* Show file title if available, otherwise show category */}
+                        <div className="flex items-center gap-3">
+                          {files.length === 1 && files[0].title ? (
+                            <h3 className="text-lg font-semibold text-gray-900">
+                              {files[0].title}
+                            </h3>
+                          ) : (
+                            editingGroupTitle === category ? (
+                              <input
+                                type="text"
+                                value={groupTitles[category] || category}
+                                onChange={(e) =>
+                                  setGroupTitles({
+                                    ...groupTitles,
+                                    [category]: e.target.value,
+                                  })
+                                }
+                                onBlur={() => setEditingGroupTitle(null)}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter") setEditingGroupTitle(null);
+                                }}
+                                className="text-lg font-semibold text-gray-900 bg-transparent border-b border-gray-300 focus:border-blue-500 outline-none"
+                                autoFocus
+                              />
+                            ) : (
+                              <h3
+                                className="text-lg font-semibold text-gray-900 cursor-pointer hover:text-blue-600"
+                                onClick={() => setEditingGroupTitle(category)}
+                              >
+                                {groupTitles[category] || category}
+                              </h3>
+                            )
+                          )}
+                          <Badge variant="secondary" className="text-xs">
+                            {files.length} files
+                          </Badge>
+                        </div>
+                        {/* Show category as subtitle when file has title */}
+                        {files.length === 1 && files[0].title && (
+                          <div className="text-sm text-gray-600 font-medium">
                             {groupTitles[category] || category}
-                          </h3>
+                          </div>
                         )}
-                        <Badge variant="secondary" className="text-xs">
-                          {files.length} files
-                        </Badge>
                       </div>
                       <Button
                         size="sm"
