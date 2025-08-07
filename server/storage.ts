@@ -103,7 +103,7 @@ export interface IStorage {
   getMonthlyExpenses(month: number, year: number): Promise<number>;
 
   // Petty Cash operations
-  getAllPettyCashExpenses(month?: number, year?: number): Promise<PettyCashExpense[]>;
+  getAllPettyCashExpenses(filters?: { category?: string; status?: string; addedBy?: number; projectId?: number; month?: number; year?: number }): Promise<PettyCashExpense[]>;
   createPettyCashExpense(expense: InsertPettyCashExpense): Promise<PettyCashExpense>;
 
   // Task operations
@@ -442,21 +442,78 @@ class DatabaseStorage implements IStorage {
   }
 
   // Petty Cash operations
-  async getAllPettyCashExpenses(month?: number, year?: number): Promise<PettyCashExpense[]> {
+  async getAllPettyCashExpenses(filters?: { category?: string; status?: string; addedBy?: number; projectId?: number; month?: number; year?: number }): Promise<PettyCashExpense[]> {
     let query = db.select().from(pettyCashExpenses);
     
-    if (month && year) {
-      const startDate = new Date(year, month - 1, 1);
-      const endDate = new Date(year, month, 0, 23, 59, 59);
-      query = query.where(
-        and(
+    // Apply filters if provided
+    if (filters) {
+      let whereClause = null;
+      
+      if (filters.category) {
+        whereClause = whereClause ? and(whereClause, eq(pettyCashExpenses.category, filters.category)) 
+                                  : eq(pettyCashExpenses.category, filters.category);
+      }
+      
+      if (filters.status) {
+        whereClause = whereClause ? and(whereClause, eq(pettyCashExpenses.status, filters.status))
+                                  : eq(pettyCashExpenses.status, filters.status);
+      }
+      
+      if (filters.addedBy) {
+        whereClause = whereClause ? and(whereClause, eq(pettyCashExpenses.addedBy, filters.addedBy))
+                                  : eq(pettyCashExpenses.addedBy, filters.addedBy);
+      }
+      
+      if (filters.projectId) {
+        whereClause = whereClause ? and(whereClause, eq(pettyCashExpenses.projectId, filters.projectId))
+                                  : eq(pettyCashExpenses.projectId, filters.projectId);
+      }
+      
+      if (filters.month && filters.year) {
+        const startDate = new Date(filters.year, filters.month - 1, 1);
+        const endDate = new Date(filters.year, filters.month, 0, 23, 59, 59);
+        const dateCondition = and(
           gte(pettyCashExpenses.expenseDate, startDate),
           lte(pettyCashExpenses.expenseDate, endDate)
-        )
-      );
+        );
+        whereClause = whereClause ? and(whereClause, dateCondition) : dateCondition;
+      }
+      
+      if (whereClause) {
+        query = query.where(whereClause);
+      }
     }
     
-    return query.orderBy(desc(pettyCashExpenses.expenseDate));
+    const results = await query.orderBy(desc(pettyCashExpenses.expenseDate));
+    
+    // Add user information by fetching users separately
+    const resultsWithUsers = await Promise.all(
+      results.map(async (expense) => {
+        let user = null;
+        if (expense.addedBy) {
+          try {
+            user = await this.getUser(expense.addedBy);
+            if (user) {
+              user = {
+                id: user.id,
+                name: user.name,
+                email: user.email,
+                username: user.username
+              };
+            }
+          } catch (error) {
+            console.log(`Failed to fetch user ${expense.addedBy}:`, error);
+          }
+        }
+        
+        return {
+          ...expense,
+          user
+        };
+      })
+    );
+    
+    return resultsWithUsers as any;
   }
 
   async createPettyCashExpense(expense: InsertPettyCashExpense): Promise<PettyCashExpense> {
