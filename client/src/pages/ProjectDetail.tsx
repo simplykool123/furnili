@@ -1862,6 +1862,12 @@ export default function ProjectDetail() {
                     return groups;
                   }, {}),
                 ).map(([category, files]: [string, any]) => {
+                  // Debug log to see what's in each category
+                  console.log(`Category: ${category}, Files count: ${files.length}`);
+                  files.forEach((f: any, i: number) => {
+                    console.log(`  File ${i + 1}: description="${f.description}", originalName="${f.originalName}"`);
+                  });
+                  
                   // Check if we have a single file with title (stored in description) or meaningful originalName
                   const singleFile = files.length === 1 ? files[0] : null;
                   const hasTitle = singleFile?.description && singleFile.description.trim().length > 0;
