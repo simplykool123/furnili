@@ -1191,10 +1191,10 @@ export default function PettyCash() {
               </div>
             </div>
             
-            {/* Paid To and Paid By */}
+            {/* Source and Paid To */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="paidTo">Paid To *</Label>
+                <Label htmlFor="paidTo">Source *</Label>
                 <Input
                   id="paidTo"
                   placeholder=""
@@ -1204,7 +1204,7 @@ export default function PettyCash() {
                 />
               </div>
               <div>
-                <Label htmlFor="paidBy">Paid By *</Label>
+                <Label htmlFor="paidBy">Paid To *</Label>
                 <Select 
                   value={formData.paidBy} 
                   onValueChange={(value) => setFormData(prev => ({ ...prev, paidBy: value }))}
@@ -1398,7 +1398,7 @@ export default function PettyCash() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="edit-paidTo">Paid To *</Label>
+                <Label htmlFor="edit-paidTo">Source *</Label>
                 <Input
                   id="edit-paidTo"
                   placeholder="Dolly Vikesh Oswal"
@@ -1408,7 +1408,7 @@ export default function PettyCash() {
                 />
               </div>
               <div>
-                <Label htmlFor="edit-paidBy">Paid By (Staff Member) *</Label>
+                <Label htmlFor="edit-paidBy">Paid To *</Label>
                 <Select 
                   value={formData.paidBy}
                   onValueChange={(value) => setFormData(prev => ({ ...prev, paidBy: value }))}
