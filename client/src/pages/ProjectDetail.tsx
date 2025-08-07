@@ -1853,224 +1853,176 @@ export default function ProjectDetail() {
 
             {/* Grouped Images Interface */}
             {selectedFileType !== "moodboard" && filteredFiles.length > 0 && (
-              <div className="space-y-4">
+              <div className="space-y-6">
                 {Object.entries(
-                  filteredFiles.reduce((groups: any, file: any) => {
+                  filteredFiles.reduce((categories: any, file: any) => {
                     const category = file.category || "general";
-                    if (!groups[category]) groups[category] = [];
-                    groups[category].push(file);
-                    return groups;
+                    if (!categories[category]) categories[category] = [];
+                    categories[category].push(file);
+                    return categories;
                   }, {}),
-                ).map(([category, files]: [string, any]) => {
-                  // For single files, prioritize showing user-entered title (description) or meaningful filename
-                  const singleFile = files.length === 1 ? files[0] : null;
-                  const hasTitle = singleFile?.description && singleFile.description.trim().length > 0;
-                  const hasOriginalName = singleFile?.originalName && 
-                    !singleFile.originalName.match(/^(image|file|document|IMG_|DSC_)$/i) &&
-                    singleFile.originalName.length > 8;
-                  
-                  const shouldShowFileAsTitle = singleFile && (hasTitle || hasOriginalName);
-                  const displayTitle = shouldShowFileAsTitle ? (
-                    hasTitle ? singleFile.description : 
-                    singleFile.originalName.replace(/\.[^/.]+$/, '')
-                  ) : null;
-                    
+                ).map(([category, categoryFiles]: [string, any]) => {
+                  // Group files within each category by their title (description)
+                  const titleGroups = categoryFiles.reduce((groups: any, file: any) => {
+                    const title = file.description && file.description.trim() 
+                      ? file.description.trim() 
+                      : 'Untitled';
+                    if (!groups[title]) groups[title] = [];
+                    groups[title].push(file);
+                    return groups;
+                  }, {});
+
                   return (
-                  <div
-                    key={category}
-                    className="bg-white rounded-lg border border-gray-200 p-4"
-                  >
-                    {/* File Title and Category Display */}
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex flex-col gap-1">
-                        {/* Show file title if available, otherwise show category */}
-                        <div className="flex items-center gap-3">
-                          {shouldShowFileAsTitle && displayTitle ? (
-                            <h3 className="text-lg font-semibold text-gray-900">
-                              {displayTitle}
-                            </h3>
-                          ) : (
-                            editingGroupTitle === category ? (
-                              <input
-                                type="text"
-                                value={groupTitles[category] || category}
-                                onChange={(e) =>
-                                  setGroupTitles({
-                                    ...groupTitles,
-                                    [category]: e.target.value,
-                                  })
-                                }
-                                onBlur={() => setEditingGroupTitle(null)}
-                                onKeyDown={(e) => {
-                                  if (e.key === "Enter") setEditingGroupTitle(null);
-                                }}
-                                className="text-lg font-semibold text-gray-900 bg-transparent border-b border-gray-300 focus:border-blue-500 outline-none"
-                                autoFocus
-                              />
-                            ) : (
-                              <h3
-                                className="text-lg font-semibold text-gray-900 cursor-pointer hover:text-blue-600"
-                                onClick={() => setEditingGroupTitle(category)}
-                              >
-                                {groupTitles[category] || category}
-                              </h3>
-                            )
-                          )}
-                          <Badge variant="secondary" className="text-xs">
-                            {files.length} files
-                          </Badge>
-                        </div>
-                        {/* Show category as subtitle when file has title */}
-                        {shouldShowFileAsTitle && displayTitle && (
-                          <div className="text-sm text-gray-600 font-medium">
-                            {groupTitles[category] || category}
-                          </div>
-                        )}
+                    <div key={category} className="space-y-4">
+                      {/* Category Header */}
+                      <div className="border-b border-gray-200 pb-2">
+                        <h2 className="text-xl font-semibold text-gray-900 capitalize">
+                          {category}
+                        </h2>
+                        <p className="text-sm text-gray-500">
+                          {categoryFiles.length} files in {Object.keys(titleGroups).length} groups
+                        </p>
                       </div>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => setIsUploadDialogOpen(true)}
-                        className="text-blue-600 border-blue-200 hover:bg-blue-50"
-                      >
-                        <Plus className="h-4 w-4 mr-1" />
-                        Add More
-                      </Button>
-                    </div>
 
-                    {/* Image Grid */}
-                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3">
-                      {files.map((file: any) => (
-                        <div key={file.id} className="group relative">
-                          {/* Image Thumbnail */}
-                          <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden relative border-2 border-orange-500">
-                            {file.mimeType?.includes("image") ? (
-                              <img
-                                src={`/${file.filePath}`}
-                                alt={file.originalName}
-                                className="w-full h-full object-contain cursor-pointer hover:scale-105 transition-transform p-1 bg-white"
-                                onClick={() => {
-                                  setPreviewImage({
-                                    src: `/${file.filePath}`,
-                                    name: file.originalName,
-                                  });
-                                  setShowImagePreview(true);
-                                }}
-                              />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center">
-                                {getFileIcon(file.mimeType, file.originalName)}
-                              </div>
-                            )}
-
-                            {/* Three-dot menu */}
-                            <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button
-                                    size="sm"
-                                    variant="ghost"
-                                    className="h-6 w-6 p-0 bg-black/50 hover:bg-black/70 text-white rounded-full"
-                                  >
-                                    <MoreVertical className="h-3 w-3" />
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent
-                                  align="end"
-                                  className="w-48"
-                                >
-                                  <DropdownMenuItem
-                                    onClick={() => {
-                                      setPreviewImage({
-                                        src: `/${file.filePath}`,
-                                        name: file.originalName,
-                                      });
-                                      setShowImagePreview(true);
-                                    }}
-                                  >
-                                    <Eye className="h-4 w-4 mr-2" />
-                                    View Full Size
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem asChild>
-                                    <a
-                                      href={`/${file.filePath}`}
-                                      download={file.originalName}
-                                    >
-                                      <Download className="h-4 w-4 mr-2" />
-                                      Download
-                                    </a>
-                                  </DropdownMenuItem>
-
-                                  <DropdownMenuSeparator />
-                                  <DropdownMenuItem
-                                    onClick={() =>
-                                      handleDeleteFile(file.id, file.fileName)
-                                    }
-                                    className="text-red-600 hover:text-red-700"
-                                  >
-                                    <Trash2 className="h-4 w-4 mr-2" />
-                                    Delete
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
+                      {/* Title Groups within Category */}
+                      {Object.entries(titleGroups).map(([title, files]: [string, any]) => (
+                        <div key={`${category}-${title}`} className="bg-white rounded-lg border border-gray-200 p-4">
+                          {/* Title Header with Edit capability */}
+                          <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-3">
+                              <h3 className="text-lg font-semibold text-gray-900 cursor-pointer hover:text-blue-600">
+                                {title}
+                              </h3>
+                              <Badge variant="secondary" className="text-xs">
+                                {files.length} files
+                              </Badge>
                             </div>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => setIsUploadDialogOpen(true)}
+                              className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                            >
+                              <Plus className="h-4 w-4 mr-1" />
+                              Add More
+                            </Button>
                           </div>
 
-                          {/* File Title and Comment Section */}
-                          <div className="mt-2">
-                            {/* Show user-entered title from description field */}
-                            {file.description && file.description.trim() && (
-                              <div className="text-sm font-medium text-gray-900 mb-1 truncate" title={file.description}>
-                                {file.description}
+                          {/* Image Grid */}
+                          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3">
+                            {files.map((file: any) => (
+                              <div key={file.id} className="group relative">
+                                {/* Image Thumbnail */}
+                                <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden relative border-2 border-orange-500">
+                                  {file.mimeType?.includes("image") ? (
+                                    <img
+                                      src={`/${file.filePath}`}
+                                      alt={file.originalName}
+                                      className="w-full h-full object-contain cursor-pointer hover:scale-105 transition-transform p-1 bg-white"
+                                      onClick={() => {
+                                        setPreviewImage({
+                                          src: `/${file.filePath}`,
+                                          name: file.originalName,
+                                        });
+                                        setShowImagePreview(true);
+                                      }}
+                                    />
+                                  ) : (
+                                    <div className="w-full h-full flex items-center justify-center">
+                                      {getFileIcon(file.mimeType, file.originalName)}
+                                    </div>
+                                  )}
+
+                                  {/* Three-dot menu */}
+                                  <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <DropdownMenu>
+                                      <DropdownMenuTrigger asChild>
+                                        <Button
+                                          size="sm"
+                                          variant="ghost"
+                                          className="h-6 w-6 p-0 bg-black/50 hover:bg-black/70 text-white rounded-full"
+                                        >
+                                          <MoreVertical className="h-3 w-3" />
+                                        </Button>
+                                      </DropdownMenuTrigger>
+                                      <DropdownMenuContent align="end" className="w-48">
+                                        <DropdownMenuItem
+                                          onClick={() => {
+                                            setPreviewImage({
+                                              src: `/${file.filePath}`,
+                                              name: file.originalName,
+                                            });
+                                            setShowImagePreview(true);
+                                          }}
+                                        >
+                                          <Eye className="h-4 w-4 mr-2" />
+                                          View Full Size
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem asChild>
+                                          <a
+                                            href={`/${file.filePath}`}
+                                            download={file.originalName}
+                                          >
+                                            <Download className="h-4 w-4 mr-2" />
+                                            Download
+                                          </a>
+                                        </DropdownMenuItem>
+                                        <DropdownMenuSeparator />
+                                        <DropdownMenuItem
+                                          onClick={() => handleDeleteFile(file.id, file.fileName)}
+                                          className="text-red-600 hover:text-red-700"
+                                        >
+                                          <Trash2 className="h-4 w-4 mr-2" />
+                                          Delete
+                                        </DropdownMenuItem>
+                                      </DropdownMenuContent>
+                                    </DropdownMenu>
+                                  </div>
+                                </div>
+
+                                {/* Comment Section */}
+                                <div className="mt-2">
+                                  <div className="bg-gray-50 rounded p-2 min-h-[40px] flex items-center">
+                                    <input
+                                      type="text"
+                                      value={
+                                        editingComment?.fileId === file.id
+                                          ? editingComment?.comment
+                                          : file.comment || ""
+                                      }
+                                      placeholder="Comment"
+                                      onChange={(e) => {
+                                        setEditingComment({
+                                          fileId: file.id,
+                                          comment: e.target.value,
+                                        });
+                                      }}
+                                      onFocus={() => {
+                                        if (!editingComment || editingComment.fileId !== file.id) {
+                                          setEditingComment({
+                                            fileId: file.id,
+                                            comment: file.comment || "",
+                                          });
+                                        }
+                                      }}
+                                      onBlur={() => {
+                                        if (editingComment?.fileId === file.id && editingComment) {
+                                          updateCommentMutation.mutate({
+                                            fileId: file.id,
+                                            comment: editingComment.comment,
+                                          });
+                                        }
+                                      }}
+                                      className="text-xs text-gray-700 flex-1 bg-transparent border-none outline-none placeholder-gray-400"
+                                    />
+                                  </div>
+                                </div>
                               </div>
-                            )}
-                            
-                            <div className="bg-gray-50 rounded p-2 min-h-[40px] flex items-center">
-                              <input
-                                type="text"
-                                value={
-                                  editingComment?.fileId === file.id
-                                    ? editingComment?.comment
-                                    : file.comment || ""
-                                }
-                                placeholder="Comment"
-                                onChange={(e) => {
-                                  setEditingComment({
-                                    fileId: file.id,
-                                    comment: e.target.value,
-                                  });
-                                }}
-                                onFocus={() => {
-                                  if (
-                                    !editingComment ||
-                                    editingComment.fileId !== file.id
-                                  ) {
-                                    setEditingComment({
-                                      fileId: file.id,
-                                      comment: file.comment || "",
-                                    });
-                                  }
-                                }}
-                                onBlur={() => {
-                                  if (
-                                    editingComment?.fileId === file.id &&
-                                    editingComment
-                                  ) {
-                                    // Auto-save when clicking elsewhere
-                                    updateCommentMutation.mutate({
-                                      fileId: file.id,
-                                      comment: editingComment.comment,
-                                    });
-                                  }
-                                }}
-                                className="text-xs text-gray-700 flex-1 bg-transparent border-none outline-none placeholder-gray-400"
-                              />
-                            </div>
+                            ))}
                           </div>
                         </div>
                       ))}
                     </div>
-                  </div>
                   );
                 })}
               </div>
