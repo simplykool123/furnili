@@ -227,27 +227,15 @@ class DatabaseStorage implements IStorage {
 
   // Material Request operations
   async getMaterialRequest(id: number): Promise<MaterialRequestWithItems | undefined> {
-    // FORCE IMMEDIATE OUTPUT - Test if method is called at all
-    process.stdout.write(`IMMEDIATE TEST: getMaterialRequest(${id}) called\n`);
-    console.error(`*** CRITICAL DEBUG: getMaterialRequest called for ID ${id} ***`);
-    
     const requestResult = await db.select().from(materialRequests).where(eq(materialRequests.id, id)).limit(1);
     if (!requestResult[0]) {
-      console.error(`*** CRITICAL DEBUG: No request found for ID ${id} ***`);
       return undefined;
     }
 
     const request = requestResult[0];
-    console.error(`*** CRITICAL DEBUG: Found request ${id}, now fetching items ***`);
     
-    // Test with raw SQL to see if Drizzle mapping is the issue
-    const rawItems = await db.execute(sql`SELECT * FROM request_items WHERE request_id = ${id}`);
-    process.stdout.write(`RAW SQL TEST: Found ${rawItems.length} items for request ${id}\n`);
-    console.error(`*** CRITICAL DEBUG: Raw SQL found ${rawItems.length} items for request ${id} ***`);
-    
+    // Simple direct query for items
     const items = await db.select().from(requestItems).where(eq(requestItems.requestId, id));
-    process.stdout.write(`DRIZZLE TEST: Found ${items.length} items for request ${id}\n`);
-    console.error(`*** CRITICAL DEBUG: Drizzle query found ${items.length} items for request ${id} ***`);
     
     const itemsWithProducts = await Promise.all(
       items.map(async (item) => {
@@ -255,14 +243,10 @@ class DatabaseStorage implements IStorage {
         return { 
           ...item, 
           product: product!,
-          requestedQuantity: item.requestedQuantity,
-          unitPrice: item.unitPrice,
-          totalPrice: item.totalPrice
         };
       })
     );
 
-    console.error(`*** CRITICAL DEBUG: Returning request ${id} with ${itemsWithProducts.length} items ***`);
     return {
       ...request,
       requestedByUser: undefined,
@@ -273,39 +257,16 @@ class DatabaseStorage implements IStorage {
   }
 
   async getAllMaterialRequests(): Promise<MaterialRequestWithItems[]> {
-    // FORCE CRITICAL DEBUG LOGS
-    console.error(`*** EMERGENCY DEBUG: getAllMaterialRequests() ENTRY POINT ***`);
+    const requests = await db.select().from(materialRequests).orderBy(desc(materialRequests.createdAt));
     
-    try {
-      const requests = await db.select().from(materialRequests).orderBy(desc(materialRequests.createdAt));
-      console.error(`*** EMERGENCY DEBUG: Found ${requests.length} base requests ***`);
-      
-      const requestsWithItems = await Promise.all(
-        requests.map(async (request) => {
-          console.error(`*** EMERGENCY DEBUG: Processing request ${request.id} for items ***`);
-          try {
-            const fullRequest = await this.getMaterialRequest(request.id);
-            console.error(`*** EMERGENCY DEBUG: Request ${request.id} has ${fullRequest?.items?.length || 0} items after getMaterialRequest ***`);
-            return fullRequest!;
-          } catch (error) {
-            console.error(`*** EMERGENCY DEBUG: Error processing request ${request.id}:`, error);
-            return {
-              ...request,
-              items: [], 
-              requestedByUser: undefined,
-              approvedByUser: undefined,
-              issuedByUser: undefined,
-            };
-          }
-        })
-      );
+    const requestsWithItems = await Promise.all(
+      requests.map(async (request) => {
+        const fullRequest = await this.getMaterialRequest(request.id);
+        return fullRequest!;
+      })
+    );
 
-      console.error(`*** EMERGENCY DEBUG: getAllMaterialRequests() RETURNING ${requestsWithItems.length} requests ***`);
-      return requestsWithItems;
-    } catch (error) {
-      console.error(`*** EMERGENCY DEBUG: FATAL ERROR in getAllMaterialRequests:`, error);
-      return [];
-    }
+    return requestsWithItems;
   }
 
   async createMaterialRequest(request: InsertMaterialRequest): Promise<MaterialRequest> {

@@ -775,19 +775,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         requests = await storage.getMaterialRequestsByProject(parseInt(projectId as string));
       } else {
         // Get all requests with filters
-        console.log(`DEBUG: About to call storage.getAllMaterialRequests()`);
-        
-        // FORCE EMERGENCY TEST: Also test getMaterialRequest directly 
-        console.error(`*** ROUTES EMERGENCY: Testing direct storage.getMaterialRequest(2) ***`);
-        const testRequest = await storage.getMaterialRequest(2);
-        console.error(`*** ROUTES EMERGENCY: Direct test returned request with ${testRequest?.items?.length || 0} items ***`);
-        
         requests = await storage.getAllMaterialRequests();
-        console.log(`DEBUG: storage.getAllMaterialRequests() returned:`, requests?.length, 'requests');
       }
       
-      console.log(`DEBUG: About to return ${requests?.length || 0} requests`);
-      console.log(`DEBUG: First request items:`, requests?.[0]?.items?.length || 'NO ITEMS');
+
       
       res.json(requests);
     } catch (error) {
