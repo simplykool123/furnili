@@ -1982,9 +1982,6 @@ export default function ProjectDetail() {
                                   {groupTitles[`${category}-${title}`] || title}
                                 </h3>
                               )}
-                              <Badge variant="secondary" className="text-xs px-1.5 py-0.5">
-                                {files.length}
-                              </Badge>
                             </div>
                             <Button
                               size="sm"
@@ -1996,9 +1993,8 @@ export default function ProjectDetail() {
                                 });
                                 setIsUploadDialogOpen(true);
                               }}
-                              className="text-blue-600 border-blue-200 hover:bg-blue-50 h-7 px-2 text-xs"
+                              className="text-blue-600 border-blue-200 hover:bg-blue-50 h-6 px-2 text-xs"
                             >
-                              <Plus className="h-3 w-3 mr-1" />
                               Add
                             </Button>
                           </div>
