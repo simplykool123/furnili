@@ -1691,7 +1691,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/tasks/my", authenticateToken, async (req: AuthRequest, res) => {
     try {
       const user = req.user!;
-      const tasks = await storage.getAllTasks({ assignedTo: user.id });
+      const tasks = await storage.getAllTasks(user.id);
       
       // Include assigned user information
       const tasksWithUsers = await Promise.all(
@@ -1720,7 +1720,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const tomorrow = new Date(today);
       tomorrow.setDate(tomorrow.getDate() + 1);
       
-      const allTasks = await storage.getAllTasks({ assignedTo: user.id });
+      const allTasks = await storage.getAllTasks(user.id);
       
       // Filter tasks due today
       const todayTasks = allTasks.filter(task => {
