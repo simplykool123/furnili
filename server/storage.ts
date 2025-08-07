@@ -581,11 +581,12 @@ class DatabaseStorage implements IStorage {
         .where(conditions.length > 0 ? and(...conditions) : undefined)
         .orderBy(desc(stockMovements.createdAt));
       
-      // Then enrich with product data
+      // Then enrich with product and user data
       const enrichedMovements = await Promise.all(
         rawMovements.map(async (movement) => {
           let productName = 'Unknown Product';
           let productCategory = 'Unknown Category';
+          let performedByUser = 'System';
           
           try {
             const product = await this.getProduct(movement.productId);
@@ -597,10 +598,20 @@ class DatabaseStorage implements IStorage {
             console.warn(`Failed to fetch product ${movement.productId}:`, error);
           }
           
+          try {
+            const user = await this.getUser(movement.performedBy);
+            if (user) {
+              performedByUser = user.name || user.username || 'System';
+            }
+          } catch (error) {
+            console.warn(`Failed to fetch user ${movement.performedBy}:`, error);
+          }
+          
           return {
             ...movement,
             productName,
-            productCategory
+            productCategory,
+            performedByUser
           };
         })
       );
@@ -835,7 +846,7 @@ class DatabaseStorage implements IStorage {
   async createProject(project: InsertProject): Promise<Project> {
     const projectData = {
       name: project.name,
-      clientId: project.clientId,
+      client_id: project.clientId,
       description: project.description,
       notes: project.notes,
       stage: project.stage || 'prospect',
