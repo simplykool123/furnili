@@ -1862,24 +1862,16 @@ export default function ProjectDetail() {
                     return groups;
                   }, {}),
                 ).map(([category, files]: [string, any]) => {
-                  // Debug logging to see what's in the files
-                  console.log(`Category: ${category}, Files:`, files.map(f => ({ 
-                    title: f.title, 
-                    originalName: f.originalName,
-                    fileName: f.fileName 
-                  })));
+                  // Check if we have a single file with meaningful originalName to display as title
+                  const singleFile = files.length === 1 ? files[0] : null;
+                  const hasOriginalName = singleFile?.originalName && 
+                    !singleFile.originalName.match(/^(image|file|document|IMG_|DSC_)$/i) &&
+                    singleFile.originalName.length > 8; // Must be longer than generic names
                   
-                  // Check if we have a single file with meaningful content to display as title
-                  const shouldShowFileAsTitle = files.length === 1 && (
-                    files[0].title || 
-                    (files[0].originalName && !files[0].originalName.match(/^(image|file|document|IMG_|DSC_)/i))
-                  );
-                  const displayTitle = files.length === 1 && files[0].title ? 
-                    files[0].title : 
-                    (files.length === 1 && files[0].originalName && !files[0].originalName.match(/^(image|file|document|IMG_|DSC_)/i) ? 
-                      files[0].originalName.replace(/\.[^/.]+$/, '') : // Remove file extension
-                      null
-                    );
+                  const shouldShowFileAsTitle = singleFile && hasOriginalName;
+                  const displayTitle = shouldShowFileAsTitle ? 
+                    singleFile.originalName.replace(/\.[^/.]+$/, '') : // Remove file extension
+                    null;
                     
                   return (
                   <div
