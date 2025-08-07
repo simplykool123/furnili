@@ -32,6 +32,8 @@ import type {
   InsertMaterialRequest,
   RequestItem,
   InsertRequestItem,
+  ProjectFile,
+  InsertProjectFile,
   PettyCashExpense,
   InsertPettyCashExpense,
   Attendance,
@@ -42,8 +44,6 @@ import type {
   InsertStockMovement,
   Payroll,
   InsertPayroll,
-  ProjectFile,
-  InsertProjectFile,
   SalesProduct,
   InsertSalesProduct,
   Quote,
@@ -120,6 +120,20 @@ export interface IStorage {
   getAllClients(): Promise<Client[]>;
   getClient(id: number): Promise<Client | undefined>;
   createClient(client: InsertClient): Promise<Client>;
+
+  // Project File operations
+  getProjectFiles(projectId: number): Promise<ProjectFile[]>;
+  createProjectFile(file: InsertProjectFile): Promise<ProjectFile>;
+  updateProjectFile(id: number, updates: Partial<ProjectFile>): Promise<ProjectFile>;
+  deleteProjectFile(id: number): Promise<void>;
+
+  // Project Log operations
+  getProjectLogs(projectId: number): Promise<any[]>;
+
+  // Material Request operations
+  getAllMaterialRequests(): Promise<MaterialRequest[]>;
+  getMaterialRequest(id: number): Promise<MaterialRequest | undefined>;
+  getMaterialRequestsByProject(projectId: number): Promise<MaterialRequest[]>;
 }
 
 class DatabaseStorage implements IStorage {
@@ -479,6 +493,54 @@ class DatabaseStorage implements IStorage {
   async createClient(client: InsertClient): Promise<Client> {
     const result = await db.insert(clients).values(client).returning();
     return result[0];
+  }
+
+  // Project File operations
+  async getProjectFiles(projectId: number): Promise<ProjectFile[]> {
+    return db.select().from(projectFiles)
+      .where(eq(projectFiles.projectId, projectId))
+      .orderBy(desc(projectFiles.createdAt));
+  }
+
+  async createProjectFile(file: InsertProjectFile): Promise<ProjectFile> {
+    const result = await db.insert(projectFiles).values(file).returning();
+    return result[0];
+  }
+
+  async updateProjectFile(id: number, updates: Partial<ProjectFile>): Promise<ProjectFile> {
+    const result = await db.update(projectFiles)
+      .set(updates)
+      .where(eq(projectFiles.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteProjectFile(id: number): Promise<void> {
+    await db.delete(projectFiles).where(eq(projectFiles.id, id));
+  }
+
+  // Project Log operations
+  async getProjectLogs(projectId: number): Promise<any[]> {
+    // Return empty array for now - can be implemented later with activity tracking
+    return [];
+  }
+
+  // Material Request operations
+  async getAllMaterialRequests(): Promise<MaterialRequest[]> {
+    return db.select().from(materialRequests).orderBy(desc(materialRequests.createdAt));
+  }
+
+  async getMaterialRequest(id: number): Promise<MaterialRequest | undefined> {
+    const result = await db.select().from(materialRequests)
+      .where(eq(materialRequests.id, id))
+      .limit(1);
+    return result[0];
+  }
+
+  async getMaterialRequestsByProject(projectId: number): Promise<MaterialRequest[]> {
+    return db.select().from(materialRequests)
+      .where(eq(materialRequests.projectId, projectId))
+      .orderBy(desc(materialRequests.createdAt));
   }
 }
 
