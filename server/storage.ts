@@ -227,17 +227,24 @@ class DatabaseStorage implements IStorage {
 
   // Material Request operations
   async getMaterialRequest(id: number): Promise<MaterialRequestWithItems | undefined> {
-    console.log(`DEBUG Storage: getMaterialRequest called for ID ${id}`);
+    // CRITICAL DEBUG: Force console output
+    console.error(`*** CRITICAL DEBUG: getMaterialRequest called for ID ${id} ***`);
+    
     const requestResult = await db.select().from(materialRequests).where(eq(materialRequests.id, id)).limit(1);
     if (!requestResult[0]) {
-      console.log(`DEBUG Storage: No request found for ID ${id}`);
+      console.error(`*** CRITICAL DEBUG: No request found for ID ${id} ***`);
       return undefined;
     }
 
     const request = requestResult[0];
-    console.log(`DEBUG Storage: Found request ${id}, now fetching items`);
+    console.error(`*** CRITICAL DEBUG: Found request ${id}, now fetching items ***`);
+    
+    // Test with raw SQL to see if Drizzle mapping is the issue
+    const rawItems = await db.execute(sql`SELECT * FROM request_items WHERE request_id = ${id}`);
+    console.error(`*** CRITICAL DEBUG: Raw SQL found ${rawItems.length} items for request ${id} ***`);
+    
     const items = await db.select().from(requestItems).where(eq(requestItems.requestId, id));
-    console.log(`DEBUG Storage: Found ${items.length} items for request ${id}`);
+    console.error(`*** CRITICAL DEBUG: Drizzle query found ${items.length} items for request ${id} ***`);
     
     const itemsWithProducts = await Promise.all(
       items.map(async (item) => {
@@ -252,7 +259,7 @@ class DatabaseStorage implements IStorage {
       })
     );
 
-    console.log(`DEBUG Storage: Returning request ${id} with ${itemsWithProducts.length} items`);
+    console.error(`*** CRITICAL DEBUG: Returning request ${id} with ${itemsWithProducts.length} items ***`);
     return {
       ...request,
       requestedByUser: undefined,
