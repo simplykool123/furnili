@@ -995,14 +995,16 @@ class DatabaseStorage implements IStorage {
     return result[0];
   }
 
-  async getAllTasks(assignedTo?: number): Promise<Task[]> {
-    let query = db.select().from(tasks);
+  async getAllTasks(filters?: { assignedTo?: number }): Promise<Task[]> {
+    const conditions = [];
     
-    if (assignedTo) {
-      query = query.where(eq(tasks.assignedTo, assignedTo));
+    if (filters?.assignedTo) {
+      conditions.push(eq(tasks.assignedTo, filters.assignedTo));
     }
     
-    return query.orderBy(desc(tasks.createdAt));
+    return db.select().from(tasks)
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .orderBy(desc(tasks.createdAt));
   }
 
   async createTask(task: InsertTask): Promise<Task> {
@@ -1043,6 +1045,38 @@ class DatabaseStorage implements IStorage {
   async deletePriceComparison(id: number): Promise<boolean> {
     await db.delete(priceComparisons).where(eq(priceComparisons.id, id));
     return true;
+  }
+
+  async getDashboardStats(userRole: string): Promise<any> {
+    try {
+      // Get basic counts
+      const totalProducts = await db.select({ count: sql`count(*)` }).from(products).where(eq(products.isActive, true));
+      const totalProjects = await db.select({ count: sql`count(*)` }).from(projects).where(eq(projects.isActive, true));
+      const totalUsers = await db.select({ count: sql`count(*)` }).from(users).where(eq(users.isActive, true));
+      
+      // Get pending material requests
+      const pendingRequests = await db.select({ count: sql`count(*)` }).from(materialRequests).where(eq(materialRequests.status, 'pending'));
+      
+      // Get low stock products
+      const lowStockProducts = await db.select({ count: sql`count(*)` }).from(products).where(sql`${products.currentStock} <= ${products.minStock}`);
+      
+      return {
+        totalProducts: Number(totalProducts[0]?.count) || 0,
+        totalProjects: Number(totalProjects[0]?.count) || 0,
+        totalUsers: Number(totalUsers[0]?.count) || 0,
+        pendingRequests: Number(pendingRequests[0]?.count) || 0,
+        lowStockProducts: Number(lowStockProducts[0]?.count) || 0
+      };
+    } catch (error) {
+      console.error('Error fetching dashboard stats:', error);
+      return {
+        totalProducts: 0,
+        totalProjects: 0,
+        totalUsers: 0,
+        pendingRequests: 0,
+        lowStockProducts: 0
+      };
+    }
   }
 }
 
