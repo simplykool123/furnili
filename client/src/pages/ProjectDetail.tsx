@@ -692,6 +692,7 @@ export default function ProjectDetail() {
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [isMoodboardDialogOpen, setIsMoodboardDialogOpen] = useState(false);
   const [selectedFileType, setSelectedFileType] = useState("all");
+  const [uploadContext, setUploadContext] = useState<{category: string; title: string} | null>(null);
   const [activeFileTab, setActiveFileTab] = useState("recce");
   const [selectedFiles, setSelectedFiles] = useState<FileList | null>(null);
   // AI preview functionality removed for simplicity
@@ -815,6 +816,24 @@ export default function ProjectDetail() {
       files: undefined,
     },
   });
+
+  // Pre-fill form when uploadContext is available
+  useEffect(() => {
+    if (isUploadDialogOpen && uploadContext) {
+      uploadForm.reset({
+        type: uploadContext.category,
+        title: uploadContext.title,
+        files: undefined,
+      });
+    } else if (isUploadDialogOpen && !uploadContext) {
+      // Reset to defaults when no context
+      uploadForm.reset({
+        type: selectedFileType === "all" ? "" : selectedFileType,
+        title: "",
+        files: undefined,
+      });
+    }
+  }, [isUploadDialogOpen, uploadContext, selectedFileType, uploadForm]);
 
   // Optimized Queries with caching
   const { data: project, isLoading: projectLoading } = useQuery({
@@ -1836,7 +1855,10 @@ export default function ProjectDetail() {
                     </div>
                   ) : (
                     <Button
-                      onClick={() => setIsUploadDialogOpen(true)}
+                      onClick={() => {
+                        setUploadContext(null); // Clear context for general upload
+                        setIsUploadDialogOpen(true);
+                      }}
                       className="btn-primary btn-sm"
                     >
                       <Upload className="h-3 w-3 mr-1" />
@@ -1966,7 +1988,13 @@ export default function ProjectDetail() {
                             <Button
                               size="sm"
                               variant="outline"
-                              onClick={() => setIsUploadDialogOpen(true)}
+                              onClick={() => {
+                                setUploadContext({
+                                  category: category,
+                                  title: groupTitles[`${category}-${title}`] || title
+                                });
+                                setIsUploadDialogOpen(true);
+                              }}
                               className="text-blue-600 border-blue-200 hover:bg-blue-50 h-7 px-2 text-xs"
                             >
                               <Plus className="h-3 w-3 mr-1" />
