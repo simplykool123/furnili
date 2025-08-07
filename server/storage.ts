@@ -227,7 +227,8 @@ class DatabaseStorage implements IStorage {
 
   // Material Request operations
   async getMaterialRequest(id: number): Promise<MaterialRequestWithItems | undefined> {
-    // CRITICAL DEBUG: Force console output
+    // FORCE IMMEDIATE OUTPUT - Test if method is called at all
+    process.stdout.write(`IMMEDIATE TEST: getMaterialRequest(${id}) called\n`);
     console.error(`*** CRITICAL DEBUG: getMaterialRequest called for ID ${id} ***`);
     
     const requestResult = await db.select().from(materialRequests).where(eq(materialRequests.id, id)).limit(1);
@@ -241,9 +242,11 @@ class DatabaseStorage implements IStorage {
     
     // Test with raw SQL to see if Drizzle mapping is the issue
     const rawItems = await db.execute(sql`SELECT * FROM request_items WHERE request_id = ${id}`);
+    process.stdout.write(`RAW SQL TEST: Found ${rawItems.length} items for request ${id}\n`);
     console.error(`*** CRITICAL DEBUG: Raw SQL found ${rawItems.length} items for request ${id} ***`);
     
     const items = await db.select().from(requestItems).where(eq(requestItems.requestId, id));
+    process.stdout.write(`DRIZZLE TEST: Found ${items.length} items for request ${id}\n`);
     console.error(`*** CRITICAL DEBUG: Drizzle query found ${items.length} items for request ${id} ***`);
     
     const itemsWithProducts = await Promise.all(
