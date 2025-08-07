@@ -232,7 +232,7 @@ class DatabaseStorage implements IStorage {
     if (!request[0]) return undefined;
 
     // Get items with products using raw SQL to ensure it works
-    const itemsRaw = await db.execute(sql`
+    const itemsResult = await db.execute(sql`
       SELECT 
         ri.id, ri.request_id, ri.product_id, ri.requested_quantity, ri.approved_quantity, ri.unit_price, ri.total_price,
         p.name as product_name, p.category as product_category, p.brand as product_brand, p.current_stock as product_stock
@@ -241,6 +241,7 @@ class DatabaseStorage implements IStorage {
       WHERE ri.request_id = ${id}
     `);
 
+    const itemsRaw = itemsResult.rows || [];
     console.log(`DEBUG: Found ${itemsRaw.length} raw items for request ${id}`);
 
     const items = itemsRaw.map((row: any) => ({
