@@ -775,8 +775,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         requests = await storage.getMaterialRequestsByProject(parseInt(projectId as string));
       } else {
         // Get all requests with filters
-        console.log(`DEBUG: Getting all material requests`);
+        console.log(`DEBUG: About to call storage.getAllMaterialRequests()`);
         requests = await storage.getAllMaterialRequests();
+        console.log(`DEBUG: storage.getAllMaterialRequests() returned:`, requests?.length, 'requests');
       }
       
       console.log(`DEBUG: About to return ${requests?.length || 0} requests`);
@@ -793,7 +794,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       console.log(`DEBUG: Fetching request ${id} via API`);
+      console.log(`DEBUG: About to call storage.getMaterialRequest(${id})`);
       const request = await storage.getMaterialRequest(id);
+      console.log(`DEBUG: storage.getMaterialRequest(${id}) returned:`, request ? 'request with ' + (request.items?.length || 0) + ' items' : 'null');
       
       if (!request) {
         console.log(`DEBUG: Request ${id} not found`);
