@@ -1905,9 +1905,9 @@ export default function ProjectDetail() {
               </div>
             )}
 
-            {/* Grouped Images Interface */}
+            {/* Grouped Images Interface - Responsive Grid Layout */}
             {selectedFileType !== "moodboard" && filteredFiles.length > 0 && (
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {Object.entries(
                   filteredFiles.reduce((categories: any, file: any) => {
                     const category = file.category || "general";
@@ -1927,10 +1927,10 @@ export default function ProjectDetail() {
                   }, {});
 
                   return (
-                    <div key={category} className="space-y-2">
-                      {/* Category Header - Compact */}
-                      <div className="border-b border-gray-200 pb-1">
-                        <h2 className="text-lg font-medium text-gray-900 capitalize">
+                    <div key={category} className="space-y-3">
+                      {/* Category Header - More Compact */}
+                      <div className="border-b border-gray-200 pb-0.5">
+                        <h2 className="text-base font-medium text-gray-900 capitalize">
                           {category}
                         </h2>
                         <p className="text-xs text-gray-500">
@@ -1938,9 +1938,10 @@ export default function ProjectDetail() {
                         </p>
                       </div>
 
-                      {/* Title Groups within Category */}
-                      {Object.entries(titleGroups).map(([title, files]: [string, any]) => (
-                        <div key={`${category}-${title}`} className="bg-white rounded border border-gray-200 p-3">
+                      {/* Title Groups Grid - Responsive Layout */}
+                      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-3">
+                        {Object.entries(titleGroups).map(([title, files]: [string, any]) => (
+                        <div key={`${category}-${title}`} className="bg-white rounded border border-gray-200 p-2">
                           {/* Title Header - Compact with Edit Functionality */}
                           <div className="flex items-center justify-between mb-2">
                             <div className="flex items-center gap-2">
@@ -2003,11 +2004,11 @@ export default function ProjectDetail() {
                           </div>
 
                           {/* Image Grid - More Compact */}
-                          <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-2">
+                          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-1.5">
                             {files.map((file: any) => (
                               <div key={file.id} className="group relative">
                                 {/* Image Thumbnail - Compact */}
-                                <div className="aspect-square bg-gray-100 rounded overflow-hidden relative border border-orange-400">
+                                <div className="aspect-square bg-gray-100 rounded-sm overflow-hidden relative border border-orange-400">
                                   {file.mimeType?.includes("image") ? (
                                     <img
                                       src={`/${file.filePath}`}
@@ -2075,8 +2076,8 @@ export default function ProjectDetail() {
                                 </div>
 
                                 {/* Comment Section - More Compact */}
-                                <div className="mt-1">
-                                  <div className="bg-gray-50 rounded px-2 py-1 min-h-[24px] flex items-center">
+                                <div className="mt-0.5">
+                                  <div className="bg-gray-50 rounded px-1.5 py-0.5 min-h-[20px] flex items-center">
                                     <input
                                       type="text"
                                       value={
@@ -2115,7 +2116,8 @@ export default function ProjectDetail() {
                             ))}
                           </div>
                         </div>
-                      ))}
+                        ))}
+                      </div>
                     </div>
                   );
                 })}
