@@ -291,70 +291,38 @@ class DatabaseStorage implements IStorage {
   }
 
   // Project operations
-  async getProject(id: number): Promise<Project | undefined> {
-    const result = await db.select({
-      id: projects.id,
-      name: projects.name,
-      code: projects.code,
-      clientId: projects.clientId,
-      description: projects.description,
-      stage: projects.stage,
-      budget: projects.budget,
-      isActive: projects.isActive,
-      createdAt: projects.createdAt,
-      updatedAt: projects.updatedAt,
-      differentSiteLocation: projects.differentSiteLocation,
-      siteAddressLine1: projects.siteAddressLine1,
-      siteAddressLine2: projects.siteAddressLine2,
-      siteState: projects.siteState,
-      sitePinCode: projects.sitePinCode,
-      siteContactPerson: projects.siteContactPerson,
-      siteMobile: projects.siteMobile,
-      notes: projects.notes,
-      files: projects.files,
-      // Join client data
-      client_name: clients.name,
-      client_mobile: clients.mobile,
-      client_email: clients.email,
-      client_address: clients.address1
-    })
-    .from(projects)
-    .leftJoin(clients, eq(projects.clientId, clients.id))
-    .where(eq(projects.id, id))
-    .limit(1);
-    return result[0];
+  async getProject(id: number): Promise<any | undefined> {
+    const result = await db.select()
+      .from(projects)
+      .leftJoin(clients, eq(projects.clientId, clients.id))
+      .where(eq(projects.id, id))
+      .limit(1);
+    
+    if (result.length === 0) return undefined;
+    
+    const row = result[0];
+    return {
+      ...row.projects,
+      client_name: row.clients?.name || null,
+      client_mobile: row.clients?.mobile || null,
+      client_email: row.clients?.email || null,
+      client_address: row.clients?.address1 || null
+    };
   }
 
-  async getAllProjects(): Promise<Project[]> {
-    return db.select({
-      id: projects.id,
-      name: projects.name,
-      code: projects.code,
-      clientId: projects.clientId,
-      description: projects.description,
-      stage: projects.stage,
-      budget: projects.budget,
-      isActive: projects.isActive,
-      createdAt: projects.createdAt,
-      updatedAt: projects.updatedAt,
-      differentSiteLocation: projects.differentSiteLocation,
-      siteAddressLine1: projects.siteAddressLine1,
-      siteAddressLine2: projects.siteAddressLine2,
-      siteState: projects.siteState,
-      sitePinCode: projects.sitePinCode,
-      siteContactPerson: projects.siteContactPerson,
-      siteMobile: projects.siteMobile,
-      notes: projects.notes,
-      files: projects.files,
-      // Join client data
-      client_name: clients.name,
-      client_mobile: clients.mobile,
-      client_email: clients.email,
-      client_address: clients.address1
-    })
-    .from(projects)
-    .leftJoin(clients, eq(projects.clientId, clients.id))
-    .orderBy(desc(projects.createdAt));
+  async getAllProjects(): Promise<any[]> {
+    const result = await db.select()
+      .from(projects)
+      .leftJoin(clients, eq(projects.clientId, clients.id))
+      .orderBy(desc(projects.createdAt));
+    
+    return result.map(row => ({
+      ...row.projects,
+      client_name: row.clients?.name || null,
+      client_mobile: row.clients?.mobile || null,
+      client_email: row.clients?.email || null,
+      client_address: row.clients?.address1 || null
+    }));
   }
 
   async createProject(project: InsertProject): Promise<Project> {
