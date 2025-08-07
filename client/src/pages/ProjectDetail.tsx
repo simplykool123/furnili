@@ -1867,7 +1867,20 @@ export default function ProjectDetail() {
                     groups[category].push(file);
                     return groups;
                   }, {}),
-                ).map(([category, files]: [string, any]) => (
+                ).map(([category, files]: [string, any]) => {
+                  // Check if we have a single file with meaningful content to display as title
+                  const shouldShowFileAsTitle = files.length === 1 && (
+                    files[0].title || 
+                    (files[0].originalName && !files[0].originalName.match(/^(image|file|document|IMG_|DSC_)/i))
+                  );
+                  const displayTitle = files.length === 1 && files[0].title ? 
+                    files[0].title : 
+                    (files.length === 1 && files[0].originalName && !files[0].originalName.match(/^(image|file|document|IMG_|DSC_)/i) ? 
+                      files[0].originalName.replace(/\.[^/.]+$/, '') : // Remove file extension
+                      null
+                    );
+                    
+                  return (
                   <div
                     key={category}
                     className="bg-white rounded-lg border border-gray-200 p-4"
@@ -1877,9 +1890,9 @@ export default function ProjectDetail() {
                       <div className="flex flex-col gap-1">
                         {/* Show file title if available, otherwise show category */}
                         <div className="flex items-center gap-3">
-                          {files.length === 1 && files[0].title ? (
+                          {shouldShowFileAsTitle && displayTitle ? (
                             <h3 className="text-lg font-semibold text-gray-900">
-                              {files[0].title}
+                              {displayTitle}
                             </h3>
                           ) : (
                             editingGroupTitle === category ? (
@@ -1913,7 +1926,7 @@ export default function ProjectDetail() {
                           </Badge>
                         </div>
                         {/* Show category as subtitle when file has title */}
-                        {files.length === 1 && files[0].title && (
+                        {shouldShowFileAsTitle && displayTitle && (
                           <div className="text-sm text-gray-600 font-medium">
                             {groupTitles[category] || category}
                           </div>
@@ -2056,7 +2069,8 @@ export default function ProjectDetail() {
                       ))}
                     </div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             )}
 
