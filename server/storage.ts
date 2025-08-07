@@ -560,44 +560,56 @@ class DatabaseStorage implements IStorage {
   }
 
   async getAllStockMovements(filters?: { productId?: number; type?: string; startDate?: Date; endDate?: Date }): Promise<any[]> {
-    const conditions = [];
-    if (filters?.productId) {
-      conditions.push(eq(stockMovements.productId, filters.productId));
+    try {
+      const conditions = [];
+      if (filters?.productId) {
+        conditions.push(eq(stockMovements.productId, filters.productId));
+      }
+      if (filters?.type) {
+        conditions.push(eq(stockMovements.movementType, filters.type));
+      }
+      if (filters?.startDate) {
+        conditions.push(gte(stockMovements.createdAt, filters.startDate));
+      }
+      if (filters?.endDate) {
+        conditions.push(lte(stockMovements.createdAt, filters.endDate));
+      }
+      
+      // First get the movements
+      const rawMovements = await db.select()
+        .from(stockMovements)
+        .where(conditions.length > 0 ? and(...conditions) : undefined)
+        .orderBy(desc(stockMovements.createdAt));
+      
+      // Then enrich with product data
+      const enrichedMovements = await Promise.all(
+        rawMovements.map(async (movement) => {
+          let productName = 'Unknown Product';
+          let productCategory = 'Unknown Category';
+          
+          try {
+            const product = await this.getProduct(movement.productId);
+            if (product) {
+              productName = product.name;
+              productCategory = product.category;
+            }
+          } catch (error) {
+            console.warn(`Failed to fetch product ${movement.productId}:`, error);
+          }
+          
+          return {
+            ...movement,
+            productName,
+            productCategory
+          };
+        })
+      );
+      
+      return enrichedMovements;
+    } catch (error) {
+      console.error('Error in getAllStockMovements:', error);
+      return [];
     }
-    if (filters?.type) {
-      conditions.push(eq(stockMovements.movementType, filters.type));
-    }
-    if (filters?.startDate) {
-      conditions.push(gte(stockMovements.createdAt, filters.startDate));
-    }
-    if (filters?.endDate) {
-      conditions.push(lte(stockMovements.createdAt, filters.endDate));
-    }
-    
-    // Join with products table to get product names
-    const movements = await db.select({
-      id: stockMovements.id,
-      productId: stockMovements.productId,
-      productName: products.name,
-      productCategory: products.category,
-      movementType: stockMovements.movementType,
-      quantity: stockMovements.quantity,
-      previousStock: stockMovements.previousStock,
-      newStock: stockMovements.newStock,
-      reason: stockMovements.reason,
-      reference: stockMovements.reference,
-      notes: stockMovements.notes,
-      costPerUnit: stockMovements.costPerUnit,
-      totalCost: stockMovements.totalCost,
-      createdAt: stockMovements.createdAt,
-      createdBy: stockMovements.createdBy
-    })
-    .from(stockMovements)
-    .leftJoin(products, eq(stockMovements.productId, products.id))
-    .where(conditions.length > 0 ? and(...conditions) : undefined)
-    .orderBy(desc(stockMovements.createdAt));
-    
-    return movements;
   }
 
   // Stub implementations for remaining methods
@@ -1051,15 +1063,14 @@ class DatabaseStorage implements IStorage {
     return result[0];
   }
 
-  async getAllTasks(filters?: { assignedTo?: number }): Promise<Task[]> {
-    const conditions = [];
-    
-    if (filters?.assignedTo) {
-      conditions.push(eq(tasks.assignedTo, filters.assignedTo));
+  async getAllTasks(assignedTo?: number): Promise<Task[]> {
+    if (assignedTo) {
+      return db.select().from(tasks)
+        .where(eq(tasks.assignedTo, assignedTo))
+        .orderBy(desc(tasks.createdAt));
     }
     
     return db.select().from(tasks)
-      .where(conditions.length > 0 ? and(...conditions) : undefined)
       .orderBy(desc(tasks.createdAt));
   }
 
