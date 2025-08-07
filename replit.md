@@ -106,6 +106,14 @@ The system adheres to a professional and consistent UI/UX based on the "Furnili 
 
 ## Recent Changes
 
+### January 8, 2025 - Payroll Month/Year Filtering Implementation  ✅ COMPLETED
+- **MAJOR FIX: Payroll Data Filtering**: Resolved payroll page showing "big list" of all records by implementing proper month/year filtering
+- **Backend Storage Enhancement**: Enhanced `getAllPayrolls()` function in `server/storage.ts` to accept and filter by month, year, and userId parameters
+- **Database Query Optimization**: Added proper LEFT JOIN with users table and WHERE conditions for accurate filtering
+- **UI Controls Integration**: Month/Year dropdown controls in header now properly filter payroll data display
+- **User Information Enhancement**: Added user names, emails, and roles to payroll records for better display
+- **System Status**: When user selects "August" from dropdown, only August payroll records are displayed instead of full unfiltered list
+
 ### January 8, 2025 - Inventory Movement Display Fix  ✅ COMPLETED
 - **MAJOR FIX: Product and User Name Display**: Resolved "Unknown Product" and "System" display issues in Inventory Movement
 - **Database Query Enhancement**: Added proper LEFT JOIN queries in `getAllStockMovements()` to fetch product names and user names
