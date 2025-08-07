@@ -443,7 +443,7 @@ export default function Projects() {
                       {getClientName(project)}
                     </TableCell>
                     <TableCell className="text-gray-600">
-                      {project.site_city || project.siteCity || project.client_city || 'N/A'}
+                      {project.city || project.siteCity || project.client_city || 'N/A'}
                     </TableCell>
                     <TableCell>
                       <Badge variant="secondary" className={getStageColor(project.stage)}>
