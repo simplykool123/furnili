@@ -867,35 +867,31 @@ class DatabaseStorage implements IStorage {
   }
 
   async getAllProjects(): Promise<any[]> {
-    // Join with clients table to get client names
-    const projectsWithClients = await db.select({
-      id: projects.id,
-      code: projects.code,
-      name: projects.name,
-      clientId: projects.client_id,
-      clientName: clients.name,
-      description: projects.description,
-      notes: projects.notes,
-      stage: projects.stage,
-      budget: projects.budget,
-      differentSiteLocation: projects.differentSiteLocation,
-      siteAddressLine1: projects.siteAddressLine1,
-      siteAddressLine2: projects.siteAddressLine2,
-      siteState: projects.siteState,
-      siteCity: projects.siteCity,
-      siteLocation: projects.siteLocation,
-      sitePincode: projects.sitePincode,
-      completionPercentage: projects.completionPercentage,
-      files: projects.files,
-      isActive: projects.isActive,
-      createdAt: projects.createdAt,
-      updatedAt: projects.updatedAt
-    })
-    .from(projects)
-    .leftJoin(clients, eq(projects.client_id, clients.id))
-    .orderBy(desc(projects.createdAt));
+    // Simplified query to avoid Drizzle schema issues
+    const allProjects = await db.select().from(projects).orderBy(desc(projects.createdAt));
     
-    return projectsWithClients;
+    // Manually enrich with client data
+    const enrichedProjects = await Promise.all(
+      allProjects.map(async (project) => {
+        let clientName = null;
+        try {
+          if (project.client_id) {
+            const client = await this.getClient(project.client_id);
+            clientName = client?.name || null;
+          }
+        } catch (error) {
+          console.warn(`Failed to fetch client ${project.client_id}:`, error);
+        }
+        
+        return {
+          ...project,
+          clientId: project.client_id,
+          clientName
+        };
+      })
+    );
+    
+    return enrichedProjects;
   }
 
   async getProject(id: number): Promise<Project | undefined> {
