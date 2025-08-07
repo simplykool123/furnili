@@ -52,7 +52,13 @@ export default function RequestTable() {
         if (value && value !== 'all') params.append(key, value);
       });
       
-      return await authenticatedApiRequest('GET', `/api/requests?${params}`);
+      const response = await authenticatedApiRequest('GET', `/api/requests?${params}`);
+      console.log('Requests API Response:', {
+        dataLength: response?.length,
+        firstItem: response?.[0],
+        data: response
+      });
+      return response;
     },
   });
 
