@@ -861,8 +861,8 @@ class DatabaseStorage implements IStorage {
       id: projects.id,
       code: projects.code,
       name: projects.name,
-      clientId: projects.clientId,
-      clientName: clients.name,
+      clientId: projects.client_id,
+      client_name: clients.name,
       description: projects.description,
       notes: projects.notes,
       stage: projects.stage,
@@ -881,7 +881,7 @@ class DatabaseStorage implements IStorage {
       updatedAt: projects.updatedAt
     })
     .from(projects)
-    .leftJoin(clients, eq(projects.clientId, clients.id))
+    .leftJoin(clients, eq(projects.client_id, clients.id))
     .orderBy(desc(projects.createdAt));
     
     return projectsWithClients;
@@ -912,7 +912,7 @@ class DatabaseStorage implements IStorage {
   }
 
   async getProjectsByClient(clientId: number): Promise<Project[]> {
-    return db.select().from(projects).where(eq(projects.clientId, clientId));
+    return db.select().from(projects).where(eq(projects.client_id, clientId));
   }
 
   async createProjectLog(log: InsertProjectLog): Promise<ProjectLog> {
