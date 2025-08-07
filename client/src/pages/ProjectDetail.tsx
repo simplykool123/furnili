@@ -1853,7 +1853,7 @@ export default function ProjectDetail() {
 
             {/* Grouped Images Interface */}
             {selectedFileType !== "moodboard" && filteredFiles.length > 0 && (
-              <div className="space-y-6">
+              <div className="space-y-3">
                 {Object.entries(
                   filteredFiles.reduce((categories: any, file: any) => {
                     const category = file.category || "general";
@@ -1873,52 +1873,52 @@ export default function ProjectDetail() {
                   }, {});
 
                   return (
-                    <div key={category} className="space-y-4">
-                      {/* Category Header */}
-                      <div className="border-b border-gray-200 pb-2">
-                        <h2 className="text-xl font-semibold text-gray-900 capitalize">
+                    <div key={category} className="space-y-2">
+                      {/* Category Header - Compact */}
+                      <div className="border-b border-gray-200 pb-1">
+                        <h2 className="text-lg font-medium text-gray-900 capitalize">
                           {category}
                         </h2>
-                        <p className="text-sm text-gray-500">
-                          {categoryFiles.length} files in {Object.keys(titleGroups).length} groups
+                        <p className="text-xs text-gray-500">
+                          {categoryFiles.length} files • {Object.keys(titleGroups).length} groups
                         </p>
                       </div>
 
                       {/* Title Groups within Category */}
                       {Object.entries(titleGroups).map(([title, files]: [string, any]) => (
-                        <div key={`${category}-${title}`} className="bg-white rounded-lg border border-gray-200 p-4">
-                          {/* Title Header with Edit capability */}
-                          <div className="flex items-center justify-between mb-4">
-                            <div className="flex items-center gap-3">
-                              <h3 className="text-lg font-semibold text-gray-900 cursor-pointer hover:text-blue-600">
+                        <div key={`${category}-${title}`} className="bg-white rounded border border-gray-200 p-3">
+                          {/* Title Header - Compact */}
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                              <h3 className="text-base font-medium text-gray-900 cursor-pointer hover:text-blue-600">
                                 {title}
                               </h3>
-                              <Badge variant="secondary" className="text-xs">
-                                {files.length} files
+                              <Badge variant="secondary" className="text-xs px-1.5 py-0.5">
+                                {files.length}
                               </Badge>
                             </div>
                             <Button
                               size="sm"
                               variant="outline"
                               onClick={() => setIsUploadDialogOpen(true)}
-                              className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                              className="text-blue-600 border-blue-200 hover:bg-blue-50 h-7 px-2 text-xs"
                             >
-                              <Plus className="h-4 w-4 mr-1" />
-                              Add More
+                              <Plus className="h-3 w-3 mr-1" />
+                              Add
                             </Button>
                           </div>
 
-                          {/* Image Grid */}
-                          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3">
+                          {/* Image Grid - More Compact */}
+                          <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-2">
                             {files.map((file: any) => (
                               <div key={file.id} className="group relative">
-                                {/* Image Thumbnail */}
-                                <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden relative border-2 border-orange-500">
+                                {/* Image Thumbnail - Compact */}
+                                <div className="aspect-square bg-gray-100 rounded overflow-hidden relative border border-orange-400">
                                   {file.mimeType?.includes("image") ? (
                                     <img
                                       src={`/${file.filePath}`}
                                       alt={file.originalName}
-                                      className="w-full h-full object-contain cursor-pointer hover:scale-105 transition-transform p-1 bg-white"
+                                      className="w-full h-full object-cover cursor-pointer hover:scale-105 transition-transform"
                                       onClick={() => {
                                         setPreviewImage({
                                           src: `/${file.filePath}`,
@@ -1933,19 +1933,19 @@ export default function ProjectDetail() {
                                     </div>
                                   )}
 
-                                  {/* Three-dot menu */}
-                                  <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                  {/* Three-dot menu - Smaller */}
+                                  <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                     <DropdownMenu>
                                       <DropdownMenuTrigger asChild>
                                         <Button
                                           size="sm"
                                           variant="ghost"
-                                          className="h-6 w-6 p-0 bg-black/50 hover:bg-black/70 text-white rounded-full"
+                                          className="h-5 w-5 p-0 bg-black/50 hover:bg-black/70 text-white rounded-full"
                                         >
-                                          <MoreVertical className="h-3 w-3" />
+                                          <MoreVertical className="h-2.5 w-2.5" />
                                         </Button>
                                       </DropdownMenuTrigger>
-                                      <DropdownMenuContent align="end" className="w-48">
+                                      <DropdownMenuContent align="end" className="w-40">
                                         <DropdownMenuItem
                                           onClick={() => {
                                             setPreviewImage({
@@ -1955,15 +1955,15 @@ export default function ProjectDetail() {
                                             setShowImagePreview(true);
                                           }}
                                         >
-                                          <Eye className="h-4 w-4 mr-2" />
-                                          View Full Size
+                                          <Eye className="h-3 w-3 mr-2" />
+                                          View
                                         </DropdownMenuItem>
                                         <DropdownMenuItem asChild>
                                           <a
                                             href={`/${file.filePath}`}
                                             download={file.originalName}
                                           >
-                                            <Download className="h-4 w-4 mr-2" />
+                                            <Download className="h-3 w-3 mr-2" />
                                             Download
                                           </a>
                                         </DropdownMenuItem>
@@ -1972,7 +1972,7 @@ export default function ProjectDetail() {
                                           onClick={() => handleDeleteFile(file.id, file.fileName)}
                                           className="text-red-600 hover:text-red-700"
                                         >
-                                          <Trash2 className="h-4 w-4 mr-2" />
+                                          <Trash2 className="h-3 w-3 mr-2" />
                                           Delete
                                         </DropdownMenuItem>
                                       </DropdownMenuContent>
@@ -1980,9 +1980,9 @@ export default function ProjectDetail() {
                                   </div>
                                 </div>
 
-                                {/* Comment Section */}
-                                <div className="mt-2">
-                                  <div className="bg-gray-50 rounded p-2 min-h-[40px] flex items-center">
+                                {/* Comment Section - More Compact */}
+                                <div className="mt-1">
+                                  <div className="bg-gray-50 rounded px-2 py-1 min-h-[24px] flex items-center">
                                     <input
                                       type="text"
                                       value={
@@ -2013,7 +2013,7 @@ export default function ProjectDetail() {
                                           });
                                         }
                                       }}
-                                      className="text-xs text-gray-700 flex-1 bg-transparent border-none outline-none placeholder-gray-400"
+                                      className="text-xs text-gray-600 flex-1 bg-transparent border-none outline-none placeholder-gray-400"
                                     />
                                   </div>
                                 </div>
@@ -2028,14 +2028,14 @@ export default function ProjectDetail() {
               </div>
             )}
 
-            {/* Empty state when no files */}
+            {/* Empty state when no files - Compact */}
             {filteredFiles.length === 0 && (
-              <div className="text-center py-12">
-                <FolderOpen className="h-16 w-16 mx-auto text-gray-300 mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
+              <div className="text-center py-8">
+                <FolderOpen className="h-12 w-12 mx-auto text-gray-300 mb-3" />
+                <h3 className="text-base font-medium text-gray-900 mb-2">
                   No files uploaded
                 </h3>
-                <p className="text-gray-500 mb-6">
+                <p className="text-sm text-gray-500 mb-4">
                   Upload your first file to get started
                 </p>
               </div>
