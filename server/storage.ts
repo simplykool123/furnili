@@ -873,7 +873,7 @@ class DatabaseStorage implements IStorage {
       code: projects.code,
       name: projects.name,
       clientId: projects.client_id,
-      client_name: clients.name,
+      clientName: clients.name,
       description: projects.description,
       notes: projects.notes,
       stage: projects.stage,
