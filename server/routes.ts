@@ -2381,9 +2381,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/inventory/movements", authenticateToken, async (req: AuthRequest, res) => {
     try {
       console.log('Fetching stock movements...');
-      const movements = await storage.getAllStockMovements();
+      
+      const { productId, type, startDate, endDate } = req.query;
+      const filters: any = {};
+      
+      if (productId) filters.productId = parseInt(productId as string);
+      if (type) filters.type = type as string;
+      if (startDate) filters.startDate = new Date(startDate as string);
+      if (endDate) filters.endDate = new Date(endDate as string);
+      
+      const movements = await storage.getAllStockMovements(filters);
       console.log(`Found ${movements.length} movements`);
-      res.json(movements);
+      
+      // Transform the data to match the frontend expectations
+      const transformedMovements = movements.map(movement => ({
+        ...movement,
+        product: {
+          id: movement.productId,
+          name: movement.productName || 'Unknown Product',
+          category: movement.productCategory || 'Unknown Category'
+        },
+        user: {
+          name: 'System'  // You can enhance this by joining with users table if needed
+        }
+      }));
+      
+      res.json(transformedMovements);
     } catch (error) {
       console.error('Stock movements API error:', error);
       res.status(500).json({ message: "Failed to fetch movements", error: error instanceof Error ? error.message : String(error) });

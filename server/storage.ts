@@ -559,7 +559,7 @@ class DatabaseStorage implements IStorage {
     return db.select().from(stockMovements).where(eq(stockMovements.productId, productId)).orderBy(desc(stockMovements.createdAt));
   }
 
-  async getAllStockMovements(filters?: { productId?: number; type?: string; startDate?: Date; endDate?: Date }): Promise<StockMovement[]> {
+  async getAllStockMovements(filters?: { productId?: number; type?: string; startDate?: Date; endDate?: Date }): Promise<any[]> {
     const conditions = [];
     if (filters?.productId) {
       conditions.push(eq(stockMovements.productId, filters.productId));
@@ -574,9 +574,30 @@ class DatabaseStorage implements IStorage {
       conditions.push(lte(stockMovements.createdAt, filters.endDate));
     }
     
-    return db.select().from(stockMovements)
-      .where(conditions.length > 0 ? and(...conditions) : undefined)
-      .orderBy(desc(stockMovements.createdAt));
+    // Join with products table to get product names
+    const movements = await db.select({
+      id: stockMovements.id,
+      productId: stockMovements.productId,
+      productName: products.name,
+      productCategory: products.category,
+      movementType: stockMovements.movementType,
+      quantity: stockMovements.quantity,
+      previousStock: stockMovements.previousStock,
+      newStock: stockMovements.newStock,
+      reason: stockMovements.reason,
+      reference: stockMovements.reference,
+      notes: stockMovements.notes,
+      costPerUnit: stockMovements.costPerUnit,
+      totalCost: stockMovements.totalCost,
+      createdAt: stockMovements.createdAt,
+      createdBy: stockMovements.createdBy
+    })
+    .from(stockMovements)
+    .leftJoin(products, eq(stockMovements.productId, products.id))
+    .where(conditions.length > 0 ? and(...conditions) : undefined)
+    .orderBy(desc(stockMovements.createdAt));
+    
+    return movements;
   }
 
   // Stub implementations for remaining methods
