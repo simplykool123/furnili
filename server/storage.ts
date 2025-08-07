@@ -105,6 +105,16 @@ export interface IStorage {
   // Petty Cash operations
   getAllPettyCashExpenses(month?: number, year?: number): Promise<PettyCashExpense[]>;
   createPettyCashExpense(expense: InsertPettyCashExpense): Promise<PettyCashExpense>;
+
+  // Task operations
+  getAllTasks(assignedTo?: number): Promise<any[]>;
+
+  // Stock Movement operations
+  getAllStockMovements(): Promise<StockMovement[]>;
+  
+  // Request Item operations
+  createRequestItem(item: InsertRequestItem): Promise<RequestItem>;
+  getRequestItems(requestId: number): Promise<RequestItem[]>;
 }
 
 class DatabaseStorage implements IStorage {
@@ -382,6 +392,27 @@ class DatabaseStorage implements IStorage {
   async createPettyCashExpense(expense: InsertPettyCashExpense): Promise<PettyCashExpense> {
     const result = await db.insert(pettyCashExpenses).values(expense).returning();
     return result[0];
+  }
+
+  // Task operations (simplified implementation)
+  async getAllTasks(assignedTo?: number): Promise<any[]> {
+    // Return empty array for now - tasks can be implemented later
+    return [];
+  }
+
+  // Stock Movement operations
+  async getAllStockMovements(): Promise<StockMovement[]> {
+    return db.select().from(stockMovements).orderBy(desc(stockMovements.createdAt));
+  }
+
+  // Request Item operations
+  async createRequestItem(item: InsertRequestItem): Promise<RequestItem> {
+    const result = await db.insert(requestItems).values(item).returning();
+    return result[0];
+  }
+
+  async getRequestItems(requestId: number): Promise<RequestItem[]> {
+    return db.select().from(requestItems).where(eq(requestItems.requestId, requestId));
   }
 }
 
