@@ -896,11 +896,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           name: sampleProject.name,
           stage: sampleProject.stage,
           isActive: sampleProject.isActive,
-          is_active: sampleProject.is_active,
-          client_name: sampleProject.client_name,
           projectCode: sampleProject.code,
-          clientId: sampleProject.clientId,
-          client_id: sampleProject.client_id
+          clientId: sampleProject.clientId
         });
       }
       
@@ -913,8 +910,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         projectCode: project.code,
         name: project.name,
         stage: project.stage,
-        client_name: project.client_name,
-        clientId: project.client_id
+        clientId: project.clientId
       }));
       
       console.log("Sending transformed projects:", transformedProjects.length);
@@ -1359,7 +1355,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         filters.addedBy = parseInt(userId as string);
       }
       
-      const expenses = await storage.getAllPettyCashExpenses(filters);
+      const expenses = await storage.getAllPettyCash(filters);
       res.json(expenses);
     } catch (error) {
       console.error("Failed to fetch expenses:", error);
@@ -1971,7 +1967,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Project not found" });
       }
       
-      console.log("API Route: Project found, client_name:", project.client_name, "client_mobile:", project.client_mobile);
+      console.log("API Route: Project found, clientId:", project.clientId);
       res.json(project);
     } catch (error) {
       console.error("Failed to fetch project:", error);
