@@ -778,17 +778,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         requests = await storage.getAllMaterialRequests();
       }
       
-      // DETAILED DEBUG: Log the actual structure
-      console.log(`=== DEBUG FULL STRUCTURE ===`);
-      requests.forEach((req, idx) => {
-        console.log(`Request ${req.id}: items=${req.items?.length || 0}`);
-        if (req.items && req.items.length > 0) {
-          req.items.forEach((item, itemIdx) => {
-            console.log(`  Item ${itemIdx}: product=${item.product?.name}, qty=${item.requestedQuantity}`);
-          });
-        }
-      });
-      console.log(`=== END DEBUG ===`);
+      // TEST: Log items count
+      console.log(`API: Request 2 has ${requests.find(r => r.id === 2)?.items?.length || 0} items`);
+      console.log(`API: Request 3 has ${requests.find(r => r.id === 3)?.items?.length || 0} items`);
       
       res.json(requests);
     } catch (error) {

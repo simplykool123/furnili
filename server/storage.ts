@@ -227,84 +227,39 @@ class DatabaseStorage implements IStorage {
 
   // Material Request operations
   async getMaterialRequest(id: number): Promise<MaterialRequestWithItems | undefined> {
-    // Direct JOIN query to get request with items in one go
-    const results = await db
-      .select({
-        // Request fields
-        id: materialRequests.id,
-        clientName: materialRequests.clientName,
-        orderNumber: materialRequests.orderNumber,
-        requestedBy: materialRequests.requestedBy,
-        status: materialRequests.status,
-        priority: materialRequests.priority,
-        boqReference: materialRequests.boqReference,
-        remarks: materialRequests.remarks,
-        totalValue: materialRequests.totalValue,
-        approvedBy: materialRequests.approvedBy,
-        approvedAt: materialRequests.approvedAt,
-        issuedBy: materialRequests.issuedBy,
-        issuedAt: materialRequests.issuedAt,
-        createdAt: materialRequests.createdAt,
-        projectId: materialRequests.projectId,
-        // Item fields
-        itemId: sql`request_items.id`,
-        itemProductId: sql`request_items.product_id`,
-        itemRequestedQuantity: sql`request_items.requested_quantity`,
-        itemApprovedQuantity: sql`request_items.approved_quantity`,
-        itemUnitPrice: sql`request_items.unit_price`,
-        itemTotalPrice: sql`request_items.total_price`,
-        // Product fields
-        productName: products.name,
-        productCategory: products.category,
-        productBrand: products.brand,
-        productCurrentStock: products.currentStock,
-      })
-      .from(materialRequests)
-      .leftJoin(requestItems, eq(materialRequests.id, sql`request_items.request_id`))
-      .leftJoin(products, eq(sql`request_items.product_id`, products.id))
-      .where(eq(materialRequests.id, id));
+    // Get the request first
+    const request = await db.select().from(materialRequests).where(eq(materialRequests.id, id)).limit(1);
+    if (!request[0]) return undefined;
 
-    if (!results || results.length === 0) {
-      return undefined;
-    }
+    // Get items with products using raw SQL to ensure it works
+    const itemsRaw = await db.execute(sql`
+      SELECT 
+        ri.id, ri.request_id, ri.product_id, ri.requested_quantity, ri.approved_quantity, ri.unit_price, ri.total_price,
+        p.name as product_name, p.category as product_category, p.brand as product_brand, p.current_stock as product_stock
+      FROM request_items ri
+      LEFT JOIN products p ON ri.product_id = p.id
+      WHERE ri.request_id = ${id}
+    `);
 
-    // Group items for the request
-    const request = results[0];
-    const items = results
-      .filter(r => r.itemId !== null)
-      .map(r => ({
-        id: r.itemId!,
-        requestId: request.id,
-        productId: r.itemProductId!,
-        requestedQuantity: r.itemRequestedQuantity!,
-        approvedQuantity: r.itemApprovedQuantity,
-        unitPrice: r.itemUnitPrice!,
-        totalPrice: r.itemTotalPrice!,
-        product: {
-          id: r.itemProductId!,
-          name: r.productName!,
-          category: r.productCategory!,
-          brand: r.productBrand,
-          currentStock: r.productCurrentStock!,
-        }
-      }));
+    const items = itemsRaw.map((row: any) => ({
+      id: row.id,
+      requestId: row.request_id,
+      productId: row.product_id,
+      requestedQuantity: row.requested_quantity,
+      approvedQuantity: row.approved_quantity,
+      unitPrice: row.unit_price,
+      totalPrice: row.total_price,
+      product: {
+        id: row.product_id,
+        name: row.product_name,
+        category: row.product_category,
+        brand: row.product_brand,
+        currentStock: row.product_stock,
+      }
+    }));
 
     return {
-      id: request.id,
-      clientName: request.clientName,
-      orderNumber: request.orderNumber,
-      requestedBy: request.requestedBy,
-      status: request.status,
-      priority: request.priority,
-      boqReference: request.boqReference,
-      remarks: request.remarks,
-      totalValue: request.totalValue,
-      approvedBy: request.approvedBy,
-      approvedAt: request.approvedAt,
-      issuedBy: request.issuedBy,
-      issuedAt: request.issuedAt,
-      createdAt: request.createdAt,
-      projectId: request.projectId,
+      ...request[0],
       requestedByUser: undefined,
       approvedByUser: undefined,
       issuedByUser: undefined,
