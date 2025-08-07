@@ -756,6 +756,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { status, clientName, projectId } = req.query;
       const user = (req as AuthRequest).user!;
       
+      console.log(`DEBUG: /api/requests called with filters: status=${status}, clientName=${clientName}, projectId=${projectId}`);
+      
       const filters: any = {
         status: status as string,
         clientName: clientName as string,
@@ -769,14 +771,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let requests;
       if (projectId) {
         // Get requests for specific project
+        console.log(`DEBUG: Getting requests for project ${projectId}`);
         requests = await storage.getMaterialRequestsByProject(parseInt(projectId as string));
       } else {
         // Get all requests with filters
+        console.log(`DEBUG: Getting all material requests`);
         requests = await storage.getAllMaterialRequests();
       }
       
+      console.log(`DEBUG: About to return ${requests?.length || 0} requests`);
+      console.log(`DEBUG: First request items:`, requests?.[0]?.items?.length || 'NO ITEMS');
+      
       res.json(requests);
     } catch (error) {
+      console.error(`DEBUG: Error in /api/requests:`, error);
       res.status(500).json({ message: "Failed to fetch requests", error });
     }
   });

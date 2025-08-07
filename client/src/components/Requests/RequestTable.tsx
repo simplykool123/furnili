@@ -45,12 +45,14 @@ export default function RequestTable() {
   const user = authService.getUser();
 
   const { data: requests, isLoading } = useQuery({
-    queryKey: ['/api/requests', filters],
+    queryKey: ['/api/requests', filters, Date.now()], // Force fresh data
     queryFn: async () => {
       const params = new URLSearchParams();
       Object.entries(filters).forEach(([key, value]) => {
         if (value && value !== 'all') params.append(key, value);
       });
+      // Add cache buster
+      params.append('_t', Date.now().toString());
       
       const response = await authenticatedApiRequest('GET', `/api/requests?${params}`);
       console.log('Requests API Response:', {
@@ -60,6 +62,8 @@ export default function RequestTable() {
       });
       return response;
     },
+    staleTime: 0, // Always consider data stale
+    gcTime: 0, // Don't cache
   });
 
   const updateStatusMutation = useMutation({
