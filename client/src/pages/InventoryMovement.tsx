@@ -546,22 +546,22 @@ export default function InventoryMovement() {
                   (selectedMovement.reference && selectedMovement.reference.includes('Material Request'))) && (
                   <div className="border-t pt-3">
                     <Label className="text-xs font-medium text-gray-600">Material Request Details</Label>
-                    <div className="mt-2 space-y-2 bg-blue-50 p-3 rounded-lg">
+                    <div className="mt-2 space-y-2">
                       {selectedMovement.clientName && (
                         <div className="flex justify-between">
-                          <span className="text-sm font-medium">Client:</span>
+                          <span className="text-sm">Client:</span>
                           <span className="text-sm font-semibold text-blue-700">{selectedMovement.clientName}</span>
                         </div>
                       )}
                       {selectedMovement.projectName && (
                         <div className="flex justify-between">
-                          <span className="text-sm font-medium">Project:</span>
+                          <span className="text-sm">Project:</span>
                           <span className="text-sm font-semibold">{selectedMovement.projectName}</span>
                         </div>
                       )}
                       {(selectedMovement.requestOrderNumber || selectedMovement.extractedOrderNumber) && (
                         <div className="flex justify-between">
-                          <span className="text-sm font-medium">Order Number:</span>
+                          <span className="text-sm">Order Number:</span>
                           <span className="text-sm font-semibold text-blue-700">
                             {selectedMovement.requestOrderNumber || selectedMovement.extractedOrderNumber}
                           </span>
@@ -569,7 +569,7 @@ export default function InventoryMovement() {
                       )}
                       {selectedMovement.requestStatus && (
                         <div className="flex justify-between">
-                          <span className="text-sm font-medium">Request Status:</span>
+                          <span className="text-sm">Request Status:</span>
                           <span className={`text-sm font-semibold px-2 py-1 rounded text-xs ${
                             selectedMovement.requestStatus === 'approved' ? 'bg-green-100 text-green-700' :
                             selectedMovement.requestStatus === 'issued' ? 'bg-blue-100 text-blue-700' :
@@ -581,12 +581,7 @@ export default function InventoryMovement() {
                         </div>
                       )}
                       <div className="text-xs text-blue-600 mt-2">
-                        {selectedMovement.clientName ? 
-                          "This stock movement is related to a material request for the above client." :
-                          (selectedMovement.requestOrderNumber || selectedMovement.extractedOrderNumber) ?
-                          `This stock movement is related to material request ${selectedMovement.requestOrderNumber || selectedMovement.extractedOrderNumber}.` :
-                          "This stock movement is related to a material request (order number not specified)."
-                        }
+                        This stock movement is related to material request{selectedMovement.clientName ? ' for the above client' : ''}.
                       </div>
                     </div>
                   </div>
