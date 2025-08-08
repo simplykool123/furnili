@@ -657,7 +657,7 @@ class DatabaseStorage implements IStorage {
 
   // Request Item operations
   async createRequestItem(item: InsertRequestItem): Promise<RequestItem> {
-    const result = await db.insert(requestItems).values(item).returning();
+    const result = await db.insert(requestItems).values([item]).returning();
     return result[0];
   }
 
