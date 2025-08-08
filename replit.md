@@ -1,7 +1,7 @@
 # Furnili Management System
 
 ## Overview
-This project is a comprehensive management platform, developed as a modern web application with a React frontend and an Express backend. Its primary purpose is to provide robust solutions for staff management, project tracking, inventory control, and financial oversight. Key capabilities include professional PDF export for quotes, mobile-first design, and role-based access control. The system aims to enhance operational efficiency and streamline workflows for businesses, maintaining a consistent Furnili brand identity.
+The Furnili Management System is a comprehensive web application designed to enhance operational efficiency and streamline workflows for businesses. Developed with a React frontend and Express backend, it provides robust solutions for staff management, project tracking, inventory control, and financial oversight. Key capabilities include professional PDF export for quotes, mobile-first design, and role-based access control, all while maintaining a consistent Furnili brand identity. The system aims to be a modern, integrated platform for business management.
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.
@@ -26,33 +26,21 @@ The system adheres to a professional and consistent UI/UX based on the "Furnili 
 - **Runtime**: Node.js with Express.js
 - **Language**: TypeScript with ES modules
 - **Database ORM**: Drizzle ORM
-- **Authentication**: JWT-based authentication with role-based access control
-- **File Processing**: Tesseract.js for OCR (Optical Character Recognition)
+- **Authentication**: JWT-based authentication
+- **File Processing**: Tesseract.js for OCR
 
 ### Feature Specifications
 
 #### Authentication & Authorization
 - JWT token-based authentication with four distinct user roles: Admin, Manager, Staff, and Store Incharge.
-- Role-based access control governs route and UI component visibility.
-- **Project Management RBAC**: Regular users (staff/store_incharge) have read-only access - New Project button and Edit/Delete actions are hidden for non-admin/manager roles.
-- **Product Management RBAC**: Store keepers have read-only access to product details with restricted add/edit/delete actions, but can perform stock adjustments through dedicated Stock Adjustment dialog. Regular users have full read-only access. Only admin and manager can add, edit, or delete products.
-- **Material Request Creation**: All authenticated users can create material requests with proper role validation.
-- **Master Data RBAC**: Master Data section in sidebar is completely hidden from staff and store_incharge users - only admin and manager can access Clients, Users, Sales Products, and Categories.
-- **Project Details RBAC**: Quotes and Finances tabs are hidden from regular users (staff/store_incharge) in Project Detail view - only admin and manager can access financial modules.
-- **Material Order Cost RBAC**: Material order cost information is hidden from regular users in the Orders tab - only admin and manager can view cost details while all users can see order status and information.
-- **Project Information RBAC**: Notes and Details tabs are hidden from regular users (staff/store_incharge) - only admin and manager can access detailed project information and notes.
-- **Client Contact RBAC**: Client contact information (phone numbers) in project headers is hidden from regular users - only admin and manager can view client contact details.
-- **Dashboard Layout RBAC**: Staff and store keeper users have a streamlined dashboard with side-by-side "My Attendance | My Tasks" layout and optimized action buttons, while admin/manager users retain the full comprehensive dashboard.
-- **Store Keeper Sidebar Access**: Store keepers (`store_incharge`) have access to Petty Cash (user-specific view) and Project Management tabs in addition to their standard permissions for Products, Material Requests, and Inventory Movement.
-- **Inventory Movement Delete**: Admin-only delete functionality for inventory movement history with automatic stock reversal and comprehensive confirmation dialogs.
-- **Simplified Movement Form**: Inventory movement form simplified to essential fields only (Product, Type, Quantity, Reason, Reference, Notes) removing complex fields like Project, Destination, Vendor, Invoice Number, and Cost per Unit for better usability.
+- Role-based access control governs route and UI component visibility for features such as Project Management, Product Management, Material Request creation, Master Data access, Project Details (Quotes/Finances/Notes), Material Order Cost, Client Contact information, Dashboard Layout, and Inventory Movement deletion.
 
 #### Product Management
-- Comprehensive product catalog including categories, brands, specifications, image upload, real-time stock tracking, SKU management, and low-stock alerts.
-- **Unified Stock Management**: Stock adjustments from Product Management are now integrated with the centralized Inventory Movement system for complete audit trails and simplified database architecture.
+- Comprehensive product catalog with categories, brands, specifications, image upload, real-time stock tracking, SKU management, and low-stock alerts.
+- Unified stock management integrated with the centralized Inventory Movement system for audit trails.
 
 #### BOQ Processing System
-- PDF upload with OCR (Tesseract.js) for automated text extraction.
+- PDF upload with OCR for automated text extraction.
 - Intelligent parsing of quantities, units, rates, and descriptions.
 - Product matching with existing inventory and auto-generation of material requests.
 
@@ -60,32 +48,24 @@ The system adheres to a professional and consistent UI/UX based on the "Furnili 
 - Lifecycle management: Submit → Pending → Approved → Issued → Completed.
 - Supports multi-item requests with quantity validation and priority levels.
 - BOQ reference linking for traceability and stock validation.
-- **Dynamic Pricing**: New requests automatically use current product prices from inventory.
-- **Fixed Cost Recording**: Once projects are completed, material costs are frozen in Project Finance for accurate historical tracking and profitability analysis.
-- **Automatic Stock Management**: When material requests are marked as "issued", inventory stock is automatically deducted. If an issued request is cancelled/rejected/deleted, stock is automatically restored with complete audit trail via stock movements.
+- Dynamic pricing using current product prices and fixed cost recording upon project completion.
+- Automatic stock deduction when issued and restoration if cancelled/rejected/deleted, with audit trails.
 
 #### Reporting & Analytics
 - Role-specific dashboards with key metrics.
 - CSV export for various data types, including category-wise analysis and financial summaries.
 
 #### Professional PDF Quote Generation
-- Fixed and optimized PDF layout with exact specifications.
-- Professional table format with seamless connectivity between sections.
-- Consistent 31px row heights for totals and blank rows.
-- Compact bottom section with 4px padding and 1.1 line-height.
-- Company signature stamp (70px width) without horizontal lines.
-- **CRITICAL**: PDF calculation logic is FINAL and correct - calculates from item line totals with proper packaging (2%), transportation (₹5,000), and GST (18%). Any discrepancies should be fixed in system/database values, NOT PDF calculations.
+- Fixed and optimized PDF layout with precise specifications for tables, spacing, and company signature.
+- Critical calculation logic for quotes includes item line totals with packaging (2%), transportation (₹5,000), and GST (18%).
 
 #### Quote Management Interface
-- **Fixed Quote Action Buttons**: Edit, Delete, and View buttons now fully functional with proper dialog components.
-- **Enhanced Quote Items Creation**: Resolved issue where quote items weren't saving during quote creation.
-- **Database Schema Fix**: Made `sales_product_id` nullable to support manual item entries.
-- **Complete CRUD Operations**: Added PUT and DELETE API routes for quote management with proper authentication.
-- **Mobile-Optimized Dialogs**: All quote management dialogs follow mobile-first design principles.
-- **Automated Quote Title Generation**: Quote titles are now automatically generated based on project names (e.g., "Estimate for 2BHK" where "2BHK" is extracted from project name). The system intelligently identifies meaningful parts like BHK patterns, property types, and business types.
-- **Quote Status Management**: Added status editing functionality allowing users to change quote status from "draft" to "sent", "approved", "rejected", "expired" through EditQuote form.
-- **WhatsApp PDF Sharing**: Integrated WhatsApp sharing functionality with PDF generation and professional message formatting.
-- **Size Field Integration**: Added Size column to Sales Products with consistent field name across both Sales Products and Quote modules for seamless data consistency.
+- Complete CRUD operations for quotes with functional action buttons and enhanced item creation.
+- Mobile-optimized dialogs.
+- Automated quote title generation based on project names.
+- Quote status management (draft, sent, approved, rejected, expired).
+- Integrated WhatsApp sharing for PDFs.
+- Consistent 'Size' field integration across Sales Products and Quotes.
 
 #### Staff Management & Payroll
 - Comprehensive staff management including attendance tracking, ID details, salary information, and document storage.
@@ -93,58 +73,14 @@ The system adheres to a professional and consistent UI/UX based on the "Furnili 
 
 #### Petty Cash Management
 - Manual expense entry and OCR processing for UPI payment screenshots.
-- Dashboard with filtering and search.
-- Balance tracking with debit/credit indicators.
+- Dashboard with filtering and search, and balance tracking.
 
 #### Project Management
 - Table-based project dashboard with auto-generated project codes.
 - Project creation with client, project, and address details.
-- Advanced filtering by stage and client.
-- Unified client database.
-- Comprehensive project stages: Prospect → Recce Done → Design In Progress → Design Approved → Estimate Given → Client Approved → Production → Installation → Handover → Completed, with "On Hold" / "Lost" optional statuses.
-- Integrated Quotes functionality as a sub-module within Project Management.
-
-## Recent Changes
-
-### January 8, 2025 - Complete Workstation Catalog Integration  ✅ COMPLETED
-- **MAJOR ACHIEVEMENT: Comprehensive Workstation Database Integration**: Successfully integrated all 9 Step Early workstation products into sales catalog
-- **Complete Product Specifications**: Added detailed descriptions, sizes, pricing (₹21,890 - ₹55,990), and technical specifications
-- **Database Storage Implementation**: Fixed missing `getAllSalesProducts` function in storage layer preventing UI display
-- **Image Integration**: Updated all workstation products with working image URLs for proper display
-- **Product Portfolio**: Integrated Arcade, Trigon, Clique, Pentagon, Trefoil, Rhombus, Classy Arcade, Helix, and Classic 60 workstations
-- **CRUD Operations**: Added complete sales product management functionality (create, read, update, delete)
-- **Category Standardization**: All products categorized as "workstations" with 18% tax rate
-- **Quote Integration Ready**: All workstation products now available for quote generation and project management
-- **System Status**: Sales Products section fully operational with complete workstation catalog display
-
-## Recent Changes
-
-### January 8, 2025 - Payroll Month/Year Filtering Implementation  ✅ COMPLETED
-- **MAJOR FIX: Payroll Data Filtering**: Resolved payroll page showing "big list" of all records by implementing proper month/year filtering
-- **Backend Storage Enhancement**: Enhanced `getAllPayrolls()` function in `server/storage.ts` to accept and filter by month, year, and userId parameters
-- **Database Query Optimization**: Added proper LEFT JOIN with users table and WHERE conditions for accurate filtering
-- **UI Controls Integration**: Month/Year dropdown controls in header now properly filter payroll data display
-- **User Information Enhancement**: Added user names, emails, and roles to payroll records for better display
-- **System Status**: When user selects "August" from dropdown, only August payroll records are displayed instead of full unfiltered list
-
-### January 8, 2025 - Inventory Movement Display Fix  ✅ COMPLETED
-- **MAJOR FIX: Product and User Name Display**: Resolved "Unknown Product" and "System" display issues in Inventory Movement
-- **Database Query Enhancement**: Added proper LEFT JOIN queries in `getAllStockMovements()` to fetch product names and user names
-- **Backend Storage Optimization**: Enhanced `server/storage.ts` with complete product and user information retrieval
-- **Client API Fix**: Added missing client operations (`getAllClients`, `getClient`, `createClient`) to resolve "Failed to fetch clients" error
-- **Data Integrity**: Inventory movements now show actual product names ("Calibrated ply") and real usernames ("keeper")
-- **System Status**: Complete resolution of data display issues with proper database relationship handling
-
-### January 6, 2025 - Critical TypeScript Error Resolution  ✅ COMPLETED
-- **MAJOR ACHIEVEMENT: Complete TypeScript Error Resolution**: Successfully resolved 116+ critical TypeScript/LSP errors across all server and client files
-- **Server Stability**: Fixed critical errors in server/routes.ts, server/storage.ts preventing proper functionality
-- **File Upload Restored**: Confirmed and restored complete file upload functionality in Projects Files tab  
-- **Database Operations**: Fixed type safety issues in database queries and API endpoints
-- **Frontend Fixes**: Resolved all ProjectDetail.tsx TypeScript errors including parameter typing and CSS object literal issues
-- **API Consistency**: Fixed apiRequest parameter inconsistencies across mutation functions
-- **Error Handling**: Improved error handling with proper type checking across all server operations
-- **Performance**: Reduced LSP diagnostic errors from 116+ to 0, achieving complete TypeScript compliance
-- **System Status**: Server running smoothly with all core functionality operational - Material requests, products, projects all functioning perfectly
+- Advanced filtering by stage and client with a unified client database.
+- Comprehensive project stages: Prospect to Completed, with optional "On Hold" / "Lost" statuses.
+- Integrated Quotes functionality as a sub-module.
 
 ## External Dependencies
 
