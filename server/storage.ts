@@ -134,6 +134,9 @@ export interface IStorage {
   getAllMaterialRequests(): Promise<MaterialRequest[]>;
   getMaterialRequest(id: number): Promise<MaterialRequest | undefined>;
   getMaterialRequestsByProject(projectId: number): Promise<MaterialRequest[]>;
+
+  // Quote operations
+  getQuotesByProject(projectId: number): Promise<Quote[]>;
 }
 
 class DatabaseStorage implements IStorage {
@@ -293,6 +296,23 @@ class DatabaseStorage implements IStorage {
     return requestsWithItems;
   }
 
+  async getMaterialRequestsByProject(projectId: number): Promise<MaterialRequestWithItems[]> {
+    console.log(`*** getMaterialRequestsByProject called for project ${projectId} ***`);
+    const requests = await db.select().from(materialRequests)
+      .where(eq(materialRequests.projectId, projectId))
+      .orderBy(desc(materialRequests.createdAt));
+    console.log(`*** Found ${requests.length} requests for project ${projectId} ***`);
+    
+    const requestsWithItems = await Promise.all(
+      requests.map(async (request) => {
+        const fullRequest = await this.getMaterialRequest(request.id);
+        return fullRequest!;
+      })
+    );
+
+    return requestsWithItems;
+  }
+
   async createMaterialRequest(request: InsertMaterialRequest): Promise<MaterialRequest> {
     if (!request.orderNumber) {
       const lastRequest = await db.select({ id: materialRequests.id }).from(materialRequests).orderBy(desc(materialRequests.id)).limit(1);
@@ -313,6 +333,16 @@ class DatabaseStorage implements IStorage {
     await db.delete(requestItems).where(eq(requestItems.requestId, id));
     await db.delete(materialRequests).where(eq(materialRequests.id, id));
     return true;
+  }
+
+  // Quote operations
+  async getQuotesByProject(projectId: number): Promise<Quote[]> {
+    console.log(`*** getQuotesByProject called for project ${projectId} ***`);
+    const result = await db.select().from(quotes)
+      .where(eq(quotes.projectId, projectId))
+      .orderBy(desc(quotes.createdAt));
+    console.log(`*** Found ${result.length} quotes for project ${projectId} ***`);
+    return result;
   }
 
   // Project operations
