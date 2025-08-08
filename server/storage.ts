@@ -81,6 +81,7 @@ export interface IStorage {
   getAllMaterialRequests(): Promise<MaterialRequestWithItems[]>;
   createMaterialRequest(request: InsertMaterialRequest, items: InsertRequestItem[]): Promise<MaterialRequestWithItems>;
   updateMaterialRequest(id: number, updates: Partial<InsertMaterialRequest>): Promise<MaterialRequest | undefined>;
+  updateMaterialRequestStatus(id: number, status: string, userId: number): Promise<MaterialRequest | undefined>;
   deleteMaterialRequest(id: number): Promise<boolean>;
 
   // Project operations
@@ -397,6 +398,17 @@ class DatabaseStorage implements IStorage {
 
   async updateMaterialRequest(id: number, updates: Partial<InsertMaterialRequest>): Promise<MaterialRequest | undefined> {
     const result = await db.update(materialRequests).set(updates).where(eq(materialRequests.id, id)).returning();
+    return result[0];
+  }
+
+  async updateMaterialRequestStatus(id: number, status: string, userId: number): Promise<MaterialRequest | undefined> {
+    const result = await db.update(materialRequests)
+      .set({ 
+        status: status,
+        updatedAt: new Date()
+      })
+      .where(eq(materialRequests.id, id))
+      .returning();
     return result[0];
   }
 
