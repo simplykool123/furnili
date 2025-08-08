@@ -692,7 +692,13 @@ class DatabaseStorage implements IStorage {
     const allUsers = await db.select().from(users);
     const result = await Promise.all(allUsers.map(async (user) => {
       const stats = await this.getPersonalPettyCashStats(user.id);
-      return { user: user.username, balance: stats.balance };
+      return { 
+        userId: user.id,
+        userName: user.name || user.username,
+        received: stats.cashGivenToMe || 0,
+        spent: stats.myExpenses || 0,
+        balance: stats.myBalance || 0
+      };
     }));
     return result;
   }

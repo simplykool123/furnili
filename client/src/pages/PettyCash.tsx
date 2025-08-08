@@ -881,17 +881,17 @@ export default function PettyCash() {
                   <div className="space-y-1 text-xs">
                     <div className="flex justify-between">
                       <span className="text-green-600">Received:</span>
-                      <span className="font-medium text-green-600">+₹{staff.received.toLocaleString()}</span>
+                      <span className="font-medium text-green-600">+₹{(staff.received ?? 0).toLocaleString()}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-red-600">Spent:</span>
-                      <span className="font-medium text-red-600">-₹{staff.spent.toLocaleString()}</span>
+                      <span className="font-medium text-red-600">-₹{(staff.spent ?? 0).toLocaleString()}</span>
                     </div>
                     <hr className="my-2" />
                     <div className="flex justify-between">
                       <span className="font-medium">Balance:</span>
-                      <span className={`font-bold ${staff.balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                        {staff.balance >= 0 ? '+' : ''}₹{staff.balance.toLocaleString()}
+                      <span className={`font-bold ${(staff.balance ?? 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        {(staff.balance ?? 0) >= 0 ? '+' : ''}₹{(staff.balance ?? 0).toLocaleString()}
                       </span>
                     </div>
                   </div>
