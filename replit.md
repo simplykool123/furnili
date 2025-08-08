@@ -1,7 +1,7 @@
-# Furnili Workforce Management System
+# Furnili Management System
 
 ## Overview
-This project is a comprehensive workforce management platform, developed as a modern web application with a React frontend and an Express backend. Its primary purpose is to provide robust solutions for staff management, project tracking, inventory control, and financial oversight. Key capabilities include professional PDF export for quotes, mobile-first design, and role-based access control. The system aims to enhance operational efficiency and streamline workflows for businesses, maintaining a consistent Furnili brand identity.
+This project is a comprehensive management platform, developed as a modern web application with a React frontend and an Express backend. Its primary purpose is to provide robust solutions for staff management, project tracking, inventory control, and financial oversight. Key capabilities include professional PDF export for quotes, mobile-first design, and role-based access control. The system aims to enhance operational efficiency and streamline workflows for businesses, maintaining a consistent Furnili brand identity.
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.

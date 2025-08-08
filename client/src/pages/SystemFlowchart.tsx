@@ -50,7 +50,7 @@ export default function SystemFlowchart() {
 
         <Card className={isFullscreen ? "fixed inset-0 z-50 rounded-none" : ""}>
           <CardHeader className={isFullscreen ? "pb-2" : ""}>
-            <CardTitle className="text-lg">Furnili Workforce Management System</CardTitle>
+            <CardTitle className="text-lg">Furnili Management System</CardTitle>
             {!isFullscreen && (
               <p className="text-sm text-gray-600">
                 Interactive system architecture showing all modules, workflows, and integrations

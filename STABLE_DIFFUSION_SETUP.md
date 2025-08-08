@@ -1,7 +1,7 @@
 # Stable Diffusion WebUI Setup Guide
 
 ## Overview
-Set up AUTOMATIC1111's Stable Diffusion WebUI for unlimited, free AI image generation in your Furnili Workforce Management System.
+Set up AUTOMATIC1111's Stable Diffusion WebUI for unlimited, free AI image generation in your Furnili Management System.
 
 ## Quick Setup (Windows)
 

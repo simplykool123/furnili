@@ -1,6 +1,6 @@
-# Furnili Workforce Management System
+# Furnili Management System
 
-A professional workforce management platform with comprehensive inventory tracking, project management, and staff administration capabilities.
+A professional management platform with comprehensive inventory tracking, project management, and staff administration capabilities.
 
 ## 🌟 Key Features
 

@@ -71,7 +71,7 @@ export default function Login() {
             <Package className="w-8 h-8 text-white" />
           </div>
           <CardTitle className="text-3xl font-bold text-gray-900">
-            Inventory Management
+            Furnili Management System
           </CardTitle>
           <CardDescription className="text-gray-600">
             Sign in to your account
