@@ -138,6 +138,13 @@ export interface IStorage {
 
   // Quote operations
   getQuotesByProject(projectId: number): Promise<Quote[]>;
+  
+  // Sales Product operations
+  getAllSalesProducts(): Promise<SalesProduct[]>;
+  getSalesProduct(id: number): Promise<SalesProduct | undefined>;
+  createSalesProduct(product: InsertSalesProduct): Promise<SalesProduct>;
+  updateSalesProduct(id: number, updates: Partial<InsertSalesProduct>): Promise<SalesProduct | undefined>;
+  deleteSalesProduct(id: number): Promise<boolean>;
 }
 
 class DatabaseStorage implements IStorage {
@@ -930,6 +937,37 @@ class DatabaseStorage implements IStorage {
       .where(eq(payroll.id, id))
       .returning();
     return result[0];
+  }
+
+  // Sales Product operations
+  async getAllSalesProducts(): Promise<SalesProduct[]> {
+    return await db.select().from(salesProducts).where(eq(salesProducts.isActive, true)).orderBy(asc(salesProducts.name));
+  }
+
+  async getSalesProduct(id: number): Promise<SalesProduct | undefined> {
+    const result = await db.select().from(salesProducts).where(eq(salesProducts.id, id)).limit(1);
+    return result[0];
+  }
+
+  async createSalesProduct(product: InsertSalesProduct): Promise<SalesProduct> {
+    const result = await db.insert(salesProducts).values(product).returning();
+    return result[0];
+  }
+
+  async updateSalesProduct(id: number, updates: Partial<InsertSalesProduct>): Promise<SalesProduct | undefined> {
+    const result = await db.update(salesProducts).set({
+      ...updates,
+      updatedAt: new Date()
+    }).where(eq(salesProducts.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteSalesProduct(id: number): Promise<boolean> {
+    const result = await db.update(salesProducts)
+      .set({ isActive: false, updatedAt: new Date() })
+      .where(eq(salesProducts.id, id))
+      .returning();
+    return result.length > 0;
   }
 }
 
