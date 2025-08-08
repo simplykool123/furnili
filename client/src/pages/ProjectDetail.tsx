@@ -3099,22 +3099,6 @@ export default function ProjectDetail() {
               </Link>
             </div>
 
-            {!canViewFinances && (
-              <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mb-4">
-                <div className="flex">
-                  <div className="flex-shrink-0">
-                    <ExternalLink className="h-5 w-5 text-blue-400" />
-                  </div>
-                  <div className="ml-3">
-                    <p className="text-sm text-blue-700">
-                      <strong>Note:</strong> Individual order costs are not displayed in this tab for security. 
-                      To view Material Orders total, click the <strong>💰 Finances</strong> tab.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-
             {ordersLoading ? (
               <div className="space-y-4">
                 {Array.from({ length: 3 }).map((_, i) => (
@@ -3139,13 +3123,15 @@ export default function ProjectDetail() {
                             Order #{order.orderNumber}
                           </h4>
                           <p className="text-sm text-gray-600 mb-2">
-                            Client: {order.clientName}
+                            Requested By: {order.requestedBy || order.clientName}
                           </p>
                         </div>
                         <div className="text-right">
-                          <div className="text-sm font-medium text-gray-900 mb-1">
-                            ₹{canViewFinances ? (order.totalValue || 0).toLocaleString() : "0"}
-                          </div>
+                          {canViewFinances && (
+                            <div className="text-sm font-medium text-gray-900 mb-1">
+                              ₹{(order.totalValue || 0).toLocaleString()}
+                            </div>
+                          )}
                           <Badge
                             variant={
                               order.status === "completed"
@@ -3171,16 +3157,39 @@ export default function ProjectDetail() {
                         </div>
                       </div>
 
+                      {/* Items Details Section */}
+                      {order.items && order.items.length > 0 && (
+                        <div className="mt-3 mb-3">
+                          <div className="text-sm font-medium text-gray-700 mb-2">
+                            Items Requested ({order.items.length}):
+                          </div>
+                          <div className="space-y-1">
+                            {order.items.slice(0, 3).map((item: any, index: number) => (
+                              <div key={index} className="flex justify-between items-center text-xs bg-gray-50 p-2 rounded">
+                                <span className="text-gray-700 truncate flex-1 mr-2">
+                                  {item.productName || item.description || "Unknown Product"}
+                                </span>
+                                <span className="text-gray-600 font-medium">
+                                  Qty: {item.quantity} {item.unit || ""}
+                                </span>
+                              </div>
+                            ))}
+                            {order.items.length > 3 && (
+                              <div className="text-xs text-gray-500 pl-2">
+                                +{order.items.length - 3} more items...
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
                       <div className="flex justify-between items-center text-sm text-gray-500">
                         <div className="flex items-center space-x-4">
                           <span>Priority: {order.priority}</span>
-                          {order.items && (
-                            <span>{order.items.length} items</span>
-                          )}
+                          <span>
+                            {new Date(order.createdAt).toLocaleDateString()}
+                          </span>
                         </div>
-                        <span>
-                          {new Date(order.createdAt).toLocaleDateString()}
-                        </span>
                       </div>
 
                       {order.remarks && (
