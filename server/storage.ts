@@ -326,8 +326,8 @@ class DatabaseStorage implements IStorage {
     
     console.log(`*** createMaterialRequest: Created request with ID ${createdRequest.id}, now creating ${items.length} items ***`);
     
-    // Create request items with the correct requestId
-    const createdItems: RequestItem[] = [];
+    // Create request items with the correct requestId and fetch product details
+    const createdItems: (RequestItem & { product: Product })[] = [];
     for (const item of items) {
       const itemWithRequestId = {
         ...item,
@@ -335,15 +335,37 @@ class DatabaseStorage implements IStorage {
       };
       console.log(`*** createMaterialRequest: Creating item for request ${createdRequest.id} - Product ${item.productId}, Quantity ${item.requestedQuantity} ***`);
       const createdItem = await this.createRequestItem(itemWithRequestId);
-      createdItems.push(createdItem);
+      
+      // Fetch product details for this item
+      const product = await this.getProduct(item.productId);
+      if (!product) {
+        throw new Error(`Product with ID ${item.productId} not found`);
+      }
+      
+      const itemWithProduct = {
+        ...createdItem,
+        product: product
+      };
+      
+      createdItems.push(itemWithProduct);
     }
     
-    console.log(`*** createMaterialRequest: Successfully created ${createdItems.length} items ***`);
+    console.log(`*** createMaterialRequest: Successfully created ${createdItems.length} items with product details ***`);
     
-    // Return the complete request with items  
+    // Get user details for the complete response
+    const requestedByUser = await this.getUser(createdRequest.requestedBy);
+    if (!requestedByUser) {
+      throw new Error(`User with ID ${createdRequest.requestedBy} not found`);
+    }
+    
+    // Return the complete request with items and user details
     const requestWithItems: MaterialRequestWithItems = {
       ...createdRequest,
-      items: createdItems
+      items: createdItems,
+      requestedByUser: {
+        name: requestedByUser.name,
+        email: requestedByUser.email
+      }
     };
     
     return requestWithItems;
