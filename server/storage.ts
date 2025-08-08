@@ -234,6 +234,8 @@ class DatabaseStorage implements IStorage {
     const request = await db.select().from(materialRequests).where(eq(materialRequests.id, id)).limit(1);
     if (!request[0]) return undefined;
 
+    console.log(`DEBUG: getMaterialRequest(${id}) - totalValue from database: ₹${request[0].totalValue}`);
+
     // Get items with products using raw SQL to ensure it works
     const itemsResult = await db.execute(sql`
       SELECT 
@@ -269,13 +271,16 @@ class DatabaseStorage implements IStorage {
     const approvedByUser = request[0].approvedBy ? await this.getUser(request[0].approvedBy) : undefined;
     const issuedByUser = request[0].issuedBy ? await this.getUser(request[0].issuedBy) : undefined;
 
-    return {
+    const result = {
       ...request[0],
       requestedByUser,
       approvedByUser,
       issuedByUser,
       items,
     };
+
+    console.log(`DEBUG: getMaterialRequest(${id}) - returning totalValue: ₹${result.totalValue}`);
+    return result;
   }
 
   async getAllMaterialRequests(): Promise<MaterialRequestWithItems[]> {
