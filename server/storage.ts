@@ -335,24 +335,36 @@ class DatabaseStorage implements IStorage {
       
       console.log(`*** createMaterialRequest: Created request with ID ${createdRequest.id}, now creating ${items.length} items ***`);
     
-    // Create request items with the correct requestId and fetch product details
+    // Create request items with the correct requestId and calculate pricing
     const createdItems: (RequestItem & { product: Product })[] = [];
+    let totalRequestValue = 0;
     for (const item of items) {
+      console.log(`*** createMaterialRequest: Processing item for request ${createdRequest.id} - Product ${item.productId}, Quantity ${item.requestedQuantity} ***`);
+      
+      // Fetch product details first to get pricing
+      const product = await this.getProduct(item.productId);
+      if (!product) {
+        console.error(`*** createMaterialRequest: Product with ID ${item.productId} not found ***`);
+        throw new Error(`Product with ID ${item.productId} not found`);
+      }
+      
+      // Calculate pricing
+      const unitPrice = product.pricePerUnit;
+      const totalPrice = unitPrice * item.requestedQuantity;
+      totalRequestValue += totalPrice;
+      
+      console.log(`*** createMaterialRequest: Calculated pricing - Unit Price: ₹${unitPrice}, Quantity: ${item.requestedQuantity}, Total: ₹${totalPrice} ***`);
+      
       const itemWithRequestId = {
         ...item,
-        requestId: createdRequest.id
+        requestId: createdRequest.id,
+        unitPrice: unitPrice,
+        totalPrice: totalPrice
       };
-      console.log(`*** createMaterialRequest: Creating item for request ${createdRequest.id} - Product ${item.productId}, Quantity ${item.requestedQuantity} ***`);
+      
       try {
         const createdItem = await this.createRequestItem(itemWithRequestId);
         console.log(`*** createMaterialRequest: Item created successfully:`, JSON.stringify(createdItem));
-      
-        // Fetch product details for this item
-        const product = await this.getProduct(item.productId);
-        if (!product) {
-          console.error(`*** createMaterialRequest: Product with ID ${item.productId} not found ***`);
-          throw new Error(`Product with ID ${item.productId} not found`);
-        }
         
         const itemWithProduct = {
           ...createdItem,
@@ -368,6 +380,14 @@ class DatabaseStorage implements IStorage {
     }
     
     console.log(`*** createMaterialRequest: Successfully created ${createdItems.length} items with product details ***`);
+    console.log(`*** createMaterialRequest: Total request value calculated: ₹${totalRequestValue} ***`);
+    
+    // Update the material request with the calculated total value
+    await db.update(materialRequests)
+      .set({ totalValue: totalRequestValue })
+      .where(eq(materialRequests.id, createdRequest.id));
+    
+    console.log(`*** createMaterialRequest: Updated request ${createdRequest.id} with total value ₹${totalRequestValue} ***`);
     
       // Get user details for the complete response
       const requestedByUser = await this.getUser(createdRequest.requestedBy);
