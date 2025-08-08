@@ -367,6 +367,8 @@ class DatabaseStorage implements IStorage {
         totalPrice: totalPrice
       };
       
+      console.log(`*** createMaterialRequest: About to save item with data:`, JSON.stringify(itemWithRequestId));
+      
       try {
         const createdItem = await this.createRequestItem(itemWithRequestId);
         console.log(`*** createMaterialRequest: Item created successfully:`, JSON.stringify(createdItem));
@@ -388,10 +390,13 @@ class DatabaseStorage implements IStorage {
     console.log(`*** createMaterialRequest: Total request value calculated: ₹${totalRequestValue} ***`);
     
     // Update the material request with the calculated total value
-    await db.update(materialRequests)
+    console.log(`*** createMaterialRequest: About to update request ${createdRequest.id} with totalValue: ₹${totalRequestValue} ***`);
+    const updateResult = await db.update(materialRequests)
       .set({ totalValue: totalRequestValue })
-      .where(eq(materialRequests.id, createdRequest.id));
+      .where(eq(materialRequests.id, createdRequest.id))
+      .returning();
     
+    console.log(`*** createMaterialRequest: Update result:`, JSON.stringify(updateResult[0]));
     console.log(`*** createMaterialRequest: Updated request ${createdRequest.id} with total value ₹${totalRequestValue} ***`);
     
       // Get user details for the complete response
@@ -706,7 +711,9 @@ class DatabaseStorage implements IStorage {
 
   // Request Item operations
   async createRequestItem(item: InsertRequestItem): Promise<RequestItem> {
+    console.log(`*** createRequestItem: Received item data:`, JSON.stringify(item));
     const result = await db.insert(requestItems).values([item]).returning();
+    console.log(`*** createRequestItem: Database returned:`, JSON.stringify(result[0]));
     return result[0];
   }
 
