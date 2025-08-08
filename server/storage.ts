@@ -340,11 +340,13 @@ class DatabaseStorage implements IStorage {
     
     console.log(`*** createMaterialRequest: Successfully created ${createdItems.length} items ***`);
     
-    // Return the complete request with items
-    return {
+    // Return the complete request with items  
+    const requestWithItems: MaterialRequestWithItems = {
       ...createdRequest,
       items: createdItems
     };
+    
+    return requestWithItems;
   }
 
   async updateMaterialRequest(id: number, updates: Partial<InsertMaterialRequest>): Promise<MaterialRequest | undefined> {
@@ -633,7 +635,7 @@ class DatabaseStorage implements IStorage {
 
   // Request Item operations
   async createRequestItem(item: InsertRequestItem): Promise<RequestItem> {
-    const result = await db.insert(requestItems).values([item]).returning();
+    const result = await db.insert(requestItems).values(item).returning();
     return result[0];
   }
 
