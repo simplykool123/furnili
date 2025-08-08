@@ -704,7 +704,22 @@ class DatabaseStorage implements IStorage {
   }
 
   async getRequestItems(requestId: number): Promise<RequestItem[]> {
-    return db.select().from(requestItems).where(eq(requestItems.requestId, requestId));
+    return db.select({
+      id: requestItems.id,
+      requestId: requestItems.requestId,
+      productId: requestItems.productId,
+      requestedQuantity: requestItems.requestedQuantity,
+      approvedQuantity: requestItems.approvedQuantity,
+      unitPrice: requestItems.unitPrice,
+      totalPrice: requestItems.totalPrice,
+      productName: products.name,
+      productBrand: products.brand,
+      productCategory: products.category,
+      productUnit: products.unit
+    })
+    .from(requestItems)
+    .leftJoin(products, eq(requestItems.productId, products.id))
+    .where(eq(requestItems.requestId, requestId));
   }
 
   // Client operations

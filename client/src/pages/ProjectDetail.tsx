@@ -3170,7 +3170,7 @@ export default function ProjectDetail() {
                                   {item.productName || item.description || "Unknown Product"}
                                 </span>
                                 <span className="text-gray-600 font-medium">
-                                  Qty: {item.quantity} {item.unit || ""}
+                                  Qty: {item.requestedQuantity} {item.productUnit || ""}
                                 </span>
                               </div>
                             ))}
