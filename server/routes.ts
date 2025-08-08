@@ -756,7 +756,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { status, clientName, projectId } = req.query;
       const user = (req as AuthRequest).user!;
       
-      console.log(`DEBUG: /api/requests called with filters: status=${status}, clientName=${clientName}, projectId=${projectId}`);
       
       const filters: any = {
         status: status as string,

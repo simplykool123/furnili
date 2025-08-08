@@ -234,7 +234,6 @@ class DatabaseStorage implements IStorage {
     const request = await db.select().from(materialRequests).where(eq(materialRequests.id, id)).limit(1);
     if (!request[0]) return undefined;
 
-    console.log(`DEBUG: getMaterialRequest(${id}) - totalValue from database: ₹${request[0].totalValue}`);
 
     // Get items with products using raw SQL to ensure it works
     const itemsResult = await db.execute(sql`
@@ -247,7 +246,6 @@ class DatabaseStorage implements IStorage {
     `);
 
     const itemsRaw = itemsResult.rows || [];
-    console.log(`DEBUG: Found ${itemsRaw.length} raw items for request ${id}`);
 
     const items = itemsRaw.map((row: any) => ({
       id: row.id,
@@ -279,34 +277,26 @@ class DatabaseStorage implements IStorage {
       items,
     };
 
-    console.log(`DEBUG: getMaterialRequest(${id}) - returning totalValue: ₹${result.totalValue}`);
     return result;
   }
 
   async getAllMaterialRequests(): Promise<MaterialRequestWithItems[]> {
-    console.log(`*** getAllMaterialRequests called ***`);
     const requests = await db.select().from(materialRequests).orderBy(desc(materialRequests.createdAt));
-    console.log(`*** Found ${requests.length} base requests ***`);
     
     const requestsWithItems = await Promise.all(
       requests.map(async (request) => {
-        console.log(`*** Processing request ${request.id} ***`);
         const fullRequest = await this.getMaterialRequest(request.id);
-        console.log(`*** Request ${request.id} returned with ${fullRequest?.items?.length || 0} items ***`);
         return fullRequest!;
       })
     );
 
-    console.log(`*** getAllMaterialRequests returning ${requestsWithItems.length} requests ***`);
     return requestsWithItems;
   }
 
   async getMaterialRequestsByProject(projectId: number): Promise<MaterialRequestWithItems[]> {
-    console.log(`*** getMaterialRequestsByProject called for project ${projectId} ***`);
     const requests = await db.select().from(materialRequests)
       .where(eq(materialRequests.projectId, projectId))
       .orderBy(desc(materialRequests.createdAt));
-    console.log(`*** Found ${requests.length} requests for project ${projectId} ***`);
     
     const requestsWithItems = await Promise.all(
       requests.map(async (request) => {
@@ -320,31 +310,21 @@ class DatabaseStorage implements IStorage {
 
   async createMaterialRequest(request: InsertMaterialRequest, items: InsertRequestItem[]): Promise<MaterialRequestWithItems> {
     try {
-      console.log(`*** createMaterialRequest: METHOD START ***`);
-      console.log(`*** createMaterialRequest: Request data:`, JSON.stringify(request));
-      console.log(`*** createMaterialRequest: Items count: ${items.length}`);
-      console.log(`*** createMaterialRequest: Items data:`, JSON.stringify(items));
       
       if (!request.orderNumber) {
-        console.log(`*** createMaterialRequest: Generating order number ***`);
         const lastRequest = await db.select({ id: materialRequests.id }).from(materialRequests).orderBy(desc(materialRequests.id)).limit(1);
         const nextId = lastRequest[0] ? lastRequest[0].id + 1 : 1;
         request.orderNumber = `REQ-${nextId.toString().padStart(4, '0')}`;
-        console.log(`*** createMaterialRequest: Generated order number: ${request.orderNumber} ***`);
       }
       
-      console.log(`*** createMaterialRequest: Creating request with order number ${request.orderNumber} ***`);
       const result = await db.insert(materialRequests).values(request).returning();
       const createdRequest = result[0];
-      console.log(`*** createMaterialRequest: Created request successfully:`, JSON.stringify(createdRequest));
       
-      console.log(`*** createMaterialRequest: Created request with ID ${createdRequest.id}, now creating ${items.length} items ***`);
     
     // Create request items with the correct requestId and calculate pricing
     const createdItems: (RequestItem & { product: Product })[] = [];
     let totalRequestValue = 0;
     for (const item of items) {
-      console.log(`*** createMaterialRequest: Processing item for request ${createdRequest.id} - Product ${item.productId}, Quantity ${item.requestedQuantity} ***`);
       
       // Fetch product details first to get pricing
       const product = await this.getProduct(item.productId);
@@ -358,7 +338,6 @@ class DatabaseStorage implements IStorage {
       const totalPrice = unitPrice * item.requestedQuantity;
       totalRequestValue += totalPrice;
       
-      console.log(`*** createMaterialRequest: Calculated pricing - Unit Price: ₹${unitPrice}, Quantity: ${item.requestedQuantity}, Total: ₹${totalPrice} ***`);
       
       const itemWithRequestId = {
         ...item,
@@ -367,11 +346,9 @@ class DatabaseStorage implements IStorage {
         totalPrice: totalPrice
       };
       
-      console.log(`*** createMaterialRequest: About to save item with data:`, JSON.stringify(itemWithRequestId));
       
       try {
         const createdItem = await this.createRequestItem(itemWithRequestId);
-        console.log(`*** createMaterialRequest: Item created successfully:`, JSON.stringify(createdItem));
         
         const itemWithProduct = {
           ...createdItem,
@@ -379,25 +356,19 @@ class DatabaseStorage implements IStorage {
         };
         
         createdItems.push(itemWithProduct);
-        console.log(`*** createMaterialRequest: Added item with product to array. Total items: ${createdItems.length} ***`);
       } catch (itemError) {
         console.error(`*** createMaterialRequest: Error creating item:`, itemError);
         throw itemError;
       }
     }
     
-    console.log(`*** createMaterialRequest: Successfully created ${createdItems.length} items with product details ***`);
-    console.log(`*** createMaterialRequest: Total request value calculated: ₹${totalRequestValue} ***`);
     
     // Update the material request with the calculated total value
-    console.log(`*** createMaterialRequest: About to update request ${createdRequest.id} with totalValue: ₹${totalRequestValue} ***`);
     const updateResult = await db.update(materialRequests)
       .set({ totalValue: totalRequestValue })
       .where(eq(materialRequests.id, createdRequest.id))
       .returning();
     
-    console.log(`*** createMaterialRequest: Update result:`, JSON.stringify(updateResult[0]));
-    console.log(`*** createMaterialRequest: Updated request ${createdRequest.id} with total value ₹${totalRequestValue} ***`);
     
       // Get user details for the complete response
       const requestedByUser = await this.getUser(createdRequest.requestedBy);
@@ -417,7 +388,6 @@ class DatabaseStorage implements IStorage {
         }
       };
       
-      console.log(`*** createMaterialRequest: Returning complete request with ${requestWithItems.items.length} items ***`);
       return requestWithItems;
     } catch (error) {
       console.error(`*** createMaterialRequest: MAJOR ERROR ***`, error);
@@ -438,11 +408,9 @@ class DatabaseStorage implements IStorage {
 
   // Quote operations
   async getQuotesByProject(projectId: number): Promise<Quote[]> {
-    console.log(`*** getQuotesByProject called for project ${projectId} ***`);
     const result = await db.select().from(quotes)
       .where(eq(quotes.projectId, projectId))
       .orderBy(desc(quotes.createdAt));
-    console.log(`*** Found ${result.length} quotes for project ${projectId} ***`);
     return result;
   }
 
@@ -711,9 +679,7 @@ class DatabaseStorage implements IStorage {
 
   // Request Item operations
   async createRequestItem(item: InsertRequestItem): Promise<RequestItem> {
-    console.log(`*** createRequestItem: Received item data:`, JSON.stringify(item));
     const result = await db.insert(requestItems).values([item]).returning();
-    console.log(`*** createRequestItem: Database returned:`, JSON.stringify(result[0]));
     return result[0];
   }
 
