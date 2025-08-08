@@ -1383,11 +1383,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         projectId: projectId ? parseInt(projectId as string) : undefined,
       };
       
-      // For staff users, automatically filter to show only their own expenses
-      if (req.user!.role === 'staff') {
+      // For staff and store_incharge users, automatically filter to show only their own expenses
+      if (req.user!.role === 'staff' || req.user!.role === 'store_incharge') {
         filters.addedBy = req.user!.id;
       } else if (userId) {
-        // Allow filtering by userId for other roles
+        // Allow filtering by userId for admin/manager roles
         filters.addedBy = parseInt(userId as string);
       }
       
@@ -1401,8 +1401,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/petty-cash/stats", authenticateToken, async (req: AuthRequest, res) => {
     try {
-      const stats = await storage.getPettyCashStats();
-      res.json(stats);
+      // For staff and store_incharge users, show only their personal stats
+      if (req.user!.role === 'staff' || req.user!.role === 'store_incharge') {
+        const personalStats = await storage.getPersonalPettyCashStats(req.user!.id);
+        res.json(personalStats);
+      } else {
+        // Admin and manager can see global stats
+        const stats = await storage.getPettyCashStats();
+        res.json(stats);
+      }
     } catch (error) {
       console.error("Failed to fetch stats:", error);
       res.status(500).json({ message: "Failed to fetch stats", error: String(error) });
@@ -1423,16 +1430,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/petty-cash/summary", authenticateToken, async (req: AuthRequest, res) => {
     try {
-      const stats = await storage.getPettyCashStats();
-      res.json(stats);
+      // For staff and store_incharge users, show only their personal summary
+      if (req.user!.role === 'staff' || req.user!.role === 'store_incharge') {
+        const personalStats = await storage.getPersonalPettyCashStats(req.user!.id);
+        res.json(personalStats);
+      } else {
+        // Admin and manager can see global summary
+        const stats = await storage.getPettyCashStats();
+        res.json(stats);
+      }
     } catch (error) {
       console.error("Failed to fetch summary:", error);
       res.status(500).json({ message: "Failed to fetch summary", error: String(error) });
     }
   });
 
-  // Get staff balances
-  app.get("/api/petty-cash/staff-balances", authenticateToken, async (req: AuthRequest, res) => {
+  // Get staff balances (admin/manager only)
+  app.get("/api/petty-cash/staff-balances", authenticateToken, requireRole(["admin", "manager"]), async (req: AuthRequest, res) => {
     try {
       const balances = await storage.getAllStaffBalances();
       res.json(balances);
@@ -1446,6 +1460,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/petty-cash/staff-balance/:userId", authenticateToken, async (req: AuthRequest, res) => {
     try {
       const userId = parseInt(req.params.userId);
+      
+      // Staff and store_incharge can only access their own balance
+      if ((req.user!.role === 'staff' || req.user!.role === 'store_incharge') && userId !== req.user!.id) {
+        return res.status(403).json({ message: "Access denied: Can only view your own balance" });
+      }
+      
       const balance = await storage.getStaffBalance(userId);
       res.json(balance);
     } catch (error) {
