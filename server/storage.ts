@@ -396,9 +396,10 @@ class DatabaseStorage implements IStorage {
         throw new Error(`User with ID ${createdRequest.requestedBy} not found`);
       }
       
-      // Return the complete request with items and user details
+      // Return the complete request with items and user details, including the updated totalValue
       const requestWithItems: MaterialRequestWithItems = {
         ...createdRequest,
+        totalValue: totalRequestValue, // Use the calculated value instead of the original 0
         items: createdItems,
         requestedByUser: {
           name: requestedByUser.name,
