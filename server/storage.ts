@@ -333,7 +333,7 @@ class DatabaseStorage implements IStorage {
         ...item,
         requestId: createdRequest.id
       };
-      console.log(`*** createMaterialRequest: Creating item for request ${createdRequest.id} - Product ${item.productId}, Quantity ${item.quantity} ***`);
+      console.log(`*** createMaterialRequest: Creating item for request ${createdRequest.id} - Product ${item.productId}, Quantity ${item.requestedQuantity} ***`);
       const createdItem = await this.createRequestItem(itemWithRequestId);
       createdItems.push(createdItem);
     }
@@ -633,7 +633,7 @@ class DatabaseStorage implements IStorage {
 
   // Request Item operations
   async createRequestItem(item: InsertRequestItem): Promise<RequestItem> {
-    const result = await db.insert(requestItems).values(item).returning();
+    const result = await db.insert(requestItems).values([item]).returning();
     return result[0];
   }
 
