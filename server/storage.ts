@@ -402,11 +402,19 @@ class DatabaseStorage implements IStorage {
   }
 
   async updateMaterialRequestStatus(id: number, status: string, userId: number): Promise<MaterialRequest | undefined> {
+    const updateData: any = { status };
+    
+    // Set specific fields based on the status
+    if (status === 'approved') {
+      updateData.approvedBy = userId;
+      updateData.approvedAt = new Date();
+    } else if (status === 'issued') {
+      updateData.issuedBy = userId;
+      updateData.issuedAt = new Date();
+    }
+    
     const result = await db.update(materialRequests)
-      .set({ 
-        status: status,
-        updatedAt: new Date()
-      })
+      .set(updateData)
       .where(eq(materialRequests.id, id))
       .returning();
     return result[0];

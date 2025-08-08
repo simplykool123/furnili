@@ -866,7 +866,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { status } = req.body;
       const userId = (req as AuthRequest).user?.id!;
       
+      console.log(`Status update attempt: ID=${id}, Status=${status}, UserId=${userId}`);
+      
       const request = await storage.updateMaterialRequestStatus(id, status, userId);
+      
+      console.log(`Status update result:`, request ? 'Success' : 'No request found');
       
       if (!request) {
         return res.status(404).json({ message: "Request not found" });
@@ -874,7 +878,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json(request);
     } catch (error) {
-      res.status(500).json({ message: "Failed to update request status", error });
+      console.error('Status update error:', error);
+      res.status(500).json({ message: "Failed to update request status", error: error.message });
     }
   });
 
