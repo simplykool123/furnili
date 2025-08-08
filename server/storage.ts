@@ -79,7 +79,7 @@ export interface IStorage {
   // Material Request operations
   getMaterialRequest(id: number): Promise<MaterialRequestWithItems | undefined>;
   getAllMaterialRequests(): Promise<MaterialRequestWithItems[]>;
-  createMaterialRequest(request: InsertMaterialRequest): Promise<MaterialRequest>;
+  createMaterialRequest(request: InsertMaterialRequest, items: InsertRequestItem[]): Promise<MaterialRequestWithItems>;
   updateMaterialRequest(id: number, updates: Partial<InsertMaterialRequest>): Promise<MaterialRequest | undefined>;
   deleteMaterialRequest(id: number): Promise<boolean>;
 
@@ -313,15 +313,38 @@ class DatabaseStorage implements IStorage {
     return requestsWithItems;
   }
 
-  async createMaterialRequest(request: InsertMaterialRequest): Promise<MaterialRequest> {
+  async createMaterialRequest(request: InsertMaterialRequest, items: InsertRequestItem[]): Promise<MaterialRequestWithItems> {
     if (!request.orderNumber) {
       const lastRequest = await db.select({ id: materialRequests.id }).from(materialRequests).orderBy(desc(materialRequests.id)).limit(1);
       const nextId = lastRequest[0] ? lastRequest[0].id + 1 : 1;
       request.orderNumber = `REQ-${nextId.toString().padStart(4, '0')}`;
     }
     
+    console.log(`*** createMaterialRequest: Creating request with order number ${request.orderNumber} ***`);
     const result = await db.insert(materialRequests).values(request).returning();
-    return result[0];
+    const createdRequest = result[0];
+    
+    console.log(`*** createMaterialRequest: Created request with ID ${createdRequest.id}, now creating ${items.length} items ***`);
+    
+    // Create request items with the correct requestId
+    const createdItems: RequestItem[] = [];
+    for (const item of items) {
+      const itemWithRequestId = {
+        ...item,
+        requestId: createdRequest.id
+      };
+      console.log(`*** createMaterialRequest: Creating item for request ${createdRequest.id} - Product ${item.productId}, Quantity ${item.quantity} ***`);
+      const createdItem = await this.createRequestItem(itemWithRequestId);
+      createdItems.push(createdItem);
+    }
+    
+    console.log(`*** createMaterialRequest: Successfully created ${createdItems.length} items ***`);
+    
+    // Return the complete request with items
+    return {
+      ...createdRequest,
+      items: createdItems
+    };
   }
 
   async updateMaterialRequest(id: number, updates: Partial<InsertMaterialRequest>): Promise<MaterialRequest | undefined> {
