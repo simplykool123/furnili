@@ -814,7 +814,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/requests", authenticateToken, requireRole(["staff", "user", "manager", "admin"]), async (req, res) => {
     try {
+      console.log("*** POST /api/requests - ROUTE HANDLER START ***");
       const { request: requestData, items } = req.body;
+      console.log("*** POST /api/requests - Request Data:", JSON.stringify(requestData));
+      console.log("*** POST /api/requests - Items:", JSON.stringify(items));
       
       // Validate project stage before creating request
       if (requestData.projectId) {
@@ -834,20 +837,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ...requestData,
         requestedBy: (req as AuthRequest).user?.id,
       });
+      console.log("*** POST /api/requests - Validated Request:", JSON.stringify(validatedRequest));
       
       // Add requestId after validation but before storage
       const validatedItems = items.map((item: any) => {
         const validatedItem = insertRequestItemSchema.parse(item);
         return validatedItem;
       });
+      console.log("*** POST /api/requests - Validated Items:", JSON.stringify(validatedItems));
       
+      console.log("*** POST /api/requests - About to call storage.createMaterialRequest ***");
       const request = await storage.createMaterialRequest(validatedRequest, validatedItems);
+      console.log("*** POST /api/requests - Request created successfully:", JSON.stringify(request));
       res.status(201).json(request);
     } catch (error) {
+      console.error("*** POST /api/requests - ERROR:", error);
       if (error instanceof z.ZodError) {
+        console.error("*** POST /api/requests - Zod validation error:", error.errors);
         return res.status(400).json({ message: "Validation failed", errors: error.errors });
       }
-      res.status(500).json({ message: "Failed to create request", error });
+      console.error("*** POST /api/requests - Generic error:", error);
+      res.status(500).json({ message: "Failed to create request", error: String(error) });
     }
   });
 

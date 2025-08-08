@@ -314,17 +314,26 @@ class DatabaseStorage implements IStorage {
   }
 
   async createMaterialRequest(request: InsertMaterialRequest, items: InsertRequestItem[]): Promise<MaterialRequestWithItems> {
-    if (!request.orderNumber) {
-      const lastRequest = await db.select({ id: materialRequests.id }).from(materialRequests).orderBy(desc(materialRequests.id)).limit(1);
-      const nextId = lastRequest[0] ? lastRequest[0].id + 1 : 1;
-      request.orderNumber = `REQ-${nextId.toString().padStart(4, '0')}`;
-    }
-    
-    console.log(`*** createMaterialRequest: Creating request with order number ${request.orderNumber} ***`);
-    const result = await db.insert(materialRequests).values(request).returning();
-    const createdRequest = result[0];
-    
-    console.log(`*** createMaterialRequest: Created request with ID ${createdRequest.id}, now creating ${items.length} items ***`);
+    try {
+      console.log(`*** createMaterialRequest: METHOD START ***`);
+      console.log(`*** createMaterialRequest: Request data:`, JSON.stringify(request));
+      console.log(`*** createMaterialRequest: Items count: ${items.length}`);
+      console.log(`*** createMaterialRequest: Items data:`, JSON.stringify(items));
+      
+      if (!request.orderNumber) {
+        console.log(`*** createMaterialRequest: Generating order number ***`);
+        const lastRequest = await db.select({ id: materialRequests.id }).from(materialRequests).orderBy(desc(materialRequests.id)).limit(1);
+        const nextId = lastRequest[0] ? lastRequest[0].id + 1 : 1;
+        request.orderNumber = `REQ-${nextId.toString().padStart(4, '0')}`;
+        console.log(`*** createMaterialRequest: Generated order number: ${request.orderNumber} ***`);
+      }
+      
+      console.log(`*** createMaterialRequest: Creating request with order number ${request.orderNumber} ***`);
+      const result = await db.insert(materialRequests).values(request).returning();
+      const createdRequest = result[0];
+      console.log(`*** createMaterialRequest: Created request successfully:`, JSON.stringify(createdRequest));
+      
+      console.log(`*** createMaterialRequest: Created request with ID ${createdRequest.id}, now creating ${items.length} items ***`);
     
     // Create request items with the correct requestId and fetch product details
     const createdItems: (RequestItem & { product: Product })[] = [];
@@ -334,41 +343,55 @@ class DatabaseStorage implements IStorage {
         requestId: createdRequest.id
       };
       console.log(`*** createMaterialRequest: Creating item for request ${createdRequest.id} - Product ${item.productId}, Quantity ${item.requestedQuantity} ***`);
-      const createdItem = await this.createRequestItem(itemWithRequestId);
+      try {
+        const createdItem = await this.createRequestItem(itemWithRequestId);
+        console.log(`*** createMaterialRequest: Item created successfully:`, JSON.stringify(createdItem));
       
-      // Fetch product details for this item
-      const product = await this.getProduct(item.productId);
-      if (!product) {
-        throw new Error(`Product with ID ${item.productId} not found`);
+        // Fetch product details for this item
+        const product = await this.getProduct(item.productId);
+        if (!product) {
+          console.error(`*** createMaterialRequest: Product with ID ${item.productId} not found ***`);
+          throw new Error(`Product with ID ${item.productId} not found`);
+        }
+        
+        const itemWithProduct = {
+          ...createdItem,
+          product: product
+        };
+        
+        createdItems.push(itemWithProduct);
+        console.log(`*** createMaterialRequest: Added item with product to array. Total items: ${createdItems.length} ***`);
+      } catch (itemError) {
+        console.error(`*** createMaterialRequest: Error creating item:`, itemError);
+        throw itemError;
       }
-      
-      const itemWithProduct = {
-        ...createdItem,
-        product: product
-      };
-      
-      createdItems.push(itemWithProduct);
     }
     
     console.log(`*** createMaterialRequest: Successfully created ${createdItems.length} items with product details ***`);
     
-    // Get user details for the complete response
-    const requestedByUser = await this.getUser(createdRequest.requestedBy);
-    if (!requestedByUser) {
-      throw new Error(`User with ID ${createdRequest.requestedBy} not found`);
-    }
-    
-    // Return the complete request with items and user details
-    const requestWithItems: MaterialRequestWithItems = {
-      ...createdRequest,
-      items: createdItems,
-      requestedByUser: {
-        name: requestedByUser.name,
-        email: requestedByUser.email
+      // Get user details for the complete response
+      const requestedByUser = await this.getUser(createdRequest.requestedBy);
+      if (!requestedByUser) {
+        console.error(`*** createMaterialRequest: User with ID ${createdRequest.requestedBy} not found ***`);
+        throw new Error(`User with ID ${createdRequest.requestedBy} not found`);
       }
-    };
-    
-    return requestWithItems;
+      
+      // Return the complete request with items and user details
+      const requestWithItems: MaterialRequestWithItems = {
+        ...createdRequest,
+        items: createdItems,
+        requestedByUser: {
+          name: requestedByUser.name,
+          email: requestedByUser.email
+        }
+      };
+      
+      console.log(`*** createMaterialRequest: Returning complete request with ${requestWithItems.items.length} items ***`);
+      return requestWithItems;
+    } catch (error) {
+      console.error(`*** createMaterialRequest: MAJOR ERROR ***`, error);
+      throw error;
+    }
   }
 
   async updateMaterialRequest(id: number, updates: Partial<InsertMaterialRequest>): Promise<MaterialRequest | undefined> {
