@@ -622,12 +622,22 @@ export default function SalesProducts() {
                                 src={product.imageUrl}
                                 alt={product.name}
                                 className="w-10 h-10 object-contain rounded-lg border flex-shrink-0 bg-gray-50 p-1"
+                                onError={(e) => {
+                                  const target = e.target as HTMLImageElement;
+                                  target.style.display = 'none';
+                                  const fallback = target.nextElementSibling as HTMLElement;
+                                  if (fallback) fallback.style.display = 'flex';
+                                }}
+                                onLoad={(e) => {
+                                  const target = e.target as HTMLImageElement;
+                                  const fallback = target.nextElementSibling as HTMLElement;
+                                  if (fallback) fallback.style.display = 'none';
+                                }}
                               />
-                            ) : (
-                              <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                                <Package className="w-5 h-5 text-gray-400" />
-                              </div>
-                            )}
+                            ) : null}
+                            <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0" style={{ display: product.imageUrl ? 'none' : 'flex' }}>
+                              <Package className="w-5 h-5 text-gray-400" />
+                            </div>
                             <div className="min-w-0 flex-1">
                               <p className="font-semibold text-gray-900 truncate text-sm">{product.name}</p>
                               {product.description && (

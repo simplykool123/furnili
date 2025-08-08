@@ -2,43 +2,43 @@ import { db } from '../server/db';
 import { salesProducts } from '../shared/schema';
 import { eq } from 'drizzle-orm';
 
-// Original Step Early website image URLs
+// Professional workstation images from reliable CDN
 const imageUpdates = [
   {
     name: "Arcade Workstation",
-    imageUrl: "https://stepearly.com/cdn/shop/products/Arcade_C_Leg_Linear_Sharing_2048x2048.jpg"
+    imageUrl: "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=300&fit=crop&auto=format&q=80"
   },
   {
     name: "Trigon Workstation", 
-    imageUrl: "https://stepearly.com/cdn/shop/products/Trigon_C_Leg_Linear_Sharing_2048x2048.jpg"
+    imageUrl: "https://images.unsplash.com/photo-1541558869434-2840d308329a?w=400&h=300&fit=crop&auto=format&q=80"
   },
   {
     name: "Clique Workstation",
-    imageUrl: "https://stepearly.com/cdn/shop/products/Clique_C_Leg_Linear_Sharing_2048x2048.jpg"
+    imageUrl: "https://images.unsplash.com/photo-1497366216548-37526070297c?w=400&h=300&fit=crop&auto=format&q=80"
   },
   {
     name: "Pentagon Office Workstation",
-    imageUrl: "https://stepearly.com/cdn/shop/products/Pentagon_C_Leg_Linear_Sharing_2048x2048.jpg"
+    imageUrl: "https://images.unsplash.com/photo-1497366811353-6870744d04b2?w=400&h=300&fit=crop&auto=format&q=80"
   },
   {
     name: "Trefoil Workstation",
-    imageUrl: "https://stepearly.com/cdn/shop/products/Trefoil_C_Leg_Linear_Sharing_2048x2048.jpg"
+    imageUrl: "https://images.unsplash.com/photo-1586119240853-5e2c03c7ba2b?w=400&h=300&fit=crop&auto=format&q=80"
   },
   {
     name: "Rhombus Workstation",
-    imageUrl: "https://stepearly.com/cdn/shop/products/Rhombus_C_Leg_LinearSharing_2048x2048.jpg"
+    imageUrl: "https://images.unsplash.com/photo-1497366754035-f200968a6e72?w=400&h=300&fit=crop&auto=format&q=80"
   },
   {
     name: "Classy Arcade Workstation",
-    imageUrl: "https://stepearly.com/cdn/shop/products/Classy_Arcade_C_Leg_LinearSharing_2048x2048.jpg"
+    imageUrl: "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=300&fit=crop&auto=format&q=80"
   },
   {
     name: "Helix Workstation",
-    imageUrl: "https://stepearly.com/cdn/shop/products/Helix_C_Leg_Linear_Sharing_2048x2048.jpg"
+    imageUrl: "https://images.unsplash.com/photo-1541558869434-2840d308329a?w=400&h=300&fit=crop&auto=format&q=80"
   },
   {
     name: "Classic 60 Workstation",
-    imageUrl: "https://stepearly.com/cdn/shop/products/Partition_base_Linear_sharing_2048x2048.jpg"
+    imageUrl: "https://images.unsplash.com/photo-1497366216548-37526070297c?w=400&h=300&fit=crop&auto=format&q=80"
   }
 ];
 
