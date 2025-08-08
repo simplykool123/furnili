@@ -879,7 +879,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(request);
     } catch (error) {
       console.error('Status update error:', error);
-      res.status(500).json({ message: "Failed to update request status", error: error.message });
+      res.status(500).json({ message: "Failed to update request status", error: error instanceof Error ? error.message : String(error) });
     }
   });
 
