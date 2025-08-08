@@ -861,12 +861,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.patch("/api/requests/:id/status", authenticateToken, requireRole(["store_incharge", "admin"]), async (req, res) => {
+    console.log('=== STATUS UPDATE ROUTE CALLED ===');
+    console.log('Request params:', req.params);
+    console.log('Request body:', req.body);
+    console.log('User:', (req as AuthRequest).user);
+    
     try {
       const id = parseInt(req.params.id);
       const { status } = req.body;
       const userId = (req as AuthRequest).user?.id!;
       
       console.log(`Status update attempt: ID=${id}, Status=${status}, UserId=${userId}`);
+      console.log('Storage method exists?', typeof storage.updateMaterialRequestStatus);
       
       const request = await storage.updateMaterialRequestStatus(id, status, userId);
       
