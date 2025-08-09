@@ -274,6 +274,8 @@ class DatabaseStorage implements IStorage {
       }
     }));
 
+    console.log('STORAGE DEBUG: Items with product info:', JSON.stringify(items, null, 2));
+
     // Get user names for request
     const requestedByUser = request[0].requestedBy ? await this.getUser(request[0].requestedBy) : undefined;
     const approvedByUser = request[0].approvedBy ? await this.getUser(request[0].approvedBy) : undefined;
