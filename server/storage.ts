@@ -243,13 +243,14 @@ class DatabaseStorage implements IStorage {
     if (!request[0]) return undefined;
 
 
-    // Get items with products using raw SQL to ensure it works
+    // Get items with products using raw SQL to ensure it works - Updated to use sales_products
     const itemsResult = await db.execute(sql`
       SELECT 
         ri.id, ri.request_id, ri.product_id, ri.requested_quantity, ri.approved_quantity, ri.unit_price, ri.total_price,
-        p.name as product_name, p.category as product_category, p.brand as product_brand, p.current_stock as product_stock
+        sp.name as product_name, sp.category as product_category, sp.size as product_size, 
+        sp.unit_price as product_unit_price, sp.tax_percentage as product_tax_percentage
       FROM request_items ri
-      LEFT JOIN products p ON ri.product_id = p.id
+      LEFT JOIN sales_products sp ON ri.product_id = sp.id
       WHERE ri.request_id = ${id}
     `);
 
@@ -267,8 +268,9 @@ class DatabaseStorage implements IStorage {
         id: row.product_id,
         name: row.product_name,
         category: row.product_category,
-        brand: row.product_brand,
-        currentStock: row.product_stock,
+        size: row.product_size,
+        unitPrice: row.product_unit_price,
+        taxPercentage: row.product_tax_percentage,
       }
     }));
 
