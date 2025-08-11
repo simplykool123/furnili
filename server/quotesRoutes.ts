@@ -308,12 +308,11 @@ export function setupQuotesRoutes(app: Express) {
         .where(eq(quoteItems.quoteId, quoteId))
         .orderBy(quoteItems.sortOrder);
 
-      console.log("=== QUOTE DETAILS DEBUG ===");
-      console.log("  quote:", JSON.stringify(quote, null, 2));
-      console.log("  client data:", JSON.stringify(client, null, 2));
-      console.log("  project data:", JSON.stringify(project, null, 2));
-      console.log("  quote client_id:", quote.client_id);
-      console.log("=== API RESPONSE STRUCTURE ===");
+      console.error("=== QUOTE DETAILS DEBUG ===");
+      console.error("Raw quote from DB:", JSON.stringify(quote, null, 2));
+      console.error("Raw client from DB:", JSON.stringify(client, null, 2));
+      console.error("Quote client_id value:", quote.client_id);
+      console.error("=== API RESPONSE STRUCTURE ===");
       
       const response = {
         ...quote,
@@ -326,9 +325,8 @@ export function setupQuotesRoutes(app: Express) {
         }))
       };
       
-      console.log("Final response structure:", Object.keys(response));
-      console.log("Final response client:", JSON.stringify(response.client, null, 2));
-      console.log("=== END DEBUG ===");
+      console.error("Final response client field:", JSON.stringify(response.client, null, 2));
+      console.error("=== END DEBUG ===");
       res.json(response);
     } catch (error) {
       console.error("Error fetching quote details:", error);
