@@ -535,7 +535,7 @@ export default function RequestTable() {
                   <h4 className="font-medium mb-2">Request Information</h4>
                   <div className="space-y-1 text-sm">
                     <p><span className="font-medium">Client:</span> {selectedRequest.clientName}</p>
-                    <p><span className="font-medium">Order Number:</span> {selectedRequest.orderNumber}</p>
+                    <p><span className="font-medium">Order Number:</span> {selectedRequest.orderNumber || `REQ-${selectedRequest.id.toString().padStart(4, '0')}`}</p>
                     <p><span className="font-medium">Requested By:</span> {selectedRequest.requestedByUser?.name || `User ${selectedRequest.requestedBy}`}</p>
                     <p><span className="font-medium">Date:</span> {new Date(selectedRequest.createdAt).toLocaleDateString()}</p>
                     {selectedRequest.boqReference && (
