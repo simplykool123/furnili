@@ -281,21 +281,21 @@ export function setupQuotesRoutes(app: Express) {
       const [client] = await db
         .select()
         .from(clients)
-        .where(eq(clients.id, quote.clientId))
+        .where(eq(clients.id, quote.client_id))
         .limit(1);
 
       // Get project data - using correct column name from database
       const [project] = await db
         .select()
         .from(projects)
-        .where(eq(projects.id, quote.projectId))
+        .where(eq(projects.id, quote.project_id))
         .limit(1);
 
       // Get created by user data - using correct column name from database
       const [createdByUser] = await db
         .select({ id: users.id, name: users.name })
         .from(users)
-        .where(eq(users.id, quote.createdBy))
+        .where(eq(users.id, quote.created_by))
         .limit(1);
 
       // Get quote items with complete sales product details
@@ -311,7 +311,7 @@ export function setupQuotesRoutes(app: Express) {
 
       // Force console output for debugging
       console.log(`=== QUOTE DEBUG ${Date.now()} ===`);
-      console.log(`Client ID from quote: ${quote.clientId}`);
+      console.log(`Client ID from quote: ${quote.client_id}`);
       console.log(`Client raw data:`, JSON.stringify(client, null, 2));
       console.log(`Client exists:`, !!client);
       if (client) {
