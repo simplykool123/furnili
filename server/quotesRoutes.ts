@@ -265,27 +265,37 @@ export function setupQuotesRoutes(app: Express) {
     try {
       const quoteId = parseInt(req.params.id);
 
-      // Get quote with complete client and project details
-      const quoteData = await db
-        .select({
-          quote: quotes,
-          client: clients,
-          project: projects,
-          createdBy: {
-            id: users.id,
-            name: users.name,
-          }
-        })
+      // Get quote first
+      const [quote] = await db
+        .select()
         .from(quotes)
-        .leftJoin(clients, eq(quotes.clientId, clients.id))
-        .leftJoin(projects, eq(quotes.projectId, projects.id))
-        .leftJoin(users, eq(quotes.createdBy, users.id))
         .where(and(eq(quotes.id, quoteId), eq(quotes.isActive, true)))
         .limit(1);
 
-      if (quoteData.length === 0) {
+      if (!quote) {
         return res.status(404).json({ error: "Quote not found" });
       }
+
+      // Get client data
+      const [client] = await db
+        .select()
+        .from(clients)
+        .where(eq(clients.id, quote.clientId))
+        .limit(1);
+
+      // Get project data
+      const [project] = await db
+        .select()
+        .from(projects)
+        .where(eq(projects.id, quote.projectId))
+        .limit(1);
+
+      // Get created by user data
+      const [createdByUser] = await db
+        .select({ id: users.id, name: users.name })
+        .from(users)
+        .where(eq(users.id, quote.createdBy))
+        .limit(1);
 
       // Get quote items with complete sales product details
       const items = await db
@@ -298,27 +308,17 @@ export function setupQuotesRoutes(app: Express) {
         .where(eq(quoteItems.quoteId, quoteId))
         .orderBy(quoteItems.sortOrder);
 
-      // Ensure we have client data by fetching it separately if the join didn't work
-      let clientData = quoteData[0].client;
-      if (!clientData && quoteData[0].quote.clientId) {
-        const clientResult = await db
-          .select()
-          .from(clients)
-          .where(eq(clients.id, quoteData[0].quote.clientId))
-          .limit(1);
-        clientData = clientResult[0] || null;
-      }
-
       console.log("Quote Details Debug:");
-      console.log("  quoteData[0]:", JSON.stringify(quoteData[0], null, 2));
-      console.log("  client data:", JSON.stringify(clientData, null, 2));
-      console.log("  quote clientId:", quoteData[0].quote.clientId);
+      console.log("  quote:", JSON.stringify(quote, null, 2));
+      console.log("  client data:", JSON.stringify(client, null, 2));
+      console.log("  project data:", JSON.stringify(project, null, 2));
+      console.log("  quote clientId:", quote.clientId);
       
       const response = {
-        ...quoteData[0].quote,
-        client: clientData,
-        project: quoteData[0].project,
-        createdBy: quoteData[0].createdBy,
+        ...quote,
+        client: client || null,
+        project: project || null,
+        createdBy: createdByUser || null,
         items: items.map(item => ({
           ...item.item,
           product: item.salesProduct
