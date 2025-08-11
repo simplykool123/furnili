@@ -285,11 +285,11 @@ export function setupQuotesRoutes(app: Express) {
         .limit(1);
 
       // Get project data - using correct column name from database
-      const [project] = await db
+      const [project] = quote.projectId ? await db
         .select()
         .from(projects)
         .where(eq(projects.id, quote.projectId))
-        .limit(1);
+        .limit(1) : [null];
 
       // Get created by user data - using correct column name from database
       const [createdByUser] = await db
