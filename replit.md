@@ -67,6 +67,7 @@ The system adheres to a professional and consistent UI/UX based on the "Furnili 
 - Quote status management (draft, sent, approved, rejected, expired).
 - Integrated WhatsApp sharing for PDFs.
 - Consistent 'Size' field integration across Sales Products and Quotes.
+- Resolved client data loading issues in PDF export with cache-bypass endpoint implementation.
 
 #### Staff Management & Payroll
 - Comprehensive staff management including attendance tracking, ID details, salary information, and document storage.
