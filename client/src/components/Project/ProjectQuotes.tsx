@@ -1239,7 +1239,10 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
                   <div className="flex items-center gap-2 text-sm">
                     <h3 
                       className="font-medium truncate cursor-pointer hover:text-brown-600 hover:underline"
-                      onClick={() => setViewQuoteId(quote.id)}
+                      onClick={() => {
+                        setSelectedQuote(quote);
+                        setShowViewDialog(true);
+                      }}
                     >
                       {quote.title}
                     </h3>
