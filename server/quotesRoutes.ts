@@ -257,7 +257,7 @@ export function setupQuotesRoutes(app: Express) {
   });
 
   // Get quote details for PDF and detailed view
-  app.get("/api/quotes/:id/details-fresh", authenticateToken, async (req, res) => {
+  app.get("/api/quotes/:id/details", authenticateToken, async (req, res) => {
     // Force no caching - completely disable all cache mechanisms
     res.set('Cache-Control', 'no-cache, no-store, must-revalidate, private, max-age=0');
     res.set('Pragma', 'no-cache');
