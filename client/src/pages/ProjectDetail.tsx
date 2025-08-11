@@ -1261,7 +1261,7 @@ export default function ProjectDetail() {
     // Handle assignment - either to a user or to "other" person
     if (data.assignedTo === "other") {
       taskData.assignedToOther = data.assignedToOther;
-    } else if (data.assignedTo && data.assignedTo !== "") {
+    } else if (data.assignedTo && data.assignedTo !== "" && data.assignedTo !== "unassigned") {
       taskData.assignedTo = parseInt(data.assignedTo);
     }
     
@@ -3474,7 +3474,7 @@ export default function ProjectDetail() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="">Unassigned</SelectItem>
+                          <SelectItem value="unassigned">Unassigned</SelectItem>
                           {users.map((user: any) => (
                             <SelectItem key={user.id} value={user.id.toString()}>
                               {user.name || user.username}
