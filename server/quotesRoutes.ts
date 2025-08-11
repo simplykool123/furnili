@@ -281,21 +281,21 @@ export function setupQuotesRoutes(app: Express) {
       const [client] = await db
         .select()
         .from(clients)
-        .where(eq(clients.id, quote.client_id))
+        .where(eq(clients.id, quote.clientId))
         .limit(1);
 
       // Get project data - using correct column name from database
       const [project] = await db
         .select()
         .from(projects)
-        .where(eq(projects.id, quote.project_id))
+        .where(eq(projects.id, quote.projectId))
         .limit(1);
 
       // Get created by user data - using correct column name from database
       const [createdByUser] = await db
         .select({ id: users.id, name: users.name })
         .from(users)
-        .where(eq(users.id, quote.created_by))
+        .where(eq(users.id, quote.createdBy))
         .limit(1);
 
       // Get quote items with complete sales product details
@@ -305,13 +305,13 @@ export function setupQuotesRoutes(app: Express) {
           salesProduct: salesProducts,
         })
         .from(quoteItems)
-        .leftJoin(salesProducts, eq(quoteItems.sales_product_id, salesProducts.id))
-        .where(eq(quoteItems.quote_id, quoteId))
-        .orderBy(quoteItems.sort_order);
+        .leftJoin(salesProducts, eq(quoteItems.salesProductId, salesProducts.id))
+        .where(eq(quoteItems.quoteId, quoteId))
+        .orderBy(quoteItems.sortOrder);
 
       // Force console output for debugging using stderr which shows immediately
       process.stderr.write(`=== QUOTE DEBUG ${Date.now()} ===\n`);
-      process.stderr.write(`Client ID from quote: ${quote.client_id}\n`);
+      process.stderr.write(`Client ID from quote: ${quote.clientId}\n`);
       process.stderr.write(`Client exists: ${!!client}\n`);
       if (client) {
         process.stderr.write(`Client name: ${client.name}\n`);
