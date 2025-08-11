@@ -294,20 +294,35 @@ export function setupQuotesRoutes(app: Express) {
         .where(eq(quoteItems.quoteId, quoteId))
         .orderBy(quoteItems.sortOrder);
 
+      // Ensure we have client data by fetching it separately if the join didn't work
+      let clientData = quoteData[0].client;
+      if (!clientData && quoteData[0].quote.clientId) {
+        const clientResult = await db
+          .select()
+          .from(clients)
+          .where(eq(clients.id, quoteData[0].quote.clientId))
+          .limit(1);
+        clientData = clientResult[0] || null;
+      }
+
       console.log("Quote Details Debug:");
-      console.log("  quoteData[0]:", quoteData[0]);
-      console.log("  client data:", quoteData[0].client);
-      console.log("  project data:", quoteData[0].project);
+      console.log("  quoteData[0]:", JSON.stringify(quoteData[0], null, 2));
+      console.log("  client data:", JSON.stringify(clientData, null, 2));
+      console.log("  quote clientId:", quoteData[0].quote.clientId);
       
       const response = {
         ...quoteData[0].quote,
-        client: quoteData[0].client,
+        client: clientData,
         project: quoteData[0].project,
         createdBy: quoteData[0].createdBy,
-        items: items
+        items: items.map(item => ({
+          ...item.item,
+          product: item.salesProduct
+        }))
       };
       
-      console.log("Final response client:", response.client);
+      console.log("Final response structure:", Object.keys(response));
+      console.log("Final response client:", JSON.stringify(response.client, null, 2));
       res.json(response);
     } catch (error) {
       console.error("Error fetching quote details:", error);
