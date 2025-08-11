@@ -698,6 +698,7 @@ export default function ProjectDetail() {
     }
   };
   const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
+  const [editingTask, setEditingTask] = useState<any>(null);
   const [isNoteDialogOpen, setIsNoteDialogOpen] = useState(false);
   const [isCommunicationDialogOpen, setIsCommunicationDialogOpen] =
     useState(false);
@@ -1245,15 +1246,14 @@ export default function ProjectDetail() {
     queryFn: () => apiRequest("/api/users"),
   });
 
-  // Task creation handler
-  const handleTaskCreate = (data: any) => {
+  // Task creation/update handler
+  const handleTaskSubmit = (data: any) => {
     const taskData = {
       title: data.title,
       description: data.description,
       priority: data.priority,
       status: data.status,
       dueDate: data.dueDate ? new Date(data.dueDate) : null,
-      projectId: parseInt(projectId), // Associate task with current project
       assignedTo: null,
       assignedToOther: null,
     };
@@ -1264,8 +1264,50 @@ export default function ProjectDetail() {
     } else if (data.assignedTo && data.assignedTo !== "" && data.assignedTo !== "unassigned") {
       taskData.assignedTo = parseInt(data.assignedTo);
     }
+
+    if (editingTask) {
+      // Update existing task
+      updateTaskMutation.mutate({ taskId: editingTask.id, taskData });
+    } else {
+      // Create new task
+      taskData.projectId = parseInt(projectId); // Associate task with current project
+      createTaskMutation.mutate(taskData);
+    }
+  };
+
+  // Task editing handler
+  const handleTaskEdit = (task: any) => {
+    setEditingTask(task);
     
-    createTaskMutation.mutate(taskData);
+    // Populate form with existing task data
+    taskForm.reset({
+      title: task.title || '',
+      description: task.description || '',
+      priority: task.priority || 'medium',
+      status: task.status || 'pending',
+      dueDate: task.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : '',
+      assignedTo: task.assignedToOther ? 'other' : 
+                  task.assignedTo ? task.assignedTo.toString() : 'unassigned',
+      assignedToOther: task.assignedToOther || '',
+    });
+    
+    setIsTaskDialogOpen(true);
+  };
+
+  // Task deletion handler
+  const handleTaskDelete = (taskId: number) => {
+    if (userRole !== 'admin') {
+      toast({
+        title: "Access Denied",
+        description: "Only administrators can delete tasks.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (confirm('Are you sure you want to delete this task? This action cannot be undone.')) {
+      deleteTaskMutation.mutate(taskId);
+    }
   };
 
   const mockNotes = [
@@ -1573,12 +1615,58 @@ export default function ProjectDetail() {
         description: "Task has been created successfully.",
       });
       setIsTaskDialogOpen(false);
+      setEditingTask(null);
       taskForm.reset();
     },
     onError: (error: any) => {
       toast({
         title: "Error",
         description: "Failed to create task",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Task update mutation
+  const updateTaskMutation = useMutation({
+    mutationFn: async ({ taskId, taskData }: { taskId: number; taskData: any }) => {
+      return await authenticatedApiRequest('PATCH', `/api/tasks/${taskId}`, taskData);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/tasks", projectId] });
+      toast({
+        title: "Task updated",
+        description: "Task has been updated successfully.",
+      });
+      setIsTaskDialogOpen(false);
+      setEditingTask(null);
+      taskForm.reset();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: "Failed to update task",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Task delete mutation
+  const deleteTaskMutation = useMutation({
+    mutationFn: async (taskId: number) => {
+      return await authenticatedApiRequest('DELETE', `/api/tasks/${taskId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/tasks", projectId] });
+      toast({
+        title: "Task deleted",
+        description: "Task has been deleted successfully.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: "Failed to delete task",
         variant: "destructive",
       });
     },
@@ -2943,16 +3031,20 @@ export default function ProjectDetail() {
                                   variant="ghost"
                                   size="sm"
                                   className="h-8 w-8 p-0"
+                                  onClick={() => handleTaskEdit(task)}
                                 >
                                   <Edit className="h-4 w-4" />
                                 </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-8 w-8 p-0"
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
+                                {userRole === 'admin' && (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+                                    onClick={() => handleTaskDelete(task.id)}
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                )}
                               </div>
                             </TableCell>
                           </TableRow>
@@ -3421,16 +3513,22 @@ export default function ProjectDetail() {
       </div>
 
       {/* Task Dialog */}
-      <Dialog open={isTaskDialogOpen} onOpenChange={setIsTaskDialogOpen}>
+      <Dialog open={isTaskDialogOpen} onOpenChange={(open) => {
+        setIsTaskDialogOpen(open);
+        if (!open) {
+          setEditingTask(null);
+          taskForm.reset();
+        }
+      }}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Add New Task</DialogTitle>
+            <DialogTitle>{editingTask ? 'Edit Task' : 'Add New Task'}</DialogTitle>
             <DialogDescription>
-              Create a new task for this project
+              {editingTask ? 'Update the task details' : 'Create a new task for this project'}
             </DialogDescription>
           </DialogHeader>
           <Form {...taskForm}>
-            <form onSubmit={taskForm.handleSubmit(handleTaskCreate)} className="space-y-4">
+            <form onSubmit={taskForm.handleSubmit(handleTaskSubmit)} className="space-y-4">
               <FormField
                 control={taskForm.control}
                 name="title"
@@ -3579,7 +3677,7 @@ export default function ProjectDetail() {
                   Cancel
                 </Button>
                 <Button type="submit" className="btn-primary">
-                  Add Task
+                  {editingTask ? 'Update Task' : 'Add Task'}
                 </Button>
               </div>
             </form>
