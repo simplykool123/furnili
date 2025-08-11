@@ -3118,7 +3118,10 @@ export default function ProjectDetail() {
                   <Card 
                     key={order.id} 
                     className="bg-white hover:bg-gray-50 cursor-pointer transition-colors"
-                    onClick={() => setSelectedOrder(order)}
+                    onClick={() => {
+                      console.log('Order clicked:', order);
+                      setSelectedOrder(order);
+                    }}
                   >
                     <CardContent className="p-3">
                       {/* Compact single-line format: Order no | requested by | Date */}
@@ -4004,6 +4007,122 @@ export default function ProjectDetail() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Order Detail Modal - Material Request Style */}
+      {selectedOrder && (
+        <Dialog
+          open={!!selectedOrder}
+          onOpenChange={() => setSelectedOrder(null)}
+        >
+          <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Request Details - {selectedOrder.orderNumber}</DialogTitle>
+            </DialogHeader>
+            
+            <div className="space-y-6">
+              {/* Request Information & Status Information */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Request Information */}
+                <div>
+                  <h3 className="text-lg font-semibold mb-3">Request Information</h3>
+                  <div className="space-y-2 text-sm">
+                    <div>
+                      <span className="font-medium">Client:</span> {selectedOrder.clientName || 'N/A'}
+                    </div>
+                    <div>
+                      <span className="font-medium">Order Number:</span> {selectedOrder.orderNumber}
+                    </div>
+                    <div>
+                      <span className="font-medium">Requested By:</span> {selectedOrder.requestedByUser?.username || selectedOrder.requestedByUser?.name || selectedOrder.clientName || `User ${selectedOrder.requestedBy}`}
+                    </div>
+                    <div>
+                      <span className="font-medium">Date:</span> {new Date(selectedOrder.createdAt).toLocaleDateString("en-GB")}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Status Information */}
+                <div>
+                  <h3 className="text-lg font-semibold mb-3">Status Information</h3>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">Status:</span>
+                      <Badge 
+                        variant={
+                          selectedOrder.status === "completed"
+                            ? "default"
+                            : selectedOrder.status === "approved"
+                              ? "secondary"
+                              : selectedOrder.status === "pending"
+                                ? "outline"
+                                : "destructive"
+                        }
+                        className={`text-xs ${
+                          selectedOrder.status === "completed"
+                            ? "bg-green-100 text-green-800"
+                            : selectedOrder.status === "approved"
+                              ? "bg-blue-100 text-blue-800"
+                              : selectedOrder.status === "pending"
+                                ? "bg-yellow-100 text-yellow-800"
+                                : ""
+                        }`}
+                      >
+                        {selectedOrder.status}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">Priority:</span>
+                      <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                        {selectedOrder.priority || 'Medium'}
+                      </Badge>
+                    </div>
+                    <div>
+                      <span className="font-medium">Total Value:</span> ₹{(selectedOrder.totalValue || 0).toLocaleString()}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Requested Items */}
+              {selectedOrder.items && selectedOrder.items.length > 0 && (
+                <div>
+                  <h3 className="text-lg font-semibold mb-4">Requested Items</h3>
+                  
+                  {/* Table Header */}
+                  <div className="bg-gray-50 rounded-t-lg border">
+                    <div className="grid grid-cols-4 gap-4 p-3 text-sm font-medium text-gray-600">
+                      <div>Product</div>
+                      <div>Requested Qty</div>
+                      <div>Unit Price</div>
+                      <div>Total</div>
+                    </div>
+                  </div>
+
+                  {/* Table Body */}
+                  <div className="border-x border-b rounded-b-lg">
+                    {selectedOrder.items.map((item: any, index: number) => (
+                      <div key={index} className="grid grid-cols-4 gap-4 p-3 text-sm border-b last:border-b-0">
+                        <div className="font-medium">
+                          {item.product?.name || item.productName || item.description || 'Unknown Product'}
+                        </div>
+                        <div>
+                          {item.requestedQuantity || item.quantity || 0} {item.unit || 'pieces'}
+                        </div>
+                        <div>
+                          ₹{(item.unitPrice || item.rate || item.price || 0).toLocaleString()}
+                        </div>
+                        <div className="font-medium">
+                          ₹{(item.totalAmount || item.amount || item.total || ((item.requestedQuantity || item.quantity || 0) * (item.unitPrice || item.rate || item.price || 0)) || 0).toLocaleString()}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }
