@@ -55,16 +55,6 @@ export default function RequestTable() {
       params.append('_t', Date.now().toString());
       
       const response = await authenticatedApiRequest('GET', `/api/requests?${params}`);
-      console.log('Requests API Response:', {
-        dataLength: response?.length,
-        firstItem: response?.[0],
-        specificRequest: response?.find(r => r.orderNumber === 'REQ-0013'),
-        itemsDebug: response?.find(r => r.orderNumber === 'REQ-0013')?.items?.map(item => ({
-          productId: item.productId,
-          productName: item.product?.name,
-          productCategory: item.product?.category
-        }))
-      });
       return response;
     },
     staleTime: 0, // Always consider data stale

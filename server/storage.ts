@@ -424,6 +424,9 @@ class DatabaseStorage implements IStorage {
     } else if (status === 'issued') {
       updateData.issuedBy = userId;
       updateData.issuedAt = new Date();
+      
+      // Create inventory movements for issued requests
+      await this.createInventoryMovementsForIssuedRequest(id, userId);
     }
     
     const result = await db.update(materialRequests)
@@ -431,6 +434,63 @@ class DatabaseStorage implements IStorage {
       .where(eq(materialRequests.id, id))
       .returning();
     return result[0];
+  }
+
+  private async createInventoryMovementsForIssuedRequest(requestId: number, userId: number): Promise<void> {
+    try {
+      // Get the request details with items
+      const request = await this.getMaterialRequest(requestId);
+      if (!request || !request.items) {
+        console.error(`Failed to get request ${requestId} for inventory movements`);
+        return;
+      }
+
+      // Get the user name for the movements
+      const user = await this.getUser(userId);
+      const userName = user?.name || 'Unknown';
+
+      // Create inventory movements for each item
+      for (const item of request.items) {
+        if (!item.product || !item.requestedQuantity) continue;
+
+        // Get current stock for the product
+        const product = await this.getProduct(item.productId);
+        if (!product) {
+          console.error(`Product ${item.productId} not found for inventory movement`);
+          continue;
+        }
+
+        const previousStock = product.currentStock || 0;
+        const newStock = previousStock - item.requestedQuantity;
+
+        // Create inventory movement record
+        await db.insert(stockMovements).values({
+          productId: item.productId,
+          movementType: 'out',
+          quantity: item.requestedQuantity,
+          previousStock,
+          newStock,
+          reference: `Material Request ${request.orderNumber}`,
+          notes: `Stock issued for client project`,
+          performedBy: userId,
+          materialRequestId: requestId,
+          reason: 'General',
+          createdAt: new Date()
+        });
+
+        // Update product stock
+        await db.update(products)
+          .set({ currentStock: newStock })
+          .where(eq(products.id, item.productId));
+
+        console.log(`Created inventory movement: ${item.product.name} -${item.requestedQuantity} (${previousStock} → ${newStock})`);
+      }
+
+      console.log(`Successfully created inventory movements for request ${request.orderNumber}`);
+    } catch (error) {
+      console.error(`Error creating inventory movements for request ${requestId}:`, error);
+      throw error;
+    }
   }
 
   async deleteMaterialRequest(id: number): Promise<boolean> {
