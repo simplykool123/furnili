@@ -262,7 +262,7 @@ export function setupQuotesRoutes(app: Express) {
     res.set('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
     res.set('Pragma', 'no-cache');
     res.set('Expires', '0');
-    res.set('ETag', `"${Date.now()}"`);
+    res.set('ETag', `"${Date.now()}-${Math.random()}"`);
     try {
       const quoteId = parseInt(req.params.id);
 
