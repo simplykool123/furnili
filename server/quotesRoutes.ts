@@ -310,10 +310,11 @@ export function setupQuotesRoutes(app: Express) {
         .orderBy(quoteItems.sortOrder);
 
       // Force console output for debugging
-      process.stdout.write(`=== QUOTE DEBUG ${Date.now()} ===\n`);
-      process.stdout.write(`Client ID from quote: ${quote.client_id}\n`);
-      process.stdout.write(`Client data: ${JSON.stringify(client)}\n`);
-      process.stdout.write(`=== END DEBUG ===\n`);
+      console.log(`=== QUOTE DEBUG ${Date.now()} ===`);
+      console.log(`Client ID from quote: ${quote.client_id}`);
+      console.log(`Client data:`, client);
+      console.log(`Quote data:`, quote);
+      console.log(`=== END DEBUG ===`);
       
       const response = {
         ...quote,

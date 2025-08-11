@@ -64,6 +64,10 @@ function QuoteClientInfo({ quoteId }: { quoteId: number }) {
     enabled: !!quoteId,
   });
 
+  // Debug logging
+  console.log("QuoteClientInfo - Full response:", quoteDetails);
+  console.log("QuoteClientInfo - Client data:", quoteDetails?.client);
+
   if (!quoteDetails?.client) {
     return (
       <div style={{ fontSize: '11px', fontWeight: 'bold', lineHeight: '1.3' }}>
