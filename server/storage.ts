@@ -517,8 +517,8 @@ class DatabaseStorage implements IStorage {
       SELECT 
         qi.id, qi.quote_id, qi.sales_product_id, qi.item_name, qi.description, 
         qi.quantity, qi.uom, qi.unit_price, qi.line_total,
-        sp.name as product_name, sp.category as product_category, sp.brand as product_brand,
-        sp.size as product_size, sp.price as product_price, sp.description as product_description
+        sp.name as product_name, sp.category as product_category, 
+        sp.size as product_size, sp.unit_price as product_price, sp.description as product_description
       FROM quote_items qi
       LEFT JOIN sales_products sp ON qi.sales_product_id = sp.id
       WHERE qi.quote_id = ${quoteId}
@@ -540,7 +540,6 @@ class DatabaseStorage implements IStorage {
         id: row.sales_product_id,
         name: row.product_name || row.item_name,
         category: row.product_category,
-        brand: row.product_brand,
         size: row.product_size,
         price: row.product_price,
         description: row.product_description || row.description
