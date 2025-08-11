@@ -56,6 +56,38 @@ import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 
+// Quote Client Info Component
+function QuoteClientInfo({ quoteId }: { quoteId: number }) {
+  const { data: quoteDetails } = useQuery({
+    queryKey: ["/api/quotes", quoteId, "details"],
+    queryFn: () => apiRequest(`/api/quotes/${quoteId}/details`),
+    enabled: !!quoteId,
+  });
+
+  if (!quoteDetails?.client) {
+    return (
+      <div style={{ fontSize: '11px', fontWeight: 'bold', lineHeight: '1.3' }}>
+        <p style={{ margin: '0 0 3px 0' }}>To:</p>
+        <p style={{ margin: '0' }}>Loading client information...</p>
+      </div>
+    );
+  }
+
+  const client = quoteDetails.client;
+  return (
+    <div style={{ fontSize: '11px', fontWeight: 'bold', lineHeight: '1.3' }}>
+      <p style={{ margin: '0 0 3px 0' }}>To:</p>
+      <p style={{ margin: '0' }}>{client.name || 'Client Name'}</p>
+      {client.address1 && <p style={{ margin: '0' }}>{client.address1}</p>}
+      {client.address2 && <p style={{ margin: '0' }}>{client.address2}</p>}
+      <p style={{ margin: '0' }}>{client.city || 'City'}, {client.state || 'State'} - {client.pinCode || client.pin_code || 'Pin Code'}</p>
+      {client.mobile && <p style={{ margin: '0' }}>Mobile: {client.mobile}</p>}
+      {client.email && <p style={{ margin: '0' }}>Email: {client.email}</p>}
+      {(client.gstNumber || client.gst_number) && <p style={{ margin: '0' }}>GST: {client.gstNumber || client.gst_number}</p>}
+    </div>
+  );
+}
+
 // Quote Items Table Component for PDF Preview
 function QuoteItemsTable({ quoteId }: { quoteId: number }) {
   const { data: quoteDetails } = useQuery({
@@ -1351,13 +1383,7 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
 
               {/* Client Information - Exact PDF Match */}
               <div style={{ marginBottom: '15px' }}>
-                <div style={{ fontSize: '11px', fontWeight: 'bold', lineHeight: '1.3' }}>
-                  <p style={{ margin: '0 0 3px 0' }}>To:</p>
-                  <p style={{ margin: '0' }}>{selectedQuote.client?.name || 'Client Name'}</p>
-                  <p style={{ margin: '0' }}>{selectedQuote.client?.address || 'Client Address'}</p>
-                  <p style={{ margin: '0' }}>{selectedQuote.client?.city || 'City'}</p>
-                  <p style={{ margin: '0' }}>Mobile: {selectedQuote.client?.mobile || 'Mobile'}</p>
-                </div>
+                <QuoteClientInfo quoteId={selectedQuote.id} />
               </div>
 
               {/* Project Details - Exact PDF Match */}
