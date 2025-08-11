@@ -295,7 +295,10 @@ export function setupQuotesRoutes(app: Express) {
         .orderBy(quoteItems.sortOrder);
 
       res.json({
-        ...quoteData[0],
+        ...quoteData[0].quote,
+        client: quoteData[0].client,
+        project: quoteData[0].project,
+        createdBy: quoteData[0].createdBy,
         items: items
       });
     } catch (error) {
