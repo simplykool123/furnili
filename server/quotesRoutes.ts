@@ -305,9 +305,9 @@ export function setupQuotesRoutes(app: Express) {
           salesProduct: salesProducts,
         })
         .from(quoteItems)
-        .leftJoin(salesProducts, eq(quoteItems.salesProductId, salesProducts.id))
-        .where(eq(quoteItems.quoteId, quoteId))
-        .orderBy(quoteItems.sortOrder);
+        .leftJoin(salesProducts, eq(quoteItems.sales_product_id, salesProducts.id))
+        .where(eq(quoteItems.quote_id, quoteId))
+        .orderBy(quoteItems.sort_order);
 
       // Force console output for debugging
       console.log(`=== QUOTE DEBUG ${Date.now()} ===`);
