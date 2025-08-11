@@ -294,13 +294,21 @@ export function setupQuotesRoutes(app: Express) {
         .where(eq(quoteItems.quoteId, quoteId))
         .orderBy(quoteItems.sortOrder);
 
-      res.json({
+      console.log("Quote Details Debug:");
+      console.log("  quoteData[0]:", quoteData[0]);
+      console.log("  client data:", quoteData[0].client);
+      console.log("  project data:", quoteData[0].project);
+      
+      const response = {
         ...quoteData[0].quote,
         client: quoteData[0].client,
         project: quoteData[0].project,
         createdBy: quoteData[0].createdBy,
         items: items
-      });
+      };
+      
+      console.log("Final response client:", response.client);
+      res.json(response);
     } catch (error) {
       console.error("Error fetching quote details:", error);
       res.status(500).json({ error: "Failed to fetch quote details" });
