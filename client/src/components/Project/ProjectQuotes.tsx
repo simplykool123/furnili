@@ -59,8 +59,8 @@ import { apiRequest } from "@/lib/queryClient";
 // Quote Client Info Component
 function QuoteClientInfo({ quoteId }: { quoteId: number }) {
   const { data: quoteDetails } = useQuery({
-    queryKey: ["/api/quotes", quoteId, "details"],
-    queryFn: () => apiRequest(`/api/quotes/${quoteId}/details`),
+    queryKey: ["/api/quotes", quoteId, "details", Date.now()],
+    queryFn: () => apiRequest(`/api/quotes/${quoteId}/details?t=${Date.now()}`),
     enabled: !!quoteId,
   });
 
@@ -100,8 +100,8 @@ function QuoteClientInfo({ quoteId }: { quoteId: number }) {
 // Quote Items Table Component for PDF Preview
 function QuoteItemsTable({ quoteId }: { quoteId: number }) {
   const { data: quoteDetails } = useQuery({
-    queryKey: ["/api/quotes", quoteId, "details"],
-    queryFn: () => apiRequest(`/api/quotes/${quoteId}/details`),
+    queryKey: ["/api/quotes", quoteId, "details", Date.now()],
+    queryFn: () => apiRequest(`/api/quotes/${quoteId}/details?t=${Date.now()}`),
     enabled: !!quoteId,
   });
 
