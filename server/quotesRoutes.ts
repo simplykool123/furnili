@@ -312,8 +312,14 @@ export function setupQuotesRoutes(app: Express) {
       // Force console output for debugging
       console.log(`=== QUOTE DEBUG ${Date.now()} ===`);
       console.log(`Client ID from quote: ${quote.client_id}`);
-      console.log(`Client data:`, client);
-      console.log(`Quote data:`, quote);
+      console.log(`Client raw data:`, JSON.stringify(client, null, 2));
+      console.log(`Client exists:`, !!client);
+      if (client) {
+        console.log(`Client fields:`, Object.keys(client));
+        console.log(`Client name:`, client.name);
+        console.log(`Client address1:`, client.address1);
+        console.log(`Client city:`, client.city);
+      }
       console.log(`=== END DEBUG ===`);
       
       const response = {

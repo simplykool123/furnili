@@ -66,7 +66,12 @@ function QuoteClientInfo({ quoteId }: { quoteId: number }) {
 
   // Debug logging
   console.log("QuoteClientInfo - Full response:", quoteDetails);
-  console.log("QuoteClientInfo - Client data:", quoteDetails?.client);
+  console.log("QuoteClientInfo - Client exists:", !!quoteDetails?.client);
+  console.log("QuoteClientInfo - Client data:", JSON.stringify(quoteDetails?.client, null, 2));
+  if (quoteDetails?.client) {
+    console.log("QuoteClientInfo - Client keys:", Object.keys(quoteDetails.client));
+    console.log("QuoteClientInfo - Client name:", quoteDetails.client.name);
+  }
 
   if (!quoteDetails?.client) {
     return (
