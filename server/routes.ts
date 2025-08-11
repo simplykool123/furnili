@@ -486,6 +486,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Product search endpoint for autocomplete
+  app.get("/api/products/search", authenticateToken, async (req, res) => {
+    try {
+      const { query } = req.query;
+      if (!query || typeof query !== 'string') {
+        return res.json([]);
+      }
+
+      const products = await storage.getAllProducts();
+      
+      // Filter products by name containing the query (case insensitive)
+      const searchTerm = query.toLowerCase();
+      const matchingProducts = products
+        .filter(product => 
+          product.name.toLowerCase().includes(searchTerm)
+        )
+        .slice(0, 10) // Limit to 10 suggestions
+        .map(product => ({
+          id: product.id,
+          name: product.name,
+          category: product.category,
+          brand: product.brand
+        }));
+
+      res.json(matchingProducts);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to search products", error });
+    }
+  });
+
   app.get("/api/products/:id", authenticateToken, async (req, res) => {
     try {
       const id = parseInt(req.params.id);

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Autocomplete } from "@/components/ui/autocomplete";
 import { Upload, X } from "lucide-react";
 
 const productSchema = z.object({
@@ -52,9 +53,20 @@ export default function ProductForm({ product, onClose, isMobile = false }: Prod
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(product?.imageUrl || null);
   const [isLoading, setIsLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState(product?.name || "");
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Debounce search query to avoid too many API calls
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   const {
     register,
@@ -272,6 +284,13 @@ export default function ProductForm({ product, onClose, isMobile = false }: Prod
     queryKey: ["/api/categories"],
   });
 
+  // Search for products based on debounced query
+  const { data: searchResults = [], isLoading: isSearchLoading } = useQuery({
+    queryKey: ["/api/products/search", debouncedSearchQuery],
+    queryFn: () => authenticatedApiRequest("GET", `/api/products/search?query=${encodeURIComponent(debouncedSearchQuery)}`),
+    enabled: debouncedSearchQuery.length > 0,
+  });
+
   const units = [
     "pieces", "meters", "kg", "bags", "boxes", "liters", "tons", "feet", "inches", "sq.ft", "cubic.ft"
   ];
@@ -284,11 +303,28 @@ export default function ProductForm({ product, onClose, isMobile = false }: Prod
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label htmlFor="name" className="text-xs font-medium mb-1">Product Name *</Label>
-              <Input
-                id="name"
-                {...register("name")}
-                className={`${errors.name ? "border-red-500" : ""} h-8 text-xs`}
+              <Autocomplete
+                value={watch("name") || ""}
+                onChange={(value) => {
+                  setValue("name", value);
+                  setSearchQuery(value);
+                }}
+                onSelect={(option) => {
+                  setValue("name", option.name);
+                  // Optionally pre-fill category and brand if they match
+                  if (option.category && !watch("category")) {
+                    setValue("category", option.category);
+                  }
+                  if (option.brand && !watch("brand")) {
+                    setValue("brand", option.brand);
+                  }
+                  setSearchQuery("");
+                }}
+                options={searchResults}
+                isLoading={isSearchLoading}
                 placeholder="e.g., Calibrated ply"
+                className={`${errors.name ? "border-red-500" : ""} h-8 text-xs`}
+                error={!!errors.name}
               />
               {errors.name && (
                 <p className="text-xs text-red-600 mt-0.5">{errors.name.message}</p>
