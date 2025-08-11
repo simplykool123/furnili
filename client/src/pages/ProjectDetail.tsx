@@ -3123,7 +3123,7 @@ export default function ProjectDetail() {
                             Order #{order.orderNumber}
                           </h4>
                           <p className="text-sm text-gray-600 mb-2">
-                            Requested By: {order.requestedBy || order.clientName}
+                            Requested By: {order.requestedByUser?.username || order.requestedByUser?.name || order.clientName || `User ${order.requestedBy}`}
                           </p>
                         </div>
                         <div className="text-right">
