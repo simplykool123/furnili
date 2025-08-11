@@ -3129,7 +3129,7 @@ export default function ProjectDetail() {
                           </span>
                           <span className="text-gray-500">|</span>
                           <span className="text-gray-600">
-                            {order.requestedByUser?.username || order.requestedByUser?.name || order.clientName || `User ${order.requestedBy}`}
+                            Requested By: {order.requestedByUser?.username || order.requestedByUser?.name || order.clientName || `User ${order.requestedBy}`}
                           </span>
                           <span className="text-gray-500">|</span>
                           <span className="text-gray-600">
