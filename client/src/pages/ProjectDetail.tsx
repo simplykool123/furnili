@@ -1253,6 +1253,7 @@ export default function ProjectDetail() {
       priority: data.priority,
       status: data.status,
       dueDate: data.dueDate ? new Date(data.dueDate) : null,
+      projectId: parseInt(projectId), // Associate task with current project
       assignedTo: null,
       assignedToOther: null,
     };
