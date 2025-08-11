@@ -15,7 +15,8 @@ import {
   payroll,
   salesProducts,
   quotes,
-  quoteItems
+  quoteItems,
+  moodboards
 } from "@shared/schema";
 import { eq, and, gte, lte, desc, asc, sql, like, or } from "drizzle-orm";
 import * as bcrypt from "bcryptjs";
@@ -52,6 +53,8 @@ import type {
   InsertQuoteItem,
   MaterialRequestWithItems,
   ProductWithStock,
+  Moodboard,
+  InsertMoodboard,
 } from "@shared/schema";
 
 export interface IStorage {
@@ -145,6 +148,14 @@ export interface IStorage {
   createSalesProduct(product: InsertSalesProduct): Promise<SalesProduct>;
   updateSalesProduct(id: number, updates: Partial<InsertSalesProduct>): Promise<SalesProduct | undefined>;
   deleteSalesProduct(id: number): Promise<boolean>;
+
+  // Moodboard operations
+  getAllMoodboards(filters?: { linkedProjectId?: number; createdBy?: number }): Promise<Moodboard[]>;
+  getMoodboard(id: number): Promise<Moodboard | undefined>;
+  getMoodboardsByProject(projectId: number): Promise<Moodboard[]>;
+  createMoodboard(moodboard: InsertMoodboard): Promise<Moodboard>;
+  updateMoodboard(id: number, updates: Partial<InsertMoodboard>): Promise<Moodboard | undefined>;
+  deleteMoodboard(id: number): Promise<boolean>;
 }
 
 class DatabaseStorage implements IStorage {
@@ -1078,6 +1089,54 @@ class DatabaseStorage implements IStorage {
       .set({ isActive: false, updatedAt: new Date() })
       .where(eq(salesProducts.id, id))
       .returning();
+    return result.length > 0;
+  }
+
+  // Moodboard operations
+  async getAllMoodboards(filters?: { linkedProjectId?: number; createdBy?: number }): Promise<Moodboard[]> {
+    let query = db.select().from(moodboards);
+    
+    const whereConditions = [];
+    if (filters?.linkedProjectId) {
+      whereConditions.push(eq(moodboards.linkedProjectId, filters.linkedProjectId));
+    }
+    if (filters?.createdBy) {
+      whereConditions.push(eq(moodboards.createdBy, filters.createdBy));
+    }
+    
+    if (whereConditions.length > 0) {
+      query = query.where(and(...whereConditions));
+    }
+    
+    return await query.orderBy(desc(moodboards.createdAt));
+  }
+
+  async getMoodboard(id: number): Promise<Moodboard | undefined> {
+    const result = await db.select().from(moodboards).where(eq(moodboards.id, id)).limit(1);
+    return result[0];
+  }
+
+  async getMoodboardsByProject(projectId: number): Promise<Moodboard[]> {
+    return await db.select().from(moodboards)
+      .where(eq(moodboards.linkedProjectId, projectId))
+      .orderBy(desc(moodboards.createdAt));
+  }
+
+  async createMoodboard(moodboard: InsertMoodboard): Promise<Moodboard> {
+    const result = await db.insert(moodboards).values(moodboard).returning();
+    return result[0];
+  }
+
+  async updateMoodboard(id: number, updates: Partial<InsertMoodboard>): Promise<Moodboard | undefined> {
+    const result = await db.update(moodboards)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(moodboards.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteMoodboard(id: number): Promise<boolean> {
+    const result = await db.delete(moodboards).where(eq(moodboards.id, id)).returning();
     return result.length > 0;
   }
 }
