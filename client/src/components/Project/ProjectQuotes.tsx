@@ -547,12 +547,11 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
       const client = quoteDetailsResponse.client || {};
       const items = quoteDetailsResponse.items || [];
 
-      console.log("Quote Details:", quoteDetailsResponse);
-      console.log("Quote Structure Keys:", Object.keys(quoteDetailsResponse));
-      console.log("Quote.quote:", quoteDetailsResponse.quote);
-      console.log("Quote.client:", quoteDetailsResponse.client);
-      console.log("Client Data:", client);
-      console.log("Items Data:", items);
+      console.log("=== FRONTEND DEBUG ===");
+      console.log("Full API Response:", JSON.stringify(quoteDetailsResponse, null, 2));
+      console.log("Client field exists:", !!quoteDetailsResponse.client);
+      console.log("Client data:", JSON.stringify(quoteDetailsResponse.client, null, 2));
+      console.log("=== END FRONTEND DEBUG ===");
 
       // Create professional PDF content matching Furnili format
       const element = document.createElement("div");

@@ -259,9 +259,10 @@ export function setupQuotesRoutes(app: Express) {
   // Get quote details for PDF and detailed view
   app.get("/api/quotes/:id/details", authenticateToken, async (req, res) => {
     // Disable caching for this endpoint
-    res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.set('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
     res.set('Pragma', 'no-cache');
     res.set('Expires', '0');
+    res.set('ETag', `"${Date.now()}"`);
     try {
       const quoteId = parseInt(req.params.id);
 
