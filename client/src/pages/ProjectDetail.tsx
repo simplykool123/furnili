@@ -3157,27 +3157,23 @@ export default function ProjectDetail() {
                         </div>
                       </div>
 
-                      {/* Items Details Section */}
+                      {/* Items Details Section - Compact 2-line format */}
                       {order.items && order.items.length > 0 && (
-                        <div className="mt-3 mb-3">
-                          <div className="text-sm font-medium text-gray-700 mb-2">
-                            Items Requested ({order.items.length}):
+                        <div className="mt-2 mb-2">
+                          <div className="text-xs font-medium text-gray-700 mb-1">
+                            Items ({order.items.length}):
                           </div>
-                          <div className="space-y-1">
-                            {order.items.slice(0, 3).map((item: any, index: number) => (
-                              <div key={index} className="flex justify-between items-center text-xs bg-gray-50 p-2 rounded">
-                                <span className="text-gray-700 truncate flex-1 mr-2">
-                                  {item.product?.name || item.productName || item.description || "Unknown Product"}
-                                </span>
-                                <span className="text-gray-600 font-medium">
-                                  Qty: {item.requestedQuantity} {item.product?.unit || item.productUnit || "pcs"}
-                                </span>
-                              </div>
+                          <div className="text-xs text-gray-600 leading-tight">
+                            {order.items.slice(0, 6).map((item: any, index: number) => (
+                              <span key={index}>
+                                {item.product?.name || item.productName || item.description || "Unknown Product"} ({item.requestedQuantity} {item.product?.unit || item.productUnit || "pcs"})
+                                {index < Math.min(order.items.length - 1, 5) ? ", " : ""}
+                              </span>
                             ))}
-                            {order.items.length > 3 && (
-                              <div className="text-xs text-gray-500 pl-2">
-                                +{order.items.length - 3} more items...
-                              </div>
+                            {order.items.length > 6 && (
+                              <span className="text-gray-400">
+                                , +{order.items.length - 6} more...
+                              </span>
                             )}
                           </div>
                         </div>
