@@ -3113,24 +3113,35 @@ export default function ProjectDetail() {
                 ))}
               </div>
             ) : projectOrders.length > 0 ? (
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {projectOrders.map((order: any) => (
-                  <Card key={order.id} className="bg-white">
-                    <CardContent className="p-4">
-                      <div className="flex justify-between items-start mb-3">
-                        <div>
-                          <h4 className="font-semibold text-gray-900 mb-1">
+                  <Card 
+                    key={order.id} 
+                    className="bg-white hover:bg-gray-50 cursor-pointer transition-colors"
+                    onClick={() => setSelectedOrder(order)}
+                  >
+                    <CardContent className="p-3">
+                      {/* Compact single-line format: Order no | requested by | Date */}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3 text-sm">
+                          <span className="font-semibold text-gray-900">
                             Order #{order.orderNumber}
-                          </h4>
-                          <p className="text-sm text-gray-600 mb-2">
-                            Requested By: {order.requestedByUser?.username || order.requestedByUser?.name || order.clientName || `User ${order.requestedBy}`}
-                          </p>
+                          </span>
+                          <span className="text-gray-500">|</span>
+                          <span className="text-gray-600">
+                            {order.requestedByUser?.username || order.requestedByUser?.name || order.clientName || `User ${order.requestedBy}`}
+                          </span>
+                          <span className="text-gray-500">|</span>
+                          <span className="text-gray-600">
+                            {new Date(order.createdAt).toLocaleDateString()}
+                          </span>
                         </div>
-                        <div className="text-right">
+                        
+                        <div className="flex items-center space-x-3">
                           {canViewFinances && (
-                            <div className="text-sm font-medium text-gray-900 mb-1">
+                            <span className="text-sm font-medium text-gray-900">
                               ₹{(order.totalValue || 0).toLocaleString()}
-                            </div>
+                            </span>
                           )}
                           <Badge
                             variant={
@@ -3142,7 +3153,7 @@ export default function ProjectDetail() {
                                     ? "outline"
                                     : "destructive"
                             }
-                            className={
+                            className={`text-xs ${
                               order.status === "completed"
                                 ? "bg-green-100 text-green-800"
                                 : order.status === "approved"
@@ -3150,50 +3161,27 @@ export default function ProjectDetail() {
                                   : order.status === "pending"
                                     ? "bg-yellow-100 text-yellow-800"
                                     : ""
-                            }
+                            }`}
                           >
                             {order.status}
                           </Badge>
                         </div>
                       </div>
 
-                      {/* Items Details Section - Compact 2-line format */}
+                      {/* Second line: Items summary */}
                       {order.items && order.items.length > 0 && (
-                        <div className="mt-2 mb-2">
-                          <div className="text-xs font-medium text-gray-700 mb-1">
-                            Items ({order.items.length}):
-                          </div>
-                          <div className="text-xs text-gray-600 leading-tight">
-                            {order.items.slice(0, 6).map((item: any, index: number) => (
-                              <span key={index}>
-                                {item.product?.name || item.productName || item.description || "Unknown Product"} ({item.requestedQuantity} {item.product?.unit || item.productUnit || "pcs"})
-                                {index < Math.min(order.items.length - 1, 5) ? ", " : ""}
-                              </span>
-                            ))}
-                            {order.items.length > 6 && (
-                              <span className="text-gray-400">
-                                , +{order.items.length - 6} more...
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      )}
-
-                      <div className="flex justify-between items-center text-sm text-gray-500">
-                        <div className="flex items-center space-x-4">
-                          <span>Priority: {order.priority}</span>
-                          <span>
-                            {new Date(order.createdAt).toLocaleDateString()}
-                          </span>
-                        </div>
-                      </div>
-
-                      {order.remarks && (
-                        <div className="mt-3 pt-3 border-t border-gray-100">
-                          <p className="text-sm text-gray-600">
-                            <span className="font-medium">Remarks:</span>{" "}
-                            {order.remarks}
-                          </p>
+                        <div className="mt-2 text-xs text-gray-600">
+                          Items ({order.items.length}): {order.items.slice(0, 3).map((item: any, index: number) => (
+                            <span key={index}>
+                              {item.product?.name || item.productName || item.description || "Unknown Product"}
+                              {index < Math.min(order.items.length - 1, 2) ? ", " : ""}
+                            </span>
+                          ))}
+                          {order.items.length > 3 && (
+                            <span className="text-gray-400">
+                              , +{order.items.length - 3} more...
+                            </span>
+                          )}
                         </div>
                       )}
                     </CardContent>
