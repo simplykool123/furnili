@@ -309,18 +309,17 @@ export function setupQuotesRoutes(app: Express) {
         .where(eq(quoteItems.quote_id, quoteId))
         .orderBy(quoteItems.sort_order);
 
-      // Force console output for debugging
-      console.log(`=== QUOTE DEBUG ${Date.now()} ===`);
-      console.log(`Client ID from quote: ${quote.client_id}`);
-      console.log(`Client raw data:`, JSON.stringify(client, null, 2));
-      console.log(`Client exists:`, !!client);
+      // Force console output for debugging using stderr which shows immediately
+      process.stderr.write(`=== QUOTE DEBUG ${Date.now()} ===\n`);
+      process.stderr.write(`Client ID from quote: ${quote.client_id}\n`);
+      process.stderr.write(`Client exists: ${!!client}\n`);
       if (client) {
-        console.log(`Client fields:`, Object.keys(client));
-        console.log(`Client name:`, client.name);
-        console.log(`Client address1:`, client.address1);
-        console.log(`Client city:`, client.city);
+        process.stderr.write(`Client name: ${client.name}\n`);
+        process.stderr.write(`Client address1: ${client.address1}\n`);
+      } else {
+        process.stderr.write(`NO CLIENT FOUND\n`);
       }
-      console.log(`=== END DEBUG ===`);
+      process.stderr.write(`=== END DEBUG ===\n`);
       
       const response = {
         ...quote,
