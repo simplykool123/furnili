@@ -58,7 +58,12 @@ export default function RequestTable() {
       console.log('Requests API Response:', {
         dataLength: response?.length,
         firstItem: response?.[0],
-        data: response
+        specificRequest: response?.find(r => r.orderNumber === 'REQ-0013'),
+        itemsDebug: response?.find(r => r.orderNumber === 'REQ-0013')?.items?.map(item => ({
+          productId: item.productId,
+          productName: item.product?.name,
+          productCategory: item.product?.category
+        }))
       });
       return response;
     },
