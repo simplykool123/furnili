@@ -16,7 +16,8 @@ import {
   salesProducts,
   quotes,
   quoteItems,
-  moodboards
+  moodboards,
+  tasks
 } from "@shared/schema";
 import { eq, and, gte, lte, desc, asc, sql, like, or } from "drizzle-orm";
 import * as bcrypt from "bcryptjs";
@@ -55,6 +56,8 @@ import type {
   ProductWithStock,
   Moodboard,
   InsertMoodboard,
+  Task,
+  InsertTask,
 } from "@shared/schema";
 
 export interface IStorage {
@@ -111,7 +114,12 @@ export interface IStorage {
   createPettyCashExpense(expense: InsertPettyCashExpense): Promise<PettyCashExpense>;
 
   // Task operations
-  getAllTasks(assignedTo?: number): Promise<any[]>;
+  getAllTasks(filters?: { assignedTo?: number; status?: string; projectId?: number }): Promise<Task[]>;
+  getTask(id: number): Promise<Task | undefined>;
+  createTask(task: InsertTask): Promise<Task>;
+  updateTask(id: number, updates: Partial<InsertTask>): Promise<Task | undefined>;
+  updateTaskStatus(id: number, status: string, userId: number): Promise<Task | undefined>;
+  deleteTask(id: number): Promise<boolean>;
 
   // Stock Movement operations
   getAllStockMovements(): Promise<StockMovement[]>;
@@ -769,10 +777,62 @@ class DatabaseStorage implements IStorage {
     return result[0];
   }
 
-  // Task operations (simplified implementation)
-  async getAllTasks(assignedTo?: number): Promise<any[]> {
-    // Return empty array for now - tasks can be implemented later
-    return [];
+  // Task operations
+  async getAllTasks(filters?: { assignedTo?: number; status?: string; projectId?: number }): Promise<Task[]> {
+    let query = db.select().from(tasks);
+    
+    const whereConditions = [];
+    if (filters?.assignedTo) {
+      whereConditions.push(eq(tasks.assignedTo, filters.assignedTo));
+    }
+    if (filters?.status) {
+      whereConditions.push(eq(tasks.status, filters.status));
+    }
+    if (filters?.projectId) {
+      whereConditions.push(eq(tasks.projectId, filters.projectId));
+    }
+    
+    if (whereConditions.length > 0) {
+      query = query.where(and(...whereConditions));
+    }
+    
+    return await query.orderBy(desc(tasks.createdAt));
+  }
+
+  async getTask(id: number): Promise<Task | undefined> {
+    const result = await db.select().from(tasks).where(eq(tasks.id, id)).limit(1);
+    return result[0];
+  }
+
+  async createTask(task: InsertTask): Promise<Task> {
+    const result = await db.insert(tasks).values(task).returning();
+    return result[0];
+  }
+
+  async updateTask(id: number, updates: Partial<InsertTask>): Promise<Task | undefined> {
+    const result = await db.update(tasks)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(tasks.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async updateTaskStatus(id: number, status: string, userId: number): Promise<Task | undefined> {
+    const updateData: any = { status, updatedAt: new Date() };
+    if (status === 'completed') {
+      updateData.completedDate = new Date();
+    }
+    
+    const result = await db.update(tasks)
+      .set(updateData)
+      .where(eq(tasks.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteTask(id: number): Promise<boolean> {
+    const result = await db.delete(tasks).where(eq(tasks.id, id)).returning();
+    return result.length > 0;
   }
 
   // Stock Movement operations

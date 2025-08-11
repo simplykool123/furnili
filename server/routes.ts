@@ -1721,6 +1721,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (req.query.assignedTo) {
         filters.assignedTo = parseInt(req.query.assignedTo as string);
       }
+      if (req.query.projectId) {
+        filters.projectId = parseInt(req.query.projectId as string);
+      }
       
       const tasks = await storage.getAllTasks(filters);
       
@@ -1847,6 +1850,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         assignedTo: parseInt(req.body.assignedTo),
         assignedBy: req.user!.id,
         dueDate: req.body.dueDate ? new Date(req.body.dueDate) : null,
+        projectId: req.body.projectId ? parseInt(req.body.projectId) : null,
       });
       
       const task = await storage.createTask(taskData);

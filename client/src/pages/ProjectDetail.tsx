@@ -87,7 +87,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { Project, Client } from "@shared/schema";
 import { useLocation } from "wouter";
 import { Link } from "wouter";
@@ -1219,32 +1219,29 @@ export default function ProjectDetail() {
     createNoteMutation.mutate(noteData);
   };
 
-  const mockTasks = [
-    {
-      id: 1,
-      title: "Site Survey Completion",
-      assignedTo: "John Doe",
-      dueDate: "2025-02-05",
-      priority: "high",
-      status: "in-progress",
-    },
-    {
-      id: 2,
-      title: "Material Procurement",
-      assignedTo: "Jane Smith",
-      dueDate: "2025-02-10",
-      priority: "medium",
-      status: "pending",
-    },
-    {
-      id: 3,
-      title: "Design Approval",
-      assignedTo: "Mike Johnson",
-      dueDate: "2025-02-15",
-      priority: "high",
-      status: "completed",
-    },
-  ];
+  // Fetch project tasks from API
+  const { data: projectTasks = [], isLoading: tasksLoading, refetch: refetchTasks } = useQuery({
+    queryKey: ["/api/tasks", projectId],
+    queryFn: () => apiRequest(`/api/tasks?projectId=${projectId}`),
+  });
+
+  // Fetch users for task assignment
+  const { data: users = [] } = useQuery({
+    queryKey: ["/api/users"],
+    queryFn: () => apiRequest("/api/users"),
+  });
+
+  // Task creation handler
+  const handleTaskCreate = (data: any) => {
+    createTaskMutation.mutate({
+      title: data.title,
+      description: data.description,
+      assignedTo: data.assignedTo ? parseInt(data.assignedTo) : null,
+      priority: data.priority,
+      status: data.status,
+      dueDate: data.dueDate ? new Date(data.dueDate) : null,
+    });
+  };
 
   const mockNotes = [
     {
@@ -1341,11 +1338,11 @@ export default function ProjectDetail() {
 
   const taskSummary = useMemo(
     () => ({
-      pending: mockTasks.filter((t) => t.status === "pending").length,
-      inProgress: mockTasks.filter((t) => t.status === "in-progress").length,
-      completed: mockTasks.filter((t) => t.status === "completed").length,
+      pending: projectTasks.filter((t: any) => t.status === "pending").length,
+      inProgress: projectTasks.filter((t: any) => t.status === "in_progress").length,
+      completed: projectTasks.filter((t: any) => t.status === "completed").length,
     }),
-    [],
+    [projectTasks],
   );
 
   const filteredFiles = useMemo(() => {
@@ -1531,6 +1528,32 @@ export default function ProjectDetail() {
       toast({
         title: "Error",
         description: "Failed to create note. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Task creation mutation
+  const createTaskMutation = useMutation({
+    mutationFn: async (taskData: any) => {
+      return await authenticatedApiRequest('POST', '/api/tasks', {
+        ...taskData,
+        projectId: parseInt(projectId)
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/tasks", projectId] });
+      toast({
+        title: "Task created",
+        description: "Task has been created successfully.",
+      });
+      setIsTaskDialogOpen(false);
+      taskForm.reset();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: "Failed to create task",
         variant: "destructive",
       });
     },
@@ -2852,43 +2875,64 @@ export default function ProjectDetail() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {mockTasks.map((task) => (
-                        <TableRow key={task.id}>
-                          <TableCell className="font-medium">
-                            {task.title}
-                          </TableCell>
-                          <TableCell>{task.assignedTo}</TableCell>
-                          <TableCell>{task.dueDate}</TableCell>
-                          <TableCell>
-                            <Badge className={getPriorityColor(task.priority)}>
-                              {task.priority}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <Badge className={getStatusColor(task.status)}>
-                              {task.status}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex space-x-2">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-8 w-8 p-0"
-                              >
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-8 w-8 p-0"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
+                      {tasksLoading ? (
+                        <TableRow>
+                          <TableCell colSpan={6} className="text-center py-8">
+                            <div className="flex items-center justify-center">
+                              <RefreshCw className="h-5 w-5 animate-spin mr-2" />
+                              Loading tasks...
                             </div>
                           </TableCell>
                         </TableRow>
-                      ))}
+                      ) : projectTasks.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                            No tasks found for this project
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        projectTasks.map((task: any) => (
+                          <TableRow key={task.id}>
+                            <TableCell className="font-medium">
+                              {task.title}
+                            </TableCell>
+                            <TableCell>
+                              {task.assignedUser?.name || 'Unassigned'}
+                            </TableCell>
+                            <TableCell>
+                              {task.dueDate ? new Date(task.dueDate).toLocaleDateString() : '-'}
+                            </TableCell>
+                            <TableCell>
+                              <Badge className={getPriorityColor(task.priority)}>
+                                {task.priority}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <Badge className={getStatusColor(task.status)}>
+                                {task.status.replace('_', ' ')}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex space-x-2">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-8 w-8 p-0"
+                                >
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-8 w-8 p-0"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
                     </TableBody>
                   </Table>
                 </div>
@@ -2977,25 +3021,19 @@ export default function ProjectDetail() {
                     <div className="flex justify-between items-center">
                       <span className="text-sm text-gray-600">Pending</span>
                       <Badge className="bg-gray-100 text-gray-800">
-                        {mockTasks.filter((t) => t.status === "pending").length}
+                        {taskSummary.pending}
                       </Badge>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-sm text-gray-600">In Progress</span>
                       <Badge className="bg-blue-100 text-blue-800">
-                        {
-                          mockTasks.filter((t) => t.status === "in-progress")
-                            .length
-                        }
+                        {taskSummary.inProgress}
                       </Badge>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-sm text-gray-600">Completed</span>
                       <Badge className="bg-green-100 text-green-800">
-                        {
-                          mockTasks.filter((t) => t.status === "completed")
-                            .length
-                        }
+                        {taskSummary.completed}
                       </Badge>
                     </div>
                   </div>
@@ -3367,7 +3405,7 @@ export default function ProjectDetail() {
             </DialogDescription>
           </DialogHeader>
           <Form {...taskForm}>
-            <form className="space-y-4">
+            <form onSubmit={taskForm.handleSubmit(handleTaskCreate)} className="space-y-4">
               <FormField
                 control={taskForm.control}
                 name="title"
@@ -3404,9 +3442,21 @@ export default function ProjectDetail() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Assigned To</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter assignee name" {...field} />
-                      </FormControl>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select user" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="">Unassigned</SelectItem>
+                          {users.map((user: any) => (
+                            <SelectItem key={user.id} value={user.id.toString()}>
+                              {user.name || user.username}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
