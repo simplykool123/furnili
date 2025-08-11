@@ -308,11 +308,11 @@ export function setupQuotesRoutes(app: Express) {
         .where(eq(quoteItems.quoteId, quoteId))
         .orderBy(quoteItems.sortOrder);
 
-      console.error("=== QUOTE DETAILS DEBUG ===");
-      console.error("Raw quote from DB:", JSON.stringify(quote, null, 2));
-      console.error("Raw client from DB:", JSON.stringify(client, null, 2));
-      console.error("Quote client_id value:", quote.client_id);
-      console.error("=== API RESPONSE STRUCTURE ===");
+      // Force console output for debugging
+      process.stdout.write(`=== QUOTE DEBUG ${Date.now()} ===\n`);
+      process.stdout.write(`Client ID from quote: ${quote.client_id}\n`);
+      process.stdout.write(`Client data: ${JSON.stringify(client)}\n`);
+      process.stdout.write(`=== END DEBUG ===\n`);
       
       const response = {
         ...quote,
