@@ -581,7 +581,7 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
     try {
       // Fetch complete quote details including client and items
       const quoteDetailsResponse = await apiRequest(
-        `/api/quotes/${quote.id}/details?t=${Date.now()}`,
+        `/api/quotes/${quote.id}/details-fresh`,
       );
 
       // Extract client data from the quote details response
