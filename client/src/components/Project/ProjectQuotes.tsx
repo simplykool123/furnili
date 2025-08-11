@@ -910,7 +910,7 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
       });
 
       // Load quote details for PDF generation
-      const quoteDetails = await apiRequest(`/api/quotes/${quote.id}/details`);
+      const quoteDetails = await apiRequest(`/api/quotes/${quote.id}/details-fresh`);
       
       // Generate PDF content (same as handleExportPDF but for sharing)
       const element = document.createElement('div');
