@@ -276,25 +276,25 @@ export function setupQuotesRoutes(app: Express) {
         return res.status(404).json({ error: "Quote not found" });
       }
 
-      // Get client data
+      // Get client data - using correct column name from database
       const [client] = await db
         .select()
         .from(clients)
-        .where(eq(clients.id, quote.clientId))
+        .where(eq(clients.id, quote.client_id))
         .limit(1);
 
-      // Get project data
+      // Get project data - using correct column name from database
       const [project] = await db
         .select()
         .from(projects)
-        .where(eq(projects.id, quote.projectId))
+        .where(eq(projects.id, quote.project_id))
         .limit(1);
 
-      // Get created by user data
+      // Get created by user data - using correct column name from database
       const [createdByUser] = await db
         .select({ id: users.id, name: users.name })
         .from(users)
-        .where(eq(users.id, quote.createdBy))
+        .where(eq(users.id, quote.created_by))
         .limit(1);
 
       // Get quote items with complete sales product details
@@ -312,7 +312,7 @@ export function setupQuotesRoutes(app: Express) {
       console.log("  quote:", JSON.stringify(quote, null, 2));
       console.log("  client data:", JSON.stringify(client, null, 2));
       console.log("  project data:", JSON.stringify(project, null, 2));
-      console.log("  quote clientId:", quote.clientId);
+      console.log("  quote client_id:", quote.client_id);
       
       const response = {
         ...quote,
