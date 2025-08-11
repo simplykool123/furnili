@@ -258,11 +258,12 @@ export function setupQuotesRoutes(app: Express) {
 
   // Get quote details for PDF and detailed view
   app.get("/api/quotes/:id/details", authenticateToken, async (req, res) => {
-    // Disable caching for this endpoint
+    // Disable caching for this endpoint completely
     res.set('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
     res.set('Pragma', 'no-cache');
     res.set('Expires', '0');
-    res.set('ETag', `"${Date.now()}-${Math.random()}"`);
+    res.set('ETag', Date.now().toString());
+    res.set('Last-Modified', new Date().toUTCString());
     try {
       const quoteId = parseInt(req.params.id);
 
@@ -332,8 +333,12 @@ export function setupQuotesRoutes(app: Express) {
         }))
       };
       
-      process.stdout.write(`Response client: ${JSON.stringify(response.client)}\n`);
-      process.stdout.write(`=== FINAL RESPONSE END ===\n`);
+      // Debug the final response
+      console.log(`=== FINAL RESPONSE DEBUG ===`);
+      console.log(`Client in response:`, response.client);
+      console.log(`Items count:`, response.items?.length || 0);
+      console.log(`=== END FINAL RESPONSE ===`);
+      
       res.json(response);
     } catch (error) {
       console.error("Error fetching quote details:", error);
