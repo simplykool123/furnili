@@ -310,17 +310,11 @@ export function setupQuotesRoutes(app: Express) {
         .where(eq(quoteItems.quoteId, quoteId))
         .orderBy(quoteItems.sortOrder);
 
-      // Force console output for debugging using stderr which shows immediately
-      process.stderr.write(`=== QUOTE DEBUG ${Date.now()} ===\n`);
-      process.stderr.write(`Client ID from quote: ${quote.clientId}\n`);
-      process.stderr.write(`Client exists: ${!!client}\n`);
+      // Simple console log for debugging
+      console.log(`QUOTE ${quoteId}: Client ID = ${quote.clientId}, Client found = ${!!client}`);
       if (client) {
-        process.stderr.write(`Client name: ${client.name}\n`);
-        process.stderr.write(`Client address1: ${client.address1}\n`);
-      } else {
-        process.stderr.write(`NO CLIENT FOUND\n`);
+        console.log(`QUOTE ${quoteId}: Client name = "${client.name}", Address = "${client.address1}"`);
       }
-      process.stderr.write(`=== END DEBUG ===\n`);
       
       const response = {
         ...quote,
@@ -333,11 +327,9 @@ export function setupQuotesRoutes(app: Express) {
         }))
       };
       
-      // Debug the final response
-      console.log(`=== FINAL RESPONSE DEBUG ===`);
-      console.log(`Client in response:`, response.client);
-      console.log(`Items count:`, response.items?.length || 0);
-      console.log(`=== END FINAL RESPONSE ===`);
+      // Debug final response structure
+      console.log(`RESPONSE ${quoteId}: Client =`, JSON.stringify(response.client));
+      console.log(`RESPONSE ${quoteId}: Items count = ${response.items?.length || 0}`);
       
       res.json(response);
     } catch (error) {
