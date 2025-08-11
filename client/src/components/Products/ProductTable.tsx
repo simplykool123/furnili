@@ -316,7 +316,7 @@ export default function ProductTable() {
 
   const GridView = () => (
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-      {products?.map((product: Product) => (
+      {filteredProducts?.map((product: Product) => (
         <Card key={product.id} className="hover:shadow-md transition-shadow">
           <CardContent className="p-4">
             <div className="space-y-3">
@@ -418,7 +418,7 @@ export default function ProductTable() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {products?.map((product: Product) => (
+          {filteredProducts?.map((product: Product) => (
             <TableRow key={product.id} className="text-sm">
               <TableCell>
                 <div className="flex items-center space-x-2">
