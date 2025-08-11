@@ -258,12 +258,13 @@ export function setupQuotesRoutes(app: Express) {
 
   // Get quote details for PDF and detailed view
   app.get("/api/quotes/:id/details", authenticateToken, async (req, res) => {
-    // Disable caching for this endpoint completely
-    res.set('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
+    // Force no caching - completely disable all cache mechanisms
+    res.set('Cache-Control', 'no-cache, no-store, must-revalidate, private, max-age=0');
     res.set('Pragma', 'no-cache');
     res.set('Expires', '0');
-    res.set('ETag', Date.now().toString());
+    res.set('ETag', `"nocache-${Date.now()}-${Math.random()}"`);
     res.set('Last-Modified', new Date().toUTCString());
+    res.set('Vary', '*');
     try {
       const quoteId = parseInt(req.params.id);
 
