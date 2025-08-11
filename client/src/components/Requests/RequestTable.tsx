@@ -658,8 +658,8 @@ export default function RequestTable() {
                 <div className="border-t pt-4">
                   <h4 className="font-medium mb-3">Actions</h4>
                   <div className="flex flex-col sm:flex-row gap-2">
-                    {/* Issue Materials - Store Incharge */}
-                    {user?.role === 'store_incharge' && (
+                    {/* Issue Materials - Admin, Manager & Store Incharge */}
+                    {(user?.role === 'admin' || user?.role === 'manager' || user?.role === 'store_incharge') && (
                       <Button
                         onClick={() => {
                           updateStatusMutation.mutate({ 

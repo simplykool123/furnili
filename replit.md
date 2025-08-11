@@ -50,6 +50,7 @@ The system adheres to a professional and consistent UI/UX based on the "Furnili 
 - BOQ reference linking for traceability and stock validation.
 - Dynamic pricing using current product prices and fixed cost recording upon project completion.
 - Automatic stock deduction when issued and restoration if cancelled/rejected/deleted, with audit trails.
+- Role-based workflow: Admin/Manager can approve and issue, Store Incharge can issue approved requests.
 
 #### Reporting & Analytics
 - Role-specific dashboards with key metrics.

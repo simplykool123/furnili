@@ -860,7 +860,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch("/api/requests/:id/status", authenticateToken, requireRole(["store_incharge", "admin"]), async (req, res) => {
+  app.patch("/api/requests/:id/status", authenticateToken, requireRole(["store_incharge", "admin", "manager"]), async (req, res) => {
     console.log('=== STATUS UPDATE ROUTE CALLED ===');
     console.log('Request params:', req.params);
     console.log('Request body:', req.body);
