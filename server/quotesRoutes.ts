@@ -325,8 +325,8 @@ export function setupQuotesRoutes(app: Express) {
         }))
       };
       
-      console.error("Final response client field:", JSON.stringify(response.client, null, 2));
-      console.error("=== END DEBUG ===");
+      process.stdout.write(`Response client: ${JSON.stringify(response.client)}\n`);
+      process.stdout.write(`=== FINAL RESPONSE END ===\n`);
       res.json(response);
     } catch (error) {
       console.error("Error fetching quote details:", error);

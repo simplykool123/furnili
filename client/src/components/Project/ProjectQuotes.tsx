@@ -1238,7 +1238,12 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
               <div className="flex items-center justify-between gap-2">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 text-sm">
-                    <h3 className="font-medium truncate">{quote.title}</h3>
+                    <h3 
+                      className="font-medium truncate cursor-pointer hover:text-brown-600 hover:underline"
+                      onClick={() => setViewQuoteId(quote.id)}
+                    >
+                      {quote.title}
+                    </h3>
                     <span className="text-xs text-muted-foreground">{quote.quoteNumber}</span>
                     {getStatusBadge(quote.status)}
                   </div>
