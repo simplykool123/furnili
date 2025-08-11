@@ -438,7 +438,8 @@ export const tasks = pgTable("tasks", {
   tags: text("tags").array().default([]), // For categorization
   attachments: text("attachments").array().default([]), // File attachments
   comments: text("comments"), // Latest comment/note
-  assignedTo: integer("assigned_to").references(() => users.id).notNull(),
+  assignedTo: integer("assigned_to").references(() => users.id),
+  assignedToOther: text("assigned_to_other"), // For "Others" option
   assignedBy: integer("assigned_by").references(() => users.id).notNull(),
   updatedBy: integer("updated_by").references(() => users.id), // Track who last updated
   completedAt: timestamp("completed_at"),

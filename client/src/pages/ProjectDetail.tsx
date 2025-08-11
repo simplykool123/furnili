@@ -102,10 +102,23 @@ const taskSchema = z.object({
   title: z.string().min(1, "Title is required"),
   description: z.string().optional(),
   assignedTo: z.string().optional(),
+  assignedToOther: z.string().optional(),
   dueDate: z.string().optional(),
   priority: z.enum(["low", "medium", "high"]).default("medium"),
   status: z.enum(["pending", "in-progress", "completed"]).default("pending"),
-});
+}).refine(
+  (data) => {
+    // If "other" is selected, assignedToOther must be provided
+    if (data.assignedTo === "other") {
+      return data.assignedToOther && data.assignedToOther.trim().length > 0;
+    }
+    return true;
+  },
+  {
+    message: "Please enter a name when selecting 'Others'",
+    path: ["assignedToOther"],
+  }
+);
 
 const noteSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -730,6 +743,7 @@ export default function ProjectDetail() {
       title: "",
       description: "",
       assignedTo: "",
+      assignedToOther: "",
       dueDate: "",
       priority: "medium" as const,
       status: "pending" as const,
@@ -1233,14 +1247,24 @@ export default function ProjectDetail() {
 
   // Task creation handler
   const handleTaskCreate = (data: any) => {
-    createTaskMutation.mutate({
+    const taskData = {
       title: data.title,
       description: data.description,
-      assignedTo: data.assignedTo ? parseInt(data.assignedTo) : null,
       priority: data.priority,
       status: data.status,
       dueDate: data.dueDate ? new Date(data.dueDate) : null,
-    });
+      assignedTo: null,
+      assignedToOther: null,
+    };
+
+    // Handle assignment - either to a user or to "other" person
+    if (data.assignedTo === "other") {
+      taskData.assignedToOther = data.assignedToOther;
+    } else if (data.assignedTo && data.assignedTo !== "") {
+      taskData.assignedTo = parseInt(data.assignedTo);
+    }
+    
+    createTaskMutation.mutate(taskData);
   };
 
   const mockNotes = [
@@ -2897,7 +2921,7 @@ export default function ProjectDetail() {
                               {task.title}
                             </TableCell>
                             <TableCell>
-                              {task.assignedUser?.name || 'Unassigned'}
+                              {task.assignedToOther || task.assignedUser?.name || 'Unassigned'}
                             </TableCell>
                             <TableCell>
                               {task.dueDate ? new Date(task.dueDate).toLocaleDateString() : '-'}
@@ -3455,12 +3479,28 @@ export default function ProjectDetail() {
                               {user.name || user.username}
                             </SelectItem>
                           ))}
+                          <SelectItem value="other">Others</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
+                {taskForm.watch("assignedTo") === "other" && (
+                  <FormField
+                    control={taskForm.control}
+                    name="assignedToOther"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Other Person Name</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter person name" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
                 <FormField
                   control={taskForm.control}
                   name="dueDate"
