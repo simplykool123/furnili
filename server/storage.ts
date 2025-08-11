@@ -507,6 +507,48 @@ class DatabaseStorage implements IStorage {
     return result;
   }
 
+  async getQuoteWithItems(quoteId: number): Promise<any> {
+    // Get the quote first
+    const quote = await db.select().from(quotes).where(eq(quotes.id, quoteId)).limit(1);
+    if (!quote[0]) return undefined;
+
+    // Get quote items with product details using raw SQL
+    const itemsResult = await db.execute(sql`
+      SELECT 
+        qi.id, qi.quote_id, qi.sales_product_id, qi.quantity, qi.unit_price, qi.total_price,
+        sp.name as product_name, sp.category as product_category, sp.brand as product_brand,
+        sp.size as product_size, sp.price as product_price, sp.description as product_description
+      FROM quote_items qi
+      LEFT JOIN sales_products sp ON qi.sales_product_id = sp.id
+      WHERE qi.quote_id = ${quoteId}
+    `);
+
+    const itemsRaw = itemsResult.rows || [];
+
+    const items = itemsRaw.map((row: any) => ({
+      id: row.id,
+      quoteId: row.quote_id,
+      salesProductId: row.sales_product_id,
+      quantity: row.quantity,
+      unitPrice: row.unit_price,
+      totalPrice: row.total_price,
+      product: {
+        id: row.sales_product_id,
+        name: row.product_name,
+        category: row.product_category,
+        brand: row.product_brand,
+        size: row.product_size,
+        price: row.product_price,
+        description: row.product_description
+      }
+    }));
+
+    return {
+      ...quote[0],
+      items
+    };
+  }
+
   // Project operations
   async getProject(id: number): Promise<any | undefined> {
     const result = await db.select()
