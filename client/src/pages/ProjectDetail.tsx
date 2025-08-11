@@ -3167,10 +3167,10 @@ export default function ProjectDetail() {
                             {order.items.slice(0, 3).map((item: any, index: number) => (
                               <div key={index} className="flex justify-between items-center text-xs bg-gray-50 p-2 rounded">
                                 <span className="text-gray-700 truncate flex-1 mr-2">
-                                  {item.productName || item.description || "Unknown Product"}
+                                  {item.product?.name || item.productName || item.description || "Unknown Product"}
                                 </span>
                                 <span className="text-gray-600 font-medium">
-                                  Qty: {item.requestedQuantity} {item.productUnit || ""}
+                                  Qty: {item.requestedQuantity} {item.product?.unit || item.productUnit || "pcs"}
                                 </span>
                               </div>
                             ))}
