@@ -544,10 +544,7 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
       );
 
       // Extract client data from the quote details response
-      const client = quoteDetailsResponse.client || {
-        name: "Client Name",
-        address: "Client Address",
-      };
+      const client = quoteDetailsResponse.client || {};
       const items = quoteDetailsResponse.items || [];
 
       console.log("Quote Details:", quoteDetailsResponse);
@@ -572,19 +569,20 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
           <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
             <div style="width: 60%;">
               <p style="margin: 0; line-height: 1.3;"><strong>To,</strong></p>
-              <p style="margin: 0; font-weight: bold; line-height: 1.3;">${client.name || "Client Name"}</p>
-              ${client.address1 ? `<p style="margin: 0; line-height: 1.3;">${client.address1}</p>` : ''}
+              <p style="margin: 0; font-weight: bold; line-height: 1.3;">${client.name || "N/A"}</p>
+              ${client.address1 ? `<p style="margin: 0; line-height: 1.3;">${client.address1}</p>` : (client.address ? `<p style="margin: 0; line-height: 1.3;">${client.address}</p>` : '')}
               ${client.address2 ? `<p style="margin: 0; line-height: 1.3;">${client.address2}</p>` : ''}
-              <p style="margin: 0; line-height: 1.3;">${client.city || "City"}, ${client.state || "State"} - ${client.pinCode || "Pin Code"}</p>
+              <p style="margin: 0; line-height: 1.3;">${client.city || "Pune"}, ${client.state || "MH"} - ${client.pinCode || client.pin_code || ""}</p>
               ${client.mobile ? `<p style="margin: 0; line-height: 1.3;">Mobile: ${client.mobile}</p>` : ''}
               ${client.email ? `<p style="margin: 0; line-height: 1.3;">Email: ${client.email}</p>` : ''}
+              ${client.gstNumber || client.gst_number ? `<p style="margin: 0; line-height: 1.3;">GST: ${client.gstNumber || client.gst_number}</p>` : ''}
             </div>
             <div style="width: 35%; text-align: right;">
               <p style="margin: 0; line-height: 1.3;"><strong>Date :-</strong> ${new Date(quote.createdAt).toLocaleDateString("en-GB")}</p>
               <p style="margin: 0; line-height: 1.3;"><strong>Est. No. :-</strong> ${quote.quoteNumber}</p>
               <p style="margin: 0; line-height: 1.3;"><strong>GSTN :-</strong> 27AAKFF2192A1ZO</p>
               <p style="margin: 0; line-height: 1.3;"><strong>PAN :-</strong> AAKFF2192A</p>
-              <p style="margin: 0; line-height: 1.3;"><strong>Contact Person :-</strong> ${client.name}</p>
+              <p style="margin: 0; line-height: 1.3;"><strong>Contact Person :-</strong> ${client.contactPerson || client.name || "N/A"}</p>
             </div>
           </div>
 
