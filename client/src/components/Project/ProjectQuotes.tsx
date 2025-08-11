@@ -548,6 +548,9 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
       const items = quoteDetailsResponse.items || [];
 
       console.log("Quote Details:", quoteDetailsResponse);
+      console.log("Quote Structure Keys:", Object.keys(quoteDetailsResponse));
+      console.log("Quote.quote:", quoteDetailsResponse.quote);
+      console.log("Quote.client:", quoteDetailsResponse.client);
       console.log("Client Data:", client);
       console.log("Items Data:", items);
 
