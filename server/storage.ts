@@ -515,7 +515,8 @@ class DatabaseStorage implements IStorage {
     // Get quote items with product details using raw SQL
     const itemsResult = await db.execute(sql`
       SELECT 
-        qi.id, qi.quote_id, qi.sales_product_id, qi.quantity, qi.unit_price, qi.total_price,
+        qi.id, qi.quote_id, qi.sales_product_id, qi.item_name, qi.description, 
+        qi.quantity, qi.uom, qi.unit_price, qi.line_total,
         sp.name as product_name, sp.category as product_category, sp.brand as product_brand,
         sp.size as product_size, sp.price as product_price, sp.description as product_description
       FROM quote_items qi
@@ -529,17 +530,20 @@ class DatabaseStorage implements IStorage {
       id: row.id,
       quoteId: row.quote_id,
       salesProductId: row.sales_product_id,
+      itemName: row.item_name,
+      description: row.description,
       quantity: row.quantity,
+      uom: row.uom,
       unitPrice: row.unit_price,
-      totalPrice: row.total_price,
+      lineTotal: row.line_total,
       product: {
         id: row.sales_product_id,
-        name: row.product_name,
+        name: row.product_name || row.item_name,
         category: row.product_category,
         brand: row.product_brand,
         size: row.product_size,
         price: row.product_price,
-        description: row.product_description
+        description: row.product_description || row.description
       }
     }));
 
