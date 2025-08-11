@@ -140,7 +140,6 @@ function ProjectFinancials({ projectId }: { projectId: string }) {
   const [dateFilter, setDateFilter] = useState("all");
   const [showAddExpense, setShowAddExpense] = useState(false);
   const [selectedExpense, setSelectedExpense] = useState<any>(null);
-  const [selectedOrder, setSelectedOrder] = useState<any>(null);
 
   // Fetch project petty cash expenses
   const { data: projectExpenses, isLoading: expensesLoading } = useQuery({
@@ -706,6 +705,7 @@ export default function ProjectDetail() {
   } | null>(null);
   const [noteFiles, setNoteFiles] = useState<FileList | null>(null);
   const [editingNoteId, setEditingNoteId] = useState<number | null>(null);
+  const [selectedOrder, setSelectedOrder] = useState<any>(null);
 
   // New state for grouped images
   const [editingGroupTitle, setEditingGroupTitle] = useState<string | null>(
