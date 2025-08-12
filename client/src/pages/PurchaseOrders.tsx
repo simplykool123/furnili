@@ -148,7 +148,7 @@ export default function PurchaseOrders() {
                 Create PO
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-[95vw] max-h-[90vh] overflow-y-auto">
+            <DialogContent className="max-w-[85vw] max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Create New Purchase Order</DialogTitle>
                 <DialogDescription>
@@ -582,17 +582,6 @@ function CreatePOForm({ suppliers, onClose, onSuccess }: {
         </div>
       </div>
 
-      {/* Notes section */}
-      <div className="space-y-1">
-        <Label className="text-xs font-medium">Remarks:</Label>
-        <textarea
-          className="w-full h-16 px-3 py-2 text-xs border border-gray-300 rounded-md resize-none focus:ring-2 focus:ring-[hsl(28,100%,25%)] focus:border-transparent"
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          placeholder="Any additional notes or requirements..."
-        />
-      </div>
-
       {/* Auto-populate button when supplier is selected and has products */}
       {selectedSupplier && supplierProducts.length > 0 && (
         <Button
@@ -771,6 +760,17 @@ function CreatePOForm({ suppliers, onClose, onSuccess }: {
           </div>
         </div>
       )}
+
+      {/* Remarks section - moved below products table */}
+      <div className="space-y-1">
+        <Label className="text-xs font-medium">Remarks:</Label>
+        <textarea
+          className="w-full h-16 px-3 py-2 text-xs border border-gray-300 rounded-md resize-none focus:ring-2 focus:ring-[hsl(28,100%,25%)] focus:border-transparent"
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          placeholder="Any additional notes or requirements..."
+        />
+      </div>
 
       <div className="flex justify-end space-x-2 pt-4">
         <Button type="button" variant="outline" onClick={onClose}>
