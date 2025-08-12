@@ -866,6 +866,8 @@ export const insertPurchaseOrderSchema = createInsertSchema(purchaseOrders).omit
 });
 export const insertPurchaseOrderItemSchema = createInsertSchema(purchaseOrderItems).omit({ 
   id: true, 
+  poId: true, // poId is added by the backend when creating items
+  totalPrice: true, // totalPrice is calculated by the backend
   createdAt: true 
 });
 export const insertAuditLogSchema = createInsertSchema(auditLogs).omit({ id: true, createdAt: true });
