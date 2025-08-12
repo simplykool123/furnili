@@ -42,7 +42,6 @@ const navigation = [
   { name: 'Inventory Movement', href: '/inventory-movement', icon: ArrowUpDown, roles: ['admin', 'manager', 'store_incharge'] }, // Store keeper needs inventory access
   { name: 'Material Requests', href: '/requests', icon: PackageSearch, roles: ['admin', 'manager', 'staff', 'store_incharge'] },
   { name: 'Purchase Orders', href: '/purchase-orders', icon: ShoppingCart, roles: ['admin', 'manager', 'store_incharge'] },
-  { name: 'Suppliers', href: '/suppliers', icon: Building, roles: ['admin', 'manager'] },
 
   { name: 'Staff Attendance', href: '/attendance', icon: UserRoundPen, roles: ['admin', 'manager', 'staff', 'store_incharge'] },
   { name: 'Petty Cash', href: '/petty-cash', icon: CircleDollarSign, roles: ['admin', 'manager', 'staff', 'store_incharge'] }, // Store keeper can access user-specific petty cash
@@ -71,6 +70,7 @@ const navigation = [
     roles: ['admin', 'manager'], // Hidden from staff and store_incharge users
     isCollapsible: true,
     subItems: [
+      { name: 'Suppliers', href: '/suppliers', icon: Building, roles: ['admin', 'manager'] },
       { name: 'Clients', href: '/clients', icon: Users, roles: ['admin', 'manager'] },
       { name: 'Users', href: '/users', icon: Users, roles: ['admin'] },
       { name: 'Sales Products', href: '/sales-products', icon: Package, roles: ['admin', 'manager'] }, // Removed staff access
