@@ -1492,23 +1492,26 @@ class DatabaseStorage implements IStorage {
             .limit(1);
           
           if (product[0]) {
-            const newStock = product[0].currentStock + item.receivedQty;
+            const currentStock = product[0].currentStock || 0; // Ensure not null
+            const newStock = currentStock + item.receivedQty;
             
             // Update product stock
             await db.update(products)
               .set({ currentStock: newStock })
               .where(eq(products.id, poItem[0].productId));
             
-            // Create stock movement
+            // Create stock movement with all required fields
             await db.insert(stockMovements).values({
               productId: poItem[0].productId,
-              productName: product[0].name,
               movementType: 'in',
               quantity: item.receivedQty,
+              previousStock: currentStock,
+              newStock: newStock,
               reason: `PO Receipt - ${poItem[0].description}`,
-              referenceId: id,
-              referenceType: 'purchase_order',
-              userId
+              reference: `PO-${id}`,
+              performedBy: userId,
+              vendor: '', // Will be filled by supplier name if needed
+              notes: `Purchase order receipt for ${poItem[0].description}`
             });
           }
         }
