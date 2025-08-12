@@ -33,7 +33,7 @@ import {
   GitBranch,
   Building,
   ShoppingCart,
-  Award
+
 } from "lucide-react";
 
 const navigation = [
@@ -43,7 +43,7 @@ const navigation = [
   { name: 'Material Requests', href: '/requests', icon: PackageSearch, roles: ['admin', 'manager', 'staff', 'store_incharge'] },
   { name: 'Purchase Orders', href: '/purchase-orders', icon: ShoppingCart, roles: ['admin', 'manager', 'store_incharge'] },
   { name: 'Suppliers', href: '/suppliers', icon: Building, roles: ['admin', 'manager'] },
-  { name: 'Brands', href: '/brands', icon: Award, roles: ['admin', 'manager'] },
+
   { name: 'Staff Attendance', href: '/attendance', icon: UserRoundPen, roles: ['admin', 'manager', 'staff', 'store_incharge'] },
   { name: 'Petty Cash', href: '/petty-cash', icon: CircleDollarSign, roles: ['admin', 'manager', 'staff', 'store_incharge'] }, // Store keeper can access user-specific petty cash
   { name: 'Project Management', href: '/projects', icon: ProjectManagementIcon, roles: ['admin', 'manager', 'staff', 'store_incharge'] }, // Store keeper can access project management
