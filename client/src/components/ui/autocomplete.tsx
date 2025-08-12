@@ -100,7 +100,7 @@ export function Autocomplete({
   const handleInputBlur = (e: React.FocusEvent) => {
     // Delay closing to allow for option clicks
     setTimeout(() => {
-      if (!e.currentTarget.contains(document.activeElement)) {
+      if (e.currentTarget && document.activeElement && !e.currentTarget.contains(document.activeElement)) {
         setIsOpen(false);
         setHighlightedIndex(-1);
       }
