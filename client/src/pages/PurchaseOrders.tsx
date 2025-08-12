@@ -359,6 +359,7 @@ function CreatePOForm({ suppliers, onClose, onSuccess }: {
     brand?: string;
     size?: string;
     thickness?: string;
+    category?: string;
   }>>([]);
   const [notes, setNotes] = useState("");
   const [productSearchQuery, setProductSearchQuery] = useState("");
@@ -618,150 +619,152 @@ function CreatePOForm({ suppliers, onClose, onSuccess }: {
       )}
 
       {/* Items Table with Material Request Layout */}
-      <div className="border rounded-lg">
-        {/* Table Header */}
-        <div className="flex gap-2 p-3 bg-gray-50 border-b text-xs font-medium text-gray-700 resize-x overflow-auto">
-          <div className="w-10 flex-shrink-0 text-center">#</div>
-          <div className="w-24 flex-shrink-0 resize-x overflow-hidden">Category</div>
-          <div className="w-24 flex-shrink-0 resize-x overflow-hidden">Brand</div>
-          <div className="w-40 flex-grow resize-x overflow-hidden">Product</div>
-          <div className="w-20 flex-shrink-0 resize-x overflow-hidden">Size</div>
-          <div className="w-16 flex-shrink-0 resize-x overflow-hidden">Thk.</div>
-          <div className="w-16 flex-shrink-0 resize-x overflow-hidden">Qty</div>
-          <div className="w-24 flex-shrink-0 resize-x overflow-hidden">Price</div>
-          <div className="w-16 flex-shrink-0 text-center">Action</div>
-        </div>
-        
-        {/* Table Body */}
-        {items.map((item, index) => (
-          <div key={index} className="flex gap-2 p-3 border-b last:border-b-0 text-xs">
-            <div className="w-10 flex-shrink-0 flex items-center justify-center font-medium">
-              {index + 1}
-            </div>
-            
-            <div className="w-24 flex-shrink-0">
-              <Select 
-                value={item.category || ""} 
-                onValueChange={(value) => updateItem(index, 'category', value)}
-              >
-                <SelectTrigger className="h-8 text-xs">
-                  <SelectValue placeholder="Select..." />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="plywood">Plywood</SelectItem>
-                  <SelectItem value="laminate">Laminate</SelectItem>
-                  <SelectItem value="hardware">Hardware</SelectItem>
-                  <SelectItem value="adhesives">Adhesives</SelectItem>
-                  <SelectItem value="boards">Boards</SelectItem>
-                  <SelectItem value="veneers">Veneers</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="w-24 flex-shrink-0">
-              <Select 
-                value={item.brand || ""} 
-                onValueChange={(value) => updateItem(index, 'brand', value)}
-              >
-                <SelectTrigger className="h-8 text-xs">
-                  <SelectValue placeholder="Select brand..." />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="century">Century</SelectItem>
-                  <SelectItem value="greenply">Greenply</SelectItem>
-                  <SelectItem value="hettich">Hettich</SelectItem>
-                  <SelectItem value="godrej">Godrej</SelectItem>
-                  <SelectItem value="fevicol">Fevicol</SelectItem>
-                  <SelectItem value="asian paints">Asian Paints</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="w-40 flex-grow">
-              <Autocomplete
-                value={item.description}
-                onChange={(value) => updateItem(index, 'description', value)}
-                onSelect={(option: any) => {
-                  updateItem(index, 'productId', option.id);
-                  updateItem(index, 'description', option.name);
-                  updateItem(index, 'sku', option.sku);
-                  updateItem(index, 'unitPrice', option.pricePerUnit || 0);
-                  updateItem(index, 'category', option.category);
-                  updateItem(index, 'brand', option.brand);
-                  updateItem(index, 'size', option.size);
-                  updateItem(index, 'thickness', option.thickness);
-                }}
-                options={productSearchResults}
-                placeholder="Select..."
-                className="h-8 text-xs"
-              />
-            </div>
-            
-            <div className="w-20 flex-shrink-0">
-              <Input
-                value={item.size || "Auto"}
-                onChange={(e) => updateItem(index, 'size', e.target.value)}
-                className="h-8 text-xs"
-                placeholder="Auto"
-              />
-            </div>
-            
-            <div className="w-16 flex-shrink-0">
-              <Input
-                value={item.thickness || "Auto"}
-                onChange={(e) => updateItem(index, 'thickness', e.target.value)}
-                className="h-8 text-xs"
-                placeholder="Auto"
-              />
-            </div>
-            
-            <div className="w-16 flex-shrink-0">
-              <Input
-                type="number"
-                value={item.qty}
-                onChange={(e) => updateItem(index, 'qty', parseInt(e.target.value) || 0)}
-                className="h-8 text-xs"
-                min="1"
-                required
-              />
-            </div>
-            
-            <div className="w-24 flex-shrink-0">
-              <Input
-                type="text"
-                value={item.unitPrice}
-                onChange={(e) => updateItem(index, 'unitPrice', parseFloat(e.target.value) || 0)}
-                className="h-8 text-xs"
-                placeholder="0.00"
-              />
-            </div>
-            
-            <div className="w-16 flex-shrink-0 flex items-center justify-center">
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => removeItem(index)}
-                className="h-8 w-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
-              >
-                <XCircle className="h-4 w-4" />
-              </Button>
-            </div>
+      <div className="border rounded-lg overflow-x-auto">
+        <div className="min-w-[800px]">
+          {/* Table Header */}
+          <div className="flex gap-2 p-3 bg-gray-50 border-b text-xs font-medium text-gray-700">
+            <div className="w-10 flex-shrink-0 text-center">#</div>
+            <div className="w-28 flex-shrink-0">Category</div>
+            <div className="w-28 flex-shrink-0">Brand</div>
+            <div className="w-48 flex-shrink-0">Product</div>
+            <div className="w-20 flex-shrink-0">Size</div>
+            <div className="w-16 flex-shrink-0">Thk.</div>
+            <div className="w-16 flex-shrink-0">Qty</div>
+            <div className="w-28 flex-shrink-0">Price</div>
+            <div className="w-16 flex-shrink-0 text-center">Action</div>
           </div>
-        ))}
         
-        {/* Add Item Row */}
-        <div className="p-3 border-t bg-gray-50">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={addItem}
-            className="h-8 text-xs"
-          >
-            <Plus className="h-3 w-3 mr-1" />
-            Add Item
-          </Button>
+          {/* Table Body */}
+          {items.map((item, index) => (
+            <div key={index} className="flex gap-2 p-3 border-b last:border-b-0 text-xs">
+              <div className="w-10 flex-shrink-0 flex items-center justify-center font-medium">
+                {index + 1}
+              </div>
+              
+              <div className="w-28 flex-shrink-0">
+                <Select 
+                  value={item.category || ""} 
+                  onValueChange={(value) => updateItem(index, 'category', value)}
+                >
+                  <SelectTrigger className="h-8 text-xs">
+                    <SelectValue placeholder="Select..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="plywood">Plywood</SelectItem>
+                    <SelectItem value="laminate">Laminate</SelectItem>
+                    <SelectItem value="hardware">Hardware</SelectItem>
+                    <SelectItem value="adhesives">Adhesives</SelectItem>
+                    <SelectItem value="boards">Boards</SelectItem>
+                    <SelectItem value="veneers">Veneers</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="w-28 flex-shrink-0">
+                <Select 
+                  value={item.brand || ""} 
+                  onValueChange={(value) => updateItem(index, 'brand', value)}
+                >
+                  <SelectTrigger className="h-8 text-xs">
+                    <SelectValue placeholder="Select brand..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="century">Century</SelectItem>
+                    <SelectItem value="greenply">Greenply</SelectItem>
+                    <SelectItem value="hettich">Hettich</SelectItem>
+                    <SelectItem value="godrej">Godrej</SelectItem>
+                    <SelectItem value="fevicol">Fevicol</SelectItem>
+                    <SelectItem value="asian paints">Asian Paints</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="w-48 flex-shrink-0">
+                <Autocomplete
+                  value={item.description}
+                  onChange={(value) => updateItem(index, 'description', value)}
+                  onSelect={(option: any) => {
+                    updateItem(index, 'productId', option.id);
+                    updateItem(index, 'description', option.name);
+                    updateItem(index, 'sku', option.sku);
+                    updateItem(index, 'unitPrice', option.pricePerUnit || 0);
+                    updateItem(index, 'category', option.category);
+                    updateItem(index, 'brand', option.brand);
+                    updateItem(index, 'size', option.size);
+                    updateItem(index, 'thickness', option.thickness);
+                  }}
+                  options={productSearchResults}
+                  placeholder="Select..."
+                  className="h-8 text-xs"
+                />
+              </div>
+              
+              <div className="w-20 flex-shrink-0">
+                <Input
+                  value={item.size || "Auto"}
+                  onChange={(e) => updateItem(index, 'size', e.target.value)}
+                  className="h-8 text-xs"
+                  placeholder="Auto"
+                />
+              </div>
+              
+              <div className="w-16 flex-shrink-0">
+                <Input
+                  value={item.thickness || "Auto"}
+                  onChange={(e) => updateItem(index, 'thickness', e.target.value)}
+                  className="h-8 text-xs"
+                  placeholder="Auto"
+                />
+              </div>
+              
+              <div className="w-16 flex-shrink-0">
+                <Input
+                  type="number"
+                  value={item.qty}
+                  onChange={(e) => updateItem(index, 'qty', parseInt(e.target.value) || 0)}
+                  className="h-8 text-xs"
+                  min="1"
+                  required
+                />
+              </div>
+              
+              <div className="w-28 flex-shrink-0">
+                <Input
+                  type="text"
+                  value={item.unitPrice}
+                  onChange={(e) => updateItem(index, 'unitPrice', parseFloat(e.target.value) || 0)}
+                  className="h-8 text-xs"
+                  placeholder="0.00"
+                />
+              </div>
+              
+              <div className="w-16 flex-shrink-0 flex items-center justify-center">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => removeItem(index)}
+                  className="h-8 w-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
+                >
+                  <XCircle className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          ))}
+
+          {/* Add Item Row */}
+          <div className="p-3 border-t bg-gray-50">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={addItem}
+              className="h-8 text-xs"
+            >
+              <Plus className="h-3 w-3 mr-1" />
+              Add Item
+            </Button>
+          </div>
         </div>
       </div>
       
