@@ -3427,9 +3427,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   return httpServer;
 }
 
-// Generate Purchase Order PDF HTML (similar to quote PDF format)
+// Generate Purchase Order PDF HTML (matching Quote PDF format exactly)
 function generatePurchaseOrderPDFHTML(po: any, items: any[]): string {
-  const currentDate = new Date().toLocaleDateString('en-IN');
+  const currentDate = new Date().toLocaleDateString();
   
   // Calculate totals
   const subtotal = items.reduce((sum, item) => sum + (item.item.qty * item.item.unitPrice), 0);
@@ -3441,37 +3441,34 @@ function generatePurchaseOrderPDFHTML(po: any, items: any[]): string {
     <html>
     <head>
       <meta charset="utf-8">
-      <title>Purchase Order - ${po.po.poNumber}</title>
+      <title>Purchase Order ${po.po.poNumber}</title>
       <style>
-        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; font-size: 12px; line-height: 1.4; }
-        .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px; border-bottom: 2px solid #8B4513; padding-bottom: 20px; }
+        body { font-family: Arial, sans-serif; margin: 20px; color: #333; }
+        .header { display: flex; justify-content: space-between; margin-bottom: 30px; border-bottom: 2px solid #8B4513; padding-bottom: 20px; }
         .company-info { flex: 1; }
-        .company-logo { font-size: 24px; font-weight: bold; color: #8B4513; margin-bottom: 5px; }
-        .company-details { color: #666; font-size: 11px; }
-        .po-info { text-align: right; }
-        .po-title { font-size: 20px; font-weight: bold; color: #8B4513; margin-bottom: 10px; }
-        .po-details { font-size: 11px; color: #666; }
-        .section { margin-bottom: 25px; }
-        .section-title { font-size: 14px; font-weight: bold; color: #8B4513; margin-bottom: 10px; border-bottom: 1px solid #ddd; padding-bottom: 5px; }
-        .supplier-info { background-color: #f9f9f9; padding: 15px; border-radius: 5px; }
-        .items-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-        .items-table th { background-color: #8B4513; color: white; padding: 10px; text-align: left; font-size: 11px; }
-        .items-table td { padding: 8px 10px; border-bottom: 1px solid #ddd; font-size: 11px; }
-        .items-table tr:nth-child(even) { background-color: #f9f9f9; }
-        .totals { float: right; width: 300px; }
-        .totals table { width: 100%; border-collapse: collapse; }
-        .totals td { padding: 8px; border-bottom: 1px solid #ddd; }
-        .totals .total-row { font-weight: bold; font-size: 14px; background-color: #f0f0f0; }
-        .footer { clear: both; margin-top: 40px; padding-top: 20px; border-top: 1px solid #ddd; text-align: center; font-size: 10px; color: #666; }
-        .notes { margin-top: 20px; padding: 15px; background-color: #f9f9f9; border-radius: 5px; }
-        .text-right { text-align: right; }
-        .text-center { text-align: center; }
+        .quote-info { flex: 1; text-align: right; }
+        .company-name { font-size: 24px; font-weight: bold; color: #8B4513; margin-bottom: 5px; }
+        .company-details { font-size: 12px; color: #666; }
+        .quote-number { font-size: 20px; font-weight: bold; color: #8B4513; }
+        .client-section { margin: 20px 0; }
+        .client-title { font-weight: bold; color: #8B4513; margin-bottom: 10px; }
+        .client-details { background: #f8f8f8; padding: 15px; border-radius: 5px; }
+        .items-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        .items-table th, .items-table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        .items-table th { background: #8B4513; color: white; font-weight: bold; }
+        .items-table tr:nth-child(even) { background: #f9f9f9; }
+        .totals-section { margin-top: 20px; text-align: right; }
+        .totals-table { margin-left: auto; }
+        .totals-table td { padding: 5px 10px; }
+        .total-row { font-weight: bold; font-size: 16px; background: #8B4513; color: white; }
+        .terms { margin-top: 30px; font-size: 12px; }
+        .footer { margin-top: 40px; text-align: center; font-size: 12px; color: #666; border-top: 1px solid #ddd; padding-top: 20px; }
       </style>
     </head>
     <body>
       <div class="header">
         <div class="company-info">
-          <div class="company-logo">FURNILI</div>
+          <div class="company-name">FURNILI</div>
           <div class="company-details">
             Professional Furniture Solutions<br>
             Email: info@furnili.com<br>
@@ -3479,78 +3476,62 @@ function generatePurchaseOrderPDFHTML(po: any, items: any[]): string {
             GST: 07AABCF1234M1ZX
           </div>
         </div>
-        <div class="po-info">
-          <div class="po-title">PURCHASE ORDER</div>
-          <div class="po-details">
-            <strong>PO Number:</strong> ${po.po.poNumber}<br>
-            <strong>Date:</strong> ${currentDate}<br>
-            <strong>Status:</strong> ${po.po.status.charAt(0).toUpperCase() + po.po.status.slice(1)}
-          </div>
+        <div class="quote-info">
+          <div class="quote-number">PURCHASE ORDER</div>
+          <div>PO Number: ${po.po.poNumber}</div>
+          <div>Date: ${currentDate}</div>
+          <div>Status: ${po.po.status.charAt(0).toUpperCase() + po.po.status.slice(1)}</div>
         </div>
       </div>
 
-      <div class="section">
-        <div class="section-title">Supplier Information</div>
-        <div class="supplier-info">
+      <div class="client-section">
+        <div class="client-title">Supplier Information</div>
+        <div class="client-details">
           <strong>${po.supplier?.name || 'N/A'}</strong><br>
-          Contact Person: ${po.supplier?.contactPerson || 'N/A'}<br>
-          Phone: ${po.supplier?.phone || 'N/A'}<br>
-          Email: ${po.supplier?.email || 'N/A'}<br>
-          Address: ${po.supplier?.address || 'N/A'}
+          ${po.supplier?.contactPerson ? `Contact Person: ${po.supplier.contactPerson}<br>` : ''}
+          ${po.supplier?.phone || 'N/A'}<br>
+          ${po.supplier?.email || ''}<br>
+          ${po.supplier?.address || ''}
         </div>
       </div>
 
-      <div class="section">
-        <div class="section-title">Order Items</div>
-        <table class="items-table">
-          <thead>
+      <table class="items-table">
+        <thead>
+          <tr>
+            <th>Description</th>
+            <th>SKU</th>
+            <th>Quantity</th>
+            <th>Unit Price</th>
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${items.map((item) => `
             <tr>
-              <th style="width: 5%;">#</th>
-              <th style="width: 35%;">Description</th>
-              <th style="width: 10%;">SKU</th>
-              <th style="width: 10%;">Quantity</th>
-              <th style="width: 15%;">Unit Price</th>
-              <th style="width: 15%;">Total</th>
+              <td>
+                <strong>${item.item.description}</strong>
+                ${item.product ? `<br><small>Brand: ${item.product.brand || item.product.name}</small>` : ''}
+              </td>
+              <td>${item.item.sku || '-'}</td>
+              <td>${item.item.qty}</td>
+              <td>₹${item.item.unitPrice.toFixed(2)}</td>
+              <td>₹${(item.item.qty * item.item.unitPrice).toFixed(2)}</td>
             </tr>
-          </thead>
-          <tbody>
-            ${items.map((item, index) => `
-              <tr>
-                <td class="text-center">${index + 1}</td>
-                <td>
-                  <strong>${item.item.description}</strong>
-                  ${item.product ? `<br><small>Product: ${item.product.name}</small>` : ''}
-                </td>
-                <td>${item.item.sku || '-'}</td>
-                <td class="text-center">${item.item.qty}</td>
-                <td class="text-right">₹${item.item.unitPrice.toLocaleString()}</td>
-                <td class="text-right">₹${(item.item.qty * item.item.unitPrice).toLocaleString()}</td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
+          `).join('')}
+        </tbody>
+      </table>
 
-        <div class="totals">
-          <table>
-            <tr>
-              <td>Subtotal:</td>
-              <td class="text-right">₹${subtotal.toLocaleString()}</td>
-            </tr>
-            <tr>
-              <td>GST (18%):</td>
-              <td class="text-right">₹${gst.toLocaleString()}</td>
-            </tr>
-            <tr class="total-row">
-              <td><strong>Total Amount:</strong></td>
-              <td class="text-right"><strong>₹${total.toLocaleString()}</strong></td>
-            </tr>
-          </table>
-        </div>
+      <div class="totals-section">
+        <table class="totals-table">
+          <tr><td>Subtotal:</td><td>₹${subtotal.toFixed(2)}</td></tr>
+          <tr><td>GST (18%):</td><td>₹${gst.toFixed(2)}</td></tr>
+          <tr class="total-row"><td>Total Amount:</td><td>₹${total.toFixed(2)}</td></tr>
+        </table>
       </div>
 
       ${po.po.notes ? `
-        <div class="notes">
-          <div class="section-title">Notes & Remarks</div>
+        <div class="terms">
+          <strong>Terms & Conditions:</strong><br>
           ${po.po.notes}
         </div>
       ` : ''}
