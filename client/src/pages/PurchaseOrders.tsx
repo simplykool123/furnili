@@ -765,9 +765,13 @@ function CreatePOForm({ suppliers, onClose, onSuccess }: {
           <Select 
             value={selectedSupplier?.toString() || ""} 
             onValueChange={(value) => {
-              setSelectedSupplier(parseInt(value));
+              const supplierId = parseInt(value);
+              setSelectedSupplier(supplierId);
               // Clear existing items when switching suppliers
               setItems([]);
+              // Reset suggestions
+              setSuggestedSuppliers([]);
+              setShowSuggestions(false);
             }}
           >
             <SelectTrigger className="h-8 text-xs">
@@ -882,14 +886,21 @@ function CreatePOForm({ suppliers, onClose, onSuccess }: {
                   value={item.description}
                   onChange={(value) => updateItem(index, 'description', value)}
                   onSelect={(option: any) => {
-                    updateItem(index, 'productId', option.id);
-                    updateItem(index, 'description', option.name);
-                    updateItem(index, 'sku', option.sku);
-                    updateItem(index, 'unitPrice', option.pricePerUnit || 0);
-                    updateItem(index, 'category', option.category);
-                    updateItem(index, 'brand', option.brand);
-                    updateItem(index, 'size', option.size);
-                    updateItem(index, 'thickness', option.thickness);
+                    // Batch all updates in a single state update to prevent infinite loops
+                    const updatedItems = items.map((item, i) => 
+                      i === index ? {
+                        ...item,
+                        productId: option.id,
+                        description: option.name,
+                        sku: option.sku || "",
+                        unitPrice: option.pricePerUnit || 0,
+                        category: option.category || "",
+                        brand: option.brand || "",
+                        size: option.size || "",
+                        thickness: option.thickness || ""
+                      } : item
+                    );
+                    setItems(updatedItems);
                   }}
                   options={productSearchResults}
                   placeholder="Select..."
