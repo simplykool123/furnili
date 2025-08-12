@@ -533,10 +533,11 @@ function CreatePOForm({ suppliers, onClose, onSuccess }: {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label>Supplier *</Label>
+    <form onSubmit={handleSubmit} className="space-y-3">
+      {/* Header section matching Material Request layout */}
+      <div className="grid grid-cols-4 gap-3">
+        <div className="space-y-1">
+          <Label className="text-xs font-medium">Supplier *</Label>
           <Select 
             value={selectedSupplier?.toString() || ""} 
             onValueChange={(value) => {
@@ -545,7 +546,7 @@ function CreatePOForm({ suppliers, onClose, onSuccess }: {
               setItems([]);
             }}
           >
-            <SelectTrigger>
+            <SelectTrigger className="h-8 text-xs">
               <SelectValue placeholder="Select supplier" />
             </SelectTrigger>
             <SelectContent>
@@ -556,173 +557,206 @@ function CreatePOForm({ suppliers, onClose, onSuccess }: {
               ))}
             </SelectContent>
           </Select>
-          
-          {/* Auto-populate button when supplier is selected and has products */}
-          {selectedSupplier && supplierProducts.length > 0 && (
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={autoPopulateSupplierProducts}
-              className="mt-2 w-full h-8 text-xs"
-            >
-              Auto-Populate {supplierProducts.length} Products
-            </Button>
-          )}
-          
-          {showSuggestions && suggestedSuppliers.length > 0 && (
-            <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
-              <div className="text-xs font-medium text-blue-800 mb-2 flex items-center">
-                <AlertTriangle className="h-3 w-3 mr-1" />
-                Suggested Suppliers (based on selected products):
-              </div>
-              <div className="flex flex-wrap gap-1">
-                {suggestedSuppliers.slice(0, 3).map((supplier) => (
-                  <Button
-                    key={supplier.id}
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="h-6 text-xs bg-white hover:bg-blue-100 border-blue-300"
-                    onClick={() => {
-                      setSelectedSupplier(supplier.id);
-                      setShowSuggestions(false);
-                      toast({
-                        title: "Supplier Selected",
-                        description: `${supplier.name} has been selected`,
-                      });
-                    }}
-                  >
-                    {supplier.name}
-                    {supplier.preferred && <span className="text-xs text-blue-600 ml-1">★</span>}
-                  </Button>
-                ))}
-                {suggestedSuppliers.length > 3 && (
-                  <span className="text-xs text-blue-600 self-center">
-                    +{suggestedSuppliers.length - 3} more
-                  </span>
-                )}
-              </div>
-            </div>
-          )}
         </div>
         
-        <div>
-          <Label>Notes</Label>
+        <div className="space-y-1">
+          <Label className="text-xs font-medium">Contact</Label>
           <Input
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            placeholder="Optional notes"
+            className="h-8 text-xs bg-gray-50"
+            value={selectedSupplier ? suppliers.find(s => s.id === selectedSupplier)?.contactPerson || "Auto-filled from supplier" : ""}
+            disabled
+            placeholder="Auto-filled from supplier"
           />
+        </div>
+        
+        <div className="space-y-1">
+          <Label className="text-xs font-medium">PO No</Label>
+          <Input
+            className="h-8 text-xs"
+            placeholder="e.g., PO-2024-001"
+          />
+        </div>
+        
+        <div className="space-y-1">
+          <Label className="text-xs font-medium">Status</Label>
+          <Select defaultValue="draft">
+            <SelectTrigger className="h-8 text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="draft">Draft</SelectItem>
+              <SelectItem value="sent">Sent</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
-      <Separator />
+      {/* Notes section */}
+      <div className="space-y-1">
+        <Label className="text-xs font-medium">Remarks:</Label>
+        <textarea
+          className="w-full h-16 px-3 py-2 text-xs border border-gray-300 rounded-md resize-none focus:ring-2 focus:ring-[hsl(28,100%,25%)] focus:border-transparent"
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          placeholder="Any additional notes or requirements..."
+        />
+      </div>
 
-      <div>
-        <div className="flex justify-between items-center mb-3">
-          <Label className="text-base font-medium">Items</Label>
-          <Button type="button" onClick={addItem} size="sm" variant="outline">
-            <Plus className="h-4 w-4 mr-1" />
-            Add Item
-          </Button>
+      {/* Auto-populate button when supplier is selected and has products */}
+      {selectedSupplier && supplierProducts.length > 0 && (
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={autoPopulateSupplierProducts}
+          className="w-full h-8 text-xs"
+        >
+          Auto-Populate {supplierProducts.length} Products
+        </Button>
+      )}
+
+      {/* Items Table with Material Request Layout */}
+      <div className="border rounded-lg">
+        {/* Table Header */}
+        <div className="grid grid-cols-12 gap-2 p-3 bg-gray-50 border-b text-xs font-medium text-gray-700">
+          <div className="col-span-1 text-center">#</div>
+          <div className="col-span-2">Category</div>
+          <div className="col-span-2">Brand</div>
+          <div className="col-span-2">Product</div>
+          <div className="col-span-1">Size</div>
+          <div className="col-span-1">Thk.</div>
+          <div className="col-span-1">Qty</div>
+          <div className="col-span-1">Price</div>
+          <div className="col-span-1 text-center">Action</div>
         </div>
         
+        {/* Table Body */}
         {items.map((item, index) => (
-          <div key={index} className="border rounded p-3 mb-3 space-y-2">
-            {/* Product details row */}
-            <div className="grid grid-cols-12 gap-2">
-              <div className="col-span-4">
-                <Label className="text-xs">Product/Description *</Label>
-                <Autocomplete
-                  value={item.description}
-                  onChange={(value) => updateItem(index, 'description', value)}
-                  onSelect={(option: any) => {
-                    updateItem(index, 'productId', option.id);
-                    updateItem(index, 'description', option.name);
-                    updateItem(index, 'sku', option.sku);
-                    updateItem(index, 'unitPrice', option.price || 0);
-                    updateItem(index, 'brand', option.brand);
-                    updateItem(index, 'size', option.size);
-                    updateItem(index, 'thickness', option.thickness);
-                  }}
-                  options={productSearchResults}
-                  placeholder="Search products..."
-                  className="h-8 text-xs"
-                />
-                {/* Product metadata display */}
-                {(item.brand || item.size || item.thickness) && (
-                  <div className="flex gap-2 mt-1 text-xs text-gray-600">
-                    {item.brand && <span>Brand: {item.brand}</span>}
-                    {item.size && <span>• Size: {item.size}</span>}
-                    {item.thickness && <span>• Thickness: {item.thickness}</span>}
-                  </div>
-                )}
-              </div>
-              
-              <div className="col-span-2">
-                <Label className="text-xs">SKU</Label>
-                <Input
-                  value={item.sku || ""}
-                  onChange={(e) => updateItem(index, 'sku', e.target.value)}
-                  className="h-8 text-xs"
-                  placeholder="SKU"
-                />
-              </div>
-              
-              <div className="col-span-2">
-                <Label className="text-xs">Qty *</Label>
-                <Input
-                  type="number"
-                  value={item.qty}
-                  onChange={(e) => updateItem(index, 'qty', parseInt(e.target.value) || 0)}
-                  className="h-8 text-xs"
-                  min="1"
-                  required
-                />
-              </div>
-              
-              <div className="col-span-2">
-                <Label className="text-xs">Unit Price *</Label>
-                <Input
-                  type="number"
-                  value={item.unitPrice}
-                  onChange={(e) => updateItem(index, 'unitPrice', parseFloat(e.target.value) || 0)}
-                  className="h-8 text-xs"
-                  min="0"
-                  step="0.01"
-                  required
-                />
-              </div>
-              
-              <div className="col-span-1">
-                <Label className="text-xs">Total</Label>
-                <div className="h-8 flex items-center text-xs font-medium">
-                  ₹{(item.qty * item.unitPrice).toLocaleString()}
-                </div>
-              </div>
-              
-              <div className="col-span-1 flex items-end">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => removeItem(index)}
-                  className="h-8 w-8 p-0"
-                >
-                  <XCircle className="h-3 w-3" />
-                </Button>
-              </div>
+          <div key={index} className="grid grid-cols-12 gap-2 p-3 border-b last:border-b-0 text-xs">
+            <div className="col-span-1 flex items-center justify-center font-medium">
+              {index + 1}
+            </div>
+            
+            <div className="col-span-2">
+              <Select>
+                <SelectTrigger className="h-8 text-xs">
+                  <SelectValue placeholder="Select..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="plywood">Plywood</SelectItem>
+                  <SelectItem value="laminate">Laminate</SelectItem>
+                  <SelectItem value="hardware">Hardware</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="col-span-2">
+              <Select>
+                <SelectTrigger className="h-8 text-xs">
+                  <SelectValue placeholder="Select brand..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="century">Century</SelectItem>
+                  <SelectItem value="greenply">Greenply</SelectItem>
+                  <SelectItem value="hettich">Hettich</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="col-span-2">
+              <Autocomplete
+                value={item.description}
+                onChange={(value) => updateItem(index, 'description', value)}
+                onSelect={(option: any) => {
+                  updateItem(index, 'productId', option.id);
+                  updateItem(index, 'description', option.name);
+                  updateItem(index, 'sku', option.sku);
+                  updateItem(index, 'unitPrice', option.price || 0);
+                  updateItem(index, 'brand', option.brand);
+                  updateItem(index, 'size', option.size);
+                  updateItem(index, 'thickness', option.thickness);
+                }}
+                options={productSearchResults}
+                placeholder="Select..."
+                className="h-8 text-xs"
+              />
+            </div>
+            
+            <div className="col-span-1">
+              <Input
+                value={item.size || "Auto"}
+                onChange={(e) => updateItem(index, 'size', e.target.value)}
+                className="h-8 text-xs"
+                placeholder="Auto"
+              />
+            </div>
+            
+            <div className="col-span-1">
+              <Input
+                value={item.thickness || "Auto"}
+                onChange={(e) => updateItem(index, 'thickness', e.target.value)}
+                className="h-8 text-xs"
+                placeholder="Auto"
+              />
+            </div>
+            
+            <div className="col-span-1">
+              <Input
+                type="number"
+                value={item.qty}
+                onChange={(e) => updateItem(index, 'qty', parseInt(e.target.value) || 0)}
+                className="h-8 text-xs"
+                min="1"
+                required
+              />
+            </div>
+            
+            <div className="col-span-1">
+              <Input
+                type="number"
+                value={item.unitPrice}
+                onChange={(e) => updateItem(index, 'unitPrice', parseFloat(e.target.value) || 0)}
+                className="h-8 text-xs"
+                min="0"
+                step="0.01"
+                required
+              />
+            </div>
+            
+            <div className="col-span-1 flex items-center justify-center">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => removeItem(index)}
+                className="h-8 w-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
+              >
+                <XCircle className="h-4 w-4" />
+              </Button>
             </div>
           </div>
         ))}
         
-        {items.length === 0 && (
-          <div className="text-center py-8 text-gray-500">
-            No items added. Click "Add Item" to get started.
-          </div>
-        )}
+        {/* Add Item Row */}
+        <div className="p-3 border-t bg-gray-50">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={addItem}
+            className="h-8 text-xs"
+          >
+            <Plus className="h-3 w-3 mr-1" />
+            Add Item
+          </Button>
+        </div>
       </div>
+      
+      {items.length === 0 && (
+        <div className="text-center py-8 text-gray-500">
+          No items added. Click "Add Item" to get started.
+        </div>
+      )}
 
       {items.length > 0 && (
         <div className="flex justify-end pt-4 border-t">
