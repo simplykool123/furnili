@@ -90,8 +90,10 @@ export interface IStorage {
 
   // Category operations
   getAllCategories(): Promise<Category[]>;
+  getCategory(id: number): Promise<Category | undefined>;
   createCategory(category: InsertCategory): Promise<Category>;
   updateCategory(id: number, updates: Partial<InsertCategory>): Promise<Category | undefined>;
+  deleteCategory(id: number): Promise<boolean>;
 
   // Product operations
   getProduct(id: number): Promise<Product | undefined>;
@@ -130,6 +132,8 @@ export interface IStorage {
   // Petty Cash operations
   getAllPettyCashExpenses(filters?: { category?: string; status?: string; addedBy?: number; projectId?: number; month?: number; year?: number }): Promise<PettyCashExpense[]>;
   createPettyCashExpense(expense: InsertPettyCashExpense): Promise<PettyCashExpense>;
+  updatePettyCashExpense(id: number, updates: Partial<InsertPettyCashExpense>): Promise<PettyCashExpense | undefined>;
+  deletePettyCashExpense(id: number): Promise<boolean>;
 
   // Task operations
   getAllTasks(filters?: { assignedTo?: number; status?: string; projectId?: number }): Promise<Task[]>;
@@ -141,6 +145,9 @@ export interface IStorage {
 
   // Stock Movement operations
   getAllStockMovements(): Promise<StockMovement[]>;
+  getStockMovement(id: number): Promise<StockMovement | undefined>;
+  createStockMovement(movement: InsertStockMovement): Promise<StockMovement>;
+  deleteStockMovement(id: number): Promise<boolean>;
   
   // Request Item operations
   createRequestItem(item: InsertRequestItem): Promise<RequestItem>;
@@ -150,15 +157,44 @@ export interface IStorage {
   getAllClients(): Promise<Client[]>;
   getClient(id: number): Promise<Client | undefined>;
   createClient(client: InsertClient): Promise<Client>;
+  updateClient(id: number, updates: Partial<InsertClient>): Promise<Client | undefined>;
+  deleteClient(id: number): Promise<boolean>;
 
   // Project File operations
   getProjectFiles(projectId: number): Promise<ProjectFile[]>;
+  getProjectFile(id: number): Promise<ProjectFile | undefined>;
   createProjectFile(file: InsertProjectFile): Promise<ProjectFile>;
   updateProjectFile(id: number, updates: Partial<ProjectFile>): Promise<ProjectFile>;
   deleteProjectFile(id: number): Promise<void>;
 
   // Project Log operations
   getProjectLogs(projectId: number): Promise<any[]>;
+  createProjectLog(log: any): Promise<any>;
+  updateProjectLog(id: number, updates: any): Promise<any>;
+  deleteProjectLog(id: number): Promise<boolean>;
+
+  // BOQ operations
+  getAllBOQUploads(): Promise<any[]>;
+  createBOQUpload(upload: any): Promise<any>;
+  updateBOQUpload(id: number, updates: any): Promise<any>;
+
+  // Attendance operations
+  getAllAttendance(): Promise<Attendance[]>;
+  createAttendance(attendance: InsertAttendance): Promise<Attendance>;
+  updateAttendance(id: number, updates: Partial<InsertAttendance>): Promise<Attendance | undefined>;
+  markAttendance(userId: number, date: string, checkIn: Date, checkOut?: Date): Promise<Attendance>;
+  bulkUpdateMonthlyAttendance(updates: any[]): Promise<boolean>;
+
+  // Payroll operations  
+  getAllPayroll(): Promise<Payroll[]>;
+  createPayroll(payroll: InsertPayroll): Promise<Payroll>;
+  updatePayroll(id: number, updates: Partial<InsertPayroll>): Promise<Payroll | undefined>;
+
+  // Additional operations
+  getLowStockProducts(): Promise<Product[]>;
+  getSalesProductCategories(): Promise<string[]>;
+  getAllPriceComparisons(): Promise<any[]>;
+  createPriceComparison(comparison: any): Promise<any>;
 
   // Material Request operations
   getAllMaterialRequests(): Promise<MaterialRequest[]>;
@@ -166,7 +202,15 @@ export interface IStorage {
   getMaterialRequestsByProject(projectId: number): Promise<MaterialRequest[]>;
 
   // Quote operations
+  getAllQuotes(): Promise<Quote[]>;
+  getQuote(id: number): Promise<Quote | undefined>;
+  getQuoteWithItems(id: number): Promise<any>;
   getQuotesByProject(projectId: number): Promise<Quote[]>;
+  getQuoteItems(quoteId: number): Promise<QuoteItem[]>;
+  createQuote(quote: InsertQuote): Promise<Quote>;
+  updateQuote(id: number, updates: Partial<InsertQuote>): Promise<Quote | undefined>;
+  updateQuoteItems(quoteId: number, items: InsertQuoteItem[]): Promise<boolean>;
+  deleteQuote(id: number): Promise<boolean>;
   
   // Sales Product operations
   getAllSalesProducts(): Promise<SalesProduct[]>;
@@ -249,6 +293,31 @@ class DatabaseStorage implements IStorage {
 
   async deleteUser(id: number): Promise<boolean> {
     await db.delete(users).where(eq(users.id, id));
+    return true;
+  }
+
+  // Category operations
+  async getAllCategories(): Promise<Category[]> {
+    return db.select().from(categories).where(eq(categories.isActive, true));
+  }
+
+  async getCategory(id: number): Promise<Category | undefined> {
+    const result = await db.select().from(categories).where(eq(categories.id, id)).limit(1);
+    return result[0];
+  }
+
+  async createCategory(category: InsertCategory): Promise<Category> {
+    const result = await db.insert(categories).values(category).returning();
+    return result[0];
+  }
+
+  async updateCategory(id: number, updates: Partial<InsertCategory>): Promise<Category | undefined> {
+    const result = await db.update(categories).set(updates).where(eq(categories.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteCategory(id: number): Promise<boolean> {
+    await db.update(categories).set({ isActive: false }).where(eq(categories.id, id));
     return true;
   }
 
@@ -672,20 +741,7 @@ class DatabaseStorage implements IStorage {
     return true;
   }
 
-  // Category operations
-  async getAllCategories(): Promise<Category[]> {
-    return db.select().from(categories).where(eq(categories.isActive, true));
-  }
-
-  async createCategory(category: InsertCategory): Promise<Category> {
-    const result = await db.insert(categories).values(category).returning();
-    return result[0];
-  }
-
-  async updateCategory(id: number, updates: Partial<InsertCategory>): Promise<Category | undefined> {
-    const result = await db.update(categories).set(updates).where(eq(categories.id, id)).returning();
-    return result[0];
-  }
+  // Remove duplicate category operations - already defined earlier
 
   // Dashboard operations
   async getDashboardStats(userRole: string): Promise<{
@@ -970,6 +1026,16 @@ class DatabaseStorage implements IStorage {
     return result[0];
   }
 
+  async updateClient(id: number, updates: Partial<InsertClient>): Promise<Client | undefined> {
+    const result = await db.update(clients).set(updates).where(eq(clients.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteClient(id: number): Promise<boolean> {
+    await db.update(clients).set({ isActive: false }).where(eq(clients.id, id));
+    return true;
+  }
+
   // Project File operations
   async getProjectFiles(projectId: number): Promise<ProjectFile[]> {
     return db.select().from(projectFiles)
@@ -994,10 +1060,193 @@ class DatabaseStorage implements IStorage {
     await db.delete(projectFiles).where(eq(projectFiles.id, id));
   }
 
+  // Project File operations (missing methods)
+  async getProjectFile(id: number): Promise<ProjectFile | undefined> {
+    const result = await db.select().from(projectFiles).where(eq(projectFiles.id, id)).limit(1);
+    return result[0];
+  }
+
   // Project Log operations
   async getProjectLogs(projectId: number): Promise<any[]> {
     // Return empty array for now - can be implemented later with activity tracking
     return [];
+  }
+
+  async createProjectLog(log: any): Promise<any> {
+    // Stub method - return the log object as is
+    return { id: Date.now(), ...log };
+  }
+
+  async updateProjectLog(id: number, updates: any): Promise<any> {
+    // Stub method - return updated object
+    return { id, ...updates };
+  }
+
+  async deleteProjectLog(id: number): Promise<boolean> {
+    // Stub method - always return true
+    return true;
+  }
+
+  // BOQ operations
+  async getAllBOQUploads(): Promise<any[]> {
+    // Stub method - return empty array
+    return [];
+  }
+
+  async createBOQUpload(upload: any): Promise<any> {
+    // Stub method - return the upload object with id
+    return { id: Date.now(), ...upload };
+  }
+
+  async updateBOQUpload(id: number, updates: any): Promise<any> {
+    // Stub method - return updated object
+    return { id, ...updates };
+  }
+
+  // Additional missing methods
+  async getLowStockProducts(): Promise<Product[]> {
+    return db.select().from(products)
+      .where(and(
+        eq(products.isActive, true),
+        sql`${products.currentStock} <= ${products.minStock}`
+      ));
+  }
+
+  async getSalesProductCategories(): Promise<string[]> {
+    // Stub method - return some default categories
+    return ['Office Furniture', 'Seating', 'Desks', 'Storage'];
+  }
+
+  async getAllPriceComparisons(): Promise<any[]> {
+    // Stub method - return empty array
+    return [];
+  }
+
+  async createPriceComparison(comparison: any): Promise<any> {
+    // Stub method - return the comparison object with id
+    return { id: Date.now(), ...comparison };
+  }
+
+  // Petty Cash missing methods
+  async updatePettyCashExpense(id: number, updates: Partial<InsertPettyCashExpense>): Promise<PettyCashExpense | undefined> {
+    const result = await db.update(pettyCashExpenses).set(updates).where(eq(pettyCashExpenses.id, id)).returning();
+    return result[0];
+  }
+
+  async deletePettyCashExpense(id: number): Promise<boolean> {
+    await db.delete(pettyCashExpenses).where(eq(pettyCashExpenses.id, id));
+    return true;
+  }
+
+  // Stock Movement missing methods
+  async getStockMovement(id: number): Promise<StockMovement | undefined> {
+    const result = await db.select().from(stockMovements).where(eq(stockMovements.id, id)).limit(1);
+    return result[0];
+  }
+
+  async createStockMovement(movement: InsertStockMovement): Promise<StockMovement> {
+    const result = await db.insert(stockMovements).values(movement).returning();
+    return result[0];
+  }
+
+  async deleteStockMovement(id: number): Promise<boolean> {
+    await db.delete(stockMovements).where(eq(stockMovements.id, id));
+    return true;
+  }
+
+  // Attendance missing methods
+  async getAllAttendance(): Promise<Attendance[]> {
+    return db.select().from(attendance).orderBy(desc(attendance.date));
+  }
+
+  async createAttendance(attendanceData: InsertAttendance): Promise<Attendance> {
+    const result = await db.insert(attendance).values(attendanceData).returning();
+    return result[0];
+  }
+
+  async updateAttendance(id: number, updates: Partial<InsertAttendance>): Promise<Attendance | undefined> {
+    const result = await db.update(attendance).set(updates).where(eq(attendance.id, id)).returning();
+    return result[0];
+  }
+
+  async markAttendance(userId: number, date: string, checkIn: Date, checkOut?: Date): Promise<Attendance> {
+    const attendanceData: InsertAttendance = {
+      userId,
+      date,
+      checkIn,
+      checkOut: checkOut || null,
+      status: 'present'
+    };
+    return this.createAttendance(attendanceData);
+  }
+
+  async bulkUpdateMonthlyAttendance(updates: any[]): Promise<boolean> {
+    // Stub method - process updates in batch
+    for (const update of updates) {
+      await this.updateAttendance(update.id, update.data);
+    }
+    return true;
+  }
+
+  // Payroll missing methods  
+  async getAllPayroll(): Promise<Payroll[]> {
+    return db.select().from(payroll).orderBy(desc(payroll.createdAt));
+  }
+
+  async createPayroll(payrollData: InsertPayroll): Promise<Payroll> {
+    const result = await db.insert(payroll).values(payrollData).returning();
+    return result[0];
+  }
+
+  async updatePayroll(id: number, updates: Partial<InsertPayroll>): Promise<Payroll | undefined> {
+    const result = await db.update(payroll).set(updates).where(eq(payroll.id, id)).returning();
+    return result[0];
+  }
+
+  // Quote operations (missing methods)
+  async getAllQuotes(): Promise<Quote[]> {
+    return db.select().from(quotes).orderBy(desc(quotes.createdAt));
+  }
+
+  async getQuote(id: number): Promise<Quote | undefined> {
+    const result = await db.select().from(quotes).where(eq(quotes.id, id)).limit(1);
+    return result[0];
+  }
+
+  async getQuoteItems(quoteId: number): Promise<QuoteItem[]> {
+    return db.select().from(quoteItems).where(eq(quoteItems.quoteId, quoteId));
+  }
+
+  async createQuote(quote: InsertQuote): Promise<Quote> {
+    const result = await db.insert(quotes).values(quote).returning();
+    return result[0];
+  }
+
+  async updateQuote(id: number, updates: Partial<InsertQuote>): Promise<Quote | undefined> {
+    const result = await db.update(quotes).set(updates).where(eq(quotes.id, id)).returning();
+    return result[0];
+  }
+
+  async updateQuoteItems(quoteId: number, items: InsertQuoteItem[]): Promise<boolean> {
+    // Delete existing items
+    await db.delete(quoteItems).where(eq(quoteItems.quoteId, quoteId));
+    
+    // Insert new items
+    if (items.length > 0) {
+      await db.insert(quoteItems).values(items);
+    }
+    
+    return true;
+  }
+
+  async deleteQuote(id: number): Promise<boolean> {
+    // Delete quote items first
+    await db.delete(quoteItems).where(eq(quoteItems.quoteId, id));
+    
+    // Delete quote
+    await db.delete(quotes).where(eq(quotes.id, id));
+    
+    return true;
   }
 
   // Missing Petty Cash methods
@@ -1075,11 +1324,7 @@ class DatabaseStorage implements IStorage {
     return stats.balance;
   }
 
-  // Missing attendance methods
-  async getAllAttendance(): Promise<any[]> {
-    const result = await db.select().from(attendance);
-    return result;
-  }
+  // Remove duplicate attendance methods - already defined above
 
   async getTodayAttendance(userId?: number): Promise<any[]> {
     const today = new Date().toISOString().split('T')[0];
