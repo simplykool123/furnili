@@ -12,7 +12,7 @@ import { canOrderMaterials, getMaterialRequestEligibleProjects, getStageDisplayN
 import { setupQuotesRoutes } from "./quotesRoutes";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
-import { projectFiles } from "@shared/schema";
+import { projectFiles, users, suppliers, products, purchaseOrders, purchaseOrderItems } from "@shared/schema";
 
 // OpenAI client removed - AI functionality simplified
 import {
