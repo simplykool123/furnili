@@ -40,7 +40,9 @@ export default function PurchaseOrders() {
         params.append("status", selectedTab);
       }
       return apiRequest(`/api/purchase-orders?${params}`);
-    }
+    },
+    staleTime: 1000 * 60 * 2, // Cache for 2 minutes
+    refetchOnWindowFocus: false,
   });
 
   // Fetch suppliers for dropdown
@@ -54,7 +56,9 @@ export default function PurchaseOrders() {
       method: "POST",
     }),
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["/api/purchase-orders"] });
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ["/api/purchase-orders"] });
+      }, 100);
       toast({
         title: "Auto POs Generated",
         description: data.message,
@@ -76,7 +80,9 @@ export default function PurchaseOrders() {
         method: "POST",
       }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/purchase-orders"] });
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ["/api/purchase-orders"] });
+      }, 100);
       toast({
         title: "Success",
         description: "Purchase order sent successfully",
@@ -91,7 +97,9 @@ export default function PurchaseOrders() {
         method: "POST",
       }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/purchase-orders"] });
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ["/api/purchase-orders"] });
+      }, 100);
       toast({
         title: "Success",
         description: "Purchase order cancelled",
@@ -106,7 +114,9 @@ export default function PurchaseOrders() {
         method: "DELETE",
       }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/purchase-orders"] });
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ["/api/purchase-orders"] });
+      }, 100);
       setShowDeleteDialog(false);
       setSelectedPO(null);
       toast({
@@ -281,7 +291,9 @@ export default function PurchaseOrders() {
                 onClose={() => setShowCreateModal(false)}
                 onSuccess={() => {
                   setShowCreateModal(false);
-                  queryClient.invalidateQueries({ queryKey: ["/api/purchase-orders"] });
+                  setTimeout(() => {
+                    queryClient.invalidateQueries({ queryKey: ["/api/purchase-orders"] });
+                  }, 100);
                 }}
               />
             </DialogContent>
@@ -491,7 +503,9 @@ export default function PurchaseOrders() {
               onSuccess={() => {
                 setShowReceiveModal(false);
                 setSelectedPO(null);
-                queryClient.invalidateQueries({ queryKey: ["/api/purchase-orders"] });
+                setTimeout(() => {
+                  queryClient.invalidateQueries({ queryKey: ["/api/purchase-orders"] });
+                }, 100);
               }}
             />
           </DialogContent>
@@ -518,7 +532,9 @@ export default function PurchaseOrders() {
               onSuccess={() => {
                 setShowEditModal(false);
                 setSelectedPO(null);
-                queryClient.invalidateQueries({ queryKey: ["/api/purchase-orders"] });
+                setTimeout(() => {
+                  queryClient.invalidateQueries({ queryKey: ["/api/purchase-orders"] });
+                }, 100);
               }}
             />
           </DialogContent>
