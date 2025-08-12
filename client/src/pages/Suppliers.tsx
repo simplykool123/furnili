@@ -442,7 +442,7 @@ function ProductLinkingButton({ supplier }: { supplier: Supplier }) {
   const [showModal, setShowModal] = useState(false);
   const [selectedProducts, setSelectedProducts] = useState<number[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedBrand, setSelectedBrand] = useState("");
+  const [selectedBrand, setSelectedBrand] = useState("all");
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -514,7 +514,7 @@ function ProductLinkingButton({ supplier }: { supplier: Supplier }) {
       (p.brand && p.brand.toLowerCase().includes(searchTerm.toLowerCase()))
     )
     .filter((p: any) => 
-      selectedBrand === "" || p.brand === selectedBrand
+      selectedBrand === "all" || selectedBrand === "" || p.brand === selectedBrand
     )
     .sort((a: any, b: any) => a.name.localeCompare(b.name));
 
@@ -593,7 +593,7 @@ function ProductLinkingButton({ supplier }: { supplier: Supplier }) {
                       <SelectValue placeholder="Filter by Brand" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">All Brands</SelectItem>
+                      <SelectItem value="all">All Brands</SelectItem>
                       {availableBrands.map((brand: string) => (
                         <SelectItem key={brand} value={brand}>
                           {brand}
@@ -607,13 +607,13 @@ function ProductLinkingButton({ supplier }: { supplier: Supplier }) {
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="w-48 h-8 text-sm"
                   />
-                  {(searchTerm || selectedBrand) && (
+                  {(searchTerm || (selectedBrand && selectedBrand !== "all")) && (
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => {
                         setSearchTerm("");
-                        setSelectedBrand("");
+                        setSelectedBrand("all");
                       }}
                       className="h-8 px-2"
                     >
