@@ -19,11 +19,13 @@ import {
   moodboards,
   tasks,
   suppliers,
+  brands,
+  supplierBrands,
   purchaseOrders,
   purchaseOrderItems,
   auditLogs
 } from "@shared/schema";
-import { eq, and, gte, lte, desc, asc, sql, like, or } from "drizzle-orm";
+import { eq, and, gte, lte, desc, asc, sql, like, or, inArray } from "drizzle-orm";
 import * as bcrypt from "bcryptjs";
 import type {
   User,
@@ -64,6 +66,10 @@ import type {
   InsertTask,
   Supplier,
   InsertSupplier,
+  Brand,
+  InsertBrand,
+  SupplierBrand,
+  InsertSupplierBrand,
   PurchaseOrder,
   InsertPurchaseOrder,
   PurchaseOrderItem,
@@ -1631,6 +1637,148 @@ class DatabaseStorage implements IStorage {
     const createdPO = await this.createPurchaseOrder(po, items);
     
     return [createdPO];
+  }
+
+  // Brand Management Methods
+  async getAllBrands(): Promise<Brand[]> {
+    return await db.select().from(brands).where(eq(brands.isActive, true)).orderBy(asc(brands.name));
+  }
+
+  async getBrand(id: number): Promise<Brand | undefined> {
+    const result = await db.select().from(brands).where(eq(brands.id, id)).limit(1);
+    return result[0];
+  }
+
+  async createBrand(brand: InsertBrand): Promise<Brand> {
+    const result = await db.insert(brands).values(brand).returning();
+    return result[0];
+  }
+
+  async updateBrand(id: number, updates: Partial<InsertBrand>): Promise<Brand | undefined> {
+    const result = await db.update(brands).set({
+      ...updates,
+      updatedAt: new Date()
+    }).where(eq(brands.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteBrand(id: number): Promise<boolean> {
+    const result = await db.update(brands)
+      .set({ isActive: false, updatedAt: new Date() })
+      .where(eq(brands.id, id))
+      .returning();
+    return result.length > 0;
+  }
+
+  // Supplier-Brand Relationship Methods
+  async getAllSupplierBrands(): Promise<SupplierBrand[]> {
+    return await db.select().from(supplierBrands).where(eq(supplierBrands.isActive, true));
+  }
+
+  async getSupplierBrands(supplierId: number): Promise<(SupplierBrand & { brand: Brand })[]> {
+    const result = await db.select()
+      .from(supplierBrands)
+      .leftJoin(brands, eq(supplierBrands.brandId, brands.id))
+      .where(and(eq(supplierBrands.supplierId, supplierId), eq(supplierBrands.isActive, true)));
+
+    return result.map(row => ({
+      ...row.supplier_brands,
+      brand: row.brands!
+    }));
+  }
+
+  async getBrandSuppliers(brandId: number): Promise<(SupplierBrand & { supplier: Supplier })[]> {
+    const result = await db.select()
+      .from(supplierBrands)
+      .leftJoin(suppliers, eq(supplierBrands.supplierId, suppliers.id))
+      .where(and(eq(supplierBrands.brandId, brandId), eq(supplierBrands.isActive, true)));
+
+    return result.map(row => ({
+      ...row.supplier_brands,
+      supplier: row.suppliers!
+    }));
+  }
+
+  async createSupplierBrand(supplierBrand: InsertSupplierBrand): Promise<SupplierBrand> {
+    const result = await db.insert(supplierBrands).values(supplierBrand).returning();
+    return result[0];
+  }
+
+  async updateSupplierBrand(id: number, updates: Partial<InsertSupplierBrand>): Promise<SupplierBrand | undefined> {
+    const result = await db.update(supplierBrands).set({
+      ...updates,
+      updatedAt: new Date()
+    }).where(eq(supplierBrands.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteSupplierBrand(id: number): Promise<boolean> {
+    const result = await db.update(supplierBrands)
+      .set({ isActive: false, updatedAt: new Date() })
+      .where(eq(supplierBrands.id, id))
+      .returning();
+    return result.length > 0;
+  }
+
+  // Supplier Auto-suggestion for Products
+  async getSuggestedSuppliersForProducts(productIds: number[]): Promise<{ productId: number; suppliers: (Supplier & { relationship?: SupplierBrand })[] }[]> {
+    const products = await db.select().from(products).where(inArray(products.id, productIds));
+    
+    const suggestions = await Promise.all(products.map(async (product) => {
+      let suppliers: (Supplier & { relationship?: SupplierBrand })[] = [];
+      
+      if (product.brand) {
+        // Find suppliers who carry this brand
+        const brandSuppliersResult = await db.select()
+          .from(supplierBrands)
+          .leftJoin(suppliers, eq(supplierBrands.supplierId, suppliers.id))
+          .leftJoin(brands, eq(supplierBrands.brandId, brands.id))
+          .where(and(
+            eq(brands.name, product.brand),
+            eq(supplierBrands.isActive, true),
+            eq(suppliers.isActive, true)
+          ))
+          .orderBy(desc(supplierBrands.isPrimarySupplier), asc(suppliers.preferred));
+
+        suppliers = brandSuppliersResult.map(row => ({
+          ...row.suppliers!,
+          relationship: row.supplier_brands
+        }));
+      }
+      
+      // If no brand-specific suppliers found, get preferred suppliers
+      if (suppliers.length === 0) {
+        const preferredSuppliersResult = await db.select()
+          .from(suppliers)
+          .where(and(eq(suppliers.preferred, true), eq(suppliers.isActive, true)));
+        
+        suppliers = preferredSuppliersResult;
+      }
+      
+      return {
+        productId: product.id,
+        suppliers
+      };
+    }));
+    
+    return suggestions;
+  }
+
+  // Get primary supplier for a specific brand
+  async getPrimarySupplierForBrand(brandName: string): Promise<Supplier | undefined> {
+    const result = await db.select()
+      .from(supplierBrands)
+      .leftJoin(suppliers, eq(supplierBrands.supplierId, suppliers.id))
+      .leftJoin(brands, eq(supplierBrands.brandId, brands.id))
+      .where(and(
+        eq(brands.name, brandName),
+        eq(supplierBrands.isPrimarySupplier, true),
+        eq(supplierBrands.isActive, true),
+        eq(suppliers.isActive, true)
+      ))
+      .limit(1);
+
+    return result[0]?.suppliers || undefined;
   }
 }
 

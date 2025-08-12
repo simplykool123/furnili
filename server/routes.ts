@@ -35,6 +35,8 @@ import {
   insertQuoteSchema,
   insertQuoteItemSchema,
   insertSupplierSchema,
+  insertBrandSchema,
+  insertSupplierBrandSchema,
   insertPurchaseOrderSchema,
   insertPurchaseOrderItemSchema,
 } from "@shared/schema";
@@ -3096,6 +3098,160 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Get audit logs error:", error);
       res.status(500).json({ message: "Failed to fetch audit logs" });
+    }
+  });
+
+  // Brand Management Routes
+  app.get("/api/brands", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const brands = await storage.getAllBrands();
+      res.json(brands);
+    } catch (error) {
+      console.error("Get brands error:", error);
+      res.status(500).json({ message: "Failed to fetch brands" });
+    }
+  });
+
+  app.get("/api/brands/:id", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const brandId = parseInt(req.params.id);
+      const brand = await storage.getBrand(brandId);
+      
+      if (!brand) {
+        return res.status(404).json({ message: "Brand not found" });
+      }
+      
+      res.json(brand);
+    } catch (error) {
+      console.error("Get brand error:", error);
+      res.status(500).json({ message: "Failed to fetch brand" });
+    }
+  });
+
+  app.post("/api/brands", authenticateToken, requireRole(['admin', 'manager']), async (req: AuthRequest, res) => {
+    try {
+      const validatedData = insertBrandSchema.parse({
+        ...req.body,
+        createdBy: req.user!.id
+      });
+      
+      const brand = await storage.createBrand(validatedData);
+      res.status(201).json(brand);
+    } catch (error) {
+      console.error("Create brand error:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Validation error", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create brand" });
+    }
+  });
+
+  app.put("/api/brands/:id", authenticateToken, requireRole(['admin', 'manager']), async (req: AuthRequest, res) => {
+    try {
+      const brandId = parseInt(req.params.id);
+      const updates = req.body;
+      
+      const brand = await storage.updateBrand(brandId, updates);
+      
+      if (!brand) {
+        return res.status(404).json({ message: "Brand not found" });
+      }
+      
+      res.json(brand);
+    } catch (error) {
+      console.error("Update brand error:", error);
+      res.status(500).json({ message: "Failed to update brand" });
+    }
+  });
+
+  app.delete("/api/brands/:id", authenticateToken, requireRole(['admin', 'manager']), async (req: AuthRequest, res) => {
+    try {
+      const brandId = parseInt(req.params.id);
+      const deleted = await storage.deleteBrand(brandId);
+      
+      if (!deleted) {
+        return res.status(404).json({ message: "Brand not found" });
+      }
+      
+      res.json({ message: "Brand deleted successfully" });
+    } catch (error) {
+      console.error("Delete brand error:", error);
+      res.status(500).json({ message: "Failed to delete brand" });
+    }
+  });
+
+  // Supplier-Brand Relationship Routes
+  app.get("/api/suppliers/:id/brands", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const supplierId = parseInt(req.params.id);
+      const brands = await storage.getSupplierBrands(supplierId);
+      res.json(brands);
+    } catch (error) {
+      console.error("Get supplier brands error:", error);
+      res.status(500).json({ message: "Failed to fetch supplier brands" });
+    }
+  });
+
+  app.get("/api/brands/:id/suppliers", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const brandId = parseInt(req.params.id);
+      const suppliers = await storage.getBrandSuppliers(brandId);
+      res.json(suppliers);
+    } catch (error) {
+      console.error("Get brand suppliers error:", error);
+      res.status(500).json({ message: "Failed to fetch brand suppliers" });
+    }
+  });
+
+  app.post("/api/supplier-brands", authenticateToken, requireRole(['admin', 'manager']), async (req: AuthRequest, res) => {
+    try {
+      const validatedData = insertSupplierBrandSchema.parse({
+        ...req.body,
+        createdBy: req.user!.id
+      });
+      
+      const supplierBrand = await storage.createSupplierBrand(validatedData);
+      res.status(201).json(supplierBrand);
+    } catch (error) {
+      console.error("Create supplier-brand relationship error:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Validation error", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create supplier-brand relationship" });
+    }
+  });
+
+  // Supplier Auto-suggestion for Products
+  app.post("/api/products/suggest-suppliers", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const { productIds } = req.body;
+      
+      if (!productIds || !Array.isArray(productIds)) {
+        return res.status(400).json({ message: "Product IDs array is required" });
+      }
+      
+      const suggestions = await storage.getSuggestedSuppliersForProducts(productIds);
+      res.json(suggestions);
+    } catch (error) {
+      console.error("Get suggested suppliers error:", error);
+      res.status(500).json({ message: "Failed to get supplier suggestions" });
+    }
+  });
+
+  // Get primary supplier for a brand
+  app.get("/api/brands/:brandName/primary-supplier", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const brandName = req.params.brandName;
+      const supplier = await storage.getPrimarySupplierForBrand(brandName);
+      
+      if (!supplier) {
+        return res.status(404).json({ message: "No primary supplier found for this brand" });
+      }
+      
+      res.json(supplier);
+    } catch (error) {
+      console.error("Get primary supplier error:", error);
+      res.status(500).json({ message: "Failed to get primary supplier" });
     }
   });
 
