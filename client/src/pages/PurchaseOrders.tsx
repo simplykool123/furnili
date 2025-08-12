@@ -387,11 +387,12 @@ function CreatePOForm({ suppliers, onClose, onSuccess }: {
         productId: sp.product.id,
         description: sp.product.name,
         qty: 1,
-        unitPrice: sp.product.unitPrice || 0,
+        unitPrice: sp.unitPrice || sp.product.pricePerUnit || 0, // Use relationship price or product price
         sku: sp.product.sku || "",
-        brand: sp.product.brand,
-        size: sp.product.size,
-        thickness: sp.product.thickness,
+        brand: sp.product.brand || "",
+        size: sp.product.size || "",
+        thickness: sp.product.thickness || "",
+        category: sp.product.category || ""
       }));
       setItems(newItems);
       toast({
@@ -476,7 +477,8 @@ function CreatePOForm({ suppliers, onClose, onSuccess }: {
       sku: "",
       brand: "",
       size: "",
-      thickness: ""
+      thickness: "",
+      category: ""
     }]);
   };
 
@@ -638,7 +640,10 @@ function CreatePOForm({ suppliers, onClose, onSuccess }: {
             </div>
             
             <div className="col-span-2">
-              <Select>
+              <Select 
+                value={item.category || ""} 
+                onValueChange={(value) => updateItem(index, 'category', value)}
+              >
                 <SelectTrigger className="h-8 text-xs">
                   <SelectValue placeholder="Select..." />
                 </SelectTrigger>
@@ -646,12 +651,18 @@ function CreatePOForm({ suppliers, onClose, onSuccess }: {
                   <SelectItem value="plywood">Plywood</SelectItem>
                   <SelectItem value="laminate">Laminate</SelectItem>
                   <SelectItem value="hardware">Hardware</SelectItem>
+                  <SelectItem value="adhesives">Adhesives</SelectItem>
+                  <SelectItem value="boards">Boards</SelectItem>
+                  <SelectItem value="veneers">Veneers</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             
             <div className="col-span-2">
-              <Select>
+              <Select 
+                value={item.brand || ""} 
+                onValueChange={(value) => updateItem(index, 'brand', value)}
+              >
                 <SelectTrigger className="h-8 text-xs">
                   <SelectValue placeholder="Select brand..." />
                 </SelectTrigger>
@@ -659,6 +670,9 @@ function CreatePOForm({ suppliers, onClose, onSuccess }: {
                   <SelectItem value="century">Century</SelectItem>
                   <SelectItem value="greenply">Greenply</SelectItem>
                   <SelectItem value="hettich">Hettich</SelectItem>
+                  <SelectItem value="godrej">Godrej</SelectItem>
+                  <SelectItem value="fevicol">Fevicol</SelectItem>
+                  <SelectItem value="asian paints">Asian Paints</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -671,7 +685,8 @@ function CreatePOForm({ suppliers, onClose, onSuccess }: {
                   updateItem(index, 'productId', option.id);
                   updateItem(index, 'description', option.name);
                   updateItem(index, 'sku', option.sku);
-                  updateItem(index, 'unitPrice', option.price || 0);
+                  updateItem(index, 'unitPrice', option.pricePerUnit || 0);
+                  updateItem(index, 'category', option.category);
                   updateItem(index, 'brand', option.brand);
                   updateItem(index, 'size', option.size);
                   updateItem(index, 'thickness', option.thickness);
