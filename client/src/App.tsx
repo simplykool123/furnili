@@ -36,6 +36,7 @@ import SalesProducts from "@/pages/SalesProducts";
 import Clients from "@/pages/Clients";
 import PurchaseOrders from "@/pages/PurchaseOrders";
 import Suppliers from "@/pages/Suppliers";
+import Brands from "@/pages/Brands";
 import NotFound from "@/pages/not-found";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -261,6 +262,12 @@ function Router() {
       <Route path="/suppliers">
         <ProtectedRoute>
           <Suppliers />
+        </ProtectedRoute>
+      </Route>
+
+      <Route path="/brands">
+        <ProtectedRoute>
+          <Brands />
         </ProtectedRoute>
       </Route>
       

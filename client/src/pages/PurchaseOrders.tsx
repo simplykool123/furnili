@@ -348,6 +348,8 @@ function CreatePOForm({ suppliers, onClose, onSuccess }: {
   onSuccess: () => void;
 }) {
   const [selectedSupplier, setSelectedSupplier] = useState<number | null>(null);
+  const [suggestedSuppliers, setSuggestedSuppliers] = useState<Supplier[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const [items, setItems] = useState<Array<{
     productId: number;
     description: string;
@@ -366,6 +368,50 @@ function CreatePOForm({ suppliers, onClose, onSuccess }: {
       apiRequest(`/api/products/search?query=${encodeURIComponent(productSearchQuery)}`),
     enabled: productSearchQuery.length > 0,
   });
+
+  // Function to get supplier suggestions when products are selected
+  const getSuggestedSuppliers = async () => {
+    const productIds = items.filter(item => item.productId > 0).map(item => item.productId);
+    
+    if (productIds.length === 0) {
+      setSuggestedSuppliers([]);
+      setShowSuggestions(false);
+      return;
+    }
+
+    try {
+      const suggestions = await apiRequest("/api/products/suggest-suppliers", {
+        method: "POST",
+        body: JSON.stringify({ productIds })
+      });
+
+      // Collect all unique suppliers from suggestions
+      const allSuggestedSuppliers = new Map<number, Supplier>();
+      
+      suggestions.forEach((suggestion: any) => {
+        suggestion.suppliers.forEach((supplier: Supplier) => {
+          allSuggestedSuppliers.set(supplier.id, supplier);
+        });
+      });
+
+      const uniqueSuppliers = Array.from(allSuggestedSuppliers.values());
+      setSuggestedSuppliers(uniqueSuppliers);
+      setShowSuggestions(uniqueSuppliers.length > 0);
+      
+      // If we have suggestions and no supplier is selected, suggest the first primary supplier
+      if (uniqueSuppliers.length > 0 && !selectedSupplier) {
+        const primarySupplier = uniqueSuppliers.find(s => s.preferred) || uniqueSuppliers[0];
+        if (primarySupplier) {
+          toast({
+            title: "Supplier Suggestion",
+            description: `${primarySupplier.name} is suggested based on selected products`,
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Failed to get supplier suggestions:", error);
+    }
+  };
 
   const createPOMutation = useMutation({
     mutationFn: (data: any) => 
@@ -404,6 +450,11 @@ function CreatePOForm({ suppliers, onClose, onSuccess }: {
       i === index ? { ...item, [field]: value } : item
     );
     setItems(updatedItems);
+    
+    // If a product was selected, get supplier suggestions
+    if (field === 'productId' && value > 0) {
+      setTimeout(() => getSuggestedSuppliers(), 100);
+    }
   };
 
   const removeItem = (index: number) => {
@@ -449,7 +500,7 @@ function CreatePOForm({ suppliers, onClose, onSuccess }: {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
-        <div>
+        <div className="space-y-2">
           <Label>Supplier *</Label>
           <Select value={selectedSupplier?.toString() || ""} onValueChange={(value) => setSelectedSupplier(parseInt(value))}>
             <SelectTrigger>
@@ -463,6 +514,42 @@ function CreatePOForm({ suppliers, onClose, onSuccess }: {
               ))}
             </SelectContent>
           </Select>
+          
+          {showSuggestions && suggestedSuppliers.length > 0 && (
+            <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
+              <div className="text-xs font-medium text-blue-800 mb-2 flex items-center">
+                <AlertTriangle className="h-3 w-3 mr-1" />
+                Suggested Suppliers (based on selected products):
+              </div>
+              <div className="flex flex-wrap gap-1">
+                {suggestedSuppliers.slice(0, 3).map((supplier) => (
+                  <Button
+                    key={supplier.id}
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-6 text-xs bg-white hover:bg-blue-100 border-blue-300"
+                    onClick={() => {
+                      setSelectedSupplier(supplier.id);
+                      setShowSuggestions(false);
+                      toast({
+                        title: "Supplier Selected",
+                        description: `${supplier.name} has been selected`,
+                      });
+                    }}
+                  >
+                    {supplier.name}
+                    {supplier.preferred && <span className="text-xs text-blue-600 ml-1">★</span>}
+                  </Button>
+                ))}
+                {suggestedSuppliers.length > 3 && (
+                  <span className="text-xs text-blue-600 self-center">
+                    +{suggestedSuppliers.length - 3} more
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
         </div>
         
         <div>
