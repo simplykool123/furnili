@@ -538,7 +538,7 @@ function CreatePOForm({ suppliers, onClose, onSuccess }: {
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
       {/* Header section matching Material Request layout */}
-      <div className="grid grid-cols-4 gap-3">
+      <div className="grid grid-cols-3 gap-3">
         <div className="space-y-1">
           <Label className="text-xs font-medium">Supplier *</Label>
           <Select 
@@ -573,24 +573,12 @@ function CreatePOForm({ suppliers, onClose, onSuccess }: {
         </div>
         
         <div className="space-y-1">
-          <Label className="text-xs font-medium">PO No</Label>
-          <Input
-            className="h-8 text-xs"
-            placeholder="e.g., PO-2024-001"
-          />
-        </div>
-        
-        <div className="space-y-1">
           <Label className="text-xs font-medium">Status</Label>
-          <Select defaultValue="draft">
-            <SelectTrigger className="h-8 text-xs">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="draft">Draft</SelectItem>
-              <SelectItem value="sent">Sent</SelectItem>
-            </SelectContent>
-          </Select>
+          <Input
+            className="h-8 text-xs bg-gray-50"
+            value="Draft"
+            disabled
+          />
         </div>
       </div>
 

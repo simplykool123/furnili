@@ -1394,10 +1394,10 @@ class DatabaseStorage implements IStorage {
   }
 
   async createPurchaseOrder(po: InsertPurchaseOrder, items: InsertPurchaseOrderItem[]): Promise<PurchaseOrder> {
-    // Generate PO number
+    // Generate PO number with FUR-25-101 format
     const lastPO = await db.select({ id: purchaseOrders.id }).from(purchaseOrders).orderBy(desc(purchaseOrders.id)).limit(1);
     const nextId = lastPO[0] ? lastPO[0].id + 1 : 1;
-    const poNumber = `PO-${nextId.toString().padStart(4, '0')}`;
+    const poNumber = `FUR-25-${(100 + nextId).toString()}`;
     
     // Calculate total amount from items
     const totalAmount = items.reduce((sum, item) => sum + (item.qty * item.unitPrice), 0);
