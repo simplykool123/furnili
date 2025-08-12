@@ -84,6 +84,18 @@ The system adheres to a professional and consistent UI/UX based on the "Furnili 
 - Comprehensive project stages: Prospect to Completed, with optional "On Hold" / "Lost" statuses.
 - Integrated Quotes functionality as a sub-module.
 
+#### Purchase Order Management
+- Complete CRUD operations for purchase orders with supplier management, PO creation, and audit logging.
+- Mobile-optimized dialogs and status management (draft, sent, received, cancelled).
+- Auto-generation functionality for low-stock items.
+- Integrated supplier database with contact management.
+
+### Layout Consistency
+All main application pages use the standard FurniliLayout component for consistent navigation and branding:
+- Dashboard, Products, Categories, BOQ, Material Requests, Projects, Inventory Movement, Purchase Orders, and Suppliers all implement the unified sidebar navigation system.
+- Login pages intentionally exclude the layout for focused authentication experience.
+- Layout provides collapsible sidebar, header navigation, and consistent Furnili branding across all modules.
+
 ## External Dependencies
 
 ### Frontend
