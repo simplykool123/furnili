@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -441,6 +442,7 @@ function ProductLinkingButton({ supplier }: { supplier: Supplier }) {
   const [showModal, setShowModal] = useState(false);
   const [selectedProducts, setSelectedProducts] = useState<number[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedBrand, setSelectedBrand] = useState("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -494,6 +496,15 @@ function ProductLinkingButton({ supplier }: { supplier: Supplier }) {
   };
 
   const linkedProductIds = (supplierProducts as any[]).map((sp: any) => sp.productId);
+  
+  // Get unique brands for filtering
+  const availableBrands = Array.from(new Set(
+    (products as any[])
+      .filter((p: any) => !linkedProductIds.includes(p.id))
+      .map((p: any) => p.brand)
+      .filter(Boolean)
+  )).sort();
+
   const availableProducts = (products as any[])
     .filter((p: any) => !linkedProductIds.includes(p.id))
     .filter((p: any) => 
@@ -501,7 +512,11 @@ function ProductLinkingButton({ supplier }: { supplier: Supplier }) {
       p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       p.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (p.brand && p.brand.toLowerCase().includes(searchTerm.toLowerCase()))
-    );
+    )
+    .filter((p: any) => 
+      selectedBrand === "" || p.brand === selectedBrand
+    )
+    .sort((a: any, b: any) => a.name.localeCompare(b.name));
 
   return (
     <>
@@ -573,17 +588,33 @@ function ProductLinkingButton({ supplier }: { supplier: Supplier }) {
                   )}
                 </div>
                 <div className="flex items-center space-x-2">
+                  <Select value={selectedBrand} onValueChange={setSelectedBrand}>
+                    <SelectTrigger className="w-40 h-8 text-sm">
+                      <SelectValue placeholder="Filter by Brand" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">All Brands</SelectItem>
+                      {availableBrands.map((brand: string) => (
+                        <SelectItem key={brand} value={brand}>
+                          {brand}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <Input
                     placeholder="Search products..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-64 h-8 text-sm"
+                    className="w-48 h-8 text-sm"
                   />
-                  {searchTerm && (
+                  {(searchTerm || selectedBrand) && (
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => setSearchTerm("")}
+                      onClick={() => {
+                        setSearchTerm("");
+                        setSelectedBrand("");
+                      }}
                       className="h-8 px-2"
                     >
                       Clear
@@ -592,9 +623,9 @@ function ProductLinkingButton({ supplier }: { supplier: Supplier }) {
                 </div>
               </div>
               {availableProducts.length > 0 ? (
-                <div className="max-h-96 overflow-y-auto border rounded-lg p-3 space-y-3">
+                <div className="max-h-80 overflow-y-auto border rounded-lg p-2 space-y-1">
                   {availableProducts.map((product: any) => (
-                    <div key={product.id} className="flex items-start space-x-3 p-3 hover:bg-gray-50 rounded border-l-2 border-transparent hover:border-blue-200">
+                    <div key={product.id} className="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded border-l-2 border-transparent hover:border-blue-200">
                       <Checkbox
                         id={`product-${product.id}`}
                         checked={selectedProducts.includes(product.id)}
@@ -605,17 +636,16 @@ function ProductLinkingButton({ supplier }: { supplier: Supplier }) {
                             setSelectedProducts(selectedProducts.filter(id => id !== product.id));
                           }
                         }}
-                        className="mt-1"
                       />
-                      <div className="flex-1">
-                        <Label htmlFor={`product-${product.id}`} className="text-sm font-medium cursor-pointer">
+                      <div className="flex-1 min-w-0">
+                        <Label htmlFor={`product-${product.id}`} className="text-sm font-medium cursor-pointer block truncate">
                           {product.name}
                         </Label>
-                        <div className="text-xs text-gray-500 mt-1 space-y-1">
-                          <div>Category: {product.category}</div>
-                          {product.brand && <div>Brand: {product.brand}</div>}
-                          {product.size && <div>Size: {product.size}</div>}
-                          <div>Current Stock: {product.currentStock || 0} {product.unit || 'units'}</div>
+                        <div className="text-xs text-gray-500 flex flex-wrap gap-2 mt-0.5">
+                          <span>{product.category}</span>
+                          {product.brand && <span>• {product.brand}</span>}
+                          {product.size && <span>• {product.size}</span>}
+                          <span>• Stock: {product.currentStock || 0}</span>
                         </div>
                       </div>
                     </div>
