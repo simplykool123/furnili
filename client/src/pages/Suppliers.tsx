@@ -14,6 +14,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Plus, Search, Building, Phone, Mail, MapPin, Edit, Trash2, Star } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
+import FurniliLayout from "@/components/Layout/FurniliLayout";
 import type { Supplier } from "@shared/schema";
 
 const supplierFormSchema = z.object({
@@ -121,13 +122,10 @@ export default function Suppliers() {
   };
 
   return (
-    <div className="container mx-auto py-6 px-4">
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-[hsl(28,100%,25%)]">Suppliers</h1>
-          <p className="text-gray-600">Manage your supplier database</p>
-        </div>
-        
+    <FurniliLayout 
+      title="Suppliers" 
+      subtitle="Manage your supplier database"
+      actions={
         <Dialog open={showCreateModal} onOpenChange={setShowCreateModal}>
           <DialogTrigger asChild>
             <Button>
@@ -149,7 +147,9 @@ export default function Suppliers() {
             />
           </DialogContent>
         </Dialog>
-      </div>
+      }
+    >
+      <div>
 
       {/* Search */}
       <div className="mb-6">
@@ -287,7 +287,8 @@ export default function Suppliers() {
           </DialogContent>
         </Dialog>
       )}
-    </div>
+      </div>
+    </FurniliLayout>
   );
 }
 

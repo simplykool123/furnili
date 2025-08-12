@@ -14,6 +14,7 @@ import { Plus, Send, Package, FileText, Eye, CheckCircle, XCircle, Clock, AlertT
 import { Autocomplete } from "@/components/ui/autocomplete";
 import { format } from "date-fns";
 import { apiRequest } from "@/lib/queryClient";
+import FurniliLayout from "@/components/Layout/FurniliLayout";
 import type { PurchaseOrderWithDetails, Supplier, Product } from "@shared/schema";
 
 export default function PurchaseOrders() {
@@ -125,12 +126,10 @@ export default function PurchaseOrders() {
   };
 
   return (
-    <div className="container mx-auto py-6 px-4">
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-[hsl(28,100%,25%)]">Purchase Orders</h1>
-          <p className="text-gray-600">Manage your purchase orders and suppliers</p>
-        </div>
+    <FurniliLayout 
+      title="Purchase Orders" 
+      subtitle="Manage your purchase orders and suppliers"
+      actions={
         <div className="flex gap-2">
           <Button
             onClick={() => autoGenerateMutation.mutate()}
@@ -167,7 +166,9 @@ export default function PurchaseOrders() {
             </DialogContent>
           </Dialog>
         </div>
-      </div>
+      }
+    >
+      <div>
 
       <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
         <TabsList className="grid w-full grid-cols-5">
@@ -335,7 +336,8 @@ export default function PurchaseOrders() {
           </DialogContent>
         </Dialog>
       )}
-    </div>
+      </div>
+    </FurniliLayout>
   );
 }
 
