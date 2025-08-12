@@ -243,23 +243,25 @@ export default function Suppliers() {
                 </div>
               )}
 
-              <div className="flex justify-end space-x-2">
+              <div className="flex justify-between items-center">
                 <ProductLinkingButton supplier={supplier} />
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setEditingSupplier(supplier)}
-                >
-                  <Edit className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleDelete(supplier)}
-                  className="text-red-600 hover:text-red-700 border-red-200 hover:border-red-300"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+                <div className="flex space-x-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setEditingSupplier(supplier)}
+                  >
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleDelete(supplier)}
+                    className="text-red-600 hover:text-red-700 border-red-200 hover:border-red-300"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             </Card>
           ))}
@@ -438,6 +440,7 @@ function SupplierForm({
 function ProductLinkingButton({ supplier }: { supplier: Supplier }) {
   const [showModal, setShowModal] = useState(false);
   const [selectedProducts, setSelectedProducts] = useState<number[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -491,7 +494,14 @@ function ProductLinkingButton({ supplier }: { supplier: Supplier }) {
   };
 
   const linkedProductIds = (supplierProducts as any[]).map((sp: any) => sp.productId);
-  const availableProducts = (products as any[]).filter((p: any) => !linkedProductIds.includes(p.id));
+  const availableProducts = (products as any[])
+    .filter((p: any) => !linkedProductIds.includes(p.id))
+    .filter((p: any) => 
+      searchTerm === "" || 
+      p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      p.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (p.brand && p.brand.toLowerCase().includes(searchTerm.toLowerCase()))
+    );
 
   return (
     <>
@@ -499,28 +509,29 @@ function ProductLinkingButton({ supplier }: { supplier: Supplier }) {
         variant="outline"
         size="sm"
         onClick={() => setShowModal(true)}
-        title="Link Products"
+        className="flex items-center gap-1 text-xs px-2"
       >
-        <Package className="h-4 w-4" />
+        <Package className="h-3 w-3" />
+        Link Products
       </Button>
 
       <Dialog open={showModal} onOpenChange={setShowModal}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Link Products to {supplier.name}</DialogTitle>
-            <DialogDescription>
-              Select products that this supplier can provide
+            <DialogTitle className="text-lg">Link Products to {supplier.name}</DialogTitle>
+            <DialogDescription className="text-sm">
+              Link products that this supplier can provide. This helps with automatic Purchase Order generation and supplier selection.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4">
+          <div className="space-y-6">
             {/* Current linked products */}
             {(supplierProducts as any[]).length > 0 && (
-              <div>
-                <h4 className="font-medium mb-2">Currently Linked Products</h4>
-                <div className="space-y-2 max-h-32 overflow-y-auto">
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h4 className="font-medium mb-3 text-green-700">✓ Currently Linked Products ({(supplierProducts as any[]).length})</h4>
+                <div className="flex flex-wrap gap-2">
                   {(supplierProducts as any[]).map((sp: any) => (
-                    <Badge key={sp.id} variant="secondary" className="mr-2">
+                    <Badge key={sp.id} variant="secondary" className="bg-green-100 text-green-800">
                       {sp.product?.name}
                     </Badge>
                   ))}
@@ -528,13 +539,62 @@ function ProductLinkingButton({ supplier }: { supplier: Supplier }) {
               </div>
             )}
 
+            {/* Instructions */}
+            <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+              <h4 className="font-medium mb-2 text-blue-800">How to Link Products:</h4>
+              <ol className="text-sm text-blue-700 space-y-1">
+                <li>1. Select products below that this supplier can provide</li>
+                <li>2. Click "Link Selected Products" to save the relationships</li>
+                <li>3. These links will be used for automatic Purchase Order generation</li>
+              </ol>
+            </div>
+
             {/* Available products to link */}
             <div>
-              <h4 className="font-medium mb-2">Available Products</h4>
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center space-x-3">
+                  <h4 className="font-medium">Select Products to Link</h4>
+                  <span className="text-sm text-gray-500">({availableProducts.length} available)</span>
+                  {availableProducts.length > 0 && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        if (selectedProducts.length === availableProducts.length) {
+                          setSelectedProducts([]);
+                        } else {
+                          setSelectedProducts(availableProducts.map((p: any) => p.id));
+                        }
+                      }}
+                      className="h-7 text-xs"
+                    >
+                      {selectedProducts.length === availableProducts.length ? "Deselect All" : "Select All"}
+                    </Button>
+                  )}
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Input
+                    placeholder="Search products..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-64 h-8 text-sm"
+                  />
+                  {searchTerm && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setSearchTerm("")}
+                      className="h-8 px-2"
+                    >
+                      Clear
+                    </Button>
+                  )}
+                </div>
+              </div>
               {availableProducts.length > 0 ? (
-                <div className="max-h-64 overflow-y-auto space-y-2">
+                <div className="max-h-96 overflow-y-auto border rounded-lg p-3 space-y-3">
                   {availableProducts.map((product: any) => (
-                    <div key={product.id} className="flex items-center space-x-2">
+                    <div key={product.id} className="flex items-start space-x-3 p-3 hover:bg-gray-50 rounded border-l-2 border-transparent hover:border-blue-200">
                       <Checkbox
                         id={`product-${product.id}`}
                         checked={selectedProducts.includes(product.id)}
@@ -545,15 +605,40 @@ function ProductLinkingButton({ supplier }: { supplier: Supplier }) {
                             setSelectedProducts(selectedProducts.filter(id => id !== product.id));
                           }
                         }}
+                        className="mt-1"
                       />
-                      <Label htmlFor={`product-${product.id}`} className="text-sm">
-                        {product.name} ({product.category})
-                      </Label>
+                      <div className="flex-1">
+                        <Label htmlFor={`product-${product.id}`} className="text-sm font-medium cursor-pointer">
+                          {product.name}
+                        </Label>
+                        <div className="text-xs text-gray-500 mt-1 space-y-1">
+                          <div>Category: {product.category}</div>
+                          {product.brand && <div>Brand: {product.brand}</div>}
+                          {product.size && <div>Size: {product.size}</div>}
+                          <div>Current Stock: {product.currentStock || 0} {product.unit || 'units'}</div>
+                        </div>
+                      </div>
                     </div>
                   ))}
                 </div>
               ) : (
-                <p className="text-gray-500 text-sm">All products are already linked to this supplier</p>
+                <div className="text-center py-8 text-gray-500">
+                  {searchTerm ? (
+                    <div>
+                      <p className="text-sm">No products found matching "{searchTerm}"</p>
+                      <Button
+                        variant="link"
+                        size="sm"
+                        onClick={() => setSearchTerm("")}
+                        className="text-xs"
+                      >
+                        Clear search to see all available products
+                      </Button>
+                    </div>
+                  ) : (
+                    <p className="text-sm">All products are already linked to this supplier</p>
+                  )}
+                </div>
               )}
             </div>
           </div>
