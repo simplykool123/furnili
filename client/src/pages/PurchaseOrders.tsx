@@ -116,6 +116,8 @@ export default function PurchaseOrders() {
     onSuccess: () => {
       setTimeout(() => {
         queryClient.invalidateQueries({ queryKey: ["/api/purchase-orders"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/inventory/movements"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/products"] });
       }, 100);
       setShowDeleteDialog(false);
       setSelectedPO(null);

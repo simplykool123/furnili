@@ -11,8 +11,8 @@ import { createBackupZip } from "./utils/backupExport";
 import { canOrderMaterials, getMaterialRequestEligibleProjects, getStageDisplayName } from "./utils/projectStageValidation";
 import { setupQuotesRoutes } from "./quotesRoutes";
 import { db } from "./db";
-import { eq } from "drizzle-orm";
-import { projectFiles, users, suppliers, products, purchaseOrders, purchaseOrderItems } from "@shared/schema";
+import { eq, and, gt } from "drizzle-orm";
+import { projectFiles, users, suppliers, products, purchaseOrders, purchaseOrderItems, stockMovements } from "@shared/schema";
 
 // OpenAI client removed - AI functionality simplified
 import {
@@ -3344,6 +3344,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Purchase order not found" });
       }
       
+      // If PO was received, reverse the stock movements
+      if (po[0].status === 'received') {
+        console.log(`Reversing stock for received PO ${po[0].poNumber}`);
+        
+        // Get all received items
+        const receivedItems = await db.select()
+          .from(purchaseOrderItems)
+          .where(and(
+            eq(purchaseOrderItems.poId, poId),
+            gt(purchaseOrderItems.receivedQty, 0)
+          ));
+        
+        // Reverse stock for each received item
+        for (const item of receivedItems) {
+          if (item.receivedQty && item.receivedQty > 0) {
+            // Get current product stock
+            const product = await db.select()
+              .from(products)
+              .where(eq(products.id, item.productId))
+              .limit(1);
+            
+            if (product[0]) {
+              const currentStock = product[0].currentStock || 0;
+              const reversedStock = Math.max(0, currentStock - item.receivedQty);
+              
+              // Update product stock
+              await db.update(products)
+                .set({ currentStock: reversedStock })
+                .where(eq(products.id, item.productId));
+              
+              // Create reverse stock movement
+              await db.insert(stockMovements).values({
+                productId: item.productId,
+                movementType: 'out',
+                quantity: item.receivedQty,
+                previousStock: currentStock,
+                newStock: reversedStock,
+                reason: `PO Deletion - ${item.description}`,
+                reference: `PO-${poId}-DELETED`,
+                performedBy: req.user!.id,
+                vendor: '',
+                notes: `Stock reversed due to Purchase Order ${po[0].poNumber} deletion`
+              });
+              
+              console.log(`Stock reversed for product ${item.productId}: ${currentStock} → ${reversedStock} (-${item.receivedQty})`);
+            }
+          }
+        }
+      }
+      
       // Delete PO items first (foreign key constraint)
       await db.delete(purchaseOrderItems).where(eq(purchaseOrderItems.poId, poId));
       
@@ -3356,10 +3406,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         action: 'po.deleted',
         tableName: 'purchase_orders',
         recordId: poId,
-        metadata: { poNumber: po[0].poNumber }
+        metadata: { 
+          poNumber: po[0].poNumber,
+          statusWhenDeleted: po[0].status,
+          stockReversed: po[0].status === 'received'
+        }
       });
       
-      res.json({ message: "Purchase order deleted successfully" });
+      res.json({ 
+        message: "Purchase order deleted successfully",
+        stockReversed: po[0].status === 'received'
+      });
     } catch (error) {
       console.error("Delete purchase order error:", error);
       res.status(500).json({ message: "Failed to delete purchase order" });
