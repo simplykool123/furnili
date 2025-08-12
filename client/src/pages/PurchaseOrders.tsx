@@ -356,11 +356,22 @@ function CreatePOForm({ suppliers, onClose, onSuccess }: {
     qty: number;
     unitPrice: number;
     sku?: string;
+    brand?: string;
+    size?: string;
+    thickness?: string;
   }>>([]);
   const [notes, setNotes] = useState("");
   const [productSearchQuery, setProductSearchQuery] = useState("");
   const { toast } = useToast();
   
+  // Fetch supplier products when supplier is selected
+  const { data: supplierProducts = [] } = useQuery({
+    queryKey: ["/api/suppliers", selectedSupplier, "products"],
+    queryFn: () => 
+      apiRequest(`/api/suppliers/${selectedSupplier}/products`),
+    enabled: !!selectedSupplier,
+  });
+
   // Search products for autocomplete
   const { data: productSearchResults = [] } = useQuery({
     queryKey: ["/api/products/search", productSearchQuery],
@@ -368,6 +379,27 @@ function CreatePOForm({ suppliers, onClose, onSuccess }: {
       apiRequest(`/api/products/search?query=${encodeURIComponent(productSearchQuery)}`),
     enabled: productSearchQuery.length > 0,
   });
+
+  // Auto-populate supplier products when supplier is selected
+  const autoPopulateSupplierProducts = () => {
+    if (supplierProducts.length > 0) {
+      const newItems = supplierProducts.map((sp: any) => ({
+        productId: sp.product.id,
+        description: sp.product.name,
+        qty: 1,
+        unitPrice: sp.product.unitPrice || 0,
+        sku: sp.product.sku || "",
+        brand: sp.product.brand,
+        size: sp.product.size,
+        thickness: sp.product.thickness,
+      }));
+      setItems(newItems);
+      toast({
+        title: "Products Auto-Populated",
+        description: `${supplierProducts.length} products loaded from supplier catalog`,
+      });
+    }
+  };
 
   // Function to get supplier suggestions when products are selected
   const getSuggestedSuppliers = async () => {
@@ -441,7 +473,10 @@ function CreatePOForm({ suppliers, onClose, onSuccess }: {
       description: "",
       qty: 1,
       unitPrice: 0,
-      sku: ""
+      sku: "",
+      brand: "",
+      size: "",
+      thickness: ""
     }]);
   };
 
@@ -502,7 +537,14 @@ function CreatePOForm({ suppliers, onClose, onSuccess }: {
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label>Supplier *</Label>
-          <Select value={selectedSupplier?.toString() || ""} onValueChange={(value) => setSelectedSupplier(parseInt(value))}>
+          <Select 
+            value={selectedSupplier?.toString() || ""} 
+            onValueChange={(value) => {
+              setSelectedSupplier(parseInt(value));
+              // Clear existing items when switching suppliers
+              setItems([]);
+            }}
+          >
             <SelectTrigger>
               <SelectValue placeholder="Select supplier" />
             </SelectTrigger>
@@ -514,6 +556,19 @@ function CreatePOForm({ suppliers, onClose, onSuccess }: {
               ))}
             </SelectContent>
           </Select>
+          
+          {/* Auto-populate button when supplier is selected and has products */}
+          {selectedSupplier && supplierProducts.length > 0 && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={autoPopulateSupplierProducts}
+              className="mt-2 w-full h-8 text-xs"
+            >
+              Auto-Populate {supplierProducts.length} Products
+            </Button>
+          )}
           
           {showSuggestions && suggestedSuppliers.length > 0 && (
             <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
@@ -574,76 +629,90 @@ function CreatePOForm({ suppliers, onClose, onSuccess }: {
         </div>
         
         {items.map((item, index) => (
-          <div key={index} className="grid grid-cols-12 gap-2 mb-3 p-3 border rounded">
-            <div className="col-span-4">
-              <Label className="text-xs">Product/Description *</Label>
-              <Autocomplete
-                value={item.description}
-                onChange={(value) => updateItem(index, 'description', value)}
-                onSelect={(option: any) => {
-                  updateItem(index, 'productId', option.id);
-                  updateItem(index, 'description', option.name);
-                  updateItem(index, 'sku', option.sku);
-                  updateItem(index, 'unitPrice', option.price || 0);
-                }}
-                options={productSearchResults}
-                placeholder="Search products..."
-                className="h-8 text-xs"
-              />
-            </div>
-            
-            <div className="col-span-2">
-              <Label className="text-xs">SKU</Label>
-              <Input
-                value={item.sku || ""}
-                onChange={(e) => updateItem(index, 'sku', e.target.value)}
-                className="h-8 text-xs"
-                placeholder="SKU"
-              />
-            </div>
-            
-            <div className="col-span-2">
-              <Label className="text-xs">Qty *</Label>
-              <Input
-                type="number"
-                value={item.qty}
-                onChange={(e) => updateItem(index, 'qty', parseInt(e.target.value) || 0)}
-                className="h-8 text-xs"
-                min="1"
-                required
-              />
-            </div>
-            
-            <div className="col-span-2">
-              <Label className="text-xs">Unit Price *</Label>
-              <Input
-                type="number"
-                value={item.unitPrice}
-                onChange={(e) => updateItem(index, 'unitPrice', parseFloat(e.target.value) || 0)}
-                className="h-8 text-xs"
-                min="0"
-                step="0.01"
-                required
-              />
-            </div>
-            
-            <div className="col-span-1">
-              <Label className="text-xs">Total</Label>
-              <div className="h-8 flex items-center text-xs font-medium">
-                ₹{(item.qty * item.unitPrice).toLocaleString()}
+          <div key={index} className="border rounded p-3 mb-3 space-y-2">
+            {/* Product details row */}
+            <div className="grid grid-cols-12 gap-2">
+              <div className="col-span-4">
+                <Label className="text-xs">Product/Description *</Label>
+                <Autocomplete
+                  value={item.description}
+                  onChange={(value) => updateItem(index, 'description', value)}
+                  onSelect={(option: any) => {
+                    updateItem(index, 'productId', option.id);
+                    updateItem(index, 'description', option.name);
+                    updateItem(index, 'sku', option.sku);
+                    updateItem(index, 'unitPrice', option.price || 0);
+                    updateItem(index, 'brand', option.brand);
+                    updateItem(index, 'size', option.size);
+                    updateItem(index, 'thickness', option.thickness);
+                  }}
+                  options={productSearchResults}
+                  placeholder="Search products..."
+                  className="h-8 text-xs"
+                />
+                {/* Product metadata display */}
+                {(item.brand || item.size || item.thickness) && (
+                  <div className="flex gap-2 mt-1 text-xs text-gray-600">
+                    {item.brand && <span>Brand: {item.brand}</span>}
+                    {item.size && <span>• Size: {item.size}</span>}
+                    {item.thickness && <span>• Thickness: {item.thickness}</span>}
+                  </div>
+                )}
               </div>
-            </div>
-            
-            <div className="col-span-1 flex items-end">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => removeItem(index)}
-                className="h-8 w-8 p-0"
-              >
-                <XCircle className="h-3 w-3" />
-              </Button>
+              
+              <div className="col-span-2">
+                <Label className="text-xs">SKU</Label>
+                <Input
+                  value={item.sku || ""}
+                  onChange={(e) => updateItem(index, 'sku', e.target.value)}
+                  className="h-8 text-xs"
+                  placeholder="SKU"
+                />
+              </div>
+              
+              <div className="col-span-2">
+                <Label className="text-xs">Qty *</Label>
+                <Input
+                  type="number"
+                  value={item.qty}
+                  onChange={(e) => updateItem(index, 'qty', parseInt(e.target.value) || 0)}
+                  className="h-8 text-xs"
+                  min="1"
+                  required
+                />
+              </div>
+              
+              <div className="col-span-2">
+                <Label className="text-xs">Unit Price *</Label>
+                <Input
+                  type="number"
+                  value={item.unitPrice}
+                  onChange={(e) => updateItem(index, 'unitPrice', parseFloat(e.target.value) || 0)}
+                  className="h-8 text-xs"
+                  min="0"
+                  step="0.01"
+                  required
+                />
+              </div>
+              
+              <div className="col-span-1">
+                <Label className="text-xs">Total</Label>
+                <div className="h-8 flex items-center text-xs font-medium">
+                  ₹{(item.qty * item.unitPrice).toLocaleString()}
+                </div>
+              </div>
+              
+              <div className="col-span-1 flex items-end">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => removeItem(index)}
+                  className="h-8 w-8 p-0"
+                >
+                  <XCircle className="h-3 w-3" />
+                </Button>
+              </div>
             </div>
           </div>
         ))}
