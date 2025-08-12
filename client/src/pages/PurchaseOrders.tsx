@@ -10,17 +10,23 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Send, Package, FileText, Eye, CheckCircle, XCircle, Clock, AlertTriangle } from "lucide-react";
+import { Plus, Send, Package, FileText, Eye, CheckCircle, XCircle, Clock, AlertTriangle, Download, Edit, Trash2, MessageCircle, MoreVertical } from "lucide-react";
 import { Autocomplete } from "@/components/ui/autocomplete";
 import { format } from "date-fns";
 import { apiRequest } from "@/lib/queryClient";
 import FurniliLayout from "@/components/Layout/FurniliLayout";
 import type { PurchaseOrderWithDetails, Supplier, Product } from "@shared/schema";
+// @ts-ignore
+import html2pdf from "html2pdf.js";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 
 export default function PurchaseOrders() {
   const [selectedTab, setSelectedTab] = useState("all");
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showReceiveModal, setShowReceiveModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [selectedPO, setSelectedPO] = useState<PurchaseOrderWithDetails | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -92,6 +98,111 @@ export default function PurchaseOrders() {
       });
     },
   });
+
+  // Delete PO mutation
+  const deletePOMutation = useMutation({
+    mutationFn: (poId: number) => 
+      apiRequest(`/api/purchase-orders/${poId}`, { 
+        method: "DELETE",
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/purchase-orders"] });
+      setShowDeleteDialog(false);
+      setSelectedPO(null);
+      toast({
+        title: "Success",
+        description: "Purchase order deleted successfully",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to delete purchase order",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // PDF Export Function
+  const handleExportPDF = async (po: PurchaseOrderWithDetails) => {
+    try {
+      const response = await apiRequest(`/api/purchase-orders/${po.id}/pdf`);
+      
+      const opt = {
+        margin: 1,
+        filename: response.filename,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+      };
+
+      html2pdf().set(opt).from(response.html).save();
+      
+      toast({
+        title: "Success",
+        description: "PDF generated successfully",
+      });
+    } catch (error) {
+      console.error("PDF generation error:", error);
+      toast({
+        title: "Error",
+        description: "Failed to generate PDF",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // WhatsApp Share Function
+  const handleShareWhatsApp = async (po: PurchaseOrderWithDetails) => {
+    try {
+      const response = await apiRequest(`/api/purchase-orders/${po.id}/pdf`);
+      
+      const opt = {
+        margin: 1,
+        filename: response.filename,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+      };
+
+      // Generate PDF blob instead of downloading
+      const pdfBlob = await html2pdf().set(opt).from(response.html).outputPdf('blob');
+      
+      // Create a temporary URL for the PDF
+      const pdfUrl = URL.createObjectURL(pdfBlob);
+      
+      // Create WhatsApp message
+      const message = `Purchase Order ${po.poNumber} from Furnili\nSupplier: ${po.supplier?.name}\nTotal: ₹${po.totalAmount.toLocaleString()}\n\nPDF: ${pdfUrl}`;
+      const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+      
+      // Open WhatsApp
+      window.open(whatsappUrl, '_blank');
+      
+      toast({
+        title: "Success",
+        description: "WhatsApp opened with purchase order details",
+      });
+    } catch (error) {
+      console.error("WhatsApp share error:", error);
+      toast({
+        title: "Error",
+        description: "Failed to share via WhatsApp",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Edit PO handler
+  const handleEdit = (po: PurchaseOrderWithDetails) => {
+    setSelectedPO(po);
+    setShowEditModal(true);
+  };
+
+  // Delete PO handler
+  const handleDelete = (po: PurchaseOrderWithDetails) => {
+    setSelectedPO(po);
+    setShowDeleteDialog(true);
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -230,16 +341,24 @@ export default function PurchaseOrders() {
                     </div>
                     
                     <div className="flex items-center space-x-2">
+                      {/* Main Action Buttons */}
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => {
-                          setSelectedPO(po);
-                          // Open view modal - to be implemented
-                        }}
+                        onClick={() => handleExportPDF(po)}
                       >
-                        <Eye className="h-4 w-4 mr-1" />
-                        View
+                        <Download className="h-4 w-4 mr-1" />
+                        PDF
+                      </Button>
+
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleShareWhatsApp(po)}
+                        className="text-green-600 hover:text-green-700 border-green-200 hover:border-green-300"
+                      >
+                        <MessageCircle className="h-4 w-4 mr-1" />
+                        WhatsApp
                       </Button>
                       
                       {canSendPO(po) && (
@@ -266,22 +385,54 @@ export default function PurchaseOrders() {
                           Receive
                         </Button>
                       )}
-                      
-                      {canCancelPO(po) && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            if (confirm(`Are you sure you want to cancel PO ${po.poNumber}?`)) {
-                              cancelPOMutation.mutate(po.id);
-                            }
-                          }}
-                          className="text-red-600 hover:text-red-700 border-red-200 hover:border-red-300"
-                        >
-                          <XCircle className="h-4 w-4 mr-1" />
-                          Cancel
-                        </Button>
-                      )}
+
+                      {/* More Actions Dropdown */}
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="outline" size="sm">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem
+                            onClick={() => {
+                              setSelectedPO(po);
+                              // Open view modal - to be implemented
+                            }}
+                          >
+                            <Eye className="h-4 w-4 mr-2" />
+                            View Details
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => handleEdit(po)}
+                            disabled={po.status === 'received' || po.status === 'cancelled'}
+                          >
+                            <Edit className="h-4 w-4 mr-2" />
+                            Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          {canCancelPO(po) && (
+                            <DropdownMenuItem
+                              onClick={() => {
+                                if (confirm(`Are you sure you want to cancel PO ${po.poNumber}?`)) {
+                                  cancelPOMutation.mutate(po.id);
+                                }
+                              }}
+                              className="text-orange-600 hover:text-orange-700"
+                            >
+                              <XCircle className="h-4 w-4 mr-2" />
+                              Cancel
+                            </DropdownMenuItem>
+                          )}
+                          <DropdownMenuItem
+                            onClick={() => handleDelete(po)}
+                            className="text-red-600 hover:text-red-700"
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
                   </div>
                   
@@ -336,6 +487,62 @@ export default function PurchaseOrders() {
           </DialogContent>
         </Dialog>
       )}
+
+      {/* Edit PO Modal */}
+      {showEditModal && selectedPO && (
+        <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
+          <DialogContent className="max-w-[85vw] max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Edit Purchase Order</DialogTitle>
+              <DialogDescription>
+                Edit purchase order {selectedPO.poNumber}
+              </DialogDescription>
+            </DialogHeader>
+            <EditPOForm 
+              po={selectedPO}
+              suppliers={suppliers}
+              onClose={() => {
+                setShowEditModal(false);
+                setSelectedPO(null);
+              }}
+              onSuccess={() => {
+                setShowEditModal(false);
+                setSelectedPO(null);
+                queryClient.invalidateQueries({ queryKey: ["/api/purchase-orders"] });
+              }}
+            />
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Purchase Order</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete purchase order {selectedPO?.poNumber}? This action cannot be undone.
+              <br />
+              <br />
+              <span className="font-medium text-red-600">
+                This will permanently remove the purchase order and all its items.
+              </span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setSelectedPO(null)}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => selectedPO && deletePOMutation.mutate(selectedPO.id)}
+              disabled={deletePOMutation.isPending}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {deletePOMutation.isPending ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       </div>
     </FurniliLayout>
   );
@@ -778,6 +985,280 @@ function CreatePOForm({ suppliers, onClose, onSuccess }: {
         </Button>
         <Button type="submit" disabled={createPOMutation.isPending}>
           {createPOMutation.isPending ? "Creating..." : "Create Purchase Order"}
+        </Button>
+      </div>
+    </form>
+  );
+}
+
+// Edit PO Form Component
+function EditPOForm({ po, suppliers, onClose, onSuccess }: {
+  po: PurchaseOrderWithDetails;
+  suppliers: Supplier[];
+  onClose: () => void;
+  onSuccess: () => void;
+}) {
+  const [selectedSupplier, setSelectedSupplier] = useState<number | null>(po.supplierId);
+  const [items, setItems] = useState<Array<{
+    productId?: number;
+    description: string;
+    qty: number;
+    unitPrice: number;
+    sku?: string;
+    brand?: string;
+    size?: string;
+    thickness?: string;
+    category?: string;
+  }>>(po.items?.map(item => ({
+    productId: item.productId,
+    description: item.description,
+    qty: item.qty,
+    unitPrice: item.unitPrice,
+    sku: item.sku,
+    brand: item.brand,
+    size: item.size,
+    thickness: item.thickness,
+    category: item.category,
+  })) || []);
+  const [notes, setNotes] = useState(po.notes || "");
+  const [productSearchQuery, setProductSearchQuery] = useState("");
+  const { toast } = useToast();
+
+  // Search products for autocomplete
+  const { data: productSearchResults = [] } = useQuery({
+    queryKey: ["/api/products/search", productSearchQuery],
+    queryFn: () => 
+      apiRequest(`/api/products/search?query=${encodeURIComponent(productSearchQuery)}`),
+    enabled: productSearchQuery.length > 0,
+  });
+
+  // Update PO mutation
+  const updatePOMutation = useMutation({
+    mutationFn: (data: any) => 
+      apiRequest(`/api/purchase-orders/${po.id}`, {
+        method: "PUT",
+        body: JSON.stringify(data),
+        headers: { "Content-Type": "application/json" }
+      }),
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Purchase order updated successfully",
+      });
+      onSuccess();
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update purchase order",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (items.length === 0) {
+      toast({
+        title: "Error",
+        description: "Please add at least one item",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!selectedSupplier) {
+      toast({
+        title: "Error", 
+        description: "Please select a supplier",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    updatePOMutation.mutate({
+      supplierId: selectedSupplier,
+      notes,
+      items,
+    });
+  };
+
+  // Same item management functions as CreatePOForm
+  const addItem = () => {
+    setItems(prev => [...prev, {
+      description: "",
+      qty: 1,
+      unitPrice: 0,
+      sku: "",
+      brand: "",
+      size: "",
+      thickness: "",
+      category: "",
+    }]);
+  };
+
+  const updateItem = (index: number, field: string, value: any) => {
+    setItems(prev => prev.map((item, i) => 
+      i === index ? { ...item, [field]: value } : item
+    ));
+  };
+
+  const removeItem = (index: number) => {
+    setItems(prev => prev.filter((_, i) => i !== index));
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-3">
+      <div className="grid grid-cols-1 gap-3">
+        <div>
+          <Label className="text-xs font-medium">Supplier *</Label>
+          <Select
+            value={selectedSupplier?.toString() || ""}
+            onValueChange={(value) => setSelectedSupplier(parseInt(value))}
+          >
+            <SelectTrigger className="h-8 text-xs">
+              <SelectValue placeholder="Select supplier..." />
+            </SelectTrigger>
+            <SelectContent>
+              {suppliers.map((supplier) => (
+                <SelectItem key={supplier.id} value={supplier.id.toString()}>
+                  {supplier.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {/* Items Table - Same structure as CreatePOForm but smaller for editing */}
+      <div className="space-y-1">
+        <Label className="text-xs font-medium">Items *</Label>
+        <div className="border rounded-md overflow-hidden">
+          {/* Table Headers */}
+          <div className="grid grid-cols-[2fr,1fr,1fr,80px,120px,60px] gap-2 p-2 bg-gray-50 text-xs font-medium text-gray-700 border-b">
+            <div>Description *</div>
+            <div>Size</div>
+            <div>Thickness</div>
+            <div>Qty *</div>
+            <div>Unit Price *</div>
+            <div></div>
+          </div>
+          
+          {/* Item Rows */}
+          {items.map((item, index) => (
+            <div key={index} className="grid grid-cols-[2fr,1fr,1fr,80px,120px,60px] gap-2 p-2 border-b last:border-b-0 bg-white">
+              <div>
+                <Input
+                  value={item.description}
+                  onChange={(e) => updateItem(index, 'description', e.target.value)}
+                  className="h-8 text-xs"
+                  placeholder="Product description"
+                  required
+                />
+              </div>
+              
+              <div>
+                <Input
+                  value={item.size || ""}
+                  onChange={(e) => updateItem(index, 'size', e.target.value)}
+                  className="h-8 text-xs"
+                  placeholder="Size"
+                />
+              </div>
+              
+              <div>
+                <Input
+                  value={item.thickness || ""}
+                  onChange={(e) => updateItem(index, 'thickness', e.target.value)}
+                  className="h-8 text-xs"
+                  placeholder="Thickness"
+                />
+              </div>
+              
+              <div>
+                <Input
+                  type="number"
+                  value={item.qty}
+                  onChange={(e) => updateItem(index, 'qty', parseInt(e.target.value) || 0)}
+                  className="h-8 text-xs"
+                  min="1"
+                  required
+                />
+              </div>
+              
+              <div>
+                <Input
+                  type="text"
+                  value={item.unitPrice}
+                  onChange={(e) => updateItem(index, 'unitPrice', parseFloat(e.target.value) || 0)}
+                  className="h-8 text-xs"
+                  placeholder="0.00"
+                />
+              </div>
+              
+              <div className="flex items-center justify-center">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => removeItem(index)}
+                  className="h-8 w-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
+                >
+                  <XCircle className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          ))}
+
+          {/* Add Item Row */}
+          <div className="p-3 border-t bg-gray-50">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={addItem}
+              className="h-8 text-xs"
+            >
+              <Plus className="h-3 w-3 mr-1" />
+              Add Item
+            </Button>
+          </div>
+        </div>
+      </div>
+      
+      {items.length > 0 && (
+        <div className="flex justify-end">
+          <div className="text-right">
+            <div className="text-lg font-semibold text-[hsl(28,100%,25%)]">
+              Total: ₹{items.reduce((sum, item) => sum + (item.qty * item.unitPrice), 0).toLocaleString()}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Remarks section */}
+      <div className="space-y-1">
+        <Label className="text-xs font-medium">Remarks:</Label>
+        <textarea
+          className="w-full h-16 px-3 py-2 text-xs border border-gray-300 rounded-md resize-none focus:ring-2 focus:ring-[hsl(28,100%,25%)] focus:border-transparent"
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          placeholder="Additional notes or special instructions..."
+        />
+      </div>
+
+      {/* Submit Button */}
+      <div className="flex justify-end space-x-2 pt-4 border-t">
+        <Button type="button" variant="outline" onClick={onClose}>
+          Cancel
+        </Button>
+        <Button 
+          type="submit" 
+          disabled={updatePOMutation.isPending || items.length === 0}
+          className="bg-[hsl(28,100%,25%)] hover:bg-[hsl(28,100%,20%)]"
+        >
+          {updatePOMutation.isPending ? "Updating..." : "Update Purchase Order"}
         </Button>
       </div>
     </form>

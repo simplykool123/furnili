@@ -3224,6 +3224,285 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Setup quotes routes
   setupQuotesRoutes(app);
 
+  // Purchase Order PDF generation
+  app.get("/api/purchase-orders/:id/pdf", authenticateToken, async (req, res) => {
+    try {
+      const poId = parseInt(req.params.id);
+
+      // Get PO with all details
+      const poData = await db
+        .select({
+          po: purchaseOrders,
+          supplier: suppliers,
+          createdBy: {
+            id: users.id,
+            name: users.name,
+          }
+        })
+        .from(purchaseOrders)
+        .leftJoin(suppliers, eq(purchaseOrders.supplierId, suppliers.id))
+        .leftJoin(users, eq(purchaseOrders.createdBy, users.id))
+        .where(eq(purchaseOrders.id, poId))
+        .limit(1);
+
+      if (poData.length === 0) {
+        return res.status(404).json({ error: "Purchase Order not found" });
+      }
+
+      // Get PO items
+      const items = await db
+        .select({
+          item: purchaseOrderItems,
+          product: products,
+        })
+        .from(purchaseOrderItems)
+        .leftJoin(products, eq(purchaseOrderItems.productId, products.id))
+        .where(eq(purchaseOrderItems.poId, poId))
+        .orderBy(purchaseOrderItems.id);
+
+      const po = poData[0];
+
+      // Generate HTML for PDF
+      const html = generatePurchaseOrderPDFHTML(po, items);
+
+      // Set headers for PDF download
+      res.setHeader('Content-Type', 'application/json');
+      res.json({ 
+        html: html,
+        filename: `PurchaseOrder_${po.po.poNumber}_${po.supplier?.name || 'Supplier'}.pdf`
+      });
+
+    } catch (error) {
+      console.error("Error generating purchase order PDF:", error);
+      res.status(500).json({ error: "Failed to generate PDF" });
+    }
+  });
+
+  // Update Purchase Order
+  app.put("/api/purchase-orders/:id", authenticateToken, requireRole(['admin', 'manager']), async (req: AuthRequest, res) => {
+    try {
+      const poId = parseInt(req.params.id);
+      const { items, ...poData } = req.body;
+      
+      if (!items || !Array.isArray(items) || items.length === 0) {
+        return res.status(400).json({ message: "Purchase order must have at least one item" });
+      }
+      
+      const validatedPO = insertPurchaseOrderSchema.omit({ createdBy: true }).parse(poData);
+      const validatedItems = items.map((item: any) => 
+        insertPurchaseOrderItemSchema.omit({ poId: true }).parse(item)
+      );
+      
+      // Calculate total amount from items
+      const totalAmount = validatedItems.reduce((sum, item) => sum + (item.qty * item.unitPrice), 0);
+      
+      // Update PO
+      await db.update(purchaseOrders)
+        .set({ ...validatedPO, totalAmount, updatedAt: new Date() })
+        .where(eq(purchaseOrders.id, poId));
+      
+      // Delete existing items
+      await db.delete(purchaseOrderItems).where(eq(purchaseOrderItems.poId, poId));
+      
+      // Insert new items
+      const itemsWithPOId = validatedItems.map(item => ({ 
+        ...item, 
+        poId: poId,
+        totalPrice: item.qty * item.unitPrice
+      }));
+      
+      await db.insert(purchaseOrderItems).values(itemsWithPOId);
+      
+      // Create audit log
+      await storage.createAuditLog({
+        userId: req.user!.id,
+        action: 'po.updated',
+        tableName: 'purchase_orders',
+        recordId: poId,
+        metadata: { itemCount: items.length, totalAmount }
+      });
+      
+      res.json({ message: "Purchase order updated successfully" });
+    } catch (error) {
+      console.error("Update purchase order error:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Validation error", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to update purchase order" });
+    }
+  });
+
+  // Delete Purchase Order
+  app.delete("/api/purchase-orders/:id", authenticateToken, requireRole(['admin', 'manager']), async (req: AuthRequest, res) => {
+    try {
+      const poId = parseInt(req.params.id);
+      
+      // Get PO details for audit log
+      const po = await db.select().from(purchaseOrders).where(eq(purchaseOrders.id, poId)).limit(1);
+      
+      if (po.length === 0) {
+        return res.status(404).json({ message: "Purchase order not found" });
+      }
+      
+      // Delete PO items first (foreign key constraint)
+      await db.delete(purchaseOrderItems).where(eq(purchaseOrderItems.poId, poId));
+      
+      // Delete PO
+      await db.delete(purchaseOrders).where(eq(purchaseOrders.id, poId));
+      
+      // Create audit log
+      await storage.createAuditLog({
+        userId: req.user!.id,
+        action: 'po.deleted',
+        tableName: 'purchase_orders',
+        recordId: poId,
+        metadata: { poNumber: po[0].poNumber }
+      });
+      
+      res.json({ message: "Purchase order deleted successfully" });
+    } catch (error) {
+      console.error("Delete purchase order error:", error);
+      res.status(500).json({ message: "Failed to delete purchase order" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
+}
+
+// Generate Purchase Order PDF HTML (similar to quote PDF format)
+function generatePurchaseOrderPDFHTML(po: any, items: any[]): string {
+  const currentDate = new Date().toLocaleDateString('en-IN');
+  
+  // Calculate totals
+  const subtotal = items.reduce((sum, item) => sum + (item.item.qty * item.item.unitPrice), 0);
+  const gst = subtotal * 0.18; // 18% GST
+  const total = subtotal + gst;
+
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <title>Purchase Order - ${po.po.poNumber}</title>
+      <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; font-size: 12px; line-height: 1.4; }
+        .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px; border-bottom: 2px solid #8B4513; padding-bottom: 20px; }
+        .company-info { flex: 1; }
+        .company-logo { font-size: 24px; font-weight: bold; color: #8B4513; margin-bottom: 5px; }
+        .company-details { color: #666; font-size: 11px; }
+        .po-info { text-align: right; }
+        .po-title { font-size: 20px; font-weight: bold; color: #8B4513; margin-bottom: 10px; }
+        .po-details { font-size: 11px; color: #666; }
+        .section { margin-bottom: 25px; }
+        .section-title { font-size: 14px; font-weight: bold; color: #8B4513; margin-bottom: 10px; border-bottom: 1px solid #ddd; padding-bottom: 5px; }
+        .supplier-info { background-color: #f9f9f9; padding: 15px; border-radius: 5px; }
+        .items-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        .items-table th { background-color: #8B4513; color: white; padding: 10px; text-align: left; font-size: 11px; }
+        .items-table td { padding: 8px 10px; border-bottom: 1px solid #ddd; font-size: 11px; }
+        .items-table tr:nth-child(even) { background-color: #f9f9f9; }
+        .totals { float: right; width: 300px; }
+        .totals table { width: 100%; border-collapse: collapse; }
+        .totals td { padding: 8px; border-bottom: 1px solid #ddd; }
+        .totals .total-row { font-weight: bold; font-size: 14px; background-color: #f0f0f0; }
+        .footer { clear: both; margin-top: 40px; padding-top: 20px; border-top: 1px solid #ddd; text-align: center; font-size: 10px; color: #666; }
+        .notes { margin-top: 20px; padding: 15px; background-color: #f9f9f9; border-radius: 5px; }
+        .text-right { text-align: right; }
+        .text-center { text-align: center; }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <div class="company-info">
+          <div class="company-logo">FURNILI</div>
+          <div class="company-details">
+            Professional Furniture Solutions<br>
+            Email: info@furnili.com<br>
+            Phone: +91 9876543210<br>
+            GST: 07AABCF1234M1ZX
+          </div>
+        </div>
+        <div class="po-info">
+          <div class="po-title">PURCHASE ORDER</div>
+          <div class="po-details">
+            <strong>PO Number:</strong> ${po.po.poNumber}<br>
+            <strong>Date:</strong> ${currentDate}<br>
+            <strong>Status:</strong> ${po.po.status.charAt(0).toUpperCase() + po.po.status.slice(1)}
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Supplier Information</div>
+        <div class="supplier-info">
+          <strong>${po.supplier?.name || 'N/A'}</strong><br>
+          Contact Person: ${po.supplier?.contactPerson || 'N/A'}<br>
+          Phone: ${po.supplier?.phone || 'N/A'}<br>
+          Email: ${po.supplier?.email || 'N/A'}<br>
+          Address: ${po.supplier?.address || 'N/A'}
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Order Items</div>
+        <table class="items-table">
+          <thead>
+            <tr>
+              <th style="width: 5%;">#</th>
+              <th style="width: 35%;">Description</th>
+              <th style="width: 10%;">SKU</th>
+              <th style="width: 10%;">Quantity</th>
+              <th style="width: 15%;">Unit Price</th>
+              <th style="width: 15%;">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${items.map((item, index) => `
+              <tr>
+                <td class="text-center">${index + 1}</td>
+                <td>
+                  <strong>${item.item.description}</strong>
+                  ${item.product ? `<br><small>Product: ${item.product.name}</small>` : ''}
+                </td>
+                <td>${item.item.sku || '-'}</td>
+                <td class="text-center">${item.item.qty}</td>
+                <td class="text-right">₹${item.item.unitPrice.toLocaleString()}</td>
+                <td class="text-right">₹${(item.item.qty * item.item.unitPrice).toLocaleString()}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+
+        <div class="totals">
+          <table>
+            <tr>
+              <td>Subtotal:</td>
+              <td class="text-right">₹${subtotal.toLocaleString()}</td>
+            </tr>
+            <tr>
+              <td>GST (18%):</td>
+              <td class="text-right">₹${gst.toLocaleString()}</td>
+            </tr>
+            <tr class="total-row">
+              <td><strong>Total Amount:</strong></td>
+              <td class="text-right"><strong>₹${total.toLocaleString()}</strong></td>
+            </tr>
+          </table>
+        </div>
+      </div>
+
+      ${po.po.notes ? `
+        <div class="notes">
+          <div class="section-title">Notes & Remarks</div>
+          ${po.po.notes}
+        </div>
+      ` : ''}
+
+      <div class="footer">
+        Generated by ${po.createdBy?.name || 'System'} on ${currentDate}<br>
+        This is a computer-generated purchase order and does not require a signature.
+      </div>
+    </body>
+    </html>
+  `;
 }
