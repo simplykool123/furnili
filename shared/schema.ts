@@ -856,6 +856,21 @@ export const purchaseOrderItems = pgTable("purchase_order_items", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Supplier-Product Relationship Table (Many-to-Many)
+export const supplierProducts = pgTable("supplier_products", {
+  id: serial("id").primaryKey(),
+  supplierId: integer("supplier_id").references(() => suppliers.id).notNull(),
+  productId: integer("product_id").references(() => products.id).notNull(),
+  isPreferred: boolean("is_preferred").notNull().default(false), // Mark as preferred supplier for this product
+  leadTimeDays: integer("lead_time_days").default(7), // Delivery time in days
+  minOrderQty: integer("min_order_qty").default(1), // Minimum order quantity
+  unitPrice: real("unit_price").default(0), // Supplier's price for this product
+  isActive: boolean("is_active").notNull().default(true),
+  createdBy: integer("created_by").references(() => users.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 export const auditLogs = pgTable("audit_logs", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").references(() => users.id).notNull(),
@@ -870,6 +885,7 @@ export const auditLogs = pgTable("audit_logs", {
 export const insertSupplierSchema = createInsertSchema(suppliers).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertBrandSchema = createInsertSchema(brands).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertSupplierBrandSchema = createInsertSchema(supplierBrands).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertSupplierProductSchema = createInsertSchema(supplierProducts).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertPurchaseOrderSchema = createInsertSchema(purchaseOrders).omit({ 
   id: true, 
   poNumber: true, 
@@ -891,6 +907,8 @@ export type Brand = typeof brands.$inferSelect;
 export type InsertBrand = z.infer<typeof insertBrandSchema>;
 export type SupplierBrand = typeof supplierBrands.$inferSelect;
 export type InsertSupplierBrand = z.infer<typeof insertSupplierBrandSchema>;
+export type SupplierProduct = typeof supplierProducts.$inferSelect;
+export type InsertSupplierProduct = z.infer<typeof insertSupplierProductSchema>;
 export type PurchaseOrder = typeof purchaseOrders.$inferSelect;
 export type InsertPurchaseOrder = z.infer<typeof insertPurchaseOrderSchema>;
 export type PurchaseOrderItem = typeof purchaseOrderItems.$inferSelect;

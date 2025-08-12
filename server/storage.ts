@@ -21,6 +21,7 @@ import {
   suppliers,
   brands,
   supplierBrands,
+  supplierProducts,
   purchaseOrders,
   purchaseOrderItems,
   auditLogs
@@ -70,6 +71,8 @@ import type {
   InsertBrand,
   SupplierBrand,
   InsertSupplierBrand,
+  SupplierProduct,
+  InsertSupplierProduct,
   PurchaseOrder,
   InsertPurchaseOrder,
   PurchaseOrderItem,
@@ -1579,7 +1582,7 @@ class DatabaseStorage implements IStorage {
     return await query.orderBy(desc(auditLogs.createdAt));
   }
 
-  // Auto PO Generation
+  // Auto PO Generation with Intelligent Supplier Selection
   async generateAutoPurchaseOrders(userId: number): Promise<PurchaseOrder[]> {
     // Find products with low stock (current_stock < minimum_stock_level)
     const lowStockProducts = await db.select({
@@ -1588,7 +1591,8 @@ class DatabaseStorage implements IStorage {
       sku: products.sku,
       currentStock: products.currentStock,
       minimumStockLevel: products.minimumStockLevel,
-      price: products.price
+      price: products.price,
+      brand: products.brand
     })
     .from(products)
     .where(
@@ -1602,41 +1606,121 @@ class DatabaseStorage implements IStorage {
       return [];
     }
     
-    // Group products by preferred supplier (for now, we'll create one PO for all products)
-    // In a real implementation, you'd group by supplier based on product-supplier relationships
-    const preferredSupplier = await db.select()
-      .from(suppliers)
-      .where(and(eq(suppliers.preferred, true), eq(suppliers.isActive, true)))
-      .limit(1);
+    // Group products by supplier using supplier-product relationships
+    const productSupplierMap = new Map<number, { supplier: Supplier; products: Array<any>; relationships: Array<any> }>();
     
-    if (preferredSupplier.length === 0) {
-      throw new Error('No preferred supplier found for auto PO generation');
+    for (const product of lowStockProducts) {
+      // Find suppliers for this product
+      const productSuppliers = await db.select()
+        .from(supplierProducts)
+        .leftJoin(suppliers, eq(supplierProducts.supplierId, suppliers.id))
+        .where(and(
+          eq(supplierProducts.productId, product.id),
+          eq(supplierProducts.isActive, true),
+          eq(suppliers.isActive, true)
+        ))
+        .orderBy(desc(supplierProducts.isPreferred), asc(supplierProducts.unitPrice));
+      
+      let selectedSupplier = null;
+      let selectedRelationship = null;
+      
+      if (productSuppliers.length > 0) {
+        // Use the best supplier (preferred first, then lowest price)
+        selectedSupplier = productSuppliers[0].suppliers!;
+        selectedRelationship = productSuppliers[0].supplier_products!;
+      } else if (product.brand) {
+        // If no direct supplier-product relationship, try to find by brand
+        const brandSuppliers = await db.select()
+          .from(supplierBrands)
+          .leftJoin(suppliers, eq(supplierBrands.supplierId, suppliers.id))
+          .leftJoin(brands, eq(supplierBrands.brandId, brands.id))
+          .where(and(
+            eq(brands.name, product.brand),
+            eq(supplierBrands.isActive, true),
+            eq(suppliers.isActive, true)
+          ))
+          .orderBy(desc(supplierBrands.isPrimarySupplier))
+          .limit(1);
+        
+        if (brandSuppliers.length > 0) {
+          selectedSupplier = brandSuppliers[0].suppliers!;
+        }
+      }
+      
+      if (!selectedSupplier) {
+        // Fall back to preferred supplier
+        const fallbackSuppliers = await db.select()
+          .from(suppliers)
+          .where(and(eq(suppliers.preferred, true), eq(suppliers.isActive, true)))
+          .limit(1);
+        
+        if (fallbackSuppliers.length > 0) {
+          selectedSupplier = fallbackSuppliers[0];
+        }
+      }
+      
+      if (selectedSupplier) {
+        if (!productSupplierMap.has(selectedSupplier.id)) {
+          productSupplierMap.set(selectedSupplier.id, {
+            supplier: selectedSupplier,
+            products: [],
+            relationships: []
+          });
+        }
+        
+        productSupplierMap.get(selectedSupplier.id)!.products.push(product);
+        if (selectedRelationship) {
+          productSupplierMap.get(selectedSupplier.id)!.relationships.push(selectedRelationship);
+        }
+      }
     }
     
-    const supplier = preferredSupplier[0];
+    if (productSupplierMap.size === 0) {
+      throw new Error('No suppliers found for low stock products');
+    }
     
-    // Create PO items for low stock products
-    const items: InsertPurchaseOrderItem[] = lowStockProducts.map(product => ({
-      poId: 0, // Will be set when PO is created
-      productId: product.id,
-      sku: product.sku || '',
-      description: product.name,
-      qty: (product.minimumStockLevel || 10) - product.currentStock, // Order enough to reach minimum level
-      unitPrice: product.price || 0
-    }));
+    // Create separate POs for each supplier
+    const createdPOs: PurchaseOrder[] = [];
     
-    // Create the auto PO
-    const po: InsertPurchaseOrder = {
-      supplierId: supplier.id,
-      status: 'draft',
-      notes: 'Auto-generated PO for low stock items',
-      autoGenerated: true,
-      createdBy: userId
-    };
+    for (const [supplierId, supplierData] of productSupplierMap) {
+      const { supplier, products: supplierProducts, relationships } = supplierData;
+      
+      // Create PO items for this supplier's products
+      const items: InsertPurchaseOrderItem[] = supplierProducts.map((product, index) => {
+        const relationship = relationships[index];
+        const qtyNeeded = Math.max(1, (product.minimumStockLevel || 10) - product.currentStock);
+        
+        // Add 10% buffer to quantity for better stock management
+        const orderQty = Math.ceil(qtyNeeded * 1.1);
+        
+        return {
+          poId: 0, // Will be set when PO is created
+          productId: product.id,
+          sku: product.sku || '',
+          description: product.name,
+          qty: Math.max(orderQty, relationship?.minOrderQty || 1),
+          unitPrice: relationship?.unitPrice || product.price || 0
+        };
+      });
+      
+      // Calculate total amount
+      const totalAmount = items.reduce((sum, item) => sum + (item.qty * item.unitPrice), 0);
+      
+      // Create the auto PO
+      const po: InsertPurchaseOrder = {
+        supplierId: supplier.id,
+        status: 'draft',
+        notes: `Auto-generated PO for ${supplierProducts.length} low stock item${supplierProducts.length !== 1 ? 's' : ''}`,
+        autoGenerated: true,
+        totalAmount,
+        createdBy: userId
+      };
+      
+      const createdPO = await this.createPurchaseOrder(po, items);
+      createdPOs.push(createdPO);
+    }
     
-    const createdPO = await this.createPurchaseOrder(po, items);
-    
-    return [createdPO];
+    return createdPOs;
   }
 
   // Brand Management Methods
@@ -1716,6 +1800,52 @@ class DatabaseStorage implements IStorage {
     const result = await db.update(supplierBrands)
       .set({ isActive: false, updatedAt: new Date() })
       .where(eq(supplierBrands.id, id))
+      .returning();
+    return result.length > 0;
+  }
+
+  // Supplier-Product Relationship Methods
+  async getSupplierProducts(supplierId: number): Promise<(SupplierProduct & { product: Product })[]> {
+    const result = await db.select()
+      .from(supplierProducts)
+      .leftJoin(products, eq(supplierProducts.productId, products.id))
+      .where(and(eq(supplierProducts.supplierId, supplierId), eq(supplierProducts.isActive, true)));
+
+    return result.map(row => ({
+      ...row.supplier_products,
+      product: row.products!
+    }));
+  }
+
+  async getProductSuppliers(productId: number): Promise<(SupplierProduct & { supplier: Supplier })[]> {
+    const result = await db.select()
+      .from(supplierProducts)
+      .leftJoin(suppliers, eq(supplierProducts.supplierId, suppliers.id))
+      .where(and(eq(supplierProducts.productId, productId), eq(supplierProducts.isActive, true)));
+
+    return result.map(row => ({
+      ...row.supplier_products,
+      supplier: row.suppliers!
+    }));
+  }
+
+  async createSupplierProduct(supplierProduct: InsertSupplierProduct): Promise<SupplierProduct> {
+    const result = await db.insert(supplierProducts).values(supplierProduct).returning();
+    return result[0];
+  }
+
+  async updateSupplierProduct(id: number, updates: Partial<InsertSupplierProduct>): Promise<SupplierProduct | undefined> {
+    const result = await db.update(supplierProducts).set({
+      ...updates,
+      updatedAt: new Date()
+    }).where(eq(supplierProducts.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteSupplierProduct(id: number): Promise<boolean> {
+    const result = await db.update(supplierProducts)
+      .set({ isActive: false, updatedAt: new Date() })
+      .where(eq(supplierProducts.id, id))
       .returning();
     return result.length > 0;
   }

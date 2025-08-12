@@ -12,7 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Plus, Search, Building, Phone, Mail, MapPin, Edit, Trash2, Star } from "lucide-react";
+import { Plus, Search, Building, Phone, Mail, MapPin, Edit, Trash2, Star, Package } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import FurniliLayout from "@/components/Layout/FurniliLayout";
 import type { Supplier } from "@shared/schema";
@@ -244,6 +244,7 @@ export default function Suppliers() {
               )}
 
               <div className="flex justify-end space-x-2">
+                <ProductLinkingButton supplier={supplier} />
                 <Button
                   variant="outline"
                   size="sm"
@@ -430,5 +431,146 @@ function SupplierForm({
         </Button>
       </div>
     </form>
+  );
+}
+
+// Product Linking Component for Suppliers
+function ProductLinkingButton({ supplier }: { supplier: Supplier }) {
+  const [showModal, setShowModal] = useState(false);
+  const [selectedProducts, setSelectedProducts] = useState<number[]>([]);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  // Fetch all products
+  const { data: products = [] } = useQuery({
+    queryKey: ["/api/products"],
+  });
+
+  // Fetch current supplier-product relationships
+  const { data: supplierProducts = [] } = useQuery({
+    queryKey: ["/api/suppliers", supplier.id, "products"],
+    enabled: showModal,
+  });
+
+  // Create supplier-product relationship mutation
+  const linkProductMutation = useMutation({
+    mutationFn: (data: { supplierId: number; productId: number; unitPrice?: number; leadTimeDays?: number; minOrderQty?: number; isPreferred?: boolean }) => 
+      apiRequest("/api/supplier-products", { 
+        method: "POST",
+        body: JSON.stringify(data)
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/suppliers", supplier.id, "products"] });
+      toast({
+        title: "Success",
+        description: "Product linked to supplier successfully",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to link product to supplier",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleLinkProducts = () => {
+    selectedProducts.forEach(productId => {
+      linkProductMutation.mutate({
+        supplierId: supplier.id,
+        productId,
+        unitPrice: 0,
+        leadTimeDays: 7,
+        minOrderQty: 1,
+        isPreferred: false
+      });
+    });
+    setSelectedProducts([]);
+    setShowModal(false);
+  };
+
+  const linkedProductIds = (supplierProducts as any[]).map((sp: any) => sp.productId);
+  const availableProducts = (products as any[]).filter((p: any) => !linkedProductIds.includes(p.id));
+
+  return (
+    <>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => setShowModal(true)}
+        title="Link Products"
+      >
+        <Package className="h-4 w-4" />
+      </Button>
+
+      <Dialog open={showModal} onOpenChange={setShowModal}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Link Products to {supplier.name}</DialogTitle>
+            <DialogDescription>
+              Select products that this supplier can provide
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            {/* Current linked products */}
+            {(supplierProducts as any[]).length > 0 && (
+              <div>
+                <h4 className="font-medium mb-2">Currently Linked Products</h4>
+                <div className="space-y-2 max-h-32 overflow-y-auto">
+                  {(supplierProducts as any[]).map((sp: any) => (
+                    <Badge key={sp.id} variant="secondary" className="mr-2">
+                      {sp.product?.name}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Available products to link */}
+            <div>
+              <h4 className="font-medium mb-2">Available Products</h4>
+              {availableProducts.length > 0 ? (
+                <div className="max-h-64 overflow-y-auto space-y-2">
+                  {availableProducts.map((product: any) => (
+                    <div key={product.id} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`product-${product.id}`}
+                        checked={selectedProducts.includes(product.id)}
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            setSelectedProducts([...selectedProducts, product.id]);
+                          } else {
+                            setSelectedProducts(selectedProducts.filter(id => id !== product.id));
+                          }
+                        }}
+                      />
+                      <Label htmlFor={`product-${product.id}`} className="text-sm">
+                        {product.name} ({product.category})
+                      </Label>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-gray-500 text-sm">All products are already linked to this supplier</p>
+              )}
+            </div>
+          </div>
+
+          <div className="flex justify-end space-x-2 pt-4">
+            <Button variant="outline" onClick={() => setShowModal(false)}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleLinkProducts}
+              disabled={selectedProducts.length === 0 || linkProductMutation.isPending}
+            >
+              {linkProductMutation.isPending ? "Linking..." : `Link ${selectedProducts.length} Product${selectedProducts.length !== 1 ? 's' : ''}`}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

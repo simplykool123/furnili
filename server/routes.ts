@@ -37,6 +37,7 @@ import {
   insertSupplierSchema,
   insertBrandSchema,
   insertSupplierBrandSchema,
+  insertSupplierProductSchema,
   insertPurchaseOrderSchema,
   insertPurchaseOrderItemSchema,
 } from "@shared/schema";
@@ -3218,6 +3219,81 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Validation error", errors: error.errors });
       }
       res.status(500).json({ message: "Failed to create supplier-brand relationship" });
+    }
+  });
+
+  // Supplier-Product Relationship Routes
+  app.get("/api/suppliers/:id/products", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const supplierId = parseInt(req.params.id);
+      const products = await storage.getSupplierProducts(supplierId);
+      res.json(products);
+    } catch (error) {
+      console.error("Get supplier products error:", error);
+      res.status(500).json({ message: "Failed to fetch supplier products" });
+    }
+  });
+
+  app.get("/api/products/:id/suppliers", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const productId = parseInt(req.params.id);
+      const suppliers = await storage.getProductSuppliers(productId);
+      res.json(suppliers);
+    } catch (error) {
+      console.error("Get product suppliers error:", error);
+      res.status(500).json({ message: "Failed to fetch product suppliers" });
+    }
+  });
+
+  app.post("/api/supplier-products", authenticateToken, requireRole(['admin', 'manager']), async (req: AuthRequest, res) => {
+    try {
+      const validatedData = insertSupplierProductSchema.parse({
+        ...req.body,
+        createdBy: req.user!.id
+      });
+      
+      const supplierProduct = await storage.createSupplierProduct(validatedData);
+      res.status(201).json(supplierProduct);
+    } catch (error) {
+      console.error("Create supplier-product relationship error:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Validation error", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create supplier-product relationship" });
+    }
+  });
+
+  app.put("/api/supplier-products/:id", authenticateToken, requireRole(['admin', 'manager']), async (req: AuthRequest, res) => {
+    try {
+      const relationshipId = parseInt(req.params.id);
+      const updates = req.body;
+      
+      const supplierProduct = await storage.updateSupplierProduct(relationshipId, updates);
+      
+      if (!supplierProduct) {
+        return res.status(404).json({ message: "Supplier-product relationship not found" });
+      }
+      
+      res.json(supplierProduct);
+    } catch (error) {
+      console.error("Update supplier-product relationship error:", error);
+      res.status(500).json({ message: "Failed to update supplier-product relationship" });
+    }
+  });
+
+  app.delete("/api/supplier-products/:id", authenticateToken, requireRole(['admin', 'manager']), async (req: AuthRequest, res) => {
+    try {
+      const relationshipId = parseInt(req.params.id);
+      const deleted = await storage.deleteSupplierProduct(relationshipId);
+      
+      if (!deleted) {
+        return res.status(404).json({ message: "Supplier-product relationship not found" });
+      }
+      
+      res.json({ message: "Supplier-product relationship deleted successfully" });
+    } catch (error) {
+      console.error("Delete supplier-product relationship error:", error);
+      res.status(500).json({ message: "Failed to delete supplier-product relationship" });
     }
   });
 
