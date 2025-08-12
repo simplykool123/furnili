@@ -885,19 +885,19 @@ function CreatePOForm({ suppliers, onClose, onSuccess }: {
               
               <div className="w-24 flex-shrink-0">
                 <Input
-                  value={item.size || "Auto"}
+                  value={item.size || ""}
                   onChange={(e) => updateItem(index, 'size', e.target.value)}
                   className="h-8 text-xs"
-                  placeholder="Auto"
+                  placeholder=""
                 />
               </div>
               
               <div className="w-20 flex-shrink-0">
                 <Input
-                  value={item.thickness || "Auto"}
+                  value={item.thickness || ""}
                   onChange={(e) => updateItem(index, 'thickness', e.target.value)}
                   className="h-8 text-xs"
-                  placeholder="Auto"
+                  placeholder=""
                 />
               </div>
               
@@ -1136,7 +1136,9 @@ function EditPOForm({ po, suppliers, onClose, onSuccess }: {
         <Label className="text-xs font-medium">Items *</Label>
         <div className="border rounded-md overflow-hidden">
           {/* Table Headers */}
-          <div className="grid grid-cols-[2fr,1fr,1fr,80px,120px,60px] gap-2 p-2 bg-gray-50 text-xs font-medium text-gray-700 border-b">
+          <div className="grid grid-cols-[120px,120px,2fr,1fr,1fr,80px,120px,60px] gap-2 p-2 bg-gray-50 text-xs font-medium text-gray-700 border-b">
+            <div>Category</div>
+            <div>Brand</div>
             <div>Description *</div>
             <div>Size</div>
             <div>Thickness</div>
@@ -1147,7 +1149,45 @@ function EditPOForm({ po, suppliers, onClose, onSuccess }: {
           
           {/* Item Rows */}
           {items.map((item, index) => (
-            <div key={index} className="grid grid-cols-[2fr,1fr,1fr,80px,120px,60px] gap-2 p-2 border-b last:border-b-0 bg-white">
+            <div key={index} className="grid grid-cols-[120px,120px,2fr,1fr,1fr,80px,120px,60px] gap-2 p-2 border-b last:border-b-0 bg-white">
+              <div>
+                <Select 
+                  value={item.category || ""} 
+                  onValueChange={(value) => updateItem(index, 'category', value)}
+                >
+                  <SelectTrigger className="h-8 text-xs">
+                    <SelectValue placeholder="Category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="plywood">Plywood</SelectItem>
+                    <SelectItem value="laminate">Laminate</SelectItem>
+                    <SelectItem value="hardware">Hardware</SelectItem>
+                    <SelectItem value="adhesives">Adhesives</SelectItem>
+                    <SelectItem value="boards">Boards</SelectItem>
+                    <SelectItem value="veneers">Veneers</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Select 
+                  value={item.brand || ""} 
+                  onValueChange={(value) => updateItem(index, 'brand', value)}
+                >
+                  <SelectTrigger className="h-8 text-xs">
+                    <SelectValue placeholder="Brand" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="century">Century</SelectItem>
+                    <SelectItem value="greenply">Greenply</SelectItem>
+                    <SelectItem value="hettich">Hettich</SelectItem>
+                    <SelectItem value="godrej">Godrej</SelectItem>
+                    <SelectItem value="fevicol">Fevicol</SelectItem>
+                    <SelectItem value="asian paints">Asian Paints</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
               <div>
                 <Input
                   value={item.description}
@@ -1163,7 +1203,7 @@ function EditPOForm({ po, suppliers, onClose, onSuccess }: {
                   value={item.size || ""}
                   onChange={(e) => updateItem(index, 'size', e.target.value)}
                   className="h-8 text-xs"
-                  placeholder="Size"
+                  placeholder=""
                 />
               </div>
               
@@ -1172,7 +1212,7 @@ function EditPOForm({ po, suppliers, onClose, onSuccess }: {
                   value={item.thickness || ""}
                   onChange={(e) => updateItem(index, 'thickness', e.target.value)}
                   className="h-8 text-xs"
-                  placeholder="Thickness"
+                  placeholder=""
                 />
               </div>
               
