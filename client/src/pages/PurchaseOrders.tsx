@@ -604,6 +604,8 @@ function CreatePOForm({ suppliers, onClose, onSuccess }: {
     queryFn: () => 
       apiRequest(`/api/suppliers/${selectedSupplier}/products`),
     enabled: !!selectedSupplier,
+    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+    refetchOnWindowFocus: false,
   });
 
   // Search products for autocomplete
@@ -612,6 +614,8 @@ function CreatePOForm({ suppliers, onClose, onSuccess }: {
     queryFn: () => 
       apiRequest(`/api/products/search?query=${encodeURIComponent(productSearchQuery)}`),
     enabled: productSearchQuery.length > 0,
+    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+    refetchOnWindowFocus: false,
   });
 
   // Auto-populate supplier products when supplier is selected
@@ -664,17 +668,6 @@ function CreatePOForm({ suppliers, onClose, onSuccess }: {
       const uniqueSuppliers = Array.from(allSuggestedSuppliers.values());
       setSuggestedSuppliers(uniqueSuppliers);
       setShowSuggestions(uniqueSuppliers.length > 0);
-      
-      // If we have suggestions and no supplier is selected, suggest the first primary supplier
-      if (uniqueSuppliers.length > 0 && !selectedSupplier) {
-        const primarySupplier = uniqueSuppliers.find(s => s.preferred) || uniqueSuppliers[0];
-        if (primarySupplier) {
-          toast({
-            title: "Supplier Suggestion",
-            description: `${primarySupplier.name} is suggested based on selected products`,
-          });
-        }
-      }
     } catch (error) {
       console.error("Failed to get supplier suggestions:", error);
     }
@@ -721,11 +714,6 @@ function CreatePOForm({ suppliers, onClose, onSuccess }: {
       i === index ? { ...item, [field]: value } : item
     );
     setItems(updatedItems);
-    
-    // If a product was selected, get supplier suggestions
-    if (field === 'productId' && value > 0) {
-      setTimeout(() => getSuggestedSuppliers(), 100);
-    }
   };
 
   const removeItem = (index: number) => {
