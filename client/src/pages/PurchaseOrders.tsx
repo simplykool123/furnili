@@ -148,7 +148,7 @@ export default function PurchaseOrders() {
                 Create PO
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="max-w-[95vw] max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Create New Purchase Order</DialogTitle>
                 <DialogDescription>
@@ -620,28 +620,28 @@ function CreatePOForm({ suppliers, onClose, onSuccess }: {
 
       {/* Items Table with Material Request Layout */}
       <div className="border rounded-lg overflow-x-auto">
-        <div className="min-w-[800px]">
+        <div className="min-w-[1000px]">
           {/* Table Header */}
-          <div className="flex gap-2 p-3 bg-gray-50 border-b text-xs font-medium text-gray-700">
-            <div className="w-10 flex-shrink-0 text-center">#</div>
-            <div className="w-28 flex-shrink-0">Category</div>
-            <div className="w-28 flex-shrink-0">Brand</div>
-            <div className="w-48 flex-shrink-0">Product</div>
-            <div className="w-20 flex-shrink-0">Size</div>
-            <div className="w-16 flex-shrink-0">Thk.</div>
-            <div className="w-16 flex-shrink-0">Qty</div>
-            <div className="w-28 flex-shrink-0">Price</div>
-            <div className="w-16 flex-shrink-0 text-center">Action</div>
+          <div className="flex gap-3 p-3 bg-gray-50 border-b text-xs font-medium text-gray-700">
+            <div className="w-12 flex-shrink-0 text-center">#</div>
+            <div className="w-36 flex-shrink-0">Category</div>
+            <div className="w-36 flex-shrink-0">Brand</div>
+            <div className="w-64 flex-shrink-0">Product</div>
+            <div className="w-24 flex-shrink-0">Size</div>
+            <div className="w-20 flex-shrink-0">Thk.</div>
+            <div className="w-20 flex-shrink-0">Qty</div>
+            <div className="w-32 flex-shrink-0">Price</div>
+            <div className="w-20 flex-shrink-0 text-center">Action</div>
           </div>
         
           {/* Table Body */}
           {items.map((item, index) => (
-            <div key={index} className="flex gap-2 p-3 border-b last:border-b-0 text-xs">
-              <div className="w-10 flex-shrink-0 flex items-center justify-center font-medium">
+            <div key={index} className="flex gap-3 p-3 border-b last:border-b-0 text-xs">
+              <div className="w-12 flex-shrink-0 flex items-center justify-center font-medium">
                 {index + 1}
               </div>
               
-              <div className="w-28 flex-shrink-0">
+              <div className="w-36 flex-shrink-0">
                 <Select 
                   value={item.category || ""} 
                   onValueChange={(value) => updateItem(index, 'category', value)}
@@ -660,7 +660,7 @@ function CreatePOForm({ suppliers, onClose, onSuccess }: {
                 </Select>
               </div>
               
-              <div className="w-28 flex-shrink-0">
+              <div className="w-36 flex-shrink-0">
                 <Select 
                   value={item.brand || ""} 
                   onValueChange={(value) => updateItem(index, 'brand', value)}
@@ -679,7 +679,7 @@ function CreatePOForm({ suppliers, onClose, onSuccess }: {
                 </Select>
               </div>
               
-              <div className="w-48 flex-shrink-0">
+              <div className="w-64 flex-shrink-0">
                 <Autocomplete
                   value={item.description}
                   onChange={(value) => updateItem(index, 'description', value)}
@@ -699,7 +699,7 @@ function CreatePOForm({ suppliers, onClose, onSuccess }: {
                 />
               </div>
               
-              <div className="w-20 flex-shrink-0">
+              <div className="w-24 flex-shrink-0">
                 <Input
                   value={item.size || "Auto"}
                   onChange={(e) => updateItem(index, 'size', e.target.value)}
@@ -708,7 +708,7 @@ function CreatePOForm({ suppliers, onClose, onSuccess }: {
                 />
               </div>
               
-              <div className="w-16 flex-shrink-0">
+              <div className="w-20 flex-shrink-0">
                 <Input
                   value={item.thickness || "Auto"}
                   onChange={(e) => updateItem(index, 'thickness', e.target.value)}
@@ -717,7 +717,7 @@ function CreatePOForm({ suppliers, onClose, onSuccess }: {
                 />
               </div>
               
-              <div className="w-16 flex-shrink-0">
+              <div className="w-20 flex-shrink-0">
                 <Input
                   type="number"
                   value={item.qty}
@@ -728,7 +728,7 @@ function CreatePOForm({ suppliers, onClose, onSuccess }: {
                 />
               </div>
               
-              <div className="w-28 flex-shrink-0">
+              <div className="w-32 flex-shrink-0">
                 <Input
                   type="text"
                   value={item.unitPrice}
@@ -738,7 +738,7 @@ function CreatePOForm({ suppliers, onClose, onSuccess }: {
                 />
               </div>
               
-              <div className="w-16 flex-shrink-0 flex items-center justify-center">
+              <div className="w-20 flex-shrink-0 flex items-center justify-center">
                 <Button
                   type="button"
                   variant="ghost"
