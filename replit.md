@@ -91,6 +91,7 @@ The system adheres to a professional and consistent UI/UX based on the "Furnili 
 - Integrated supplier database with contact management.
 - Auto-populate products feature loads all supplier's linked products with complete details (category, brand, price).
 - Form validation and real-time total calculations with proper field binding.
+- Fixed stock movement creation during PO receipt with proper database constraints and cache invalidation.
 
 ### Layout Consistency
 All main application pages use the standard FurniliLayout component for consistent navigation and branding:

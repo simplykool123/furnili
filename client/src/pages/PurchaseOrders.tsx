@@ -505,6 +505,8 @@ export default function PurchaseOrders() {
                 setSelectedPO(null);
                 setTimeout(() => {
                   queryClient.invalidateQueries({ queryKey: ["/api/purchase-orders"] });
+                  queryClient.invalidateQueries({ queryKey: ["/api/inventory/movements"] });
+                  queryClient.invalidateQueries({ queryKey: ["/api/products"] });
                 }, 100);
               }}
             />
