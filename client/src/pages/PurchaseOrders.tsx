@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Plus, Send, Package, FileText, Eye, CheckCircle, XCircle, Clock, AlertTriangle } from "lucide-react";
 import { Autocomplete } from "@/components/ui/autocomplete";
 import { format } from "date-fns";
+import { apiRequest } from "@/lib/queryClient";
 import type { PurchaseOrderWithDetails, Supplier, Product } from "@shared/schema";
 
 export default function PurchaseOrders() {
@@ -24,14 +25,14 @@ export default function PurchaseOrders() {
   const queryClient = useQueryClient();
 
   // Fetch purchase orders
-  const { data: pos = [], isLoading: posLoading } = useQuery({
+  const { data: pos = [], isLoading: posLoading } = useQuery<PurchaseOrderWithDetails[]>({
     queryKey: ["/api/purchase-orders", selectedTab],
-    queryFn: () => {
+    queryFn: async () => {
       const params = new URLSearchParams();
       if (selectedTab !== "all") {
         params.append("status", selectedTab);
       }
-      return fetch(`/api/purchase-orders?${params}`).then(res => res.json());
+      return apiRequest(`/api/purchase-orders?${params}`);
     }
   });
 
@@ -42,10 +43,9 @@ export default function PurchaseOrders() {
 
   // Auto-generate PO mutation
   const autoGenerateMutation = useMutation({
-    mutationFn: () => fetch("/api/purchase-orders/auto-generate", { 
+    mutationFn: () => apiRequest("/api/purchase-orders/auto-generate", {
       method: "POST",
-      headers: { "Content-Type": "application/json" }
-    }).then(res => res.json()),
+    }),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["/api/purchase-orders"] });
       toast({
@@ -65,10 +65,9 @@ export default function PurchaseOrders() {
   // Send PO mutation
   const sendPOMutation = useMutation({
     mutationFn: (poId: number) => 
-      fetch(`/api/purchase-orders/${poId}/send`, { 
+      apiRequest(`/api/purchase-orders/${poId}/send`, { 
         method: "POST",
-        headers: { "Content-Type": "application/json" }
-      }).then(res => res.json()),
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/purchase-orders"] });
       toast({
@@ -81,10 +80,9 @@ export default function PurchaseOrders() {
   // Cancel PO mutation
   const cancelPOMutation = useMutation({
     mutationFn: (poId: number) => 
-      fetch(`/api/purchase-orders/${poId}/cancel`, { 
+      apiRequest(`/api/purchase-orders/${poId}/cancel`, { 
         method: "POST",
-        headers: { "Content-Type": "application/json" }
-      }).then(res => res.json()),
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/purchase-orders"] });
       toast({
@@ -363,18 +361,16 @@ function CreatePOForm({ suppliers, onClose, onSuccess }: {
   const { data: productSearchResults = [] } = useQuery({
     queryKey: ["/api/products/search", productSearchQuery],
     queryFn: () => 
-      fetch(`/api/products/search?query=${encodeURIComponent(productSearchQuery)}`)
-        .then(res => res.json()),
+      apiRequest(`/api/products/search?query=${encodeURIComponent(productSearchQuery)}`),
     enabled: productSearchQuery.length > 0,
   });
 
   const createPOMutation = useMutation({
     mutationFn: (data: any) => 
-      fetch("/api/purchase-orders", { 
+      apiRequest("/api/purchase-orders", { 
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data)
-      }).then(res => res.json()),
+      }),
     onSuccess: () => {
       toast({
         title: "Success",
@@ -608,11 +604,10 @@ function ReceivePOForm({ po, onClose, onSuccess }: {
 
   const receivePOMutation = useMutation({
     mutationFn: (data: any) => 
-      fetch(`/api/purchase-orders/${po.id}/receive`, { 
+      apiRequest(`/api/purchase-orders/${po.id}/receive`, { 
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data)
-      }).then(res => res.json()),
+      }),
     onSuccess: () => {
       toast({
         title: "Success",

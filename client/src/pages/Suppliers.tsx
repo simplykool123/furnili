@@ -13,6 +13,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Plus, Search, Building, Phone, Mail, MapPin, Edit, Trash2, Star } from "lucide-react";
+import { apiRequest } from "@/lib/queryClient";
 import type { Supplier } from "@shared/schema";
 
 const supplierFormSchema = z.object({
@@ -38,21 +39,20 @@ export default function Suppliers() {
   // Fetch suppliers
   const { data: suppliers = [], isLoading } = useQuery<Supplier[]>({
     queryKey: ["/api/suppliers", searchQuery],
-    queryFn: () => {
+    queryFn: async () => {
       const params = new URLSearchParams();
       if (searchQuery) params.append("search", searchQuery);
-      return fetch(`/api/suppliers?${params}`).then(res => res.json());
+      return apiRequest(`/api/suppliers?${params}`);
     }
   });
 
   // Create supplier mutation
   const createSupplierMutation = useMutation({
     mutationFn: (data: SupplierFormData) => 
-      fetch("/api/suppliers", { 
+      apiRequest("/api/suppliers", { 
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data)
-      }).then(res => res.json()),
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/suppliers"] });
       toast({
@@ -73,11 +73,10 @@ export default function Suppliers() {
   // Update supplier mutation
   const updateSupplierMutation = useMutation({
     mutationFn: ({ id, data }: { id: number; data: Partial<SupplierFormData> }) => 
-      fetch(`/api/suppliers/${id}`, { 
+      apiRequest(`/api/suppliers/${id}`, { 
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data)
-      }).then(res => res.json()),
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/suppliers"] });
       toast({
@@ -98,7 +97,7 @@ export default function Suppliers() {
   // Delete supplier mutation
   const deleteSupplierMutation = useMutation({
     mutationFn: (id: number) => 
-      fetch(`/api/suppliers/${id}`, { method: "DELETE" }).then(res => res.json()),
+      apiRequest(`/api/suppliers/${id}`, { method: "DELETE" }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/suppliers"] });
       toast({
