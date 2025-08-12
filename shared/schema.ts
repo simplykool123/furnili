@@ -795,6 +795,37 @@ export const suppliers = pgTable("suppliers", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Brands Table - Centralized brand management
+export const brands = pgTable("brands", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull().unique(),
+  description: text("description"),
+  website: text("website"),
+  logoUrl: text("logo_url"),
+  country: text("country"), // Country of origin
+  isActive: boolean("is_active").notNull().default(true),
+  createdBy: integer("created_by").references(() => users.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Supplier-Brand Relationship Table (Many-to-Many)
+export const supplierBrands = pgTable("supplier_brands", {
+  id: serial("id").primaryKey(),
+  supplierId: integer("supplier_id").references(() => suppliers.id).notNull(),
+  brandId: integer("brand_id").references(() => brands.id).notNull(),
+  isPrimarySupplier: boolean("is_primary_supplier").notNull().default(false), // Main supplier for this brand
+  minOrderQuantity: integer("min_order_quantity").default(1),
+  leadTimeDays: integer("lead_time_days").default(7), // Delivery time in days
+  creditTerms: text("credit_terms"), // Specific terms for this brand
+  discountPercentage: real("discount_percentage").default(0), // Special discount for this brand
+  notes: text("notes"), // Additional notes about supplier-brand relationship
+  isActive: boolean("is_active").notNull().default(true),
+  createdBy: integer("created_by").references(() => users.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 export const purchaseOrders = pgTable("purchase_orders", {
   id: serial("id").primaryKey(),
   poNumber: text("po_number").notNull().unique(), // Auto-generated: PO-001, PO-002
@@ -835,8 +866,10 @@ export const auditLogs = pgTable("audit_logs", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-// Insert schemas for PO system
+// Insert schemas for PO system and brand management
 export const insertSupplierSchema = createInsertSchema(suppliers).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertBrandSchema = createInsertSchema(brands).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertSupplierBrandSchema = createInsertSchema(supplierBrands).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertPurchaseOrderSchema = createInsertSchema(purchaseOrders).omit({ 
   id: true, 
   poNumber: true, 
@@ -851,9 +884,13 @@ export const insertPurchaseOrderItemSchema = createInsertSchema(purchaseOrderIte
 });
 export const insertAuditLogSchema = createInsertSchema(auditLogs).omit({ id: true, createdAt: true });
 
-// PO System Types
+// PO System and Brand Management Types
 export type Supplier = typeof suppliers.$inferSelect;
 export type InsertSupplier = z.infer<typeof insertSupplierSchema>;
+export type Brand = typeof brands.$inferSelect;
+export type InsertBrand = z.infer<typeof insertBrandSchema>;
+export type SupplierBrand = typeof supplierBrands.$inferSelect;
+export type InsertSupplierBrand = z.infer<typeof insertSupplierBrandSchema>;
 export type PurchaseOrder = typeof purchaseOrders.$inferSelect;
 export type InsertPurchaseOrder = z.infer<typeof insertPurchaseOrderSchema>;
 export type PurchaseOrderItem = typeof purchaseOrderItems.$inferSelect;
@@ -872,4 +909,14 @@ export type SupplierWithStats = Supplier & {
   totalOrders: number;
   totalValue: number;
   lastOrderDate?: Date;
+  brands?: Brand[]; // Associated brands
+};
+
+export type SupplierWithBrands = Supplier & {
+  brands: (SupplierBrand & { brand: Brand })[];
+};
+
+export type BrandWithSuppliers = Brand & {
+  suppliers: (SupplierBrand & { supplier: Supplier })[];
+  primarySupplier?: Supplier; // Main supplier for this brand
 };
