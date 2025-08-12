@@ -1,219 +1,212 @@
-import { ReactNode } from "react";
-import { cn } from "@/lib/utils";
-import { Card, CardContent } from "@/components/ui/card";
+import { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-
-interface MobileTableColumn {
-  key: string;
-  label: string;
-  render?: (value: any, row: any) => ReactNode;
-  className?: string;
-  priority?: 'high' | 'medium' | 'low'; // For responsive display
-}
-
-interface MobileTableAction {
-  label: string;
-  icon?: any;
-  onClick: () => void;
-  destructive?: boolean;
-}
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { useIsMobile } from "./MobileOptimizer";
+import { ChevronDown, ChevronRight, MoreVertical } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface MobileTableProps {
   data: any[];
-  columns: MobileTableColumn[];
+  columns: {
+    key: string;
+    label: string;
+    render?: (value: any, row: any) => React.ReactNode;
+    mobile?: boolean; // Show on mobile
+  }[];
   onRowClick?: (row: any) => void;
+  actions?: (row: any) => React.ReactNode;
+  title?: string;
   emptyMessage?: string;
-  className?: string;
-  cardClassName?: string;
-  itemActions?: (row: any) => MobileTableAction[];
+  loading?: boolean;
 }
 
 export default function MobileTable({
   data,
   columns,
   onRowClick,
+  actions,
+  title,
   emptyMessage = "No data available",
-  className,
-  cardClassName,
-  itemActions
+  loading = false
 }: MobileTableProps) {
-  if (!data || data.length === 0) {
+  const isMobile = useIsMobile();
+  const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
+
+  if (!isMobile) {
+    // Return desktop table component
     return (
-      <Card className={cn("w-full", cardClassName)}>
-        <CardContent className="p-6 text-center text-muted-foreground">
-          {emptyMessage}
+      <div className="table-responsive">
+        <table className="w-full border-collapse">
+          <thead>
+            <tr className="border-b">
+              {columns.map((column) => (
+                <th key={column.key} className="text-left p-3 font-medium">
+                  {column.label}
+                </th>
+              ))}
+              {actions && <th className="text-right p-3 font-medium">Actions</th>}
+            </tr>
+          </thead>
+          <tbody>
+            {data.map((row, index) => (
+              <tr
+                key={index}
+                className="border-b hover:bg-muted/50 cursor-pointer"
+                onClick={() => onRowClick?.(row)}
+              >
+                {columns.map((column) => (
+                  <td key={column.key} className="p-3">
+                    {column.render ? column.render(row[column.key], row) : row[column.key]}
+                  </td>
+                ))}
+                {actions && (
+                  <td className="p-3 text-right">
+                    {actions(row)}
+                  </td>
+                )}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    );
+  }
+
+  const toggleRow = (index: number) => {
+    const newExpanded = new Set(expandedRows);
+    if (newExpanded.has(index)) {
+      newExpanded.delete(index);
+    } else {
+      newExpanded.add(index);
+    }
+    setExpandedRows(newExpanded);
+  };
+
+  const mobileColumns = columns.filter(col => col.mobile !== false).slice(0, 2);
+  const detailColumns = columns.filter(col => !mobileColumns.includes(col));
+
+  if (loading) {
+    return (
+      <div className="space-y-3">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <Card key={i}>
+            <CardContent className="p-4">
+              <div className="animate-pulse space-y-2">
+                <div className="h-4 bg-muted rounded w-3/4"></div>
+                <div className="h-3 bg-muted rounded w-1/2"></div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  }
+
+  if (data.length === 0) {
+    return (
+      <Card>
+        <CardContent className="p-8 text-center">
+          <p className="text-muted-foreground">{emptyMessage}</p>
         </CardContent>
       </Card>
     );
   }
 
-  // Determine which columns to show based on priority and screen space
-  const primaryColumns = columns.filter(col => col.priority === 'high' || !col.priority);
-  const secondaryColumns = columns.filter(col => col.priority === 'medium');
-  const tertiaryColumns = columns.filter(col => col.priority === 'low');
-
   return (
-    <div className={cn("space-y-3", className)}>
-      {data.map((row, index) => (
-        <Card 
-          key={row.id || index}
-          className={cn(
-            "transition-all duration-200 hover:shadow-md border border-border/50",
-            onRowClick && "cursor-pointer hover:bg-muted/30 active:bg-muted/50",
-            cardClassName
-          )}
-          onClick={() => onRowClick?.(row)}
-        >
-          <CardContent className="p-4">
-            <div className="space-y-3">
-              {/* Primary Information - Always Visible */}
-              <div className="space-y-2">
-                {primaryColumns.map((column) => {
-                  const value = row[column.key];
-                  return (
-                    <div key={column.key} className="flex items-start justify-between gap-3">
-                      <span className="text-sm font-medium text-muted-foreground min-w-0 flex-shrink-0">
-                        {column.label}:
-                      </span>
-                      <div className="text-sm text-foreground font-medium text-right min-w-0 flex-1">
-                        {column.render ? column.render(value, row) : String(value || '-')}
-                      </div>
+    <div className="space-y-3">
+      {title && (
+        <CardHeader className="px-0 pt-0">
+          <CardTitle>{title}</CardTitle>
+        </CardHeader>
+      )}
+      
+      {data.map((row, index) => {
+        const isExpanded = expandedRows.has(index);
+        
+        return (
+          <Card key={index} className="overflow-hidden">
+            <CardContent className="p-0">
+              {/* Main row - always visible */}
+              <div 
+                className="p-4 cursor-pointer"
+                onClick={() => onRowClick ? onRowClick(row) : toggleRow(index)}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between mb-2">
+                      {mobileColumns.map((column) => (
+                        <div key={column.key} className="min-w-0 flex-1">
+                          <div className="text-sm font-medium truncate">
+                            {column.render ? column.render(row[column.key], row) : row[column.key]}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            {column.label}
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  );
-                })}
-              </div>
-
-              {/* Secondary Information - Collapsible */}
-              {secondaryColumns.length > 0 && (
-                <details className="group">
-                  <summary className="text-xs text-muted-foreground cursor-pointer list-none flex items-center gap-1 hover:text-foreground transition-colors">
-                    <span className="group-open:rotate-90 transition-transform">▶</span>
-                    More details
-                  </summary>
-                  <div className="mt-2 pt-2 border-t border-border/50 space-y-2">
-                    {secondaryColumns.map((column) => {
-                      const value = row[column.key];
-                      return (
-                        <div key={column.key} className="flex items-start justify-between gap-3">
-                          <span className="text-xs text-muted-foreground min-w-0 flex-shrink-0">
-                            {column.label}:
-                          </span>
-                          <div className="text-xs text-foreground text-right min-w-0 flex-1">
-                            {column.render ? column.render(value, row) : String(value || '-')}
-                          </div>
-                        </div>
-                      );
-                    })}
                   </div>
-                </details>
-              )}
-
-              {/* Tertiary Information - Hidden by default, can be shown in expanded view */}
-              {tertiaryColumns.length > 0 && (
-                <details className="group">
-                  <summary className="text-xs text-muted-foreground cursor-pointer list-none flex items-center gap-1 hover:text-foreground transition-colors">
-                    <span className="group-open:rotate-90 transition-transform">▶</span>
-                    Additional info
-                  </summary>
-                  <div className="mt-2 pt-2 border-t border-border/50 space-y-2">
-                    {tertiaryColumns.map((column) => {
-                      const value = row[column.key];
-                      return (
-                        <div key={column.key} className="flex items-start justify-between gap-3">
-                          <span className="text-xs text-muted-foreground min-w-0 flex-shrink-0">
-                            {column.label}:
-                          </span>
-                          <div className="text-xs text-foreground text-right min-w-0 flex-1">
-                            {column.render ? column.render(value, row) : String(value || '-')}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </details>
-              )}
-
-              {/* Actions */}
-              {itemActions && (
-                <div className="pt-2 border-t border-border/50">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    {itemActions(row).map((action, actionIndex) => {
-                      const IconComponent = action.icon;
-                      return (
-                        <Button
-                          key={actionIndex}
-                          variant={action.destructive ? "destructive" : "ghost"}
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            action.onClick();
-                          }}
-                          className="h-8 px-3 text-xs"
-                        >
-                          {IconComponent && <IconComponent className="w-3 h-3 mr-1" />}
-                          {action.label}
-                        </Button>
-                      );
-                    })}
+                  
+                  <div className="flex items-center space-x-2 ml-3">
+                    {actions && (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          {actions(row)}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    )}
+                    
+                    {detailColumns.length > 0 && (
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="h-8 w-8 p-0"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleRow(index);
+                        }}
+                      >
+                        {isExpanded ? 
+                          <ChevronDown className="h-4 w-4" /> : 
+                          <ChevronRight className="h-4 w-4" />
+                        }
+                      </Button>
+                    )}
                   </div>
                 </div>
+              </div>
+
+              {/* Expanded details */}
+              {isExpanded && detailColumns.length > 0 && (
+                <div className="border-t bg-muted/30 p-4 space-y-3">
+                  {detailColumns.map((column) => (
+                    <div key={column.key} className="flex justify-between items-center">
+                      <span className="text-sm font-medium text-muted-foreground">
+                        {column.label}:
+                      </span>
+                      <span className="text-sm">
+                        {column.render ? column.render(row[column.key], row) : row[column.key]}
+                      </span>
+                    </div>
+                  ))}
+                </div>
               )}
-            </div>
-          </CardContent>
-        </Card>
-      ))}
-    </div>
-  );
-}
-
-// Status Badge Component for consistent mobile styling
-export function MobileStatusBadge({ 
-  status, 
-  variant 
-}: { 
-  status: string; 
-  variant?: 'default' | 'success' | 'warning' | 'destructive' | 'outline' 
-}) {
-  return (
-    <Badge 
-      variant={variant || 'default'} 
-      className="text-xs px-2 py-1 font-medium"
-    >
-      {status}
-    </Badge>
-  );
-}
-
-// Action Buttons Component for mobile tables
-export function MobileTableActions({ 
-  actions 
-}: { 
-  actions: Array<{
-    label: string;
-    onClick: () => void;
-    variant?: 'default' | 'outline' | 'destructive';
-    size?: 'sm' | 'xs';
-    icon?: ReactNode;
-  }> 
-}) {
-  return (
-    <div className="flex flex-wrap gap-1.5 justify-end">
-      {actions.map((action, index) => (
-        <Button
-          key={index}
-          variant={action.variant || 'outline'}
-          size={action.size || 'xs'}
-          onClick={(e) => {
-            e.stopPropagation();
-            action.onClick();
-          }}
-          className="text-xs h-7 px-2"
-        >
-          {action.icon && <span className="mr-1">{action.icon}</span>}
-          {action.label}
-        </Button>
-      ))}
+            </CardContent>
+          </Card>
+        );
+      })}
     </div>
   );
 }

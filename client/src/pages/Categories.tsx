@@ -11,7 +11,7 @@ import type { Category } from "@shared/schema";
 
 export default function Categories() {
   const [isCreating, setIsCreating] = useState(false);
-  const { isMobile } = useIsMobile();
+  const isMobile = useIsMobile();
 
   const {
     data: categories = [],

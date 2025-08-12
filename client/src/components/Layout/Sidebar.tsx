@@ -36,7 +36,7 @@ import {
 
 } from "lucide-react";
 
-const navigation = [
+export const navigation = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard, roles: ['admin', 'manager', 'staff', 'store_incharge'] },
   { name: 'Products', href: '/products', icon: Package, roles: ['admin', 'manager', 'staff', 'store_incharge'] }, // Store keepers have read-only access
   { name: 'Inventory Movement', href: '/inventory-movement', icon: ArrowUpDown, roles: ['admin', 'manager', 'store_incharge'] }, // Store keeper needs inventory access

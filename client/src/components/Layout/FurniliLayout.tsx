@@ -1,8 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { cn } from '@/lib/utils';
 import { ChevronRight } from 'lucide-react';
 import Header from './Header';
 import Sidebar from './Sidebar';
+import { useIsMobile } from '@/components/Mobile/MobileOptimizer';
+import MobileLayout from '@/components/Mobile/MobileLayout';
 
 interface FurniliLayoutProps {
   children: React.ReactNode;
@@ -24,20 +26,23 @@ export default function FurniliLayout({
   className 
 }: FurniliLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
+  const isMobile = useIsMobile(1024);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true); // Start collapsed
   const [isHovering, setIsHovering] = useState(false);
 
-  useEffect(() => {
-    const checkIsMobile = () => {
-      setIsMobile(window.innerWidth < 1024);
-    };
-    
-    checkIsMobile();
-    window.addEventListener('resize', checkIsMobile);
-    
-    return () => window.removeEventListener('resize', checkIsMobile);
-  }, []);
+  // Use mobile layout for better performance on mobile devices
+  if (isMobile) {
+    return (
+      <MobileLayout 
+        title={title} 
+        subtitle={subtitle}
+        actions={actions}
+        className={className}
+      >
+        {children}
+      </MobileLayout>
+    );
+  }
 
   // No auto-hide - sidebar stays open once expanded
 

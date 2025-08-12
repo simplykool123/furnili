@@ -1,166 +1,82 @@
-import { useState } from "react";
+import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
-import { Menu, X, Home, Package, FileText, Users, DollarSign, BarChart3, Folder } from "lucide-react";
-import { Link, useLocation } from "wouter";
-import { cn } from "@/lib/utils";
+import { Card, CardContent } from "@/components/ui/card";
 import { useIsMobile } from "./MobileOptimizer";
-import { authService } from "@/lib/auth";
+import { ChevronLeft, ChevronRight, MoreHorizontal } from "lucide-react";
 
 interface MobileNavigationProps {
-  isOpen: boolean;
-  onToggle: () => void;
-  onClose: () => void;
+  items: {
+    id: string;
+    label: string;
+    icon?: React.ComponentType<any>;
+    href?: string;
+    onClick?: () => void;
+    active?: boolean;
+  }[];
+  onItemClick?: (id: string) => void;
+  className?: string;
 }
 
-const navigationItems = [
-  { icon: Home, label: "Dashboard", href: "/", roles: ['admin', 'manager', 'staff', 'store_incharge'] },
-  { icon: Package, label: "Products", href: "/products", roles: ['admin', 'manager', 'staff', 'store_incharge'] },
-  { icon: FileText, label: "Requests", href: "/requests", roles: ['admin', 'manager', 'staff', 'store_incharge'] },
-  { icon: Users, label: "Staff", href: "/attendance", roles: ['admin', 'manager', 'staff', 'store_incharge'] },
-  { icon: DollarSign, label: "Petty Cash", href: "/petty-cash", roles: ['admin', 'manager', 'staff', 'store_incharge'] },
-  { icon: Folder, label: "Projects", href: "/projects", roles: ['admin', 'manager', 'staff', 'store_incharge'] }, // Store keeper can access projects
-  { icon: BarChart3, label: "Reports", href: "/reports", roles: ['admin', 'manager'] }, // Admin and Manager access
-];
+export default function MobileNavigation({ 
+  items, 
+  onItemClick, 
+  className 
+}: MobileNavigationProps) {
+  const isMobile = useIsMobile();
+  const [showAll, setShowAll] = useState(false);
 
-export default function MobileNavigation({ isOpen, onToggle, onClose }: MobileNavigationProps) {
-  const { isMobile } = useIsMobile();
-  const [location] = useLocation();
-  const user = authService.getUser();
+  if (!isMobile) {
+    return null;
+  }
 
-  if (!isMobile || !user) return null;
-
-  // Filter navigation items based on user role
-  const filteredNavigationItems = navigationItems.filter(item => 
-    item.roles.includes(user.role)
-  );
+  const visibleItems = showAll ? items : items.slice(0, 4);
+  const hasMore = items.length > 4;
 
   return (
-    <>
-      {/* Mobile Header Bar */}
-      <div className="sticky top-0 z-50 bg-white border-b border-border lg:hidden">
-        <div className="flex items-center justify-between px-4 py-3">
-          <div className="flex items-center space-x-3">
+    <Card className={`sticky bottom-4 mx-4 border-2 shadow-lg ${className || ''}`}>
+      <CardContent className="p-2">
+        <div className="flex items-center justify-between">
+          {/* Navigation Items */}
+          <div className="flex flex-1 space-x-1">
+            {visibleItems.map((item) => (
+              <Button
+                key={item.id}
+                variant={item.active ? "default" : "ghost"}
+                size="sm"
+                className={`flex-1 flex flex-col h-12 px-2 ${
+                  item.active ? 'bg-furnili-brown text-white' : ''
+                }`}
+                onClick={() => {
+                  item.onClick?.();
+                  onItemClick?.(item.id);
+                }}
+              >
+                {item.icon && <item.icon className="h-4 w-4 mb-1" />}
+                <span className="text-xs truncate">{item.label}</span>
+              </Button>
+            ))}
+          </div>
+
+          {/* More button */}
+          {hasMore && (
             <Button
               variant="ghost"
               size="sm"
-              onClick={onToggle}
-              className="touch-target"
+              className="h-12 w-12 flex flex-col"
+              onClick={() => setShowAll(!showAll)}
             >
-              {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              {showAll ? (
+                <ChevronLeft className="h-4 w-4 mb-1" />
+              ) : (
+                <MoreHorizontal className="h-4 w-4 mb-1" />
+              )}
+              <span className="text-xs">
+                {showAll ? 'Less' : 'More'}
+              </span>
             </Button>
-            <h1 className="text-lg font-semibold text-amber-900">Furnili MS</h1>
-          </div>
+          )}
         </div>
-      </div>
-
-      {/* Mobile Navigation Overlay */}
-      {isOpen && (
-        <div className="fixed inset-0 z-40 lg:hidden">
-          <div 
-            className="fixed inset-0 bg-black bg-opacity-50 animate-fade-in" 
-            onClick={onClose}
-          />
-          
-          <div className="fixed inset-y-0 left-0 w-80 max-w-[85vw] bg-white shadow-xl animate-slide-up">
-            <div className="flex flex-col h-full">
-              {/* Header */}
-              <div className="flex items-center justify-between p-4 border-b border-border">
-                <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center">
-                    <span className="text-sm font-bold text-amber-700">F</span>
-                  </div>
-                  <h2 className="text-lg font-semibold text-amber-900">Furnili MS</h2>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={onClose}
-                  className="touch-target"
-                >
-                  <X className="w-5 h-5" />
-                </Button>
-              </div>
-
-              {/* Navigation Items */}
-              <div className="flex-1 overflow-y-auto py-4">
-                <nav className="space-y-2 px-3">
-                  {filteredNavigationItems.map((item) => {
-                    const isActive = location === item.href;
-                    return (
-                      <Link key={item.href} href={item.href}>
-                        <a
-                          onClick={onClose}
-                          className={cn(
-                            "flex items-center space-x-3 px-4 py-3 rounded-lg text-base font-medium transition-all duration-200 touch-target",
-                            isActive
-                              ? "bg-amber-100 text-amber-900 shadow-sm"
-                              : "text-gray-700 hover:bg-gray-100 active:bg-gray-200"
-                          )}
-                        >
-                          <item.icon className={cn(
-                            "w-5 h-5 flex-shrink-0",
-                            isActive ? "text-amber-600" : "text-gray-500"
-                          )} />
-                          <span>{item.label}</span>
-                        </a>
-                      </Link>
-                    );
-                  })}
-                </nav>
-              </div>
-
-              {/* Footer */}
-              <div className="border-t border-border p-4">
-                <div className="text-xs text-gray-500 text-center">
-                  Furnili Management System
-                  <br />
-                  Version 2.0
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-    </>
-  );
-}
-
-// Bottom Navigation Bar for Mobile
-export function MobileBottomNav() {
-  const { isMobile } = useIsMobile();
-  const [location] = useLocation();
-
-  if (!isMobile) return null;
-
-  const quickActions = [
-    { icon: Home, label: "Home", href: "/" },
-    { icon: Package, label: "Products", href: "/products" },
-    { icon: FileText, label: "Requests", href: "/requests" },
-    { icon: DollarSign, label: "Cash", href: "/petty-cash" },
-  ];
-
-  return (
-    <div className="fixed bottom-0 left-0 right-0 z-30 bg-white border-t border-border mobile-safe-area-bottom lg:hidden">
-      <div className="flex items-center justify-around py-2">
-        {quickActions.map((item) => {
-          const isActive = location === item.href;
-          return (
-            <Link key={item.href} href={item.href}>
-              <a
-                className={cn(
-                  "flex flex-col items-center space-y-1 px-3 py-2 rounded-lg transition-all duration-200 touch-target min-w-[64px]",
-                  isActive
-                    ? "text-amber-600"
-                    : "text-gray-500 active:text-amber-500"
-                )}
-              >
-                <item.icon className="w-5 h-5" />
-                <span className="text-xs font-medium">{item.label}</span>
-              </a>
-            </Link>
-          );
-        })}
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }

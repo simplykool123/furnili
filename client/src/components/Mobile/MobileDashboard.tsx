@@ -1,272 +1,310 @@
-import { Package, AlertTriangle, Clock, CheckCircle, TrendingUp, DollarSign } from "lucide-react";
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useQuery } from "@tanstack/react-query";
-import { authenticatedApiRequest } from "@/lib/auth";
-import { MobileGrid, MobileCard, MobileHeading, MobileText, useIsMobile } from "./MobileOptimizer";
-import { useLocation } from "wouter";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { 
+  Package, 
+  AlertTriangle, 
+  TrendingUp, 
+  Clock, 
+  DollarSign,
+  CheckCircle,
+  ArrowRight,
+  Users,
+  BarChart3,
+  Briefcase
+} from "lucide-react";
+import { Link } from "wouter";
+import { useIsMobile, useMobileBreakpoint } from "./MobileOptimizer";
 
-interface DashboardStats {
-  totalProducts: number;
-  lowStockProducts: any[];
-  todayAttendance: number;
-  activeTasks: number;
-  pendingRequests: number;
-  monthlyExpenses: number;
-  lowStockItems?: number;
+interface MobileDashboardProps {
+  stats: any;
+  tasks: any[];
+  isLoading: boolean;
 }
 
-export default function MobileDashboard() {
-  const { isMobile } = useIsMobile();
-  const [, setLocation] = useLocation();
+export default function MobileDashboard({ stats, tasks, isLoading }: MobileDashboardProps) {
+  const isMobile = useIsMobile();
+  const breakpoint = useMobileBreakpoint();
+  const [activeTab, setActiveTab] = useState<'overview' | 'tasks' | 'alerts'>('overview');
 
-  const { data: stats, isLoading } = useQuery({
-    queryKey: ['/api/dashboard/stats'],
-    queryFn: async () => {
-      return await authenticatedApiRequest('GET', '/api/dashboard/stats') as DashboardStats;
-    },
-  });
-
-  const { data: activity = [] } = useQuery({
-    queryKey: ['/api/dashboard/activity'],
-    queryFn: async () => {
-      return await authenticatedApiRequest('GET', '/api/dashboard/activity');
-    },
-  });
-
-  if (isLoading) {
-    return (
-      <div className="space-y-4">
-        <div className="animate-pulse">
-          <div className="h-6 bg-muted rounded w-48 mb-2" />
-          <div className="h-4 bg-muted rounded w-32" />
-        </div>
-        <MobileGrid>
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="bg-card border border-border rounded-lg p-4 space-y-3 animate-pulse">
-              <div className="flex items-center justify-between">
-                <div className="h-4 bg-muted rounded w-20" />
-                <div className="h-4 w-4 bg-muted rounded" />
-              </div>
-              <div className="h-8 bg-muted rounded w-16" />
-              <div className="h-3 bg-muted rounded w-24" />
-            </div>
-          ))}
-        </MobileGrid>
-      </div>
-    );
+  if (!isMobile) {
+    return null; // Use desktop dashboard
   }
 
-  const statCards = [
+  const quickStats = [
     {
       title: "Products",
       value: stats?.totalProducts || 0,
-      description: "Active items",
       icon: Package,
-      color: "blue",
-      gradient: "from-blue-500 to-blue-600",
+      color: "bg-blue-500",
       href: "/products"
-    },
-    {
-      title: "Low Stock",
-      value: Array.isArray(stats?.lowStockProducts) ? stats.lowStockProducts.length : (stats?.lowStockItems || 0),
-      description: "Need restocking",
-      icon: AlertTriangle,
-      color: "red",
-      gradient: "from-red-500 to-red-600",
-      href: "/products"
-    },
-    {
-      title: "Attendance",
-      value: stats?.todayAttendance || 0,
-      description: "Staff today",
-      icon: Clock,
-      color: "orange",
-      gradient: "from-orange-500 to-orange-600",
-      href: "/attendance"
-    },
-    {
-      title: "Tasks",
-      value: stats?.activeTasks || 0,
-      description: "In progress",
-      icon: CheckCircle,
-      color: "purple",
-      gradient: "from-purple-500 to-purple-600",
-      href: "/attendance"
     },
     {
       title: "Requests",
       value: stats?.pendingRequests || 0,
-      description: "Pending",
-      icon: TrendingUp,
-      color: "indigo",
-      gradient: "from-indigo-500 to-indigo-600",
+      icon: Clock,
+      color: "bg-orange-500",
       href: "/requests"
     },
     {
-      title: "Expenses",
-      value: `₹${stats?.monthlyExpenses?.toLocaleString() || 0}`,
-      description: "This month",
+      title: "Low Stock",
+      value: stats?.lowStockItems || 0,
+      icon: AlertTriangle,
+      color: "bg-red-500",
+      href: "/products"
+    },
+    {
+      title: "Value",
+      value: `₹${(stats?.totalValue || 0).toLocaleString()}`,
       icon: DollarSign,
-      color: "yellow",
-      gradient: "from-yellow-500 to-yellow-600",
-      href: "/petty-cash"
+      color: "bg-green-500",
+      href: "/reports"
     }
+  ];
+
+  const tabs = [
+    { id: 'overview', label: 'Overview', icon: BarChart3 },
+    { id: 'tasks', label: 'Tasks', icon: CheckCircle },
+    { id: 'alerts', label: 'Alerts', icon: AlertTriangle }
   ];
 
   return (
     <div className="space-y-4">
-      {/* Mobile Header */}
-      <div className="space-y-1">
-        <MobileHeading>Dashboard Overview</MobileHeading>
-        <MobileText>Real-time business metrics and insights</MobileText>
+      {/* Mobile Tabs */}
+      <div className="flex bg-muted rounded-lg p-1">
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id as any)}
+            className={`flex-1 flex items-center justify-center space-x-2 py-2 px-3 rounded-md text-sm font-medium transition-colors ${
+              activeTab === tab.id 
+                ? 'bg-background text-foreground shadow-sm' 
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <tab.icon className="h-4 w-4" />
+            <span className={breakpoint === 'xs' ? 'hidden' : 'block'}>{tab.label}</span>
+          </button>
+        ))}
       </div>
 
-      {/* Stats Grid - Compact Mobile Layout */}
-      <MobileGrid 
-        mobileColumns={2} 
-        tabletColumns={3} 
-        desktopColumns={isMobile ? 2 : 6}
-        className="gap-2 sm:gap-3"
-      >
-        {statCards.map((stat, index) => (
-          <div
-            key={index}
-            className="relative overflow-hidden group hover:shadow-md transition-all duration-200 border-l-4 border-l-current cursor-pointer active:scale-95 bg-card rounded-lg p-3 shadow-sm"
-            style={{ borderLeftColor: `var(--${stat.color}-500, #6b7280)` }}
-            onClick={() => setLocation(stat.href)}
-          >
-            <div className="flex items-start justify-between mb-2">
-              <div 
-                className={`w-7 h-7 rounded-full bg-gradient-to-br ${stat.gradient} flex items-center justify-center flex-shrink-0`}
-              >
-                <stat.icon className="w-3.5 h-3.5 text-white" />
-              </div>
-              <span className="text-xs font-medium text-muted-foreground">
-                {stat.title}
-              </span>
-            </div>
-            
-            <div className="space-y-0.5">
-              <div className="text-lg font-bold text-foreground leading-tight">
-                {typeof stat.value === 'string' ? stat.value : stat.value.toLocaleString()}
-              </div>
-              <p className="text-xs text-muted-foreground leading-tight">
-                {stat.description}
-              </p>
-            </div>
-
-            {/* Gradient overlay */}
-            <div className={`absolute inset-0 bg-gradient-to-br ${stat.gradient} opacity-0 group-hover:opacity-5 transition-opacity duration-200 pointer-events-none`} />
-          </div>
-        ))}
-      </MobileGrid>
-
-      {/* Quick Actions - Compact */}
-      <MobileCard className="space-y-3">
-        <MobileHeading className="text-base">Quick Actions</MobileHeading>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-          {[
-            { label: "Add Product", icon: Package, color: "bg-blue-100 text-blue-700", action: () => {
-              setLocation('/products');
-              // Trigger add product modal
-              setTimeout(() => {
-                window.dispatchEvent(new Event('openAddProductModal'));
-              }, 100);
-            }},
-            { label: "Check In/Out", icon: Clock, color: "bg-green-100 text-green-700", action: () => setLocation('/attendance') },
-            { label: "New Request", icon: TrendingUp, color: "bg-purple-100 text-purple-700", action: () => setLocation('/requests') }
-          ].map((action, index) => (
-            <button
-              key={index}
-              onClick={action.action}
-              className="flex items-center space-x-2 p-3 rounded-lg border border-border hover:bg-muted/50 transition-all duration-200 group active:scale-95 min-h-[48px]"
-            >
-              <div className={`w-8 h-8 rounded-full ${action.color} flex items-center justify-center group-hover:scale-110 transition-transform duration-200`}>
-                <action.icon className="w-4 h-4" />
-              </div>
-              <span className="text-sm font-medium text-foreground">
-                {action.label}
-              </span>
-            </button>
-          ))}
-        </div>
-      </MobileCard>
-
-      {/* Recent Activity - Compact */}
-      <MobileCard className="space-y-3">
-        <div className="flex items-center justify-between">
-          <MobileHeading className="text-base">Recent Activity</MobileHeading>
-          <button className="text-xs text-primary hover:text-primary/80 transition-colors">
-            View All
-          </button>
-        </div>
-        
-        {activity.length > 0 ? (
-          <div className="space-y-2">
-            {activity.slice(0, isMobile ? 2 : 3).map((item: any, index: number) => (
-              <div key={index} className="flex items-start space-x-2 p-2 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
-                <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2 flex-shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs text-foreground font-medium break-words leading-tight">
-                    {item.description}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    {new Date(item.timestamp).toLocaleString()}
-                  </p>
-                </div>
-              </div>
+      {/* Overview Tab */}
+      {activeTab === 'overview' && (
+        <div className="space-y-4">
+          {/* Quick Stats Grid */}
+          <div className="grid grid-cols-2 gap-3">
+            {quickStats.map((stat) => (
+              <Link key={stat.title} href={stat.href}>
+                <Card className="cursor-pointer hover:shadow-md transition-shadow">
+                  <CardContent className="p-4">
+                    <div className="flex items-center space-x-3">
+                      <div className={`w-10 h-10 rounded-lg ${stat.color} flex items-center justify-center`}>
+                        <stat.icon className="h-5 w-5 text-white" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium text-muted-foreground">
+                          {stat.title}
+                        </p>
+                        <p className="text-lg font-bold truncate">
+                          {stat.value}
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
             ))}
           </div>
-        ) : (
-          <div className="text-center py-4">
-            <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center mx-auto mb-2">
-              <Clock className="w-4 h-4 text-muted-foreground" />
-            </div>
-            <p className="text-xs text-muted-foreground">No recent activity</p>
-          </div>
-        )}
-      </MobileCard>
 
-      {/* Performance Metrics - Compact */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-        <MobileCard className="space-y-3">
-          <MobileHeading className="text-base">Inventory Health</MobileHeading>
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Total Stock Value</span>
-              <span className="font-medium text-foreground">₹{((stats?.totalProducts || 0) * 5000).toLocaleString()}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Low Stock Items</span>
-              <span className={`font-medium ${(Array.isArray(stats?.lowStockProducts) ? stats.lowStockProducts.length : 0) > 0 ? 'text-destructive' : 'text-success'}`}>
-                {Array.isArray(stats?.lowStockProducts) ? stats.lowStockProducts.length : 0}
-              </span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Categories</span>
-              <span className="font-medium text-foreground">8+</span>
-            </div>
-          </div>
-        </MobileCard>
+          {/* Recent Activity */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg">Recent Requests</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {(stats?.recentRequests || []).slice(0, 3).map((request: any) => (
+                <div key={request.id} className="flex items-center justify-between py-2 border-b last:border-0">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium truncate">
+                      {request.clientName || 'Unknown Client'}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {request.requestCount} items • {request.status}
+                    </p>
+                  </div>
+                  <Badge variant={request.status === 'pending' ? 'destructive' : 'secondary'}>
+                    {request.status}
+                  </Badge>
+                </div>
+              ))}
+              
+              <Link href="/requests">
+                <Button variant="ghost" className="w-full text-sm">
+                  View All Requests
+                  <ArrowRight className="h-4 w-4 ml-2" />
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
-        <MobileCard className="space-y-3">
-          <MobileHeading className="text-base">Team Performance</MobileHeading>
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Present Today</span>
-              <span className="font-medium text-success">{stats?.todayAttendance || 0}/10</span>
+      {/* Tasks Tab */}
+      {activeTab === 'tasks' && (
+        <div className="space-y-4">
+          <ScrollArea className="h-96">
+            <div className="space-y-3">
+              {tasks.slice(0, 10).map((task: any) => (
+                <Card key={task.id}>
+                  <CardContent className="p-4">
+                    <div className="flex items-start justify-between">
+                      <div className="min-w-0 flex-1">
+                        <h4 className="text-sm font-medium mb-1 line-clamp-2">
+                          {task.title}
+                        </h4>
+                        {task.description && (
+                          <p className="text-xs text-muted-foreground mb-2 line-clamp-2">
+                            {task.description}
+                          </p>
+                        )}
+                        <div className="flex items-center space-x-2">
+                          <Badge variant={task.priority === 'high' ? 'destructive' : 'secondary'} className="text-xs">
+                            {task.priority}
+                          </Badge>
+                          <Badge variant="outline" className="text-xs">
+                            {task.status}
+                          </Badge>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Active Tasks</span>
-              <span className="font-medium text-foreground">{stats?.activeTasks || 0}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">Completed Requests</span>
-              <span className="font-medium text-success">24</span>
-            </div>
+          </ScrollArea>
+          
+          <Link href="/tasks">
+            <Button className="w-full">
+              View All Tasks
+              <ArrowRight className="h-4 w-4 ml-2" />
+            </Button>
+          </Link>
+        </div>
+      )}
+
+      {/* Alerts Tab */}
+      {activeTab === 'alerts' && (
+        <div className="space-y-4">
+          {/* Low Stock Alerts */}
+          {stats?.lowStockProducts?.length > 0 && (
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg flex items-center">
+                  <AlertTriangle className="h-5 w-5 text-red-500 mr-2" />
+                  Low Stock Alert
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {stats.lowStockProducts.slice(0, 5).map((product: any) => (
+                  <div key={product.id} className="flex items-center justify-between py-2 border-b last:border-0">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium truncate">
+                        {product.name}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Stock: {product.currentStock} {product.unit}
+                      </p>
+                    </div>
+                    <Badge variant="destructive">
+                      Low
+                    </Badge>
+                  </div>
+                ))}
+                
+                <Link href="/products">
+                  <Button variant="outline" className="w-full text-sm">
+                    Manage Stock
+                    <Package className="h-4 w-4 ml-2" />
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Pending Requests Alert */}
+          {stats?.pendingRequests > 0 && (
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg flex items-center">
+                  <Clock className="h-5 w-5 text-orange-500 mr-2" />
+                  Pending Requests
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground mb-3">
+                  You have {stats.pendingRequests} pending material requests that need attention.
+                </p>
+                <Link href="/requests">
+                  <Button className="w-full">
+                    Review Requests
+                    <ArrowRight className="h-4 w-4 ml-2" />
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* No Alerts */}
+          {(!stats?.lowStockProducts?.length && !stats?.pendingRequests) && (
+            <Card>
+              <CardContent className="p-6 text-center">
+                <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-3" />
+                <h3 className="font-medium mb-1">All Clear!</h3>
+                <p className="text-sm text-muted-foreground">
+                  No alerts at this time. Everything looks good.
+                </p>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      )}
+
+      {/* Quick Actions */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg">Quick Actions</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 gap-3">
+            <Link href="/requests/new">
+              <Button variant="outline" className="w-full h-16 flex flex-col">
+                <Package className="h-5 w-5 mb-1" />
+                <span className="text-xs">New Request</span>
+              </Button>
+            </Link>
+            <Link href="/products">
+              <Button variant="outline" className="w-full h-16 flex flex-col">
+                <TrendingUp className="h-5 w-5 mb-1" />
+                <span className="text-xs">Check Stock</span>
+              </Button>
+            </Link>
+            <Link href="/attendance">
+              <Button variant="outline" className="w-full h-16 flex flex-col">
+                <Users className="h-5 w-5 mb-1" />
+                <span className="text-xs">Attendance</span>
+              </Button>
+            </Link>
+            <Link href="/projects">
+              <Button variant="outline" className="w-full h-16 flex flex-col">
+                <Briefcase className="h-5 w-5 mb-1" />
+                <span className="text-xs">Projects</span>
+              </Button>
+            </Link>
           </div>
-        </MobileCard>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
