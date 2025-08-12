@@ -575,15 +575,25 @@ function ProductLinkingButton({ supplier }: { supplier: Supplier }) {
                       variant="outline"
                       size="sm"
                       onClick={() => {
-                        if (selectedProducts.length === availableProducts.length) {
-                          setSelectedProducts([]);
+                        const availableProductIds = availableProducts.map((p: any) => p.id);
+                        const selectedFromAvailable = selectedProducts.filter(id => availableProductIds.includes(id));
+                        
+                        if (selectedFromAvailable.length === availableProducts.length) {
+                          // Deselect all filtered products
+                          setSelectedProducts(selectedProducts.filter(id => !availableProductIds.includes(id)));
                         } else {
-                          setSelectedProducts(availableProducts.map((p: any) => p.id));
+                          // Select all filtered products
+                          const newSelected = [...selectedProducts.filter(id => !availableProductIds.includes(id)), ...availableProductIds];
+                          setSelectedProducts(newSelected);
                         }
                       }}
                       className="h-7 text-xs"
                     >
-                      {selectedProducts.length === availableProducts.length ? "Deselect All" : "Select All"}
+                      {(() => {
+                        const availableProductIds = availableProducts.map((p: any) => p.id);
+                        const selectedFromAvailable = selectedProducts.filter(id => availableProductIds.includes(id));
+                        return selectedFromAvailable.length === availableProducts.length ? "Deselect All" : "Select All";
+                      })()}
                     </Button>
                   )}
                 </div>
