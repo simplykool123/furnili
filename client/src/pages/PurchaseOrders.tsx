@@ -132,7 +132,12 @@ export default function PurchaseOrders() {
         margin: 1,
         filename: response.filename,
         image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2 },
+        html2canvas: { 
+          scale: 2,
+          useCORS: true,
+          allowTaint: true,
+          letterRendering: true
+        },
         jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
       };
 
@@ -161,7 +166,12 @@ export default function PurchaseOrders() {
         margin: 1,
         filename: response.filename,
         image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2 },
+        html2canvas: { 
+          scale: 2,
+          useCORS: true,
+          allowTaint: true,
+          letterRendering: true
+        },
         jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
       };
 
@@ -1014,11 +1024,11 @@ function EditPOForm({ po, suppliers, onClose, onSuccess }: {
     description: item.description,
     qty: item.qty,
     unitPrice: item.unitPrice,
-    sku: item.sku,
-    brand: item.brand,
-    size: item.size,
-    thickness: item.thickness,
-    category: item.category,
+    sku: item.sku || undefined,
+    brand: item.product?.brand || undefined,
+    size: item.product?.size || undefined,
+    thickness: item.product?.thickness || undefined,
+    category: item.product?.category || undefined,
   })) || []);
   const [notes, setNotes] = useState(po.notes || "");
   const [productSearchQuery, setProductSearchQuery] = useState("");
