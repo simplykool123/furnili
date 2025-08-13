@@ -624,14 +624,20 @@ export default function Dashboard() {
       {/* Admin/Manager Only: Compact Urgent Tasks Display */}
       {!authService.hasRole(['staff', 'store_incharge']) && pendingTasks && pendingTasks.length > 0 && (
         <Card className="hover:shadow-md transition-all duration-200">
-          <CardHeader className="pb-2">
+          <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0">
             <CardTitle className="text-base font-semibold text-foreground flex items-center gap-2">
               <AlertCircle className="h-5 w-5 text-red-500" />
               Urgent Tasks
             </CardTitle>
+            <button 
+              onClick={() => setLocation('/tasks')}
+              className="text-xs text-blue-600 hover:text-blue-800 hover:underline transition-colors"
+            >
+              View All {pendingTasks.length} Tasks
+            </button>
           </CardHeader>
           <CardContent className="pt-0">
-            {/* Show only the next 2-3 most urgent tasks */}
+            {/* Show only the next 2-3 most urgent tasks as one-liners */}
             <div className="space-y-2">
               {pendingTasks
                 .sort((a, b) => {
@@ -654,48 +660,31 @@ export default function Dashboard() {
                 .map((task) => (
                   <div 
                     key={task.id} 
-                    className="flex items-start gap-2 p-3 rounded-lg bg-red-50/50 border border-red-200/50 hover:bg-red-50 cursor-pointer transition-colors"
+                    className="flex items-center gap-2 p-2 rounded-lg bg-red-50/50 border border-red-200/50 hover:bg-red-50 cursor-pointer transition-colors"
                     onClick={() => setLocation(`/tasks/${task.id}`)}
                   >
-                    <div className="flex-shrink-0 mt-1">
-                      <div className={`w-2 h-2 rounded-full ${
-                        task.priority === 'high' ? 'bg-red-500' :
-                        task.priority === 'medium' ? 'bg-yellow-500' : 'bg-green-500'
-                      }`} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900 truncate">
-                        {task.title}
-                      </p>
-                      <div className="flex items-center gap-2 mt-1">
-                        <Badge 
-                          variant={task.priority === 'high' ? 'destructive' : 
-                                  task.priority === 'medium' ? 'default' : 'secondary'}
-                          className="text-xs px-2 py-0"
-                        >
-                          {task.priority}
-                        </Badge>
-                        {task.dueDate && (
-                          <span className="text-xs text-gray-500">
-                            Due: {new Date(task.dueDate).toLocaleDateString()}
-                          </span>
-                        )}
-                      </div>
-                    </div>
+                    <div className={`w-2 h-2 rounded-full flex-shrink-0 ${
+                      task.priority === 'high' ? 'bg-red-500' :
+                      task.priority === 'medium' ? 'bg-yellow-500' : 'bg-green-500'
+                    }`} />
+                    <p className="text-sm font-medium text-gray-900 truncate flex-1">
+                      {task.title}
+                    </p>
+                    <Badge 
+                      variant={task.priority === 'high' ? 'destructive' : 
+                              task.priority === 'medium' ? 'default' : 'secondary'}
+                      className="text-xs px-2 py-0 flex-shrink-0"
+                    >
+                      {task.priority}
+                    </Badge>
+                    {task.dueDate && (
+                      <span className="text-xs text-gray-500 flex-shrink-0">
+                        Due: {new Date(task.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                      </span>
+                    )}
                   </div>
                 ))
               }
-            </div>
-            {/* Always show View All Tasks button for quick access */}
-            <div className="mt-3 pt-2 border-t border-gray-200">
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full text-xs hover:bg-red-50 hover:border-red-300"
-                onClick={() => setLocation('/tasks')}
-              >
-                View All {pendingTasks.length} Tasks
-              </Button>
             </div>
           </CardContent>
         </Card>
