@@ -3035,7 +3035,7 @@ export default function ProjectDetail() {
                                 >
                                   <Edit className="h-4 w-4" />
                                 </Button>
-                                {userRole === 'admin' && (
+                                {currentUser?.role === 'admin' && (
                                   <Button
                                     variant="ghost"
                                     size="sm"
