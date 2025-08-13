@@ -407,6 +407,12 @@ class DatabaseStorage implements IStorage {
         unit: row.product_unit,
         pricePerUnit: row.product_price_per_unit,
         currentStock: row.product_current_stock,
+        isActive: true,
+        createdAt: null,
+        sku: null,
+        minStock: 0,
+        description: null,
+        updatedAt: null,
       }
     }));
 
@@ -721,13 +727,16 @@ class DatabaseStorage implements IStorage {
   }
 
   async createProject(project: InsertProject): Promise<Project> {
-    if (!project.code) {
-      const lastProject = await db.select({ id: projects.id }).from(projects).orderBy(desc(projects.id)).limit(1);
-      const nextId = lastProject[0] ? lastProject[0].id + 1 : 1;
-      project.code = `FUN-${nextId.toString().padStart(4, '0')}`;
-    }
+    const lastProject = await db.select({ id: projects.id }).from(projects).orderBy(desc(projects.id)).limit(1);
+    const nextId = lastProject[0] ? lastProject[0].id + 1 : 1;
+    const code = `FUN-${nextId.toString().padStart(4, '0')}`;
     
-    const result = await db.insert(projects).values(project).returning();
+    const projectData = {
+      ...project,
+      code
+    };
+    
+    const result = await db.insert(projects).values([projectData]).returning();
     return result[0];
   }
 
@@ -758,7 +767,7 @@ class DatabaseStorage implements IStorage {
     
     const pendingRequests = allRequests.filter(r => r.status === 'pending');
     const recentRequests = allRequests.slice(0, 5);
-    const totalValue = allProducts.reduce((sum, p) => sum + (p.price * p.currentStock), 0);
+    const totalValue = allProducts.reduce((sum, p) => sum + (p.pricePerUnit * p.currentStock), 0);
 
     return {
       totalProducts: allProducts.length,
@@ -836,7 +845,7 @@ class DatabaseStorage implements IStorage {
       }
       
       if (whereClause) {
-        query = query.where(whereClause);
+        query = query.where(whereClause) as any;
       }
     }
     
@@ -893,7 +902,7 @@ class DatabaseStorage implements IStorage {
     }
     
     if (whereConditions.length > 0) {
-      query = query.where(and(...whereConditions));
+      query = query.where(and(...whereConditions)) as any;
     }
     
     return await query.orderBy(desc(tasks.createdAt));
@@ -988,7 +997,11 @@ class DatabaseStorage implements IStorage {
 
   // Request Item operations
   async createRequestItem(item: InsertRequestItem): Promise<RequestItem> {
-    const result = await db.insert(requestItems).values([item]).returning();
+    const itemWithRequestId = {
+      ...item,
+      requestId: item.requestId || 0 // Ensure requestId is present
+    };
+    const result = await db.insert(requestItems).values([itemWithRequestId]).returning();
     return result[0];
   }
 
@@ -1172,7 +1185,7 @@ class DatabaseStorage implements IStorage {
   async markAttendance(userId: number, date: string, checkIn: Date, checkOut?: Date): Promise<Attendance> {
     const attendanceData: InsertAttendance = {
       userId,
-      date,
+      date: new Date(date),
       checkIn,
       checkOut: checkOut || null,
       status: 'present'
@@ -1218,7 +1231,17 @@ class DatabaseStorage implements IStorage {
   }
 
   async createQuote(quote: InsertQuote): Promise<Quote> {
-    const result = await db.insert(quotes).values(quote).returning();
+    // Generate quote number if not provided
+    const lastQuote = await db.select({ id: quotes.id }).from(quotes).orderBy(desc(quotes.id)).limit(1);
+    const nextId = lastQuote[0] ? lastQuote[0].id + 1 : 1;
+    const quoteNumber = `Q${nextId.toString().padStart(6, '0')}`;
+    
+    const quoteData = {
+      ...quote,
+      quoteNumber
+    };
+    
+    const result = await db.insert(quotes).values([quoteData]).returning();
     return result[0];
   }
 
@@ -1332,7 +1355,7 @@ class DatabaseStorage implements IStorage {
       .where(sql`DATE(check_in_time) = ${today}`);
     
     if (userId) {
-      query = query.where(eq(attendance.userId, userId)) as any;
+      query = query.where(and(sql`DATE(check_in_time) = ${today}`, eq(attendance.userId, userId))) as any;
     }
     
     return query;
@@ -1384,7 +1407,7 @@ class DatabaseStorage implements IStorage {
 
     // Apply combined where conditions if any exist
     if (whereConditions.length > 0) {
-      query = query.where(and(...whereConditions));
+      query = query.where(and(...whereConditions)) as any;
     }
 
     const results = await query;
@@ -1454,7 +1477,7 @@ class DatabaseStorage implements IStorage {
     }
     
     if (whereConditions.length > 0) {
-      query = query.where(and(...whereConditions));
+      query = query.where(and(...whereConditions)) as any;
     }
     
     return await query.orderBy(desc(moodboards.createdAt));
@@ -1585,7 +1608,7 @@ class DatabaseStorage implements IStorage {
     }
     
     if (whereConditions.length > 0) {
-      query = query.where(and(...whereConditions));
+      query = query.where(and(...whereConditions)) as any;
     }
     
     const result = await query.orderBy(desc(purchaseOrders.createdAt));
@@ -1820,7 +1843,7 @@ class DatabaseStorage implements IStorage {
     }
     
     if (whereConditions.length > 0) {
-      query = query.where(and(...whereConditions));
+      query = query.where(and(...whereConditions)) as any;
     }
     
     return await query.orderBy(desc(auditLogs.createdAt));
@@ -1828,21 +1851,21 @@ class DatabaseStorage implements IStorage {
 
   // Auto PO Generation with Intelligent Supplier Selection
   async generateAutoPurchaseOrders(userId: number): Promise<PurchaseOrder[]> {
-    // Find products with low stock (current_stock < minimum_stock_level)
+    // Find products with low stock (current_stock < min_stock)
     const lowStockProducts = await db.select({
       id: products.id,
       name: products.name,
       sku: products.sku,
       currentStock: products.currentStock,
-      minimumStockLevel: products.minimumStockLevel,
-      price: products.price,
+      minStock: products.minStock,
+      pricePerUnit: products.pricePerUnit,
       brand: products.brand
     })
     .from(products)
     .where(
       and(
         eq(products.isActive, true),
-        sql`current_stock < minimum_stock_level`
+        sql`current_stock < min_stock`
       )
     );
     
@@ -1872,23 +1895,6 @@ class DatabaseStorage implements IStorage {
         // Use the best supplier (preferred first, then lowest price)
         selectedSupplier = productSuppliers[0].suppliers!;
         selectedRelationship = productSuppliers[0].supplier_products!;
-      } else if (product.brand) {
-        // If no direct supplier-product relationship, try to find by brand
-        const brandSuppliers = await db.select()
-          .from(supplierBrands)
-          .leftJoin(suppliers, eq(supplierBrands.supplierId, suppliers.id))
-          .leftJoin(brands, eq(supplierBrands.brandId, brands.id))
-          .where(and(
-            eq(brands.name, product.brand),
-            eq(supplierBrands.isActive, true),
-            eq(suppliers.isActive, true)
-          ))
-          .orderBy(desc(supplierBrands.isPrimarySupplier))
-          .limit(1);
-        
-        if (brandSuppliers.length > 0) {
-          selectedSupplier = brandSuppliers[0].suppliers!;
-        }
       }
       
       if (!selectedSupplier) {
@@ -1932,7 +1938,7 @@ class DatabaseStorage implements IStorage {
       // Create PO items for this supplier's products
       const items: InsertPurchaseOrderItem[] = supplierProducts.map((product, index) => {
         const relationship = relationships[index];
-        const qtyNeeded = Math.max(1, (product.minimumStockLevel || 10) - product.currentStock);
+        const qtyNeeded = Math.max(1, (product.minStock || 10) - product.currentStock);
         
         // Add 10% buffer to quantity for better stock management
         const orderQty = Math.ceil(qtyNeeded * 1.1);
@@ -1943,7 +1949,7 @@ class DatabaseStorage implements IStorage {
           sku: product.sku || '',
           description: product.name,
           qty: Math.max(orderQty, relationship?.minOrderQty || 1),
-          unitPrice: relationship?.unitPrice || product.price || 0
+          unitPrice: relationship?.unitPrice || product.pricePerUnit || 0
         };
       });
       

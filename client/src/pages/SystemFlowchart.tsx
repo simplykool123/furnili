@@ -15,7 +15,7 @@ export default function SystemFlowchart() {
   };
 
   return (
-    <FurniliLayout>
+    <FurniliLayout title="System Flowchart" subtitle="Complete workflow and module integration diagram">
       <div className="container mx-auto px-4 py-6">
         <div className="flex items-center justify-between mb-6">
           <div>

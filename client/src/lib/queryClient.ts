@@ -83,11 +83,39 @@ export const queryClient = new QueryClient({
       queryFn: getQueryFn({ on401: "throw" }),
       refetchInterval: false,
       refetchOnWindowFocus: false,
-      staleTime: Infinity,
-      retry: false,
+      staleTime: 30000, // 30 seconds for better performance
+      gcTime: 300000, // 5 minutes cache
+      retry: 1,
+      networkMode: 'online',
     },
     mutations: {
-      retry: false,
+      retry: 1,
+      networkMode: 'online',
     },
   },
 });
+
+// Enhanced performance utilities
+export const performanceUtils = {
+  measureApiCall: async <T>(operation: string, fn: () => Promise<T>): Promise<T> => {
+    const start = performance.now();
+    try {
+      const result = await fn();
+      const duration = performance.now() - start;
+      if (duration > 1000) {
+        console.warn(`Slow API call: ${operation} took ${duration.toFixed(2)}ms`);
+      }
+      return result;
+    } catch (error) {
+      const duration = performance.now() - start;
+      console.error(`Failed API call: ${operation} took ${duration.toFixed(2)}ms`, error);
+      throw error;
+    }
+  },
+
+  batchInvalidate: (patterns: string[]) => {
+    patterns.forEach(pattern => {
+      queryClient.invalidateQueries({ queryKey: [pattern] });
+    });
+  }
+};
