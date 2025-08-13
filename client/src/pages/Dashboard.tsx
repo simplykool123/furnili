@@ -718,12 +718,12 @@ export default function Dashboard() {
 
       {/* Admin/Manager Only: Hide project information from store keepers */}
       {!authService.hasRole(['staff', 'store_incharge']) && currentUser?.role !== 'store_incharge' && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Ongoing Projects Section */}
           <Card className="hover:shadow-md transition-all duration-200">
             <CardHeader className="pb-2">
               <CardTitle className="text-base font-semibold text-foreground flex items-center gap-2">
-                <Package className="h-6 w-6" />
+                <Package className="h-5 w-5" />
                 Ongoing Projects
               </CardTitle>
             </CardHeader>
@@ -731,14 +731,14 @@ export default function Dashboard() {
               {ongoingProjects && ongoingProjects.length > 0 ? (
                 <>
                   <div className="space-y-1 max-h-64 overflow-y-auto">
-                    {ongoingProjects.slice(0, 8).map((project: any) => (
+                    {ongoingProjects.slice(0, 4).map((project: any) => (
                       <div 
                         key={project.id} 
-                        className="flex items-center justify-between p-2 rounded-md bg-gray-50/50 border border-gray-100/50 hover:bg-gray-100/50 cursor-pointer transition-colors"
+                        className="flex flex-col gap-1 p-2 rounded-md bg-gray-50/50 border border-gray-100/50 hover:bg-gray-100/50 cursor-pointer transition-colors"
                         onClick={() => setLocation(`/projects/${project.id}`)}
                       >
-                        <div className="flex items-center gap-3 min-w-0 flex-1">
-                          <p className="text-sm font-medium text-gray-900 min-w-fit">
+                        <div className="flex items-center justify-between">
+                          <p className="text-sm font-medium text-gray-900">
                             {project.code}
                           </p>
                           <Badge 
@@ -748,19 +748,18 @@ export default function Dashboard() {
                               project.stage === 'Client Approved' ? 'destructive' :
                               'outline'
                             }
-                            className="text-xs min-w-fit"
+                            className="text-xs"
                           >
                             {project.stage}
                           </Badge>
-                          <p className="text-xs text-gray-600 truncate">
-                            {project.name} - {project.client_name}
-                          </p>
                         </div>
-                        <ArrowRight className="h-3 w-3 text-gray-400 flex-shrink-0" />
+                        <p className="text-xs text-gray-600 truncate">
+                          {project.name}
+                        </p>
                       </div>
                     ))}
                   </div>
-                  {ongoingProjects.length > 8 && (
+                  {ongoingProjects.length > 4 && (
                     <div className="mt-2 pt-2 border-t border-gray-200">
                       <Button
                         variant="outline"
@@ -768,103 +767,143 @@ export default function Dashboard() {
                         className="w-full text-xs"
                         onClick={() => setLocation('/projects')}
                       >
-                        View All {ongoingProjects.length} Ongoing Projects
+                        +{ongoingProjects.length - 4} more
                       </Button>
                     </div>
                   )}
                 </>
               ) : (
                 <div className="text-center py-6">
-                  <CheckCircle2 className="h-12 w-12 mx-auto text-blue-500 mb-3" />
+                  <CheckCircle2 className="h-8 w-8 mx-auto text-blue-500 mb-2" />
                   <p className="text-sm font-medium text-blue-900">All projects completed!</p>
-                  <p className="text-xs text-blue-700">No ongoing projects at the moment.</p>
+                  <p className="text-xs text-blue-700">No ongoing projects.</p>
                 </div>
               )}
             </CardContent>
           </Card>
 
-          {/* Low Stock Products Section - Enhanced */}
-          <Card className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-red-500 bg-gradient-to-br from-red-50/20 to-red-50/50">
-            <CardHeader className="pb-3 bg-gradient-to-r from-red-50 to-red-100/50">
-              <CardTitle className="text-lg font-bold text-red-900 flex items-center gap-3">
-                <div className="p-2 bg-red-500 rounded-full animate-pulse">
-                  <AlertTriangle className="h-5 w-5 text-white" />
-                </div>
+          {/* Critical Stock Alerts Section */}
+          <Card className="hover:shadow-md transition-all duration-200 border-l-4 border-l-amber-500 bg-amber-50/30">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base font-semibold text-foreground flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5 text-amber-600" />
                 Critical Stock Alerts
-                <Badge variant="destructive" className="ml-auto">
-                  {stats?.lowStockProducts?.length || 0}
-                </Badge>
+                {stats?.lowStockProducts && stats.lowStockProducts.length > 0 && (
+                  <Badge variant="destructive" className="ml-auto">
+                    {stats.lowStockProducts.length}
+                  </Badge>
+                )}
               </CardTitle>
-              <CardDescription className="text-red-700 font-medium">
+              <CardDescription className="text-amber-700">
                 Products requiring immediate attention
               </CardDescription>
             </CardHeader>
             <CardContent className="pt-0">
               {stats?.lowStockProducts && stats.lowStockProducts.length > 0 ? (
                 <>
-                  <div className="space-y-3 max-h-80 overflow-y-auto">
-                    {stats.lowStockProducts.slice(0, 6).map((product: any) => (
+                  <div className="space-y-2 max-h-64 overflow-y-auto">
+                    {stats.lowStockProducts.slice(0, 3).map((product: any) => (
                       <div 
                         key={product.id}
-                        className="group flex items-center justify-between p-4 rounded-xl bg-white border-2 border-red-100 hover:border-red-300 hover:shadow-md cursor-pointer transition-all duration-300 hover:scale-[1.02]"
+                        className="flex items-center justify-between p-3 bg-white rounded-lg border border-amber-200 hover:border-amber-300 cursor-pointer transition-colors"
                         onClick={() => setLocation(`/products?filter=low-stock`)}
                       >
-                        <div className="flex items-center gap-4 flex-1 min-w-0">
-                          <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center group-hover:bg-red-200 transition-colors">
-                            <Package className="h-6 w-6 text-red-600" />
+                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                          <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center">
+                            <Package className="h-4 w-4 text-amber-600" />
                           </div>
                           <div className="min-w-0 flex-1">
-                            <p className="text-sm font-bold text-gray-900 truncate">
+                            <p className="text-sm font-medium text-gray-900 truncate">
                               {product.name}
                             </p>
-                            <p className="text-xs text-gray-600 truncate mb-1">
-                              {product.category}
+                            <p className="text-xs text-gray-600">
+                              Stock: {product.currentStock}
                             </p>
-                            <div className="flex items-center gap-2">
-                              <div className="text-xs font-medium text-red-700 bg-red-100 px-2 py-1 rounded-full">
-                                Stock: {product.currentStock}
-                              </div>
-                              <div className="text-xs text-gray-500">
-                                Min: {product.minStock}
-                              </div>
-                            </div>
                           </div>
                         </div>
-                        <div className="flex items-center gap-3">
-                          <div className="text-right">
-                            <Badge variant="destructive" className="mb-1">
-                              Critical
-                            </Badge>
-                            <div className="text-xs text-red-600 font-medium">
-                              {Math.max(0, product.minStock - product.currentStock)} needed
-                            </div>
-                          </div>
-                          <ArrowRight className="h-4 w-4 text-red-400 group-hover:text-red-600 flex-shrink-0" />
-                        </div>
+                        <Badge variant="destructive" className="text-xs">
+                          Critical
+                        </Badge>
                       </div>
                     ))}
                   </div>
-                  {stats.lowStockProducts.length > 6 && (
-                    <div className="mt-4 pt-3 border-t border-red-200">
+                  {stats.lowStockProducts.length > 3 && (
+                    <div className="text-center pt-2">
                       <Button
-                        variant="destructive"
+                        variant="outline"
                         size="sm"
-                        className="w-full font-medium hover:bg-red-600"
+                        className="w-full text-xs"
                         onClick={() => setLocation('/products?filter=low-stock')}
                       >
-                        View All {stats.lowStockProducts.length} Critical Items
-                        <ArrowRight className="h-4 w-4 ml-2" />
+                        +{stats.lowStockProducts.length - 3} more
                       </Button>
                     </div>
                   )}
                 </>
               ) : (
-                <div className="text-center py-8">
-                  <div className="w-16 h-16 mx-auto bg-green-100 rounded-full flex items-center justify-center mb-4">
-                    <CheckCircle2 className="h-8 w-8 text-green-600" />
+                <div className="text-center py-6">
+                  <CheckCircle2 className="h-8 w-8 mx-auto text-green-500 mb-2" />
+                  <p className="text-sm font-medium text-green-900">All stock levels adequate</p>
+                  <p className="text-xs text-green-600">No critical alerts</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Recent Activity Section */}
+          <Card className="hover:shadow-md transition-all duration-200 border-l-4 border-l-blue-500 bg-blue-50/30">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base font-semibold text-foreground flex items-center gap-2">
+                <Activity className="h-5 w-5 text-blue-600" />
+                Recent Activity
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="space-y-2 max-h-64 overflow-y-auto">
+                {recentActivity && recentActivity.length > 0 ? (
+                  recentActivity.slice(0, 4).map((activity: any, index: number) => (
+                    <div key={index} className="flex items-start gap-3 p-3 bg-white rounded-lg border border-blue-200 hover:border-blue-300 transition-colors">
+                      <div className="flex-shrink-0 mt-1">
+                        {activity.description.includes('product') ? (
+                          <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center">
+                            <Package className="h-3 w-3 text-green-600" />
+                          </div>
+                        ) : activity.description.includes('project') ? (
+                          <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center">
+                            <Briefcase className="h-3 w-3 text-blue-600" />
+                          </div>
+                        ) : activity.description.includes('request') ? (
+                          <div className="w-6 h-6 rounded-full bg-orange-100 flex items-center justify-center">
+                            <Clock className="h-3 w-3 text-orange-600" />
+                          </div>
+                        ) : (
+                          <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center">
+                            <Activity className="h-3 w-3 text-gray-600" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-900 leading-tight">
+                          {activity.description}
+                        </p>
+                        <span className="text-xs text-gray-500">
+                          {activity.timestamp || '2 mins ago'}
+                        </span>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-6 text-gray-500">
+                    <Activity className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                    <p className="text-sm">No recent activity</p>
                   </div>
-                  <p className="text-base font-bold text-green-900 mb-1">Excellent Stock Levels!</p>
-                  <p className="text-sm text-green-700">All products are properly stocked</p>
+                )}
+              </div>
+              {recentActivity && recentActivity.length > 4 && (
+                <div className="text-center pt-2">
+                  <Badge variant="outline" className="text-blue-700 border-blue-300">
+                    +{recentActivity.length - 4} more
+                  </Badge>
                 </div>
               )}
             </CardContent>
