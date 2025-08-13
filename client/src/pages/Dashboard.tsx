@@ -694,65 +694,82 @@ export default function Dashboard() {
 
       {/* Removed animated "New Messages" section - keeping only clean "Pending Tasks" section below */}
 
-      {/* Admin/Manager Only: Pending Tasks Section - Similar to Recent Activity */}
+      {/* Admin/Manager Only: Compact Urgent Tasks Display */}
       {!authService.hasRole(['staff', 'store_incharge']) && pendingTasks && pendingTasks.length > 0 && (
         <Card className="hover:shadow-md transition-all duration-200">
           <CardHeader className="pb-2">
             <CardTitle className="text-base font-semibold text-foreground flex items-center gap-2">
               <AlertCircle className="h-6 w-6 text-red-500" />
-              Pending Tasks ({pendingTasks.length})
+              Urgent Tasks
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-0">
-            <div className="space-y-2 max-h-64 overflow-y-auto">
-              {pendingTasks.slice(0, 5).map((task) => (
-                <div 
-                  key={task.id} 
-                  className="flex items-start gap-2 p-3 rounded-lg bg-red-50/50 border border-red-200/50 hover:bg-red-50 cursor-pointer transition-colors"
-                  onClick={() => setLocation(`/tasks/${task.id}`)}
-                >
-                  <div className="flex-shrink-0 mt-1">
-                    <AlertCircle className="h-4 w-4 text-red-500" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 truncate">
-                      {task.title}
-                    </p>
-                    {task.description && (
-                      <p className="text-xs text-gray-600 mt-1 line-clamp-2">
-                        {task.description}
+            {/* Show only the next 2-3 most urgent tasks */}
+            <div className="space-y-2">
+              {pendingTasks
+                .sort((a, b) => {
+                  // Sort by priority: high > medium > low
+                  const priorityOrder = { 'high': 3, 'medium': 2, 'low': 1 };
+                  const priorityDiff = (priorityOrder[b.priority] || 1) - (priorityOrder[a.priority] || 1);
+                  if (priorityDiff !== 0) return priorityDiff;
+                  
+                  // Then by due date if available
+                  if (a.dueDate && b.dueDate) {
+                    return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
+                  }
+                  if (a.dueDate) return -1;
+                  if (b.dueDate) return 1;
+                  
+                  // Finally by creation date
+                  return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+                })
+                .slice(0, 3)
+                .map((task) => (
+                  <div 
+                    key={task.id} 
+                    className="flex items-start gap-2 p-3 rounded-lg bg-red-50/50 border border-red-200/50 hover:bg-red-50 cursor-pointer transition-colors"
+                    onClick={() => setLocation(`/tasks/${task.id}`)}
+                  >
+                    <div className="flex-shrink-0 mt-1">
+                      <div className={`w-2 h-2 rounded-full ${
+                        task.priority === 'high' ? 'bg-red-500' :
+                        task.priority === 'medium' ? 'bg-yellow-500' : 'bg-green-500'
+                      }`} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900 truncate">
+                        {task.title}
                       </p>
-                    )}
-                    <div className="flex items-center gap-2 mt-1">
-                      <Badge 
-                        variant={task.priority === 'high' ? 'destructive' : 
-                                task.priority === 'medium' ? 'default' : 'secondary'}
-                        className="text-xs"
-                      >
-                        {task.priority}
-                      </Badge>
-                      {task.dueDate && (
-                        <span className="text-xs text-gray-500">
-                          Due: {new Date(task.dueDate).toLocaleDateString()}
-                        </span>
-                      )}
+                      <div className="flex items-center gap-2 mt-1">
+                        <Badge 
+                          variant={task.priority === 'high' ? 'destructive' : 
+                                  task.priority === 'medium' ? 'default' : 'secondary'}
+                          className="text-xs px-2 py-0"
+                        >
+                          {task.priority}
+                        </Badge>
+                        {task.dueDate && (
+                          <span className="text-xs text-gray-500">
+                            Due: {new Date(task.dueDate).toLocaleDateString()}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))
+              }
             </div>
-            {pendingTasks.length > 5 && (
-              <div className="mt-3 pt-2 border-t border-gray-200">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full text-xs"
-                  onClick={() => setLocation('/tasks')}
-                >
-                  View All {pendingTasks.length} Tasks
-                </Button>
-              </div>
-            )}
+            {/* Always show View All Tasks button for quick access */}
+            <div className="mt-3 pt-2 border-t border-gray-200">
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full text-xs hover:bg-red-50 hover:border-red-300"
+                onClick={() => setLocation('/tasks')}
+              >
+                View All {pendingTasks.length} Tasks
+              </Button>
+            </div>
           </CardContent>
         </Card>
       )}
