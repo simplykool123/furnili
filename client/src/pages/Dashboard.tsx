@@ -338,13 +338,13 @@ export default function Dashboard() {
       {authService.hasRole(['staff', 'store_incharge']) && !authService.hasRole(['admin', 'manager']) ? (
         <>
           {/* Main Action Buttons - 4 in a row (5 for store keepers) */}
-          <div className={`grid grid-cols-2 gap-4 mb-6 ${currentUser?.role === 'store_incharge' ? 'lg:grid-cols-5' : 'lg:grid-cols-4'}`}>
+          <div className={`grid grid-cols-2 gap-3 mb-4 ${currentUser?.role === 'store_incharge' ? 'lg:grid-cols-5' : 'lg:grid-cols-4'}`}>
             {/* Check In/Out Button */}
             <Card className="hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-green-50 to-green-100 border-green-200 cursor-pointer" onClick={handleCheckInOut}>
-              <CardContent className="p-5 text-center">
-                <div className="flex flex-col items-center space-y-2">
-                  <div className="p-2 bg-green-500 rounded-full">
-                    {hasCheckedInToday ? <LogOut className="h-5 w-5 text-white" /> : <LogIn className="h-5 w-5 text-white" />}
+              <CardContent className="p-3 text-center">
+                <div className="flex flex-col items-center space-y-1">
+                  <div className="p-1.5 bg-green-500 rounded-full">
+                    {hasCheckedInToday ? <LogOut className="h-4 w-4 text-white" /> : <LogIn className="h-4 w-4 text-white" />}
                   </div>
                   <span className="text-xs font-medium text-green-900">
                     {hasCheckedInToday ? 'Check Out' : 'Check In'}
@@ -355,10 +355,10 @@ export default function Dashboard() {
 
             {/* Material Request/Issue Button */}
             <Card className="hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200 cursor-pointer" onClick={() => setLocation('/requests')}>
-              <CardContent className="p-5 text-center">
-                <div className="flex flex-col items-center space-y-2">
-                  <div className="p-2 bg-orange-500 rounded-full">
-                    <Package className="h-5 w-5 text-white" />
+              <CardContent className="p-3 text-center">
+                <div className="flex flex-col items-center space-y-1">
+                  <div className="p-1.5 bg-orange-500 rounded-full">
+                    <Package className="h-4 w-4 text-white" />
                   </div>
                   <span className="text-xs font-medium text-orange-900">
                     {currentUser?.role === 'store_incharge' ? 'Material Issue' : 'New Material Request'}
@@ -369,10 +369,10 @@ export default function Dashboard() {
 
             {/* Add New Expense Button */}
             <Card className="hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200 cursor-pointer" onClick={() => setLocation('/petty-cash')}>
-              <CardContent className="p-5 text-center">
-                <div className="flex flex-col items-center space-y-2">
-                  <div className="p-2 bg-purple-500 rounded-full">
-                    <DollarSign className="h-5 w-5 text-white" />
+              <CardContent className="p-3 text-center">
+                <div className="flex flex-col items-center space-y-1">
+                  <div className="p-1.5 bg-purple-500 rounded-full">
+                    <DollarSign className="h-4 w-4 text-white" />
                   </div>
                   <span className="text-xs font-medium text-purple-900">Add New Expense</span>
                 </div>
@@ -382,10 +382,10 @@ export default function Dashboard() {
             {/* Inventory Movement Button - Only for store keepers */}
             {currentUser?.role === 'store_incharge' && (
               <Card className="hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-teal-50 to-teal-100 border-teal-200 cursor-pointer" onClick={() => setLocation('/inventory-movement')}>
-                <CardContent className="p-5 text-center">
-                  <div className="flex flex-col items-center space-y-2">
-                    <div className="p-2 bg-teal-500 rounded-full">
-                      <BarChart3 className="h-5 w-5 text-white" />
+                <CardContent className="p-3 text-center">
+                  <div className="flex flex-col items-center space-y-1">
+                    <div className="p-1.5 bg-teal-500 rounded-full">
+                      <BarChart3 className="h-4 w-4 text-white" />
                     </div>
                     <span className="text-xs font-medium text-teal-900">Inventory Movement</span>
                   </div>
@@ -395,10 +395,10 @@ export default function Dashboard() {
 
             {/* Ongoing Projects Button - Moved to last position */}
             <Card className="hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200 cursor-pointer" onClick={() => setLocation('/projects')}>
-              <CardContent className="p-5 text-center">
-                <div className="flex flex-col items-center space-y-2">
-                  <div className="p-2 bg-blue-500 rounded-full">
-                    <Briefcase className="h-5 w-5 text-white" />
+              <CardContent className="p-3 text-center">
+                <div className="flex flex-col items-center space-y-1">
+                  <div className="p-1.5 bg-blue-500 rounded-full">
+                    <Briefcase className="h-4 w-4 text-white" />
                   </div>
                   <span className="text-xs font-medium text-blue-900">Ongoing Projects</span>
                 </div>
@@ -407,7 +407,7 @@ export default function Dashboard() {
           </div>
 
           {/* My Attendance & Tasks - Side by Side */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
             {/* My Attendance */}
             <Card className="hover:shadow-md transition-all duration-200">
               <CardHeader className="pb-3">
@@ -537,7 +537,7 @@ export default function Dashboard() {
         </>
       ) : (
         /* ADMIN/MANAGER DASHBOARD - Keep existing layout */
-        <div className="grid gap-3 sm:gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
+        <div className="grid gap-2 sm:gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 mb-4">
           <Card className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-blue-500 bg-gradient-to-br from-card to-blue-50/20 cursor-pointer" onClick={() => setLocation('/products')}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
               <CardTitle className="text-xs font-semibold text-card-foreground">Products</CardTitle>
@@ -706,7 +706,7 @@ export default function Dashboard() {
 
       {/* Admin/Manager Only: Hide project information from store keepers */}
       {!authService.hasRole(['staff', 'store_incharge']) && currentUser?.role !== 'store_incharge' && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
           {/* Ongoing Projects Section */}
           <Card className="hover:shadow-md transition-all duration-200">
             <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0">
