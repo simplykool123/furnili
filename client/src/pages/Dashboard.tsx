@@ -21,7 +21,8 @@ import {
   LogIn,
   LogOut,
   Briefcase,
-  BarChart3
+  BarChart3,
+  Activity
 } from "lucide-react";
 import { authService } from "@/lib/auth";
 import { useState, useEffect } from "react";
@@ -331,8 +332,80 @@ export default function Dashboard() {
 
 
 
-      {/* Stock Warnings */}
-      <StockWarnings />
+      {/* Stock Warnings and Recent Activity Feed */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <StockWarnings />
+        
+        {/* Recent Activity Feed */}
+        <Card className="border-l-4 border-l-blue-500 bg-blue-50/30">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-blue-900">
+              <Activity className="h-6 w-6 text-blue-600" />
+              Recent Activity Feed
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3 max-h-64 overflow-y-auto">
+              {recentActivity && recentActivity.length > 0 ? (
+                recentActivity.slice(0, 8).map((activity: any, index: number) => (
+                  <div key={index} className="flex items-start gap-3 p-3 bg-white rounded-lg border border-blue-200 hover:border-blue-300 transition-colors">
+                    <div className="flex-shrink-0 mt-1">
+                      {activity.description.includes('product') ? (
+                        <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
+                          <Package className="h-4 w-4 text-green-600" />
+                        </div>
+                      ) : activity.description.includes('project') ? (
+                        <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                          <Briefcase className="h-4 w-4 text-blue-600" />
+                        </div>
+                      ) : activity.description.includes('request') ? (
+                        <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center">
+                          <Clock className="h-4 w-4 text-orange-600" />
+                        </div>
+                      ) : activity.description.includes('stock') ? (
+                        <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center">
+                          <AlertTriangle className="h-4 w-4 text-red-600" />
+                        </div>
+                      ) : (
+                        <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
+                          <Activity className="h-4 w-4 text-gray-600" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900 leading-tight">
+                        {activity.description}
+                      </p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-xs text-gray-500">
+                          {new Date(activity.timestamp).toLocaleString()}
+                        </span>
+                        {activity.entityType && (
+                          <Badge variant="outline" className="text-xs">
+                            {activity.entityType}
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-6 text-gray-500">
+                  <Activity className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                  <p className="text-sm">No recent activity</p>
+                </div>
+              )}
+            </div>
+            {recentActivity && recentActivity.length > 8 && (
+              <div className="text-center pt-3 border-t border-blue-200 mt-3">
+                <Badge variant="outline" className="text-blue-700 border-blue-300">
+                  +{recentActivity.length - 8} more activities
+                </Badge>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
 
       {/* NEW DASHBOARD DESIGN FOR USERS & STOREKEEPERS */}
       {authService.hasRole(['staff', 'store_incharge']) && !authService.hasRole(['admin', 'manager']) ? (

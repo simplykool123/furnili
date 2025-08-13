@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { AlertTriangle, Package } from "lucide-react";
+import { AlertTriangle, Package, CheckCircle2 } from "lucide-react";
 import { authService } from "@/lib/auth";
 
 interface MaterialRequest {
@@ -70,7 +70,23 @@ export default function StockWarnings() {
   });
 
   if (stockWarnings.length === 0) {
-    return null;
+    return (
+      <Card className="border-l-4 border-l-green-500 bg-green-50/30">
+        <CardHeader className="pb-2">
+          <CardTitle className="flex items-center gap-2 text-green-900">
+            <CheckCircle2 className="h-5 w-5 text-green-600" />
+            Stock Status
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-6 text-green-700">
+            <CheckCircle2 className="h-8 w-8 text-green-500 mx-auto mb-2" />
+            <p className="text-sm font-medium">All stock levels are adequate</p>
+            <p className="text-xs text-green-600 mt-1">No critical alerts at this time</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
   }
 
   return (
