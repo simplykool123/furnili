@@ -707,10 +707,10 @@ export default function Dashboard() {
 
       {/* Admin/Manager Only: Hide project information from store keepers */}
       {!authService.hasRole(['staff', 'store_incharge']) && currentUser?.role !== 'store_incharge' && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           {/* Ongoing Projects Section */}
           <Card className="hover:shadow-md transition-all duration-200">
-            <CardHeader className="pb-2">
+            <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0">
               <CardTitle className="text-base font-semibold text-foreground flex items-center gap-2">
                 <Package className="h-5 w-5" />
                 Ongoing Projects
@@ -718,120 +718,90 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent className="pt-0">
               {ongoingProjects && ongoingProjects.length > 0 ? (
-                <>
-                  <div className="space-y-1 max-h-64 overflow-y-auto">
-                    {ongoingProjects.slice(0, 4).map((project: any) => (
-                      <div 
-                        key={project.id} 
-                        className="flex flex-col gap-1 p-2 rounded-md bg-gray-50/50 border border-gray-100/50 hover:bg-gray-100/50 cursor-pointer transition-colors"
-                        onClick={() => setLocation(`/projects/${project.id}`)}
-                      >
-                        <div className="flex items-center justify-between">
-                          <p className="text-sm font-medium text-gray-900">
-                            {project.code}
-                          </p>
-                          <Badge 
-                            variant={
-                              project.stage === 'Production' ? 'default' :
-                              project.stage === 'Installation' ? 'secondary' :
-                              project.stage === 'Client Approved' ? 'destructive' :
-                              'outline'
-                            }
-                            className="text-xs"
-                          >
-                            {project.stage}
-                          </Badge>
-                        </div>
+                <div className="space-y-2">
+                  {ongoingProjects.slice(0, 4).map((project: any) => (
+                    <div 
+                      key={project.id} 
+                      className="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                      onClick={() => setLocation(`/projects/${project.id}`)}
+                    >
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-900 truncate">
+                          {project.code}
+                        </p>
                         <p className="text-xs text-gray-600 truncate">
                           {project.name}
                         </p>
                       </div>
-                    ))}
-                  </div>
-                  {ongoingProjects.length > 4 && (
-                    <div className="mt-2 pt-2 border-t border-gray-200">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="w-full text-xs"
-                        onClick={() => setLocation('/projects')}
+                      <Badge 
+                        variant={
+                          project.stage === 'estimate-given' ? 'default' :
+                          project.stage === 'client-approved' ? 'destructive' :
+                          project.stage === 'prospect' ? 'secondary' :
+                          'outline'
+                        }
+                        className="text-xs ml-2 flex-shrink-0"
                       >
-                        +{ongoingProjects.length - 4} more
-                      </Button>
+                        {project.stage}
+                      </Badge>
                     </div>
-                  )}
-                </>
+                  ))}
+                </div>
               ) : (
-                <div className="text-center py-6">
-                  <CheckCircle2 className="h-8 w-8 mx-auto text-blue-500 mb-2" />
-                  <p className="text-sm font-medium text-blue-900">All projects completed!</p>
-                  <p className="text-xs text-blue-700">No ongoing projects.</p>
+                <div className="text-center py-4">
+                  <CheckCircle2 className="h-6 w-6 mx-auto text-green-500 mb-2" />
+                  <p className="text-sm font-medium text-green-900">All projects completed!</p>
+                  <p className="text-xs text-green-700">No ongoing projects.</p>
                 </div>
               )}
             </CardContent>
           </Card>
 
           {/* Critical Stock Alerts Section */}
-          <Card className="hover:shadow-md transition-all duration-200 border-l-4 border-l-amber-500 bg-amber-50/30">
-            <CardHeader className="pb-2">
+          <Card className="hover:shadow-md transition-all duration-200">
+            <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0">
               <CardTitle className="text-base font-semibold text-foreground flex items-center gap-2">
                 <AlertTriangle className="h-5 w-5 text-amber-600" />
                 Critical Stock Alerts
                 {stats?.lowStockProducts && stats.lowStockProducts.length > 0 && (
-                  <Badge variant="destructive" className="ml-auto">
+                  <Badge variant="destructive" className="text-xs">
                     {stats.lowStockProducts.length}
                   </Badge>
                 )}
               </CardTitle>
-              <CardDescription className="text-amber-700">
-                Products requiring immediate attention
-              </CardDescription>
             </CardHeader>
             <CardContent className="pt-0">
+              <p className="text-xs text-amber-700 mb-3">Products requiring immediate attention</p>
               {stats?.lowStockProducts && stats.lowStockProducts.length > 0 ? (
-                <>
-                  <div className="space-y-2 max-h-64 overflow-y-auto">
-                    {stats.lowStockProducts.slice(0, 3).map((product: any) => (
-                      <div 
-                        key={product.id}
-                        className="flex items-center justify-between p-3 bg-white rounded-lg border border-amber-200 hover:border-amber-300 cursor-pointer transition-colors"
-                        onClick={() => setLocation(`/products?filter=low-stock`)}
-                      >
-                        <div className="flex items-center gap-3 flex-1 min-w-0">
-                          <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center">
-                            <Package className="h-4 w-4 text-amber-600" />
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <p className="text-sm font-medium text-gray-900 truncate">
-                              {product.name}
-                            </p>
-                            <p className="text-xs text-gray-600">
-                              Stock: {product.currentStock}
-                            </p>
-                          </div>
+                <div className="space-y-2">
+                  {stats.lowStockProducts.slice(0, 3).map((product: any) => (
+                    <div 
+                      key={product.id}
+                      className="flex items-center justify-between p-2 rounded-lg hover:bg-amber-50 cursor-pointer transition-colors"
+                      onClick={() => setLocation(`/products?filter=low-stock`)}
+                    >
+                      <div className="flex items-center gap-2 flex-1 min-w-0">
+                        <div className="w-6 h-6 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0">
+                          <Package className="h-3 w-3 text-amber-600" />
                         </div>
-                        <Badge variant="destructive" className="text-xs">
-                          Critical
-                        </Badge>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium text-gray-900 truncate">
+                            {product.name}
+                          </p>
+                          <p className="text-xs text-gray-600">
+                            Stock: {product.currentStock}
+                          </p>
+                        </div>
                       </div>
-                    ))}
-                  </div>
-                  {stats.lowStockProducts.length > 3 && (
-                    <div className="text-center pt-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="w-full text-xs"
-                        onClick={() => setLocation('/products?filter=low-stock')}
-                      >
-                        +{stats.lowStockProducts.length - 3} more
-                      </Button>
+                      <Badge variant="destructive" className="text-xs ml-2 flex-shrink-0">
+                        Critical
+                      </Badge>
                     </div>
-                  )}
-                </>
+                  ))}
+                </div>
               ) : (
-                <div className="text-center py-6">
-                  <CheckCircle2 className="h-8 w-8 mx-auto text-green-500 mb-2" />
+                <div className="text-center py-4">
+                  <CheckCircle2 className="h-6 w-6 mx-auto text-green-500 mb-2" />
                   <p className="text-sm font-medium text-green-900">All stock levels adequate</p>
                   <p className="text-xs text-green-600">No critical alerts</p>
                 </div>
@@ -840,28 +810,32 @@ export default function Dashboard() {
           </Card>
 
           {/* Recent Activity Section */}
-          <Card className="hover:shadow-md transition-all duration-200 border-l-4 border-l-blue-500 bg-blue-50/30">
-            <CardHeader className="pb-2">
+          <Card className="hover:shadow-md transition-all duration-200">
+            <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0">
               <CardTitle className="text-base font-semibold text-foreground flex items-center gap-2">
                 <Activity className="h-5 w-5 text-blue-600" />
                 Recent Activity
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-0">
-              <div className="space-y-2 max-h-64 overflow-y-auto">
-                {recentActivity && recentActivity.length > 0 ? (
-                  recentActivity.slice(0, 4).map((activity: any, index: number) => (
-                    <div key={index} className="flex items-start gap-3 p-3 bg-white rounded-lg border border-blue-200 hover:border-blue-300 transition-colors">
-                      <div className="flex-shrink-0 mt-1">
+              {recentActivity && recentActivity.length > 0 ? (
+                <div className="space-y-2">
+                  {recentActivity.slice(0, 4).map((activity: any, index: number) => (
+                    <div key={index} className="flex items-center gap-2 p-2 rounded-lg hover:bg-blue-50 transition-colors">
+                      <div className="flex-shrink-0">
                         {activity.description.includes('product') ? (
                           <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center">
                             <Package className="h-3 w-3 text-green-600" />
                           </div>
-                        ) : activity.description.includes('project') ? (
+                        ) : activity.description.includes('Stock movement') ? (
                           <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center">
-                            <Briefcase className="h-3 w-3 text-blue-600" />
+                            <BarChart3 className="h-3 w-3 text-blue-600" />
                           </div>
-                        ) : activity.description.includes('request') ? (
+                        ) : activity.description.includes('Task completed') ? (
+                          <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center">
+                            <CheckCircle2 className="h-3 w-3 text-green-600" />
+                          </div>
+                        ) : activity.description.includes('checked in') ? (
                           <div className="w-6 h-6 rounded-full bg-orange-100 flex items-center justify-center">
                             <Clock className="h-3 w-3 text-orange-600" />
                           </div>
@@ -872,27 +846,21 @@ export default function Dashboard() {
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900 leading-tight">
+                        <p className="text-sm font-medium text-gray-900 truncate">
                           {activity.description}
                         </p>
-                        <span className="text-xs text-gray-500">
+                        <p className="text-xs text-gray-500">
                           {activity.timestamp || '2 mins ago'}
-                        </span>
+                        </p>
                       </div>
                     </div>
-                  ))
-                ) : (
-                  <div className="text-center py-6 text-gray-500">
-                    <Activity className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                    <p className="text-sm">No recent activity</p>
-                  </div>
-                )}
-              </div>
-              {recentActivity && recentActivity.length > 4 && (
-                <div className="text-center pt-2">
-                  <Badge variant="outline" className="text-blue-700 border-blue-300">
-                    +{recentActivity.length - 4} more
-                  </Badge>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-4">
+                  <Activity className="h-6 w-6 text-gray-400 mx-auto mb-2" />
+                  <p className="text-sm font-medium text-gray-900">No recent activity</p>
+                  <p className="text-xs text-gray-600">Activity will appear here</p>
                 </div>
               )}
             </CardContent>
