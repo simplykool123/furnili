@@ -125,14 +125,20 @@ export class ObjectStorageService {
     const bucket = objectStorageClient.bucket(bucketName);
     const fileObj = bucket.file(objName);
 
-    await fileObj.save(file, {
+    // Use createWriteStream for better compatibility with Buffer data
+    const stream = fileObj.createWriteStream({
       metadata: {
         contentType: mimeType,
       },
     });
 
-    // Return the public URL path that can be accessed via the API
-    return `/public-objects/${objectName}`;
+    return new Promise((resolve, reject) => {
+      stream.on('error', reject);
+      stream.on('finish', () => {
+        resolve(`/public-objects/${objectName}`);
+      });
+      stream.end(file);
+    });
   }
 }
 

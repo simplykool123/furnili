@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { Category } from "@shared/schema";
 import { authenticatedApiRequest, authService } from "@/lib/auth";
@@ -40,6 +40,7 @@ export default function ProductTable() {
     category: "",
     stockStatus: "",
   });
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
@@ -47,28 +48,66 @@ export default function ProductTable() {
   const [newStockValue, setNewStockValue] = useState("");
   // Remove movementType state since it's now calculated automatically
   const [reference, setReference] = useState("");
-  const { isMobile } = useIsMobile();
+  const isMobile = useIsMobile();
   const user = authService.getUser();
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Debounce search input (500ms delay)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(filters.search);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [filters.search]);
 
   // Check if user can see pricing information and perform actions
   const canSeePricing = user && ['admin', 'manager'].includes(user.role);
   const canEditProducts = user && ['admin', 'manager'].includes(user.role);
   const canAdjustStock = user && ['admin', 'manager', 'store_incharge'].includes(user.role);
 
-  const { data: products, isLoading } = useQuery({
-    queryKey: ['/api/products', filters],
+  // Load all products once (no search parameter to API)
+  const { data: allProducts, isLoading } = useQuery({
+    queryKey: ['/api/products'],
     queryFn: async () => {
-      const params = new URLSearchParams();
-      Object.entries(filters).forEach(([key, value]) => {
-        if (value && value !== 'all') params.append(key, value);
-      });
-      
-      return await authenticatedApiRequest('GET', `/api/products?${params}`);
+      return await authenticatedApiRequest('GET', '/api/products');
     },
   });
+
+  // Client-side filtering with debounced search
+  const filteredProducts = useMemo(() => {
+    if (!allProducts) return [];
+    
+    return allProducts.filter((product: Product) => {
+      // Search filter (only apply if 3+ characters)
+      if (debouncedSearch && debouncedSearch.length >= 3) {
+        const searchLower = debouncedSearch.toLowerCase();
+        const searchMatch = (
+          product.name.toLowerCase().includes(searchLower) ||
+          product.category.toLowerCase().includes(searchLower) ||
+          product.brand?.toLowerCase().includes(searchLower) ||
+          product.sku?.toLowerCase().includes(searchLower)
+        );
+        if (!searchMatch) return false;
+      }
+      
+      // Category filter
+      if (filters.category && filters.category !== 'all') {
+        if (product.category !== filters.category) return false;
+      }
+      
+      // Stock status filter
+      if (filters.stockStatus && filters.stockStatus !== 'all') {
+        const stockStatus = product.currentStock === 0 ? 'out-of-stock' : 
+                           product.currentStock <= product.minStock ? 'low-stock' : 'in-stock';
+        if (stockStatus !== filters.stockStatus) return false;
+      }
+      
+      return true;
+    });
+  }, [allProducts, debouncedSearch, filters.category, filters.stockStatus]);
 
   // Fetch categories for filter dropdown
   const { data: categories = [] } = useQuery<Category[]>({
@@ -292,17 +331,7 @@ export default function ProductTable() {
     },
   ];
 
-  const filteredProducts = products?.filter((product: Product) => {
-    const matchesSearch = filters.search === "" || 
-      product.name.toLowerCase().includes(filters.search.toLowerCase()) ||
-      product.sku.toLowerCase().includes(filters.search.toLowerCase()) ||
-      product.brand.toLowerCase().includes(filters.search.toLowerCase());
-    
-    const matchesCategory = filters.category === "" || filters.category === "all" || product.category === filters.category;
-    const matchesStockStatus = filters.stockStatus === "" || filters.stockStatus === "all" || product.stockStatus === filters.stockStatus;
-    
-    return matchesSearch && matchesCategory && matchesStockStatus;
-  }) || [];
+
 
   if (isLoading) {
     return (
@@ -558,32 +587,6 @@ export default function ProductTable() {
           data={filteredProducts}
           columns={mobileColumns}
           emptyMessage="No products found"
-          itemActions={(canEditProducts || canAdjustStock) ? (product) => {
-            const actions = [];
-            if (canEditProducts) {
-              actions.push(
-                {
-                  label: 'Edit',
-                  icon: Edit,
-                  onClick: () => handleEdit(product),
-                },
-                {
-                  label: 'Delete',
-                  icon: Trash2,
-                  onClick: () => setProductToDelete(product),
-                  destructive: true,
-                }
-              );
-            }
-            if (canAdjustStock) {
-              actions.push({
-                label: 'Adjust Stock',
-                icon: Package,
-                onClick: () => handleStockAdjust(product),
-              });
-            }
-            return actions;
-          } : undefined}
         />
       ) : (
         /* Desktop Products Display */
