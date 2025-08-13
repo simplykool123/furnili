@@ -10,6 +10,9 @@ Form Layout Requirements: All popup forms must be optimized for screen size with
 ## System Architecture
 
 ### Recent Changes (August 2025)
+- **Security Enhancement**: Successfully implemented Row Level Security (RLS) policies for all 40+ database tables to address Supabase security warnings, maintaining Express backend functionality
+- **Purchase Order PDF Format**: Fixed Purchase Order PDF to match Quote PDF format exactly - added Discount column, removed "Brand:" prefix, matched totals structure for consistent professional branding
+- **Runtime Error Resolution**: Fixed "userRole is not defined" error by replacing with currentUser?.role in ProjectDetail.tsx
 - **Storage Interface Optimization**: Completed comprehensive implementation of missing DatabaseStorage methods including categories, clients, BOQ uploads, attendance, payroll, quotes, and other modules
 - **Build System Health**: Resolved 40+ TypeScript errors and build warnings by implementing all missing storage interface methods
 - **Code Quality**: Eliminated duplicate method definitions and cleaned up storage implementation

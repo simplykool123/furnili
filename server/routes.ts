@@ -3499,6 +3499,7 @@ function generatePurchaseOrderPDFHTML(po: any, items: any[]): string {
             <th>Qty</th>
             <th>UOM</th>
             <th>Rate</th>
+            <th>Discount</th>
             <th>Amount</th>
           </tr>
         </thead>
@@ -3507,12 +3508,13 @@ function generatePurchaseOrderPDFHTML(po: any, items: any[]): string {
             <tr>
               <td>
                 <strong>${item.description}</strong>
-                ${product ? `<br><small>Brand: ${product.brand || product.name}</small>` : ''}
+                ${product ? `<br><small>${product.brand || product.name}</small>` : ''}
                 ${item.sku ? `<br><small>SKU: ${item.sku}</small>` : ''}
               </td>
               <td>${item.qty}</td>
               <td>Nos</td>
               <td>₹${item.unitPrice.toFixed(2)}</td>
+              <td>0%</td>
               <td>₹${(item.qty * item.unitPrice).toFixed(2)}</td>
             </tr>
           `).join('')}
@@ -3522,7 +3524,8 @@ function generatePurchaseOrderPDFHTML(po: any, items: any[]): string {
       <div class="totals-section">
         <table class="totals-table">
           <tr><td>Sub Total:</td><td>₹${subtotal.toFixed(2)}</td></tr>
-          <tr><td>GST (18%):</td><td>₹${gst.toFixed(2)}</td></tr>
+          <tr><td>Discount (0%):</td><td>-₹0.00</td></tr>
+          <tr><td>GST:</td><td>₹${gst.toFixed(2)}</td></tr>
           <tr class="total-row"><td>Total:</td><td>₹${total.toFixed(2)}</td></tr>
         </table>
       </div>
