@@ -117,17 +117,18 @@ export function AnimatedNotificationBell() {
             size="sm" 
 
             className={cn(
-              "relative group transition-all duration-300 hover:bg-amber-50 rounded-full p-2",
+              "relative group transition-all duration-300 hover:bg-amber-50 rounded-full p-3 min-w-[48px] min-h-[48px] border border-amber-200 hover:border-amber-300 shadow-sm hover:shadow-md",
               showGlow && "animate-glow-ring",
-              hasNewTasks && "animate-bell-bounce"
+              hasNewTasks && "animate-bell-bounce",
+              hasUrgentNotifications && "border-red-200 hover:border-red-300"
             )}
           >
             <div className="relative">
               {/* Bell Icon with dynamic animations */}
               <Bell 
                 className={cn(
-                  "h-5 w-5 transition-all duration-300",
-                  hasUrgentNotifications ? "text-red-500" : "text-amber-600"
+                  "h-6 w-6 transition-all duration-300",
+                  hasUrgentNotifications ? "text-red-500" : "text-amber-700"
                 )} 
               />
               
@@ -138,8 +139,8 @@ export function AnimatedNotificationBell() {
                 <Badge 
                   variant="destructive" 
                   className={cn(
-                    "absolute -top-1 -right-1 h-5 w-5 p-0 text-xs flex items-center justify-center font-bold border-2 border-white",
-                    hasUrgentNotifications ? "bg-red-600" : "bg-red-500"
+                    "absolute -top-2 -right-2 h-6 w-6 p-0 text-xs flex items-center justify-center font-bold border-2 border-white shadow-lg",
+                    hasUrgentNotifications ? "bg-red-600 animate-pulse" : "bg-red-500"
                   )}
                 >
                   {totalNotifications > 9 ? '9+' : totalNotifications}
