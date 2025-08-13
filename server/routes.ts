@@ -536,23 +536,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/products", authenticateToken, requireRole(["admin", "manager"]), productImageUpload.single("image"), async (req, res) => {
+  app.post("/api/products", authenticateToken, requireRole(["admin", "manager"]), async (req, res) => {
     try {
-      // Convert FormData strings to proper types
-      const formDataSchema = z.object({
+      const productSchema = z.object({
         name: z.string().min(1, "Product name is required"),
         category: z.string().min(1, "Category is required"),
         brand: z.string().optional(),
         size: z.string().optional(),
         thickness: z.string().optional(),
         sku: z.string().optional(),
-        price: z.string().transform((val) => parseFloat(val)).pipe(z.number().min(0, "Price must be positive")),
-        currentStock: z.string().transform((val) => parseInt(val, 10)).pipe(z.number().int().min(0, "Stock must be non-negative")),
-        minStock: z.string().transform((val) => parseInt(val, 10)).pipe(z.number().int().min(0, "Minimum stock must be non-negative")),
+        price: z.number().min(0, "Price must be positive"),
+        currentStock: z.number().int().min(0, "Stock must be non-negative"),
+        minStock: z.number().int().min(0, "Minimum stock must be non-negative"),
         unit: z.string().min(1, "Unit is required"),
+        imageUrl: z.string().optional(),
       });
       
-      const validatedData = formDataSchema.parse(req.body);
+      const validatedData = productSchema.parse(req.body);
       
       // Map 'price' to 'pricePerUnit' to match schema
       const productData = {
@@ -560,10 +560,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         pricePerUnit: validatedData.price,
       };
       delete (productData as any).price;
-      
-      if (req.file) {
-        (productData as any).imageUrl = `/uploads/products/${req.file.filename}`;
-      }
       
       const product = await storage.createProduct(productData);
       res.status(201).json(product);
@@ -575,35 +571,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/products/:id", authenticateToken, requireRole(["admin", "manager"]), productImageUpload.single("image"), async (req, res) => {
+  app.put("/api/products/:id", authenticateToken, requireRole(["admin", "manager"]), async (req, res) => {
     try {
       const id = parseInt(req.params.id);
       
-      // Convert FormData strings to proper types for updates
-      const formDataSchema = z.object({
+      const productUpdateSchema = z.object({
         name: z.string().min(1, "Product name is required").optional(),
         category: z.string().min(1, "Category is required").optional(),
         brand: z.string().optional(),
         size: z.string().optional(),
         thickness: z.string().optional(),
         sku: z.string().optional(),
-        price: z.string().transform((val) => parseFloat(val)).pipe(z.number().min(0, "Price must be positive")).optional(),
-        currentStock: z.string().transform((val) => parseInt(val, 10)).pipe(z.number().int().min(0, "Stock must be non-negative")).optional(),
-        minStock: z.string().transform((val) => parseInt(val, 10)).pipe(z.number().int().min(0, "Minimum stock must be non-negative")).optional(),
+        price: z.number().min(0, "Price must be positive").optional(),
+        currentStock: z.number().int().min(0, "Stock must be non-negative").optional(),
+        minStock: z.number().int().min(0, "Minimum stock must be non-negative").optional(),
         unit: z.string().min(1, "Unit is required").optional(),
+        imageUrl: z.string().optional(),
       });
       
-      const validatedUpdates = formDataSchema.parse(req.body);
+      const validatedUpdates = productUpdateSchema.parse(req.body);
       
       // Map 'price' to 'pricePerUnit' to match schema
       const updates: any = { ...validatedUpdates };
       if (validatedUpdates.price !== undefined) {
         updates.pricePerUnit = validatedUpdates.price;
         delete updates.price;
-      }
-      
-      if (req.file) {
-        updates.imageUrl = `/uploads/products/${req.file.filename}`;
       }
       
       const product = await storage.updateProduct(id, updates);
@@ -3420,6 +3412,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Delete purchase order error:", error);
       res.status(500).json({ message: "Failed to delete purchase order" });
+    }
+  });
+
+  // Object Storage Routes for Product Images
+  const { ObjectStorageService } = await import("./objectStorage");
+
+  // Serve public objects (product images)
+  app.get("/public-objects/:filePath(*)", async (req, res) => {
+    const filePath = req.params.filePath;
+    const objectStorageService = new ObjectStorageService();
+    try {
+      const file = await objectStorageService.searchPublicObject(filePath);
+      if (!file) {
+        return res.status(404).json({ error: "File not found" });
+      }
+      objectStorageService.downloadObject(file, res);
+    } catch (error) {
+      console.error("Error searching for public object:", error);
+      return res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
+  // Upload product image
+  app.post("/api/products/upload-image", authenticateToken, requireRole(['admin', 'manager']), productImageUpload.single('image'), async (req: AuthRequest, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: "No image file provided" });
+      }
+
+      const objectStorageService = new ObjectStorageService();
+      const imageUrl = await objectStorageService.uploadProductImage(
+        req.file.buffer,
+        req.file.originalname,
+        req.file.mimetype
+      );
+
+      res.json({ imageUrl });
+    } catch (error) {
+      console.error("Error uploading product image:", error);
+      res.status(500).json({ error: "Failed to upload image" });
     }
   });
 

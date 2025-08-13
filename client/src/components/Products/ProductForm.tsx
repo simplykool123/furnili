@@ -24,6 +24,7 @@ const productSchema = z.object({
   currentStock: z.coerce.number().int().min(0, "Stock must be non-negative"),
   minStock: z.coerce.number().int().min(0, "Minimum stock must be non-negative"),
   unit: z.string().min(1, "Unit is required"),
+  imageUrl: z.string().optional(),
 });
 
 type ProductFormData = z.infer<typeof productSchema>;
@@ -90,39 +91,52 @@ export default function ProductForm({ product, onClose, isMobile = false }: Prod
     },
   });
 
-  const createProductMutation = useMutation({
-    mutationFn: async (formData: FormData) => {
+
+
+  const onSubmit = async (data: ProductFormData) => {
+    setIsLoading(true);
+    
+    try {
+      let imageUrl = product?.imageUrl || null;
+      
+      // Upload image first if a new one is selected
+      if (selectedImage) {
+        const imageFormData = new FormData();
+        imageFormData.append('image', selectedImage);
+        
+        const token = localStorage.getItem('authToken');
+        if (!token) {
+          throw new Error('No authentication token found');
+        }
+        
+        const imageResponse = await fetch('/api/products/upload-image', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+          body: imageFormData,
+        });
+        
+        if (!imageResponse.ok) {
+          throw new Error('Failed to upload image');
+        }
+        
+        const imageResult = await imageResponse.json();
+        imageUrl = imageResult.imageUrl;
+      }
+      
+      // Create product data with image URL
+      const productData = {
+        ...data,
+        imageUrl: imageUrl
+      };
+      
+      // Use regular JSON request for product data
       const url = product ? `/api/products/${product.id}` : '/api/products';
       const method = product ? 'PUT' : 'POST';
       
-      const token = localStorage.getItem('authToken');
-      if (!token) {
-        throw new Error('No authentication token found');
-      }
+      const response = await authenticatedApiRequest(method, url, productData);
       
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-        body: formData,
-      });
-
-      if (!response.ok) {
-        if (response.status === 401) {
-          // Token expired, redirect to login
-          localStorage.removeItem('authToken');
-          localStorage.removeItem('authUser');
-          window.location.href = '/login';
-          return;
-        }
-        const error = await response.json().catch(() => ({ message: 'Unknown error' }));
-        throw new Error(error.message || 'Failed to save product');
-      }
-
-      return response.json();
-    },
-    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/products'] });
       queryClient.invalidateQueries({ queryKey: ['/api/dashboard/stats'] });
       toast({
@@ -130,40 +144,7 @@ export default function ProductForm({ product, onClose, isMobile = false }: Prod
         description: product ? "Product has been successfully updated." : "Product has been successfully created.",
       });
       onClose();
-    },
-    onError: (error) => {
-      toast({
-        title: "Save failed",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
-  const onSubmit = async (data: ProductFormData) => {
-    setIsLoading(true);
-    
-    try {
-      const formData = new FormData();
       
-      // Append all form fields with proper type conversion
-      Object.entries(data).forEach(([key, value]) => {
-        if (value === undefined || value === null) return;
-        
-        // Convert numbers properly
-        if (typeof value === 'number') {
-          formData.append(key, value.toString());
-        } else {
-          formData.append(key, value.toString());
-        }
-      });
-      
-      // Append image if selected
-      if (selectedImage) {
-        formData.append('image', selectedImage);
-      }
-      
-      createProductMutation.mutate(formData);
     } catch (error) {
       toast({
         title: "Save failed",
