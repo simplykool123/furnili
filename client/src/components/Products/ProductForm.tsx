@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Autocomplete } from "@/components/ui/autocomplete";
 import { Upload, X } from "lucide-react";
+import { ImageViewer } from "@/components/ui/image-viewer";
 
 const productSchema = z.object({
   name: z.string().min(1, "Product name is required"),
@@ -451,11 +452,17 @@ export default function ProductForm({ product, onClose, isMobile = false }: Prod
             <div className="mt-1">
               {imagePreview ? (
                 <div className="relative inline-block">
-                  <img 
+                  <ImageViewer 
                     src={imagePreview} 
-                    alt="Preview" 
-                    className="object-contain rounded-lg border bg-gray-50 p-1 w-20 h-20"
-                  />
+                    alt="Product Image Preview"
+                    className="w-20 h-20"
+                  >
+                    <img 
+                      src={imagePreview} 
+                      alt="Preview" 
+                      className="object-contain rounded-lg border bg-gray-50 p-1 w-20 h-20"
+                    />
+                  </ImageViewer>
                   <Button
                     type="button"
                     variant="destructive"

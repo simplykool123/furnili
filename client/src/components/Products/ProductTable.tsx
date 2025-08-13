@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Edit, Trash2, Search, Grid3X3, List, Package } from "lucide-react";
+import { ImageViewer } from "@/components/ui/image-viewer";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { useIsMobile } from "@/components/Mobile/MobileOptimizer";
@@ -352,11 +353,17 @@ export default function ProductTable() {
               {/* Product Image */}
               <div className="w-full h-24 bg-gray-100 rounded-lg overflow-hidden">
                 {product.imageUrl ? (
-                  <img 
+                  <ImageViewer 
                     src={product.imageUrl} 
                     alt={product.name}
-                    className="w-full h-full object-contain p-1"
-                  />
+                    className="w-full h-full"
+                  >
+                    <img 
+                      src={product.imageUrl} 
+                      alt={product.name}
+                      className="w-full h-full object-contain p-1"
+                    />
+                  </ImageViewer>
                 ) : (
                   <div className="w-full h-full bg-gray-200 flex items-center justify-center">
                     <Package className="w-8 h-8 text-gray-400" />
@@ -453,11 +460,17 @@ export default function ProductTable() {
                 <div className="flex items-center space-x-2">
                   <div className="w-8 h-8 bg-gray-200 rounded overflow-hidden flex-shrink-0">
                     {product.imageUrl ? (
-                      <img 
+                      <ImageViewer 
                         src={product.imageUrl} 
                         alt={product.name}
-                        className="w-full h-full object-contain p-0.5"
-                      />
+                        className="w-full h-full"
+                      >
+                        <img 
+                          src={product.imageUrl} 
+                          alt={product.name}
+                          className="w-full h-full object-contain p-0.5"
+                        />
+                      </ImageViewer>
                     ) : (
                       <div className="w-full h-full bg-gray-300 flex items-center justify-center">
                         <Package className="w-3 h-3 text-gray-500" />
