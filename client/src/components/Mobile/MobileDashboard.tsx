@@ -100,8 +100,8 @@ export default function MobileDashboard({ stats, tasks, isLoading }: MobileDashb
                 <Card className="cursor-pointer hover:shadow-md transition-shadow">
                   <CardContent className="p-4">
                     <div className="flex items-center space-x-3">
-                      <div className={`w-10 h-10 rounded-lg ${stat.color} flex items-center justify-center`}>
-                        <stat.icon className="h-5 w-5 text-white" />
+                      <div className={`w-12 h-12 rounded-lg ${stat.color} flex items-center justify-center`}>
+                        <stat.icon className="h-6 w-6 text-white" />
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-medium text-muted-foreground">

@@ -12,6 +12,7 @@ Form Layout Requirements: All popup forms must be optimized for screen size with
 ### Recent Changes (August 2025)
 - **Security Enhancement**: Successfully implemented Row Level Security (RLS) policies for all 40+ database tables to address Supabase security warnings, maintaining Express backend functionality
 - **Purchase Order PDF Format**: Fixed Purchase Order PDF to match Quote PDF format exactly - added company logo, professional authority signature with digital signature image, consistent colors, enhanced footer layout, Discount column, removed "Brand:" prefix, and matched totals structure for complete professional branding consistency
+- **Dashboard Icon Enhancement**: Increased KPI card icon sizes throughout the dashboard for better scannability - mobile dashboard icons from h-5 w-5 to h-6 w-6, desktop action buttons from h-5 w-5 to h-6 w-6, FurniliStatsCard icons from h-4-6 w-4-6 to h-6-8 w-6-8, and enhanced icon container sizes for improved user experience
 - **Runtime Error Resolution**: Fixed "userRole is not defined" error by replacing with currentUser?.role in ProjectDetail.tsx
 - **Storage Interface Optimization**: Completed comprehensive implementation of missing DatabaseStorage methods including categories, clients, BOQ uploads, attendance, payroll, quotes, and other modules
 - **Build System Health**: Resolved 40+ TypeScript errors and build warnings by implementing all missing storage interface methods

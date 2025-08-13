@@ -59,8 +59,8 @@ export default function FurniliStatsCard({
           )}
         </div>
         {Icon && (
-          <div className="furnili-gradient p-2 sm:p-3 rounded-lg">
-            <Icon className="h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6 text-white" />
+          <div className="furnili-gradient p-3 sm:p-3 rounded-lg">
+            <Icon className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8 text-white" />
           </div>
         )}
       </div>
