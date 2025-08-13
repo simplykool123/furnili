@@ -344,7 +344,7 @@ export default function Dashboard() {
               <CardContent className="p-5 text-center">
                 <div className="flex flex-col items-center space-y-2">
                   <div className="p-2 bg-green-500 rounded-full">
-                    {hasCheckedInToday ? <LogOut className="h-6 w-6 text-white" /> : <LogIn className="h-6 w-6 text-white" />}
+                    {hasCheckedInToday ? <LogOut className="h-5 w-5 text-white" /> : <LogIn className="h-5 w-5 text-white" />}
                   </div>
                   <span className="text-xs font-medium text-green-900">
                     {hasCheckedInToday ? 'Check Out' : 'Check In'}
@@ -358,7 +358,7 @@ export default function Dashboard() {
               <CardContent className="p-5 text-center">
                 <div className="flex flex-col items-center space-y-2">
                   <div className="p-2 bg-orange-500 rounded-full">
-                    <Package className="h-6 w-6 text-white" />
+                    <Package className="h-5 w-5 text-white" />
                   </div>
                   <span className="text-xs font-medium text-orange-900">
                     {currentUser?.role === 'store_incharge' ? 'Material Issue' : 'New Material Request'}
@@ -372,7 +372,7 @@ export default function Dashboard() {
               <CardContent className="p-5 text-center">
                 <div className="flex flex-col items-center space-y-2">
                   <div className="p-2 bg-purple-500 rounded-full">
-                    <DollarSign className="h-6 w-6 text-white" />
+                    <DollarSign className="h-5 w-5 text-white" />
                   </div>
                   <span className="text-xs font-medium text-purple-900">Add New Expense</span>
                 </div>
@@ -385,7 +385,7 @@ export default function Dashboard() {
                 <CardContent className="p-5 text-center">
                   <div className="flex flex-col items-center space-y-2">
                     <div className="p-2 bg-teal-500 rounded-full">
-                      <BarChart3 className="h-6 w-6 text-white" />
+                      <BarChart3 className="h-5 w-5 text-white" />
                     </div>
                     <span className="text-xs font-medium text-teal-900">Inventory Movement</span>
                   </div>
@@ -398,7 +398,7 @@ export default function Dashboard() {
               <CardContent className="p-5 text-center">
                 <div className="flex flex-col items-center space-y-2">
                   <div className="p-2 bg-blue-500 rounded-full">
-                    <Briefcase className="h-6 w-6 text-white" />
+                    <Briefcase className="h-5 w-5 text-white" />
                   </div>
                   <span className="text-xs font-medium text-blue-900">Ongoing Projects</span>
                 </div>
@@ -412,7 +412,7 @@ export default function Dashboard() {
             <Card className="hover:shadow-md transition-all duration-200">
               <CardHeader className="pb-3">
                 <CardTitle className="text-lg font-semibold text-foreground flex items-center gap-2">
-                  <Clock className="h-6 w-6 text-orange-500" />
+                  <Clock className="h-5 w-5 text-orange-500" />
                   My Attendance
                 </CardTitle>
               </CardHeader>
@@ -541,7 +541,7 @@ export default function Dashboard() {
           <Card className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-blue-500 bg-gradient-to-br from-card to-blue-50/20 cursor-pointer" onClick={() => setLocation('/products')}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1">
               <CardTitle className="text-xs font-semibold text-card-foreground">Products</CardTitle>
-              <Package className="h-3 w-3 text-blue-600" />
+              <Package className="h-5 w-5 text-blue-600" />
             </CardHeader>
             <CardContent className="pb-2 pt-1">
               <div className="text-xl font-bold text-foreground">{stats?.totalProducts || 0}</div>
@@ -553,7 +553,7 @@ export default function Dashboard() {
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-bold text-red-900 group-hover:text-red-700">Low Stock Alert</CardTitle>
               <div className="p-2 bg-red-500 rounded-full group-hover:bg-red-600 transition-colors">
-                <AlertTriangle className="h-4 w-4 text-white animate-pulse" />
+                <AlertTriangle className="h-5 w-5 text-white animate-pulse" />
               </div>
             </CardHeader>
             <CardContent className="pb-3 pt-1">
@@ -573,7 +573,7 @@ export default function Dashboard() {
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-bold text-orange-900 group-hover:text-orange-700">Today's Attendance</CardTitle>
               <div className="p-2 bg-orange-500 rounded-full group-hover:bg-orange-600 transition-colors">
-                <Clock className="h-6 w-6 text-white" />
+                <Clock className="h-5 w-5 text-white" />
               </div>
             </CardHeader>
             <CardContent className="pb-3 pt-1">
@@ -603,7 +603,7 @@ export default function Dashboard() {
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-bold text-yellow-900 group-hover:text-yellow-700">Monthly Expenses</CardTitle>
               <div className="p-2 bg-yellow-500 rounded-full group-hover:bg-yellow-600 transition-colors">
-                <DollarSign className="h-6 w-6 text-white" />
+                <DollarSign className="h-5 w-5 text-white" />
               </div>
             </CardHeader>
             <CardContent className="pb-3 pt-1">
@@ -626,7 +626,7 @@ export default function Dashboard() {
         <Card className="hover:shadow-md transition-all duration-200">
           <CardHeader className="pb-2">
             <CardTitle className="text-base font-semibold text-foreground flex items-center gap-2">
-              <AlertCircle className="h-6 w-6 text-red-500" />
+              <AlertCircle className="h-5 w-5 text-red-500" />
               Urgent Tasks
             </CardTitle>
           </CardHeader>
