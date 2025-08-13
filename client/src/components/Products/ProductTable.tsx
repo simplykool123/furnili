@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Edit, Trash2, Search, Grid3X3, List, Package } from "lucide-react";
+import { Edit, Trash2, Search, Grid3X3, List, Package, ChevronUp, ChevronDown, ChevronsUpDown } from "lucide-react";
 import { ImageViewer } from "@/components/ui/image-viewer";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -49,6 +49,10 @@ export default function ProductTable() {
   const [newStockValue, setNewStockValue] = useState("");
   // Remove movementType state since it's now calculated automatically
   const [reference, setReference] = useState("");
+  const [sortConfig, setSortConfig] = useState<{
+    key: keyof Product | null;
+    direction: 'asc' | 'desc';
+  }>({ key: null, direction: 'asc' });
   const isMobile = useIsMobile();
   const user = authService.getUser();
 
@@ -77,11 +81,19 @@ export default function ProductTable() {
     },
   });
 
-  // Client-side filtering with debounced search
+  // Sorting function
+  const handleSort = (key: keyof Product) => {
+    setSortConfig(prevConfig => ({
+      key,
+      direction: prevConfig.key === key && prevConfig.direction === 'asc' ? 'desc' : 'asc'
+    }));
+  };
+
+  // Client-side filtering and sorting with debounced search
   const filteredProducts = useMemo(() => {
     if (!allProducts) return [];
     
-    return allProducts.filter((product: Product) => {
+    let result = allProducts.filter((product: Product) => {
       // Search filter (only apply if 3+ characters)
       if (debouncedSearch && debouncedSearch.length >= 3) {
         const searchLower = debouncedSearch.toLowerCase();
@@ -108,7 +120,37 @@ export default function ProductTable() {
       
       return true;
     });
-  }, [allProducts, debouncedSearch, filters.category, filters.stockStatus]);
+
+    // Apply sorting
+    if (sortConfig.key) {
+      result.sort((a, b) => {
+        const aValue = a[sortConfig.key!];
+        const bValue = b[sortConfig.key!];
+        
+        // Handle null/undefined values
+        if (aValue == null && bValue == null) return 0;
+        if (aValue == null) return 1;
+        if (bValue == null) return -1;
+        
+        // Handle different data types
+        if (typeof aValue === 'string' && typeof bValue === 'string') {
+          const comparison = aValue.toLowerCase().localeCompare(bValue.toLowerCase());
+          return sortConfig.direction === 'asc' ? comparison : -comparison;
+        }
+        
+        if (typeof aValue === 'number' && typeof bValue === 'number') {
+          const comparison = aValue - bValue;
+          return sortConfig.direction === 'asc' ? comparison : -comparison;
+        }
+        
+        // Fallback to string comparison
+        const comparison = String(aValue).toLowerCase().localeCompare(String(bValue).toLowerCase());
+        return sortConfig.direction === 'asc' ? comparison : -comparison;
+      });
+    }
+
+    return result;
+  }, [allProducts, debouncedSearch, filters.category, filters.stockStatus, sortConfig]);
 
   // Fetch categories for filter dropdown
   const { data: categories = [] } = useQuery<Category[]>({
@@ -438,18 +480,50 @@ export default function ProductTable() {
     </div>
   );
 
+  // Sortable header component
+  const SortableHeader = ({ 
+    column, 
+    children, 
+    className = "" 
+  }: { 
+    column: keyof Product; 
+    children: React.ReactNode; 
+    className?: string; 
+  }) => {
+    const getSortIcon = () => {
+      if (sortConfig.key !== column) {
+        return <ChevronsUpDown className="w-3 h-3 text-gray-400" />;
+      }
+      return sortConfig.direction === 'asc' 
+        ? <ChevronUp className="w-3 h-3 text-brown-600" />
+        : <ChevronDown className="w-3 h-3 text-brown-600" />;
+    };
+
+    return (
+      <TableHead 
+        className={`cursor-pointer hover:bg-gray-50 ${className}`}
+        onClick={() => handleSort(column)}
+      >
+        <div className="flex items-center gap-1 select-none">
+          {children}
+          {getSortIcon()}
+        </div>
+      </TableHead>
+    );
+  };
+
   const ListView = () => (
     <div className="overflow-x-auto">
       <Table>
         <TableHeader>
           <TableRow className="text-xs">
-            <TableHead className="w-[200px]">Product</TableHead>
-            <TableHead>Category</TableHead>
-            <TableHead>Brand</TableHead>
-            <TableHead>Size</TableHead>
-            <TableHead>Thk.</TableHead>
-            <TableHead>Stock</TableHead>
-            {canSeePricing && <TableHead>Price</TableHead>}
+            <SortableHeader column="name" className="w-[200px]">Product</SortableHeader>
+            <SortableHeader column="category">Category</SortableHeader>
+            <SortableHeader column="brand">Brand</SortableHeader>
+            <SortableHeader column="size">Size</SortableHeader>
+            <SortableHeader column="thickness">Thk.</SortableHeader>
+            <SortableHeader column="currentStock">Stock</SortableHeader>
+            {canSeePricing && <SortableHeader column="pricePerUnit">Price</SortableHeader>}
             {(canEditProducts || canAdjustStock) && <TableHead className="w-[80px]">Actions</TableHead>}
           </TableRow>
         </TableHeader>
@@ -608,6 +682,37 @@ export default function ProductTable() {
             <div className="flex items-center justify-between">
               <CardTitle className="text-lg">Products ({filteredProducts?.length || 0})</CardTitle>
               <div className="flex items-center gap-2">
+                {/* Sort Control for Grid View */}
+                {viewMode === 'grid' && (
+                  <Select 
+                    value={sortConfig.key ? `${sortConfig.key}-${sortConfig.direction}` : ''} 
+                    onValueChange={(value) => {
+                      if (!value) return;
+                      const [key, direction] = value.split('-') as [keyof Product, 'asc' | 'desc'];
+                      setSortConfig({ key, direction });
+                    }}
+                  >
+                    <SelectTrigger className="w-40 h-8 text-sm">
+                      <SelectValue placeholder="Sort by..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="name-asc">Name (A-Z)</SelectItem>
+                      <SelectItem value="name-desc">Name (Z-A)</SelectItem>
+                      <SelectItem value="category-asc">Category (A-Z)</SelectItem>
+                      <SelectItem value="category-desc">Category (Z-A)</SelectItem>
+                      <SelectItem value="brand-asc">Brand (A-Z)</SelectItem>
+                      <SelectItem value="brand-desc">Brand (Z-A)</SelectItem>
+                      <SelectItem value="currentStock-asc">Stock (Low-High)</SelectItem>
+                      <SelectItem value="currentStock-desc">Stock (High-Low)</SelectItem>
+                      {canSeePricing && (
+                        <>
+                          <SelectItem value="pricePerUnit-asc">Price (Low-High)</SelectItem>
+                          <SelectItem value="pricePerUnit-desc">Price (High-Low)</SelectItem>
+                        </>
+                      )}
+                    </SelectContent>
+                  </Select>
+                )}
                 <Button
                   variant={viewMode === 'list' ? 'default' : 'outline'}
                   size="sm"
@@ -626,6 +731,12 @@ export default function ProductTable() {
                 </Button>
               </div>
             </div>
+            {/* Sort indicator for list view */}
+            {viewMode === 'list' && sortConfig.key && (
+              <div className="text-xs text-gray-500 mt-1">
+                Sorted by {sortConfig.key} ({sortConfig.direction === 'asc' ? 'A-Z' : 'Z-A'})
+              </div>
+            )}
           </CardHeader>
           <CardContent>
             {viewMode === 'grid' ? <GridView /> : <ListView />}
