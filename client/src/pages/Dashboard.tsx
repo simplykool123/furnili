@@ -332,8 +332,7 @@ export default function Dashboard() {
 
 
 
-      {/* Stock Warnings */}
-      <StockWarnings />
+
 
       {/* NEW DASHBOARD DESIGN FOR USERS & STOREKEEPERS */}
       {authService.hasRole(['staff', 'store_incharge']) && !authService.hasRole(['admin', 'manager']) ? (
