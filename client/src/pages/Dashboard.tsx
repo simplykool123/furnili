@@ -637,8 +637,8 @@ export default function Dashboard() {
             </button>
           </CardHeader>
           <CardContent className="pt-0">
-            {/* Show only the next 2-3 most urgent tasks as one-liners */}
-            <div className="space-y-2">
+            {/* Show only the next 2-3 most urgent tasks as simple one-liners */}
+            <div className="space-y-0">
               {pendingTasks
                 .sort((a, b) => {
                   // Sort by priority: high > medium > low
@@ -660,7 +660,7 @@ export default function Dashboard() {
                 .map((task) => (
                   <div 
                     key={task.id} 
-                    className="flex items-center gap-2 p-2 rounded-lg bg-red-50/50 border border-red-200/50 hover:bg-red-50 cursor-pointer transition-colors"
+                    className="flex items-center gap-3 py-2 px-1 hover:bg-gray-50 cursor-pointer transition-colors border-b border-gray-100 last:border-b-0"
                     onClick={() => setLocation(`/tasks/${task.id}`)}
                   >
                     <div className={`w-2 h-2 rounded-full flex-shrink-0 ${
@@ -670,13 +670,12 @@ export default function Dashboard() {
                     <p className="text-sm font-medium text-gray-900 truncate flex-1">
                       {task.title}
                     </p>
-                    <Badge 
-                      variant={task.priority === 'high' ? 'destructive' : 
-                              task.priority === 'medium' ? 'default' : 'secondary'}
-                      className="text-xs px-2 py-0 flex-shrink-0"
-                    >
+                    <span className={`text-xs px-2 py-1 rounded flex-shrink-0 ${
+                      task.priority === 'high' ? 'bg-red-100 text-red-700' :
+                      task.priority === 'medium' ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700'
+                    }`}>
                       {task.priority}
-                    </Badge>
+                    </span>
                     {task.dueDate && (
                       <span className="text-xs text-gray-500 flex-shrink-0">
                         Due: {new Date(task.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
@@ -718,11 +717,11 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent className="pt-0">
               {ongoingProjects && ongoingProjects.length > 0 ? (
-                <div className="space-y-2">
+                <div className="space-y-0">
                   {ongoingProjects.slice(0, 4).map((project: any) => (
                     <div 
                       key={project.id} 
-                      className="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                      className="flex items-center justify-between py-2 px-1 hover:bg-gray-50 cursor-pointer transition-colors border-b border-gray-100 last:border-b-0"
                       onClick={() => setLocation(`/projects/${project.id}`)}
                     >
                       <div className="flex-1 min-w-0">
@@ -733,17 +732,14 @@ export default function Dashboard() {
                           {project.name}
                         </p>
                       </div>
-                      <Badge 
-                        variant={
-                          project.stage === 'estimate-given' ? 'default' :
-                          project.stage === 'client-approved' ? 'destructive' :
-                          project.stage === 'prospect' ? 'secondary' :
-                          'outline'
-                        }
-                        className="text-xs ml-2 flex-shrink-0"
-                      >
+                      <span className={`text-xs px-2 py-1 rounded ml-2 flex-shrink-0 ${
+                        project.stage === 'estimate-given' ? 'bg-blue-100 text-blue-700' :
+                        project.stage === 'client-approved' ? 'bg-red-100 text-red-700' :
+                        project.stage === 'prospect' ? 'bg-gray-100 text-gray-700' :
+                        'bg-gray-100 text-gray-700'
+                      }`}>
                         {project.stage}
-                      </Badge>
+                      </span>
                     </div>
                   ))}
                 </div>
@@ -773,14 +769,14 @@ export default function Dashboard() {
             <CardContent className="pt-0">
               <p className="text-xs text-amber-700 mb-3">Products requiring immediate attention</p>
               {stats?.lowStockProducts && stats.lowStockProducts.length > 0 ? (
-                <div className="space-y-2">
+                <div className="space-y-0">
                   {stats.lowStockProducts.slice(0, 3).map((product: any) => (
                     <div 
                       key={product.id}
-                      className="flex items-center justify-between p-2 rounded-lg hover:bg-amber-50 cursor-pointer transition-colors"
+                      className="flex items-center justify-between py-2 px-1 hover:bg-gray-50 cursor-pointer transition-colors border-b border-gray-100 last:border-b-0"
                       onClick={() => setLocation(`/products?filter=low-stock`)}
                     >
-                      <div className="flex items-center gap-2 flex-1 min-w-0">
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
                         <div className="w-6 h-6 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0">
                           <Package className="h-3 w-3 text-amber-600" />
                         </div>
@@ -793,9 +789,9 @@ export default function Dashboard() {
                           </p>
                         </div>
                       </div>
-                      <Badge variant="destructive" className="text-xs ml-2 flex-shrink-0">
+                      <span className="text-xs px-2 py-1 rounded bg-red-100 text-red-700 ml-2 flex-shrink-0">
                         Critical
-                      </Badge>
+                      </span>
                     </div>
                   ))}
                 </div>
@@ -819,30 +815,20 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent className="pt-0">
               {recentActivity && recentActivity.length > 0 ? (
-                <div className="space-y-2">
+                <div className="space-y-0">
                   {recentActivity.slice(0, 4).map((activity: any, index: number) => (
-                    <div key={index} className="flex items-center gap-2 p-2 rounded-lg hover:bg-blue-50 transition-colors">
+                    <div key={index} className="flex items-center gap-3 py-2 px-1 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0">
                       <div className="flex-shrink-0">
                         {activity.description.includes('product') ? (
-                          <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center">
-                            <Package className="h-3 w-3 text-green-600" />
-                          </div>
+                          <Package className="h-4 w-4 text-green-600" />
                         ) : activity.description.includes('Stock movement') ? (
-                          <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center">
-                            <BarChart3 className="h-3 w-3 text-blue-600" />
-                          </div>
+                          <BarChart3 className="h-4 w-4 text-blue-600" />
                         ) : activity.description.includes('Task completed') ? (
-                          <div className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center">
-                            <CheckCircle2 className="h-3 w-3 text-green-600" />
-                          </div>
+                          <CheckCircle2 className="h-4 w-4 text-green-600" />
                         ) : activity.description.includes('checked in') ? (
-                          <div className="w-6 h-6 rounded-full bg-orange-100 flex items-center justify-center">
-                            <Clock className="h-3 w-3 text-orange-600" />
-                          </div>
+                          <Clock className="h-4 w-4 text-orange-600" />
                         ) : (
-                          <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center">
-                            <Activity className="h-3 w-3 text-gray-600" />
-                          </div>
+                          <Activity className="h-4 w-4 text-gray-600" />
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
