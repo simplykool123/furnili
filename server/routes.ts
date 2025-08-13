@@ -10,6 +10,7 @@ import { exportProductsCSV, exportRequestsCSV, exportLowStockCSV } from "./utils
 import { createBackupZip } from "./utils/backupExport";
 import { canOrderMaterials, getMaterialRequestEligibleProjects, getStageDisplayName } from "./utils/projectStageValidation";
 import { setupQuotesRoutes } from "./quotesRoutes";
+import { ObjectStorageService } from "./objectStorage";
 import { db } from "./db";
 import { eq, and, gt } from "drizzle-orm";
 import { projectFiles, users, suppliers, products, purchaseOrders, purchaseOrderItems, stockMovements } from "@shared/schema";
@@ -1122,23 +1123,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('Upload request - user:', req.user?.id);
       console.log('Upload request - type:', type);
       console.log('Upload request - file:', file ? {
-        filename: file.filename,
         originalname: file.originalname,
         mimetype: file.mimetype,
-        size: file.size
+        size: file.size,
+        buffer: file.buffer ? 'present' : 'missing'
       } : 'none');
       
-      if (!file) {
+      if (!file || !file.buffer) {
         return res.status(400).json({ message: "No file uploaded" });
       }
 
-      // For sales products and other general uploads
-      const filePath = `/uploads/products/${file.filename}`;
+      // Upload to object storage instead of local storage
+      const objectStorageService = new ObjectStorageService();
+      const filePath = await objectStorageService.uploadProductImage(
+        file.buffer,
+        file.originalname || 'upload',
+        file.mimetype
+      );
+      
+      console.log('Image uploaded to object storage:', filePath);
       
       res.json({ 
         success: true,
         filePath,
-        filename: file.filename,
         originalName: file.originalname,
         size: file.size,
         mimeType: file.mimetype
@@ -1149,8 +1156,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Serve static files from uploads directory
+  // Serve static files from uploads directory (for legacy files)
   app.use('/uploads', express.static('uploads'));
+
+  // Serve public objects from object storage
+  app.get("/public-objects/:filePath(*)", async (req, res) => {
+    try {
+      const filePath = req.params.filePath;
+      const objectStorageService = new ObjectStorageService();
+      const file = await objectStorageService.searchPublicObject(filePath);
+      
+      if (!file) {
+        return res.status(404).json({ error: "File not found" });
+      }
+      
+      await objectStorageService.downloadObject(file, res);
+    } catch (error) {
+      console.error("Error serving public object:", error);
+      return res.status(500).json({ error: "Internal server error" });
+    }
+  });
 
   // Attendance routes
   app.get("/api/attendance", authenticateToken, async (req: AuthRequest, res) => {
