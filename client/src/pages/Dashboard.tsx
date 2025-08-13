@@ -621,31 +621,28 @@ export default function Dashboard() {
 
       {/* Removed animated "New Messages" section - keeping only clean "Pending Tasks" section below */}
 
-      {/* Admin/Manager Only: Professional Urgent Tasks Display */}
+      {/* Admin/Manager Only: Compact Urgent Tasks Display */}
       {!authService.hasRole(['staff', 'store_incharge']) && pendingTasks && pendingTasks.length > 0 && (
-        <Card className="bg-gradient-to-br from-red-50 to-rose-50 border border-red-200 shadow-sm hover:shadow-lg transition-all duration-300">
-          <CardHeader className="pb-4 border-b border-red-200/50">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-lg font-semibold text-gray-900 flex items-center gap-3">
-                <div className="p-2 bg-red-100 rounded-lg">
-                  <AlertCircle className="h-5 w-5 text-red-600" />
-                </div>
-                Urgent Tasks
-              </CardTitle>
-              <button 
-                onClick={() => setLocation('/tasks')}
-                className="text-sm text-blue-600 hover:text-blue-800 hover:underline transition-colors font-medium"
-              >
-                View All {pendingTasks.length} Tasks
-              </button>
-            </div>
+        <Card className="hover:shadow-md transition-all duration-200">
+          <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0">
+            <CardTitle className="text-base font-semibold text-foreground flex items-center gap-2">
+              <AlertCircle className="h-5 w-5 text-red-500" />
+              Urgent Tasks
+            </CardTitle>
+            <button 
+              onClick={() => setLocation('/tasks')}
+              className="text-xs text-blue-600 hover:text-blue-800 hover:underline transition-colors"
+            >
+              View All {pendingTasks.length} Tasks
+            </button>
           </CardHeader>
-          <CardContent className="pt-4">
-            <div className="space-y-3">
+          <CardContent className="pt-0">
+            {/* Show only the next 2-3 most urgent tasks as simple one-liners */}
+            <div className="space-y-0">
               {pendingTasks
                 .sort((a, b) => {
                   // Sort by priority: high > medium > low
-                  const priorityOrder: Record<string, number> = { 'high': 3, 'medium': 2, 'low': 1 };
+                  const priorityOrder = { 'high': 3, 'medium': 2, 'low': 1 };
                   const priorityDiff = (priorityOrder[b.priority] || 1) - (priorityOrder[a.priority] || 1);
                   if (priorityDiff !== 0) return priorityDiff;
                   
@@ -663,32 +660,27 @@ export default function Dashboard() {
                 .map((task) => (
                   <div 
                     key={task.id} 
-                    className="group p-3 rounded-lg border border-red-200 bg-white hover:border-red-300 hover:bg-red-50/50 cursor-pointer transition-all duration-200"
+                    className="flex items-center gap-3 py-2 px-1 hover:bg-gray-50 cursor-pointer transition-colors border-b border-gray-100 last:border-b-0"
                     onClick={() => setLocation(`/tasks/${task.id}`)}
                   >
-                    <div className="flex items-center gap-3">
-                      <div className={`w-3 h-3 rounded-full flex-shrink-0 ${
-                        task.priority === 'high' ? 'bg-red-500' :
-                        task.priority === 'medium' ? 'bg-yellow-500' : 'bg-green-500'
-                      }`} />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-gray-900 truncate">
-                          {task.title}
-                        </p>
-                        {task.dueDate && (
-                          <p className="text-xs text-gray-600 mt-1">
-                            Due: {new Date(task.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                          </p>
-                        )}
-                      </div>
-                      <Badge 
-                        variant={task.priority === 'high' ? 'destructive' : 
-                                task.priority === 'medium' ? 'default' : 'secondary'}
-                        className="text-xs font-medium flex-shrink-0"
-                      >
-                        {task.priority}
-                      </Badge>
-                    </div>
+                    <div className={`w-2 h-2 rounded-full flex-shrink-0 ${
+                      task.priority === 'high' ? 'bg-red-500' :
+                      task.priority === 'medium' ? 'bg-yellow-500' : 'bg-green-500'
+                    }`} />
+                    <p className="text-sm font-medium text-gray-900 truncate flex-1">
+                      {task.title}
+                    </p>
+                    <span className={`text-xs px-2 py-1 rounded flex-shrink-0 ${
+                      task.priority === 'high' ? 'bg-red-100 text-red-700' :
+                      task.priority === 'medium' ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700'
+                    }`}>
+                      {task.priority}
+                    </span>
+                    {task.dueDate && (
+                      <span className="text-xs text-gray-500 flex-shrink-0">
+                        Due: {new Date(task.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                      </span>
+                    )}
                   </div>
                 ))
               }
@@ -714,170 +706,147 @@ export default function Dashboard() {
 
       {/* Admin/Manager Only: Hide project information from store keepers */}
       {!authService.hasRole(['staff', 'store_incharge']) && currentUser?.role !== 'store_incharge' && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           {/* Ongoing Projects Section */}
-          <Card className="bg-white border border-gray-200 shadow-sm hover:shadow-lg transition-all duration-300">
-            <CardHeader className="pb-4 border-b border-gray-100">
-              <CardTitle className="text-lg font-semibold text-gray-900 flex items-center gap-3">
-                <div className="p-2 bg-blue-50 rounded-lg">
-                  <Package className="h-5 w-5 text-blue-600" />
-                </div>
+          <Card className="hover:shadow-md transition-all duration-200">
+            <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0">
+              <CardTitle className="text-base font-semibold text-foreground flex items-center gap-2">
+                <Package className="h-5 w-5" />
                 Ongoing Projects
               </CardTitle>
             </CardHeader>
-            <CardContent className="pt-4">
+            <CardContent className="pt-0">
               {ongoingProjects && ongoingProjects.length > 0 ? (
-                <div className="space-y-3">
+                <div className="space-y-0">
                   {ongoingProjects.slice(0, 4).map((project: any) => (
                     <div 
                       key={project.id} 
-                      className="group p-3 rounded-lg border border-gray-100 hover:border-blue-200 hover:bg-blue-50/30 cursor-pointer transition-all duration-200"
+                      className="flex items-center justify-between py-2 px-1 hover:bg-gray-50 cursor-pointer transition-colors border-b border-gray-100 last:border-b-0"
                       onClick={() => setLocation(`/projects/${project.id}`)}
                     >
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-semibold text-gray-900 truncate">
-                            {project.code}
-                          </p>
-                          <p className="text-xs text-gray-600 truncate mt-1">
-                            {project.name}
-                          </p>
-                        </div>
-                        <div className="ml-3 flex-shrink-0">
-                          <Badge 
-                            variant={
-                              project.stage === 'estimate-given' ? 'default' :
-                              project.stage === 'client-approved' ? 'destructive' :
-                              project.stage === 'prospect' ? 'secondary' :
-                              'outline'
-                            }
-                            className="text-xs font-medium"
-                          >
-                            {project.stage}
-                          </Badge>
-                        </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-900 truncate">
+                          {project.code}
+                        </p>
+                        <p className="text-xs text-gray-600 truncate">
+                          {project.name}
+                        </p>
                       </div>
+                      <span className={`text-xs px-2 py-1 rounded ml-2 flex-shrink-0 ${
+                        project.stage === 'estimate-given' ? 'bg-blue-100 text-blue-700' :
+                        project.stage === 'client-approved' ? 'bg-red-100 text-red-700' :
+                        project.stage === 'prospect' ? 'bg-gray-100 text-gray-700' :
+                        'bg-gray-100 text-gray-700'
+                      }`}>
+                        {project.stage}
+                      </span>
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-8">
-                  <div className="p-3 bg-green-50 rounded-full w-fit mx-auto mb-3">
-                    <CheckCircle2 className="h-6 w-6 text-green-600" />
-                  </div>
-                  <p className="text-sm font-medium text-gray-900">All projects completed!</p>
-                  <p className="text-xs text-gray-600 mt-1">No ongoing projects.</p>
+                <div className="text-center py-4">
+                  <CheckCircle2 className="h-6 w-6 mx-auto text-green-500 mb-2" />
+                  <p className="text-sm font-medium text-green-900">All projects completed!</p>
+                  <p className="text-xs text-green-700">No ongoing projects.</p>
                 </div>
               )}
             </CardContent>
           </Card>
 
           {/* Critical Stock Alerts Section */}
-          <Card className="bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 shadow-sm hover:shadow-lg transition-all duration-300">
-            <CardHeader className="pb-4 border-b border-amber-200/50">
-              <CardTitle className="text-lg font-semibold text-gray-900 flex items-center gap-3">
-                <div className="p-2 bg-amber-100 rounded-lg">
-                  <AlertTriangle className="h-5 w-5 text-amber-600" />
-                </div>
-                <span>Critical Stock Alerts</span>
+          <Card className="hover:shadow-md transition-all duration-200">
+            <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0">
+              <CardTitle className="text-base font-semibold text-foreground flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5 text-amber-600" />
+                Critical Stock Alerts
                 {stats?.lowStockProducts && stats.lowStockProducts.length > 0 && (
-                  <Badge variant="destructive" className="text-xs font-medium ml-auto">
+                  <Badge variant="destructive" className="text-xs">
                     {stats.lowStockProducts.length}
                   </Badge>
                 )}
               </CardTitle>
-              <p className="text-sm text-amber-700 mt-2">Products requiring immediate attention</p>
             </CardHeader>
-            <CardContent className="pt-4">
+            <CardContent className="pt-0">
+              <p className="text-xs text-amber-700 mb-3">Products requiring immediate attention</p>
               {stats?.lowStockProducts && stats.lowStockProducts.length > 0 ? (
-                <div className="space-y-3">
+                <div className="space-y-0">
                   {stats.lowStockProducts.slice(0, 3).map((product: any) => (
                     <div 
                       key={product.id}
-                      className="group p-3 rounded-lg border border-amber-200 bg-white hover:border-amber-300 hover:bg-amber-50/50 cursor-pointer transition-all duration-200"
+                      className="flex items-center justify-between py-2 px-1 hover:bg-gray-50 cursor-pointer transition-colors border-b border-gray-100 last:border-b-0"
                       onClick={() => setLocation(`/products?filter=low-stock`)}
                     >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3 flex-1 min-w-0">
-                          <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center flex-shrink-0">
-                            <Package className="h-4 w-4 text-amber-600" />
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <p className="text-sm font-semibold text-gray-900 truncate">
-                              {product.name}
-                            </p>
-                            <p className="text-xs text-gray-600 mt-1">
-                              Stock: {product.currentStock}
-                            </p>
-                          </div>
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                        <div className="w-6 h-6 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0">
+                          <Package className="h-3 w-3 text-amber-600" />
                         </div>
-                        <Badge variant="destructive" className="text-xs font-medium ml-3 flex-shrink-0">
-                          Critical
-                        </Badge>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium text-gray-900 truncate">
+                            {product.name}
+                          </p>
+                          <p className="text-xs text-gray-600">
+                            Stock: {product.currentStock}
+                          </p>
+                        </div>
                       </div>
+                      <span className="text-xs px-2 py-1 rounded bg-red-100 text-red-700 ml-2 flex-shrink-0">
+                        Critical
+                      </span>
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-8">
-                  <div className="p-3 bg-green-50 rounded-full w-fit mx-auto mb-3">
-                    <CheckCircle2 className="h-6 w-6 text-green-600" />
-                  </div>
-                  <p className="text-sm font-medium text-gray-900">All stock levels adequate</p>
-                  <p className="text-xs text-gray-600 mt-1">No critical alerts</p>
+                <div className="text-center py-4">
+                  <CheckCircle2 className="h-6 w-6 mx-auto text-green-500 mb-2" />
+                  <p className="text-sm font-medium text-green-900">All stock levels adequate</p>
+                  <p className="text-xs text-green-600">No critical alerts</p>
                 </div>
               )}
             </CardContent>
           </Card>
 
           {/* Recent Activity Section */}
-          <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 shadow-sm hover:shadow-lg transition-all duration-300">
-            <CardHeader className="pb-4 border-b border-blue-200/50">
-              <CardTitle className="text-lg font-semibold text-gray-900 flex items-center gap-3">
-                <div className="p-2 bg-blue-100 rounded-lg">
-                  <Activity className="h-5 w-5 text-blue-600" />
-                </div>
+          <Card className="hover:shadow-md transition-all duration-200">
+            <CardHeader className="pb-3 flex flex-row items-center justify-between space-y-0">
+              <CardTitle className="text-base font-semibold text-foreground flex items-center gap-2">
+                <Activity className="h-5 w-5 text-blue-600" />
                 Recent Activity
               </CardTitle>
             </CardHeader>
-            <CardContent className="pt-4">
-              {recentActivity && Array.isArray(recentActivity) && recentActivity.length > 0 ? (
-                <div className="space-y-3">
+            <CardContent className="pt-0">
+              {recentActivity && recentActivity.length > 0 ? (
+                <div className="space-y-0">
                   {recentActivity.slice(0, 4).map((activity: any, index: number) => (
-                    <div key={index} className="group p-3 rounded-lg border border-blue-200 bg-white hover:border-blue-300 hover:bg-blue-50/50 transition-all duration-200">
-                      <div className="flex items-center gap-3">
-                        <div className="flex-shrink-0 p-2 rounded-lg bg-gray-50 group-hover:bg-white">
-                          {activity.description.includes('product') ? (
-                            <Package className="h-4 w-4 text-green-600" />
-                          ) : activity.description.includes('Stock movement') ? (
-                            <BarChart3 className="h-4 w-4 text-blue-600" />
-                          ) : activity.description.includes('Task completed') ? (
-                            <CheckCircle2 className="h-4 w-4 text-green-600" />
-                          ) : activity.description.includes('checked in') ? (
-                            <Clock className="h-4 w-4 text-orange-600" />
-                          ) : (
-                            <Activity className="h-4 w-4 text-gray-600" />
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-semibold text-gray-900 truncate">
-                            {activity.description}
-                          </p>
-                          <p className="text-xs text-gray-600 mt-1">
-                            {activity.timestamp || '2 mins ago'}
-                          </p>
-                        </div>
+                    <div key={index} className="flex items-center gap-3 py-2 px-1 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0">
+                      <div className="flex-shrink-0">
+                        {activity.description.includes('product') ? (
+                          <Package className="h-4 w-4 text-green-600" />
+                        ) : activity.description.includes('Stock movement') ? (
+                          <BarChart3 className="h-4 w-4 text-blue-600" />
+                        ) : activity.description.includes('Task completed') ? (
+                          <CheckCircle2 className="h-4 w-4 text-green-600" />
+                        ) : activity.description.includes('checked in') ? (
+                          <Clock className="h-4 w-4 text-orange-600" />
+                        ) : (
+                          <Activity className="h-4 w-4 text-gray-600" />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-900 truncate">
+                          {activity.description}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {activity.timestamp || '2 mins ago'}
+                        </p>
                       </div>
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-8">
-                  <div className="p-3 bg-gray-50 rounded-full w-fit mx-auto mb-3">
-                    <Activity className="h-6 w-6 text-gray-400" />
-                  </div>
+                <div className="text-center py-4">
+                  <Activity className="h-6 w-6 text-gray-400 mx-auto mb-2" />
                   <p className="text-sm font-medium text-gray-900">No recent activity</p>
-                  <p className="text-xs text-gray-600 mt-1">Activity will appear here</p>
+                  <p className="text-xs text-gray-600">Activity will appear here</p>
                 </div>
               )}
             </CardContent>
