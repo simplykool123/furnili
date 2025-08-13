@@ -2,40 +2,9 @@ import multer from "multer";
 import path from "path";
 import crypto from "crypto";
 
-// Product image upload configuration with proper storage
+// Product image upload configuration with memory storage for object storage
 export const productImageUpload = multer({
-  storage: multer.diskStorage({
-    destination: function (req, file, cb) {
-      cb(null, 'uploads/products/');
-    },
-    filename: function (req, file, cb) {
-      // Generate unique filename with original extension
-      const uniqueName = crypto.randomBytes(16).toString('hex');
-      let ext = path.extname(file.originalname);
-      
-      // If no extension, derive from mimetype (for pasted images)
-      if (!ext) {
-        switch (file.mimetype) {
-          case 'image/jpeg':
-            ext = '.jpg';
-            break;
-          case 'image/png':
-            ext = '.png';
-            break;
-          case 'image/gif':
-            ext = '.gif';
-            break;
-          case 'image/webp':
-            ext = '.webp';
-            break;
-          default:
-            ext = '.jpg'; // fallback
-        }
-      }
-      
-      cb(null, uniqueName + ext);
-    }
-  }),
+  storage: multer.memoryStorage(), // Use memory storage for object storage uploads
   limits: {
     fileSize: 5 * 1024 * 1024, // 5MB limit
   },
