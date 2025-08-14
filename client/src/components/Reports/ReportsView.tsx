@@ -36,9 +36,9 @@ export default function ReportsView() {
   });
 
   const { data: products } = useQuery({
-    queryKey: ['/api/products'],
+    queryKey: ['/api/sales-products'],
     queryFn: async () => {
-      const response = await authenticatedApiRequest('GET', '/api/products');
+      const response = await authenticatedApiRequest('GET', '/api/sales-products');
       return response.json();
     },
   });
@@ -108,11 +108,11 @@ export default function ReportsView() {
       }
       
       acc[product.category].totalItems += 1;
-      acc[product.category].totalValue += (product.pricePerUnit || 0) * product.currentStock;
+      acc[product.category].totalValue += (product.unitPrice || 0);
       
-      if (product.currentStock > product.minStock) {
+      if (product.unitPrice > 5000) {
         acc[product.category].inStock += 1;
-      } else if (product.currentStock <= product.minStock && product.currentStock > 0) {
+      } else if (product.unitPrice < 5000 && product.unitPrice > 0) {
         acc[product.category].lowStock += 1;
       }
       
@@ -181,7 +181,7 @@ export default function ReportsView() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Categories</SelectItem>
-                  {Array.from(new Set((products || []).map((p: any) => p.category))).map((category: string) => (
+                  {Array.from(new Set((products || []).map((p: any) => p.category))).filter((cat): cat is string => typeof cat === 'string').map((category: string) => (
                     <SelectItem key={category} value={category}>{category}</SelectItem>
                   ))}
                 </SelectContent>

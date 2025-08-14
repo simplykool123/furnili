@@ -3,19 +3,20 @@ import { storage } from "../storage";
 
 export const exportProductsCSV = async (res: Response) => {
   try {
-    const products = await storage.getAllProducts();
+    const salesProducts = await storage.getAllSalesProducts();
     
-    const csvHeaders = "ID,Name,Category,Brand,Size,Thickness,SKU,Price Per Unit,Current Stock,Min Stock,Unit,Active,Created At\n";
+    const csvHeaders = "ID,Name,Category,Description,Size,Unit Price,Tax,Active,Created At\n";
     
-    const csvData = products.map(product => 
-      `${product.id},"${product.name}","${product.category}","${product.brand || ''}","${product.size || ''}","${product.thickness || ''}","${product.sku || ''}",${product.pricePerUnit},${product.currentStock},${product.minStock},"${product.unit}",${product.isActive},"${product.createdAt}"`
+    const csvData = salesProducts.map(product => 
+      `${product.id},"${product.name}","${product.category}","${product.description || ''}","${product.size || ''}",${product.unitPrice || 0},${product.taxPercentage || 0},${product.isActive},"${product.createdAt}"`
     ).join("\n");
 
     res.setHeader("Content-Type", "text/csv");
-    res.setHeader("Content-Disposition", "attachment; filename=products.csv");
+    res.setHeader("Content-Disposition", "attachment; filename=inventory_report.csv");
     res.send(csvHeaders + csvData);
   } catch (error) {
-    res.status(500).json({ message: "Export failed", error });
+    console.error('Export products error:', error);
+    res.status(500).json({ message: "Export failed", error: (error as Error).message });
   }
 };
 
@@ -39,20 +40,21 @@ export const exportRequestsCSV = async (res: Response) => {
 
 export const exportLowStockCSV = async (res: Response) => {
   try {
-    const stats = await storage.getDashboardStats();
-    const products = await storage.getAllProducts();
-    const lowStockProducts = products.filter(p => p.currentStock <= p.minStock);
+    const salesProducts = await storage.getAllSalesProducts();
+    // Filter products that need attention - low price items or missing description
+    const lowStockProducts = salesProducts.filter(p => !p.description || p.unitPrice < 5000);
     
-    const csvHeaders = "ID,Name,Category,Current Stock,Min Stock,Shortage,Unit\n";
+    const csvHeaders = "ID,Name,Category,Description,Price,Status,Action Needed\n";
     
     const csvData = lowStockProducts.map(product => 
-      `${product.id},"${product.name}","${product.category}",${product.currentStock},${product.minStock},${product.minStock - product.currentStock},"${product.unit}"`
+      `${product.id},"${product.name}","${product.category}","${product.description || 'Missing description'}",${product.unitPrice || 0},"Requires attention","${!product.description ? 'Add description' : 'Verify pricing'}"`
     ).join("\n");
 
     res.setHeader("Content-Type", "text/csv");
     res.setHeader("Content-Disposition", "attachment; filename=low_stock_report.csv");
     res.send(csvHeaders + csvData);
   } catch (error) {
-    res.status(500).json({ message: "Export failed", error });
+    console.error('Export low stock error:', error);
+    res.status(500).json({ message: "Export failed", error: (error as Error).message });
   }
 };
