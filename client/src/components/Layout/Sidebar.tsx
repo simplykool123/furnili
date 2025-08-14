@@ -39,7 +39,7 @@ import {
 export const navigation = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard, roles: ['admin', 'manager', 'staff', 'store_incharge'] },
   { name: 'Products', href: '/products', icon: Package, roles: ['admin', 'manager', 'staff', 'store_incharge'] }, // Store keepers have read-only access
-  { name: 'Inventory Movement', href: '/inventory-movement', icon: ArrowUpDown, roles: ['admin', 'manager', 'store_incharge'] }, // Store keeper needs inventory access
+  { name: 'Stock Movement', href: '/inventory-movement', icon: ArrowUpDown, roles: ['admin', 'manager', 'store_incharge'] }, // Store keeper needs inventory access
   { name: 'Material Requests', href: '/requests', icon: PackageSearch, roles: ['admin', 'manager', 'staff', 'store_incharge'] },
   { name: 'Purchase Orders', href: '/purchase-orders', icon: ShoppingCart, roles: ['admin', 'manager', 'store_incharge'] },
 
@@ -47,7 +47,7 @@ export const navigation = [
   { name: 'Petty Cash', href: '/petty-cash', icon: CircleDollarSign, roles: ['admin', 'manager', 'staff', 'store_incharge'] }, // Store keeper can access user-specific petty cash
   { name: 'Project Management', href: '/projects', icon: ProjectManagementIcon, roles: ['admin', 'manager', 'staff', 'store_incharge'] }, // Store keeper can access project management
   { name: 'Task Management', href: '/tasks', icon: CheckSquare, roles: ['admin', 'manager', 'staff', 'store_incharge'] },
-  { name: 'Product Comparison', href: '/product-comparison', icon: GitCompare, roles: ['admin', 'manager'] },
+  { name: 'Compare Products', href: '/product-comparison', icon: GitCompare, roles: ['admin', 'manager'] },
   { name: 'WhatsApp Export', href: '/whatsapp', icon: MessageCircle, roles: ['admin', 'manager', 'staff'] }, // Store keeper doesn't need WhatsApp export
 
   { name: 'Reports', href: '/reports', icon: BarChart3, roles: ['admin', 'manager'] },
@@ -59,8 +59,8 @@ export const navigation = [
     subItems: [
       { name: 'OCR Wizard', href: '/ocr-wizard', icon: Brain, roles: ['admin', 'manager', 'staff'] }, // Store keeper doesn't need OCR
       { name: 'Price Comparison', href: '/price-comparison', icon: TrendingUp, roles: ['admin', 'manager'] },
-      { name: 'Display Settings', href: '/display-settings', icon: Settings, roles: ['admin', 'manager', 'staff', 'store_incharge'] },
-      { name: 'System Flowchart', href: '/system-flowchart', icon: GitBranch, roles: ['admin', 'manager', 'staff'] }, // Store keeper doesn't need flowchart
+      { name: 'Theme & Layout', href: '/display-settings', icon: Settings, roles: ['admin', 'manager', 'staff', 'store_incharge'] },
+      { name: 'Workflow', href: '/system-flowchart', icon: GitBranch, roles: ['admin', 'manager', 'staff'] }, // Store keeper doesn't need flowchart
       { name: 'Backups', href: '/backups', icon: Download, roles: ['admin'] },
     ]
   },

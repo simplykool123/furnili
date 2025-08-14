@@ -178,7 +178,7 @@ export default function InventoryMovement() {
 
   return (
     <FurniliLayout
-      title="Inventory Movement"
+      title="Stock Movement"
       subtitle="Track and manage stock movements"
     >
       <div className="space-y-6">

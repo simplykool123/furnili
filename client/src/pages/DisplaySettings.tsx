@@ -10,7 +10,7 @@ export default function DisplaySettings() {
 
   return (
     <FurniliLayout
-      title="Display Settings"
+      title="Theme & Layout"
       subtitle="Customize how the application looks and feels"
     >
         <div className="max-w-4xl mx-auto">
