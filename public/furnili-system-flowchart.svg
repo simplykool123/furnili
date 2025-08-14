@@ -251,21 +251,16 @@
     ✓ Mobile-first responsive design with touch optimization
   </text>
   
-  <!-- Connecting lines -->
+  <!-- Authentication to Dashboard connection -->
   <path d="M 250 160 L 340 160" stroke="#6b7280" stroke-width="1" stroke-dasharray="5,5"/>
-  <path d="M 190 220 L 190 300 L 400 300 L 400 640" stroke="#6b7280" stroke-width="1"/>
-  <path d="M 410 220 L 410 640" stroke="#6b7280" stroke-width="1"/>
-  <path d="M 630 220 L 630 300 L 400 300" stroke="#6b7280" stroke-width="1"/>
-  <path d="M 190 360 L 190 640" stroke="#6b7280" stroke-width="1"/>
-  <path d="M 410 360 L 410 500" stroke="#6b7280" stroke-width="1"/>
-  <path d="M 630 360 L 630 640" stroke="#6b7280" stroke-width="1"/>
-  <path d="M 190 500 L 190 640" stroke="#6b7280" stroke-width="1"/>
-  <path d="M 410 500 L 410 640" stroke="#6b7280" stroke-width="1"/>
   
-  <!-- Storage connections -->
-  <path d="M 140 770 L 140 720 L 300 720" stroke="#16a34a" stroke-width="1"/>
-  <path d="M 360 770 L 360 720 L 500 720" stroke="#c026d3" stroke-width="1"/>
-  <path d="M 580 770 L 580 720 L 600 720" stroke="#d97706" stroke-width="1"/>
+  <!-- Vertical connections to database (simplified) -->
+  <path d="M 400 300 L 400 640" stroke="#6b7280" stroke-width="1" opacity="0.3"/>
+  
+  <!-- Storage connections (simplified) -->
+  <path d="M 400 720 L 140 720 L 140 770" stroke="#16a34a" stroke-width="1" opacity="0.5"/>
+  <path d="M 400 720 L 360 720 L 360 770" stroke="#c026d3" stroke-width="1" opacity="0.5"/>
+  <path d="M 400 720 L 580 720 L 580 770" stroke="#d97706" stroke-width="1" opacity="0.5"/>
   
   <!-- Arrow marker definition -->
   <defs>
