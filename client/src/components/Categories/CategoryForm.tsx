@@ -48,10 +48,16 @@ export function CategoryForm({ category, onSuccess }: CategoryFormProps) {
 
   const createMutation = useMutation({
     mutationFn: async (data: CategoryFormData) => {
-      return apiRequest("/api/categories", "POST", data);
+      return apiRequest("/api/categories", {
+        method: "POST",
+        body: JSON.stringify(data)
+      });
     },
     onSuccess: () => {
+      // Invalidate and refetch to ensure fresh data
       queryClient.invalidateQueries({ queryKey: ["/api/categories"] });
+      queryClient.refetchQueries({ queryKey: ["/api/categories"] });
+      
       toast({
         title: "Success",
         description: "Category created successfully",
@@ -69,11 +75,19 @@ export function CategoryForm({ category, onSuccess }: CategoryFormProps) {
 
   const updateMutation = useMutation({
     mutationFn: async (data: CategoryFormData) => {
-      return apiRequest(`/api/categories/${category!.id}`, "PUT", data);
+      return apiRequest(`/api/categories/${category!.id}`, {
+        method: "PUT",
+        body: JSON.stringify(data)
+      });
     },
     onSuccess: () => {
+      // Invalidate all related queries
       queryClient.invalidateQueries({ queryKey: ["/api/categories"] });
       queryClient.invalidateQueries({ queryKey: ["/api/products"] });
+      
+      // Also refetch immediately to ensure fresh data
+      queryClient.refetchQueries({ queryKey: ["/api/categories"] });
+      
       toast({
         title: "Success",
         description: "Category updated successfully",

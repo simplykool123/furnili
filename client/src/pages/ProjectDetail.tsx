@@ -1263,16 +1263,19 @@ export default function ProjectDetail() {
     if (data.assignedTo === "other") {
       taskData.assignedToOther = data.assignedToOther;
     } else if (data.assignedTo && data.assignedTo !== "" && data.assignedTo !== "unassigned") {
-      taskData.assignedTo = parseInt(data.assignedTo);
+      taskData.assignedTo = parseInt(data.assignedTo) || null;
     }
 
     if (editingTask) {
       // Update existing task
       updateTaskMutation.mutate({ taskId: editingTask.id, taskData });
     } else {
-      // Create new task
-      taskData.projectId = parseInt(projectId); // Associate task with current project
-      createTaskMutation.mutate(taskData);
+      // Create new task with projectId
+      const newTaskData = {
+        ...taskData,
+        projectId: parseInt(projectId)
+      };
+      createTaskMutation.mutate(newTaskData);
     }
   };
 
@@ -1297,7 +1300,7 @@ export default function ProjectDetail() {
 
   // Task deletion handler
   const handleTaskDelete = (taskId: number) => {
-    if (userRole !== 'admin') {
+    if (currentUser?.role !== 'admin') {
       toast({
         title: "Access Denied",
         description: "Only administrators can delete tasks.",
