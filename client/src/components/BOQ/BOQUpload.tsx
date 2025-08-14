@@ -181,11 +181,11 @@ export default function BOQUpload() {
     const file = acceptedFiles[0];
     if (!file) return;
 
-    const validTypes = ['image/png', 'image/jpeg', 'image/jpg'];
+    const validTypes = ['application/pdf', 'image/png', 'image/jpeg', 'image/jpg'];
     if (!validTypes.includes(file.type)) {
       toast({
-        title: "Invalid file type", 
-        description: "Please upload an image file (PNG, JPG). For PDFs, save as image first.",
+        title: "Invalid file type",
+        description: "Please upload a PDF file or image (PNG, JPG).",
         variant: "destructive",
       });
       return;
@@ -207,10 +207,14 @@ export default function BOQUpload() {
       // Upload file first
       await uploadBOQMutation.mutateAsync(file);
 
-      // Process with OCR for images
-      const result = await ocrService.processBOQImage(file, (progress) => {
-        setOCRProgress(progress * 100);
-      });
+      // Process with appropriate method based on file type
+      const result = file.type === 'application/pdf' 
+        ? await ocrService.processBOQPDF(file, (progress) => {
+            setOCRProgress(progress * 100);
+          })
+        : await ocrService.processBOQImage(file, (progress) => {
+            setOCRProgress(progress * 100);
+          });
 
       setExtractedData(result);
       setShowExtractedData(true);
@@ -243,6 +247,7 @@ export default function BOQUpload() {
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: {
+      'application/pdf': ['.pdf'],
       'image/png': ['.png'],
       'image/jpeg': ['.jpg', '.jpeg']
     },
@@ -335,16 +340,16 @@ export default function BOQUpload() {
             ) : (
               <>
                 <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  Drop your BOQ Image here
+                  Drop your BOQ PDF or Image here
                 </h3>
                 <p className="text-gray-600 mb-4">or click to browse files</p>
                 <Button type="button">Choose File</Button>
                 <p className="text-sm text-gray-500 mt-4">
-                  Supported: PNG, JPG images (Max size: 10MB)
+                  Supported: PDF, PNG, JPG (Max size: 10MB)
                   <br />
-                  <span className="text-blue-600">✨ Advanced OCR text extraction from images</span>
+                  <span className="text-blue-600">✨ Smart processing: Text extraction for PDFs, OCR for images</span>
                   <br />
-                  <span className="text-amber-600">📄 For PDFs: Save as image first, then upload</span>
+                  <span className="text-amber-600">📄 If PDF text extraction fails, save as image for OCR</span>
                 </p>
               </>
             )}
