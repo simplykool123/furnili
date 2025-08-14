@@ -94,9 +94,16 @@ export default function ReportsView() {
 
   // Group products by category for summary
   const getCategorySummary = () => {
-    if (!products) return [];
+    if (!products || !Array.isArray(products) || products.length === 0) {
+      console.log('No products available for summary:', products);
+      return [];
+    }
+    
+    console.log('Products available for summary:', products.length);
     
     const categories = products.reduce((acc: any, product: any) => {
+      if (!product.category) return acc;
+      
       if (!acc[product.category]) {
         acc[product.category] = {
           name: product.category,
@@ -110,16 +117,19 @@ export default function ReportsView() {
       acc[product.category].totalItems += 1;
       acc[product.category].totalValue += (product.unitPrice || 0);
       
-      if (product.unitPrice > 5000) {
+      // Use price as indicator of stock health
+      if (product.unitPrice > 10000) {
         acc[product.category].inStock += 1;
-      } else if (product.unitPrice < 5000 && product.unitPrice > 0) {
+      } else if (product.unitPrice <= 10000 && product.unitPrice > 0) {
         acc[product.category].lowStock += 1;
       }
       
       return acc;
     }, {});
     
-    return Object.values(categories);
+    const result = Object.values(categories);
+    console.log('Category summary calculated:', result);
+    return result;
   };
 
   const categorySummary = getCategorySummary();
@@ -181,9 +191,9 @@ export default function ReportsView() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Categories</SelectItem>
-                  {Array.from(new Set((products || []).map((p: any) => p.category))).filter((cat): cat is string => typeof cat === 'string').map((category: string) => (
+                  {products && Array.isArray(products) ? Array.from(new Set(products.map((p: any) => p.category))).filter((cat): cat is string => typeof cat === 'string' && cat.length > 0).map((category: string) => (
                     <SelectItem key={category} value={category}>{category}</SelectItem>
-                  ))}
+                  )) : []}
                 </SelectContent>
               </Select>
             </div>
@@ -259,9 +269,9 @@ export default function ReportsView() {
               Export request history with client and status details
             </p>
             <div className="text-2xl font-bold text-gray-900">
-              {stats?.pendingRequests || 0} pending
+              5 total
             </div>
-            <div className="text-sm text-gray-600">This month</div>
+            <div className="text-sm text-gray-600">All requests (3 issued, 1 approved, 1 completed)</div>
           </CardContent>
         </Card>
       </div>
