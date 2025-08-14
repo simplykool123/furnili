@@ -3,16 +3,16 @@ import { storage } from "../storage";
 
 export const exportProductsCSV = async (res: Response) => {
   try {
-    const salesProducts = await storage.getAllSalesProducts();
+    const products = await storage.getAllProducts(); // Use main products
     
-    if (!salesProducts || salesProducts.length === 0) {
+    if (!products || products.length === 0) {
       throw new Error("No products found for export");
     }
     
-    const csvHeaders = "ID,Name,Category,Description,Size,Unit Price,Tax,Active,Created At\n";
+    const csvHeaders = "ID,Name,Category,Description,SKU,Price,Stock Quantity,Min Stock Level,Active,Created At\n";
     
-    const csvData = salesProducts.map(product => 
-      `${product.id},"${(product.name || '').replace(/"/g, '""')}","${(product.category || '').replace(/"/g, '""')}","${(product.description || '').replace(/"/g, '""')}","${(product.size || '').replace(/"/g, '""')}",${product.unitPrice || 0},${product.taxPercentage || 0},${product.isActive},${product.createdAt ? new Date(product.createdAt).toISOString() : ''}`
+    const csvData = products.map(product => 
+      `${product.id},"${(product.name || '').replace(/"/g, '""')}","${(product.category || '').replace(/"/g, '""')}","${(product.description || '').replace(/"/g, '""')}","${(product.sku || '').replace(/"/g, '""')}",${product.price || 0},${product.stockQuantity || 0},${product.minStockLevel || 0},${product.isActive || false},"${product.createdAt || ''}"`
     ).join("\n");
 
     res.setHeader("Content-Type", "text/csv; charset=utf-8");
@@ -36,7 +36,7 @@ export const exportRequestsCSV = async (res: Response) => {
     const csvHeaders = "ID,Client Name,Order Number,Status,Priority,Total Value,Requested By,Created At\n";
     
     const csvData = requests.map(request => 
-      `${request.id},"${(request.clientName || '').replace(/"/g, '""')}","${(request.orderNumber || '').replace(/"/g, '""')}","${(request.status || '').replace(/"/g, '""')}","${(request.priority || '').replace(/"/g, '""')}",${request.totalValue || 0},${request.requestedBy || ''},${request.createdAt ? new Date(request.createdAt).toISOString() : ''}`
+      `${request.id},"${(request.clientName || '').replace(/"/g, '""')}","${(request.orderNumber || '').replace(/"/g, '""')}","${(request.status || '').replace(/"/g, '""')}","${(request.priority || '').replace(/"/g, '""')}",${request.totalValue || 0},"${request.requestedBy || ''}","${request.createdAt || ''}"`
     ).join("\n");
 
     res.setHeader("Content-Type", "text/csv; charset=utf-8");
@@ -51,18 +51,18 @@ export const exportRequestsCSV = async (res: Response) => {
 
 export const exportLowStockCSV = async (res: Response) => {
   try {
-    const salesProducts = await storage.getAllSalesProducts();
+    const products = await storage.getAllProducts(); // Use main products
     
-    if (!salesProducts || salesProducts.length === 0) {
+    if (!products || products.length === 0) {
       throw new Error("No products found for low stock analysis");
     }
     
-    // Filter products that need attention - low price items or missing description
-    const lowStockProducts = salesProducts.filter(p => !p.description || p.unitPrice < 5000);
+    // Filter products with stock below minimum threshold
+    const lowStockProducts = products.filter(p => (p.stockQuantity || 0) < (p.minStockLevel || 10));
     
     if (lowStockProducts.length === 0) {
       // Create empty CSV with headers
-      const csvHeaders = "ID,Name,Category,Description,Price,Status,Action Needed\n";
+      const csvHeaders = "ID,Name,Category,Current Stock,Min Stock Level,Status,Action Needed\n";
       const noDataRow = ",,,,,'No low stock items found',''";
       
       res.setHeader("Content-Type", "text/csv; charset=utf-8");
@@ -72,10 +72,10 @@ export const exportLowStockCSV = async (res: Response) => {
       return;
     }
     
-    const csvHeaders = "ID,Name,Category,Description,Price,Status,Action Needed\n";
+    const csvHeaders = "ID,Name,Category,Current Stock,Min Stock Level,Status,Action Needed\n";
     
     const csvData = lowStockProducts.map(product => 
-      `${product.id},"${(product.name || '').replace(/"/g, '""')}","${(product.category || '').replace(/"/g, '""')}","${(product.description || 'Missing description').replace(/"/g, '""')}",${product.unitPrice || 0},"Requires attention","${!product.description ? 'Add description' : 'Verify pricing'}"`
+      `${product.id},"${(product.name || '').replace(/"/g, '""')}","${(product.category || '').replace(/"/g, '""')}",${product.stockQuantity || 0},${product.minStockLevel || 10},"Low Stock","Reorder required"`
     ).join("\n");
 
     res.setHeader("Content-Type", "text/csv; charset=utf-8");

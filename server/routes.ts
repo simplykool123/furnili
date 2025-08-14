@@ -1157,19 +1157,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Reports Dashboard API
   app.get("/api/reports/dashboard", authenticateToken, async (req, res) => {
     try {
-      const salesProducts = await storage.getAllSalesProducts();
+      const products = await storage.getAllProducts(); // Use main products, not sales products
       const materialRequests = await storage.getAllMaterialRequests();
       
       // Calculate summary statistics
-      const totalProducts = salesProducts.length;
-      const totalValue = salesProducts.reduce((sum, p) => sum + (p.unitPrice || 0), 0);
-      const lowStockItems = salesProducts.filter(p => !p.description || p.unitPrice < 5000).length;
+      const totalProducts = products.length;
+      const totalValue = products.reduce((sum, p) => sum + ((p.price || 0) * (p.stockQuantity || 0)), 0);
+      const lowStockItems = products.filter(p => (p.stockQuantity || 0) < (p.minStockLevel || 10)).length;
       const pendingRequests = materialRequests.filter(r => r.status === 'pending').length;
       
       // Calculate category summary
       const categoryMap = new Map();
       
-      salesProducts.forEach(product => {
+      products.forEach(product => {
         const category = product.category || 'Uncategorized';
         if (!categoryMap.has(category)) {
           categoryMap.set(category, {
@@ -1184,10 +1184,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         const categoryData = categoryMap.get(category);
         categoryData.totalItems++;
-        categoryData.totalValue += (product.unitPrice || 0);
+        categoryData.totalValue += ((product.price || 0) * (product.stockQuantity || 0));
         
-        // Use price as stock health indicator
-        if (product.unitPrice > 5000) {
+        // Use actual stock levels for health indicator
+        const currentStock = product.stockQuantity || 0;
+        const minStock = product.minStockLevel || 10;
+        
+        if (currentStock >= minStock) {
           categoryData.inStock++;
         } else {
           categoryData.lowStock++;
