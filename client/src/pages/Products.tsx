@@ -18,7 +18,7 @@ export default function Products() {
   const [showAddProduct, setShowAddProduct] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const user = authService.getUser();
-  const { isMobile } = useIsMobile();
+  const isMobile = useIsMobile();
   
   const canManageProducts = user && ['admin', 'manager'].includes(user.role);
 
@@ -47,8 +47,8 @@ export default function Products() {
 
   return (
     <FurniliLayout
-      title="Product Management"
-      subtitle="Manage your inventory products and stock levels"
+      title="Raw Materials"
+      subtitle="Manage your raw materials inventory and stock levels"
       showAddButton={canManageProducts || false}
       onAddClick={() => setShowAddProduct(true)}
     >

@@ -38,16 +38,24 @@ import {
 
 export const navigation = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard, roles: ['admin', 'manager', 'staff', 'store_incharge'] },
-  { name: 'Products', href: '/products', icon: Package, roles: ['admin', 'manager', 'staff', 'store_incharge'] }, // Store keepers have read-only access
-  { name: 'Stock Movement', href: '/inventory-movement', icon: ArrowUpDown, roles: ['admin', 'manager', 'store_incharge'] }, // Store keeper needs inventory access
+  { 
+    name: 'Products', 
+    icon: Package, 
+    roles: ['admin', 'manager', 'staff', 'store_incharge'],
+    isCollapsible: true,
+    subItems: [
+      { name: 'Raw Materials', href: '/products', icon: Package, roles: ['admin', 'manager', 'staff', 'store_incharge'] },
+      { name: 'Stock Movement', href: '/inventory-movement', icon: ArrowUpDown, roles: ['admin', 'manager', 'store_incharge'] },
+      { name: 'Purchase Orders', href: '/purchase-orders', icon: ShoppingCart, roles: ['admin', 'manager', 'store_incharge'] },
+      { name: 'Compare Material', href: '/product-comparison', icon: GitCompare, roles: ['admin', 'manager'] },
+    ]
+  },
   { name: 'Material Requests', href: '/requests', icon: PackageSearch, roles: ['admin', 'manager', 'staff', 'store_incharge'] },
-  { name: 'Purchase Orders', href: '/purchase-orders', icon: ShoppingCart, roles: ['admin', 'manager', 'store_incharge'] },
 
   { name: 'Staff Attendance', href: '/attendance', icon: UserRoundPen, roles: ['admin', 'manager', 'staff', 'store_incharge'] },
   { name: 'Petty Cash', href: '/petty-cash', icon: CircleDollarSign, roles: ['admin', 'manager', 'staff', 'store_incharge'] }, // Store keeper can access user-specific petty cash
   { name: 'Project Management', href: '/projects', icon: ProjectManagementIcon, roles: ['admin', 'manager', 'staff', 'store_incharge'] }, // Store keeper can access project management
   { name: 'Task Management', href: '/tasks', icon: CheckSquare, roles: ['admin', 'manager', 'staff', 'store_incharge'] },
-  { name: 'Compare Products', href: '/product-comparison', icon: GitCompare, roles: ['admin', 'manager'] },
   { name: 'WhatsApp Export', href: '/whatsapp', icon: MessageCircle, roles: ['admin', 'manager', 'staff'] }, // Store keeper doesn't need WhatsApp export
 
   { name: 'Reports', href: '/reports', icon: BarChart3, roles: ['admin', 'manager'] },
@@ -90,9 +98,9 @@ export default function Sidebar({ onItemClick, collapsed = false, onToggleCollap
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
   const user = authService.getUser();
 
-  // Auto-expand Master Data/System Settings menus if any sub-item is active
+  // Auto-expand Master Data/System Settings/Products menus if any sub-item is active
   useEffect(() => {
-    ['Master Data', 'System Settings'].forEach(sectionName => {
+    ['Master Data', 'System Settings', 'Products'].forEach(sectionName => {
       const settingsItem = navigation.find(item => item.name === sectionName);
       if (settingsItem?.subItems) {
         const hasActiveSettingsSubItem = settingsItem.subItems.some(subItem => 

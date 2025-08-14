@@ -206,8 +206,8 @@ export default function ProductComparison() {
 
   return (
     <FurniliLayout
-      title="Compare Products"
-      subtitle="Compare products by category and find the best prices"
+      title="Compare Material"
+      subtitle="Compare materials by category and find the best prices"
     >
       <div className="space-y-6" id="comparison-content">
         {/* Header */}
