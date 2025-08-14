@@ -1030,17 +1030,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "No PDF file uploaded" });
       }
 
-      // Import pdf-parse dynamically
-      const pdfParse = (await import('pdf-parse')).default;
+      // Use require for pdf-parse to avoid module loading issues
+      const pdfParse = require('pdf-parse');
       
       // Extract text from PDF
       const pdfBuffer = req.file.buffer;
+      
+      if (!pdfBuffer || pdfBuffer.length === 0) {
+        return res.status(400).json({ message: "Invalid PDF file" });
+      }
+      
       const data = await pdfParse(pdfBuffer);
+      
+      if (!data || !data.text) {
+        return res.status(400).json({ message: "Could not extract text from PDF. This may be a scanned PDF - please save as image and use OCR instead." });
+      }
       
       res.json({ text: data.text });
     } catch (error) {
       console.error('PDF text extraction error:', error);
-      res.status(500).json({ message: "Failed to extract text from PDF", error: error instanceof Error ? error.message : 'Unknown error' });
+      res.status(500).json({ 
+        message: "Failed to extract text from PDF. For scanned PDFs, please save as an image (PNG/JPG) and upload that instead.",
+        error: error instanceof Error ? error.message : 'Unknown error' 
+      });
     }
   });
 
