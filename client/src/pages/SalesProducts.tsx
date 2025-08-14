@@ -607,9 +607,9 @@ export default function SalesProducts() {
                     <TableRow>
                       <TableHead className="w-[45%] md:w-[50%]">Product</TableHead>
                       <TableHead className="w-[20%] hidden sm:table-cell">Category</TableHead>
-                      <TableHead className="w-[25%] md:w-[20%]">Size</TableHead>
-                      <TableHead className="w-[15%]">Price</TableHead>
-                      <TableHead className="w-[5%] text-right">Actions</TableHead>
+                      <TableHead className="w-[25%] md:w-[25%]">Size</TableHead>
+                      <TableHead className="w-[20%]">Price</TableHead>
+                      <TableHead className="w-[10%] text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -656,9 +656,9 @@ export default function SalesProducts() {
                             </Badge>
                           )}
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="max-w-0">
                           <div className="flex flex-col gap-1">
-                            <span className="text-xs text-gray-700 font-mono whitespace-nowrap bg-gray-50 px-2 py-1 rounded">
+                            <span className="text-xs text-gray-700 font-mono break-words bg-gray-50 px-2 py-1 rounded leading-tight">
                               {product.size || "-"}
                             </span>
                             <span className="text-xs text-gray-400 sm:hidden truncate">
