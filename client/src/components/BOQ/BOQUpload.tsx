@@ -181,11 +181,18 @@ export default function BOQUpload() {
     const file = acceptedFiles[0];
     if (!file) return;
 
-    const validTypes = ['application/pdf', 'image/png', 'image/jpeg', 'image/jpg'];
+    const validTypes = [
+      'application/pdf', 
+      'image/png', 
+      'image/jpeg', 
+      'image/jpg',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
+      'application/vnd.ms-excel' // .xls
+    ];
     if (!validTypes.includes(file.type)) {
       toast({
         title: "Invalid file type",
-        description: "Please upload a PDF file or image (PNG, JPG).",
+        description: "Please upload Excel (.xlsx, .xls), PDF, or image file (PNG, JPG).",
         variant: "destructive",
       });
       return;
@@ -208,13 +215,23 @@ export default function BOQUpload() {
       await uploadBOQMutation.mutateAsync(file);
 
       // Process with appropriate method based on file type
-      const result = file.type === 'application/pdf' 
-        ? await ocrService.processBOQPDF(file, (progress) => {
-            setOCRProgress(progress * 100);
-          })
-        : await ocrService.processBOQImage(file, (progress) => {
-            setOCRProgress(progress * 100);
-          });
+      let result;
+      if (file.type.includes('spreadsheetml') || file.type.includes('ms-excel')) {
+        // Excel file processing
+        result = await ocrService.processBOQExcel(file, (progress) => {
+          setOCRProgress(progress * 100);
+        });
+      } else if (file.type === 'application/pdf') {
+        // PDF processing
+        result = await ocrService.processBOQPDF(file, (progress) => {
+          setOCRProgress(progress * 100);
+        });
+      } else {
+        // Image OCR processing  
+        result = await ocrService.processBOQImage(file, (progress) => {
+          setOCRProgress(progress * 100);
+        });
+      }
 
       setExtractedData(result);
       setShowExtractedData(true);
@@ -247,6 +264,8 @@ export default function BOQUpload() {
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: {
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'],
+      'application/vnd.ms-excel': ['.xls'],
       'application/pdf': ['.pdf'],
       'image/png': ['.png'],
       'image/jpeg': ['.jpg', '.jpeg']
@@ -340,16 +359,16 @@ export default function BOQUpload() {
             ) : (
               <>
                 <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  Drop your BOQ PDF or Image here
+                  Drop your BOQ Excel, PDF or Image here
                 </h3>
                 <p className="text-gray-600 mb-4">or click to browse files</p>
                 <Button type="button">Choose File</Button>
                 <p className="text-sm text-gray-500 mt-4">
-                  Supported: PDF, PNG, JPG (Max size: 10MB)
+                  Supported: Excel (.xlsx, .xls), PDF, PNG, JPG (Max size: 10MB)
                   <br />
-                  <span className="text-blue-600">✨ Smart processing: Text extraction for PDFs, OCR for images</span>
+                  <span className="text-green-600">⭐ Best: Excel files for accurate data parsing</span>
                   <br />
-                  <span className="text-amber-600">📄 If PDF text extraction fails, save as image for OCR</span>
+                  <span className="text-blue-600">📄 PDF: Text extraction • 📷 Images: OCR processing</span>
                 </p>
               </>
             )}
