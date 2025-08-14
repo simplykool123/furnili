@@ -153,6 +153,7 @@ function ProjectFinancials({ projectId }: { projectId: string }) {
   const [dateFilter, setDateFilter] = useState("all");
   const [showAddExpense, setShowAddExpense] = useState(false);
   const [selectedExpense, setSelectedExpense] = useState<any>(null);
+  const [selectedOrder, setSelectedOrder] = useState<any>(null);
 
   // Fetch project petty cash expenses
   const { data: projectExpenses, isLoading: expensesLoading } = useQuery({
