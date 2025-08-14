@@ -60,10 +60,15 @@ export default function SystemFlowchart() {
           <CardContent className={isFullscreen ? "h-full overflow-auto p-2" : "p-2"}>
             <div className={`w-full ${isFullscreen ? "h-full" : "h-[800px]"} overflow-auto border rounded-lg bg-gray-50`}>
               <img 
-                src="/furnili-system-flowchart.svg" 
+                src={`/furnili-system-flowchart.svg?v=${Date.now()}`}
                 alt="Furnili System Architecture Flowchart"
                 className="w-full h-auto min-w-[1400px]"
                 style={{ imageRendering: 'crisp-edges' }}
+                onLoad={() => console.log('SVG loaded successfully')}
+                onError={(e) => {
+                  console.error('SVG failed to load:', e);
+                  console.log('Trying to load from:', e.currentTarget.src);
+                }}
               />
             </div>
           </CardContent>
