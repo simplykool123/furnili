@@ -119,3 +119,28 @@ export const performanceUtils = {
     });
   }
 };
+
+// Authenticated API request function for components
+export const authenticatedApiRequest = async (method: string, url: string, data?: any): Promise<Response> => {
+  const token = localStorage.getItem('token');
+  
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+  };
+  
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  
+  const options: RequestInit = {
+    method,
+    headers,
+    credentials: 'include',
+  };
+  
+  if (data && (method === 'POST' || method === 'PUT' || method === 'PATCH')) {
+    options.body = JSON.stringify(data);
+  }
+  
+  return fetch(url, options);
+};

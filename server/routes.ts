@@ -1658,6 +1658,189 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Comprehensive Reports Data Endpoint
+  app.get("/api/reports/data", authenticateToken, async (req, res) => {
+    try {
+      const { type, month, year, category } = req.query;
+      const monthNum = month ? parseInt(month as string) : new Date().getMonth() + 1;
+      const yearNum = year ? parseInt(year as string) : new Date().getFullYear();
+      
+      let reportData: any = {
+        reportType: type,
+        detailedData: [],
+        totalProducts: 0,
+        totalValue: 0,
+        lowStockItems: 0,
+        pendingRequests: 0,
+        totalPettyCash: 0,
+        completedProjects: 0,
+        totalAttendance: 0,
+        totalPurchaseOrders: 0,
+        totalSalesValue: 0,
+        summary: {}
+      };
+
+      switch (type) {
+        case 'inventory':
+          const products = await storage.getAllProducts();
+          reportData.detailedData = products.filter((p: any) => 
+            category === 'all' || !category || p.category === category
+          );
+          reportData.totalProducts = reportData.detailedData.length;
+          reportData.totalValue = reportData.detailedData.reduce((sum: number, p: any) => 
+            sum + (p.price * p.currentStock), 0
+          );
+          reportData.lowStockItems = reportData.detailedData.filter((p: any) => 
+            p.currentStock <= p.minStockLevel
+          ).length;
+          break;
+
+        case 'material-requests':
+          const requests = await storage.getAllMaterialRequests();
+          reportData.detailedData = requests;
+          reportData.pendingRequests = requests.filter((r: any) => r.status === 'pending').length;
+          break;
+
+        case 'low-stock':
+          const allProducts = await storage.getAllProducts();
+          reportData.detailedData = allProducts.filter((p: any) => p.currentStock <= p.minStockLevel);
+          reportData.lowStockItems = reportData.detailedData.length;
+          break;
+
+        case 'petty-cash':
+          const expenses = await storage.getPettyCashExpenses();
+          const monthlyExpenses = expenses.filter((e: any) => {
+            const expenseDate = new Date(e.expenseDate);
+            return expenseDate.getMonth() + 1 === monthNum && expenseDate.getFullYear() === yearNum;
+          });
+          reportData.detailedData = monthlyExpenses;
+          reportData.totalPettyCash = monthlyExpenses.reduce((sum: number, e: any) => sum + e.amount, 0);
+          break;
+
+        case 'projects':
+          const projects = await storage.getAllProjects();
+          reportData.detailedData = projects;
+          reportData.completedProjects = projects.filter((p: any) => p.stage === 'completed').length;
+          break;
+
+        case 'sales':
+          const salesProducts = await storage.getAllSalesProducts();
+          const monthlySales = salesProducts.filter((s: any) => {
+            const saleDate = new Date(s.createdAt);
+            return saleDate.getMonth() + 1 === monthNum && saleDate.getFullYear() === yearNum;
+          });
+          reportData.detailedData = category === 'all' || !category ? 
+            monthlySales : monthlySales.filter((s: any) => s.category === category);
+          reportData.totalSalesValue = reportData.detailedData.reduce((sum: number, s: any) => 
+            sum + s.unitPrice, 0
+          );
+          break;
+
+        case 'attendance':
+          const attendance = await storage.getAllAttendance();
+          const monthlyAttendance = attendance.filter((a: any) => {
+            const attDate = new Date(a.date);
+            return attDate.getMonth() + 1 === monthNum && attDate.getFullYear() === yearNum;
+          });
+          
+          // Get user details for each attendance record
+          const attendanceWithUsers = await Promise.all(
+            monthlyAttendance.map(async (record: any) => {
+              const user = await storage.getUser(record.userId);
+              return {
+                ...record,
+                userName: user ? user.name || user.username : 'Unknown User'
+              };
+            })
+          );
+          
+          reportData.detailedData = attendanceWithUsers;
+          reportData.totalAttendance = attendanceWithUsers.filter((a: any) => a.status === 'present').length;
+          break;
+
+        case 'purchase-orders':
+          const purchaseOrders = await storage.getAllPurchaseOrders();
+          const monthlyPOs = purchaseOrders.filter((po: any) => {
+            const poDate = new Date(po.date);
+            return poDate.getMonth() + 1 === monthNum && poDate.getFullYear() === yearNum;
+          });
+          reportData.detailedData = monthlyPOs;
+          reportData.totalPurchaseOrders = monthlyPOs.length;
+          reportData.totalValue = monthlyPOs.reduce((sum: number, po: any) => sum + po.totalAmount, 0);
+          break;
+
+        case 'financial':
+          // Comprehensive financial summary
+          const allExpenses = await storage.getPettyCashExpenses();
+          const monthlyFinExpenses = allExpenses.filter((e: any) => {
+            const expenseDate = new Date(e.expenseDate);
+            return expenseDate.getMonth() + 1 === monthNum && expenseDate.getFullYear() === yearNum;
+          });
+          
+          const allPOs = await storage.getAllPurchaseOrders();
+          const monthlyFinPOs = allPOs.filter((po: any) => {
+            const poDate = new Date(po.date);
+            return poDate.getMonth() + 1 === monthNum && poDate.getFullYear() === yearNum;
+          });
+
+          const allSales = await storage.getAllSalesProducts();
+          const monthlyFinSales = allSales.filter((s: any) => {
+            const saleDate = new Date(s.createdAt);
+            return saleDate.getMonth() + 1 === monthNum && saleDate.getFullYear() === yearNum;
+          });
+
+          reportData.summary = {
+            totalExpenses: monthlyFinExpenses.reduce((sum: number, e: any) => sum + e.amount, 0),
+            totalPurchases: monthlyFinPOs.reduce((sum: number, po: any) => sum + po.totalAmount, 0),
+            totalSales: monthlyFinSales.reduce((sum: number, s: any) => sum + s.unitPrice, 0),
+            expensesByCategory: monthlyFinExpenses.reduce((acc: any, e: any) => {
+              acc[e.category] = (acc[e.category] || 0) + e.amount;
+              return acc;
+            }, {})
+          };
+          
+          reportData.detailedData = [
+            ...monthlyFinExpenses.map((e: any) => ({ ...e, type: 'expense' })),
+            ...monthlyFinPOs.map((po: any) => ({ ...po, type: 'purchase' })),
+            ...monthlyFinSales.map((s: any) => ({ ...s, type: 'sales' }))
+          ];
+          break;
+
+        default:
+          return res.status(400).json({ message: "Invalid report type" });
+      }
+
+      res.json(reportData);
+    } catch (error) {
+      console.error('Reports data error:', error);
+      res.status(500).json({ message: "Failed to fetch report data", error: (error as Error).message });
+    }
+  });
+
+  // Enhanced Export CSV route for all report types
+  app.get("/api/reports/export", authenticateToken, requireRole(["admin", "manager"]), async (req, res) => {
+    try {
+      const { type, category, month, year } = req.query;
+      const monthNum = month ? parseInt(month as string) : undefined;
+      const yearNum = year ? parseInt(year as string) : undefined;
+      
+      if (type === "inventory") {
+        return exportProductsCSV(res, category as string);
+      } else if (type === "material-requests") {
+        return exportRequestsCSV(res);
+      } else if (type === "low-stock") {
+        return exportLowStockCSV(res);
+      } else if (type === "attendance") {
+        return exportAttendanceCSV(res, monthNum, yearNum);
+      } else {
+        return res.status(400).json({ message: "Invalid export type" });
+      }
+    } catch (error) {
+      console.error('Export error:', error);
+      res.status(500).json({ message: "Export failed", error: (error as Error).message });
+    }
+  });
+
   // Payroll routes - Get payroll records
   app.get("/api/payroll", authenticateToken, async (req: AuthRequest, res) => {
     try {
