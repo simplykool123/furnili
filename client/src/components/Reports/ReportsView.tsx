@@ -117,10 +117,10 @@ export default function ReportsView() {
       acc[product.category].totalItems += 1;
       acc[product.category].totalValue += (product.unitPrice || 0);
       
-      // Use price as indicator of stock health
-      if (product.unitPrice > 10000) {
+      // Use price as indicator of stock health (all items count as either in-stock or low-stock)
+      if (product.unitPrice > 5000) {
         acc[product.category].inStock += 1;
-      } else if (product.unitPrice <= 10000 && product.unitPrice > 0) {
+      } else {
         acc[product.category].lowStock += 1;
       }
       
@@ -304,7 +304,7 @@ export default function ReportsView() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {categorySummary.map((category: any, index) => {
+                {categorySummary && categorySummary.length > 0 ? categorySummary.map((category: any, index) => {
                   const stockHealthPercentage = category.totalItems > 0 
                     ? (category.inStock / category.totalItems) * 100 
                     : 0;
@@ -335,7 +335,18 @@ export default function ReportsView() {
                       </TableCell>
                     </TableRow>
                   );
-                })}
+                }) : (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                      <div className="flex flex-col items-center">
+                        <FileBarChart className="w-12 h-12 text-gray-300 mb-2" />
+                        <span>
+                          {products ? `Processing ${products.length} products...` : 'Loading inventory data...'}
+                        </span>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                )}
               </TableBody>
             </Table>
           </div>
