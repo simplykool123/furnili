@@ -133,6 +133,10 @@ export default function ReportsView() {
   };
 
   const categorySummary = getCategorySummary();
+  
+  // Debug log to check data
+  console.log('Products data for reports:', products?.length, products?.slice(0, 2));
+  console.log('Category summary calculated:', categorySummary?.length, categorySummary);
 
   return (
     <div className="space-y-6">
@@ -336,7 +340,7 @@ export default function ReportsView() {
             </Table>
           </div>
           
-          {categorySummary.length === 0 && (
+          {(!categorySummary || categorySummary.length === 0) && (
             <div className="text-center py-8 text-gray-500">
               <FileBarChart className="w-12 h-12 mx-auto mb-4 text-gray-300" />
               <p>No data available for report</p>
