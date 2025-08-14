@@ -65,7 +65,12 @@ export default function ReportsView() {
   const { data: reportData, isLoading, error } = useQuery({
     queryKey: ['reports', filters],
     queryFn: async (): Promise<ReportStats> => {
-      const response = await authenticatedFetch('/api/reports/dashboard');
+      const params = new URLSearchParams({
+        dateRange: filters.dateRange,
+        type: filters.type,
+        category: filters.category,
+      });
+      const response = await authenticatedFetch(`/api/reports/dashboard?${params}`);
       if (!response.ok) {
         throw new Error(`Failed to fetch reports: ${response.statusText}`);
       }
@@ -209,7 +214,13 @@ export default function ReportsView() {
             </div>
 
             <div className="flex items-end">
-              <Button className="w-full">
+              <Button 
+                className="w-full"
+                onClick={() => {
+                  // Force refresh with new filters
+                  window.location.search = `?dateRange=${filters.dateRange}&type=${filters.type}&category=${filters.category}`;
+                }}
+              >
                 <Calendar className="w-4 h-4 mr-2" />
                 Generate
               </Button>
@@ -307,6 +318,13 @@ export default function ReportsView() {
             </div>
           ) : reportData?.categorySummary && reportData.categorySummary.length > 0 ? (
             <div className="overflow-x-auto">
+              {filters.category !== 'all' && (
+                <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <p className="text-sm text-blue-700">
+                    <strong>Filtered by:</strong> {filters.category} category, {filters.dateRange} timeframe
+                  </p>
+                </div>
+              )}
               <Table>
                 <TableHeader>
                   <TableRow>

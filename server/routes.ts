@@ -1157,23 +1157,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Reports Dashboard API
   app.get("/api/reports/dashboard", authenticateToken, async (req, res) => {
     try {
-      const products = await storage.getAllProducts(); // Use main products, not sales products
+      const { dateRange, category, type } = req.query;
+      
+      let products = await storage.getAllProducts();
       const materialRequests = await storage.getAllMaterialRequests();
+      
+      // Apply date filter if specified
+      if (dateRange && dateRange !== 'all') {
+        const now = new Date();
+        let startDate: Date;
+        
+        switch (dateRange) {
+          case 'today':
+            startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            break;
+          case 'week':
+            startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+            break;
+          case 'month':
+            startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+            break;
+          case 'quarter':
+            startDate = new Date(now.getFullYear(), Math.floor(now.getMonth() / 3) * 3, 1);
+            break;
+          case 'year':
+            startDate = new Date(now.getFullYear(), 0, 1);
+            break;
+          default:
+            startDate = new Date(0);
+        }
+        
+        products = products.filter(p => {
+          const productDate = p.createdAt ? new Date(p.createdAt) : new Date();
+          return productDate >= startDate;
+        });
+      }
+      
+      // Apply category filter if specified
+      if (category && category !== 'all') {
+        products = products.filter(p => p.category === category);
+      }
       
       // Calculate summary statistics
       const totalProducts = products.length;
-      const totalValue = products.reduce((sum, p) => sum + ((p.price || 0) * (p.stockQuantity || 0)), 0);
-      const lowStockItems = products.filter(p => (p.stockQuantity || 0) < (p.minStockLevel || 10)).length;
+      const totalValue = products.reduce((sum, p) => {
+        const price = Number(p.price) || 0;
+        const stock = Number(p.stockQuantity) || 0;
+        return sum + (price * stock);
+      }, 0);
+      const lowStockItems = products.filter(p => {
+        const stock = Number(p.stockQuantity) || 0;
+        const minStock = Number(p.minStockLevel) || 10;
+        return stock < minStock;
+      }).length;
       const pendingRequests = materialRequests.filter(r => r.status === 'pending').length;
       
       // Calculate category summary
       const categoryMap = new Map();
       
       products.forEach(product => {
-        const category = product.category || 'Uncategorized';
-        if (!categoryMap.has(category)) {
-          categoryMap.set(category, {
-            category,
+        const categoryName = product.category || 'Uncategorized';
+        if (!categoryMap.has(categoryName)) {
+          categoryMap.set(categoryName, {
+            category: categoryName,
             totalItems: 0,
             totalValue: 0,
             inStock: 0,
@@ -1182,15 +1228,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
         }
         
-        const categoryData = categoryMap.get(category);
+        const categoryData = categoryMap.get(categoryName);
         categoryData.totalItems++;
-        categoryData.totalValue += ((product.price || 0) * (product.stockQuantity || 0));
+        
+        const price = Number(product.price) || 0;
+        const stock = Number(product.stockQuantity) || 0;
+        const minStock = Number(product.minStockLevel) || 10;
+        
+        categoryData.totalValue += (price * stock);
         
         // Use actual stock levels for health indicator
-        const currentStock = product.stockQuantity || 0;
-        const minStock = product.minStockLevel || 10;
-        
-        if (currentStock >= minStock) {
+        if (stock >= minStock) {
           categoryData.inStock++;
         } else {
           categoryData.lowStock++;
@@ -1209,7 +1257,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         totalValue,
         lowStockItems,
         pendingRequests,
-        categorySummary
+        categorySummary,
+        filters: { dateRange, category, type } // Return applied filters
       });
     } catch (error) {
       console.error('Reports dashboard error:', error);
