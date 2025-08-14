@@ -108,7 +108,7 @@ export default function ReportsView() {
       }
       
       acc[product.category].totalItems += 1;
-      acc[product.category].totalValue += product.price * product.currentStock;
+      acc[product.category].totalValue += (product.pricePerUnit || 0) * product.currentStock;
       
       if (product.currentStock > product.minStock) {
         acc[product.category].inStock += 1;
@@ -181,10 +181,9 @@ export default function ReportsView() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Categories</SelectItem>
-                  <SelectItem value="Construction Materials">Construction Materials</SelectItem>
-                  <SelectItem value="Electrical Supplies">Electrical Supplies</SelectItem>
-                  <SelectItem value="Plumbing Supplies">Plumbing Supplies</SelectItem>
-                  <SelectItem value="Tools & Equipment">Tools & Equipment</SelectItem>
+                  {Array.from(new Set((products || []).map((p: any) => p.category))).map((category: string) => (
+                    <SelectItem key={category} value={category}>{category}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
