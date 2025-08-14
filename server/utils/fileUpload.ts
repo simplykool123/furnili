@@ -43,14 +43,22 @@ export const boqFileUpload = multer({
     fileSize: 10 * 1024 * 1024, // 10MB limit
   },
   fileFilter: (req, file, cb) => {
-    const allowedTypes = /pdf/;
+    const allowedTypes = /pdf|xlsx|xls|png|jpg|jpeg/;
     const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-    const mimetype = file.mimetype === "application/pdf";
+    const allowedMimeTypes = [
+      'application/pdf',
+      'application/vnd.ms-excel',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'image/png',
+      'image/jpg',
+      'image/jpeg'
+    ];
+    const mimetype = allowedMimeTypes.includes(file.mimetype);
 
     if (mimetype && extname) {
       return cb(null, true);
     } else {
-      cb(new Error("Only PDF files are allowed"));
+      cb(new Error("Only PDF, Excel (.xlsx, .xls), and Image files (.png, .jpg) are allowed"));
     }
   },
 });
