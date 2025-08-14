@@ -1031,7 +1031,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Import pdf-parse dynamically
-      const pdfParse = (await import('pdf-parse')).default;
+      const pdfParse = (await import('pdf-parse')).default as any;
       
       // Extract text from PDF
       const pdfBuffer = req.file.buffer;
