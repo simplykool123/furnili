@@ -59,9 +59,7 @@ class OCRService {
       });
       
       if (!response.ok) {
-        // If PDF text extraction fails, fallback to OCR processing
-        console.warn('PDF text extraction failed, falling back to OCR');
-        return await this.processBOQImage(file, onProgress);
+        throw new Error('Failed to extract text from PDF. For scanned PDFs, please save as an image (PNG/JPG) and upload that instead.');
       }
       
       const { text } = await response.json();
@@ -75,9 +73,7 @@ class OCRService {
       
       return result;
     } catch (error) {
-      console.warn('PDF processing failed, falling back to OCR:', error);
-      // Fallback to OCR processing for scanned PDFs
-      return await this.processBOQImage(file, onProgress);
+      throw new Error(`BOQ processing failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -91,28 +87,23 @@ class OCRService {
     try {
       if (onProgress) onProgress(10);
 
-      // Convert PDF to images if needed, otherwise use the image directly
-      let imageFile = file;
-      
+      // For PDF files, we need to convert to image first
+      // For regular images, use directly
       if (file.type === 'application/pdf') {
-        // For PDF files, we'll extract the first page as an image
-        if (onProgress) onProgress(30);
-        
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        
-        // Create a simple fallback - convert PDF to image using canvas
-        // This is a basic implementation - for production, you might want to use pdf.js
-        const arrayBuffer = await file.arrayBuffer();
-        
-        // For now, we'll process it as a scanned document
-        if (onProgress) onProgress(50);
+        // For PDF files that failed text extraction, we'd need pdf.js
+        // For now, return error to avoid complexity
+        throw new Error('PDF to image conversion not implemented. Please use an image format (PNG, JPG) for OCR processing.');
       }
 
       if (onProgress) onProgress(60);
 
+      // Ensure file is a valid image
+      if (!file.type.startsWith('image/')) {
+        throw new Error('File must be an image for OCR processing');
+      }
+
       // Perform OCR on the image
-      const { data: { text } } = await this.worker.recognize(imageFile);
+      const { data: { text } } = await this.worker.recognize(file);
 
       if (onProgress) onProgress(95);
 
