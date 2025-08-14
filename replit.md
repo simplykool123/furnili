@@ -20,6 +20,8 @@ Form Layout Requirements: All popup forms must be optimized for screen size with
 - **Simplified Dashboard Design**: Removed excessive "bubble" styling from task displays, project lists, and activity feeds - converted to clean line-separated format with minimal rounded elements, border dividers, and simple hover effects for reduced visual clutter
 - **Compact Task Display**: Optimized dashboard task section to show only the next 2-3 most urgent tasks as clean one-liners sorted by priority and due date, with "View All Tasks" moved to small clickable text on the right side for maximum space efficiency
 - **Runtime Error Resolution**: Fixed "userRole is not defined" error by replacing with currentUser?.role in ProjectDetail.tsx
+- **Category Management Fix**: Resolved category editing bug where changes showed "saved successfully" but didn't reflect in UI - corrected API call format from (url, method, data) to proper options object with enhanced cache invalidation and refetch strategies
+- **Category Sorting**: Implemented alphabetical sorting for categories list to display items in consistent name-based order
 - **Storage Interface Optimization**: Completed comprehensive implementation of missing DatabaseStorage methods including categories, clients, BOQ uploads, attendance, payroll, quotes, and other modules
 - **Build System Health**: Resolved 40+ TypeScript errors and build warnings by implementing all missing storage interface methods
 - **Code Quality**: Eliminated duplicate method definitions and cleaned up storage implementation

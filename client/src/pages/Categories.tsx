@@ -14,12 +14,17 @@ export default function Categories() {
   const isMobile = useIsMobile();
 
   const {
-    data: categories = [],
+    data: categoriesData = [],
     isLoading,
     error,
   } = useQuery<Category[]>({
     queryKey: ["/api/categories"],
   });
+
+  // Sort categories alphabetically by name
+  const categories = [...categoriesData].sort((a, b) => 
+    a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })
+  );
 
   const totalCategories = categories.length;
   const activeCategories = categories.filter(cat => cat.isActive).length;
