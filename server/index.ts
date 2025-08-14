@@ -54,7 +54,15 @@ app.use('/assets', express.static('public/assets', {
   }
 }));
 
-// Serve SVG files directly from public directory
+// Serve SVG files directly from public directory with explicit route
+app.get('/furnili-system-flowchart.svg', (req, res) => {
+  res.setHeader('Content-Type', 'image/svg+xml');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.sendFile('furnili-system-flowchart.svg', { root: 'public' });
+});
+
+// Fallback for other SVG files
 app.get('/*.svg', express.static('public', {
   setHeaders: (res, path, stat) => {
     res.setHeader('Content-Type', 'image/svg+xml');
