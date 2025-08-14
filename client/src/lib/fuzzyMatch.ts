@@ -28,6 +28,7 @@ export interface BOQItem {
   thickness?: string;
   size?: string;
   brand?: string;
+  type?: string;
 }
 
 // Simple Levenshtein distance implementation
@@ -220,6 +221,16 @@ export function findProductMatches(boqItem: BOQItem, products: Product[]): Match
         matchedFields
       });
     }
+    
+    // Debug logging for troubleshooting
+    if (product.name.includes('Calibrated') || product.name.includes('Plywood')) {
+      console.log(`Matching "${parsedBOQ.productName || boqItem.description}" with "${product.name}":`, {
+        totalConfidence,
+        matchCount,
+        matchedFields,
+        parsedBOQ
+      });
+    }
   }
   
   // Sort by confidence descending
@@ -234,10 +245,14 @@ export function getBestMatch(boqItem: BOQItem, products: Product[]): MatchResult
 
 // Auto-match all BOQ items with products
 export function autoMatchBOQItems(boqItems: BOQItem[], products: Product[]): (BOQItem & { matchedProductId?: number; confidence?: number; matchedFields?: string[] })[] {
+  console.log('Auto-matching BOQ items:', boqItems.length, 'items with', products.length, 'products');
+  
   return boqItems.map(item => {
     const bestMatch = getBestMatch(item, products);
     
-    if (bestMatch && bestMatch.confidence > 70) { // Auto-select if confidence > 70%
+    console.log(`Best match for "${item.description}":`, bestMatch);
+    
+    if (bestMatch && bestMatch.confidence > 30) { // Lower threshold for testing
       return {
         ...item,
         matchedProductId: bestMatch.productId,
