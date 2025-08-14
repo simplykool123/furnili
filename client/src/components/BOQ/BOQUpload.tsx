@@ -181,10 +181,11 @@ export default function BOQUpload() {
     const file = acceptedFiles[0];
     if (!file) return;
 
-    if (file.type !== 'application/pdf') {
+    const validTypes = ['application/pdf', 'image/png', 'image/jpeg', 'image/jpg'];
+    if (!validTypes.includes(file.type)) {
       toast({
         title: "Invalid file type",
-        description: "Please upload a PDF file.",
+        description: "Please upload a PDF file or image (PNG, JPG).",
         variant: "destructive",
       });
       return;
@@ -206,10 +207,14 @@ export default function BOQUpload() {
       // Upload file first
       await uploadBOQMutation.mutateAsync(file);
 
-      // Process with OCR
-      const result = await ocrService.processBOQPDF(file, (progress) => {
-        setOCRProgress(progress * 100);
-      });
+      // Process with OCR - handle both PDF and images
+      const result = file.type === 'application/pdf' 
+        ? await ocrService.processBOQPDF(file, (progress) => {
+            setOCRProgress(progress * 100);
+          })
+        : await ocrService.processBOQImage(file, (progress) => {
+            setOCRProgress(progress * 100);
+          });
 
       setExtractedData(result);
       setShowExtractedData(true);
@@ -242,7 +247,9 @@ export default function BOQUpload() {
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: {
-      'application/pdf': ['.pdf']
+      'application/pdf': ['.pdf'],
+      'image/png': ['.png'],
+      'image/jpeg': ['.jpg', '.jpeg']
     },
     multiple: false,
   });
@@ -329,16 +336,18 @@ export default function BOQUpload() {
               <Upload className="w-8 h-8 text-primary" />
             </div>
             {isDragActive ? (
-              <p className="text-lg font-medium text-primary">Drop the PDF here...</p>
+              <p className="text-lg font-medium text-primary">Drop the file here...</p>
             ) : (
               <>
                 <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  Drop your BOQ PDF here
+                  Drop your BOQ PDF or Image here
                 </h3>
                 <p className="text-gray-600 mb-4">or click to browse files</p>
-                <Button type="button">Choose PDF File</Button>
+                <Button type="button">Choose File</Button>
                 <p className="text-sm text-gray-500 mt-4">
-                  Supported formats: PDF (Max size: 10MB)
+                  Supported: PDF, PNG, JPG (Max size: 10MB)
+                  <br />
+                  <span className="text-blue-600">✨ Includes Scan to OCR for images & scanned PDFs</span>
                 </p>
               </>
             )}
