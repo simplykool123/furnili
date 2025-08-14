@@ -9,6 +9,7 @@ export interface BOQExtractedItem {
   // Extracted detail fields
   productName?: string;
   brand?: string;
+  type?: string;
   size?: string;
   thickness?: string;
   // Auto-matching fields
@@ -40,29 +41,42 @@ class OCRService {
   }
 
   async processBOQPDF(file: File, onProgress?: (progress: number) => void): Promise<OCRResult> {
-    await this.initializeWorker();
-    
-    if (!this.worker) {
-      throw new Error('OCR worker not initialized');
-    }
-
     try {
-      // For now, simulate OCR processing with sample data since PDF processing requires additional libraries
-      if (onProgress) {
-        onProgress(20);
-        setTimeout(() => onProgress(60), 500);
-        setTimeout(() => onProgress(90), 1000);
+      if (onProgress) onProgress(10);
+      
+      // Extract text from PDF
+      const arrayBuffer = await file.arrayBuffer();
+      
+      if (onProgress) onProgress(40);
+      
+      // Send PDF to server for text extraction
+      const formData = new FormData();
+      formData.append('pdfFile', file);
+      
+      const response = await fetch('/api/boq/extract-text', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+        },
+        body: formData,
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to extract text from PDF');
       }
       
-      // Wait for simulation
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      const { text } = await response.json();
+      
+      if (onProgress) onProgress(80);
+      
+      // Parse extracted text to BOQ data
+      const result = this.parseTextToBOQ(text);
       
       if (onProgress) onProgress(100);
       
-      // Return sample BOQ data that would typically come from OCR
-      return this.generateSampleBOQData(file.name);
+      return result;
     } catch (error) {
-      throw new Error(`OCR processing failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(`BOQ processing failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -127,17 +141,43 @@ class OCRService {
     const lines = text.split('\n').filter(line => line.trim().length > 0);
     const items: BOQExtractedItem[] = [];
     let projectName = '';
+    let client = '';
+    let workOrderNumber = '';
+    let workOrderDate = '';
+    let description = '';
     
-    // Simple parsing logic - this would need to be more sophisticated for real BOQs
-    for (const line of lines) {
-      // Look for project name
-      if (line.toLowerCase().includes('project') && !projectName) {
-        projectName = line.trim();
+    // Enhanced parsing logic for BOQ documents
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim();
+      
+      // Extract project metadata
+      if (line.includes('Project') && line.includes('Client')) {
+        const projectMatch = line.match(/Project\s+([^\s]+(?:\s+[^\s]+)*?)(?:\s+Client)/i);
+        if (projectMatch) projectName = projectMatch[1].trim();
+        
+        const clientMatch = line.match(/Client\s+([^\s]+(?:\s+[^\s]+)*?)(?:\s+Work Order)/i);
+        if (clientMatch) client = clientMatch[1].trim();
+        
+        const woNumberMatch = line.match(/Work Order #\s*(\w+)/i);
+        if (woNumberMatch) workOrderNumber = woNumberMatch[1];
+        
+        const woDateMatch = line.match(/Work Order Date\s+(.+)/i);
+        if (woDateMatch) workOrderDate = woDateMatch[1].trim();
+      }
+      
+      // Extract "For" description
+      if (line.toLowerCase().startsWith('for ')) {
+        description = line.substring(4).trim();
+      }
+      
+      // Look for table headers to identify data rows
+      if (line.includes('#') && line.includes('Description') && line.includes('Quantity')) {
+        // Skip to data rows after header
         continue;
       }
       
-      // Look for BOQ items (simplified pattern matching)
-      const itemMatch = this.extractBOQItem(line);
+      // Extract BOQ items from both Goods and Hardware sections
+      const itemMatch = this.extractBOQItemAdvanced(line);
       if (itemMatch) {
         items.push(itemMatch);
       }
@@ -148,44 +188,76 @@ class OCRService {
     return {
       items,
       projectName: projectName || 'Extracted BOQ Project',
+      client: client || '---',
+      workOrderNumber: workOrderNumber || '',
+      workOrderDate: workOrderDate || '',
+      description: description || '',
       totalValue,
     };
   }
 
-  private extractBOQItem(line: string): BOQExtractedItem | null {
-    // Patterns to match BOQ items
-    const patterns = [
-      // Pattern: Description | Quantity | Unit | Rate | Amount
-      /^(.+?)\s+(\d+(?:\.\d+)?)\s+(\w+)\s+₹?(\d+(?:\.\d+)?)\s+₹?(\d+(?:\.\d+)?)$/,
-      // Pattern: Description Quantity Unit Rate Amount (space separated)
-      /^(.+?)\s+(\d+)\s+(\w+)\s+(\d+(?:\.\d+)?)\s+(\d+(?:\.\d+)?)$/,
-    ];
-    
-    for (const pattern of patterns) {
-      const match = line.match(pattern);
-      if (match) {
-        const [, description, quantity, unit, rate, amount] = match;
-        return {
-          description: description.trim(),
-          quantity: parseFloat(quantity),
-          unit: unit.toLowerCase(),
-          rate: parseFloat(rate),
-          amount: parseFloat(amount),
-        };
-      }
+  private extractBOQItemAdvanced(line: string): BOQExtractedItem | null {
+    // Skip empty lines, headers, and section dividers
+    if (!line.trim() || 
+        line.includes('#') || 
+        line.toLowerCase().includes('description') ||
+        line.toLowerCase().includes('goods') ||
+        line.toLowerCase().includes('hardware') ||
+        line.toLowerCase().includes('generated on') ||
+        line.match(/^\d+\s*$/)) {
+      return null;
     }
     
-    // If no specific pattern matches, try to extract basic information
-    const numbers = line.match(/\d+(?:\.\d+)?/g);
-    if (numbers && numbers.length >= 3) {
-      const words = line.replace(/\d+(?:\.\d+)?/g, '').split(/\s+/).filter(w => w.length > 0);
-      if (words.length > 0) {
+    // Enhanced patterns for different BOQ formats
+    const patterns = [
+      // Pattern 1: # Description Brand Type Quantity Unit Price Total Price
+      /^\s*\d+\s+(.+?)\s+([^\s]+)\s+([^\s]+)\s+(\d+(?:\.\d+)?)\s*([^\s]*)\s+₹?([\d,]+(?:\.\d+)?)\s+₹?([\d,]+(?:\.\d+)?)$/,
+      
+      // Pattern 2: # Description Quantity Unit Price Total 
+      /^\s*\d+\s+(.+?)\s+(\d+(?:\.\d+)?)\s*([^\s]*)\s+₹?([\d,]+(?:\.\d+)?)\s+₹?([\d,]+(?:\.\d+)?)$/,
+      
+      // Pattern 3: Description with quantity and prices (no leading number)
+      /^(.+?)\s+(\d+(?:\.\d+)?)\s*([a-zA-Z]*)\s+₹?([\d,]+(?:\.\d+)?)\s+₹?([\d,]+(?:\.\d+)?)$/,
+      
+      // Pattern 4: Item with "piece(s)" or "m" units
+      /^(.+?)\s+(\d+(?:\.\d+)?)\s+(piece\(s\)|m|meters?)\s+₹?([\d,]+(?:\.\d+)?)\/\w+\s+₹?([\d,]+(?:\.\d+)?)$/,
+    ];
+    
+    for (let i = 0; i < patterns.length; i++) {
+      const match = line.match(patterns[i]);
+      if (match) {
+        let description, quantity, unit, rate, amount, brand = '', type = '';
+        
+        if (i === 0) {
+          // Pattern 1: Full format with brand and type
+          [, description, brand, type, quantity, unit, rate, amount] = match;
+        } else if (i === 3) {
+          // Pattern 4: Special case with unit pricing
+          [, description, quantity, unit, rate, amount] = match;
+        } else {
+          // Patterns 2 and 3: Standard format
+          [, description, quantity, unit, rate, amount] = match;
+        }
+        
+        // Clean up extracted values
+        const cleanAmount = parseFloat(amount.replace(/,/g, ''));
+        const cleanRate = parseFloat(rate.replace(/,/g, ''));
+        const cleanQuantity = parseFloat(quantity);
+        
+        // Extract additional info from description
+        const sizeMatch = description.match(/(\d+(?:\.\d+)?(?:mm|cm|m)\s*x?\s*\d+(?:\.\d+)?(?:mm|cm|m)?)/i);
+        const thicknessMatch = description.match(/(\d+(?:\.\d+)?mm)/i);
+        
         return {
-          description: words.slice(0, -1).join(' ').trim() || 'Unknown Item',
-          quantity: parseFloat(numbers[0]) || 1,
-          unit: words[words.length - 1] || 'nos',
-          rate: parseFloat(numbers[1]) || 0,
-          amount: parseFloat(numbers[2]) || 0,
+          description: description.trim(),
+          quantity: cleanQuantity,
+          unit: unit || 'nos',
+          rate: cleanRate,
+          amount: cleanAmount,
+          brand: brand || undefined,
+          type: type || undefined,
+          size: sizeMatch ? sizeMatch[0] : undefined,
+          thickness: thicknessMatch ? thicknessMatch[0] : undefined,
         };
       }
     }

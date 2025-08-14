@@ -22,6 +22,8 @@ Form Layout Requirements: All popup forms must be optimized for screen size with
 - **Runtime Error Resolution**: Fixed "userRole is not defined" error by replacing with currentUser?.role in ProjectDetail.tsx
 - **Category Management Fix**: Resolved category editing bug where changes showed "saved successfully" but didn't reflect in UI - corrected API call format from (url, method, data) to proper options object with enhanced cache invalidation and refetch strategies
 - **Category Sorting**: Implemented alphabetical sorting for categories list to display items in consistent name-based order
+- **Sales Products Table Fix**: Fixed size column text wrapping issue by removing whitespace-nowrap and implementing break-words with improved column width distribution for better readability
+- **BOQ Processing Enhancement**: Implemented real PDF text extraction using pdf-parse library replacing hardcoded sample data with actual document parsing - enhanced extraction patterns to handle both Goods and Hardware sections with proper metadata extraction (project name, client, work order details)
 - **Storage Interface Optimization**: Completed comprehensive implementation of missing DatabaseStorage methods including categories, clients, BOQ uploads, attendance, payroll, quotes, and other modules
 - **Build System Health**: Resolved 40+ TypeScript errors and build warnings by implementing all missing storage interface methods
 - **Code Quality**: Eliminated duplicate method definitions and cleaned up storage implementation

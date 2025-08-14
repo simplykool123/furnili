@@ -1023,6 +1023,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // New endpoint for PDF text extraction
+  app.post("/api/boq/extract-text", authenticateToken, requireRole(["manager", "admin", "staff"]), boqFileUpload.single("pdfFile"), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: "No PDF file uploaded" });
+      }
+
+      // Import pdf-parse dynamically
+      const pdfParse = (await import('pdf-parse')).default;
+      
+      // Extract text from PDF
+      const pdfBuffer = req.file.buffer;
+      const data = await pdfParse(pdfBuffer);
+      
+      res.json({ text: data.text });
+    } catch (error) {
+      console.error('PDF text extraction error:', error);
+      res.status(500).json({ message: "Failed to extract text from PDF", error: error instanceof Error ? error.message : 'Unknown error' });
+    }
+  });
+
   app.patch("/api/boq/:id", authenticateToken, requireRole(["manager", "admin", "staff"]), async (req, res) => {
     try {
       const id = parseInt(req.params.id);
