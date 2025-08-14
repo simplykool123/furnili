@@ -340,84 +340,122 @@ class OCRService {
     let projectName = '';
     let client = '';
     let workOrderNumber = '';
+    let workOrderDate = '';
+    let description = '';
     let totalValue = 0;
 
-    // Find header row (look for common BOQ column names)
+    // Extract project info from first few rows (specific to your BOM format)
+    // Row 0: Project, Client Name, Client, Client Name, Work Order #, Number, Work Order Date, Date
+    if (data[0] && data[0].length >= 8) {
+      client = String(data[0][1] || '').trim(); // Client name from position 1
+      workOrderNumber = String(data[0][5] || '').trim(); // Work order number from position 5
+      workOrderDate = String(data[0][7] || '').trim(); // Work order date from position 7
+    }
+
+    // Row 1: For, Description
+    if (data[1] && data[1].length >= 2) {
+      description = String(data[1][1] || '').trim(); // Project description from position 1
+      projectName = `${client} - ${description}`;
+    }
+
+    // Find the header row with column names
+    // Expected format: #, Description, (empty), Brand, Type, Quantity, Unit, Unit Price ($), Total Price ($)
     let headerRowIndex = -1;
-    const headerPatterns = ['description', 'qty', 'quantity', 'rate', 'amount', 'item', 'unit'];
-    
-    for (let i = 0; i < Math.min(10, data.length); i++) {
+    for (let i = 0; i < Math.min(15, data.length); i++) {
       const row = data[i];
       if (row && Array.isArray(row)) {
-        const rowText = row.join('').toLowerCase();
-        const matchCount = headerPatterns.filter(pattern => rowText.includes(pattern)).length;
-        if (matchCount >= 3) {
+        const rowStr = row.join('').toLowerCase();
+        if (rowStr.includes('description') && rowStr.includes('quantity') && rowStr.includes('price')) {
           headerRowIndex = i;
           break;
         }
       }
     }
 
-    // Extract project info from top rows
-    for (let i = 0; i < Math.min(headerRowIndex > 0 ? headerRowIndex : 5, data.length); i++) {
-      const row = data[i];
-      if (row && row.length > 0) {
-        const text = row.join(' ').trim();
-        if (text && !projectName && text.length > 5) {
-          projectName = text;
-        }
-        if (text.toLowerCase().includes('client') && !client) {
-          client = text.replace(/client:?/gi, '').trim();
-        }
-        if (text.toLowerCase().includes('work order') || text.toLowerCase().includes('w.o.')) {
-          workOrderNumber = text.replace(/work order:?|w\.o\.?/gi, '').trim();
-        }
-      }
+    console.log('Header found at row:', headerRowIndex);
+    if (headerRowIndex >= 0) {
+      console.log('Header row:', data[headerRowIndex]);
     }
 
-    if (headerRowIndex === -1) {
-      // No clear header found, assume standard format starting from row 0 or 1
-      headerRowIndex = data.length > 1 && data[0] && data[0].some(cell => 
-        typeof cell === 'string' && cell.toLowerCase().includes('sr')
-      ) ? 0 : 1;
-    }
+    // Parse data rows after header
+    if (headerRowIndex >= 0) {
+      for (let i = headerRowIndex + 1; i < data.length; i++) {
+        const row = data[i];
+        if (!row || row.length < 5) continue;
 
-    // Parse data rows
-    for (let i = headerRowIndex + 1; i < data.length; i++) {
-      const row = data[i];
-      if (!row || row.length < 3) continue;
+        // Skip empty rows
+        if (!row.some(cell => cell && String(cell).trim())) continue;
 
-      // Skip empty or summary rows
-      const firstCell = String(row[0] || '').trim();
-      if (!firstCell || firstCell.toLowerCase().includes('total') || 
-          firstCell.toLowerCase().includes('grand')) {
-        continue;
-      }
+        // Skip section headers like "Goods", "Hardware"
+        const firstCell = String(row[0] || '').trim();
+        if (isNaN(Number(firstCell)) && firstCell.length < 10) continue;
 
-      try {
-        // Try to parse BOQ item from row
-        const item = this.parseExcelRowToBOQItem(row);
-        if (item) {
-          items.push(item);
-          totalValue += item.amount;
+        try {
+          // Parse BOQ item from row
+          const item = this.parseBOMRowToBOQItem(row);
+          if (item) {
+            items.push(item);
+            totalValue += item.amount;
+          }
+        } catch (error) {
+          console.warn('Failed to parse BOM row:', row, error);
         }
-      } catch (error) {
-        console.warn('Failed to parse row:', row, error);
       }
     }
 
     return {
       items,
-      projectName: projectName || 'Excel BOQ Import',
+      projectName: projectName || 'BOM Import',
       client: client || 'Unknown Client',
       workOrderNumber: workOrderNumber || '',
-      totalValue,
-      description: `Imported from Excel file with ${items.length} items`
+      workOrderDate: workOrderDate || '',
+      description: description || `Imported BOM with ${items.length} items`,
+      totalValue
+    };
+  }
+
+  private parseBOMRowToBOQItem(row: any[]): BOQExtractedItem | null {
+    // BOM format: #, Description, (empty), Brand, Type, Quantity, Unit, Unit Price ($), Total Price ($)
+    // Indices:     0,       1,       2,     3,    4,       5,    6,           7,              8
+
+    const rowData = row.map(cell => String(cell || '').trim());
+    
+    // Extract data from specific positions
+    const serialNo = rowData[0] || '';
+    const description = rowData[1] || '';
+    const brand = rowData[3] || '';
+    const type = rowData[4] || '';
+    const quantity = parseFloat(String(row[5] || '0'));
+    const unit = rowData[6] || 'nos';
+    const unitPrice = parseFloat(String(row[7] || '0'));
+    const totalPrice = parseFloat(String(row[8] || '0'));
+
+    // Validation
+    if (!description || quantity <= 0 || unitPrice <= 0) {
+      return null;
+    }
+
+    // Calculate amount (use provided total or calculate)
+    let amount = totalPrice;
+    if (amount <= 0) {
+      amount = quantity * unitPrice;
+    }
+
+    return {
+      description: description.trim(),
+      quantity: quantity,
+      unit: unit || 'nos',
+      rate: unitPrice,
+      amount: amount,
+      brand: brand || undefined,
+      type: type || undefined,
+      productName: description.split('-')[0].trim(), // Extract main product name
+      confidence: 0.98 // Very high confidence for structured BOM data
     };
   }
 
   private parseExcelRowToBOQItem(row: any[]): BOQExtractedItem | null {
-    // Flexible parsing - try different column arrangements
+    // Fallback generic parsing for other Excel formats
     let description = '';
     let quantity = 0;
     let rate = 0;
@@ -442,30 +480,19 @@ class OCRService {
     // Find numeric values (qty, rate, amount)
     const numbers: number[] = [];
     for (let i = 0; i < rowData.length; i++) {
-      const num = parseFloat(rowData[i].replace(/[,₹]/g, ''));
+      const num = parseFloat(rowData[i].replace(/[,₹$]/g, ''));
       if (!isNaN(num) && num > 0) {
         numbers.push(num);
       }
     }
 
     if (numbers.length >= 2) {
-      // Usually: quantity, rate (amount is calculated)
       quantity = numbers[0];
       rate = numbers[1];
-      
-      // If we have 3+ numbers, the last one might be the amount
-      if (numbers.length >= 3) {
-        const calculatedAmount = quantity * rate;
-        const providedAmount = numbers[numbers.length - 1];
-        // Use provided amount if it's close to calculated
-        if (Math.abs(calculatedAmount - providedAmount) / calculatedAmount < 0.1) {
-          rate = numbers[numbers.length - 2];
-        }
-      }
     }
 
     // Look for unit in text columns
-    const unitPatterns = ['nos', 'pcs', 'sq ft', 'sqft', 'sq.ft', 'running ft', 'rft', 'lft', 'mt', 'kg'];
+    const unitPatterns = ['nos', 'pcs', 'sq ft', 'sqft', 'sq.ft', 'running ft', 'rft', 'lft', 'mt', 'kg', 'm'];
     for (const cell of rowData) {
       for (const pattern of unitPatterns) {
         if (cell.toLowerCase().includes(pattern)) {
@@ -487,9 +514,8 @@ class OCRService {
       unit,
       rate,
       amount,
-      // Extract additional details from description
       productName: description.split(',')[0].trim(),
-      confidence: 0.95 // High confidence for Excel data
+      confidence: 0.95
     };
   }
 
