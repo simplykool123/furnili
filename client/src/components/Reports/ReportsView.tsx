@@ -1,149 +1,153 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { authenticatedApiRequest } from "@/lib/auth";
-import { useToast } from "@/hooks/use-toast";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Download, FileBarChart, Package, AlertTriangle, TrendingUp } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
+import { 
+  Download, 
+  Package, 
+  AlertTriangle, 
+  TrendingUp, 
+  FileBarChart,
+  Calendar,
+  Filter
+} from "lucide-react";
 
 interface ReportFilters {
   dateRange: string;
   type: string;
   category: string;
-  client: string;
+}
+
+interface CategorySummary {
+  category: string;
+  totalItems: number;
+  totalValue: number;
+  inStock: number;
+  lowStock: number;
+  stockHealth: number;
+}
+
+interface ReportStats {
+  totalProducts: number;
+  totalValue: number;
+  lowStockItems: number;
+  pendingRequests: number;
+  categorySummary: CategorySummary[];
+}
+
+async function authenticatedFetch(url: string, options: RequestInit = {}) {
+  const token = localStorage.getItem('authToken');
+  return fetch(url, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+      ...options.headers,
+    },
+    credentials: 'include',
+  });
 }
 
 export default function ReportsView() {
   const [filters, setFilters] = useState<ReportFilters>({
     dateRange: "month",
     type: "inventory",
-    category: "",
-    client: "",
+    category: "all",
   });
   
   const { toast } = useToast();
 
-  const { data: stats } = useQuery({
-    queryKey: ['/api/dashboard/stats'],
+  // Fetch report data with proper error handling
+  const { data: reportData, isLoading, error } = useQuery({
+    queryKey: ['reports', filters],
+    queryFn: async (): Promise<ReportStats> => {
+      const response = await authenticatedFetch('/api/reports/dashboard');
+      if (!response.ok) {
+        throw new Error(`Failed to fetch reports: ${response.statusText}`);
+      }
+      return response.json();
+    },
+    retry: 3,
+    staleTime: 30000, // 30 seconds
+  });
+
+  // Fetch categories for dropdown
+  const { data: categories } = useQuery({
+    queryKey: ['categories'],
     queryFn: async () => {
-      const response = await authenticatedApiRequest('GET', '/api/dashboard/stats');
+      const response = await authenticatedFetch('/api/categories');
+      if (!response.ok) throw new Error('Failed to fetch categories');
       return response.json();
     },
   });
 
-  const { data: products } = useQuery({
-    queryKey: ['/api/sales-products'],
-    queryFn: async () => {
-      const response = await authenticatedApiRequest('GET', '/api/sales-products');
-      return response.json();
-    },
-  });
-
-  const exportReport = async (reportType: string) => {
+  const handleExport = async (reportType: 'inventory' | 'requests' | 'low-stock') => {
     try {
-      let endpoint = '';
-      switch (reportType) {
-        case 'inventory':
-          endpoint = '/api/export/products';
-          break;
-        case 'requests':
-          endpoint = '/api/export/requests';
-          break;
-        case 'low-stock':
-          endpoint = '/api/export/low-stock';
-          break;
-        default:
-          return;
+      const endpoint = `/api/reports/export/${reportType}`;
+      const response = await authenticatedFetch(endpoint, {
+        method: 'GET',
+      });
+
+      if (!response.ok) {
+        throw new Error(`Export failed: ${response.statusText}`);
       }
 
-      const response = await authenticatedApiRequest('GET', endpoint);
       const blob = await response.blob();
-      
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `${reportType}_report_${Date.now()}.csv`;
+      a.download = `${reportType}_report_${new Date().toISOString().split('T')[0]}.csv`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
-      
+
       toast({
         title: "Export successful",
         description: `${reportType} report has been downloaded.`,
       });
     } catch (error) {
+      console.error('Export error:', error);
       toast({
         title: "Export failed",
-        description: "Failed to generate report",
+        description: "Failed to generate report. Please try again.",
         variant: "destructive",
       });
     }
   };
 
-  const generateReport = () => {
-    toast({
-      title: "Report generated",
-      description: "Report has been generated successfully.",
-    });
-  };
-
-  // Group products by category for summary
-  const getCategorySummary = () => {
-    if (!products || !Array.isArray(products) || products.length === 0) {
-      console.log('No products available for summary:', products);
-      return [];
-    }
-    
-    console.log('Products available for summary:', products.length);
-    
-    const categories = products.reduce((acc: any, product: any) => {
-      if (!product.category) return acc;
-      
-      if (!acc[product.category]) {
-        acc[product.category] = {
-          name: product.category,
-          totalItems: 0,
-          inStock: 0,
-          lowStock: 0,
-          totalValue: 0,
-        };
-      }
-      
-      acc[product.category].totalItems += 1;
-      acc[product.category].totalValue += (product.unitPrice || 0);
-      
-      // Use price as indicator of stock health (all items count as either in-stock or low-stock)
-      if (product.unitPrice > 5000) {
-        acc[product.category].inStock += 1;
-      } else {
-        acc[product.category].lowStock += 1;
-      }
-      
-      return acc;
-    }, {});
-    
-    const result = Object.values(categories);
-    console.log('Category summary calculated:', result);
-    return result;
-  };
-
-  const categorySummary = getCategorySummary();
-  
-  // Debug log to check data
-  console.log('Products data for reports:', products?.length, products?.slice(0, 2));
-  console.log('Category summary calculated:', categorySummary?.length, categorySummary);
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-center py-8">
+              <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Failed to Load Reports</h3>
+              <p className="text-gray-600 mb-4">Unable to fetch report data from the server.</p>
+              <Button onClick={() => window.location.reload()}>
+                Retry
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
-      {/* Report Filters */}
+      {/* Report Configuration */}
       <Card>
         <CardHeader>
-          <CardTitle>Report Configuration</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <Filter className="w-5 h-5" />
+            Report Configuration
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -178,7 +182,7 @@ export default function ReportsView() {
                 <SelectContent>
                   <SelectItem value="inventory">Inventory Report</SelectItem>
                   <SelectItem value="requests">Material Requests</SelectItem>
-                  <SelectItem value="low-stock">Low Stock Items</SelectItem>
+                  <SelectItem value="low-stock">Low Stock Alert</SelectItem>
                   <SelectItem value="financial">Financial Summary</SelectItem>
                 </SelectContent>
               </Select>
@@ -191,20 +195,22 @@ export default function ReportsView() {
                 onValueChange={(value) => setFilters({ ...filters, category: value })}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="All Categories" />
+                  <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Categories</SelectItem>
-                  {products && Array.isArray(products) ? Array.from(new Set(products.map((p: any) => p.category))).filter((cat): cat is string => typeof cat === 'string' && cat.length > 0).map((category: string) => (
-                    <SelectItem key={category} value={category}>{category}</SelectItem>
-                  )) : []}
+                  {categories?.map((category: any) => (
+                    <SelectItem key={category.id} value={category.name}>
+                      {category.name}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
 
-            <div className="flex items-end space-x-2">
-              <Button onClick={generateReport} className="flex-1">
-                <FileBarChart className="w-4 h-4 mr-2" />
+            <div className="flex items-end">
+              <Button className="w-full">
+                <Calendar className="w-4 h-4 mr-2" />
                 Generate
               </Button>
             </div>
@@ -212,9 +218,9 @@ export default function ReportsView() {
         </CardContent>
       </Card>
 
-      {/* Quick Export Options */}
+      {/* Quick Export Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => exportReport('inventory')}>
+        <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => handleExport('inventory')}>
           <CardContent className="pt-6">
             <div className="flex items-center justify-between mb-4">
               <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -229,15 +235,15 @@ export default function ReportsView() {
               Export complete product inventory with stock levels and values
             </p>
             <div className="text-2xl font-bold text-gray-900">
-              {stats?.totalProducts || 0} items
+              {isLoading ? "..." : reportData?.totalProducts || 0} items
             </div>
             <div className="text-sm text-gray-600">
-              Total Value: ₹{((stats?.totalValue || 0) / 100000).toFixed(1)}L
+              Total Value: ₹{isLoading ? "..." : reportData?.totalValue?.toLocaleString() || 0}
             </div>
           </CardContent>
         </Card>
 
-        <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => exportReport('low-stock')}>
+        <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => handleExport('low-stock')}>
           <CardContent className="pt-6">
             <div className="flex items-center justify-between mb-4">
               <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
@@ -252,13 +258,13 @@ export default function ReportsView() {
               Export products below minimum stock threshold
             </p>
             <div className="text-2xl font-bold text-gray-900">
-              {stats?.lowStockItems || 0} items
+              {isLoading ? "..." : reportData?.lowStockItems || 0} items
             </div>
-            <div className="text-sm text-red-600">Requires immediate attention</div>
+            <div className="text-sm text-gray-600">Requires immediate attention</div>
           </CardContent>
         </Card>
 
-        <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => exportReport('requests')}>
+        <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => handleExport('requests')}>
           <CardContent className="pt-6">
             <div className="flex items-center justify-between mb-4">
               <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
@@ -273,88 +279,79 @@ export default function ReportsView() {
               Export request history with client and status details
             </p>
             <div className="text-2xl font-bold text-gray-900">
-              5 total
+              {isLoading ? "..." : reportData?.pendingRequests || 0} pending
             </div>
-            <div className="text-sm text-gray-600">All requests (3 issued, 1 approved, 1 completed)</div>
+            <div className="text-sm text-gray-600">Active requests in workflow</div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Category Summary Report */}
+      {/* Category Summary Table */}
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle>Inventory Summary by Category</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <FileBarChart className="w-5 h-5" />
+              Inventory Summary by Category
+            </CardTitle>
             <div className="text-sm text-gray-600">
               Generated: {new Date().toLocaleDateString()}
             </div>
           </div>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Category</TableHead>
-                  <TableHead>Total Items</TableHead>
-                  <TableHead>In Stock</TableHead>
-                  <TableHead>Low Stock</TableHead>
-                  <TableHead>Total Value</TableHead>
-                  <TableHead>Stock Health</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {categorySummary && categorySummary.length > 0 ? categorySummary.map((category: any, index) => {
-                  const stockHealthPercentage = category.totalItems > 0 
-                    ? (category.inStock / category.totalItems) * 100 
-                    : 0;
-                    
-                  return (
+          {isLoading ? (
+            <div className="text-center py-8">
+              <div className="animate-spin w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+              <p className="text-gray-600">Loading inventory data...</p>
+            </div>
+          ) : reportData?.categorySummary && reportData.categorySummary.length > 0 ? (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Category</TableHead>
+                    <TableHead className="text-center">Total Items</TableHead>
+                    <TableHead className="text-center">In Stock</TableHead>
+                    <TableHead className="text-center">Low Stock</TableHead>
+                    <TableHead className="text-center">Total Value</TableHead>
+                    <TableHead className="text-center">Stock Health</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {reportData.categorySummary.map((category, index) => (
                     <TableRow key={index}>
-                      <TableCell className="font-medium">{category.name}</TableCell>
-                      <TableCell>{category.totalItems}</TableCell>
-                      <TableCell>
+                      <TableCell className="font-medium">{category.category}</TableCell>
+                      <TableCell className="text-center">{category.totalItems}</TableCell>
+                      <TableCell className="text-center">
                         <span className="text-green-600 font-medium">{category.inStock}</span>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="text-center">
                         <span className="text-yellow-600 font-medium">{category.lowStock}</span>
                       </TableCell>
-                      <TableCell>₹{category.totalValue.toFixed(2)}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center space-x-2">
+                      <TableCell className="text-center">₹{category.totalValue.toLocaleString()}</TableCell>
+                      <TableCell className="text-center">
+                        <div className="flex items-center justify-center space-x-2">
                           <div className="w-16 h-2 bg-gray-200 rounded-full">
                             <div 
                               className="h-2 bg-green-500 rounded-full"
-                              style={{ width: `${stockHealthPercentage}%` }}
+                              style={{ width: `${category.stockHealth}%` }}
                             />
                           </div>
                           <span className="text-sm text-gray-600">
-                            {stockHealthPercentage.toFixed(0)}%
+                            {category.stockHealth.toFixed(0)}%
                           </span>
                         </div>
                       </TableCell>
                     </TableRow>
-                  );
-                }) : (
-                  <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8 text-gray-500">
-                      <div className="flex flex-col items-center">
-                        <FileBarChart className="w-12 h-12 text-gray-300 mb-2" />
-                        <span>
-                          {products ? `Processing ${products.length} products...` : 'Loading inventory data...'}
-                        </span>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
-          
-          {(!categorySummary || categorySummary.length === 0) && (
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          ) : (
             <div className="text-center py-8 text-gray-500">
               <FileBarChart className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-              <p>No data available for report</p>
+              <p>No inventory data available for the selected filters</p>
             </div>
           )}
         </CardContent>

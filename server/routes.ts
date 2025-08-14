@@ -1154,17 +1154,77 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Export routes
-  app.get("/api/export/products", authenticateToken, async (req, res) => {
+  // Reports Dashboard API
+  app.get("/api/reports/dashboard", authenticateToken, async (req, res) => {
+    try {
+      const salesProducts = await storage.getAllSalesProducts();
+      const materialRequests = await storage.getAllMaterialRequests();
+      
+      // Calculate summary statistics
+      const totalProducts = salesProducts.length;
+      const totalValue = salesProducts.reduce((sum, p) => sum + (p.unitPrice || 0), 0);
+      const lowStockItems = salesProducts.filter(p => !p.description || p.unitPrice < 5000).length;
+      const pendingRequests = materialRequests.filter(r => r.status === 'pending').length;
+      
+      // Calculate category summary
+      const categoryMap = new Map();
+      
+      salesProducts.forEach(product => {
+        const category = product.category || 'Uncategorized';
+        if (!categoryMap.has(category)) {
+          categoryMap.set(category, {
+            category,
+            totalItems: 0,
+            totalValue: 0,
+            inStock: 0,
+            lowStock: 0,
+            stockHealth: 0
+          });
+        }
+        
+        const categoryData = categoryMap.get(category);
+        categoryData.totalItems++;
+        categoryData.totalValue += (product.unitPrice || 0);
+        
+        // Use price as stock health indicator
+        if (product.unitPrice > 5000) {
+          categoryData.inStock++;
+        } else {
+          categoryData.lowStock++;
+        }
+        
+        // Calculate stock health percentage
+        categoryData.stockHealth = categoryData.totalItems > 0 
+          ? (categoryData.inStock / categoryData.totalItems) * 100 
+          : 0;
+      });
+      
+      const categorySummary = Array.from(categoryMap.values());
+      
+      res.json({
+        totalProducts,
+        totalValue,
+        lowStockItems,
+        pendingRequests,
+        categorySummary
+      });
+    } catch (error) {
+      console.error('Reports dashboard error:', error);
+      res.status(500).json({ message: "Failed to fetch reports data", error: String(error) });
+    }
+  });
+
+  // Export routes with better error handling
+  app.get("/api/reports/export/inventory", authenticateToken, async (req, res) => {
     try {
       await exportProductsCSV(res);
     } catch (error) {
-      console.error('Products export error:', error);
+      console.error('Inventory export error:', error);
       res.status(500).json({ message: "Export failed", error: String(error) });
     }
   });
 
-  app.get("/api/export/requests", authenticateToken, async (req, res) => {
+  app.get("/api/reports/export/requests", authenticateToken, async (req, res) => {
     try {
       await exportRequestsCSV(res);
     } catch (error) {
@@ -1173,7 +1233,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/export/low-stock", authenticateToken, async (req, res) => {
+  app.get("/api/reports/export/low-stock", authenticateToken, async (req, res) => {
     try {
       await exportLowStockCSV(res);
     } catch (error) {
