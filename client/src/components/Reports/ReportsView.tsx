@@ -75,15 +75,11 @@ export default function ReportsView() {
     staleTime: 30000, // 30 seconds
   });
 
-  // Fetch categories for dropdown
-  const { data: categories } = useQuery({
-    queryKey: ['categories'],
-    queryFn: async () => {
-      const response = await authenticatedFetch('/api/categories');
-      if (!response.ok) throw new Error('Failed to fetch categories');
-      return response.json();
-    },
-  });
+  // Get unique categories from report data for dropdown
+  const uniqueCategories = reportData?.categorySummary?.map(cat => ({
+    id: cat.category,
+    name: cat.category
+  })) || [];
 
   const handleExport = async (reportType: 'inventory' | 'requests' | 'low-stock') => {
     try {
@@ -199,7 +195,7 @@ export default function ReportsView() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Categories</SelectItem>
-                  {categories?.map((category: any) => (
+                  {uniqueCategories.map((category: any) => (
                     <SelectItem key={category.id} value={category.name}>
                       {category.name}
                     </SelectItem>
