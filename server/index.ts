@@ -54,6 +54,14 @@ app.use('/assets', express.static('public/assets', {
   }
 }));
 
+// Serve SVG files directly from public directory
+app.get('/*.svg', express.static('public', {
+  setHeaders: (res, path, stat) => {
+    res.setHeader('Content-Type', 'image/svg+xml');
+    res.setHeader('Cache-Control', 'public, max-age=3600');
+  }
+}));
+
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
