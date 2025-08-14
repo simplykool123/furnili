@@ -10,6 +10,7 @@ Form Layout Requirements: All popup forms must be optimized for screen size with
 ## System Architecture
 
 ### Recent Changes (August 2025)
+- **Scan to OCR Implementation**: Successfully implemented comprehensive OCR functionality using Tesseract.js for processing BOQ documents from images (PNG/JPG), with streamlined interface focused on mobile-captured document processing and automatic text extraction
 - **Security Enhancement**: Successfully implemented Row Level Security (RLS) policies for all 40+ database tables to address Supabase security warnings, maintaining Express backend functionality
 - **Purchase Order PDF Format**: Fixed Purchase Order PDF to match Quote PDF format exactly - added company logo, professional authority signature with digital signature image, consistent colors, enhanced footer layout, Discount column, removed "Brand:" prefix, and matched totals structure for complete professional branding consistency
 - **Navigation Restructure**: Reorganized navigation with "Products" as main category containing Raw Materials, Stock Movement, Purchase Orders, and Compare Material subcategories for better logical grouping and user experience
