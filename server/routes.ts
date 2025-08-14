@@ -1312,6 +1312,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
           totalValue: (Number(product.price) || 0) * (Number(product.stockQuantity) || 0),
           lastUpdated: product.updatedAt || product.createdAt || ''
         }));
+      } else if (type === 'sales') {
+        // Sales report from Sales Products table
+        const salesProducts = await storage.getAllSalesProducts();
+        
+        // Apply date filter to sales products
+        let filteredSalesProducts = salesProducts;
+        if (dateRange && dateRange !== 'all') {
+          const now = new Date();
+          let startDate: Date;
+          
+          switch (dateRange) {
+            case 'today':
+              startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+              break;
+            case 'week':
+              startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+              break;
+            case 'month':
+              startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+              break;
+            case 'quarter':
+              startDate = new Date(now.getFullYear(), Math.floor(now.getMonth() / 3) * 3, 1);
+              break;
+            case 'year':
+              startDate = new Date(now.getFullYear(), 0, 1);
+              break;
+            default:
+              startDate = new Date(0);
+          }
+          
+          filteredSalesProducts = salesProducts.filter(p => {
+            const productDate = p.createdAt ? new Date(p.createdAt) : new Date();
+            return productDate >= startDate;
+          });
+        }
+        
+        detailedData = filteredSalesProducts.map(salesProduct => ({
+          id: salesProduct.id,
+          name: salesProduct.name,
+          category: salesProduct.category || 'Uncategorized',
+          size: salesProduct.size || '',
+          description: salesProduct.description || '',
+          unitPrice: Number(salesProduct.unitPrice) || 0,
+          quantitySold: Number(salesProduct.quantitySold) || 0,
+          totalSales: (Number(salesProduct.unitPrice) || 0) * (Number(salesProduct.quantitySold) || 0),
+          createdAt: salesProduct.createdAt || '',
+          lastUpdated: salesProduct.updatedAt || salesProduct.createdAt || ''
+        }));
       }
       
       res.json({

@@ -47,6 +47,7 @@ const getReportTitle = (type: string) => {
     case 'requests': return 'Material Requests Report'; 
     case 'low-stock': return 'Low Stock Alert Report';
     case 'financial': return 'Financial Summary Report';
+    case 'sales': return 'Sales Report';
     default: return 'Report';
   }
 };
@@ -221,6 +222,42 @@ const renderDetailedTable = (type: string, data: any[]) => {
         </Table>
       );
       
+    case 'sales':
+      return (
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Product Name</TableHead>
+              <TableHead>Category</TableHead>
+              <TableHead>Size</TableHead>
+              <TableHead>Description</TableHead>
+              <TableHead className="text-right">Unit Price (₹)</TableHead>
+              <TableHead className="text-center">Quantity Sold</TableHead>
+              <TableHead className="text-right">Total Sales (₹)</TableHead>
+              <TableHead>Date Added</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {data.map((salesProduct) => (
+              <TableRow key={salesProduct.id}>
+                <TableCell className="font-medium">{salesProduct.name}</TableCell>
+                <TableCell>{salesProduct.category}</TableCell>
+                <TableCell>{salesProduct.size || '-'}</TableCell>
+                <TableCell className="max-w-xs truncate">{salesProduct.description || '-'}</TableCell>
+                <TableCell className="text-right">{salesProduct.unitPrice.toLocaleString()}</TableCell>
+                <TableCell className="text-center">
+                  <span className="font-medium text-blue-600">{salesProduct.quantitySold}</span>
+                </TableCell>
+                <TableCell className="text-right font-medium text-green-600">
+                  {salesProduct.totalSales.toLocaleString()}
+                </TableCell>
+                <TableCell>{new Date(salesProduct.createdAt).toLocaleDateString()}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      );
+      
     default:
       return <p>No data available</p>;
   }
@@ -376,6 +413,8 @@ export default function ReportsView() {
                   <SelectItem value="requests">Material Requests</SelectItem>
                   <SelectItem value="low-stock">Low Stock Alert</SelectItem>
                   <SelectItem value="financial">Financial Summary</SelectItem>
+                  <SelectItem value="sales">Sales Report</SelectItem>
+                  <SelectItem value="sales">Sales Report</SelectItem>
                 </SelectContent>
               </Select>
             </div>
