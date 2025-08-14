@@ -6,7 +6,7 @@ import { z } from "zod";
 import { storage } from "./storage";
 import { authenticateToken, requireRole, generateToken, comparePassword, type AuthRequest } from "./middleware/auth";
 import { productImageUpload, boqFileUpload, receiptImageUpload, csvFileUpload, projectFileUpload } from "./utils/fileUpload";
-import { exportProductsCSV, exportRequestsCSV, exportLowStockCSV } from "./utils/csvExport";
+import { exportProductsCSV, exportRequestsCSV, exportLowStockCSV, exportAttendanceCSV } from "./utils/csvExport";
 import { createBackupZip } from "./utils/backupExport";
 import { canOrderMaterials, getMaterialRequestEligibleProjects, getStageDisplayName } from "./utils/projectStageValidation";
 import { setupQuotesRoutes } from "./quotesRoutes";
@@ -1640,6 +1640,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating attendance:", error);
       res.status(500).json({ error: "Failed to update attendance" });
+    }
+  });
+
+  // Export attendance records as CSV
+  app.get("/api/attendance/export", authenticateToken, requireRole(["admin", "manager"]), async (req: AuthRequest, res) => {
+    try {
+      const { month, year } = req.query;
+      
+      const monthNum = month && typeof month === 'string' ? parseInt(month) : undefined;
+      const yearNum = year && typeof year === 'string' ? parseInt(year) : undefined;
+      
+      await exportAttendanceCSV(res, monthNum, yearNum);
+    } catch (error) {
+      console.error("Export attendance failed:", error);
+      res.status(500).json({ message: "Export failed", error: String(error) });
     }
   });
 

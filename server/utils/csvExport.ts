@@ -87,3 +87,59 @@ export const exportLowStockCSV = async (res: Response) => {
     res.status(500).json({ message: "Export failed", error: (error as Error).message });
   }
 };
+
+export const exportAttendanceCSV = async (res: Response, month?: number, year?: number) => {
+  try {
+    const attendance = await storage.getAllAttendance();
+    
+    if (!attendance || attendance.length === 0) {
+      // Create empty CSV with headers when no data
+      const csvHeaders = "Date,Employee Name,Employee ID,Check In,Check Out,Total Hours,Status,Notes\n";
+      const noDataRow = ",,,,,'No attendance records found',,";
+      
+      res.setHeader("Content-Type", "text/csv; charset=utf-8");
+      res.setHeader("Content-Disposition", "attachment; filename=attendance_report.csv");
+      res.setHeader("Cache-Control", "no-cache");
+      res.send(csvHeaders + noDataRow);
+      return;
+    }
+    
+    // Filter by month and year if provided
+    let filteredAttendance = attendance;
+    if (month && year) {
+      filteredAttendance = attendance.filter(record => {
+        const recordDate = new Date(record.date);
+        return recordDate.getMonth() + 1 === month && recordDate.getFullYear() === year;
+      });
+    }
+    
+    // Get user details for each attendance record
+    const attendanceWithUsers = await Promise.all(
+      filteredAttendance.map(async (record) => {
+        const user = await storage.getUser(record.userId);
+        return {
+          ...record,
+          userName: user ? user.name || user.username : 'Unknown User'
+        };
+      })
+    );
+    
+    const csvHeaders = "Date,Employee Name,Employee ID,Check In,Check Out,Total Hours,Status,Notes\n";
+    
+    const csvData = attendanceWithUsers.map(record => {
+      const checkInTime = record.checkInTime ? new Date(record.checkInTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+      const checkOutTime = record.checkOutTime ? new Date(record.checkOutTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+      const totalHours = record.totalHours || 0;
+      
+      return `"${record.date ? new Date(record.date).toLocaleDateString() : ''}","${(record.userName || '').replace(/"/g, '""')}","${record.userId || ''}","${checkInTime}","${checkOutTime}","${totalHours}","${record.status || 'present'}","${(record.notes || '').replace(/"/g, '""')}"`;
+    }).join("\n");
+
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader("Content-Disposition", "attachment; filename=attendance_report.csv");
+    res.setHeader("Cache-Control", "no-cache");
+    res.send(csvHeaders + csvData);
+  } catch (error) {
+    console.error('Export attendance error:', error);
+    res.status(500).json({ message: "Export failed", error: (error as Error).message });
+  }
+};

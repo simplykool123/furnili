@@ -495,85 +495,31 @@ export default function Attendance() {
     
     setIsExporting(true);
     try {
-      console.log('Starting export for month:', selectedMonth, 'year:', selectedYear);
+      console.log('Starting attendance export for month:', selectedMonth, 'year:', selectedYear);
       
-      // Fetch staff and attendance data
-      const [staffResponse, attendanceResponse] = await Promise.all([
-        apiRequest('GET', '/api/users'),
-        apiRequest('GET', `/api/attendance?month=${selectedMonth}&year=${selectedYear}`)
-      ]);
+      // Use the new server-side CSV export endpoint
+      const response = await authenticatedApiRequest('GET', `/api/attendance/export?month=${selectedMonth}&year=${selectedYear}`);
       
-      const staffData = await staffResponse.json();
-      const attendanceData = await attendanceResponse.json();
-      
-      console.log('Staff data:', staffData);
-      console.log('Attendance data:', attendanceData);
-      
-      if (!Array.isArray(staffData) || !Array.isArray(attendanceData)) {
-        throw new Error('Invalid data format received from API');
+      if (!response.ok) {
+        throw new Error(`Export failed: ${response.statusText}`);
       }
       
-      // Calculate attendance summary for each staff member
-      const reportData = staffData.map((member: any) => {
-        const memberAttendance = attendanceData.filter((att: any) => att.userId === member.id);
-        const totalPresent = memberAttendance.filter((att: any) => att.status === 'present').length;
-        const totalAbsent = memberAttendance.filter((att: any) => att.status === 'absent').length;
-        const totalHalfDay = memberAttendance.filter((att: any) => att.status === 'half-day').length;
-        const totalLeave = memberAttendance.filter((att: any) => att.status === 'leave').length;
-        
-        return {
-          'Employee ID': member.employeeId || 'Not Set',
-          'Employee Name': member.name,
-          'Department': member.department || 'General',
-          'Role': member.role,
-          'Present Days': totalPresent,
-          'Half Days': totalHalfDay,
-          'Leave Days': totalLeave,
-          'Absent Days': totalAbsent,
-          'Total Working Days': totalPresent + totalHalfDay + totalLeave + totalAbsent,
-          'Attendance Percentage': totalPresent + totalAbsent + totalHalfDay + totalLeave > 0 
-            ? Math.round(((totalPresent + totalHalfDay * 0.5 + totalLeave) / (totalPresent + totalAbsent + totalHalfDay + totalLeave)) * 100) + '%'
-            : '0%'
-        };
-      });
+      // Get the CSV content as blob
+      const blob = await response.blob();
       
-      console.log('Report data prepared:', reportData);
-      
-      // Convert to CSV
-      if (reportData.length === 0) {
-        toast({
-          title: "No Data",
-          description: "No staff data found to export.",
-          variant: "destructive"
-        });
-        return;
-      }
-      
-      const headers = Object.keys(reportData[0]);
-      const csvContent = [
-        headers.join(','),
-        ...reportData.map((row: any) => 
-          headers.map(header => `"${row[header]}"`).join(',')
-        )
-      ].join('\n');
-      
-      console.log('CSV content generated:', csvContent.substring(0, 200) + '...');
-      
-      // Download CSV
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      // Create download link
+      const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
-      const url = URL.createObjectURL(blob);
-      link.setAttribute('href', url);
-      link.setAttribute('download', `attendance_report_${selectedMonth}_${selectedYear}.csv`);
-      link.style.visibility = 'hidden';
+      link.href = url;
+      link.download = `attendance_report_${selectedMonth}_${selectedYear}.csv`;
       document.body.appendChild(link);
       link.click();
+      window.URL.revokeObjectURL(url);
       document.body.removeChild(link);
-      URL.revokeObjectURL(url);
       
       toast({
         title: "Export Successful",
-        description: `Attendance report exported for ${selectedMonth}/${selectedYear}`
+        description: `Attendance report for ${new Date(0, selectedMonth - 1).toLocaleString('default', { month: 'long' })} ${selectedYear} has been downloaded.`,
       });
       
     } catch (error) {
