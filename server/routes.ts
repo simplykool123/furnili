@@ -1252,19 +1252,67 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const categorySummary = Array.from(categoryMap.values());
       
-      // For inventory reports, also return detailed product list
-      const productsList = products.map(product => ({
-        id: product.id,
-        name: product.name,
-        category: product.category,
-        sku: product.sku,
-        price: Number(product.price) || 0,
-        stockQuantity: Number(product.stockQuantity) || 0,
-        minStockLevel: Number(product.minStockLevel) || 10,
-        stockStatus: (Number(product.stockQuantity) || 0) >= (Number(product.minStockLevel) || 10) ? 'In Stock' : 'Low Stock',
-        totalValue: (Number(product.price) || 0) * (Number(product.stockQuantity) || 0),
-        description: product.description
-      }));
+      // Prepare detailed data based on report type
+      let detailedData = [];
+      
+      if (type === 'inventory') {
+        // Detailed product list for inventory reports
+        detailedData = products.map(product => ({
+          id: product.id,
+          name: product.name,
+          category: product.category,
+          sku: product.sku || '',
+          price: Number(product.price) || 0,
+          stockQuantity: Number(product.stockQuantity) || 0,
+          minStockLevel: Number(product.minStockLevel) || 10,
+          stockStatus: (Number(product.stockQuantity) || 0) >= (Number(product.minStockLevel) || 10) ? 'In Stock' : 'Low Stock',
+          totalValue: (Number(product.price) || 0) * (Number(product.stockQuantity) || 0),
+          description: product.description || ''
+        }));
+      } else if (type === 'requests') {
+        // Detailed material requests
+        detailedData = materialRequests.map(request => ({
+          id: request.id,
+          clientName: request.clientName || '',
+          orderNumber: request.orderNumber || '',
+          status: request.status || '',
+          priority: request.priority || 'Medium',
+          totalValue: Number(request.totalValue) || 0,
+          requestedBy: request.requestedBy || '',
+          createdAt: request.createdAt || '',
+          items: request.items || []
+        }));
+      } else if (type === 'low-stock') {
+        // Detailed low stock items
+        const lowStockProducts = products.filter(p => {
+          const stock = Number(p.stockQuantity) || 0;
+          const minStock = Number(p.minStockLevel) || 10;
+          return stock < minStock;
+        });
+        
+        detailedData = lowStockProducts.map(product => ({
+          id: product.id,
+          name: product.name,
+          category: product.category,
+          sku: product.sku || '',
+          currentStock: Number(product.stockQuantity) || 0,
+          minStockLevel: Number(product.minStockLevel) || 10,
+          deficit: (Number(product.minStockLevel) || 10) - (Number(product.stockQuantity) || 0),
+          price: Number(product.price) || 0,
+          reorderValue: ((Number(product.minStockLevel) || 10) - (Number(product.stockQuantity) || 0)) * (Number(product.price) || 0)
+        }));
+      } else if (type === 'financial') {
+        // Financial summary with product values
+        detailedData = products.map(product => ({
+          id: product.id,
+          name: product.name,
+          category: product.category,
+          price: Number(product.price) || 0,
+          stockQuantity: Number(product.stockQuantity) || 0,
+          totalValue: (Number(product.price) || 0) * (Number(product.stockQuantity) || 0),
+          lastUpdated: product.updatedAt || product.createdAt || ''
+        }));
+      }
       
       res.json({
         totalProducts,
@@ -1272,8 +1320,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         lowStockItems,
         pendingRequests,
         categorySummary,
-        productsList, // Add detailed product list
-        filters: { dateRange, category, type } // Return applied filters
+        detailedData, // Generic detailed data based on report type
+        reportType: type,
+        filters: { dateRange, category, type }
       });
     } catch (error) {
       console.error('Reports dashboard error:', error);

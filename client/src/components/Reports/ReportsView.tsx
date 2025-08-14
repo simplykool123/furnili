@@ -37,19 +37,194 @@ interface ReportStats {
   lowStockItems: number;
   pendingRequests: number;
   categorySummary: CategorySummary[];
-  productsList: Array<{
-    id: number;
-    name: string;
-    category: string;
-    sku: string;
-    price: number;
-    stockQuantity: number;
-    minStockLevel: number;
-    stockStatus: string;
-    totalValue: number;
-    description?: string;
-  }>;
+  detailedData: any[];
+  reportType: string;
 }
+
+const getReportTitle = (type: string) => {
+  switch (type) {
+    case 'inventory': return 'Detailed Inventory Report';
+    case 'requests': return 'Material Requests Report'; 
+    case 'low-stock': return 'Low Stock Alert Report';
+    case 'financial': return 'Financial Summary Report';
+    default: return 'Report';
+  }
+};
+
+const renderDetailedTable = (type: string, data: any[]) => {
+  switch (type) {
+    case 'inventory':
+      return (
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Product Name</TableHead>
+              <TableHead>Category</TableHead>
+              <TableHead>SKU</TableHead>
+              <TableHead className="text-right">Price (₹)</TableHead>
+              <TableHead className="text-center">Current Stock</TableHead>
+              <TableHead className="text-center">Min Stock</TableHead>
+              <TableHead className="text-center">Status</TableHead>
+              <TableHead className="text-right">Total Value (₹)</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {data.map((product) => (
+              <TableRow key={product.id}>
+                <TableCell className="font-medium">{product.name}</TableCell>
+                <TableCell>{product.category}</TableCell>
+                <TableCell className="text-gray-600">{product.sku || '-'}</TableCell>
+                <TableCell className="text-right">{product.price.toLocaleString()}</TableCell>
+                <TableCell className="text-center">
+                  <span className={`font-medium ${
+                    product.stockQuantity >= product.minStockLevel 
+                      ? 'text-green-600' 
+                      : 'text-red-600'
+                  }`}>
+                    {product.stockQuantity}
+                  </span>
+                </TableCell>
+                <TableCell className="text-center">{product.minStockLevel}</TableCell>
+                <TableCell className="text-center">
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                    product.stockStatus === 'In Stock'
+                      ? 'bg-green-100 text-green-700'
+                      : 'bg-red-100 text-red-700'
+                  }`}>
+                    {product.stockStatus}
+                  </span>
+                </TableCell>
+                <TableCell className="text-right font-medium">
+                  {product.totalValue.toLocaleString()}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      );
+      
+    case 'requests':
+      return (
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Request ID</TableHead>
+              <TableHead>Client Name</TableHead>
+              <TableHead>Order Number</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Priority</TableHead>
+              <TableHead className="text-right">Total Value (₹)</TableHead>
+              <TableHead>Requested By</TableHead>
+              <TableHead>Date</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {data.map((request) => (
+              <TableRow key={request.id}>
+                <TableCell className="font-medium">{request.id}</TableCell>
+                <TableCell>{request.clientName}</TableCell>
+                <TableCell>{request.orderNumber}</TableCell>
+                <TableCell>
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                    request.status === 'completed' ? 'bg-green-100 text-green-700' :
+                    request.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
+                    'bg-gray-100 text-gray-700'
+                  }`}>
+                    {request.status}
+                  </span>
+                </TableCell>
+                <TableCell>
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                    request.priority === 'high' ? 'bg-red-100 text-red-700' :
+                    request.priority === 'medium' ? 'bg-yellow-100 text-yellow-700' :
+                    'bg-green-100 text-green-700'
+                  }`}>
+                    {request.priority}
+                  </span>
+                </TableCell>
+                <TableCell className="text-right font-medium">
+                  {request.totalValue.toLocaleString()}
+                </TableCell>
+                <TableCell>{request.requestedBy}</TableCell>
+                <TableCell>{new Date(request.createdAt).toLocaleDateString()}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      );
+      
+    case 'low-stock':
+      return (
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Product Name</TableHead>
+              <TableHead>Category</TableHead>
+              <TableHead>SKU</TableHead>
+              <TableHead className="text-center">Current Stock</TableHead>
+              <TableHead className="text-center">Min Stock</TableHead>
+              <TableHead className="text-center">Deficit</TableHead>
+              <TableHead className="text-right">Unit Price (₹)</TableHead>
+              <TableHead className="text-right">Reorder Value (₹)</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {data.map((product) => (
+              <TableRow key={product.id}>
+                <TableCell className="font-medium">{product.name}</TableCell>
+                <TableCell>{product.category}</TableCell>
+                <TableCell className="text-gray-600">{product.sku || '-'}</TableCell>
+                <TableCell className="text-center">
+                  <span className="text-red-600 font-medium">{product.currentStock}</span>
+                </TableCell>
+                <TableCell className="text-center">{product.minStockLevel}</TableCell>
+                <TableCell className="text-center">
+                  <span className="text-red-600 font-medium">-{product.deficit}</span>
+                </TableCell>
+                <TableCell className="text-right">{product.price.toLocaleString()}</TableCell>
+                <TableCell className="text-right font-medium">
+                  {product.reorderValue.toLocaleString()}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      );
+      
+    case 'financial':
+      return (
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Product Name</TableHead>
+              <TableHead>Category</TableHead>
+              <TableHead className="text-right">Unit Price (₹)</TableHead>
+              <TableHead className="text-center">Stock Quantity</TableHead>
+              <TableHead className="text-right">Total Value (₹)</TableHead>
+              <TableHead>Last Updated</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {data.map((product) => (
+              <TableRow key={product.id}>
+                <TableCell className="font-medium">{product.name}</TableCell>
+                <TableCell>{product.category}</TableCell>
+                <TableCell className="text-right">{product.price.toLocaleString()}</TableCell>
+                <TableCell className="text-center">{product.stockQuantity}</TableCell>
+                <TableCell className="text-right font-medium">
+                  {product.totalValue.toLocaleString()}
+                </TableCell>
+                <TableCell>{new Date(product.lastUpdated).toLocaleDateString()}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      );
+      
+    default:
+      return <p>No data available</p>;
+  }
+};
 
 async function authenticatedFetch(url: string, options: RequestInit = {}) {
   const token = localStorage.getItem('authToken');
@@ -315,7 +490,7 @@ export default function ReportsView() {
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2">
               <FileBarChart className="w-5 h-5" />
-              Inventory Summary by Category
+              {getReportTitle(filters.type)}
             </CardTitle>
             <div className="text-sm text-gray-600">
               Generated: {new Date().toLocaleDateString()}
@@ -328,7 +503,7 @@ export default function ReportsView() {
               <div className="animate-spin w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
               <p className="text-gray-600">Loading inventory data...</p>
             </div>
-          ) : reportData?.categorySummary && reportData.categorySummary.length > 0 ? (
+          ) : reportData?.detailedData && reportData.detailedData.length > 0 ? (
             <div className="overflow-x-auto">
               {filters.category !== 'all' && (
                 <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
@@ -337,117 +512,16 @@ export default function ReportsView() {
                   </p>
                 </div>
               )}
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Category</TableHead>
-                    <TableHead className="text-center">Total Items</TableHead>
-                    <TableHead className="text-center">In Stock</TableHead>
-                    <TableHead className="text-center">Low Stock</TableHead>
-                    <TableHead className="text-center">Total Value</TableHead>
-                    <TableHead className="text-center">Stock Health</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {reportData.categorySummary.map((category, index) => (
-                    <TableRow key={index}>
-                      <TableCell className="font-medium">{category.category}</TableCell>
-                      <TableCell className="text-center">{category.totalItems}</TableCell>
-                      <TableCell className="text-center">
-                        <span className="text-green-600 font-medium">{category.inStock}</span>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <span className="text-yellow-600 font-medium">{category.lowStock}</span>
-                      </TableCell>
-                      <TableCell className="text-center">₹{category.totalValue.toLocaleString()}</TableCell>
-                      <TableCell className="text-center">
-                        <div className="flex items-center justify-center space-x-2">
-                          <div className="w-16 h-2 bg-gray-200 rounded-full">
-                            <div 
-                              className="h-2 bg-green-500 rounded-full"
-                              style={{ width: `${category.stockHealth}%` }}
-                            />
-                          </div>
-                          <span className="text-sm text-gray-600">
-                            {category.stockHealth.toFixed(0)}%
-                          </span>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+              {renderDetailedTable(filters.type, reportData.detailedData)}
             </div>
           ) : (
             <div className="text-center py-8 text-gray-500">
               <FileBarChart className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-              <p>No inventory data available for the selected filters</p>
+              <p>No data available for the selected filters</p>
             </div>
           )}
         </CardContent>
       </Card>
-
-      {/* Detailed Inventory Table - Only show for Inventory Report */}
-      {filters.type === 'inventory' && reportData?.productsList && reportData.productsList.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Package className="w-5 h-5 mr-2" />
-              Detailed Product Inventory
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Product Name</TableHead>
-                    <TableHead>Category</TableHead>
-                    <TableHead>SKU</TableHead>
-                    <TableHead className="text-right">Price (₹)</TableHead>
-                    <TableHead className="text-center">Current Stock</TableHead>
-                    <TableHead className="text-center">Min Stock</TableHead>
-                    <TableHead className="text-center">Status</TableHead>
-                    <TableHead className="text-right">Total Value (₹)</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {reportData.productsList.map((product) => (
-                    <TableRow key={product.id}>
-                      <TableCell className="font-medium">{product.name}</TableCell>
-                      <TableCell>{product.category}</TableCell>
-                      <TableCell className="text-gray-600">{product.sku || '-'}</TableCell>
-                      <TableCell className="text-right">{product.price.toLocaleString()}</TableCell>
-                      <TableCell className="text-center">
-                        <span className={`font-medium ${
-                          product.stockQuantity >= product.minStockLevel 
-                            ? 'text-green-600' 
-                            : 'text-red-600'
-                        }`}>
-                          {product.stockQuantity}
-                        </span>
-                      </TableCell>
-                      <TableCell className="text-center">{product.minStockLevel}</TableCell>
-                      <TableCell className="text-center">
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          product.stockStatus === 'In Stock'
-                            ? 'bg-green-100 text-green-700'
-                            : 'bg-red-100 text-red-700'
-                        }`}>
-                          {product.stockStatus}
-                        </span>
-                      </TableCell>
-                      <TableCell className="text-right font-medium">
-                        {product.totalValue.toLocaleString()}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 }
