@@ -441,6 +441,9 @@ class OCRService {
       amount = quantity * unitPrice;
     }
 
+    // Enhanced parsing of description for better product matching
+    const parsedDetails = this.parseProductDescription(description);
+    
     return {
       description: description.trim(),
       quantity: quantity,
@@ -449,7 +452,9 @@ class OCRService {
       amount: amount,
       brand: brand || undefined,
       type: type || undefined,
-      productName: description.split('-')[0].trim(), // Extract main product name
+      productName: parsedDetails.productName,
+      thickness: parsedDetails.thickness,
+      size: parsedDetails.size,
       confidence: 0.98 // Very high confidence for structured BOM data
     };
   }
@@ -516,6 +521,61 @@ class OCRService {
       amount,
       productName: description.split(',')[0].trim(),
       confidence: 0.95
+    };
+  }
+
+  private parseProductDescription(description: string): {
+    productName: string;
+    thickness?: string;
+    size?: string;
+  } {
+    // Clean the description
+    const cleanDesc = description.trim();
+    
+    // Extract thickness patterns (e.g., 16mm, 18mm, 25mm)
+    const thicknessMatch = cleanDesc.match(/(\d+(?:\.\d+)?mm)/i);
+    const thickness = thicknessMatch ? thicknessMatch[1] : undefined;
+    
+    // Extract size patterns (e.g., 8 X 4 feet, 4x8 ft, 1220x2440mm)
+    const sizePatterns = [
+      /(\d+\s*[xX×]\s*\d+\s*(?:feet|ft|mm|cm|m|inch|in))/i,
+      /(\d+(?:\.\d+)?\s*[xX×]\s*\d+(?:\.\d+)?\s*(?:feet|ft|mm|cm|m|inch|in))/i
+    ];
+    
+    let size: string | undefined;
+    for (const pattern of sizePatterns) {
+      const sizeMatch = cleanDesc.match(pattern);
+      if (sizeMatch) {
+        size = sizeMatch[1].replace(/\s+/g, ' ').trim();
+        break;
+      }
+    }
+    
+    // Extract product name by removing thickness and size
+    let productName = cleanDesc;
+    
+    // Remove thickness
+    if (thickness) {
+      productName = productName.replace(new RegExp(`\\s*-?\\s*${thickness.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'gi'), '');
+    }
+    
+    // Remove size
+    if (size) {
+      productName = productName.replace(new RegExp(`\\s*-?\\s*${size.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'gi'), '');
+    }
+    
+    // Clean up remaining hyphens and extra spaces
+    productName = productName
+      .replace(/\s*-\s*$/, '') // Remove trailing dash
+      .replace(/^\s*-\s*/, '') // Remove leading dash
+      .replace(/\s*-\s*-\s*/g, ' - ') // Clean up multiple dashes
+      .replace(/\s+/g, ' ') // Multiple spaces to single
+      .trim();
+    
+    return {
+      productName,
+      thickness,
+      size
     };
   }
 

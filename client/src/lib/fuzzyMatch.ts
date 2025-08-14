@@ -133,7 +133,10 @@ export function parseBOQDescription(description: string): Partial<BOQItem> {
 
 // Find best matching products for a BOQ item
 export function findProductMatches(boqItem: BOQItem, products: Product[]): MatchResult[] {
-  const parsedBOQ = parseBOQDescription(boqItem.description);
+  // Use parsed details from BOQ item if available, otherwise parse description
+  const parsedBOQ = boqItem.productName || boqItem.thickness || boqItem.size 
+    ? boqItem 
+    : parseBOQDescription(boqItem.description);
   const matches: MatchResult[] = [];
   
   for (const product of products) {
@@ -142,9 +145,28 @@ export function findProductMatches(boqItem: BOQItem, products: Product[]): Match
     const matchedFields: string[] = [];
     
     // Match product name (highest weight)
-    if (parsedBOQ.productName && product.name) {
-      const nameConfidence = calculateSimilarity(parsedBOQ.productName, product.name);
-      if (nameConfidence > 30) { // Minimum threshold
+    const productNameToMatch = parsedBOQ.productName || boqItem.description;
+    if (productNameToMatch && product.name) {
+      // Multiple matching strategies
+      const nameScores = [
+        calculateSimilarity(productNameToMatch, product.name),
+        calculateSimilarity(productNameToMatch, product.category)
+      ];
+      
+      // Check for keyword matching
+      const keywords = productNameToMatch.toLowerCase().split(/\s+/);
+      const productKeywords = product.name.toLowerCase().split(/\s+/);
+      const keywordMatches = keywords.filter(k => 
+        productKeywords.some(pk => pk.includes(k) || k.includes(pk))
+      );
+      
+      let keywordBonus = 0;
+      if (keywordMatches.length > 0) {
+        keywordBonus = (keywordMatches.length / keywords.length) * 25;
+      }
+      
+      const nameConfidence = Math.max(...nameScores) + keywordBonus;
+      if (nameConfidence > 25) { // Lower threshold for better matching
         totalConfidence += nameConfidence * 0.5; // 50% weight
         matchCount++;
         matchedFields.push(`Name: ${nameConfidence.toFixed(0)}%`);
