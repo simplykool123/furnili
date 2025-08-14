@@ -1156,15 +1156,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Export routes
   app.get("/api/export/products", authenticateToken, async (req, res) => {
-    await exportProductsCSV(res);
+    try {
+      await exportProductsCSV(res);
+    } catch (error) {
+      console.error('Products export error:', error);
+      res.status(500).json({ message: "Export failed", error: String(error) });
+    }
   });
 
   app.get("/api/export/requests", authenticateToken, async (req, res) => {
-    await exportRequestsCSV(res);
+    try {
+      await exportRequestsCSV(res);
+    } catch (error) {
+      console.error('Requests export error:', error);
+      res.status(500).json({ message: "Export failed", error: String(error) });
+    }
   });
 
   app.get("/api/export/low-stock", authenticateToken, async (req, res) => {
-    await exportLowStockCSV(res);
+    try {
+      await exportLowStockCSV(res);
+    } catch (error) {
+      console.error('Low stock export error:', error);
+      res.status(500).json({ message: "Export failed", error: String(error) });
+    }
   });
 
   // Generic file upload endpoint for sales products and other uses
