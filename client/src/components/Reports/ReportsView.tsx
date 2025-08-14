@@ -35,6 +35,14 @@ const reportTypes = [
   { value: "projects", label: "Projects Report", icon: Building },
   { value: "attendance", label: "Attendance Report", icon: Users },
   { value: "purchase-orders", label: "Purchase Orders", icon: Target },
+  { value: "quotes", label: "Quotes & Estimates", icon: FileBarChart },
+  { value: "suppliers", label: "Supplier Performance", icon: Building },
+  { value: "stock-movements", label: "Stock Movement History", icon: TrendingUp },
+  { value: "user-activity", label: "User Activity Log", icon: Users },
+  { value: "quotes", label: "Quotes & Estimates", icon: FileBarChart },
+  { value: "suppliers", label: "Supplier Performance", icon: Building },
+  { value: "stock-movements", label: "Stock Movement History", icon: TrendingUp },
+  { value: "user-activity", label: "User Activity Log", icon: Users },
 ];
 
 interface ReportFilters {
@@ -55,6 +63,10 @@ interface ReportStats {
   totalAttendance: number;
   totalPurchaseOrders: number;
   totalSalesValue: number;
+  totalQuotes: number;
+  totalSuppliers: number;
+  totalStockMovements: number;
+  totalUserActivity: number;
   detailedData: any[];
   reportType: string;
   summary: any;
@@ -71,6 +83,10 @@ const getReportTitle = (type: string) => {
     case 'projects': return 'Projects Status Report';
     case 'attendance': return 'Staff Attendance Report';
     case 'purchase-orders': return 'Purchase Orders Report';
+    case 'quotes': return 'Quotes & Estimates Report';
+    case 'suppliers': return 'Supplier Performance Report';
+    case 'stock-movements': return 'Stock Movement History Report';
+    case 'user-activity': return 'User Activity Log Report';
     default: return 'Report';
   }
 };
@@ -124,6 +140,26 @@ const renderStatsCards = (stats: ReportStats) => {
         return [
           { label: "Total POs", value: stats.detailedData?.length || 0, icon: Target },
           { label: "Total Value", value: formatCurrency(stats.totalValue), icon: DollarSign },
+        ];
+      case 'quotes':
+        return [
+          { label: "Total Quotes", value: stats.detailedData?.length || 0, icon: FileBarChart },
+          { label: "Total Value", value: formatCurrency(stats.totalValue), icon: DollarSign },
+        ];
+      case 'suppliers':
+        return [
+          { label: "Total Suppliers", value: stats.detailedData?.length || 0, icon: Building },
+          { label: "Active Suppliers", value: stats.totalSuppliers, icon: TrendingUp },
+        ];
+      case 'stock-movements':
+        return [
+          { label: "Total Movements", value: stats.detailedData?.length || 0, icon: TrendingUp },
+          { label: "Stock Changes", value: stats.totalStockMovements, icon: Package },
+        ];
+      case 'user-activity':
+        return [
+          { label: "Total Activities", value: stats.detailedData?.length || 0, icon: Users },
+          { label: "Active Users", value: stats.totalUserActivity, icon: TrendingUp },
         ];
       default:
         return [];
@@ -418,6 +454,149 @@ const renderDetailedTable = (type: string, data: any[]) => {
                 <TableCell className="text-right">{formatCurrency(po.totalAmount)}</TableCell>
                 <TableCell>{po.itemsCount || 0}</TableCell>
                 <TableCell>{po.createdByName}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      );
+
+    case 'quotes':
+      return (
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Quote Number</TableHead>
+              <TableHead>Project</TableHead>
+              <TableHead>Client</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Date</TableHead>
+              <TableHead className="text-right">Amount (₹)</TableHead>
+              <TableHead>Items Count</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {data.map((quote) => (
+              <TableRow key={quote.id}>
+                <TableCell><Badge variant="outline">{quote.quoteNumber}</Badge></TableCell>
+                <TableCell className="font-medium">{quote.projectName}</TableCell>
+                <TableCell>{quote.clientName}</TableCell>
+                <TableCell>
+                  <Badge variant={
+                    quote.status === 'approved' ? 'default' :
+                    quote.status === 'sent' ? 'secondary' :
+                    quote.status === 'draft' ? 'outline' : 'destructive'
+                  }>
+                    {quote.status}
+                  </Badge>
+                </TableCell>
+                <TableCell>{formatDate(quote.createdAt)}</TableCell>
+                <TableCell className="text-right">{formatCurrency(quote.totalAmount)}</TableCell>
+                <TableCell>{quote.itemsCount || 0}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      );
+
+    case 'suppliers':
+      return (
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Supplier Name</TableHead>
+              <TableHead>Contact Person</TableHead>
+              <TableHead>Email</TableHead>
+              <TableHead>Phone</TableHead>
+              <TableHead>Address</TableHead>
+              <TableHead>Products Count</TableHead>
+              <TableHead>Status</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {data.map((supplier) => (
+              <TableRow key={supplier.id}>
+                <TableCell className="font-medium">{supplier.name}</TableCell>
+                <TableCell>{supplier.contactPerson || "N/A"}</TableCell>
+                <TableCell>{supplier.email || "N/A"}</TableCell>
+                <TableCell>{supplier.phone || "N/A"}</TableCell>
+                <TableCell>{supplier.address || "N/A"}</TableCell>
+                <TableCell>{supplier.productsCount || 0}</TableCell>
+                <TableCell>
+                  <Badge variant="default">Active</Badge>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      );
+
+    case 'stock-movements':
+      return (
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Date</TableHead>
+              <TableHead>Product</TableHead>
+              <TableHead>Type</TableHead>
+              <TableHead>Quantity</TableHead>
+              <TableHead>Reference</TableHead>
+              <TableHead>User</TableHead>
+              <TableHead>Notes</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {data.map((movement) => (
+              <TableRow key={movement.id}>
+                <TableCell>{formatDate(movement.createdAt)}</TableCell>
+                <TableCell className="font-medium">{movement.productName}</TableCell>
+                <TableCell>
+                  <Badge variant={
+                    movement.type === 'IN' ? 'default' :
+                    movement.type === 'OUT' ? 'destructive' : 'secondary'
+                  }>
+                    {movement.type}
+                  </Badge>
+                </TableCell>
+                <TableCell>{movement.quantity}</TableCell>
+                <TableCell>{movement.reference || "N/A"}</TableCell>
+                <TableCell>{movement.userName || "N/A"}</TableCell>
+                <TableCell>{movement.notes || "N/A"}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      );
+
+    case 'user-activity':
+      return (
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Date</TableHead>
+              <TableHead>User</TableHead>
+              <TableHead>Action</TableHead>
+              <TableHead>Entity Type</TableHead>
+              <TableHead>Entity ID</TableHead>
+              <TableHead>Details</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {data.map((activity) => (
+              <TableRow key={activity.id}>
+                <TableCell>{formatDate(activity.createdAt)}</TableCell>
+                <TableCell className="font-medium">{activity.userName}</TableCell>
+                <TableCell>
+                  <Badge variant={
+                    activity.action === 'CREATE' ? 'default' :
+                    activity.action === 'UPDATE' ? 'secondary' :
+                    activity.action === 'DELETE' ? 'destructive' : 'outline'
+                  }>
+                    {activity.action}
+                  </Badge>
+                </TableCell>
+                <TableCell>{activity.entityType}</TableCell>
+                <TableCell>{activity.entityId}</TableCell>
+                <TableCell>{activity.details || "N/A"}</TableCell>
               </TableRow>
             ))}
           </TableBody>

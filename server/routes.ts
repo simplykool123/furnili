@@ -6,7 +6,16 @@ import { z } from "zod";
 import { storage } from "./storage";
 import { authenticateToken, requireRole, generateToken, comparePassword, type AuthRequest } from "./middleware/auth";
 import { productImageUpload, boqFileUpload, receiptImageUpload, csvFileUpload, projectFileUpload } from "./utils/fileUpload";
-import { exportProductsCSV, exportRequestsCSV, exportLowStockCSV, exportAttendanceCSV } from "./utils/csvExport";
+import { 
+  exportProductsCSV, 
+  exportRequestsCSV, 
+  exportLowStockCSV, 
+  exportAttendanceCSV,
+  exportQuotesCSV,
+  exportSuppliersCSV,
+  exportStockMovementsCSV,
+  exportUserActivityCSV
+} from "./utils/csvExport";
 import { createBackupZip } from "./utils/backupExport";
 import { canOrderMaterials, getMaterialRequestEligibleProjects, getStageDisplayName } from "./utils/projectStageValidation";
 import { setupQuotesRoutes } from "./quotesRoutes";
@@ -1677,6 +1686,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         totalAttendance: 0,
         totalPurchaseOrders: 0,
         totalSalesValue: 0,
+        totalQuotes: 0,
+        totalSuppliers: 0,
+        totalStockMovements: 0,
+        totalUserActivity: 0,
         summary: {}
       };
 
@@ -1806,6 +1819,78 @@ export async function registerRoutes(app: Express): Promise<Server> {
           ];
           break;
 
+        case 'quotes':
+          const quotes = await storage.getAllQuotes();
+          const monthlyQuotes = quotes.filter((q: any) => {
+            const quoteDate = new Date(q.createdAt);
+            return quoteDate.getMonth() + 1 === monthNum && quoteDate.getFullYear() === yearNum;
+          });
+          reportData.detailedData = monthlyQuotes;
+          reportData.totalQuotes = monthlyQuotes.length;
+          reportData.totalValue = monthlyQuotes.reduce((sum: number, q: any) => sum + q.totalAmount, 0);
+          break;
+
+        case 'suppliers':
+          const suppliers = await storage.getAllSuppliers();
+          reportData.detailedData = suppliers.map((s: any) => ({
+            ...s,
+            productsCount: 0 // Could be enhanced to count actual supplier products
+          }));
+          reportData.totalSuppliers = suppliers.length;
+          break;
+
+        case 'stock-movements':
+          const stockMovements = await storage.getAllStockMovements();
+          const monthlyMovements = stockMovements.filter((sm: any) => {
+            const movementDate = new Date(sm.createdAt);
+            return movementDate.getMonth() + 1 === monthNum && movementDate.getFullYear() === yearNum;
+          });
+          
+          // Get product and user details for each movement
+          const movementsWithDetails = await Promise.all(
+            monthlyMovements.map(async (movement: any) => {
+              const product = await storage.getProduct(movement.productId);
+              const user = await storage.getUser(movement.userId);
+              return {
+                ...movement,
+                productName: product ? product.name : 'Unknown Product',
+                userName: user ? user.name || user.username : 'Unknown User'
+              };
+            })
+          );
+          
+          reportData.detailedData = movementsWithDetails;
+          reportData.totalStockMovements = movementsWithDetails.length;
+          break;
+
+        case 'user-activity':
+          // For now, we'll use audit logs if available, otherwise create a simplified version
+          try {
+            const auditLogs = await storage.getAllAuditLogs();
+            const monthlyLogs = auditLogs.filter((log: any) => {
+              const logDate = new Date(log.createdAt);
+              return logDate.getMonth() + 1 === monthNum && logDate.getFullYear() === yearNum;
+            });
+            
+            const logsWithUsers = await Promise.all(
+              monthlyLogs.map(async (log: any) => {
+                const user = await storage.getUser(log.userId);
+                return {
+                  ...log,
+                  userName: user ? user.name || user.username : 'Unknown User'
+                };
+              })
+            );
+            
+            reportData.detailedData = logsWithUsers;
+            reportData.totalUserActivity = logsWithUsers.length;
+          } catch (error) {
+            // If audit logs don't exist, create basic activity data
+            reportData.detailedData = [];
+            reportData.totalUserActivity = 0;
+          }
+          break;
+
         default:
           return res.status(400).json({ message: "Invalid report type" });
       }
@@ -1832,6 +1917,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return exportLowStockCSV(res);
       } else if (type === "attendance") {
         return exportAttendanceCSV(res, monthNum, yearNum);
+      } else if (type === "quotes") {
+        return exportQuotesCSV(res, monthNum, yearNum);
+      } else if (type === "suppliers") {
+        return exportSuppliersCSV(res);
+      } else if (type === "stock-movements") {
+        return exportStockMovementsCSV(res, monthNum, yearNum);
+      } else if (type === "user-activity") {
+        return exportUserActivityCSV(res, monthNum, yearNum);
       } else {
         return res.status(400).json({ message: "Invalid export type" });
       }
