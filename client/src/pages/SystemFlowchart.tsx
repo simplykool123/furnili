@@ -2,12 +2,14 @@ import FurniliLayout from "@/components/Layout/FurniliLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Download, Maximize2, Minimize2, RefreshCw } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function SystemFlowchart() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [imageKey, setImageKey] = useState(Date.now());
   const [imageError, setImageError] = useState(false);
+  const [svgContent, setSvgContent] = useState<string>('');
+  const [loading, setLoading] = useState(true);
 
   const handleDownload = () => {
     const link = document.createElement('a');
@@ -19,7 +21,30 @@ export default function SystemFlowchart() {
   const handleRefresh = () => {
     setImageKey(Date.now());
     setImageError(false);
+    loadSvgContent();
   };
+
+  const loadSvgContent = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(`/furnili-system-flowchart.svg?v=${Date.now()}`);
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+      const content = await response.text();
+      setSvgContent(content);
+      setImageError(false);
+    } catch (error) {
+      console.error('Failed to load SVG content:', error);
+      setImageError(true);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadSvgContent();
+  }, []);
 
   return (
     <FurniliLayout title="Workflow" subtitle="Complete workflow and module integration diagram">
@@ -75,7 +100,12 @@ export default function SystemFlowchart() {
           </CardHeader>
           <CardContent className={isFullscreen ? "h-full overflow-auto p-2" : "p-2"}>
             <div className={`w-full ${isFullscreen ? "h-full" : "h-[800px]"} overflow-auto border rounded-lg bg-gray-50`}>
-              {imageError ? (
+              {loading ? (
+                <div className="flex flex-col items-center justify-center h-full p-8 text-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mb-4"></div>
+                  <p className="text-sm text-gray-500">Loading system workflow diagram...</p>
+                </div>
+              ) : imageError ? (
                 <div className="flex flex-col items-center justify-center h-full p-8 text-center">
                   <p className="text-lg font-semibold text-gray-700 mb-2">Diagram temporarily unavailable</p>
                   <p className="text-sm text-gray-500 mb-4">The system workflow diagram could not be loaded.</p>
@@ -84,23 +114,16 @@ export default function SystemFlowchart() {
                     Try Again
                   </Button>
                 </div>
-              ) : (
-                <img 
-                  key={imageKey}
-                  src={`/furnili-system-flowchart.svg?v=${imageKey}`}
-                  alt="Furnili System Architecture Flowchart"
+              ) : svgContent ? (
+                <div 
                   className="w-full h-auto min-w-[1400px]"
                   style={{ imageRendering: 'crisp-edges' }}
-                  onLoad={() => {
-                    console.log('SVG loaded successfully');
-                    setImageError(false);
-                  }}
-                  onError={(e) => {
-                    console.error('SVG failed to load:', e);
-                    console.log('Trying to load from:', e.currentTarget.src);
-                    setImageError(true);
-                  }}
+                  dangerouslySetInnerHTML={{ __html: svgContent }}
                 />
+              ) : (
+                <div className="flex flex-col items-center justify-center h-full p-8 text-center">
+                  <p className="text-sm text-gray-500">No diagram content available</p>
+                </div>
               )}
             </div>
           </CardContent>
