@@ -37,6 +37,18 @@ interface ReportStats {
   lowStockItems: number;
   pendingRequests: number;
   categorySummary: CategorySummary[];
+  productsList: Array<{
+    id: number;
+    name: string;
+    category: string;
+    sku: string;
+    price: number;
+    stockQuantity: number;
+    minStockLevel: number;
+    stockStatus: string;
+    totalValue: number;
+    description?: string;
+  }>;
 }
 
 async function authenticatedFetch(url: string, options: RequestInit = {}) {
@@ -374,6 +386,68 @@ export default function ReportsView() {
           )}
         </CardContent>
       </Card>
+
+      {/* Detailed Inventory Table - Only show for Inventory Report */}
+      {filters.type === 'inventory' && reportData?.productsList && reportData.productsList.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Package className="w-5 h-5 mr-2" />
+              Detailed Product Inventory
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Product Name</TableHead>
+                    <TableHead>Category</TableHead>
+                    <TableHead>SKU</TableHead>
+                    <TableHead className="text-right">Price (₹)</TableHead>
+                    <TableHead className="text-center">Current Stock</TableHead>
+                    <TableHead className="text-center">Min Stock</TableHead>
+                    <TableHead className="text-center">Status</TableHead>
+                    <TableHead className="text-right">Total Value (₹)</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {reportData.productsList.map((product) => (
+                    <TableRow key={product.id}>
+                      <TableCell className="font-medium">{product.name}</TableCell>
+                      <TableCell>{product.category}</TableCell>
+                      <TableCell className="text-gray-600">{product.sku || '-'}</TableCell>
+                      <TableCell className="text-right">{product.price.toLocaleString()}</TableCell>
+                      <TableCell className="text-center">
+                        <span className={`font-medium ${
+                          product.stockQuantity >= product.minStockLevel 
+                            ? 'text-green-600' 
+                            : 'text-red-600'
+                        }`}>
+                          {product.stockQuantity}
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-center">{product.minStockLevel}</TableCell>
+                      <TableCell className="text-center">
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          product.stockStatus === 'In Stock'
+                            ? 'bg-green-100 text-green-700'
+                            : 'bg-red-100 text-red-700'
+                        }`}>
+                          {product.stockStatus}
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-right font-medium">
+                        {product.totalValue.toLocaleString()}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

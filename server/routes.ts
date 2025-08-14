@@ -1252,12 +1252,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const categorySummary = Array.from(categoryMap.values());
       
+      // For inventory reports, also return detailed product list
+      const productsList = products.map(product => ({
+        id: product.id,
+        name: product.name,
+        category: product.category,
+        sku: product.sku,
+        price: Number(product.price) || 0,
+        stockQuantity: Number(product.stockQuantity) || 0,
+        minStockLevel: Number(product.minStockLevel) || 10,
+        stockStatus: (Number(product.stockQuantity) || 0) >= (Number(product.minStockLevel) || 10) ? 'In Stock' : 'Low Stock',
+        totalValue: (Number(product.price) || 0) * (Number(product.stockQuantity) || 0),
+        description: product.description
+      }));
+      
       res.json({
         totalProducts,
         totalValue,
         lowStockItems,
         pendingRequests,
         categorySummary,
+        productsList, // Add detailed product list
         filters: { dateRange, category, type } // Return applied filters
       });
     } catch (error) {
