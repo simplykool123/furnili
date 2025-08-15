@@ -1696,6 +1696,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       switch (type) {
         case 'inventory':
           const products = await storage.getAllProducts();
+          console.log('DEBUG: First product data:', JSON.stringify(products[0], null, 2));
           reportData.detailedData = products.filter((p: any) => 
             category === 'all' || !category || p.category === category
           );
@@ -1706,6 +1707,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           reportData.lowStockItems = reportData.detailedData.filter((p: any) => 
             (p.currentStock || 0) <= (p.minStock || 0)
           ).length;
+          console.log('DEBUG: Sample calculation for first product:', {
+            pricePerUnit: products[0]?.pricePerUnit,
+            currentStock: products[0]?.currentStock,
+            calculated: (products[0]?.pricePerUnit || 0) * (products[0]?.currentStock || 0)
+          });
           break;
 
         case 'material-requests':

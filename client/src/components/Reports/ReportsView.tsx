@@ -221,15 +221,15 @@ const renderDetailedTable = (type: string, data: any[]) => {
                 <TableCell className="font-medium">{product.name}</TableCell>
                 <TableCell>{product.category}</TableCell>
                 <TableCell><Badge variant="outline">{product.sku}</Badge></TableCell>
-                <TableCell className="text-right">{formatCurrency(product.price_per_unit || 0)}</TableCell>
-                <TableCell className="text-center">{product.current_stock || 0}</TableCell>
-                <TableCell className="text-center">{product.min_stock || 0}</TableCell>
+                <TableCell className="text-right">{formatCurrency(product.pricePerUnit || 0)}</TableCell>
+                <TableCell className="text-center">{product.currentStock || 0}</TableCell>
+                <TableCell className="text-center">{product.minStock || 0}</TableCell>
                 <TableCell className="text-center">
-                  <Badge variant={(product.current_stock || 0) <= (product.min_stock || 0) ? "destructive" : "default"}>
-                    {(product.current_stock || 0) <= (product.min_stock || 0) ? "Low" : "Good"}
+                  <Badge variant={(product.currentStock || 0) <= (product.minStock || 0) ? "destructive" : "default"}>
+                    {(product.currentStock || 0) <= (product.minStock || 0) ? "Low" : "Good"}
                   </Badge>
                 </TableCell>
-                <TableCell className="text-right">{formatCurrency((product.price_per_unit || 0) * (product.current_stock || 0))}</TableCell>
+                <TableCell className="text-right">{formatCurrency((product.pricePerUnit || 0) * (product.currentStock || 0))}</TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -257,14 +257,14 @@ const renderDetailedTable = (type: string, data: any[]) => {
                 <TableCell className="font-medium">{product.name}</TableCell>
                 <TableCell>{product.category}</TableCell>
                 <TableCell><Badge variant="outline">{product.sku}</Badge></TableCell>
-                <TableCell className="text-right">{formatCurrency(product.price_per_unit || 0)}</TableCell>
-                <TableCell className="text-center">{product.current_stock || 0}</TableCell>
-                <TableCell className="text-center">{product.min_stock || 0}</TableCell>
+                <TableCell className="text-right">{formatCurrency(product.pricePerUnit || 0)}</TableCell>
+                <TableCell className="text-center">{product.currentStock || 0}</TableCell>
+                <TableCell className="text-center">{product.minStock || 0}</TableCell>
                 <TableCell className="text-center">
                   <Badge variant="destructive">Critical</Badge>
                 </TableCell>
                 <TableCell className="text-right">
-                  <Badge variant="outline">Reorder {(product.min_stock || 0) - (product.current_stock || 0) + 10}</Badge>
+                  <Badge variant="outline">Reorder {(product.minStock || 0) - (product.currentStock || 0) + 10}</Badge>
                 </TableCell>
               </TableRow>
             ))}
