@@ -1701,10 +1701,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           );
           reportData.totalProducts = reportData.detailedData.length;
           reportData.totalValue = reportData.detailedData.reduce((sum: number, p: any) => 
-            sum + (p.price * p.currentStock), 0
+            sum + ((p.price_per_unit || 0) * (p.current_stock || 0)), 0
           );
           reportData.lowStockItems = reportData.detailedData.filter((p: any) => 
-            p.currentStock <= p.minStockLevel
+            (p.current_stock || 0) <= (p.min_stock || 0)
           ).length;
           break;
 
@@ -1716,7 +1716,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         case 'low-stock':
           const allProducts = await storage.getAllProducts();
-          reportData.detailedData = allProducts.filter((p: any) => p.currentStock <= p.minStockLevel);
+          reportData.detailedData = allProducts.filter((p: any) => (p.current_stock || 0) <= (p.min_stock || 0));
           reportData.lowStockItems = reportData.detailedData.length;
           break;
 

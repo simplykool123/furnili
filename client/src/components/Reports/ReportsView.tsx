@@ -107,6 +107,12 @@ const renderStatsCards = (stats: ReportStats) => {
           { label: "Total Value", value: formatCurrency(stats.totalValue), icon: DollarSign },
           { label: "Low Stock Items", value: stats.lowStockItems, icon: AlertTriangle },
         ];
+      case 'low-stock':
+        return [
+          { label: "Critical Items", value: stats.lowStockItems, icon: AlertTriangle },
+          { label: "Total Value at Risk", value: formatCurrency(stats.totalValue), icon: DollarSign },
+          { label: "Immediate Action Needed", value: `${Math.ceil((stats.lowStockItems || 0) * 0.7)} Items`, icon: Package },
+        ];
       case 'material-requests':
         return [
           { label: "Total Requests", value: stats.detailedData?.length || 0, icon: Briefcase },
@@ -215,15 +221,51 @@ const renderDetailedTable = (type: string, data: any[]) => {
                 <TableCell className="font-medium">{product.name}</TableCell>
                 <TableCell>{product.category}</TableCell>
                 <TableCell><Badge variant="outline">{product.sku}</Badge></TableCell>
-                <TableCell className="text-right">{formatCurrency(product.price)}</TableCell>
-                <TableCell className="text-center">{product.currentStock}</TableCell>
-                <TableCell className="text-center">{product.minStockLevel}</TableCell>
+                <TableCell className="text-right">{formatCurrency(product.price_per_unit || 0)}</TableCell>
+                <TableCell className="text-center">{product.current_stock || 0}</TableCell>
+                <TableCell className="text-center">{product.min_stock || 0}</TableCell>
                 <TableCell className="text-center">
-                  <Badge variant={product.currentStock <= product.minStockLevel ? "destructive" : "default"}>
-                    {product.currentStock <= product.minStockLevel ? "Low" : "Good"}
+                  <Badge variant={(product.current_stock || 0) <= (product.min_stock || 0) ? "destructive" : "default"}>
+                    {(product.current_stock || 0) <= (product.min_stock || 0) ? "Low" : "Good"}
                   </Badge>
                 </TableCell>
-                <TableCell className="text-right">{formatCurrency(product.price * product.currentStock)}</TableCell>
+                <TableCell className="text-right">{formatCurrency((product.price_per_unit || 0) * (product.current_stock || 0))}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      );
+
+    case 'low-stock':
+      return (
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Product Name</TableHead>
+              <TableHead>Category</TableHead>
+              <TableHead>SKU</TableHead>
+              <TableHead className="text-right">Price (₹)</TableHead>
+              <TableHead className="text-center">Current Stock</TableHead>
+              <TableHead className="text-center">Min Stock</TableHead>
+              <TableHead className="text-center">Status</TableHead>
+              <TableHead className="text-right">Action Needed</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {data.map((product) => (
+              <TableRow key={product.id}>
+                <TableCell className="font-medium">{product.name}</TableCell>
+                <TableCell>{product.category}</TableCell>
+                <TableCell><Badge variant="outline">{product.sku}</Badge></TableCell>
+                <TableCell className="text-right">{formatCurrency(product.price_per_unit || 0)}</TableCell>
+                <TableCell className="text-center">{product.current_stock || 0}</TableCell>
+                <TableCell className="text-center">{product.min_stock || 0}</TableCell>
+                <TableCell className="text-center">
+                  <Badge variant="destructive">Critical</Badge>
+                </TableCell>
+                <TableCell className="text-right">
+                  <Badge variant="outline">Reorder {(product.min_stock || 0) - (product.current_stock || 0) + 10}</Badge>
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
