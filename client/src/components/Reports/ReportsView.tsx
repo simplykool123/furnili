@@ -39,10 +39,6 @@ const reportTypes = [
   { value: "suppliers", label: "Supplier Performance", icon: Building },
   { value: "stock-movements", label: "Stock Movement History", icon: TrendingUp },
   { value: "user-activity", label: "User Activity Log", icon: Users },
-  { value: "quotes", label: "Quotes & Estimates", icon: FileBarChart },
-  { value: "suppliers", label: "Supplier Performance", icon: Building },
-  { value: "stock-movements", label: "Stock Movement History", icon: TrendingUp },
-  { value: "user-activity", label: "User Activity Log", icon: Users },
 ];
 
 interface ReportFilters {
@@ -637,11 +633,19 @@ export default function ReportsView() {
   });
 
   // Fetch categories for filter dropdown
-  const { data: categories } = useQuery({
+  const { data: categories = [] } = useQuery({
     queryKey: ['/api/categories'],
     queryFn: async () => {
-      const response = await authenticatedApiRequest('GET', '/api/categories');
-      return response.json();
+      try {
+        const response = await authenticatedApiRequest('GET', '/api/categories');
+        if (!response.ok) {
+          throw new Error('Failed to fetch categories');
+        }
+        return response.json();
+      } catch (error) {
+        console.error('Categories fetch error:', error);
+        return [];
+      }
     },
   });
 
@@ -804,7 +808,7 @@ export default function ReportsView() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Categories</SelectItem>
-                  {categories?.map((category: any) => (
+                  {Array.isArray(categories) && categories.map((category: any) => (
                     <SelectItem key={category.id} value={category.name}>
                       {category.name}
                     </SelectItem>

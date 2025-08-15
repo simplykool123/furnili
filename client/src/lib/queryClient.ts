@@ -122,7 +122,7 @@ export const performanceUtils = {
 
 // Authenticated API request function for components
 export const authenticatedApiRequest = async (method: string, url: string, data?: any): Promise<Response> => {
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem('authToken');
   
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
