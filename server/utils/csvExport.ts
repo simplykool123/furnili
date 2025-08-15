@@ -12,7 +12,7 @@ export const exportProductsCSV = async (res: Response) => {
     const csvHeaders = "ID,Name,Category,Description,SKU,Price,Stock Quantity,Min Stock Level,Active,Created At\n";
     
     const csvData = products.map(product => 
-      `${product.id},"${(product.name || '').replace(/"/g, '""')}","${(product.category || '').replace(/"/g, '""')}","${(product.description || '').replace(/"/g, '""')}","${(product.sku || '').replace(/"/g, '""')}",${product.price || 0},${product.stockQuantity || 0},${product.minStockLevel || 0},${product.isActive || false},"${product.createdAt || ''}"`
+      `${product.id},"${(product.name || '').replace(/"/g, '""')}","${(product.category || '').replace(/"/g, '""')}","${(product.description || '').replace(/"/g, '""')}","${(product.sku || '').replace(/"/g, '""')}",${product.pricePerUnit || 0},${product.currentStock || 0},${product.minStock || 0},${product.isActive || false},"${product.createdAt || ''}"`
     ).join("\n");
 
     res.setHeader("Content-Type", "text/csv; charset=utf-8");
@@ -58,7 +58,7 @@ export const exportLowStockCSV = async (res: Response) => {
     }
     
     // Filter products with stock below minimum threshold
-    const lowStockProducts = products.filter(p => (p.stockQuantity || 0) < (p.minStockLevel || 10));
+    const lowStockProducts = products.filter(p => (p.currentStock || 0) < (p.minStock || 10));
     
     if (lowStockProducts.length === 0) {
       // Create empty CSV with headers
@@ -75,7 +75,7 @@ export const exportLowStockCSV = async (res: Response) => {
     const csvHeaders = "ID,Name,Category,Current Stock,Min Stock Level,Status,Action Needed\n";
     
     const csvData = lowStockProducts.map(product => 
-      `${product.id},"${(product.name || '').replace(/"/g, '""')}","${(product.category || '').replace(/"/g, '""')}",${product.stockQuantity || 0},${product.minStockLevel || 10},"Low Stock","Reorder required"`
+      `${product.id},"${(product.name || '').replace(/"/g, '""')}","${(product.category || '').replace(/"/g, '""')}",${product.currentStock || 0},${product.minStock || 10},"Low Stock","Reorder required"`
     ).join("\n");
 
     res.setHeader("Content-Type", "text/csv; charset=utf-8");
