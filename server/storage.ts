@@ -332,8 +332,8 @@ class DatabaseStorage implements IStorage {
     
     const productsWithStock: ProductWithStock[] = result.map(product => ({
       ...product,
-      stockStatus: (product.current_stock || 0) <= 0 ? 'out-of-stock' :
-                   (product.current_stock || 0) <= (product.min_stock || 0) ? 'low-stock' : 'in-stock'
+      stockStatus: (product.currentStock || 0) <= 0 ? 'out-of-stock' :
+                   (product.currentStock || 0) <= (product.minStock || 0) ? 'low-stock' : 'in-stock'
     }));
 
     if (filters?.category) {
@@ -486,7 +486,7 @@ class DatabaseStorage implements IStorage {
       }
       
       // Calculate pricing
-      const unitPrice = product.price_per_unit || 0;
+      const unitPrice = product.pricePerUnit || 0;
       const totalPrice = unitPrice * item.requestedQuantity;
       totalRequestValue += totalPrice;
       
@@ -767,7 +767,7 @@ class DatabaseStorage implements IStorage {
     
     const pendingRequests = allRequests.filter(r => r.status === 'pending');
     const recentRequests = allRequests.slice(0, 5);
-    const totalValue = allProducts.reduce((sum, p) => sum + ((p.price_per_unit || 0) * (p.current_stock || 0)), 0);
+    const totalValue = allProducts.reduce((sum, p) => sum + ((p.pricePerUnit || 0) * (p.currentStock || 0)), 0);
 
     return {
       totalProducts: allProducts.length,
@@ -1121,7 +1121,7 @@ class DatabaseStorage implements IStorage {
     return db.select().from(products)
       .where(and(
         eq(products.isActive, true),
-        sql`${products.current_stock} <= ${products.min_stock}`
+        sql`${products.currentStock} <= ${products.minStock}`
       ));
   }
 
@@ -1765,7 +1765,7 @@ class DatabaseStorage implements IStorage {
             
             // Update product stock
             await db.update(products)
-              .set({ current_stock: newStock })
+              .set({ currentStock: newStock })
               .where(eq(products.id, poItem[0].productId));
             
             // Create stock movement with all required fields
@@ -1856,9 +1856,9 @@ class DatabaseStorage implements IStorage {
       id: products.id,
       name: products.name,
       sku: products.sku,
-      currentStock: products.current_stock,
-      minStock: products.min_stock,
-      pricePerUnit: products.price_per_unit,
+      currentStock: products.currentStock,
+      minStock: products.minStock,
+      pricePerUnit: products.pricePerUnit,
       brand: products.brand
     })
     .from(products)
