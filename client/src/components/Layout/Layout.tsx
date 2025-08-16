@@ -40,13 +40,16 @@ export default function Layout({
   }, []);
   
   if (!user) {
+    console.log('Layout: No user found, rendering nothing');
     return null; // Will redirect to login
   }
+
+  console.log('Layout: User found, rendering layout for:', user.name);
 
   const isMobile = useIsMobile();
 
   return (
-    <div className="min-h-screen flex" data-testid="main-layout" style={{backgroundColor: '#F5F0E8'}}>
+    <div className="min-h-screen flex bg-white">
       {/* Desktop Sidebar */}
       <div className="hidden lg:block">
         <Sidebar 
@@ -63,10 +66,10 @@ export default function Layout({
       {sidebarOpen && (
         <div className="fixed inset-0 z-50 lg:hidden">
           <div 
-            className="fixed inset-0 bg-black bg-opacity-50 animate-fade-in" 
+            className="fixed inset-0 bg-black bg-opacity-50" 
             onClick={() => setSidebarOpen(false)}
           />
-          <div className="fixed inset-y-0 left-0 w-64 animate-slide-up">
+          <div className="fixed inset-y-0 left-0 w-64">
             <Sidebar onItemClick={() => setSidebarOpen(false)} />
           </div>
         </div>
@@ -85,7 +88,7 @@ export default function Layout({
           />
         )}
         
-        <div className="flex-1 overflow-auto mobile-scroll mobile-safe-area-bottom p-3 sm:p-4 lg:p-6" style={{backgroundColor: '#F5F0E8'}}>
+        <div className="flex-1 overflow-auto p-4 bg-gray-50">
           {children}
         </div>
       </main>
