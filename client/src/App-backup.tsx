@@ -46,17 +46,14 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const checkAuth = () => {
       try {
-        console.log('Checking authentication...');
         const token = localStorage.getItem('authToken');
         const user = localStorage.getItem('authUser');
-        console.log('Auth check - Token exists:', !!token, 'User exists:', !!user);
         if (token && user) {
           setIsAuthenticated(true);
         } else {
           setIsAuthenticated(false);
         }
       } catch (error) {
-        console.error('Auth check error:', error);
         setIsAuthenticated(false);
       } finally {
         setIsLoading(false);
@@ -67,23 +64,17 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   }, []);
 
   if (isLoading) {
-    console.log('ProtectedRoute - Still loading...');
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-600 mx-auto mb-2"></div>
-          <p className="text-gray-600">Loading...</p>
-        </div>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     );
   }
 
   if (!isAuthenticated) {
-    console.log('ProtectedRoute - Not authenticated, showing login');
     return <LoginSimple />;
   }
 
-  console.log('ProtectedRoute - Authenticated, showing children');
   return <>{children}</>;
 }
 
@@ -106,23 +97,9 @@ function Router() {
         </ProtectedRoute>
       </Route>
       
-      {/* Test route to verify routing works */}
-      <Route path="/test">
-        <div className="p-8 bg-white min-h-screen">
-          <h1 className="text-2xl font-bold text-black">Test Route Working!</h1>
-          <p className="text-gray-600">If you can see this, routing is working correctly.</p>
-        </div>
-      </Route>
-      
       <Route path="/products">
         <ProtectedRoute>
           <Products />
-        </ProtectedRoute>
-      </Route>
-      
-      <Route path="/categories">
-        <ProtectedRoute>
-          <Categories />
         </ProtectedRoute>
       </Route>
       
@@ -132,21 +109,9 @@ function Router() {
         </ProtectedRoute>
       </Route>
       
-      <Route path="/requests">
-        <ProtectedRoute>
-          <MaterialRequests />
-        </ProtectedRoute>
-      </Route>
-      
       <Route path="/material-requests">
         <ProtectedRoute>
           <MaterialRequests />
-        </ProtectedRoute>
-      </Route>
-      
-      <Route path="/inventory-movement">
-        <ProtectedRoute>
-          <InventoryMovement />
         </ProtectedRoute>
       </Route>
       
@@ -159,6 +124,12 @@ function Router() {
       <Route path="/users">
         <ProtectedRoute>
           <Users />
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/categories">
+        <ProtectedRoute>
+          <Categories />
         </ProtectedRoute>
       </Route>
       
@@ -177,42 +148,6 @@ function Router() {
       <Route path="/ocr-wizard">
         <ProtectedRoute>
           <OCRWizard />
-        </ProtectedRoute>
-      </Route>
-      
-      <Route path="/projects">
-        <ProtectedRoute>
-          <Projects />
-        </ProtectedRoute>
-      </Route>
-      
-      <Route path="/projects/:projectId">
-        <ProtectedRoute>
-          <ProjectDetail />
-        </ProtectedRoute>
-      </Route>
-      
-      <Route path="/projects/:projectId/:tab">
-        <ProtectedRoute>
-          <ProjectDetail />
-        </ProtectedRoute>
-      </Route>
-      
-      <Route path="/projects/:projectId/quotes/create">
-        <ProtectedRoute>
-          <CreateQuote />
-        </ProtectedRoute>
-      </Route>
-      
-      <Route path="/projects/:projectId/quotes/:quoteId/edit">
-        <ProtectedRoute>
-          <EditQuote />
-        </ProtectedRoute>
-      </Route>
-      
-      <Route path="/clients">
-        <ProtectedRoute>
-          <Clients />
         </ProtectedRoute>
       </Route>
       
@@ -240,9 +175,15 @@ function Router() {
         </ProtectedRoute>
       </Route>
       
-      <Route path="/whatsapp">
+      <Route path="/whatsapp-export">
         <ProtectedRoute>
           <WhatsAppExport />
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/inventory-movement">
+        <ProtectedRoute>
+          <InventoryMovement />
         </ProtectedRoute>
       </Route>
       
@@ -257,61 +198,79 @@ function Router() {
           <Backups />
         </ProtectedRoute>
       </Route>
-
+      
       <Route path="/system-flowchart">
         <ProtectedRoute>
           <SystemFlowchart />
         </ProtectedRoute>
       </Route>
-
+      
+      <Route path="/projects">
+        <ProtectedRoute>
+          <Projects />
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/projects/:projectId">
+        <ProtectedRoute>
+          <ProjectDetail />
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/quotes/create">
+        <ProtectedRoute>
+          <CreateQuote />
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/quotes/:quoteId/edit">
+        <ProtectedRoute>
+          <EditQuote />
+        </ProtectedRoute>
+      </Route>
+      
       <Route path="/sales-products">
         <ProtectedRoute>
           <SalesProducts />
         </ProtectedRoute>
       </Route>
-
+      
+      <Route path="/clients">
+        <ProtectedRoute>
+          <Clients />
+        </ProtectedRoute>
+      </Route>
+      
       <Route path="/purchase-orders">
         <ProtectedRoute>
           <PurchaseOrders />
         </ProtectedRoute>
       </Route>
-
+      
       <Route path="/suppliers">
         <ProtectedRoute>
           <Suppliers />
         </ProtectedRoute>
       </Route>
-
-
       
       <Route component={NotFound} />
     </Switch>
   );
 }
 
-function App() {
-  try {
-    console.log('App component rendering...');
-    return (
-      <QueryClientProvider client={queryClient}>
-        <ThemeProvider>
-          <TooltipProvider>
-            <div className="App bg-white min-h-screen">
-              {/* Temporarily bypass Layout to debug */}
-              <div className="p-4">
-                <h1 className="text-2xl font-bold text-black mb-4">Furnili Management System</h1>
-                <Router />
-              </div>
-              <Toaster />
-            </div>
-          </TooltipProvider>
-        </ThemeProvider>
-      </QueryClientProvider>
-    );
-  } catch (error) {
-    console.error("App component error:", error);
-    return <div className="p-4 bg-red-100 text-red-800">Error loading application: {String(error)}</div>;
-  }
+export default function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider>
+        <TooltipProvider>
+          <div className="App">
+            <Layout>
+              <Router />
+            </Layout>
+            <Toaster />
+          </div>
+        </TooltipProvider>
+      </ThemeProvider>
+    </QueryClientProvider>
+  );
 }
-
-export default App;
