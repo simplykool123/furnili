@@ -40,11 +40,10 @@ export default function Layout({
   }, []);
   
   if (!user) {
-    console.log('Layout: No user found, rendering nothing');
-    return null; // Will redirect to login
+    return <div className="min-h-screen flex items-center justify-center bg-red-100">
+      <div className="p-4 text-red-800">Layout Error: No user found</div>
+    </div>;
   }
-
-  console.log('Layout: User found, rendering layout for:', user.name);
 
   const isMobile = useIsMobile();
 
