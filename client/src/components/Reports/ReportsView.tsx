@@ -290,10 +290,20 @@ const renderDetailedTable = (type: string, data: any[]) => {
           <TableBody>
             {data.map((request) => (
               <TableRow key={request.id}>
-                <TableCell><Badge variant="outline">REQ-{request.id}</Badge></TableCell>
-                <TableCell className="font-medium">{request.productName}</TableCell>
-                <TableCell>{request.quantity}</TableCell>
-                <TableCell>{request.projectName || "N/A"}</TableCell>
+                <TableCell><Badge variant="outline">{request.orderNumber}</Badge></TableCell>
+                <TableCell className="font-medium">
+                  {request.items && request.items.length > 0 
+                    ? request.items.map(item => item.product?.name).filter(Boolean).join(', ') || 'N/A'
+                    : 'N/A'
+                  }
+                </TableCell>
+                <TableCell>
+                  {request.items && request.items.length > 0
+                    ? request.items.reduce((total, item) => total + (item.requestedQuantity || 0), 0)
+                    : 0
+                  }
+                </TableCell>
+                <TableCell>{request.clientName || "N/A"}</TableCell>
                 <TableCell>
                   <Badge variant={
                     request.status === 'completed' ? 'default' :
@@ -309,7 +319,7 @@ const renderDetailedTable = (type: string, data: any[]) => {
                   </Badge>
                 </TableCell>
                 <TableCell>{formatDate(request.createdAt)}</TableCell>
-                <TableCell className="text-right">{formatCurrency(request.estimatedCost || 0)}</TableCell>
+                <TableCell className="text-right">{formatCurrency(request.totalValue || 0)}</TableCell>
               </TableRow>
             ))}
           </TableBody>

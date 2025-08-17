@@ -1849,6 +1849,24 @@ class DatabaseStorage implements IStorage {
     return await query.orderBy(desc(auditLogs.createdAt));
   }
 
+  // Petty Cash operations
+  async getPettyCashExpenses(filters?: { month?: number; year?: number }): Promise<PettyCashExpense[]> {
+    let query = db.select().from(pettyCashExpenses);
+    
+    if (filters?.month && filters?.year) {
+      const whereConditions = [];
+      whereConditions.push(
+        sql`EXTRACT(MONTH FROM ${pettyCashExpenses.expenseDate}) = ${filters.month}`
+      );
+      whereConditions.push(
+        sql`EXTRACT(YEAR FROM ${pettyCashExpenses.expenseDate}) = ${filters.year}`
+      );
+      query = query.where(and(...whereConditions)) as any;
+    }
+    
+    return await query.orderBy(desc(pettyCashExpenses.expenseDate));
+  }
+
   // Auto PO Generation with Intelligent Supplier Selection
   async generateAutoPurchaseOrders(userId: number): Promise<PurchaseOrder[]> {
     // Find products with low stock (current_stock < min_stock)
