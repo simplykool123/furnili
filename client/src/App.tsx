@@ -92,45 +92,67 @@ function Router() {
         }}
       </Route>
       
+      <Route path="/dashboard">
+        <ProtectedRoute>
+          <Layout>
+            <Dashboard />
+          </Layout>
+        </ProtectedRoute>
+      </Route>
+      
       <Route path="/">
         <ProtectedRoute>
-          <Dashboard />
+          <Layout>
+            <Dashboard />
+          </Layout>
         </ProtectedRoute>
       </Route>
       
       <Route path="/products">
         <ProtectedRoute>
-          <Products />
+          <Layout>
+            <Products />
+          </Layout>
         </ProtectedRoute>
       </Route>
       
       <Route path="/categories">
         <ProtectedRoute>
-          <Categories />
+          <Layout>
+            <Categories />
+          </Layout>
         </ProtectedRoute>
       </Route>
       
       <Route path="/boq">
         <ProtectedRoute>
-          <BOQ />
+          <Layout>
+            <BOQ />
+          </Layout>
         </ProtectedRoute>
       </Route>
       
       <Route path="/requests">
         <ProtectedRoute>
-          <MaterialRequests />
+          <Layout>
+            <MaterialRequests />
+          </Layout>
         </ProtectedRoute>
       </Route>
       
       <Route path="/material-requests">
         <ProtectedRoute>
-          <MaterialRequests />
+          <Layout>
+            <MaterialRequests />
+          </Layout>
         </ProtectedRoute>
       </Route>
       
       <Route path="/inventory-movement">
         <ProtectedRoute>
-          <InventoryMovement />
+          <Layout>
+            <InventoryMovement />
+          </Layout>
         </ProtectedRoute>
       </Route>
       
@@ -142,25 +164,33 @@ function Router() {
       
       <Route path="/reports">
         <ProtectedRoute>
-          <Reports />
+          <Layout>
+            <Reports />
+          </Layout>
         </ProtectedRoute>
       </Route>
       
       <Route path="/users">
         <ProtectedRoute>
-          <Users />
+          <Layout>
+            <Users />
+          </Layout>
         </ProtectedRoute>
       </Route>
       
       <Route path="/attendance">
         <ProtectedRoute>
-          <Attendance />
+          <Layout>
+            <Attendance />
+          </Layout>
         </ProtectedRoute>
       </Route>
       
       <Route path="/petty-cash">
         <ProtectedRoute>
-          <PettyCash />
+          <Layout>
+            <PettyCash />
+          </Layout>
         </ProtectedRoute>
       </Route>
       
@@ -172,19 +202,25 @@ function Router() {
       
       <Route path="/projects">
         <ProtectedRoute>
-          <Projects />
+          <Layout>
+            <Projects />
+          </Layout>
         </ProtectedRoute>
       </Route>
       
       <Route path="/projects/:projectId">
         <ProtectedRoute>
-          <ProjectDetail />
+          <Layout>
+            <ProjectDetail />
+          </Layout>
         </ProtectedRoute>
       </Route>
       
       <Route path="/projects/:projectId/:tab">
         <ProtectedRoute>
-          <ProjectDetail />
+          <Layout>
+            <ProjectDetail />
+          </Layout>
         </ProtectedRoute>
       </Route>
       

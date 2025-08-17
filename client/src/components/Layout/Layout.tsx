@@ -2,7 +2,7 @@ import { ReactNode, useState, useEffect } from "react";
 import Sidebar from "./Sidebar";
 import Header from "./Header";
 import { authService } from "@/lib/auth";
-import MobileOptimizer from "@/components/Mobile/MobileOptimizer";
+import { useIsMobile } from "@/components/Mobile/MobileOptimizer";
 import { cn } from "@/lib/utils";
 
 interface LayoutProps {
@@ -44,19 +44,18 @@ export default function Layout({
   }
 
   return (
-    <MobileOptimizer>
-      <div className="min-h-screen flex" data-testid="main-layout" style={{backgroundColor: '#F5F0E8'}}>
-        {/* Desktop Sidebar */}
-        <div className="hidden lg:block">
-          <Sidebar 
-            collapsed={sidebarCollapsed} 
-            onToggleCollapse={() => {
-              const newCollapsed = !sidebarCollapsed;
-              setSidebarCollapsed(newCollapsed);
-              localStorage.setItem('sidebarCollapsed', newCollapsed.toString());
-            }} 
-          />
-        </div>
+    <div className="min-h-screen flex" data-testid="main-layout" style={{backgroundColor: '#F5F0E8'}}>
+      {/* Desktop Sidebar */}
+      <div className="hidden lg:block">
+        <Sidebar 
+          collapsed={sidebarCollapsed} 
+          onToggleCollapse={() => {
+            const newCollapsed = !sidebarCollapsed;
+            setSidebarCollapsed(newCollapsed);
+            localStorage.setItem('sidebarCollapsed', newCollapsed.toString());
+          }} 
+        />
+      </div>
         
         {/* Mobile Sidebar Overlay */}
         {sidebarOpen && (
@@ -87,8 +86,7 @@ export default function Layout({
           <div className="flex-1 overflow-auto mobile-scroll mobile-safe-area-bottom p-3 sm:p-4 lg:p-6" style={{backgroundColor: '#F5F0E8'}}>
             {children}
           </div>
-        </main>
-      </div>
-    </MobileOptimizer>
+      </main>
+    </div>
   );
 }
