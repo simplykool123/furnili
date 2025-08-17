@@ -1696,9 +1696,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       switch (type) {
         case 'inventory':
           const products = await storage.getAllProducts();
-          reportData.detailedData = products.filter((p: any) => 
-            category === 'all' || !category || p.category === category
-          );
+          // Filter products by creation/update date and category
+          reportData.detailedData = products.filter((p: any) => {
+            // Category filter
+            const categoryMatch = category === 'all' || !category || p.category === category;
+            
+            // Date filter - check if product was created or updated in the specified month/year
+            let dateMatch = true;
+            if (p.createdAt || p.updatedAt) {
+              const productDate = new Date(p.updatedAt || p.createdAt);
+              dateMatch = productDate.getMonth() + 1 === monthNum && productDate.getFullYear() === yearNum;
+            }
+            
+            return categoryMatch && dateMatch;
+          });
           reportData.totalProducts = reportData.detailedData.length;
           reportData.totalValue = reportData.detailedData.reduce((sum: number, p: any) => 
             sum + ((p.pricePerUnit || 0) * (p.currentStock || 0)), 0
