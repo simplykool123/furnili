@@ -1812,12 +1812,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         case 'purchase-orders':
           const purchaseOrders = await storage.getAllPurchaseOrders();
           const monthlyPOs = purchaseOrders.filter((po: any) => {
-            const poDate = new Date(po.date);
+            const poDate = new Date(po.createdAt);
             return poDate.getMonth() + 1 === monthNum && poDate.getFullYear() === yearNum;
           });
           reportData.detailedData = monthlyPOs;
           reportData.totalPurchaseOrders = monthlyPOs.length;
-          reportData.totalValue = monthlyPOs.reduce((sum: number, po: any) => sum + po.totalAmount, 0);
+          reportData.totalValue = monthlyPOs.reduce((sum: number, po: any) => sum + (po.totalAmount || 0), 0);
           break;
 
         case 'financial':
@@ -1830,7 +1830,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           const allPOs = await storage.getAllPurchaseOrders();
           const monthlyFinPOs = allPOs.filter((po: any) => {
-            const poDate = new Date(po.date);
+            const poDate = new Date(po.createdAt);
             return poDate.getMonth() + 1 === monthNum && poDate.getFullYear() === yearNum;
           });
 
