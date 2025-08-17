@@ -24,6 +24,21 @@ import {
   Briefcase
 } from "lucide-react";
 import { authenticatedApiRequest } from "@/lib/queryClient";
+import {
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  Legend
+} from 'recharts';
 
 const reportTypes = [
   { value: "inventory", label: "Inventory Report", icon: Package },
@@ -97,6 +112,141 @@ const formatCurrency = (amount: number) => {
 
 const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleDateString('en-IN');
+};
+
+// Colors for charts
+const CHART_COLORS = ['#D97706', '#92400E', '#FBBF24', '#FCD34D', '#FEF3C7'];
+
+// Function to prepare stock movement chart data
+const prepareStockMovementChartData = (data: any[]) => {
+  // Group by date
+  const dailyMovements = data.reduce((acc: any, movement: any) => {
+    const date = formatDate(movement.createdAt);
+    if (!acc[date]) {
+      acc[date] = { date, in: 0, out: 0, total: 0 };
+    }
+    
+    if (movement.type === 'in' || movement.type === 'adjustment-in') {
+      acc[date].in += Math.abs(movement.quantity);
+    } else {
+      acc[date].out += Math.abs(movement.quantity);
+    }
+    acc[date].total += Math.abs(movement.quantity);
+    
+    return acc;
+  }, {});
+
+  const dailyData = Object.values(dailyMovements).sort((a: any, b: any) => 
+    new Date(a.date).getTime() - new Date(b.date).getTime()
+  );
+
+  // Group by product for pie chart
+  const productMovements = data.reduce((acc: any, movement: any) => {
+    const product = movement.productName || 'Unknown Product';
+    if (!acc[product]) {
+      acc[product] = { name: product, value: 0 };
+    }
+    acc[product].value += Math.abs(movement.quantity);
+    return acc;
+  }, {});
+
+  const productData = Object.values(productMovements).slice(0, 5); // Top 5 products
+
+  // Group by type for bar chart
+  const typeMovements = data.reduce((acc: any, movement: any) => {
+    let type = movement.type;
+    if (type === 'adjustment-in' || type === 'in') type = 'Stock In';
+    else if (type === 'adjustment-out' || type === 'out') type = 'Stock Out';
+    else type = 'Other';
+    
+    if (!acc[type]) {
+      acc[type] = { type, count: 0 };
+    }
+    acc[type].count += 1;
+    return acc;
+  }, {});
+
+  const typeData = Object.values(typeMovements);
+
+  return { dailyData, productData, typeData };
+};
+
+// Function to render charts for stock movement history
+const renderStockMovementCharts = (data: any[]) => {
+  const { dailyData, productData, typeData } = prepareStockMovementChartData(data);
+
+  return (
+    <div className="space-y-6 mb-6">
+      {/* Daily Stock Movement Trend */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Daily Stock Movement Trend</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={300}>
+            <LineChart data={dailyData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="date" />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              <Line type="monotone" dataKey="in" stroke="#10B981" strokeWidth={2} name="Stock In" />
+              <Line type="monotone" dataKey="out" stroke="#EF4444" strokeWidth={2} name="Stock Out" />
+              <Line type="monotone" dataKey="total" stroke="#D97706" strokeWidth={2} name="Total Movement" />
+            </LineChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Top Products by Movement Volume */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Top Products by Movement Volume</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <PieChart>
+                <Pie
+                  data={productData}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={({ name, percent }: any) => `${name} (${(percent * 100).toFixed(0)}%)`}
+                  outerRadius={80}
+                  fill="#8884d8"
+                  dataKey="value"
+                >
+                  {productData.map((_: any, index: number) => (
+                    <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        {/* Movement Types Distribution */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Movement Types Distribution</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={typeData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="type" />
+                <YAxis />
+                <Tooltip />
+                <Bar dataKey="count" fill="#D97706" />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
 };
 
 const renderStatsCards = (stats: ReportStats) => {
@@ -581,39 +731,52 @@ const renderDetailedTable = (type: string, data: any[]) => {
 
     case 'stock-movements':
       return (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Date</TableHead>
-              <TableHead>Product</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead>Quantity</TableHead>
-              <TableHead>Reference</TableHead>
-              <TableHead>User</TableHead>
-              <TableHead>Notes</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {data.map((movement) => (
-              <TableRow key={movement.id}>
-                <TableCell>{formatDate(movement.createdAt)}</TableCell>
-                <TableCell className="font-medium">{movement.productName}</TableCell>
-                <TableCell>
-                  <Badge variant={
-                    movement.type === 'IN' ? 'default' :
-                    movement.type === 'OUT' ? 'destructive' : 'secondary'
-                  }>
-                    {movement.type}
-                  </Badge>
-                </TableCell>
-                <TableCell>{movement.quantity}</TableCell>
-                <TableCell>{movement.reference || "N/A"}</TableCell>
-                <TableCell>{movement.userName || "N/A"}</TableCell>
-                <TableCell>{movement.notes || "N/A"}</TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+        <div>
+          {/* Render Charts First */}
+          {renderStockMovementCharts(data)}
+          
+          {/* Then Render Table */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Detailed Stock Movement Records</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Product</TableHead>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Quantity</TableHead>
+                    <TableHead>Reference</TableHead>
+                    <TableHead>User</TableHead>
+                    <TableHead>Notes</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {data.map((movement) => (
+                    <TableRow key={movement.id}>
+                      <TableCell>{formatDate(movement.createdAt)}</TableCell>
+                      <TableCell className="font-medium">{movement.productName}</TableCell>
+                      <TableCell>
+                        <Badge variant={
+                          movement.type === 'IN' ? 'default' :
+                          movement.type === 'OUT' ? 'destructive' : 'secondary'
+                        }>
+                          {movement.type}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>{movement.quantity}</TableCell>
+                      <TableCell>{movement.reference || "N/A"}</TableCell>
+                      <TableCell>{movement.userName || "N/A"}</TableCell>
+                      <TableCell>{movement.notes || "N/A"}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </div>
       );
 
     case 'user-activity':
