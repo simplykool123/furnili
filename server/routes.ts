@@ -1863,9 +1863,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
             const quoteDate = new Date(q.createdAt);
             return quoteDate.getMonth() + 1 === monthNum && quoteDate.getFullYear() === yearNum;
           });
-          reportData.detailedData = monthlyQuotes;
-          reportData.totalQuotes = monthlyQuotes.length;
-          reportData.totalValue = monthlyQuotes.reduce((sum: number, q: any) => sum + q.totalAmount, 0);
+          
+          // Get project and client details for each quote
+          const quotesWithDetails = await Promise.all(
+            monthlyQuotes.map(async (quote: any) => {
+              const project = quote.projectId ? await storage.getProject(quote.projectId) : null;
+              const client = quote.clientId ? await storage.getClient(quote.clientId) : null;
+              return {
+                ...quote,
+                projectName: project ? project.name : 'N/A',
+                clientName: client ? client.name : 'N/A'
+              };
+            })
+          );
+          
+          reportData.detailedData = quotesWithDetails;
+          reportData.totalQuotes = quotesWithDetails.length;
+          reportData.totalValue = quotesWithDetails.reduce((sum: number, q: any) => sum + (q.totalAmount || 0), 0);
           break;
 
         case 'suppliers':
