@@ -1849,6 +1849,10 @@ class DatabaseStorage implements IStorage {
     return await query.orderBy(desc(auditLogs.createdAt));
   }
 
+  async getAllAuditLogs(): Promise<AuditLog[]> {
+    return this.getAuditLogs();
+  }
+
   // Petty Cash operations
   async getPettyCashExpenses(filters?: { month?: number; year?: number }): Promise<PettyCashExpense[]> {
     let query = db.select().from(pettyCashExpenses);
