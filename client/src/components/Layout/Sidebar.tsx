@@ -51,6 +51,7 @@ export const navigation = [
     ]
   },
   { name: 'Material Requests', href: '/requests', icon: PackageSearch, roles: ['admin', 'manager', 'staff', 'store_incharge'] },
+  { name: 'Inventory Optimization', href: '/inventory-optimization', icon: TrendingUp, roles: ['admin', 'manager'] },
 
   { name: 'Staff Attendance', href: '/attendance', icon: UserRoundPen, roles: ['admin', 'manager', 'staff', 'store_incharge'] },
   { name: 'Petty Cash', href: '/petty-cash', icon: CircleDollarSign, roles: ['admin', 'manager', 'staff', 'store_incharge'] }, // Store keeper can access user-specific petty cash

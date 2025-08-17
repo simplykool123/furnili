@@ -36,6 +36,7 @@ import SalesProducts from "@/pages/SalesProducts";
 import Clients from "@/pages/Clients";
 import PurchaseOrders from "@/pages/PurchaseOrders";
 import Suppliers from "@/pages/Suppliers";
+import InventoryOptimization from "@/pages/InventoryOptimization";
 
 import NotFound from "@/pages/not-found";
 
@@ -130,6 +131,12 @@ function Router() {
       <Route path="/inventory-movement">
         <ProtectedRoute>
           <InventoryMovement />
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/inventory-optimization">
+        <ProtectedRoute>
+          <InventoryOptimization />
         </ProtectedRoute>
       </Route>
       

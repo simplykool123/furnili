@@ -328,6 +328,161 @@ export async function getAllBackupData(): Promise<BackupData> {
       console.log('Users data not available:', error);
     }
 
+    // Projects
+    try {
+      const projects = await storage.getAllProjects();
+      if (projects.length > 0) {
+        backupData.projects = projects.map(proj => ({
+          id: proj.id,
+          code: proj.code,
+          name: proj.name,
+          clientId: proj.clientId,
+          stage: proj.stage,
+          budget: proj.budget || 0,
+          description: proj.description || '',
+          startDate: proj.startDate || '',
+          endDate: proj.endDate || '',
+          priority: proj.priority,
+          manager: proj.manager,
+          createdBy: proj.createdBy,
+          createdAt: proj.createdAt
+        }));
+      }
+    } catch (error) {
+      console.log('Projects data not available:', error);
+    }
+
+    // Clients
+    try {
+      const clients = await storage.getAllClients();
+      if (clients.length > 0) {
+        backupData.clients = clients.map(client => ({
+          id: client.id,
+          name: client.name,
+          email: client.email || '',
+          phone: client.phone || '',
+          address: client.address || '',
+          contactPerson: client.contactPerson || '',
+          gstNumber: client.gstNumber || '',
+          panNumber: client.panNumber || '',
+          isActive: client.isActive,
+          createdAt: client.createdAt
+        }));
+      }
+    } catch (error) {
+      console.log('Clients data not available:', error);
+    }
+
+    // Sales Products
+    try {
+      const salesProducts = await storage.getAllSalesProducts();
+      if (salesProducts.length > 0) {
+        backupData.sales_products = salesProducts.map(sp => ({
+          id: sp.id,
+          name: sp.name,
+          description: sp.description || '',
+          size: sp.size || '',
+          unitPrice: sp.unitPrice,
+          category: sp.category || '',
+          imageUrl: sp.imageUrl || '',
+          taxPercentage: sp.taxPercentage || 0,
+          internalNotes: sp.internalNotes || '',
+          isActive: sp.isActive,
+          createdAt: sp.createdAt
+        }));
+      }
+    } catch (error) {
+      console.log('Sales products data not available:', error);
+    }
+
+    // Quotes
+    try {
+      const quotes = await storage.getAllQuotes();
+      if (quotes.length > 0) {
+        backupData.quotes = quotes.map(quote => ({
+          id: quote.id,
+          projectId: quote.projectId,
+          title: quote.title,
+          description: quote.description || '',
+          items: quote.items || [],
+          subtotal: quote.subtotal,
+          packaging: quote.packaging,
+          transportation: quote.transportation,
+          gst: quote.gst,
+          total: quote.total,
+          status: quote.status,
+          validUntil: quote.validUntil || '',
+          termsConditions: quote.termsConditions || '',
+          createdBy: quote.createdBy,
+          createdAt: quote.createdAt
+        }));
+      }
+    } catch (error) {
+      console.log('Quotes data not available:', error);
+    }
+
+    // Purchase Orders
+    try {
+      const pos = await storage.getAllPurchaseOrders();
+      if (pos.length > 0) {
+        backupData.purchase_orders = pos.map(po => ({
+          id: po.id,
+          poNumber: po.poNumber,
+          supplierId: po.supplierId,
+          status: po.status,
+          totalAmount: po.totalAmount,
+          notes: po.notes || '',
+          expectedDelivery: po.expectedDelivery || '',
+          createdBy: po.createdBy,
+          createdAt: po.createdAt,
+          sentAt: po.sentAt || '',
+          receivedAt: po.receivedAt || ''
+        }));
+      }
+    } catch (error) {
+      console.log('Purchase orders data not available:', error);
+    }
+
+    // Suppliers
+    try {
+      const suppliers = await storage.getAllSuppliers();
+      if (suppliers.length > 0) {
+        backupData.suppliers = suppliers.map(supplier => ({
+          id: supplier.id,
+          name: supplier.name,
+          contactPerson: supplier.contactPerson || '',
+          email: supplier.email || '',
+          phone: supplier.phone || '',
+          address: supplier.address || '',
+          gstNumber: supplier.gstNumber || '',
+          panNumber: supplier.panNumber || '',
+          isActive: supplier.isActive,
+          createdBy: supplier.createdBy,
+          createdAt: supplier.createdAt
+        }));
+      }
+    } catch (error) {
+      console.log('Suppliers data not available:', error);
+    }
+
+    // Audit Logs
+    try {
+      const auditLogs = await storage.getAllAuditLogs();
+      if (auditLogs.length > 0) {
+        backupData.audit_logs = auditLogs.map(log => ({
+          id: log.id,
+          userId: log.userId,
+          action: log.action,
+          tableName: log.tableName,
+          recordId: log.recordId,
+          metadata: log.metadata || {},
+          createdAt: log.createdAt
+        }));
+      }
+    } catch (error) {
+      console.log('Audit logs data not available:', error);
+    }
+
     return backupData;
   } catch (error) {
     console.error('Error getting backup data:', error);

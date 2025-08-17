@@ -787,6 +787,95 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Calendar and Project Milestone Routes
+  app.get("/api/calendar/events", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const { projectId, allProjects } = req.query;
+      
+      // Get tasks and projects for calendar events
+      const events: any[] = [];
+      
+      if (projectId) {
+        // Get project-specific events
+        const projectTasks = await storage.getTasks(Number(projectId));
+        const project = await storage.getProject(Number(projectId));
+        
+        // Add task events
+        projectTasks.forEach(task => {
+          if (task.dueDate) {
+            events.push({
+              id: `task-${task.id}`,
+              title: task.title,
+              date: new Date(task.dueDate),
+              type: 'task',
+              projectId: Number(projectId),
+              projectName: project?.name,
+              status: task.status,
+              assignedTo: task.assignedTo,
+              description: task.description
+            });
+          }
+        });
+      } else if (allProjects === 'true') {
+        // Get all project events
+        const allTasks = await storage.getAllTasks();
+        const projects = await storage.getAllProjects();
+        
+        // Add task events from all projects
+        for (const task of allTasks) {
+          if (task.dueDate) {
+            const project = projects.find(p => p.id === task.projectId);
+            events.push({
+              id: `task-${task.id}`,
+              title: task.title,
+              date: new Date(task.dueDate),
+              type: 'task',
+              projectId: task.projectId,
+              projectName: project?.name,
+              status: task.status,
+              assignedTo: task.assignedTo,
+              description: task.description
+            });
+          }
+        }
+        
+        // Add project milestone events
+        projects.forEach(project => {
+          if (project.startDate) {
+            events.push({
+              id: `project-start-${project.id}`,
+              title: `${project.name} - Start`,
+              date: new Date(project.startDate),
+              type: 'milestone',
+              projectId: project.id,
+              projectName: project.name,
+              status: project.stage
+            });
+          }
+          if (project.endDate) {
+            events.push({
+              id: `project-end-${project.id}`,
+              title: `${project.name} - Deadline`,
+              date: new Date(project.endDate),
+              type: 'milestone',
+              projectId: project.id,
+              projectName: project.name,
+              status: project.stage
+            });
+          }
+        });
+      }
+      
+      res.json(events.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()));
+    } catch (error) {
+      console.error('Calendar events error:', error);
+      res.status(500).json({ 
+        message: "Failed to fetch calendar events", 
+        error: error instanceof Error ? error.message : String(error) 
+      });
+    }
+  });
+
   // Material request routes
   app.get("/api/requests", authenticateToken, async (req, res) => {
     try {
@@ -3129,6 +3218,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Stock movements API error:', error);
       res.status(500).json({ message: "Failed to fetch movements", error: error instanceof Error ? error.message : String(error) });
+    }
+  });
+
+  // Inventory Optimization Routes
+  app.get("/api/inventory/optimization", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const { generateInventoryOptimizationReport } = await import("./utils/inventoryOptimization");
+      const report = await generateInventoryOptimizationReport();
+      res.json(report);
+    } catch (error) {
+      console.error('Inventory optimization error:', error);
+      res.status(500).json({ 
+        message: "Failed to generate optimization report", 
+        error: error instanceof Error ? error.message : String(error) 
+      });
+    }
+  });
+
+  app.get("/api/inventory/reorder-points", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const { calculateOptimalReorderPoints } = await import("./utils/inventoryOptimization");
+      const reorderPoints = await calculateOptimalReorderPoints();
+      res.json(reorderPoints);
+    } catch (error) {
+      console.error('Reorder points calculation error:', error);
+      res.status(500).json({ 
+        message: "Failed to calculate reorder points", 
+        error: error instanceof Error ? error.message : String(error) 
+      });
+    }
+  });
+
+  app.get("/api/inventory/dead-stock", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const { identifyDeadStock } = await import("./utils/inventoryOptimization");
+      const deadStock = await identifyDeadStock();
+      res.json(deadStock);
+    } catch (error) {
+      console.error('Dead stock identification error:', error);
+      res.status(500).json({ 
+        message: "Failed to identify dead stock", 
+        error: error instanceof Error ? error.message : String(error) 
+      });
+    }
+  });
+
+  app.get("/api/inventory/seasonal-forecast", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const { generateSeasonalForecast } = await import("./utils/inventoryOptimization");
+      const forecast = await generateSeasonalForecast();
+      res.json(forecast);
+    } catch (error) {
+      console.error('Seasonal forecast error:', error);
+      res.status(500).json({ 
+        message: "Failed to generate seasonal forecast", 
+        error: error instanceof Error ? error.message : String(error) 
+      });
     }
   });
 
