@@ -126,7 +126,7 @@ const prepareStockMovementChartData = (data: any[]) => {
       acc[date] = { date, in: 0, out: 0, total: 0 };
     }
     
-    if (movement.type === 'in' || movement.type === 'adjustment-in') {
+    if (movement.movementType === 'in' || movement.movementType === 'adjustment-in') {
       acc[date].in += Math.abs(movement.quantity);
     } else {
       acc[date].out += Math.abs(movement.quantity);
@@ -154,7 +154,7 @@ const prepareStockMovementChartData = (data: any[]) => {
 
   // Group by type for bar chart
   const typeMovements = data.reduce((acc: any, movement: any) => {
-    let type = movement.type;
+    let type = movement.movementType;
     if (type === 'adjustment-in' || type === 'in') type = 'Stock In';
     else if (type === 'adjustment-out' || type === 'out') type = 'Stock Out';
     else type = 'Other';
@@ -760,10 +760,10 @@ const renderDetailedTable = (type: string, data: any[]) => {
                       <TableCell className="font-medium">{movement.productName}</TableCell>
                       <TableCell>
                         <Badge variant={
-                          movement.type === 'IN' ? 'default' :
-                          movement.type === 'OUT' ? 'destructive' : 'secondary'
+                          movement.movementType === 'in' ? 'default' :
+                          movement.movementType === 'out' ? 'destructive' : 'secondary'
                         }>
-                          {movement.type}
+                          {movement.movementType?.toUpperCase()}
                         </Badge>
                       </TableCell>
                       <TableCell>{movement.quantity}</TableCell>

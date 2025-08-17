@@ -1899,17 +1899,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
           
           // Get product and user details for each movement
-          const movementsWithDetails = await Promise.all(
-            monthlyMovements.map(async (movement: any) => {
-              const product = await storage.getProduct(movement.productId);
-              const user = await storage.getUser(movement.userId);
-              return {
-                ...movement,
-                productName: product ? product.name : 'Unknown Product',
-                userName: user ? user.name || user.username : 'Unknown User'
-              };
-            })
-          );
+          const movementsWithDetails = monthlyMovements.map((movement: any) => {
+            return {
+              ...movement,
+              userName: movement.performedByName || 'Unknown User'
+            };
+          });
           
           reportData.detailedData = movementsWithDetails;
           reportData.totalStockMovements = movementsWithDetails.length;
