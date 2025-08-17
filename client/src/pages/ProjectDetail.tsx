@@ -96,6 +96,7 @@ import FurniliCard from "@/components/UI/FurniliCard";
 import FurniliButton from "@/components/UI/FurniliButton";
 import ProjectQuotes from "@/components/Project/ProjectQuotes";
 import { authService, authenticatedApiRequest } from "@/lib/auth";
+import ProjectActivities from "@/components/Project/ProjectActivities";
 
 // Schemas for various forms
 const taskSchema = z.object({
@@ -3377,19 +3378,7 @@ export default function ProjectDetail() {
           </TabsContent>
 
           <TabsContent value="activities" className="p-6 bg-gray-50">
-            <div className="text-center py-12">
-              <Calendar className="h-16 w-16 mx-auto text-gray-300 mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
-                Activities Timeline
-              </h3>
-              <p className="text-gray-500 mb-6">
-                Track project activities and milestones
-              </p>
-              <Button className="bg-blue-600 hover:bg-blue-700 text-white">
-                <Plus className="h-4 w-4 mr-2" />
-                Add Activity
-              </Button>
-            </div>
+            <ProjectActivities projectId={projectId} />
           </TabsContent>
 
           {canViewFinances && (

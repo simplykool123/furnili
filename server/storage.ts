@@ -1081,23 +1081,106 @@ class DatabaseStorage implements IStorage {
 
   // Project Log operations
   async getProjectLogs(projectId: number): Promise<any[]> {
-    // Return empty array for now - can be implemented later with activity tracking
-    return [];
+    const result = await db.select({
+      id: projectLogs.id,
+      projectId: projectLogs.projectId,
+      logType: projectLogs.logType,
+      title: projectLogs.title,
+      description: projectLogs.description,
+      createdBy: projectLogs.createdBy,
+      attachments: projectLogs.attachments,
+      isImportant: projectLogs.isImportant,
+      createdAt: projectLogs.createdAt,
+      createdByUser: {
+        name: users.name,
+        username: users.username
+      }
+    })
+    .from(projectLogs)
+    .leftJoin(users, eq(projectLogs.createdBy, users.id))
+    .where(eq(projectLogs.projectId, projectId))
+    .orderBy(desc(projectLogs.createdAt));
+
+    return result.map(log => ({
+      id: log.id,
+      projectId: log.projectId,
+      type: log.logType,
+      title: log.title,
+      description: log.description,
+      priority: log.isImportant ? 'high' : 'medium',
+      createdBy: log.createdBy,
+      attachments: log.attachments,
+      createdAt: log.createdAt,
+      createdByUser: log.createdByUser
+    }));
   }
 
   async createProjectLog(log: any): Promise<any> {
-    // Stub method - return the log object as is
-    return { id: Date.now(), ...log };
+    const result = await db.insert(projectLogs).values({
+      projectId: log.projectId,
+      logType: log.logType,
+      title: log.title,
+      description: log.description,
+      createdBy: log.createdBy,
+      attachments: log.attachments || [],
+      isImportant: log.isImportant || false
+    }).returning();
+
+    const createdLog = result[0];
+    
+    // Get user details for response
+    const user = await this.getUser(createdLog.createdBy);
+    
+    return {
+      id: createdLog.id,
+      projectId: createdLog.projectId,
+      type: createdLog.logType,
+      title: createdLog.title,
+      description: createdLog.description,
+      priority: createdLog.isImportant ? 'high' : 'medium',
+      createdBy: createdLog.createdBy,
+      attachments: createdLog.attachments,
+      createdAt: createdLog.createdAt,
+      createdByUser: user ? { name: user.name, username: user.username } : null
+    };
   }
 
   async updateProjectLog(id: number, updates: any): Promise<any> {
-    // Stub method - return updated object
-    return { id, ...updates };
+    const updateData = {
+      title: updates.title,
+      description: updates.description,
+      logType: updates.logType,
+      isImportant: updates.isImportant || false
+    };
+
+    const result = await db.update(projectLogs)
+      .set(updateData)
+      .where(eq(projectLogs.id, id))
+      .returning();
+
+    const updatedLog = result[0];
+    if (!updatedLog) return null;
+
+    // Get user details for response
+    const user = await this.getUser(updatedLog.createdBy);
+    
+    return {
+      id: updatedLog.id,
+      projectId: updatedLog.projectId,
+      type: updatedLog.logType,
+      title: updatedLog.title,
+      description: updatedLog.description,
+      priority: updatedLog.isImportant ? 'high' : 'medium',
+      createdBy: updatedLog.createdBy,
+      attachments: updatedLog.attachments,
+      createdAt: updatedLog.createdAt,
+      createdByUser: user ? { name: user.name, username: user.username } : null
+    };
   }
 
   async deleteProjectLog(id: number): Promise<boolean> {
-    // Stub method - always return true
-    return true;
+    const result = await db.delete(projectLogs).where(eq(projectLogs.id, id)).returning();
+    return result.length > 0;
   }
 
   // BOQ operations
@@ -2066,3 +2149,4 @@ class DatabaseStorage implements IStorage {
 }
 
 export const storage = new DatabaseStorage();
+export { db };

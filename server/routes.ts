@@ -787,6 +787,82 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Project Activities Routes
+  app.get("/api/projects/:projectId/activities", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const { projectId } = req.params;
+      const activities = await storage.getProjectLogs(parseInt(projectId));
+      res.json(activities);
+    } catch (error) {
+      console.error('Project activities error:', error);
+      res.status(500).json({ 
+        message: "Failed to fetch project activities", 
+        error: error instanceof Error ? error.message : String(error) 
+      });
+    }
+  });
+
+  app.post("/api/projects/:projectId/activities", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const { projectId } = req.params;
+      const { title, description, type, priority } = req.body;
+      const user = req.user!;
+
+      const activity = await storage.createProjectLog({
+        projectId: parseInt(projectId),
+        logType: type,
+        title,
+        description,
+        createdBy: user.id,
+        isImportant: priority === 'high'
+      });
+
+      res.json(activity);
+    } catch (error) {
+      console.error('Create activity error:', error);
+      res.status(500).json({ 
+        message: "Failed to create activity", 
+        error: error instanceof Error ? error.message : String(error) 
+      });
+    }
+  });
+
+  app.put("/api/projects/:projectId/activities/:activityId", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const { activityId } = req.params;
+      const { title, description, type, priority } = req.body;
+
+      const activity = await storage.updateProjectLog(parseInt(activityId), {
+        title,
+        description,
+        logType: type,
+        isImportant: priority === 'high'
+      });
+
+      res.json(activity);
+    } catch (error) {
+      console.error('Update activity error:', error);
+      res.status(500).json({ 
+        message: "Failed to update activity", 
+        error: error instanceof Error ? error.message : String(error) 
+      });
+    }
+  });
+
+  app.delete("/api/projects/:projectId/activities/:activityId", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const { activityId } = req.params;
+      await storage.deleteProjectLog(parseInt(activityId));
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Delete activity error:', error);
+      res.status(500).json({ 
+        message: "Failed to delete activity", 
+        error: error instanceof Error ? error.message : String(error) 
+      });
+    }
+  });
+
   // Calendar and Project Milestone Routes
   app.get("/api/calendar/events", authenticateToken, async (req: AuthRequest, res) => {
     try {
