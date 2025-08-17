@@ -37,6 +37,7 @@ import Clients from "@/pages/Clients";
 import PurchaseOrders from "@/pages/PurchaseOrders";
 import Suppliers from "@/pages/Suppliers";
 import InventoryOptimization from "@/pages/InventoryOptimization";
+import Activities from "@/pages/Activities";
 
 import NotFound from "@/pages/not-found";
 
@@ -310,6 +311,14 @@ function Router() {
 
 
       
+      <Route path="/activities">
+        <ProtectedRoute>
+          <Layout>
+            <Activities />
+          </Layout>
+        </ProtectedRoute>
+      </Route>
+
       <Route component={NotFound} />
     </Switch>
   );

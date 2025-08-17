@@ -863,7 +863,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Calendar and Project Milestone Routes
+  // Calendar events endpoint (updated to use combined activities)
   app.get("/api/calendar/events", authenticateToken, async (req: AuthRequest, res) => {
     try {
       const { projectId, allProjects } = req.query;
@@ -1160,6 +1160,118 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
 
+
+  // Combined Activities API for calendar and timeline views
+  app.get("/api/activities/combined", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const user = req.user!;
+      const activities: any[] = [];
+
+      // Get project logs (activities)
+      const projectLogs = await storage.getAllProjectLogs();
+      activities.push(...projectLogs.map((log: any) => ({
+        id: log.id,
+        type: 'project_log',
+        title: log.title,
+        description: log.description,
+        date: new Date(log.createdAt),
+        projectName: log.projectName,
+        projectId: log.projectId,
+        createdBy: log.createdByName,
+        logType: log.logType,
+        isImportant: log.isImportant
+      })));
+
+      // Get tasks
+      const tasks = await storage.getAllTasks();
+      activities.push(...tasks.map((task: any) => ({
+        id: task.id,
+        type: 'task',
+        title: task.title,
+        description: task.description,
+        date: new Date(task.createdAt),
+        dueDate: task.dueDate ? new Date(task.dueDate) : null,
+        status: task.status,
+        priority: task.priority,
+        projectName: task.projectName,
+        projectId: task.projectId,
+        assignedTo: task.assignedToName || task.assignedToOther
+      })));
+
+      // Get CRM activities
+      const crmActivities = await storage.getAllCRMActivities();
+      activities.push(...crmActivities.map((activity: any) => ({
+        id: activity.id,
+        type: 'crm_activity',
+        title: activity.subject,
+        description: activity.description,
+        date: new Date(activity.createdAt),
+        dueDate: activity.dueDate ? new Date(activity.dueDate) : null,
+        status: activity.status,
+        assignedTo: activity.assignedTo,
+        createdBy: activity.createdByName
+      })));
+
+      res.json(activities);
+    } catch (error) {
+      console.error('Combined activities error:', error);
+      res.status(500).json({ 
+        message: "Failed to fetch activities", 
+        error 
+      });
+    }
+  });
+
+  // Activity statistics for dashboard
+  app.get("/api/activities/stats", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const user = req.user!;
+      
+      // Get all tasks for statistics
+      const tasks = await storage.getAllTasks();
+      const projectLogs = await storage.getAllProjectLogs();
+      const crmActivities = await storage.getAllCRMActivities();
+      
+      const today = new Date();
+      const weekFromNow = new Date();
+      weekFromNow.setDate(today.getDate() + 7);
+      
+      let overdue = 0;
+      let dueToday = 0;
+      let thisWeek = 0;
+      
+      tasks.forEach((task: any) => {
+        if (task.dueDate && task.status !== 'completed') {
+          const dueDate = new Date(task.dueDate);
+          
+          if (dueDate < today) {
+            overdue++;
+          } else if (dueDate.toDateString() === today.toDateString()) {
+            dueToday++;
+          } else if (dueDate <= weekFromNow) {
+            thisWeek++;
+          }
+        }
+      });
+
+      // CRM activities processing would go here when table exists
+
+      const stats = {
+        total: tasks.length + projectLogs.length + crmActivities.length,
+        overdue,
+        dueToday,
+        thisWeek
+      };
+
+      res.json(stats);
+    } catch (error) {
+      console.error('Activity stats error:', error);
+      res.status(500).json({ 
+        message: "Failed to fetch activity statistics", 
+        error 
+      });
+    }
+  });
 
   // BOQ routes
   app.get("/api/boq", authenticateToken, requireRole(["manager", "admin", "staff"]), async (req, res) => {

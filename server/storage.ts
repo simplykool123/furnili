@@ -368,6 +368,41 @@ class DatabaseStorage implements IStorage {
     return true;
   }
 
+  // Project Log operations
+  async getAllProjectLogs(): Promise<any[]> {
+    try {
+      const result = await db
+        .select({
+          id: projectLogs.id,
+          projectId: projectLogs.projectId,
+          logType: projectLogs.logType,
+          title: projectLogs.title,
+          description: projectLogs.description,
+          createdBy: projectLogs.createdBy,
+          attachments: projectLogs.attachments,
+          isImportant: projectLogs.isImportant,
+          createdAt: projectLogs.createdAt,
+          projectName: projects.name,
+          createdByName: users.name
+        })
+        .from(projectLogs)
+        .leftJoin(projects, eq(projectLogs.projectId, projects.id))
+        .leftJoin(users, eq(projectLogs.createdBy, users.id))
+        .orderBy(desc(projectLogs.createdAt));
+      
+      return result;
+    } catch (error) {
+      console.error('Error fetching project logs:', error);
+      return [];
+    }
+  }
+
+  // CRM Activities operations (placeholder - no CRM activities table yet)
+  async getAllCRMActivities(): Promise<any[]> {
+    // Return empty array since CRM activities table doesn't exist yet
+    return [];
+  }
+
   // Material Request operations
   async getMaterialRequest(id: number): Promise<MaterialRequestWithItems | undefined> {
     // Get the request first
