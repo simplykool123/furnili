@@ -93,67 +93,49 @@ function Router() {
       
       <Route path="/">
         <ProtectedRoute>
-          <Layout>
-            <Dashboard />
-          </Layout>
+          <Dashboard />
         </ProtectedRoute>
       </Route>
       
-
-      
       <Route path="/products">
         <ProtectedRoute>
-          <Layout>
-            <Products />
-          </Layout>
+          <Products />
         </ProtectedRoute>
       </Route>
       
       <Route path="/categories">
         <ProtectedRoute>
-          <Layout>
-            <Categories />
-          </Layout>
+          <Categories />
         </ProtectedRoute>
       </Route>
       
       <Route path="/boq">
         <ProtectedRoute>
-          <Layout>
-            <BOQ />
-          </Layout>
+          <BOQ />
         </ProtectedRoute>
       </Route>
       
       <Route path="/requests">
         <ProtectedRoute>
-          <Layout>
-            <MaterialRequests />
-          </Layout>
+          <MaterialRequests />
         </ProtectedRoute>
       </Route>
       
       <Route path="/material-requests">
         <ProtectedRoute>
-          <Layout>
-            <MaterialRequests />
-          </Layout>
+          <MaterialRequests />
         </ProtectedRoute>
       </Route>
       
       <Route path="/inventory-movement">
         <ProtectedRoute>
-          <Layout>
-            <InventoryMovement />
-          </Layout>
+          <InventoryMovement />
         </ProtectedRoute>
       </Route>
       
       <Route path="/reports">
         <ProtectedRoute>
-          <Layout>
-            <Reports />
-          </Layout>
+          <Reports />
         </ProtectedRoute>
       </Route>
       
@@ -295,14 +277,8 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <TooltipProvider>
-          <div className="App min-h-screen bg-white">
-            <div className="p-4 text-center">
-              <h1 className="text-2xl font-bold text-black mb-4">Furnili Management System</h1>
-              <p className="text-gray-600 mb-4">Application Loading...</p>
-            </div>
-            <Router />
-            <Toaster />
-          </div>
+          <Toaster />
+          <Router />
         </TooltipProvider>
       </ThemeProvider>
     </QueryClientProvider>
