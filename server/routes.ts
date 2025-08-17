@@ -1709,9 +1709,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           break;
 
         case 'material-requests':
-          const requests = await storage.getAllMaterialRequests();
-          reportData.detailedData = requests;
-          reportData.pendingRequests = requests.filter((r: any) => r.status === 'pending').length;
+          const allRequests = await storage.getAllMaterialRequests();
+          const filteredRequests = allRequests.filter((r: any) => {
+            const requestDate = new Date(r.createdAt);
+            return requestDate.getMonth() + 1 === monthNum && requestDate.getFullYear() === yearNum;
+          });
+          reportData.detailedData = filteredRequests;
+          reportData.pendingRequests = filteredRequests.filter((r: any) => r.status === 'pending').length;
           break;
 
         case 'low-stock':
