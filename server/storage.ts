@@ -9,6 +9,7 @@ import {
   requestItems, 
   projects, 
   projectFiles,
+  projectLogs,
   pettyCashExpenses,
   attendance,
   stockMovements,
@@ -19,7 +20,6 @@ import {
   moodboards,
   tasks,
   suppliers,
-
   supplierProducts,
   purchaseOrders,
   purchaseOrderItems,
