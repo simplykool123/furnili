@@ -115,34 +115,29 @@ export function AnimatedNotificationBell() {
           <Button 
             variant="ghost" 
             size="sm" 
-
             className={cn(
-              "relative group transition-colors hover:bg-gray-100 rounded-full p-3 min-w-[48px] min-h-[48px]",
+              "relative group transition-colors hover:bg-amber-100 dark:hover:bg-amber-900/20 rounded-full p-3 min-w-[48px] min-h-[48px] bg-amber-50/50 dark:bg-amber-900/10",
               hasNewTasks && "animate-bell-bounce"
             )}
           >
             <div className="relative">
-              {/* Bell Icon with dynamic animations */}
+              {/* Bell Icon with dynamic animations - Larger and more visible */}
               <Bell 
                 className={cn(
-                  "h-6 w-6 transition-all duration-300",
-                  hasUrgentNotifications ? "text-red-500" : "text-amber-700"
+                  "h-7 w-7 transition-all duration-300 drop-shadow-sm",
+                  hasUrgentNotifications ? "text-red-600" : "text-amber-700 dark:text-amber-500"
                 )} 
               />
               
-              {/* Removed animated ripple effects */}
-              
-              {/* Total notification count badge */}
+              {/* Total notification count badge - More prominent */}
               {totalNotifications > 0 && (
                 <Badge 
                   variant="destructive" 
-                  className="absolute -top-1 -right-1 h-5 w-5 p-0 text-xs flex items-center justify-center font-bold border-2 border-white bg-red-500"
+                  className="absolute -top-2 -right-2 h-6 w-6 p-0 text-xs flex items-center justify-center font-bold border-2 border-white dark:border-gray-900 bg-red-500 text-white shadow-lg"
                 >
                   {totalNotifications > 9 ? '9+' : totalNotifications}
                 </Badge>
               )}
-              
-              {/* Removed extra decorations for cleaner look */}
             </div>
             
 

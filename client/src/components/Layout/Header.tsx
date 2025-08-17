@@ -54,28 +54,21 @@ export default function Header({ title, subtitle, showAddButton = false, onAddCl
           </div>
         </div>
         
-        <div className="flex items-center space-x-1 sm:space-x-2 lg:space-x-3">
+        <div className="flex items-center space-x-3 sm:space-x-4 lg:space-x-5">
           {/* Custom Actions */}
           {actions && (
-            <div className="flex items-center space-x-1 sm:space-x-2">
+            <div className="flex items-center space-x-2">
               {actions}
             </div>
           )}
           
-          {/* Task Notifications for Staff */}
-          <div className="hidden sm:block">
+          {/* Task Notifications for Staff - More visible with better spacing */}
+          <div className="flex items-center">
             <AnimatedNotificationBell />
           </div>
           
-          {/* Mobile compact notifications */}
-          <div className="sm:hidden">
-            <AnimatedNotificationBell />
-          </div>
-          
-          {/* Removed duplicate low stock notification - now handled by unified AnimatedNotificationBell */}
-
-          {/* User Profile */}
-          <div className="flex items-center space-x-3">
+          {/* User Profile - Better separated from notification */}
+          <div className="flex items-center space-x-3 border-l border-border/30 pl-3 sm:pl-4">
             <div className="text-right hidden sm:block">
               <p className="font-semibold text-foreground text-sm lg:text-base truncate">{user?.name}</p>
               <p className="text-xs text-muted-foreground capitalize">{user?.role}</p>
