@@ -1667,10 +1667,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get employees for filtering
+  app.get("/api/reports/employees", authenticateToken, async (req, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      const employees = users.map((user: any) => ({
+        id: user.id,
+        name: user.name || user.username || 'Unknown User'
+      }));
+      res.json(employees);
+    } catch (error) {
+      console.error('Error fetching employees:', error);
+      res.status(500).json({ error: "Failed to fetch employees" });
+    }
+  });
+
   // Comprehensive Reports Data Endpoint
   app.get("/api/reports/data", authenticateToken, async (req, res) => {
     try {
-      const { type, month, year, category } = req.query;
+      const { type, month, year, category, employee } = req.query;
       const monthNum = month ? parseInt(month as string) : new Date().getMonth() + 1;
       const yearNum = year ? parseInt(year as string) : new Date().getFullYear();
       
@@ -1782,8 +1797,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
             })
           );
           
-          reportData.detailedData = attendanceWithUsers;
-          reportData.totalAttendance = attendanceWithUsers.filter((a: any) => a.status === 'present').length;
+          // Filter by employee name if specified
+          let filteredAttendance = attendanceWithUsers;
+          if (employee && employee !== 'all') {
+            filteredAttendance = attendanceWithUsers.filter((a: any) => 
+              a.userName.toLowerCase().includes((employee as string).toLowerCase())
+            );
+          }
+          
+          reportData.detailedData = filteredAttendance;
+          reportData.totalAttendance = filteredAttendance.filter((a: any) => a.status === 'present').length;
           break;
 
         case 'purchase-orders':

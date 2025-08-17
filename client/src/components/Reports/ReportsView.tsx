@@ -47,6 +47,7 @@ interface ReportFilters {
   category: string;
   month: number;
   year: number;
+  employee: string;
 }
 
 interface ReportStats {
@@ -664,19 +665,21 @@ export default function ReportsView() {
     category: "all",
     month: new Date().getMonth() + 1,
     year: new Date().getFullYear(),
+    employee: "all",
   });
 
   const [isExporting, setIsExporting] = useState(false);
 
   // Fetch report data based on selected type and filters
   const { data: reportData, isLoading, error } = useQuery({
-    queryKey: ['/api/reports/data', filters.type, filters.month, filters.year, filters.category],
+    queryKey: ['/api/reports/data', filters.type, filters.month, filters.year, filters.category, filters.employee],
     queryFn: async () => {
       const params = new URLSearchParams({
         type: filters.type,
         month: filters.month.toString(),
         year: filters.year.toString(),
         category: filters.category,
+        employee: filters.employee,
       });
       
       const response = await authenticatedApiRequest('GET', `/api/reports/data?${params}`);
@@ -701,6 +704,23 @@ export default function ReportsView() {
     },
   });
 
+  // Fetch employees for attendance filter dropdown
+  const { data: employees = [] } = useQuery({
+    queryKey: ['/api/reports/employees'],
+    queryFn: async () => {
+      try {
+        const response = await authenticatedApiRequest('GET', '/api/reports/employees');
+        if (!response.ok) {
+          throw new Error('Failed to fetch employees');
+        }
+        return response.json();
+      } catch (error) {
+        console.error('Employees fetch error:', error);
+        return [];
+      }
+    },
+  });
+
   const handleExport = async () => {
     if (isExporting) return;
     
@@ -711,6 +731,7 @@ export default function ReportsView() {
         month: filters.month.toString(),
         year: filters.year.toString(),
         category: filters.category,
+        employee: filters.employee,
       });
       
       const response = await authenticatedApiRequest('GET', `/api/reports/export?${params}`);
@@ -863,6 +884,28 @@ export default function ReportsView() {
                   {Array.isArray(categories) && categories.map((category: any) => (
                     <SelectItem key={category.id} value={category.name}>
                       {category.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          {filters.type === 'attendance' && (
+            <div className="space-y-2">
+              <Label>Employee</Label>
+              <Select 
+                value={filters.employee} 
+                onValueChange={(value) => setFilters(prev => ({ ...prev, employee: value }))}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Employees</SelectItem>
+                  {Array.isArray(employees) && employees.map((employee: any) => (
+                    <SelectItem key={employee.id} value={employee.name}>
+                      {employee.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
