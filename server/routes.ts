@@ -794,7 +794,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { projectId } = req.params;
       const activities = await storage.getProjectLogs(parseInt(projectId));
-      res.json(activities);
+      
+      // Enhance activities with task information if they're linked to tasks
+      const enhancedActivities = await Promise.all(
+        activities.map(async (activity: any) => {
+          if (activity.taskId) {
+            try {
+              const taskInfo = await storage.getTask(activity.taskId);
+              return {
+                ...activity,
+                task: taskInfo ? {
+                  id: taskInfo.id,
+                  title: taskInfo.title,
+                  status: taskInfo.status,
+                  priority: taskInfo.priority,
+                  dueDate: taskInfo.dueDate,
+                  assignedTo: taskInfo.assignedToName || taskInfo.assignedToOther
+                } : null
+              };
+            } catch (error) {
+              console.log(`Could not fetch task ${activity.taskId}:`, error);
+              return activity;
+            }
+          }
+          return activity;
+        })
+      );
+      
+      res.json(enhancedActivities);
     } catch (error) {
       console.error('Project activities error:', error);
       res.status(500).json({ 
@@ -807,16 +834,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/projects/:projectId/activities", authenticateToken, async (req: AuthRequest, res) => {
     try {
       const { projectId } = req.params;
-      const { title, description, type, priority } = req.body;
+      const { title, description, type, priority, taskTitle, taskPriority, taskAssignedTo, taskDueDate } = req.body;
       const user = req.user!;
 
+      let taskId = null;
+      let activityTitle = title;
+      let activityDescription = description;
+
+      // If it's a task activity, create the task first
+      if (type === 'task' && taskTitle) {
+        const taskData = {
+          title: taskTitle,
+          description: description || '',
+          priority: taskPriority || 'medium',
+          status: 'pending',
+          assignedTo: taskAssignedTo ? parseInt(taskAssignedTo) : null,
+          assignedToOther: null,
+          dueDate: taskDueDate || null,
+          projectId: parseInt(projectId),
+          createdBy: user.id
+        };
+
+        const newTask = await storage.createTask(taskData);
+        taskId = newTask.id;
+        activityTitle = `Task created: ${taskTitle}`;
+        activityDescription = description || `New task "${taskTitle}" created for the project`;
+      }
+
+      // Create the activity/log entry
       const activity = await storage.createProjectLog({
         projectId: parseInt(projectId),
         logType: type,
-        title,
-        description,
+        title: activityTitle,
+        description: activityDescription,
         createdBy: user.id,
-        isImportant: priority === 'high'
+        isImportant: priority === 'high',
+        taskId: taskId // Link to the task if one was created
       });
 
       res.json(activity);
