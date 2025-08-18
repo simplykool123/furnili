@@ -86,13 +86,12 @@ export const projects = pgTable("projects", {
 export const projectLogs = pgTable("project_logs", {
   id: serial("id").primaryKey(),
   projectId: integer("project_id").references(() => projects.id),
-  logType: text("log_type").notNull(), // activity, note, milestone, issue, update, task
+  logType: text("log_type").notNull(), // activity, note, milestone, issue, update
   title: text("title").notNull(),
   description: text("description"),
   createdBy: integer("created_by").references(() => users.id),
   attachments: text("attachments").array().default([]),
   isImportant: boolean("is_important").default(false),
-  taskId: integer("task_id").references(() => tasks.id), // Link to task when activity is task-related
   createdAt: timestamp("created_at").defaultNow(),
 });
 

@@ -38,7 +38,6 @@ import PurchaseOrders from "@/pages/PurchaseOrders";
 import Suppliers from "@/pages/Suppliers";
 import InventoryOptimization from "@/pages/InventoryOptimization";
 import Activities from "@/pages/Activities";
-import ActivityCalendar from "@/pages/ActivityCalendar";
 
 import NotFound from "@/pages/not-found";
 
@@ -317,12 +316,6 @@ function Router() {
           <Layout>
             <Activities />
           </Layout>
-        </ProtectedRoute>
-      </Route>
-
-      <Route path="/:projectId/activities">
-        <ProtectedRoute>
-          <ActivityCalendar />
         </ProtectedRoute>
       </Route>
 
