@@ -1,10 +1,8 @@
-import { useState, useEffect, lazy, Suspense } from 'react';
+import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { ChevronRight } from 'lucide-react';
 import Header from './Header';
 import Sidebar from './Sidebar';
-import { useIsMobile } from '@/components/Mobile/MobileOptimizer';
-import MobileLayout from '@/components/Mobile/MobileLayout';
 
 interface FurniliLayoutProps {
   children: React.ReactNode;
@@ -26,17 +24,30 @@ export default function FurniliLayout({
   className 
 }: FurniliLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const isMobile = useIsMobile(1024);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true); // Start collapsed
   const [isHovering, setIsHovering] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
-
-  // Ensure proper initialization
+  
+  // Simple mobile detection without hooks to avoid conflicts
+  const [isMobile, setIsMobile] = useState(false);
+  
   useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 1024);
+    };
+    
+    checkMobile();
+    const handleResize = () => checkMobile();
+    window.addEventListener('resize', handleResize);
+    
     const timer = setTimeout(() => {
       setIsInitialized(true);
-    }, 50);
-    return () => clearTimeout(timer);
+    }, 100);
+    
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      clearTimeout(timer);
+    };
   }, []);
 
   // Show minimal loading state during initialization
@@ -66,19 +77,7 @@ export default function FurniliLayout({
     );
   }
 
-  // Use mobile layout for better performance on mobile devices
-  if (isMobile) {
-    return (
-      <MobileLayout 
-        title={title} 
-        subtitle={subtitle}
-        actions={actions}
-        className={className}
-      >
-        {children}
-      </MobileLayout>
-    );
-  }
+  // For mobile devices, we still use the same layout but with responsive design
 
   // No auto-hide - sidebar stays open once expanded
 
@@ -92,32 +91,51 @@ export default function FurniliLayout({
       </div>
 
       <div className="flex min-h-screen">
-        {/* Sidebar - Always Fixed */}
-        <div className={cn(
-          "fixed inset-y-0 left-0 z-50 transform transition-all duration-300 ease-in-out",
-          sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
-          sidebarCollapsed && !isMobile ? "w-16" : "w-64"
-        )}
-        onClick={() => {
-          if (!isMobile && sidebarCollapsed) {
-            setSidebarCollapsed(false);
-          }
-        }}>
-          <div className="furnili-sidebar h-full shadow-xl border-r border-border/50">
-            <Sidebar 
-              onItemClick={() => isMobile && setSidebarOpen(false)} 
-              collapsed={sidebarCollapsed && !isMobile}
-              onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
-            />
+        {/* Sidebar - Always Fixed - Only show on desktop */}
+        {!isMobile && (
+          <div className={cn(
+            "fixed inset-y-0 left-0 z-50 transform transition-all duration-300 ease-in-out",
+            sidebarCollapsed ? "w-16" : "w-64"
+          )}
+          onClick={() => {
+            if (sidebarCollapsed) {
+              setSidebarCollapsed(false);
+            }
+          }}>
+            <div className="furnili-sidebar h-full shadow-xl border-r border-border/50">
+              <Sidebar 
+                onItemClick={() => {}} 
+                collapsed={sidebarCollapsed}
+                onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
+              />
+            </div>
           </div>
-        </div>
+        )}
 
-        {/* Mobile overlay */}
-        {sidebarOpen && isMobile && (
-          <div 
-            className="fixed inset-0 z-40 bg-black/20 backdrop-blur-sm lg:hidden" 
-            onClick={() => setSidebarOpen(false)}
-          />
+        {/* Mobile Sidebar - Only show when needed */}
+        {isMobile && (
+          <>
+            <div className={cn(
+              "fixed inset-y-0 left-0 z-50 w-64 transform transition-all duration-300 ease-in-out",
+              sidebarOpen ? "translate-x-0" : "-translate-x-full"
+            )}>
+              <div className="furnili-sidebar h-full shadow-xl border-r border-border/50">
+                <Sidebar 
+                  onItemClick={() => setSidebarOpen(false)} 
+                  collapsed={false}
+                  onToggleCollapse={() => {}}
+                />
+              </div>
+            </div>
+            
+            {/* Mobile overlay */}
+            {sidebarOpen && (
+              <div 
+                className="fixed inset-0 z-40 bg-black/20 backdrop-blur-sm" 
+                onClick={() => setSidebarOpen(false)}
+              />
+            )}
+          </>
         )}
 
         {/* Sidebar Toggle Button for Desktop */}
@@ -134,7 +152,8 @@ export default function FurniliLayout({
         {/* Main content */}
         <div className={cn(
           "flex-1 flex flex-col min-w-0 transition-all duration-300 ease-in-out",
-          sidebarCollapsed && !isMobile ? "ml-16" : "ml-64 lg:ml-64",
+          !isMobile && sidebarCollapsed ? "ml-16" : "",
+          !isMobile && !sidebarCollapsed ? "ml-64" : "",
           isMobile ? "ml-0" : ""
         )}>
           {/* Header */}
@@ -143,9 +162,9 @@ export default function FurniliLayout({
               title={title}
               subtitle={subtitle}
               showAddButton={showAddButton}
+              onMenuClick={isMobile ? () => setSidebarOpen(true) : undefined}
               onAddClick={onAddClick}
               actions={actions}
-              onMenuClick={() => setSidebarOpen(!sidebarOpen)}
             />
           </div>
 

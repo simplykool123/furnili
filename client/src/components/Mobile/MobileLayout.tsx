@@ -48,12 +48,9 @@ export default function MobileLayout({
     };
   }, [sidebarOpen, isMobile]);
 
+  // This component should only render mobile-specific content
   if (!isMobile) {
-    return (
-      <div className={cn("min-h-screen bg-background", className)}>
-        {children}
-      </div>
-    );
+    return null;
   }
 
   return (
