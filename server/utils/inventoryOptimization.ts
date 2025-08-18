@@ -147,6 +147,7 @@ export async function identifyDeadStock(): Promise<DeadStockItem[]> {
         currentStock: products.currentStock,
         category: products.category,
         pricePerUnit: products.pricePerUnit,
+        createdAt: products.createdAt,
       })
       .from(products)
       .where(sql`${products.isActive} = true AND ${products.currentStock} > 0`);
@@ -168,9 +169,11 @@ export async function identifyDeadStock(): Promise<DeadStockItem[]> {
         .limit(1);
 
       const lastMovementDate = lastMovement.length > 0 ? lastMovement[0].createdAt : null;
+      
+      // If no movement found, calculate days since product creation instead of using 999
       const daysSinceLastMovement = lastMovementDate 
         ? Math.floor((Date.now() - new Date(lastMovementDate).getTime()) / (1000 * 60 * 60 * 24))
-        : 999;
+        : Math.floor((Date.now() - new Date(product.createdAt).getTime()) / (1000 * 60 * 60 * 24));
 
       // Consider items as dead stock if no movement for 6+ months
       if (daysSinceLastMovement >= 180) {
