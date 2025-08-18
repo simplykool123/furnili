@@ -99,7 +99,21 @@ interface SidebarProps {
 export default function Sidebar({ onItemClick, collapsed = false, onToggleCollapse }: SidebarProps = {}) {
   const [location] = useLocation();
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const user = authService.getUser();
+
+  // Wait for auth initialization
+  useEffect(() => {
+    const checkAuthReady = () => {
+      if (authService.isAuthInitialized()) {
+        setIsLoading(false);
+      } else {
+        // Check again after a short delay
+        setTimeout(checkAuthReady, 50);
+      }
+    };
+    checkAuthReady();
+  }, []);
 
   // Auto-expand Master Data/System Settings/Products menus if any sub-item is active
   useEffect(() => {
@@ -128,6 +142,23 @@ export default function Sidebar({ onItemClick, collapsed = false, onToggleCollap
         : [...prev, itemName]
     );
   };
+
+  // Show loading state during initialization
+  if (isLoading) {
+    return (
+      <div className="flex h-full flex-col bg-white border-r border-gray-200">
+        <div className="flex items-center p-4">
+          <div className="h-8 w-8 bg-gray-200 rounded animate-pulse"></div>
+          {!collapsed && <div className="ml-3 h-4 w-24 bg-gray-200 rounded animate-pulse"></div>}
+        </div>
+        <div className="flex-1 p-2 space-y-2">
+          {[...Array(8)].map((_, i) => (
+            <div key={i} className="h-10 bg-gray-100 rounded animate-pulse"></div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   // Return early if no user, but after all hooks
   if (!user) return null;

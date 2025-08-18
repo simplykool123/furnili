@@ -451,11 +451,24 @@ export default function TaskManagement() {
         </CardContent>
       </Card>
 
-      {/* Tasks Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Tasks ({filteredTasks.length})</CardTitle>
-        </CardHeader>
+      {/* Tasks View - Table and Calendar */}
+      <Tabs defaultValue="table" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="table" className="flex items-center gap-2">
+            <Filter className="h-4 w-4" />
+            Table View
+          </TabsTrigger>
+          <TabsTrigger value="calendar" className="flex items-center gap-2">
+            <CalendarIcon className="h-4 w-4" />
+            Calendar View
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="table">
+          <Card>
+            <CardHeader>
+              <CardTitle>Tasks ({filteredTasks.length})</CardTitle>
+            </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
@@ -549,7 +562,13 @@ export default function TaskManagement() {
             </div>
           )}
         </CardContent>
-      </Card>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="calendar">
+          <TaskCalendar tasks={filteredTasks} />
+        </TabsContent>
+      </Tabs>
         </TabsContent>
 
         <TabsContent value="calendar">

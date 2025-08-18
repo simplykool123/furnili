@@ -15,20 +15,32 @@ export interface LoginCredentials {
 class AuthService {
   private user: User | null = null;
   private token: string | null = null;
+  private isInitialized: boolean = false;
 
   constructor() {
     // Load user and token from localStorage on initialization
-    const storedToken = localStorage.getItem('authToken');
-    const storedUser = localStorage.getItem('authUser');
-    
-    if (storedToken && storedUser) {
-      this.token = storedToken;
-      try {
-        this.user = JSON.parse(storedUser);
-      } catch (e) {
-        // If parsing fails, clear stored data
-        this.logout();
+    this.initializeAuth();
+  }
+
+  private initializeAuth() {
+    try {
+      const storedToken = localStorage.getItem('authToken');
+      const storedUser = localStorage.getItem('authUser');
+      
+      if (storedToken && storedUser) {
+        this.token = storedToken;
+        const parsedUser = JSON.parse(storedUser);
+        if (parsedUser && typeof parsedUser === 'object' && parsedUser.id) {
+          this.user = parsedUser;
+        } else {
+          this.logout();
+        }
       }
+    } catch (e) {
+      console.warn('Auth initialization failed:', e);
+      this.logout();
+    } finally {
+      this.isInitialized = true;
     }
   }
 
@@ -70,7 +82,14 @@ class AuthService {
   }
 
   getUser(): User | null {
+    if (!this.isInitialized) {
+      this.initializeAuth();
+    }
     return this.user;
+  }
+
+  isAuthInitialized(): boolean {
+    return this.isInitialized;
   }
 
   getToken(): string | null {
