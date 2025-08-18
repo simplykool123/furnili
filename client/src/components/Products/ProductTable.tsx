@@ -30,6 +30,7 @@ interface Product {
   currentStock: number;
   minStock: number;
   unit: string;
+  productType: 'raw_material' | 'finishing_good' | 'assembly' | 'seasonal';
   imageUrl?: string;
   stockStatus: 'in-stock' | 'low-stock' | 'out-of-stock';
   isActive: boolean;
@@ -306,6 +307,30 @@ export default function ProductTable() {
       priority: 'medium' as const,
     },
     {
+      key: 'productType',
+      label: 'Type',
+      priority: 'medium' as const,
+      render: (value: string) => {
+        const typeLabels = {
+          'raw_material': 'Raw Material',
+          'finishing_good': 'Finishing goods',
+          'assembly': 'Assembly',
+          'seasonal': 'Seasonal'
+        };
+        const colors = {
+          'raw_material': 'bg-blue-100 text-blue-800',
+          'finishing_good': 'bg-green-100 text-green-800',
+          'assembly': 'bg-purple-100 text-purple-800',
+          'seasonal': 'bg-orange-100 text-orange-800'
+        };
+        return (
+          <Badge className={`${colors[value as keyof typeof colors]} hover:${colors[value as keyof typeof colors]} text-xs`}>
+            {typeLabels[value as keyof typeof typeLabels]}
+          </Badge>
+        );
+      },
+    },
+    {
       key: 'brand',
       label: 'Brand',
       priority: 'medium' as const,
@@ -419,11 +444,32 @@ export default function ProductTable() {
                   {product.name}
                 </h3>
                 <p className="text-xs text-gray-500">{product.category}</p>
-                <div className="flex items-center justify-between text-xs">
+                <div className="flex items-center justify-between text-xs mb-1">
                   <span className="text-gray-600">{product.brand || '-'}</span>
                   {canSeePricing && (
                     <span className="font-medium">₹{(product.pricePerUnit || 0).toFixed(0)}</span>
                   )}
+                </div>
+                <div className="flex justify-start">
+                  {(() => {
+                    const typeLabels = {
+                      'raw_material': 'Raw Material',
+                      'finishing_good': 'Finishing goods',
+                      'assembly': 'Assembly',
+                      'seasonal': 'Seasonal'
+                    };
+                    const colors = {
+                      'raw_material': 'bg-blue-100 text-blue-800',
+                      'finishing_good': 'bg-green-100 text-green-800',
+                      'assembly': 'bg-purple-100 text-purple-800',
+                      'seasonal': 'bg-orange-100 text-orange-800'
+                    };
+                    return (
+                      <Badge className={`${colors[product.productType as keyof typeof colors]} hover:${colors[product.productType as keyof typeof colors]} text-xs`}>
+                        {typeLabels[product.productType as keyof typeof typeLabels]}
+                      </Badge>
+                    );
+                  })()}
                 </div>
               </div>
               
@@ -519,6 +565,7 @@ export default function ProductTable() {
           <TableRow className="text-xs">
             <SortableHeader column="name" className="w-[200px]">Product</SortableHeader>
             <SortableHeader column="category">Category</SortableHeader>
+            <SortableHeader column="productType">Type</SortableHeader>
             <SortableHeader column="brand">Brand</SortableHeader>
             <SortableHeader column="size">Size</SortableHeader>
             <SortableHeader column="thickness">Thk.</SortableHeader>
@@ -558,6 +605,27 @@ export default function ProductTable() {
                 </div>
               </TableCell>
               <TableCell className="text-xs">{product.category}</TableCell>
+              <TableCell className="text-xs">
+                {(() => {
+                  const typeLabels = {
+                    'raw_material': 'Raw Material',
+                    'finishing_good': 'Finishing goods',
+                    'assembly': 'Assembly',
+                    'seasonal': 'Seasonal'
+                  };
+                  const colors = {
+                    'raw_material': 'bg-blue-100 text-blue-800',
+                    'finishing_good': 'bg-green-100 text-green-800',
+                    'assembly': 'bg-purple-100 text-purple-800',
+                    'seasonal': 'bg-orange-100 text-orange-800'
+                  };
+                  return (
+                    <Badge className={`${colors[product.productType as keyof typeof colors]} hover:${colors[product.productType as keyof typeof colors]} text-xs`}>
+                      {typeLabels[product.productType as keyof typeof typeLabels]}
+                    </Badge>
+                  );
+                })()}
+              </TableCell>
               <TableCell className="text-xs">{product.brand || '-'}</TableCell>
               <TableCell className="text-xs">{product.size || '-'}</TableCell>
               <TableCell className="text-xs font-medium text-blue-600">{product.thickness || '-'}</TableCell>

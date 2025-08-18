@@ -17,6 +17,7 @@ interface Product {
   currentStock: number;
   minStock: number;
   unit: string;
+  productType: 'raw_material' | 'finishing_good' | 'assembly' | 'seasonal';
   imageUrl?: string;
   isActive: boolean;
   createdAt: string;
@@ -99,6 +100,30 @@ export default function MobileProductTable({ onEdit, onDelete, onView }: MobileP
           {value}
         </Badge>
       )
+    },
+    {
+      key: 'productType',
+      label: 'Type',
+      priority: 'medium' as const,
+      render: (value: string) => {
+        const typeLabels = {
+          'raw_material': 'Raw Material',
+          'finishing_good': 'Finishing goods',
+          'assembly': 'Assembly',
+          'seasonal': 'Seasonal'
+        };
+        const colors = {
+          'raw_material': 'bg-blue-100 text-blue-800',
+          'finishing_good': 'bg-green-100 text-green-800',
+          'assembly': 'bg-purple-100 text-purple-800',
+          'seasonal': 'bg-orange-100 text-orange-800'
+        };
+        return (
+          <Badge className={`${colors[value as keyof typeof colors]} hover:${colors[value as keyof typeof colors]} text-xs`}>
+            {typeLabels[value as keyof typeof typeLabels]}
+          </Badge>
+        );
+      },
     },
     {
       key: 'currentStock',

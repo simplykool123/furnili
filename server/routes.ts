@@ -559,6 +559,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         currentStock: z.number().int().min(0, "Stock must be non-negative"),
         minStock: z.number().int().min(0, "Minimum stock must be non-negative"),
         unit: z.string().min(1, "Unit is required"),
+        productType: z.enum(['raw_material', 'finishing_good', 'assembly', 'seasonal']).default('raw_material'),
         imageUrl: z.string().optional(),
       });
       
@@ -596,6 +597,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         currentStock: z.number().int().min(0, "Stock must be non-negative").optional(),
         minStock: z.number().int().min(0, "Minimum stock must be non-negative").optional(),
         unit: z.string().min(1, "Unit is required").optional(),
+        productType: z.enum(['raw_material', 'finishing_good', 'assembly', 'seasonal']).optional(),
         imageUrl: z.string().optional(),
       });
       

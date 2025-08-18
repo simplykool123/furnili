@@ -25,6 +25,7 @@ const productSchema = z.object({
   currentStock: z.coerce.number().int().min(0, "Stock must be non-negative"),
   minStock: z.coerce.number().int().min(0, "Minimum stock must be non-negative"),
   unit: z.string().min(1, "Unit is required"),
+  productType: z.enum(['raw_material', 'finishing_good', 'assembly', 'seasonal']).default('raw_material'),
   imageUrl: z.string().optional(),
 });
 
@@ -42,6 +43,7 @@ interface Product {
   currentStock: number;
   minStock: number;
   unit: string;
+  productType: 'raw_material' | 'finishing_good' | 'assembly' | 'seasonal';
   imageUrl?: string;
 }
 
@@ -89,6 +91,7 @@ export default function ProductForm({ product, onClose, isMobile = false }: Prod
       currentStock: product?.currentStock || 0,
       minStock: product?.minStock || 10,
       unit: product?.unit || "pieces",
+      productType: product?.productType || "raw_material",
     },
   });
 
@@ -411,6 +414,30 @@ export default function ProductForm({ product, onClose, isMobile = false }: Prod
               </Select>
               {errors.unit && (
                 <p className="text-xs text-red-600 mt-0.5">{errors.unit.message}</p>
+              )}
+            </div>
+          </div>
+
+          {/* Row 4: Product Type */}
+          <div className="grid grid-cols-1 gap-3">
+            <div>
+              <Label htmlFor="productType" className="text-xs font-medium mb-1">Product Type *</Label>
+              <Select 
+                value={watch("productType")}
+                onValueChange={(value) => setValue("productType", value as 'raw_material' | 'finishing_good' | 'assembly' | 'seasonal')}
+              >
+                <SelectTrigger className={`${errors.productType ? "border-red-500" : ""} h-8 text-xs`}>
+                  <SelectValue placeholder="Select product type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="raw_material">Raw Material</SelectItem>
+                  <SelectItem value="finishing_good">Finishing goods</SelectItem>
+                  <SelectItem value="assembly">Assembly</SelectItem>
+                  <SelectItem value="seasonal">Seasonal</SelectItem>
+                </SelectContent>
+              </Select>
+              {errors.productType && (
+                <p className="text-xs text-red-600 mt-0.5">{errors.productType.message}</p>
               )}
             </div>
           </div>

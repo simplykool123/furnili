@@ -271,6 +271,7 @@ export const products = pgTable("products", {
   minStock: integer("min_stock").notNull().default(10),
   unit: text("unit").notNull().default("pieces"),
   imageUrl: text("image_url"),
+  productType: text("product_type").notNull().default("raw_material"), // raw_material, finishing_good, assembly, seasonal
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
@@ -550,6 +551,9 @@ export const insertCategorySchema = createInsertSchema(categories).omit({
 export const insertProductSchema = createInsertSchema(products).omit({
   id: true,
   createdAt: true,
+  updatedAt: true,
+}).extend({
+  productType: z.enum(['raw_material', 'finishing_good', 'assembly', 'seasonal']).default('raw_material'),
 });
 
 export const insertMaterialRequestSchema = createInsertSchema(materialRequests).omit({

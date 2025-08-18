@@ -47,8 +47,8 @@ export default function Products() {
 
   return (
     <FurniliLayout
-      title="Raw Materials"
-      subtitle="Manage your raw materials inventory and stock levels"
+      title="Products"
+      subtitle="Manage your raw materials, finishing goods, assemblies and seasonal items"
       showAddButton={canManageProducts || false}
       onAddClick={() => setShowAddProduct(true)}
     >
