@@ -14,6 +14,7 @@ interface Task {
   id: number;
   title: string;
   description?: string;
+  projectId?: number;
   status: string;
   priority: string;
   dueDate?: string;
@@ -24,6 +25,7 @@ interface Task {
   completedAt?: string;
   assignedUser?: { id: number; name: string; username: string };
   assignedByUser?: { id: number; name: string; username: string };
+  project?: { id: number; name: string; code: string; stage: string };
 }
 
 export default function TaskDetail() {
@@ -172,6 +174,37 @@ export default function TaskDetail() {
               <p className="text-gray-700 bg-gray-50 p-4 rounded-lg whitespace-pre-wrap">
                 {task.description}
               </p>
+            </div>
+          )}
+
+          {/* Project Information */}
+          {task.project && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <h3 className="font-semibold text-blue-900 mb-2 flex items-center gap-2">
+                <Calendar className="h-4 w-4" />
+                Linked to Project
+              </h3>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium text-blue-800">{task.project.code} - {task.project.name}</p>
+                  <p className="text-sm text-blue-600">Stage: {task.project.stage}</p>
+                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => setLocation(`/projects/${task.project?.id}`)}
+                  className="border-blue-300 text-blue-700 hover:bg-blue-100"
+                >
+                  View Project
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {!task.project && (
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+              <h3 className="font-semibold text-gray-700 mb-1">General Task</h3>
+              <p className="text-sm text-gray-500">This task is not linked to any specific project.</p>
             </div>
           )}
 

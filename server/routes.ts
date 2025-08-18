@@ -2688,7 +2688,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const tasks = await storage.getAllTasks(filters);
       
-      // Include assigned user information for better display
+      // Include assigned user and project information for better display
       const tasksWithUsers = await Promise.all(
         tasks.map(async (task) => {
           const assignedUser = await storage.getUser(task.assignedTo);
@@ -2697,6 +2697,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
             ...task,
             assignedUser: assignedUser ? { id: assignedUser.id, name: assignedUser.name, username: assignedUser.username } : null,
             assignedByUser: assignedByUser ? { id: assignedByUser.id, name: assignedByUser.name, username: assignedByUser.username } : null,
+            // Project information is already included from the storage query
+            project: task.projectId ? {
+              id: task.projectId,
+              name: task.projectName,
+              code: task.projectCode,
+              stage: task.projectStage
+            } : null,
           };
         })
       );
@@ -2713,7 +2720,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = req.user!;
       const tasks = await storage.getAllTasks({ assignedTo: user.id });
       
-      // Include assigned user information
+      // Include assigned user and project information
       const tasksWithUsers = await Promise.all(
         tasks.map(async (task) => {
           const assignedByUser = await storage.getUser(task.assignedBy);
@@ -2721,6 +2728,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
             ...task,
             assignedUser: { id: user.id, name: user.name, username: user.username },
             assignedByUser: assignedByUser ? { id: assignedByUser.id, name: assignedByUser.name, username: assignedByUser.username } : null,
+            project: task.projectId ? {
+              id: task.projectId,
+              name: task.projectName,
+              code: task.projectCode,
+              stage: task.projectStage
+            } : null,
           };
         })
       );
@@ -2849,6 +2862,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ...task,
         assignedUser: assignedUser ? { id: assignedUser.id, name: assignedUser.name, username: assignedUser.username } : null,
         assignedByUser: assignedByUser ? { id: assignedByUser.id, name: assignedByUser.name, username: assignedByUser.username } : null,
+        project: task.projectId ? {
+          id: task.projectId,
+          name: task.projectName,
+          code: task.projectCode,
+          stage: task.projectStage
+        } : null,
       };
       
       res.json(taskWithUsers);

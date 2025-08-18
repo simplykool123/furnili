@@ -9,12 +9,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
 import { authenticatedApiRequest, authService } from "@/lib/auth";
-import { Plus, CheckCircle2, Clock, AlertCircle, User, Calendar, Search, Filter } from "lucide-react";
+import { Plus, CheckCircle2, Clock, AlertCircle, User, Calendar, Search, Filter, CalendarIcon } from "lucide-react";
 import FurniliLayout from "@/components/Layout/FurniliLayout";
+import TaskCalendar from "@/components/Calendar/TaskCalendar";
 
 export default function TaskManagement() {
   const { toast } = useToast();
@@ -29,6 +31,7 @@ export default function TaskManagement() {
     assignedTo: "",
     priority: "medium",
     dueDate: "",
+    projectId: "",
   });
 
   const currentUser = authService.getUser();
@@ -40,6 +43,10 @@ export default function TaskManagement() {
 
   const { data: users } = useQuery({
     queryKey: ["/api/users"],
+  });
+
+  const { data: projects } = useQuery({
+    queryKey: ["/api/projects"],
   });
 
   // Filter staff users for assignment dropdown
@@ -74,6 +81,7 @@ export default function TaskManagement() {
         assignedTo: "",
         priority: "medium",
         dueDate: "",
+        projectId: "",
       });
     },
     onError: (error) => {
@@ -248,6 +256,26 @@ export default function TaskManagement() {
                 </div>
 
                 <div>
+                  <Label htmlFor="projectId">Link to Project (Optional)</Label>
+                  <Select 
+                    value={taskForm.projectId}
+                    onValueChange={(value) => setTaskForm(prev => ({ ...prev, projectId: value }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select project (optional)" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">General Task (No Project)</SelectItem>
+                      {Array.isArray(projects) && projects.map((project: any) => (
+                        <SelectItem key={project.id} value={project.id.toString()}>
+                          {project.code} - {project.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
                   <Label htmlFor="dueDate">Due Date</Label>
                   <Input
                     id="dueDate"
@@ -334,8 +362,22 @@ export default function TaskManagement() {
         </Card>
       </div>
 
-      {/* Filters and Search */}
-      <Card>
+      {/* Task Views */}
+      <Tabs defaultValue="list" className="w-full">
+        <TabsList className="grid w-full grid-cols-2 max-w-md">
+          <TabsTrigger value="list" className="flex items-center gap-2">
+            <Filter className="h-4 w-4" />
+            List View
+          </TabsTrigger>
+          <TabsTrigger value="calendar" className="flex items-center gap-2">
+            <Calendar className="h-4 w-4" />
+            Calendar View
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="list" className="space-y-6">
+          {/* Filters and Search */}
+          <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Filter className="h-5 w-5" />
@@ -419,7 +461,7 @@ export default function TaskManagement() {
             <TableHeader>
               <TableRow>
                 <TableHead>Task Title</TableHead>
-                <TableHead>Description</TableHead>
+                <TableHead>Project</TableHead>
                 <TableHead>Assigned To</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Priority</TableHead>
@@ -434,9 +476,22 @@ export default function TaskManagement() {
                   className="cursor-pointer hover:bg-muted/50 transition-colors"
                   onClick={() => setLocation(`/tasks/${task.id}`)}
                 >
-                  <TableCell className="font-medium">{task.title}</TableCell>
-                  <TableCell className="max-w-xs truncate" title={task.description}>
-                    {task.description || "No description"}
+                  <TableCell className="font-medium">
+                    <div>
+                      <div>{task.title}</div>
+                      <div className="text-xs text-gray-500 truncate max-w-xs" title={task.description}>
+                        {task.description || "No description"}
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    {task.project ? (
+                      <Badge variant="outline" className="text-xs">
+                        {task.project.code}
+                      </Badge>
+                    ) : (
+                      <span className="text-xs text-gray-400">General Task</span>
+                    )}
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
@@ -495,6 +550,12 @@ export default function TaskManagement() {
           )}
         </CardContent>
       </Card>
+        </TabsContent>
+
+        <TabsContent value="calendar">
+          <TaskCalendar tasks={Array.isArray(tasks) ? tasks : []} />
+        </TabsContent>
+      </Tabs>
     </FurniliLayout>
   );
 }

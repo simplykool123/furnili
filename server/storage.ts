@@ -923,7 +923,34 @@ class DatabaseStorage implements IStorage {
 
   // Task operations
   async getAllTasks(filters?: { assignedTo?: number; status?: string; projectId?: number }): Promise<Task[]> {
-    let query = db.select().from(tasks);
+    let query = db.select({
+      id: tasks.id,
+      title: tasks.title,
+      description: tasks.description,
+      projectId: tasks.projectId,
+      status: tasks.status,
+      priority: tasks.priority,
+      dueDate: tasks.dueDate,
+      startDate: tasks.startDate,
+      completedDate: tasks.completedDate,
+      estimatedHours: tasks.estimatedHours,
+      actualHours: tasks.actualHours,
+      tags: tasks.tags,
+      attachments: tasks.attachments,
+      comments: tasks.comments,
+      assignedTo: tasks.assignedTo,
+      assignedToOther: tasks.assignedToOther,
+      assignedBy: tasks.assignedBy,
+      updatedBy: tasks.updatedBy,
+      completedAt: tasks.completedAt,
+      createdAt: tasks.createdAt,
+      updatedAt: tasks.updatedAt,
+      // Include project information
+      projectName: projects.name,
+      projectCode: projects.code,
+      projectStage: projects.stage,
+    }).from(tasks)
+    .leftJoin(projects, eq(tasks.projectId, projects.id));
     
     const whereConditions = [];
     if (filters?.assignedTo) {
@@ -944,7 +971,36 @@ class DatabaseStorage implements IStorage {
   }
 
   async getTask(id: number): Promise<Task | undefined> {
-    const result = await db.select().from(tasks).where(eq(tasks.id, id)).limit(1);
+    const result = await db.select({
+      id: tasks.id,
+      title: tasks.title,
+      description: tasks.description,
+      projectId: tasks.projectId,
+      status: tasks.status,
+      priority: tasks.priority,
+      dueDate: tasks.dueDate,
+      startDate: tasks.startDate,
+      completedDate: tasks.completedDate,
+      estimatedHours: tasks.estimatedHours,
+      actualHours: tasks.actualHours,
+      tags: tasks.tags,
+      attachments: tasks.attachments,
+      comments: tasks.comments,
+      assignedTo: tasks.assignedTo,
+      assignedToOther: tasks.assignedToOther,
+      assignedBy: tasks.assignedBy,
+      updatedBy: tasks.updatedBy,
+      completedAt: tasks.completedAt,
+      createdAt: tasks.createdAt,
+      updatedAt: tasks.updatedAt,
+      // Include project information
+      projectName: projects.name,
+      projectCode: projects.code,
+      projectStage: projects.stage,
+    }).from(tasks)
+    .leftJoin(projects, eq(tasks.projectId, projects.id))
+    .where(eq(tasks.id, id))
+    .limit(1);
     return result[0];
   }
 
