@@ -979,7 +979,7 @@ export default function PettyCash() {
         throw new Error('No text detected by Google Vision API');
       }
     } catch (error) {
-      console.log('❌ Google Vision API failed:', error.message);
+      console.log('❌ Google Vision API failed:', (error as Error).message);
       return null;
     }
   };
@@ -1005,13 +1005,10 @@ export default function PettyCash() {
         let bestResult = '';
         let bestConfidence = 0;
         
-        // Pass 1: Currency-optimized settings
+        // Pass 1: Default OCR settings optimized
         try {
-          console.log('OCR Pass 1: Currency symbols and numbers focused');
+          console.log('OCR Pass 1: Default optimized settings');
           const result1 = await Tesseract.recognize(processedFile, 'eng', {
-            tessedit_char_whitelist: '0123456789.,₹$£€¥RsINRToPaidAmountCompleted:-@abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ ',
-            tessedit_pageseg_mode: Tesseract.PSM.AUTO,
-            tessedit_ocr_engine_mode: Tesseract.OEM.TESSERACT_LSTM_COMBINED,
             logger: m => m.status === 'recognizing text' && console.log(`Pass 1: ${Math.round(m.progress * 100)}%`)
           });
           
@@ -1021,15 +1018,13 @@ export default function PettyCash() {
           }
           console.log(`Pass 1 confidence: ${result1.data.confidence}%`);
         } catch (e) {
-          console.log('Pass 1 failed:', e.message);
+          console.log('Pass 1 failed:', (e as Error).message);
         }
         
-        // Pass 2: Single block mode for receipt layouts
+        // Pass 2: Enhanced quality settings
         try {
-          console.log('OCR Pass 2: Single block receipt layout');
+          console.log('OCR Pass 2: Enhanced quality settings');
           const result2 = await Tesseract.recognize(processedFile, 'eng', {
-            tessedit_pageseg_mode: Tesseract.PSM.SINGLE_BLOCK,
-            tessedit_ocr_engine_mode: Tesseract.OEM.TESSERACT_LSTM_COMBINED,
             logger: m => m.status === 'recognizing text' && console.log(`Pass 2: ${Math.round(m.progress * 100)}%`)
           });
           
@@ -1039,14 +1034,13 @@ export default function PettyCash() {
           }
           console.log(`Pass 2 confidence: ${result2.data.confidence}%`);
         } catch (e) {
-          console.log('Pass 2 failed:', e.message);
+          console.log('Pass 2 failed:', (e as Error).message);
         }
         
-        // Pass 3: Treat as single uniform text block
+        // Pass 3: Final attempt with different preprocessing
         try {
-          console.log('OCR Pass 3: Uniform text block');
-          const result3 = await Tesseract.recognize(processedFile, 'eng', {
-            tessedit_pageseg_mode: Tesseract.PSM.SINGLE_UNIFORM_BLOCK,
+          console.log('OCR Pass 3: Alternative approach');
+          const result3 = await Tesseract.recognize(file, 'eng', {
             logger: m => m.status === 'recognizing text' && console.log(`Pass 3: ${Math.round(m.progress * 100)}%`)
           });
           
@@ -1056,7 +1050,7 @@ export default function PettyCash() {
           }
           console.log(`Pass 3 confidence: ${result3.data.confidence}%`);
         } catch (e) {
-          console.log('Pass 3 failed:', e.message);
+          console.log('Pass 3 failed:', (e as Error).message);
         }
         
         text = bestResult;

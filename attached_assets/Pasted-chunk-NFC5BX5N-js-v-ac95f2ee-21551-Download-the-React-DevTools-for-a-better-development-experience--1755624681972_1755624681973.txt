@@ -1,0 +1,177 @@
+chunk-NFC5BX5N.js?v=ac95f2ee:21551 Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+chunk-5UTCTWXI.js?v=ac95f2ee:339 Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+(anonymous) @ chunk-5UTCTWXI.js?v=ac95f2ee:339
+commitHookEffectListMount @ chunk-NFC5BX5N.js?v=ac95f2ee:16915
+commitPassiveMountOnFiber @ chunk-NFC5BX5N.js?v=ac95f2ee:18156
+commitPassiveMountEffects_complete @ chunk-NFC5BX5N.js?v=ac95f2ee:18129
+commitPassiveMountEffects_begin @ chunk-NFC5BX5N.js?v=ac95f2ee:18119
+commitPassiveMountEffects @ chunk-NFC5BX5N.js?v=ac95f2ee:18109
+flushPassiveEffectsImpl @ chunk-NFC5BX5N.js?v=ac95f2ee:19490
+flushPassiveEffects @ chunk-NFC5BX5N.js?v=ac95f2ee:19447
+commitRootImpl @ chunk-NFC5BX5N.js?v=ac95f2ee:19416
+commitRoot @ chunk-NFC5BX5N.js?v=ac95f2ee:19277
+performSyncWorkOnRoot @ chunk-NFC5BX5N.js?v=ac95f2ee:18895
+flushSyncCallbacks @ chunk-NFC5BX5N.js?v=ac95f2ee:9119
+(anonymous) @ chunk-NFC5BX5N.js?v=ac95f2ee:18627
+PettyCash.tsx:1258 Pasted image details: {originalName: 'WhatsApp Image 2025-08-19 at 18.48.55.jpeg', newName: 'pasted-receipt-1755624666187.jpg', type: 'image/jpeg', size: 38807}
+PettyCash.tsx:1204 Processing file: {name: 'pasted-receipt-1755624666187.jpg', type: 'image/jpeg', size: 38807, lastModified: 1755624666187}
+PettyCash.tsx:940 === TRYING GOOGLE VISION API (PRIMARY) ===
+PettyCash.tsx:982 ❌ Google Vision API failed: Google Cloud API key not configured
+PettyCash.tsx:1000 === USING ENHANCED TESSERACT OCR FOR CURRENCY DETECTION ===
+PettyCash.tsx:855 === PREPROCESSING IMAGE FOR BETTER OCR ===
+PettyCash.tsx:881 Preprocessing image: grayscale conversion, contrast enhancement, and binarization
+PettyCash.tsx:913 Image preprocessed successfully: processed_pasted-receipt-1755624666187.jpg Size: 37716
+PettyCash.tsx:1002 Using preprocessed image for Enhanced Tesseract OCR: processed_pasted-receipt-1755624666187.jpg
+PettyCash.tsx:1010 OCR Pass 1: Currency symbols and numbers focused
+PettyCash.tsx:1015 Pass 1: 0%
+PettyCash.tsx:1015 Pass 1: 4%
+PettyCash.tsx:1015 Pass 1: 9%
+PettyCash.tsx:1015 Pass 1: 13%
+PettyCash.tsx:1015 Pass 1: 17%
+PettyCash.tsx:1015 Pass 1: 21%
+PettyCash.tsx:1015 Pass 1: 26%
+PettyCash.tsx:1015 Pass 1: 30%
+PettyCash.tsx:1015 Pass 1: 36%
+PettyCash.tsx:1015 Pass 1: 40%
+PettyCash.tsx:1015 Pass 1: 44%
+PettyCash.tsx:1015 Pass 1: 49%
+PettyCash.tsx:1015 Pass 1: 53%
+PettyCash.tsx:1015 Pass 1: 57%
+PettyCash.tsx:1015 Pass 1: 61%
+PettyCash.tsx:1015 Pass 1: 66%
+PettyCash.tsx:1015 Pass 1: 100%
+PettyCash.tsx:1022 Pass 1 confidence: 74%
+PettyCash.tsx:1029 OCR Pass 2: Single block receipt layout
+PettyCash.tsx:1033 Pass 2: 0%
+PettyCash.tsx:1033 Pass 2: 4%
+PettyCash.tsx:1033 Pass 2: 9%
+PettyCash.tsx:1033 Pass 2: 13%
+PettyCash.tsx:1033 Pass 2: 17%
+PettyCash.tsx:1033 Pass 2: 21%
+PettyCash.tsx:1033 Pass 2: 26%
+PettyCash.tsx:1033 Pass 2: 30%
+PettyCash.tsx:1033 Pass 2: 36%
+PettyCash.tsx:1033 Pass 2: 40%
+PettyCash.tsx:1033 Pass 2: 44%
+PettyCash.tsx:1033 Pass 2: 49%
+PettyCash.tsx:1033 Pass 2: 53%
+PettyCash.tsx:1033 Pass 2: 57%
+PettyCash.tsx:1033 Pass 2: 61%
+PettyCash.tsx:1033 Pass 2: 66%
+PettyCash.tsx:1033 Pass 2: 100%
+PettyCash.tsx:1040 Pass 2 confidence: 74%
+PettyCash.tsx:1047 OCR Pass 3: Uniform text block
+PettyCash.tsx:1050 Pass 3: 0%
+PettyCash.tsx:1050 Pass 3: 4%
+PettyCash.tsx:1050 Pass 3: 9%
+PettyCash.tsx:1050 Pass 3: 13%
+PettyCash.tsx:1050 Pass 3: 17%
+PettyCash.tsx:1050 Pass 3: 21%
+PettyCash.tsx:1050 Pass 3: 26%
+PettyCash.tsx:1050 Pass 3: 30%
+PettyCash.tsx:1050 Pass 3: 36%
+PettyCash.tsx:1050 Pass 3: 40%
+PettyCash.tsx:1050 Pass 3: 44%
+PettyCash.tsx:1050 Pass 3: 49%
+PettyCash.tsx:1050 Pass 3: 53%
+PettyCash.tsx:1050 Pass 3: 57%
+PettyCash.tsx:1050 Pass 3: 61%
+PettyCash.tsx:1050 Pass 3: 66%
+PettyCash.tsx:1050 Pass 3: 100%
+PettyCash.tsx:1057 Pass 3 confidence: 74%
+PettyCash.tsx:1063 ✅ Using best result with 74% confidence
+PettyCash.tsx:1065 === FULL OCR TEXT START ===
+PettyCash.tsx:1066 To SUNRISE HARDWARE
+furnili tapping bit
+Completed
+5 Aug 2025, 9:40 am
+
+£1) Hore Bank 0720 v
+UPI transaction [D
+109266995483
+To: SUNRISE HARDWARE
+gpay-112445848261@okbizaxis
+From: SUNRISE MEDIA (HDFC Bank)
+Google Fay + kunallunkad-3@ckhdichank:
+Google transaction ID
+CICAgKitIsKZeQ
+
+usw
+
+1%
+
+PettyCash.tsx:1067 === FULL OCR TEXT END ===
+PettyCash.tsx:1073 === DEBUG: ALL EXTRACTED LINES ===
+PettyCash.tsx:1075 Line 0: "To SUNRISE HARDWARE"
+PettyCash.tsx:1075 Line 1: "furnili tapping bit"
+PettyCash.tsx:1075 Line 2: "Completed"
+PettyCash.tsx:1075 Line 3: "5 Aug 2025, 9:40 am"
+PettyCash.tsx:1075 Line 4: "£1) Hore Bank 0720 v"
+PettyCash.tsx:1075 Line 5: "UPI transaction [D"
+PettyCash.tsx:1075 Line 6: "109266995483"
+PettyCash.tsx:1075 Line 7: "To: SUNRISE HARDWARE"
+PettyCash.tsx:1075 Line 8: "gpay-112445848261@okbizaxis"
+PettyCash.tsx:1075 Line 9: "From: SUNRISE MEDIA (HDFC Bank)"
+PettyCash.tsx:1075 Line 10: "Google Fay + kunallunkad-3@ckhdichank:"
+PettyCash.tsx:1075 Line 11: "Google transaction ID"
+PettyCash.tsx:1075 Line 12: "CICAgKitIsKZeQ"
+PettyCash.tsx:1075 Line 13: "usw"
+PettyCash.tsx:1075 Line 14: "1%"
+PettyCash.tsx:1077 === END DEBUG LINES ===
+PettyCash.tsx:1081 === PLATFORM DETECTION ===
+PettyCash.tsx:1082 Detected Platform: googlepay
+PettyCash.tsx:1083 === ALL LINES ===
+PettyCash.tsx:1085 Line 0: "To SUNRISE HARDWARE"
+PettyCash.tsx:1085 Line 1: "furnili tapping bit"
+PettyCash.tsx:1085 Line 2: "Completed"
+PettyCash.tsx:1085 Line 3: "5 Aug 2025, 9:40 am"
+PettyCash.tsx:1085 Line 4: "£1) Hore Bank 0720 v"
+PettyCash.tsx:1085 Line 5: "UPI transaction [D"
+PettyCash.tsx:1085 Line 6: "109266995483"
+PettyCash.tsx:1085 Line 7: "To: SUNRISE HARDWARE"
+PettyCash.tsx:1085 Line 8: "gpay-112445848261@okbizaxis"
+PettyCash.tsx:1085 Line 9: "From: SUNRISE MEDIA (HDFC Bank)"
+PettyCash.tsx:1085 Line 10: "Google Fay + kunallunkad-3@ckhdichank:"
+PettyCash.tsx:1085 Line 11: "Google transaction ID"
+PettyCash.tsx:1085 Line 12: "CICAgKitIsKZeQ"
+PettyCash.tsx:1085 Line 13: "usw"
+PettyCash.tsx:1085 Line 14: "1%"
+PettyCash.tsx:657 === GOOGLE PAY SPECIFIC EXTRACTION ===
+PettyCash.tsx:667 GooglePay: Found recipient: SUNRISE HARDWARE
+PettyCash.tsx:410 Checking line for amount: "To SUNRISE HARDWARE"
+PettyCash.tsx:410 Checking line for amount: "furnili tapping bit"
+PettyCash.tsx:695 GooglePay: Found description (service term): furnili tapping bit
+PettyCash.tsx:410 Checking line for amount: "Completed"
+PettyCash.tsx:410 Checking line for amount: "5 Aug 2025, 9:40 am"
+PettyCash.tsx:410 Checking line for amount: "£1) Hore Bank 0720 v"
+PettyCash.tsx:410 Checking line for amount: "UPI transaction [D"
+PettyCash.tsx:410 Checking line for amount: "109266995483"
+PettyCash.tsx:414 ⚠️ Skipping transaction ID: "109266995483"
+PettyCash.tsx:410 Checking line for amount: "To: SUNRISE HARDWARE"
+PettyCash.tsx:410 Checking line for amount: "gpay-112445848261@okbizaxis"
+PettyCash.tsx:420 ⚠️ Skipping email/phone pattern: "gpay-112445848261@okbizaxis"
+PettyCash.tsx:410 Checking line for amount: "From: SUNRISE MEDIA (HDFC Bank)"
+PettyCash.tsx:410 Checking line for amount: "Google Fay + kunallunkad-3@ckhdichank:"
+PettyCash.tsx:420 ⚠️ Skipping email/phone pattern: "Google Fay + kunallunkad-3@ckhdichank:"
+PettyCash.tsx:410 Checking line for amount: "Google transaction ID"
+PettyCash.tsx:410 Checking line for amount: "CICAgKitIsKZeQ"
+PettyCash.tsx:410 Checking line for amount: "usw"
+PettyCash.tsx:410 Checking line for amount: "1%"
+PettyCash.tsx:703 GooglePay: No amount found, trying fallback extraction...
+PettyCash.tsx:480 === FALLBACK AMOUNT EXTRACTION ===
+PettyCash.tsx:526 ❌ Fallback amount extraction failed - no amounts found near "paid"
+PettyCash.tsx:529 === FINAL AMOUNT FALLBACK ===
+PettyCash.tsx:1120 === PLATFORM-SPECIFIC EXTRACTION RESULTS ===
+PettyCash.tsx:1121 Amount: 
+PettyCash.tsx:1122 Recipient: SUNRISE HARDWARE
+PettyCash.tsx:1123 Description: furnili tapping bit
+PettyCash.tsx:1148 === DATE EXTRACTION ===
+PettyCash.tsx:1149 Extracted Date: 2025-08-05
+PettyCash.tsx:1176 Auto-categorized as: Material
+PettyCash.tsx:1179 === FINAL EXTRACTED DATA ===
+PettyCash.tsx:1180 Platform: googlepay
+PettyCash.tsx:1181 Amount: 
+PettyCash.tsx:1182 Recipient: SUNRISE HARDWARE
+PettyCash.tsx:1183 Description: furnili tapping bit
+PettyCash.tsx:1184 Category: Material
+PettyCash.tsx:1185 Date: 2025-08-05
