@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@google-cloud/storage": "^7.16.0",
+    "@google-cloud/vision": "^5.3.3",
     "@google/genai": "^1.12.0",
     "@hookform/resolvers": "^3.10.0",
     "@jridgewell/trace-mapping": "^0.3.25",
@@ -60,6 +61,7 @@
     "@uppy/progress-bar": "^4.3.1",
     "@uppy/react": "^4.5.1",
     "archiver": "^7.0.1",
+    "axios": "^1.11.0",
     "bcryptjs": "^3.0.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -74,6 +76,7 @@
     "embla-carousel-react": "^8.6.0",
     "express": "^4.21.2",
     "express-session": "^1.18.1",
+    "form-data": "^4.0.4",
     "framer-motion": "^11.13.1",
     "google-auth-library": "^10.2.0",
     "html2pdf.js": "^0.10.3",
