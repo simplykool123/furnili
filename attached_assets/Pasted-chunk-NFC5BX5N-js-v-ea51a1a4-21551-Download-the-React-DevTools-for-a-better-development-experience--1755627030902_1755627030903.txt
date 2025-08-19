@@ -1,0 +1,193 @@
+chunk-NFC5BX5N.js?v=ea51a1a4:21551 Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+chunk-LIY4DVB2.js?v=ea51a1a4:339 Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+(anonymous) @ chunk-LIY4DVB2.js?v=ea51a1a4:339
+commitHookEffectListMount @ chunk-NFC5BX5N.js?v=ea51a1a4:16915
+commitPassiveMountOnFiber @ chunk-NFC5BX5N.js?v=ea51a1a4:18156
+commitPassiveMountEffects_complete @ chunk-NFC5BX5N.js?v=ea51a1a4:18129
+commitPassiveMountEffects_begin @ chunk-NFC5BX5N.js?v=ea51a1a4:18119
+commitPassiveMountEffects @ chunk-NFC5BX5N.js?v=ea51a1a4:18109
+flushPassiveEffectsImpl @ chunk-NFC5BX5N.js?v=ea51a1a4:19490
+flushPassiveEffects @ chunk-NFC5BX5N.js?v=ea51a1a4:19447
+commitRootImpl @ chunk-NFC5BX5N.js?v=ea51a1a4:19416
+commitRoot @ chunk-NFC5BX5N.js?v=ea51a1a4:19277
+performSyncWorkOnRoot @ chunk-NFC5BX5N.js?v=ea51a1a4:18895
+flushSyncCallbacks @ chunk-NFC5BX5N.js?v=ea51a1a4:9119
+(anonymous) @ chunk-NFC5BX5N.js?v=ea51a1a4:18627
+PettyCash.tsx:1265 Processing file: {name: 'WhatsApp Image 2025-08-19 at 18.50.20.jpeg', type: 'image/jpeg', size: 42649, lastModified: 1755611569813}
+PettyCash.tsx:1014 === TRYING OCR.SPACE API (PRIMARY) ===
+PettyCash.tsx:1026  POST https://c5906033-bfeb-4ac5-b032-6406c5147d39-00-2smvucpzymdj8.worf.replit.dev/api/ocr-process 500 (Internal Server Error)
+processOCRSpaceAPI @ PettyCash.tsx:1026
+await in processOCRSpaceAPI
+processImageWithOCR @ PettyCash.tsx:1060
+processFile @ PettyCash.tsx:1276
+handleImageUpload @ PettyCash.tsx:1260
+callCallback2 @ chunk-NFC5BX5N.js?v=ea51a1a4:3674
+invokeGuardedCallbackDev @ chunk-NFC5BX5N.js?v=ea51a1a4:3699
+invokeGuardedCallback @ chunk-NFC5BX5N.js?v=ea51a1a4:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-NFC5BX5N.js?v=ea51a1a4:3736
+executeDispatch @ chunk-NFC5BX5N.js?v=ea51a1a4:7014
+processDispatchQueueItemsInOrder @ chunk-NFC5BX5N.js?v=ea51a1a4:7034
+processDispatchQueue @ chunk-NFC5BX5N.js?v=ea51a1a4:7043
+dispatchEventsForPlugins @ chunk-NFC5BX5N.js?v=ea51a1a4:7051
+(anonymous) @ chunk-NFC5BX5N.js?v=ea51a1a4:7174
+batchedUpdates$1 @ chunk-NFC5BX5N.js?v=ea51a1a4:18913
+batchedUpdates @ chunk-NFC5BX5N.js?v=ea51a1a4:3579
+dispatchEventForPluginEventSystem @ chunk-NFC5BX5N.js?v=ea51a1a4:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-NFC5BX5N.js?v=ea51a1a4:5478
+dispatchEvent @ chunk-NFC5BX5N.js?v=ea51a1a4:5472
+dispatchDiscreteEvent @ chunk-NFC5BX5N.js?v=ea51a1a4:5449
+PettyCash.tsx:1049 ❌ OCR.space API failed: OCR.space API error: 500
+PettyCash.tsx:1067 === FALLING BACK TO ENHANCED TESSERACT OCR ===
+PettyCash.tsx:929 === PREPROCESSING IMAGE FOR BETTER OCR ===
+PettyCash.tsx:955 Preprocessing image: grayscale conversion, contrast enhancement, and binarization
+PettyCash.tsx:987 Image preprocessed successfully: processed_WhatsApp Image 2025-08-19 at 18.50.20.jpeg Size: 41247
+PettyCash.tsx:1069 Using preprocessed image for Enhanced Tesseract OCR: processed_WhatsApp Image 2025-08-19 at 18.50.20.jpeg
+PettyCash.tsx:1077 OCR Pass 1: Default optimized settings
+PettyCash.tsx:1079 Pass 1: 0%
+PettyCash.tsx:1079 Pass 1: 3%
+PettyCash.tsx:1079 Pass 1: 7%
+PettyCash.tsx:1079 Pass 1: 10%
+PettyCash.tsx:1079 Pass 1: 14%
+PettyCash.tsx:1079 Pass 1: 17%
+PettyCash.tsx:1079 Pass 1: 21%
+PettyCash.tsx:1079 Pass 1: 24%
+PettyCash.tsx:1079 Pass 1: 29%
+PettyCash.tsx:1079 Pass 1: 31%
+PettyCash.tsx:1079 Pass 1: 36%
+PettyCash.tsx:1079 Pass 1: 39%
+PettyCash.tsx:1079 Pass 1: 43%
+PettyCash.tsx:1079 Pass 1: 46%
+PettyCash.tsx:1079 Pass 1: 50%
+PettyCash.tsx:1079 Pass 1: 53%
+PettyCash.tsx:1079 Pass 1: 57%
+PettyCash.tsx:1079 Pass 1: 60%
+PettyCash.tsx:1079 Pass 1: 64%
+PettyCash.tsx:1079 Pass 1: 67%
+PettyCash.tsx:1079 Pass 1: 100%
+PettyCash.tsx:1086 Pass 1 confidence: 73%
+PettyCash.tsx:1093 OCR Pass 2: Enhanced quality settings
+PettyCash.tsx:1095 Pass 2: 0%
+PettyCash.tsx:1095 Pass 2: 3%
+PettyCash.tsx:1095 Pass 2: 7%
+PettyCash.tsx:1095 Pass 2: 10%
+PettyCash.tsx:1095 Pass 2: 14%
+PettyCash.tsx:1095 Pass 2: 17%
+PettyCash.tsx:1095 Pass 2: 21%
+PettyCash.tsx:1095 Pass 2: 24%
+PettyCash.tsx:1095 Pass 2: 29%
+PettyCash.tsx:1095 Pass 2: 31%
+PettyCash.tsx:1095 Pass 2: 36%
+PettyCash.tsx:1095 Pass 2: 39%
+PettyCash.tsx:1095 Pass 2: 43%
+PettyCash.tsx:1095 Pass 2: 46%
+PettyCash.tsx:1095 Pass 2: 50%
+PettyCash.tsx:1095 Pass 2: 53%
+PettyCash.tsx:1095 Pass 2: 57%
+PettyCash.tsx:1095 Pass 2: 60%
+PettyCash.tsx:1095 Pass 2: 64%
+PettyCash.tsx:1095 Pass 2: 67%
+PettyCash.tsx:1095 Pass 2: 100%
+PettyCash.tsx:1102 Pass 2 confidence: 73%
+PettyCash.tsx:1109 OCR Pass 3: Alternative approach
+PettyCash.tsx:1111 Pass 3: 0%
+PettyCash.tsx:1111 Pass 3: 3%
+PettyCash.tsx:1111 Pass 3: 7%
+PettyCash.tsx:1111 Pass 3: 11%
+PettyCash.tsx:1111 Pass 3: 16%
+PettyCash.tsx:1111 Pass 3: 20%
+PettyCash.tsx:1111 Pass 3: 24%
+PettyCash.tsx:1111 Pass 3: 29%
+PettyCash.tsx:1111 Pass 3: 33%
+PettyCash.tsx:1111 Pass 3: 37%
+PettyCash.tsx:1111 Pass 3: 41%
+PettyCash.tsx:1111 Pass 3: 46%
+PettyCash.tsx:1111 Pass 3: 50%
+PettyCash.tsx:1111 Pass 3: 54%
+PettyCash.tsx:1111 Pass 3: 59%
+PettyCash.tsx:1111 Pass 3: 63%
+PettyCash.tsx:1111 Pass 3: 67%
+PettyCash.tsx:1111 Pass 3: 100%
+PettyCash.tsx:1118 Pass 3 confidence: 79%
+PettyCash.tsx:1124 ✅ Using best result with 79% confidence
+PettyCash.tsx:1126 === FULL OCR TEXT START ===
+PettyCash.tsx:1127 To MAHENDRASING B RAJPUROHIT
+74,9500
+frige furnili
+© Completed
+30 Jul 2025, 11:51am
+
+£1 Hore Bank 0720 v
+UPI transaction ID
+108930435607
+To: MAHENDRASING B RAJPUROHIT
+PhonePe +» 9860581531@ibl
+From: SUNRISE MEDIA (HDFC Bank)
+Google Pay « kunallunkad-3@okhdfcbank
+Google transaction ID
+CICAgKjlqrDAHQ
+
+Liz
+
+G Pay
+
+PettyCash.tsx:1128 === FULL OCR TEXT END ===
+PettyCash.tsx:1134 === DEBUG: ALL EXTRACTED LINES ===
+PettyCash.tsx:1136 Line 0: "To MAHENDRASING B RAJPUROHIT"
+PettyCash.tsx:1136 Line 1: "74,9500"
+PettyCash.tsx:1136 Line 2: "frige furnili"
+PettyCash.tsx:1136 Line 3: "© Completed"
+PettyCash.tsx:1136 Line 4: "30 Jul 2025, 11:51am"
+PettyCash.tsx:1136 Line 5: "£1 Hore Bank 0720 v"
+PettyCash.tsx:1136 Line 6: "UPI transaction ID"
+PettyCash.tsx:1136 Line 7: "108930435607"
+PettyCash.tsx:1136 Line 8: "To: MAHENDRASING B RAJPUROHIT"
+PettyCash.tsx:1136 Line 9: "PhonePe +» 9860581531@ibl"
+PettyCash.tsx:1136 Line 10: "From: SUNRISE MEDIA (HDFC Bank)"
+PettyCash.tsx:1136 Line 11: "Google Pay « kunallunkad-3@okhdfcbank"
+PettyCash.tsx:1136 Line 12: "Google transaction ID"
+PettyCash.tsx:1136 Line 13: "CICAgKjlqrDAHQ"
+PettyCash.tsx:1136 Line 14: "Liz"
+PettyCash.tsx:1136 Line 15: "G Pay"
+PettyCash.tsx:1138 === END DEBUG LINES ===
+PettyCash.tsx:1142 === PLATFORM DETECTION ===
+PettyCash.tsx:1143 Detected Platform: googlepay
+PettyCash.tsx:1144 === ALL LINES ===
+PettyCash.tsx:1146 Line 0: "To MAHENDRASING B RAJPUROHIT"
+PettyCash.tsx:1146 Line 1: "74,9500"
+PettyCash.tsx:1146 Line 2: "frige furnili"
+PettyCash.tsx:1146 Line 3: "© Completed"
+PettyCash.tsx:1146 Line 4: "30 Jul 2025, 11:51am"
+PettyCash.tsx:1146 Line 5: "£1 Hore Bank 0720 v"
+PettyCash.tsx:1146 Line 6: "UPI transaction ID"
+PettyCash.tsx:1146 Line 7: "108930435607"
+PettyCash.tsx:1146 Line 8: "To: MAHENDRASING B RAJPUROHIT"
+PettyCash.tsx:1146 Line 9: "PhonePe +» 9860581531@ibl"
+PettyCash.tsx:1146 Line 10: "From: SUNRISE MEDIA (HDFC Bank)"
+PettyCash.tsx:1146 Line 11: "Google Pay « kunallunkad-3@okhdfcbank"
+PettyCash.tsx:1146 Line 12: "Google transaction ID"
+PettyCash.tsx:1146 Line 13: "CICAgKjlqrDAHQ"
+PettyCash.tsx:1146 Line 14: "Liz"
+PettyCash.tsx:1146 Line 15: "G Pay"
+PettyCash.tsx:731 === GOOGLE PAY SPECIFIC EXTRACTION ===
+PettyCash.tsx:741 GooglePay: Found recipient: MAHENDRASING B RAJPUROHIT
+PettyCash.tsx:358 Checking line for amount: "To MAHENDRASING B RAJPUROHIT"
+PettyCash.tsx:358 Checking line for amount: "74,9500"
+PettyCash.tsx:394 💰 Found comma-formatted amount: "74,9500" → ₹7495 (confidence: 0.95)
+PettyCash.tsx:503 === EVALUATING 1 AMOUNT CANDIDATES ===
+PettyCash.tsx:504 Candidate: ₹7495 (confidence: 0.95, source: comma_formatted)
+PettyCash.tsx:541 ✅ Selected: ₹7495 (confidence: 0.95, source: comma_formatted)
+PettyCash.tsx:750 GooglePay: Found amount: 7495
+PettyCash.tsx:769 GooglePay: Found description (service term): frige furnili
+PettyCash.tsx:1181 === PLATFORM-SPECIFIC EXTRACTION RESULTS ===
+PettyCash.tsx:1182 Amount: 7495
+PettyCash.tsx:1183 Recipient: MAHENDRASING B RAJPUROHIT
+PettyCash.tsx:1184 Description: frige furnili
+PettyCash.tsx:1209 === DATE EXTRACTION ===
+PettyCash.tsx:1210 Extracted Date: 2025-07-30
+PettyCash.tsx:1240 === FINAL EXTRACTED DATA ===
+PettyCash.tsx:1241 Platform: googlepay
+PettyCash.tsx:1242 Amount: 7495
+PettyCash.tsx:1243 Recipient: MAHENDRASING B RAJPUROHIT
+PettyCash.tsx:1244 Description: frige furnili
+PettyCash.tsx:1245 Category: 
+PettyCash.tsx:1246 Date: 2025-07-30
