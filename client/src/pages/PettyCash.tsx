@@ -565,65 +565,70 @@ export default function PettyCash() {
           const line = lines[i].trim();
           const lowerLine = line.toLowerCase();
           
-          // Look for "To [RECIPIENT]" pattern first
+          // Look for "To [RECIPIENT]" pattern first to identify recipient
           if (lowerLine.startsWith('to ') && line.length > 3) {
             extractedTo = line.substring(3).trim(); // Remove "To " prefix
             recipientFound = true;
-            
-            // The description is usually this "To [RECIPIENT]" line itself
-            extractedPurpose = line;
+            // Don't set extractedPurpose here - look for actual description in next lines
             continue;
           }
           
-          // If we found the recipient, look for additional description in next lines
+          // If we found the recipient, look for actual payment description
           if (recipientFound && !extractedPurpose) {
-            // Skip transaction info lines
+            // Skip transaction info lines but look for actual business descriptions
             if (lowerLine.includes('completed') ||
                 lowerLine.includes('transaction') ||
                 lowerLine.includes('google pay') ||
                 lowerLine.includes('upi') ||
                 lowerLine.includes('powered by') ||
                 lowerLine.includes('@') ||
+                lowerLine.startsWith('to ') ||
                 /^\d{1,2}\s(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)/i.test(line) ||
                 /^\d{1,2}:\d{2}/.test(line) ||
                 line.length < 3) {
               continue;
             }
             
-            // This could be additional description
-            extractedPurpose = line.trim();
-            break;
+            // Look for business-related descriptions like "furnili thinet", "steel purchase", etc.
+            if (line.length >= 3 && line.length <= 50 && 
+                !line.match(/^[A-Z\s&]+$/) && // Skip all-caps business names
+                !/^\d+$/.test(line)) { // Skip standalone numbers
+              extractedPurpose = line.trim();
+              break;
+            }
           }
         }
         
-        // Alternative: Look for business/vendor descriptions after amount
+        // Alternative: Look for business/product descriptions anywhere in the text
         if (!extractedPurpose) {
-          let foundAmount = false;
-          
-          for (let i = 0; i < lines.length; i++) {
-            const line = lines[i].trim();
+          // Look for descriptive text that's not transaction metadata
+          for (const line of lines) {
             const lowerLine = line.toLowerCase();
             
-            // Check if we found amount line
-            if (!foundAmount && (/^₹[\d,]+/.test(line) || /^\d+$/.test(line))) {
-              foundAmount = true;
+            // Skip transaction metadata and recipient info
+            if (lowerLine.includes('google pay') ||
+                lowerLine.includes('upi') ||
+                lowerLine.includes('transaction') ||
+                lowerLine.includes('completed') ||
+                lowerLine.includes('powered by') ||
+                lowerLine.includes('success') ||
+                lowerLine.startsWith('to ') ||
+                lowerLine.includes('@') ||
+                /^₹[\d,]+/.test(line) || // Skip amounts
+                /^\d+$/.test(line) || // Skip standalone numbers
+                /^\d{1,2}\s(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)/i.test(line) ||
+                /^\d{1,2}:\d{2}/.test(line) ||
+                line.match(/^[A-Z\s&]+$/) || // Skip all-caps business names
+                line.length < 3 || line.length > 50) {
               continue;
             }
             
-            // After finding amount, look for business description
-            if (foundAmount && !lowerLine.includes('completed')) {
-              // Skip transaction details
-              if (lowerLine.includes('google pay') ||
-                  lowerLine.includes('upi') ||
-                  lowerLine.includes('transaction') ||
-                  lowerLine.includes('powered by') ||
-                  /^\d{1,2}\s(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)/i.test(line) ||
-                  /^\d{1,2}:\d{2}/.test(line) ||
-                  line.length < 5) {
-                continue;
-              }
-              
-              // This should be the description
+            // Look for business-related descriptions containing common terms
+            const businessTerms = ['furnili', 'steel', 'wood', 'material', 'thiner', 'paint', 'hardware', 'purchase', 'order', 'supply'];
+            const hasBusinessTerm = businessTerms.some(term => lowerLine.includes(term));
+            
+            // Accept lines with business terms or reasonable descriptive text
+            if (hasBusinessTerm || (line.split(' ').length >= 2 && line.split(' ').length <= 6)) {
               extractedPurpose = line.trim();
               break;
             }
