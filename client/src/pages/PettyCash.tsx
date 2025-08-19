@@ -555,54 +555,67 @@ export default function PettyCash() {
         
         // console.log('CRED OCR Debug - Final extracted purpose:', extractedPurpose);
       } else if (platformType === 'googlepay') {
-        // For Google Pay, look for the description that typically appears in the bubble
-        // Common patterns: "To BUSINESS NAME", followed by description text
+        // For Google Pay, extract the complete description from the payment bubble
+        // GPay bubble typically contains the full transaction context
         
-        let recipientFound = false;
-        let extractedTo = '';
+        let recipientLine = '';
+        let descriptionLines = [];
         
+        // First pass: identify all content lines and separate recipient from description
         for (let i = 0; i < lines.length; i++) {
           const line = lines[i].trim();
           const lowerLine = line.toLowerCase();
           
-          // Look for "To [RECIPIENT]" pattern first to identify recipient
-          if (lowerLine.startsWith('to ') && line.length > 3) {
-            extractedTo = line.substring(3).trim(); // Remove "To " prefix
-            recipientFound = true;
-            // Don't set extractedPurpose here - look for actual description in next lines
+          // Skip obvious system/transaction lines
+          if (lowerLine.includes('google pay') ||
+              lowerLine.includes('upi') ||
+              lowerLine.includes('transaction') ||
+              lowerLine.includes('completed') ||
+              lowerLine.includes('success') ||
+              lowerLine.includes('sent') ||
+              lowerLine.includes('powered by') ||
+              lowerLine.includes('@') ||
+              /^₹[\d,]+/.test(line) ||
+              /^\d+$/.test(line) ||
+              /^\d{1,2}\s(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)/i.test(line) ||
+              /^\d{1,2}:\d{2}/.test(line) ||
+              line.length < 3) {
             continue;
           }
           
-          // If we found the recipient, look for actual payment description
-          if (recipientFound && !extractedPurpose) {
-            // Skip transaction info lines but look for actual business descriptions
-            if (lowerLine.includes('completed') ||
-                lowerLine.includes('transaction') ||
-                lowerLine.includes('google pay') ||
-                lowerLine.includes('upi') ||
-                lowerLine.includes('powered by') ||
-                lowerLine.includes('@') ||
-                lowerLine.startsWith('to ') ||
-                /^\d{1,2}\s(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)/i.test(line) ||
-                /^\d{1,2}:\d{2}/.test(line) ||
-                line.length < 3) {
-              continue;
-            }
+          // Identify recipient line (usually "To [RECIPIENT]" format)
+          if (lowerLine.startsWith('to ') && line.length > 3) {
+            recipientLine = line;
+            continue;
+          }
+          
+          // Collect potential description lines
+          if (line.length >= 3 && line.length <= 150) {
+            // Check if this is descriptive content (not just recipient names)
+            const isAllCaps = /^[A-Z\s&]+$/.test(line);
+            const isBusinessName = isAllCaps && line.length > 10;
             
-            // Look for business-related descriptions like "furnili thinet for cleaning tops"
-            if (line.length >= 3 && line.length <= 100 && 
-                !line.match(/^[A-Z\s&]+$/) && // Skip all-caps business names
-                !/^\d+$/.test(line)) { // Skip standalone numbers
-              
-              // For GPay, accept longer descriptive text that includes full context
-              const businessTerms = ['furnili', 'steel', 'wood', 'material', 'thiner', 'paint', 'hardware', 'purchase', 'order', 'supply', 'for', 'cleaning', 'tops'];
-              const hasBusinessTerm = businessTerms.some(term => line.toLowerCase().includes(term));
-              
-              if (hasBusinessTerm || line.split(' ').length >= 2) {
-                extractedPurpose = line.trim();
-                break;
-              }
+            if (!isBusinessName) {
+              descriptionLines.push(line.trim());
             }
+          }
+        }
+        
+        // Build the complete description from all relevant lines
+        if (descriptionLines.length > 0) {
+          // Filter out duplicate content and combine meaningful descriptions
+          const meaningfulLines = descriptionLines.filter(line => {
+            const lowerLine = line.toLowerCase();
+            // Keep lines that contain business context or descriptive information
+            return line.split(' ').length >= 2 || 
+                   ['furnili', 'steel', 'wood', 'material', 'thiner', 'paint', 'hardware', 'purchase', 'order', 'supply', 'for', 'cleaning', 'tops', 'edge', 'pati'].some(term => lowerLine.includes(term));
+          });
+          
+          if (meaningfulLines.length === 1) {
+            extractedPurpose = meaningfulLines[0];
+          } else if (meaningfulLines.length > 1) {
+            // Combine related descriptions, avoiding redundancy
+            extractedPurpose = meaningfulLines.join(' ');
           }
         }
         
@@ -652,7 +665,7 @@ export default function PettyCash() {
               extractedPurpose = potentialDescriptions[0];
             } else {
               // Combine multiple descriptive lines, but avoid duplicates
-              const uniqueDescriptions = [...new Set(potentialDescriptions)];
+              const uniqueDescriptions = Array.from(new Set(potentialDescriptions));
               extractedPurpose = uniqueDescriptions.join(' - ');
             }
           }
