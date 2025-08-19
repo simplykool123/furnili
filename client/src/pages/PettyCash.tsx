@@ -324,8 +324,16 @@ export default function PettyCash() {
       
       switch (platform) {
         case 'googlepay':
-          // Google Pay: "₹500", "Amount: ₹500", "Paid ₹500"
-          amountMatch = line.match(/(?:paid|amount)?\s*₹\s?([0-9,]+\.?[0-9]*)/i);
+          // Google Pay: "₹500", "Amount: ₹500", "Paid ₹500", "Rs 500", "Rs. 500", standalone numbers
+          amountMatch = line.match(/(?:paid|amount|rs\.?|₹)?\s*₹?\s?([0-9,]+\.?[0-9]*)/i);
+          // Also try to match standalone currency amounts
+          if (!amountMatch) {
+            amountMatch = line.match(/^₹?\s?([0-9,]+\.?[0-9]*)$/);
+          }
+          // Try Rs format commonly used in Google Pay
+          if (!amountMatch) {
+            amountMatch = line.match(/rs\.?\s?([0-9,]+\.?[0-9]*)/i);
+          }
           break;
         case 'phonepe':
           // PhonePe: "₹500 sent", "Amount ₹500"
@@ -340,8 +348,15 @@ export default function PettyCash() {
           amountMatch = line.match(/(?:debited|credited|amount|inr)\s*₹?\s?([0-9,]+\.?[0-9]*)/i);
           break;
         default:
-          // Generic patterns
+          // Generic patterns - try multiple formats
           amountMatch = line.match(/₹\s?([0-9,]+\.?[0-9]*)/);
+          if (!amountMatch) {
+            amountMatch = line.match(/rs\.?\s?([0-9,]+\.?[0-9]*)/i);
+          }
+          if (!amountMatch) {
+            // Try standalone number that could be amount
+            amountMatch = line.match(/^([0-9,]+\.?[0-9]*)$/);
+          }
       }
       
       if (amountMatch) {
@@ -452,6 +467,7 @@ export default function PettyCash() {
       // Detect platform type for specialized parsing
       const platformType = detectPlatformType(text.toLowerCase());
       console.log('Detected Platform:', platformType);
+      console.log('OCR Text Lines:', lines);
       
       // Platform-specific amount extraction
       const extractedAmount = extractAmountByPlatform(lines, platformType);
