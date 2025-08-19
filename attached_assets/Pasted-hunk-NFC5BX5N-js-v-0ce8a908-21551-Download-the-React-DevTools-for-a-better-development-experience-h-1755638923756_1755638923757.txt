@@ -1,0 +1,109 @@
+hunk-NFC5BX5N.js?v=0ce8a908:21551 Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+PettyCash.tsx:1056 Pasted image details: {originalName: 'WhatsApp Image 2025-08-19 at 18.51.55.jpeg', newName: 'pasted-receipt-1755638891634.jpg', type: 'image/jpeg', size: 43058}
+PettyCash.tsx:1002 Processing file: {name: 'pasted-receipt-1755638891634.jpg', type: 'image/jpeg', size: 43058, lastModified: 1755638891634}
+PettyCash.tsx:327 OCR Debug - Platform: googlepay
+PettyCash.tsx:328 OCR Debug - All lines: (17) ['To NARAYAN PREMARAM CHOUDHARI', 'furnili tools', '© Completed', '24 Jul 2025, 10:09 am', '(Tal) HDFC Bank o', '652926 XXXXXXXX80', 'UPI transaction ID', '108613752177', 'To: NARAYAN PREMARAM CHOUDHARI', 'PhonePe + q841832060@ybl', 'From: KUNAL LUNKAD (HDFC Bank)', 'Google Pay « kunallunkad-4@okhdfcbank', 'Google transaction ID', 'CICAgKiZ-6LYLQ', '»', 'Lin', 'G Pay']
+PettyCash.tsx:345 OCR Debug - Sorted lines: (17) ['108613752177', 'PhonePe + q841832060@ybl', '652926 XXXXXXXX80', '24 Jul 2025, 10:09 am', 'CICAgKiZ-6LYLQ', 'Google Pay « kunallunkad-4@okhdfcbank', 'To NARAYAN PREMARAM CHOUDHARI', 'furnili tools', '© Completed', '(Tal) HDFC Bank o', 'UPI transaction ID', 'To: NARAYAN PREMARAM CHOUDHARI', 'From: KUNAL LUNKAD (HDFC Bank)', 'Google transaction ID', '»', 'Lin', 'G Pay']
+PettyCash.tsx:352 OCR Debug - Processing GPay line: 108613752177
+PettyCash.tsx:361 OCR Debug - Priority 1 (₹) match: null
+PettyCash.tsx:366 OCR Debug - Priority 2 (context) match: null
+PettyCash.tsx:372 OCR Debug - Priority 3 (Rs) match: null
+PettyCash.tsx:384 OCR Debug - Priority 4 (standalone) match: (2) ['108613752177', '108613752177', index: 0, input: '108613752177', groups: undefined]
+PettyCash.tsx:423 OCR Debug - Found amount match: (2) ['108613752177', '108613752177', index: 0, input: '108613752177', groups: undefined]
+PettyCash.tsx:425 OCR Debug - Parsed amount: 108613752177
+PettyCash.tsx:437 OCR Debug - Amount rejected (out of range or transaction ID): 108613752177
+PettyCash.tsx:352 OCR Debug - Processing GPay line: PhonePe + q841832060@ybl
+PettyCash.tsx:361 OCR Debug - Priority 1 (₹) match: null
+PettyCash.tsx:366 OCR Debug - Priority 2 (context) match: null
+PettyCash.tsx:372 OCR Debug - Priority 3 (Rs) match: null
+PettyCash.tsx:384 OCR Debug - Priority 4 (standalone) match: null
+PettyCash.tsx:390 OCR Debug - Priority 5 (currency indicators) match: null
+PettyCash.tsx:352 OCR Debug - Processing GPay line: 652926 XXXXXXXX80
+PettyCash.tsx:361 OCR Debug - Priority 1 (₹) match: null
+PettyCash.tsx:366 OCR Debug - Priority 2 (context) match: null
+PettyCash.tsx:372 OCR Debug - Priority 3 (Rs) match: null
+PettyCash.tsx:384 OCR Debug - Priority 4 (standalone) match: null
+PettyCash.tsx:390 OCR Debug - Priority 5 (currency indicators) match: null
+PettyCash.tsx:352 OCR Debug - Processing GPay line: 24 Jul 2025, 10:09 am
+PettyCash.tsx:352 OCR Debug - Processing GPay line: CICAgKiZ-6LYLQ
+PettyCash.tsx:361 OCR Debug - Priority 1 (₹) match: null
+PettyCash.tsx:366 OCR Debug - Priority 2 (context) match: null
+PettyCash.tsx:372 OCR Debug - Priority 3 (Rs) match: null
+PettyCash.tsx:384 OCR Debug - Priority 4 (standalone) match: null
+PettyCash.tsx:390 OCR Debug - Priority 5 (currency indicators) match: null
+PettyCash.tsx:352 OCR Debug - Processing GPay line: Google Pay « kunallunkad-4@okhdfcbank
+PettyCash.tsx:361 OCR Debug - Priority 1 (₹) match: null
+PettyCash.tsx:366 OCR Debug - Priority 2 (context) match: null
+PettyCash.tsx:372 OCR Debug - Priority 3 (Rs) match: null
+PettyCash.tsx:384 OCR Debug - Priority 4 (standalone) match: null
+PettyCash.tsx:390 OCR Debug - Priority 5 (currency indicators) match: null
+PettyCash.tsx:352 OCR Debug - Processing GPay line: To NARAYAN PREMARAM CHOUDHARI
+PettyCash.tsx:361 OCR Debug - Priority 1 (₹) match: null
+PettyCash.tsx:366 OCR Debug - Priority 2 (context) match: null
+PettyCash.tsx:372 OCR Debug - Priority 3 (Rs) match: null
+PettyCash.tsx:384 OCR Debug - Priority 4 (standalone) match: null
+PettyCash.tsx:390 OCR Debug - Priority 5 (currency indicators) match: null
+PettyCash.tsx:352 OCR Debug - Processing GPay line: furnili tools
+PettyCash.tsx:361 OCR Debug - Priority 1 (₹) match: null
+PettyCash.tsx:366 OCR Debug - Priority 2 (context) match: null
+PettyCash.tsx:372 OCR Debug - Priority 3 (Rs) match: null
+PettyCash.tsx:384 OCR Debug - Priority 4 (standalone) match: null
+PettyCash.tsx:390 OCR Debug - Priority 5 (currency indicators) match: null
+PettyCash.tsx:352 OCR Debug - Processing GPay line: © Completed
+PettyCash.tsx:361 OCR Debug - Priority 1 (₹) match: null
+PettyCash.tsx:366 OCR Debug - Priority 2 (context) match: null
+PettyCash.tsx:372 OCR Debug - Priority 3 (Rs) match: null
+PettyCash.tsx:384 OCR Debug - Priority 4 (standalone) match: null
+PettyCash.tsx:390 OCR Debug - Priority 5 (currency indicators) match: null
+PettyCash.tsx:352 OCR Debug - Processing GPay line: (Tal) HDFC Bank o
+PettyCash.tsx:361 OCR Debug - Priority 1 (₹) match: null
+PettyCash.tsx:366 OCR Debug - Priority 2 (context) match: null
+PettyCash.tsx:372 OCR Debug - Priority 3 (Rs) match: null
+PettyCash.tsx:384 OCR Debug - Priority 4 (standalone) match: null
+PettyCash.tsx:390 OCR Debug - Priority 5 (currency indicators) match: null
+PettyCash.tsx:352 OCR Debug - Processing GPay line: UPI transaction ID
+PettyCash.tsx:361 OCR Debug - Priority 1 (₹) match: null
+PettyCash.tsx:366 OCR Debug - Priority 2 (context) match: null
+PettyCash.tsx:372 OCR Debug - Priority 3 (Rs) match: null
+PettyCash.tsx:384 OCR Debug - Priority 4 (standalone) match: null
+PettyCash.tsx:390 OCR Debug - Priority 5 (currency indicators) match: null
+PettyCash.tsx:352 OCR Debug - Processing GPay line: To: NARAYAN PREMARAM CHOUDHARI
+PettyCash.tsx:361 OCR Debug - Priority 1 (₹) match: null
+PettyCash.tsx:366 OCR Debug - Priority 2 (context) match: null
+PettyCash.tsx:372 OCR Debug - Priority 3 (Rs) match: null
+PettyCash.tsx:384 OCR Debug - Priority 4 (standalone) match: null
+PettyCash.tsx:390 OCR Debug - Priority 5 (currency indicators) match: null
+PettyCash.tsx:352 OCR Debug - Processing GPay line: From: KUNAL LUNKAD (HDFC Bank)
+PettyCash.tsx:361 OCR Debug - Priority 1 (₹) match: null
+PettyCash.tsx:366 OCR Debug - Priority 2 (context) match: null
+PettyCash.tsx:372 OCR Debug - Priority 3 (Rs) match: null
+PettyCash.tsx:384 OCR Debug - Priority 4 (standalone) match: null
+PettyCash.tsx:390 OCR Debug - Priority 5 (currency indicators) match: null
+PettyCash.tsx:352 OCR Debug - Processing GPay line: Google transaction ID
+PettyCash.tsx:361 OCR Debug - Priority 1 (₹) match: null
+PettyCash.tsx:366 OCR Debug - Priority 2 (context) match: null
+PettyCash.tsx:372 OCR Debug - Priority 3 (Rs) match: null
+PettyCash.tsx:384 OCR Debug - Priority 4 (standalone) match: null
+PettyCash.tsx:390 OCR Debug - Priority 5 (currency indicators) match: null
+PettyCash.tsx:352 OCR Debug - Processing GPay line: »
+PettyCash.tsx:361 OCR Debug - Priority 1 (₹) match: null
+PettyCash.tsx:366 OCR Debug - Priority 2 (context) match: null
+PettyCash.tsx:372 OCR Debug - Priority 3 (Rs) match: null
+PettyCash.tsx:384 OCR Debug - Priority 4 (standalone) match: null
+PettyCash.tsx:390 OCR Debug - Priority 5 (currency indicators) match: null
+PettyCash.tsx:352 OCR Debug - Processing GPay line: Lin
+PettyCash.tsx:361 OCR Debug - Priority 1 (₹) match: null
+PettyCash.tsx:366 OCR Debug - Priority 2 (context) match: null
+PettyCash.tsx:372 OCR Debug - Priority 3 (Rs) match: null
+PettyCash.tsx:384 OCR Debug - Priority 4 (standalone) match: null
+PettyCash.tsx:390 OCR Debug - Priority 5 (currency indicators) match: null
+PettyCash.tsx:352 OCR Debug - Processing GPay line: G Pay
+PettyCash.tsx:361 OCR Debug - Priority 1 (₹) match: null
+PettyCash.tsx:366 OCR Debug - Priority 2 (context) match: null
+PettyCash.tsx:372 OCR Debug - Priority 3 (Rs) match: null
+PettyCash.tsx:384 OCR Debug - Priority 4 (standalone) match: null
+PettyCash.tsx:390 OCR Debug - Priority 5 (currency indicators) match: null
+PettyCash.tsx:442 OCR Debug - No valid amount found in any line
+PettyCash.tsx:452 OCR Debug - Found fallback amount: 24
+PettyCash.tsx:684 OCR Debug - GPay description lines: (8) ['furnili tools', '(Tal) HDFC Bank o', '652926 XXXXXXXX80', 'To: NARAYAN PREMARAM CHOUDHARI', 'From: KUNAL LUNKAD (HDFC Bank)', 'CICAgKiZ-6LYLQ', 'Lin', 'G Pay']
+PettyCash.tsx:712 OCR Debug - Meaningful lines after filtering: (6) ['furnili tools', '(Tal) HDFC Bank o', '652926 XXXXXXXX80', 'To: NARAYAN PREMARAM CHOUDHARI', 'From: KUNAL LUNKAD (HDFC Bank)', 'G Pay']

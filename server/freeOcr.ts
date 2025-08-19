@@ -11,21 +11,36 @@ export class FreeOCRService {
 
   private async initializeTesseract() {
     try {
-      const Tesseract = await import('tesseract.js');
+      // Try enhanced tesseract-ocr-enhanced first for better rupee recognition
+      let Tesseract;
+      try {
+        Tesseract = await import('tesseract-ocr-enhanced');
+        console.log('Using enhanced Tesseract OCR with rupee sign support');
+      } catch (enhancedError) {
+        console.log('Enhanced Tesseract not available, using standard version');
+        Tesseract = await import('tesseract.js');
+      }
+      
       this.tesseractWorker = await Tesseract.default.createWorker();
       await this.tesseractWorker.loadLanguage('eng');
       await this.tesseractWorker.initialize('eng');
       
-      // Optimize for payment screenshots
+      // Enhanced settings specifically for Indian payment screenshots with rupee symbols
       await this.tesseractWorker.setParameters({
-        tessedit_char_whitelist: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz ₹£$@.-/:',
+        tessedit_char_whitelist: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz ₹£$@.-/:(),',
         tessedit_pageseg_mode: '6', // Uniform block of text
-        preserve_interword_spaces: '1'
+        preserve_interword_spaces: '1',
+        // Enhanced settings for currency symbol recognition
+        user_defined_dpi: '300', // Higher DPI for better symbol recognition
+        tessedit_ocr_engine_mode: '1', // Use LSTM OCR engine for better accuracy
+        // Currency-specific character confidence
+        tessedit_char_blacklist: '', // Don't blacklist any chars for currency
+        textord_really_old_xheight: '1', // Better height detection for symbols
       });
       
-      console.log('Enhanced Tesseract initialized for payment screenshots');
+      console.log('Enhanced Tesseract initialized with rupee sign optimization');
     } catch (error) {
-      console.error('Failed to initialize Tesseract:', error);
+      console.error('Failed to initialize enhanced Tesseract:', error);
     }
   }
 
