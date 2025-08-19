@@ -487,20 +487,50 @@ export default function PettyCash() {
         updatedData.date = extractedDate;
       }
 
-      // Enhanced description extraction
-      if (extractedRecipient && platformType === 'googlepay') {
-        // For Google Pay, create a more meaningful description
+      // Enhanced description extraction - Look for business purpose before creating generic descriptions
+      let extractedPurpose = '';
+      
+      // First, try to find meaningful business descriptions
+      for (const line of lines) {
+        const trimmedLine = line.trim().toLowerCase();
+        
+        // Skip obvious non-purpose lines
+        if (trimmedLine.includes('google pay') || 
+            trimmedLine.includes('transaction') || 
+            trimmedLine.includes('completed') ||
+            trimmedLine.includes('powered by') ||
+            trimmedLine.includes('upi') ||
+            /^\d+$/.test(trimmedLine) || // Just numbers
+            /^₹\s*\d/.test(trimmedLine) || // Currency amounts
+            /^\d{1,2}\s\w{3}/.test(trimmedLine) || // Dates
+            trimmedLine.length < 3 ||
+            trimmedLine === extractedRecipient?.toLowerCase()) {
+          continue;
+        }
+        
+        // Look for business-relevant descriptions
+        if (trimmedLine.includes('furnili') || 
+            trimmedLine.includes('thinet') ||
+            trimmedLine.includes('material') ||
+            trimmedLine.includes('hardware') ||
+            trimmedLine.includes('order') ||
+            /^[a-z\s]{3,30}$/.test(trimmedLine)) { // Simple text descriptions
+          extractedPurpose = line.trim();
+          break;
+        }
+      }
+      
+      // Use extracted purpose or create meaningful fallback
+      if (extractedPurpose) {
+        updatedData.purpose = extractedPurpose;
+      } else if (extractedRecipient && platformType === 'googlepay') {
         updatedData.purpose = `Payment to ${extractedRecipient}`;
       } else if (extractedRecipient) {
-        // For other platforms, use a generic format
         updatedData.purpose = `Payment to ${extractedRecipient}`;
-      }
-
-      // If no recipient found but we have platform info, use that
-      if (!updatedData.purpose && platformType !== 'generic') {
+      } else if (platformType !== 'generic') {
         const platformNames = {
           googlepay: 'Google Pay',
-          phonepe: 'PhonePe',
+          phonepe: 'PhonePe', 
           paytm: 'Paytm',
           amazonpay: 'Amazon Pay',
           bhimupi: 'BHIM UPI',
