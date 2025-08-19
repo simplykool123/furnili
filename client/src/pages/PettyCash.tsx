@@ -452,6 +452,10 @@ export default function PettyCash() {
           dateMatch = [null, day, month, year];
         }
         break;
+      case 'cred':
+        // CRED format: "16 |AUG 2025, 5:00PM | TXN ID: 559419149585"
+        dateMatch = text.match(/(\d{1,2})\s*\|\s*(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\s+(\d{4})/i);
+        break;
       case 'bank':
         // Format: "15/08/2025" or "15-08-2025"
         dateMatch = text.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
@@ -561,6 +565,8 @@ export default function PettyCash() {
       
       // Platform-specific date extraction
       const extractedDate = extractDateByPlatform(text, platformType);
+      console.log('=== DATE EXTRACTION ===');
+      console.log('Extracted Date:', extractedDate);
       if (extractedDate) {
         updatedData.date = extractedDate;
       }
@@ -674,6 +680,8 @@ export default function PettyCash() {
       }
       
       // Set the purpose based on what we found
+      console.log('=== PURPOSE EXTRACTION ===');
+      console.log('Final extracted purpose:', extractedPurpose);
       if (extractedPurpose) {
         updatedData.purpose = extractedPurpose;
       } else if (extractedRecipient && platformType === 'googlepay') {

@@ -1,0 +1,76 @@
+Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+chunk-LIY4DVB2.js?v=ac1ce3d0:339 Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+(anonymous) @ chunk-LIY4DVB2.js?v=ac1ce3d0:339
+commitHookEffectListMount @ chunk-NFC5BX5N.js?v=ac1ce3d0:16915
+commitPassiveMountOnFiber @ chunk-NFC5BX5N.js?v=ac1ce3d0:18156
+commitPassiveMountEffects_complete @ chunk-NFC5BX5N.js?v=ac1ce3d0:18129
+commitPassiveMountEffects_begin @ chunk-NFC5BX5N.js?v=ac1ce3d0:18119
+commitPassiveMountEffects @ chunk-NFC5BX5N.js?v=ac1ce3d0:18109
+flushPassiveEffectsImpl @ chunk-NFC5BX5N.js?v=ac1ce3d0:19490
+flushPassiveEffects @ chunk-NFC5BX5N.js?v=ac1ce3d0:19447
+commitRootImpl @ chunk-NFC5BX5N.js?v=ac1ce3d0:19416
+commitRoot @ chunk-NFC5BX5N.js?v=ac1ce3d0:19277
+performSyncWorkOnRoot @ chunk-NFC5BX5N.js?v=ac1ce3d0:18895
+flushSyncCallbacks @ chunk-NFC5BX5N.js?v=ac1ce3d0:9119
+(anonymous) @ chunk-NFC5BX5N.js?v=ac1ce3d0:18627Understand this warning
+PettyCash.tsx:946 Pasted image details: {originalName: 'image.png', newName: 'pasted-receipt-1755614342762.png', type: 'image/png', size: 615810}
+PettyCash.tsx:892 Processing file: {name: 'pasted-receipt-1755614342762.png', type: 'image/png', size: 615810, lastModified: 1755614342762}
+PettyCash.tsx:486 {status: 'loading tesseract core', progress: 0, userJobId: 'Job-0-bbfdf'}
+PettyCash.tsx:486 {status: 'loading tesseract core', progress: 1, userJobId: 'Job-0-bbfdf'}
+PettyCash.tsx:486 {workerId: 'Worker-0-ea5c1', status: 'initializing tesseract', progress: 0, userJobId: 'Job-0-bbfdf'}
+PettyCash.tsx:486 {workerId: 'Worker-0-ea5c1', status: 'initializing tesseract', progress: 1, userJobId: 'Job-0-bbfdf'}
+PettyCash.tsx:486 {workerId: 'Worker-0-ea5c1', status: 'loading language traineddata', progress: 0, userJobId: 'Job-1-c2a14'}
+PettyCash.tsx:486 {workerId: 'Worker-0-ea5c1', status: 'loading language traineddata', progress: 0.5, userJobId: 'Job-1-c2a14'}
+PettyCash.tsx:486 {workerId: 'Worker-0-ea5c1', status: 'loading language traineddata', progress: 1, userJobId: 'Job-1-c2a14'}
+PettyCash.tsx:486 {workerId: 'Worker-0-ea5c1', status: 'initializing api', progress: 0, userJobId: 'Job-2-b95bb'}
+PettyCash.tsx:486 {workerId: 'Worker-0-ea5c1', status: 'initializing api', progress: 1, userJobId: 'Job-2-b95bb'}
+PettyCash.tsx:486 {workerId: 'Worker-0-ea5c1', jobId: 'Job-0-bbfdf', status: 'recognizing text', progress: 0, userJobId: 'Job-3-569dd'}
+PettyCash.tsx:486 {workerId: 'Worker-0-ea5c1', jobId: 'Job-0-bbfdf', status: 'recognizing text', progress: 0.08571428571428572, userJobId: 'Job-3-569dd'}
+PettyCash.tsx:486 {workerId: 'Worker-0-ea5c1', jobId: 'Job-0-bbfdf', status: 'recognizing text', progress: 0.17142857142857143, userJobId: 'Job-3-569dd'}
+PettyCash.tsx:486 {workerId: 'Worker-0-ea5c1', jobId: 'Job-0-bbfdf', status: 'recognizing text', progress: 0.2571428571428571, userJobId: 'Job-3-569dd'}
+PettyCash.tsx:486 {workerId: 'Worker-0-ea5c1', jobId: 'Job-0-bbfdf', status: 'recognizing text', progress: 0.35714285714285715, userJobId: 'Job-3-569dd'}
+PettyCash.tsx:486 {workerId: 'Worker-0-ea5c1', jobId: 'Job-0-bbfdf', status: 'recognizing text', progress: 0.44285714285714284, userJobId: 'Job-3-569dd'}
+PettyCash.tsx:486 {workerId: 'Worker-0-ea5c1', jobId: 'Job-0-bbfdf', status: 'recognizing text', progress: 0.5285714285714286, userJobId: 'Job-3-569dd'}
+PettyCash.tsx:486 {workerId: 'Worker-0-ea5c1', jobId: 'Job-0-bbfdf', status: 'recognizing text', progress: 0.6142857142857143, userJobId: 'Job-3-569dd'}
+PettyCash.tsx:486 {workerId: 'Worker-0-ea5c1', jobId: 'Job-0-bbfdf', status: 'recognizing text', progress: 1, userJobId: 'Job-3-569dd'}
+PettyCash.tsx:490 === FULL OCR TEXT START ===
+PettyCash.tsx:491 Vishal Sonigra paid
+Kalayatan Cargo And Logistics...
+paytm-74375550@ptys
+glue transport furnili
+paid securely by
+CRED
+powered by LIF»
+
+16 |AUG 2025, 5:00PM | TXN ID: 559419149585
+
+PettyCash.tsx:492 === FULL OCR TEXT END ===
+PettyCash.tsx:499 === PLATFORM DETECTION ===
+PettyCash.tsx:500 Detected Platform: cred
+PettyCash.tsx:501 === ALL LINES ===
+PettyCash.tsx:503 Line 0: "Vishal Sonigra paid"
+PettyCash.tsx:503 Line 1: "Kalayatan Cargo And Logistics..."
+PettyCash.tsx:503 Line 2: "paytm-74375550@ptys"
+PettyCash.tsx:503 Line 3: "glue transport furnili"
+PettyCash.tsx:503 Line 4: "paid securely by"
+PettyCash.tsx:503 Line 5: "CRED"
+PettyCash.tsx:503 Line 6: "powered by LIF»"
+PettyCash.tsx:503 Line 7: "16 |AUG 2025, 5:00PM | TXN ID: 559419149585"
+PettyCash.tsx:508 === AMOUNT EXTRACTION ===
+PettyCash.tsx:509 Extracted Amount from patterns: 
+PettyCash.tsx:513 CRED: Trying to find ₹ amount in full text...
+PettyCash.tsx:519 CRED: No ₹ symbol found, trying alternative patterns...
+PettyCash.tsx:544 CRED: All extraction methods failed. OCR might have missed the amount completely.
+PettyCash.tsx:545 CRED: Expected amount is ₹600 based on visual receipt, but OCR did not capture it.
+PettyCash.tsx:556 === RECIPIENT EXTRACTION ===
+PettyCash.tsx:557 Extracted Recipient: 
+PettyCash.tsx:572 CRED OCR Debug - All lines: (8) ['Vishal Sonigra paid', 'Kalayatan Cargo And Logistics...', 'paytm-74375550@ptys', 'glue transport furnili', 'paid securely by', 'CRED', 'powered by LIF»', '16 |AUG 2025, 5:00PM | TXN ID: 559419149585']
+PettyCash.tsx:578 CRED OCR Debug - Checking line 0 : Vishal Sonigra paid
+PettyCash.tsx:599 CRED OCR Debug - Skipped line: Vishal Sonigra paid
+PettyCash.tsx:578 CRED OCR Debug - Checking line 1 : Kalayatan Cargo And Logistics...
+PettyCash.tsx:599 CRED OCR Debug - Skipped line: Kalayatan Cargo And Logistics...
+PettyCash.tsx:578 CRED OCR Debug - Checking line 2 : paytm-74375550@ptys
+PettyCash.tsx:599 CRED OCR Debug - Skipped line: paytm-74375550@ptys
+PettyCash.tsx:578 CRED OCR Debug - Checking line 3 : glue transport furnili
+PettyCash.tsx:595 CRED OCR Debug - Found potential description: glue transport furnili
+PettyCash.tsx:603 CRED OCR Debug - Final extracted purpose: glue transport furnil
