@@ -27,7 +27,6 @@ export default function FurniliLayout({
 }: FurniliLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
-  const [isInitialized, setIsInitialized] = useState(false);
   
   // Simple mobile detection
   const [isMobile, setIsMobile] = useState(false);
@@ -41,39 +40,10 @@ export default function FurniliLayout({
     const handleResize = () => checkMobile();
     window.addEventListener('resize', handleResize);
     
-    const timer = setTimeout(() => {
-      setIsInitialized(true);
-    }, 100);
-    
     return () => {
       window.removeEventListener('resize', handleResize);
-      clearTimeout(timer);
     };
   }, []);
-
-  if (!isInitialized) {
-    return (
-      <div className="flex min-h-screen">
-        <div className="w-64 bg-amber-100 animate-pulse">
-          <div className="h-16 bg-amber-200 rounded m-2 mb-4"></div>
-          <div className="space-y-2 p-2">
-            {[...Array(8)].map((_, i) => (
-              <div key={i} className="h-10 bg-amber-200 rounded"></div>
-            ))}
-          </div>
-        </div>
-        <div className="flex-1 p-6">
-          <div className="h-6 w-48 bg-gray-200 rounded animate-pulse mb-2"></div>
-          <div className="h-4 w-32 bg-gray-100 rounded animate-pulse mb-6"></div>
-          <div className="space-y-4">
-            {[...Array(3)].map((_, i) => (
-              <div key={i} className="h-32 bg-gray-100 rounded animate-pulse"></div>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="furnili-page">

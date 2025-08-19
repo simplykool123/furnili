@@ -155,7 +155,7 @@ export default function Dashboard() {
   const currentUser = authService.getUser();
   const admin = authService.hasRole(['admin']);
   const [dailyQuote, setDailyQuote] = useState<typeof motivationalQuotes[0] | null>(null);
-  const { isMobile } = useIsMobile();
+  const isMobile = useIsMobile();
   const [, setLocation] = useLocation();
 
   // Memoized daily quote to prevent re-calculation on each render
@@ -276,7 +276,7 @@ export default function Dashboard() {
 
   // Handle check in/out functionality for the new dashboard design
   const handleCheckInOut = () => {
-    const myTodayRecord = todayAttendance.find((a: any) => a.userId === currentUser.id);
+    const myTodayRecord = todayAttendance?.find((a: any) => a.userId === currentUser?.id);
     const hasCheckedInToday = myTodayRecord && !myTodayRecord.checkOutTime;
     
     if (hasCheckedInToday) {
@@ -301,7 +301,7 @@ export default function Dashboard() {
         title={`Welcome back, ${currentUser?.name || 'Admin'}!`}
         subtitle="Here's your business overview and key metrics for today."
       >
-        <MobileDashboard />
+        <MobileDashboard stats={stats || {}} tasks={tasks || []} isLoading={isLoading} />
       </FurniliLayout>
     );
   }
