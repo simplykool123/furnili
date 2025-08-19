@@ -307,12 +307,13 @@ export default function PettyCash() {
 
   // Platform detection for specialized OCR parsing
   const detectPlatformType = (text: string): string => {
+    // CRED detection should come first and be more specific
+    if (text.includes('cred') || text.includes('paid securely by') || text.includes('powered by lif')) return 'cred';
     if (text.includes('google pay') || text.includes('gpay')) return 'googlepay';
     if (text.includes('phonepe') || text.includes('phone pe')) return 'phonepe';
     if (text.includes('paytm')) return 'paytm';
     if (text.includes('amazon pay') || text.includes('amazonpay')) return 'amazonpay';
     if (text.includes('bhim upi') || text.includes('bhim')) return 'bhimupi';
-    if (text.includes('cred') || text.includes('paid securely by')) return 'cred';
     if (text.includes('bank') || text.includes('neft') || text.includes('rtgs')) return 'bank';
     if (text.includes('cash') || text.includes('receipt')) return 'cash';
     return 'generic';
@@ -345,8 +346,13 @@ export default function PettyCash() {
           amountMatch = line.match(/(?:amount|rs|₹)\s?([0-9,]+\.?[0-9]*)/i);
           break;
         case 'cred':
-          // CRED: "₹600", "₹12,000" format - more flexible matching
+          // CRED: Look for standalone amount patterns, not just with ₹ symbol
+          // Sometimes OCR doesn't capture the ₹ symbol clearly
           amountMatch = line.match(/₹\s?([0-9,]+\.?[0-9]*)/);
+          if (!amountMatch) {
+            // Try standalone number that could be amount (600, 12000, etc.)
+            amountMatch = line.match(/^([0-9,]+\.?[0-9]*)$/);
+          }
           break;
         case 'bank':
           // Bank: "Debited ₹500", "Amount: INR 500"
@@ -398,9 +404,17 @@ export default function PettyCash() {
           }
           break;
         case 'cred':
-          // CRED: Look for recipient name (usually largest text after payer info)
-          if (!line.includes('paid') && !line.includes('@') && !line.includes('cred') && 
-              line.length > 5 && /^[A-Z][a-z\s]+/.test(line)) {
+          // CRED: Look for recipient name - usually the business name line
+          // Skip payer info, email addresses, platform mentions
+          if (!line.toLowerCase().includes('paid') && 
+              !line.includes('@') && 
+              !line.toLowerCase().includes('cred') &&
+              !line.toLowerCase().includes('powered') &&
+              !line.toLowerCase().includes('securely') &&
+              !line.includes('|') && // Skip transaction info
+              line.length > 10 && 
+              /^[A-Z]/.test(line) && // Starts with capital letter
+              !/^\d/.test(line)) { // Not starting with number
             recipient = line.trim();
           }
           break;
@@ -515,42 +529,32 @@ export default function PettyCash() {
       if (platformType === 'cred') {
         console.log('CRED OCR Debug - All lines:', lines);
         
-        // For CRED, look for description that appears after the amount but before transaction details
-        let foundAmount = false;
-        
+        // For CRED, look for the business description which appears as simple text
+        // Based on the debug output, "glue transport furnili" is at Line 3
         for (let i = 0; i < lines.length; i++) {
           const line = lines[i].trim();
+          console.log('CRED OCR Debug - Checking line', i, ':', line);
           
-          // Check if we found the amount line (₹600, ₹12,000 format)
-          if (!foundAmount && /₹[\d,]+/.test(line)) {
-            foundAmount = true;
-            console.log('CRED OCR Debug - Found amount at line', i, ':', line);
-            
-            // Look at the immediate next few lines for description
-            for (let j = i + 1; j < Math.min(i + 3, lines.length); j++) {
-              const nextLine = lines[j].trim();
-              console.log('CRED OCR Debug - Checking line', j, ':', nextLine);
-              
-              // This should be the business description - look for simple text lines
-              // Skip empty lines and lines with transaction info
-              if (nextLine.length >= 3 && 
-                  nextLine.length <= 50 && 
-                  !nextLine.includes('|') && 
-                  !nextLine.includes('paid securely') &&
-                  !nextLine.includes('powered by') &&
-                  !nextLine.includes('TXN ID') &&
-                  !nextLine.includes('AUG') &&
-                  !nextLine.includes('2025') &&
-                  !/\d{4,}/.test(nextLine) && // No long numbers (transaction IDs)
-                  !/\d{1,2}:\d{2}/.test(nextLine)) { // No time formats
-                console.log('CRED OCR Debug - Found potential description:', nextLine);
-                extractedPurpose = nextLine;
-                break;
-              } else {
-                console.log('CRED OCR Debug - Skipped line (transaction info):', nextLine);
-              }
-            }
+          // Look for business descriptions - simple text without special characters
+          // Skip transaction info, platform mentions, email addresses
+          if (line.length >= 3 && 
+              line.length <= 50 && 
+              !line.includes('|') && // Skip transaction info
+              !line.toLowerCase().includes('paid') &&
+              !line.toLowerCase().includes('cred') &&
+              !line.toLowerCase().includes('powered') &&
+              !line.toLowerCase().includes('securely') &&
+              !line.includes('@') && // Skip email addresses
+              !line.includes('paytm-') && // Skip payment IDs
+              !/^\d+\s\w{3}\s\d{4}/.test(line) && // Skip dates
+              !/\d{4,}/.test(line) && // No long numbers (transaction IDs)
+              !/\d{1,2}:\d{2}/.test(line) && // No time formats
+              /^[a-z\s]+$/i.test(line)) { // Only letters and spaces
+            console.log('CRED OCR Debug - Found potential description:', line);
+            extractedPurpose = line;
             break;
+          } else {
+            console.log('CRED OCR Debug - Skipped line:', line);
           }
         }
         
