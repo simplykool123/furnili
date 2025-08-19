@@ -1,0 +1,74 @@
+To HARIOM HARDWARE AND ELECTRICALS
+furrili thirst
+Completed
+10 Aug 2025, 7:43 pm
+(TaT] HDFC Bank
+~
+652926 XXXXXXXX80
+UPI transaction ID
+109595532100
+To: HARIOM HARDWARE AND ELECTRICALS
+PhonePe - q755064728:8vbl
+From: KUNAL LUNKAD (HDFC Bank)
+Google Pay + kunallurikad-4 Gokhdfcbank
+Google transaction ID
+CICAGKIDNGTTIw
++ Pay
+
+PettyCash.tsx:899 === FULL OCR TEXT END ===
+PettyCash.tsx:906 === PLATFORM DETECTION ===
+PettyCash.tsx:907 Detected Platform: googlepay
+PettyCash.tsx:908 === ALL LINES ===
+PettyCash.tsx:910 Line 0: "To HARIOM HARDWARE AND ELECTRICALS"
+PettyCash.tsx:910 Line 1: "furrili thirst"
+PettyCash.tsx:910 Line 2: "Completed"
+PettyCash.tsx:910 Line 3: "10 Aug 2025, 7:43 pm"
+PettyCash.tsx:910 Line 4: "(TaT] HDFC Bank"
+PettyCash.tsx:910 Line 5: "~"
+PettyCash.tsx:910 Line 6: "652926 XXXXXXXX80"
+PettyCash.tsx:910 Line 7: "UPI transaction ID"
+PettyCash.tsx:910 Line 8: "109595532100"
+PettyCash.tsx:910 Line 9: "To: HARIOM HARDWARE AND ELECTRICALS"
+PettyCash.tsx:910 Line 10: "PhonePe - q755064728:8vbl"
+PettyCash.tsx:910 Line 11: "From: KUNAL LUNKAD (HDFC Bank)"
+PettyCash.tsx:910 Line 12: "Google Pay + kunallurikad-4 Gokhdfcbank"
+PettyCash.tsx:910 Line 13: "Google transaction ID"
+PettyCash.tsx:910 Line 14: "CICAGKIDNGTTIw"
+PettyCash.tsx:910 Line 15: "+ Pay"
+PettyCash.tsx:579 === GOOGLE PAY SPECIFIC EXTRACTION ===
+PettyCash.tsx:583 GooglePay Line 0: "To HARIOM HARDWARE AND ELECTRICALS"
+PettyCash.tsx:592 GooglePay: Found recipient (to pattern): HARIOM HARDWARE AND ELECTRICALS
+PettyCash.tsx:643 GooglePay: Found description (service pattern): To HARIOM HARDWARE AND ELECTRICALS
+PettyCash.tsx:583 GooglePay Line 1: "furrili thirst"
+PettyCash.tsx:583 GooglePay Line 2: "Completed"
+PettyCash.tsx:583 GooglePay Line 3: "10 Aug 2025, 7:43 pm"
+PettyCash.tsx:583 GooglePay Line 4: "(TaT] HDFC Bank"
+PettyCash.tsx:583 GooglePay Line 5: "~"
+PettyCash.tsx:583 GooglePay Line 6: "652926 XXXXXXXX80"
+PettyCash.tsx:583 GooglePay Line 7: "UPI transaction ID"
+PettyCash.tsx:583 GooglePay Line 8: "109595532100"
+PettyCash.tsx:583 GooglePay Line 9: "To: HARIOM HARDWARE AND ELECTRICALS"
+PettyCash.tsx:583 GooglePay Line 10: "PhonePe - q755064728:8vbl"
+PettyCash.tsx:583 GooglePay Line 11: "From: KUNAL LUNKAD (HDFC Bank)"
+PettyCash.tsx:583 GooglePay Line 12: "Google Pay + kunallurikad-4 Gokhdfcbank"
+PettyCash.tsx:583 GooglePay Line 13: "Google transaction ID"
+PettyCash.tsx:583 GooglePay Line 14: "CICAGKIDNGTTIw"
+PettyCash.tsx:583 GooglePay Line 15: "+ Pay"
+PettyCash.tsx:650 GooglePay: No amount found, trying fallback extraction...
+PettyCash.tsx:424 === FALLBACK AMOUNT EXTRACTION ===
+PettyCash.tsx:462 ❌ Fallback amount extraction failed - no amounts found near "paid"
+PettyCash.tsx:465 === FINAL AMOUNT FALLBACK ===
+PettyCash.tsx:945 === PLATFORM-SPECIFIC EXTRACTION RESULTS ===
+PettyCash.tsx:946 Amount: 
+PettyCash.tsx:947 Recipient: HARIOM HARDWARE AND ELECTRICALS
+PettyCash.tsx:948 Description: To HARIOM HARDWARE AND ELECTRICALS
+PettyCash.tsx:965 === DATE EXTRACTION ===
+PettyCash.tsx:966 Extracted Date: 2025-08-10
+PettyCash.tsx:993 Auto-categorized as: Repair
+PettyCash.tsx:996 === FINAL EXTRACTED DATA ===
+PettyCash.tsx:997 Platform: googlepay
+PettyCash.tsx:998 Amount: 
+PettyCash.tsx:999 Recipient: HARIOM HARDWARE AND ELECTRICALS
+PettyCash.tsx:1000 Description: To HARIOM HARDWARE AND ELECTRICALS
+PettyCash.tsx:1001 Category: Repair
+PettyCash.tsx:1002 Date: 2025-08-10
