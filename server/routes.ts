@@ -2613,17 +2613,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
         updateData.expenseDate = new Date(req.body.expenseDate);
       }
       
-      if (req.file) {
-        updateData.receiptImageUrl = req.file.path;
-      }
-      
       console.log("Update data being sent:", updateData);
       
+      // Update the expense first
       const expense = await storage.updatePettyCashExpense(id, updateData);
       if (!expense) {
         return res.status(404).json({ message: "Expense not found" });
       }
-      res.json(expense);
+      
+      // If there's an uploaded file, rename it with the expense ID
+      if (req.file) {
+        const fs = require('fs');
+        const path = require('path');
+        
+        // Get file extension from mimetype or original name
+        let extension = '.png'; // default
+        if (req.file.mimetype === 'image/jpeg') extension = '.jpg';
+        else if (req.file.mimetype === 'image/png') extension = '.png';
+        else if (req.file.originalname) {
+          const ext = path.extname(req.file.originalname);
+          if (ext) extension = ext;
+        }
+        
+        // Create new filename with zero-padded ID: 001.png, 012.jpg, etc.
+        const paddedId = id.toString().padStart(3, '0');
+        const newFileName = `${paddedId}${extension}`;
+        const newPath = `uploads/receipts/${newFileName}`;
+        
+        // Move file from temp location to new name
+        fs.renameSync(req.file.path, newPath);
+        console.log(`Receipt image renamed from ${req.file.path} to ${newPath}`);
+        
+        // Update expense with new image path
+        await storage.updatePettyCashExpense(id, {
+          receiptImageUrl: newPath
+        });
+        
+        // Return updated expense
+        const updatedExpenses = await storage.getPettyCashExpenses();
+        const updatedExpense = updatedExpenses.find(e => e.id === id);
+        res.json(updatedExpense || expense);
+      } else {
+        res.json(expense);
+      }
     } catch (error) {
       console.error("Failed to update expense:", error);
       res.status(500).json({ message: "Failed to update expense", error: String(error) });
