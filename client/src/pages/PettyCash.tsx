@@ -486,6 +486,29 @@ export default function PettyCash() {
       if (extractedDate) {
         updatedData.date = extractedDate;
       }
+
+      // Enhanced description extraction
+      if (extractedRecipient && platformType === 'googlepay') {
+        // For Google Pay, create a more meaningful description
+        updatedData.purpose = `Payment to ${extractedRecipient}`;
+      } else if (extractedRecipient) {
+        // For other platforms, use a generic format
+        updatedData.purpose = `Payment to ${extractedRecipient}`;
+      }
+
+      // If no recipient found but we have platform info, use that
+      if (!updatedData.purpose && platformType !== 'generic') {
+        const platformNames = {
+          googlepay: 'Google Pay',
+          phonepe: 'PhonePe',
+          paytm: 'Paytm',
+          amazonpay: 'Amazon Pay',
+          bhimupi: 'BHIM UPI',
+          bank: 'Bank Transfer',
+          cash: 'Cash Payment'
+        };
+        updatedData.purpose = `${platformNames[platformType as keyof typeof platformNames] || 'Digital'} payment`;
+      }
       
       // Enhanced Paid By and Paid To extraction
       for (let i = 0; i < lines.length; i++) {
