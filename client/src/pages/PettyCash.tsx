@@ -75,7 +75,7 @@ export default function PettyCash() {
   const [expenseToDelete, setExpenseToDelete] = useState<PettyCashExpense | null>(null);
   
   // Mobile optimization hook
-  const { isMobile } = useIsMobile();
+  const isMobile = useIsMobile();
   
   // Get current user
   const user = authService.getUser();
@@ -425,7 +425,7 @@ export default function PettyCash() {
     
     if (dateMatch) {
       const [, day, month, year] = dateMatch;
-      const monthNum = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'].indexOf(month.toLowerCase()) + 1;
+      const monthNum = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'].indexOf(month?.toLowerCase() || '') + 1;
       if (monthNum > 0) {
         return `${year}-${String(monthNum).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
       }
@@ -440,9 +440,7 @@ export default function PettyCash() {
     try {
       // Enhanced OCR settings for better accuracy across platforms
       const result = await Tesseract.recognize(file, 'eng', {
-        logger: m => console.log(m),
-        tessedit_char_whitelist: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz₹@.-:/, ',
-        tessedit_pageseg_mode: Tesseract.PSM.SPARSE_TEXT
+        logger: m => console.log(m)
       });
       
       const text = result.data.text;
@@ -1382,10 +1380,10 @@ export default function PettyCash() {
               </div>
             </div>
             
-            {/* Source and Paid To */}
+            {/* Paid To and Paid By */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="paidTo">Source *</Label>
+                <Label htmlFor="paidTo">Paid To *</Label>
                 <Input
                   id="paidTo"
                   placeholder=""
@@ -1395,7 +1393,7 @@ export default function PettyCash() {
                 />
               </div>
               <div>
-                <Label htmlFor="paidBy">Paid To *</Label>
+                <Label htmlFor="paidBy">Paid By *</Label>
                 <Select 
                   value={formData.paidBy} 
                   onValueChange={(value) => setFormData(prev => ({ ...prev, paidBy: value }))}
@@ -1589,7 +1587,7 @@ export default function PettyCash() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="edit-paidTo">Source *</Label>
+                <Label htmlFor="edit-paidTo">Paid To *</Label>
                 <Input
                   id="edit-paidTo"
                   placeholder="Dolly Vikesh Oswal"
@@ -1599,7 +1597,7 @@ export default function PettyCash() {
                 />
               </div>
               <div>
-                <Label htmlFor="edit-paidBy">Paid To *</Label>
+                <Label htmlFor="edit-paidBy">Paid By *</Label>
                 <Select 
                   value={formData.paidBy}
                   onValueChange={(value) => setFormData(prev => ({ ...prev, paidBy: value }))}
