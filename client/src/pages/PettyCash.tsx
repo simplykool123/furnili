@@ -405,39 +405,23 @@ export default function PettyCash() {
       .trim();
   };
 
-  // Extract amount using robust regex pattern with priority for rupee symbols
+  // Enhanced amount extraction with flexible regex for various formats
   const extractAmount = (text: string): string | null => {
     console.log(`Checking line for amount: "${text}"`);
     
-    // High priority: explicit rupee symbol patterns (₹ is big and bold in screenshots)
-    const rupeePatterns = [
-      /₹\s*([0-9,]+\.?\d*)/,           // ₹2025 or ₹ 2025
-      /\u20B9\s*([0-9,]+\.?\d*)/,     // Unicode rupee symbol
-      /Rs\.?\s+([0-9,]+\.?\d*)/i,     // Rs. 2025 or Rs 2025
-      /INR\s*([0-9,]+\.?\d*)/i,       // INR 2025
-      /amount\s*:?\s*₹?\s*([0-9,]+\.?\d*)/i, // Amount: ₹2025
-      /paid\s*₹?\s*([0-9,]+\.?\d*)/i,        // Paid ₹2025
-    ];
+    // Enhanced regex pattern to handle commas, decimals, and various currency formats
+    const enhancedRegex = /(?:₹|Rs\.?|INR|¥|amount:?\s*|paid:?\s*)?\s?(\d{1,3}(?:,\d{3})*(?:\.\d{1,2})?)(?:\/-)?/i;
+    const match = text.match(enhancedRegex);
     
-    for (const pattern of rupeePatterns) {
-      const match = text.match(pattern);
-      if (match && match[1]) {
-        const amount = parseInt(match[1].replace(/,/g, ''));
-        if (amount >= 10 && amount <= 100000) {
-          console.log(`✅ Found amount with rupee pattern: "${text}" → ${amount}`);
-          return match[1].replace(/,/g, '');
-        }
-      }
-    }
-    
-    // Lower priority: standalone numbers (only if no rupee symbol found)
-    const standaloneMatch = text.match(/^([0-9,]+\.?\d*)$/);
-    if (standaloneMatch && standaloneMatch[1]) {
-      const amount = parseInt(standaloneMatch[1].replace(/,/g, ''));
-      // Be very selective for standalone numbers - avoid dates like "2025"
-      if (amount >= 50 && amount <= 10000 && amount !== 2025) {
-        console.log(`⚠️  Found standalone amount: "${text}" → ${amount}`);
-        return standaloneMatch[1].replace(/,/g, '');
+    if (match && match[1]) {
+      const cleanAmount = match[1].replace(/,/g, '');
+      const amount = parseFloat(cleanAmount);
+      
+      // Validate reasonable amount range and exclude common date patterns
+      if (amount >= 10 && amount <= 100000 && 
+          !['2025', '2024', '2026', '1024', '2048'].includes(cleanAmount)) {
+        console.log(`✅ Found amount: "${text}" → ${amount}`);
+        return cleanAmount;
       }
     }
     
@@ -448,37 +432,45 @@ export default function PettyCash() {
   const fallbackAmountExtraction = (lines: string[]): string | null => {
     console.log('=== FALLBACK AMOUNT EXTRACTION ===');
     
+    // Enhanced contextual anchors for amount detection
+    const anchors = ['paid', 'received', 'amount', 'total', 'transferred', 'sent'];
+    
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
-      if (line.toLowerCase().includes("paid")) {
-        console.log(`Found "paid" at line ${i}: "${line}"`);
-        
-        // Check current line first
-        const currentAmount = extractAmount(line);
-        if (currentAmount) {
-          console.log('Found amount in same line as "paid":', currentAmount);
-          return currentAmount;
-        }
-        
-        // Check next 2 lines after "paid"
-        for (let j = 1; j <= 2; j++) {
-          if (i + j < lines.length) {
-            const nextLine = lines[i + j];
-            const nextAmount = extractAmount(nextLine);
-            if (nextAmount) {
-              console.log(`Found amount ${j} line(s) after "paid": "${nextLine}" → ${nextAmount}`);
-              return nextAmount;
+      const lowerLine = line.toLowerCase();
+      
+      // Check if line contains any contextual anchor
+      for (const anchor of anchors) {
+        if (lowerLine.includes(anchor)) {
+          console.log(`Found "${anchor}" at line ${i}: "${line}"`);
+          
+          // Check current line first
+          const currentAmount = extractAmount(line);
+          if (currentAmount) {
+            console.log(`✅ Found amount in same line as "${anchor}":`, currentAmount);
+            return currentAmount;
+          }
+          
+          // Check next 2 lines after anchor
+          for (let j = 1; j <= 2; j++) {
+            if (i + j < lines.length) {
+              const nextLine = lines[i + j];
+              const nextAmount = extractAmount(nextLine);
+              if (nextAmount) {
+                console.log(`✅ Found amount ${j} line(s) after "${anchor}": "${nextLine}" → ${nextAmount}`);
+                return nextAmount;
+              }
             }
           }
-        }
-        
-        // Check 1 line before "paid" as well
-        if (i > 0) {
-          const prevLine = lines[i - 1];
-          const prevAmount = extractAmount(prevLine);
-          if (prevAmount) {
-            console.log(`Found amount 1 line before "paid": "${prevLine}" → ${prevAmount}`);
-            return prevAmount;
+          
+          // Check 1 line before anchor as well
+          if (i > 0) {
+            const prevLine = lines[i - 1];
+            const prevAmount = extractAmount(prevLine);
+            if (prevAmount) {
+              console.log(`✅ Found amount 1 line before "${anchor}": "${prevLine}" → ${prevAmount}`);
+              return prevAmount;
+            }
           }
         }
       }
@@ -914,6 +906,13 @@ export default function PettyCash() {
       
       const updatedData = { ...formData };
       const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+      
+      // Debug: Log all extracted lines for analysis
+      console.log('=== DEBUG: ALL EXTRACTED LINES ===');
+      lines.forEach((line, index) => {
+        console.log(`Line ${index}: "${line}"`);
+      });
+      console.log('=== END DEBUG LINES ===');
       
       // Detect platform type for specialized parsing
       const platformType = detectPlatformType(text.toLowerCase());
