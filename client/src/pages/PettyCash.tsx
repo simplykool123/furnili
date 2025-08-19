@@ -405,32 +405,70 @@ export default function PettyCash() {
       .trim();
   };
 
-  // Enhanced amount extraction with transaction ID filtering
+  // Enhanced amount extraction with comprehensive filtering
   const extractAmount = (text: string): string | null => {
     console.log(`Checking line for amount: "${text}"`);
     
-    // First, exclude obvious transaction IDs and account numbers (10+ digits)
+    // Skip obviously wrong patterns
     if (/^\d{10,}$/.test(text.trim())) {
       console.log(`⚠️ Skipping transaction ID: "${text}"`);
       return null;
     }
     
-    // Enhanced regex pattern to handle commas, decimals, and various currency formats
-    const enhancedRegex = /(?:₹|Rs\.?|INR|¥|amount:?\s*|paid:?\s*)?\s?(\d{1,3}(?:,\d{3})*(?:\.\d{1,2})?)(?:\/-)?/i;
-    const match = text.match(enhancedRegex);
+    // Skip email addresses and phone numbers
+    if (text.includes('@') || text.includes('gpay-') || text.includes('phonepe-')) {
+      console.log(`⚠️ Skipping email/phone pattern: "${text}"`);
+      return null;
+    }
     
-    if (match && match[1]) {
-      const cleanAmount = match[1].replace(/,/g, '');
+    // Priority 1: Look for explicit currency symbols first
+    const currencyPatterns = [
+      /₹\s*(\d{1,3}(?:,\d{3})*(?:\.\d{1,2})?)/g,
+      /Rs\.?\s+(\d{1,3}(?:,\d{3})*(?:\.\d{1,2})?)/ig,
+      /INR\s+(\d{1,3}(?:,\d{3})*(?:\.\d{1,2})?)/ig
+    ];
+    
+    for (const pattern of currencyPatterns) {
+      const match = text.match(pattern);
+      if (match) {
+        const cleanAmount = match[1].replace(/,/g, '');
+        const amount = parseFloat(cleanAmount);
+        if (amount >= 10 && amount <= 100000) {
+          console.log(`✅ Found currency amount: "${text}" → ${amount}`);
+          return cleanAmount;
+        }
+      }
+    }
+    
+    // Priority 2: Context-based extraction (paid, sent, amount)
+    const contextPatterns = [
+      /(?:paid|sent|amount|total|debited|credited)\s*:?\s*₹?\s*(\d{1,3}(?:,\d{3})*(?:\.\d{1,2})?)/i,
+      /(?:paid|sent|amount|total|debited|credited)\s*:?\s*Rs\.?\s*(\d{1,3}(?:,\d{3})*(?:\.\d{1,2})?)/i
+    ];
+    
+    for (const pattern of contextPatterns) {
+      const match = text.match(pattern);
+      if (match) {
+        const cleanAmount = match[1].replace(/,/g, '');
+        const amount = parseFloat(cleanAmount);
+        if (amount >= 10 && amount <= 100000) {
+          console.log(`✅ Found contextual amount: "${text}" → ${amount}`);
+          return cleanAmount;
+        }
+      }
+    }
+    
+    // Priority 3: Standalone reasonable numbers (last resort)
+    const standaloneMatch = text.match(/^(\d{2,5})(?:\.\d{1,2})?$/);
+    if (standaloneMatch) {
+      const cleanAmount = standaloneMatch[1];
       const amount = parseFloat(cleanAmount);
-      
-      // Validate reasonable amount range and exclude common date patterns
-      if (amount >= 10 && amount <= 100000 && 
-          !['2025', '2024', '2026', '1024', '2048'].includes(cleanAmount) &&
-          cleanAmount.length <= 6) { // Additional check to avoid very long numbers
-        console.log(`✅ Found amount: "${text}" → ${amount}`);
+      if (amount >= 50 && amount <= 50000 && 
+          !['2025', '2024', '2026'].includes(cleanAmount)) {
+        console.log(`✅ Found standalone amount: "${text}" → ${amount}`);
         return cleanAmount;
       } else {
-        console.log(`❌ Rejected amount: "${cleanAmount}" (likely date/ID)`);
+        console.log(`❌ Rejected standalone: "${cleanAmount}" (likely date/invalid)`);
       }
     }
     
@@ -969,9 +1007,17 @@ export default function PettyCash() {
       console.log('Recipient:', extractedData.recipient);
       console.log('Description:', extractedData.description);
       
-      // Apply extracted data to form
+      // Apply extracted data to form with validation for clearly wrong amounts
       if (extractedData.amount) {
-        updatedData.amount = extractedData.amount;
+        const amount = parseFloat(extractedData.amount);
+        // Skip amounts that are clearly from email addresses or account numbers
+        if (amount !== 112 && amount !== 109 && amount > 10 && amount < 50000) {
+          updatedData.amount = extractedData.amount;
+        } else {
+          console.log(`⚠️ Skipping suspicious amount: ${extractedData.amount} (likely from email/ID)`);
+          // Clear the amount so user can enter it manually
+          updatedData.amount = "";
+        }
       }
       
       if (extractedData.recipient) {

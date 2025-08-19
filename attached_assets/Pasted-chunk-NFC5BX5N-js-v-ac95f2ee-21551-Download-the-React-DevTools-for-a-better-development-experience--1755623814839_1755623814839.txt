@@ -1,0 +1,134 @@
+chunk-NFC5BX5N.js?v=ac95f2ee:21551 Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+chunk-5UTCTWXI.js?v=ac95f2ee:339 Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+(anonymous) @ chunk-5UTCTWXI.js?v=ac95f2ee:339
+commitHookEffectListMount @ chunk-NFC5BX5N.js?v=ac95f2ee:16915
+commitPassiveMountOnFiber @ chunk-NFC5BX5N.js?v=ac95f2ee:18156
+commitPassiveMountEffects_complete @ chunk-NFC5BX5N.js?v=ac95f2ee:18129
+commitPassiveMountEffects_begin @ chunk-NFC5BX5N.js?v=ac95f2ee:18119
+commitPassiveMountEffects @ chunk-NFC5BX5N.js?v=ac95f2ee:18109
+flushPassiveEffectsImpl @ chunk-NFC5BX5N.js?v=ac95f2ee:19490
+flushPassiveEffects @ chunk-NFC5BX5N.js?v=ac95f2ee:19447
+commitRootImpl @ chunk-NFC5BX5N.js?v=ac95f2ee:19416
+commitRoot @ chunk-NFC5BX5N.js?v=ac95f2ee:19277
+performSyncWorkOnRoot @ chunk-NFC5BX5N.js?v=ac95f2ee:18895
+flushSyncCallbacks @ chunk-NFC5BX5N.js?v=ac95f2ee:9119
+(anonymous) @ chunk-NFC5BX5N.js?v=ac95f2ee:18627
+PettyCash.tsx:1097 Pasted image details: {originalName: 'WhatsApp Image 2025-08-19 at 18.48.55.jpeg', newName: 'pasted-receipt-1755623770862.jpg', type: 'image/jpeg', size: 38807}
+PettyCash.tsx:1043 Processing file: {name: 'pasted-receipt-1755623770862.jpg', type: 'image/jpeg', size: 38807, lastModified: 1755623770862}
+PettyCash.tsx:817 === PREPROCESSING IMAGE FOR BETTER OCR ===
+PettyCash.tsx:843 Preprocessing image: grayscale conversion, contrast enhancement, and binarization
+PettyCash.tsx:875 Image preprocessed successfully: processed_pasted-receipt-1755623770862.jpg Size: 37716
+PettyCash.tsx:904 Using preprocessed image for OCR: processed_pasted-receipt-1755623770862.jpg
+PettyCash.tsx:908 {status: 'loading tesseract core', progress: 0, userJobId: 'Job-0-b9d98'}
+PettyCash.tsx:908 {status: 'loading tesseract core', progress: 1, userJobId: 'Job-0-b9d98'}
+PettyCash.tsx:908 {workerId: 'Worker-0-9e0f5', status: 'initializing tesseract', progress: 0, userJobId: 'Job-0-b9d98'}
+PettyCash.tsx:908 {workerId: 'Worker-0-9e0f5', status: 'initializing tesseract', progress: 1, userJobId: 'Job-0-b9d98'}
+PettyCash.tsx:908 {workerId: 'Worker-0-9e0f5', status: 'loading language traineddata', progress: 0, userJobId: 'Job-1-4ccfe'}
+PettyCash.tsx:908 {workerId: 'Worker-0-9e0f5', status: 'loading language traineddata', progress: 0.5, userJobId: 'Job-1-4ccfe'}
+PettyCash.tsx:908 {workerId: 'Worker-0-9e0f5', status: 'loading language traineddata', progress: 1, userJobId: 'Job-1-4ccfe'}
+PettyCash.tsx:908 {workerId: 'Worker-0-9e0f5', status: 'initializing api', progress: 0, userJobId: 'Job-2-ef1f4'}
+PettyCash.tsx:908 {workerId: 'Worker-0-9e0f5', status: 'initializing api', progress: 1, userJobId: 'Job-2-ef1f4'}
+PettyCash.tsx:908 {workerId: 'Worker-0-9e0f5', jobId: 'Job-0-b9d98', status: 'recognizing text', progress: 0, userJobId: 'Job-3-576f2'}
+PettyCash.tsx:908 {workerId: 'Worker-0-9e0f5', jobId: 'Job-0-b9d98', status: 'recognizing text', progress: 0.04285714285714286, userJobId: 'Job-3-576f2'}
+PettyCash.tsx:908 {workerId: 'Worker-0-9e0f5', jobId: 'Job-0-b9d98', status: 'recognizing text', progress: 0.08571428571428572, userJobId: 'Job-3-576f2'}
+PettyCash.tsx:908 {workerId: 'Worker-0-9e0f5', jobId: 'Job-0-b9d98', status: 'recognizing text', progress: 0.12857142857142856, userJobId: 'Job-3-576f2'}
+PettyCash.tsx:908 {workerId: 'Worker-0-9e0f5', jobId: 'Job-0-b9d98', status: 'recognizing text', progress: 0.17142857142857143, userJobId: 'Job-3-576f2'}
+PettyCash.tsx:908 {workerId: 'Worker-0-9e0f5', jobId: 'Job-0-b9d98', status: 'recognizing text', progress: 0.21428571428571427, userJobId: 'Job-3-576f2'}
+PettyCash.tsx:908 {workerId: 'Worker-0-9e0f5', jobId: 'Job-0-b9d98', status: 'recognizing text', progress: 0.2571428571428571, userJobId: 'Job-3-576f2'}
+PettyCash.tsx:908 {workerId: 'Worker-0-9e0f5', jobId: 'Job-0-b9d98', status: 'recognizing text', progress: 0.3, userJobId: 'Job-3-576f2'}
+PettyCash.tsx:908 {workerId: 'Worker-0-9e0f5', jobId: 'Job-0-b9d98', status: 'recognizing text', progress: 0.35714285714285715, userJobId: 'Job-3-576f2'}
+PettyCash.tsx:908 {workerId: 'Worker-0-9e0f5', jobId: 'Job-0-b9d98', status: 'recognizing text', progress: 0.4, userJobId: 'Job-3-576f2'}
+PettyCash.tsx:908 {workerId: 'Worker-0-9e0f5', jobId: 'Job-0-b9d98', status: 'recognizing text', progress: 0.44285714285714284, userJobId: 'Job-3-576f2'}
+PettyCash.tsx:908 {workerId: 'Worker-0-9e0f5', jobId: 'Job-0-b9d98', status: 'recognizing text', progress: 0.4857142857142857, userJobId: 'Job-3-576f2'}
+PettyCash.tsx:908 {workerId: 'Worker-0-9e0f5', jobId: 'Job-0-b9d98', status: 'recognizing text', progress: 0.5285714285714286, userJobId: 'Job-3-576f2'}
+PettyCash.tsx:908 {workerId: 'Worker-0-9e0f5', jobId: 'Job-0-b9d98', status: 'recognizing text', progress: 0.5714285714285714, userJobId: 'Job-3-576f2'}
+PettyCash.tsx:908 {workerId: 'Worker-0-9e0f5', jobId: 'Job-0-b9d98', status: 'recognizing text', progress: 0.6142857142857143, userJobId: 'Job-3-576f2'}
+PettyCash.tsx:908 {workerId: 'Worker-0-9e0f5', jobId: 'Job-0-b9d98', status: 'recognizing text', progress: 0.6571428571428571, userJobId: 'Job-3-576f2'}
+PettyCash.tsx:908 {workerId: 'Worker-0-9e0f5', jobId: 'Job-0-b9d98', status: 'recognizing text', progress: 1, userJobId: 'Job-3-576f2'}
+PettyCash.tsx:912 === FULL OCR TEXT START ===
+PettyCash.tsx:913 To SUNRISE HARDWARE
+furnili tapping bit
+Completed
+5 Aug 2025, 9:40 am
+
+£1) Hore Bank 0720 v
+UPI transaction [D
+109266995483
+To: SUNRISE HARDWARE
+gpay-112445848261@okbizaxis
+From: SUNRISE MEDIA (HDFC Bank)
+Google Fay + kunallunkad-3@ckhdichank:
+Google transaction ID
+CICAgKitIsKZeQ
+
+usw
+
+1%
+
+PettyCash.tsx:914 === FULL OCR TEXT END ===
+PettyCash.tsx:920 === DEBUG: ALL EXTRACTED LINES ===
+PettyCash.tsx:922 Line 0: "To SUNRISE HARDWARE"
+PettyCash.tsx:922 Line 1: "furnili tapping bit"
+PettyCash.tsx:922 Line 2: "Completed"
+PettyCash.tsx:922 Line 3: "5 Aug 2025, 9:40 am"
+PettyCash.tsx:922 Line 4: "£1) Hore Bank 0720 v"
+PettyCash.tsx:922 Line 5: "UPI transaction [D"
+PettyCash.tsx:922 Line 6: "109266995483"
+PettyCash.tsx:922 Line 7: "To: SUNRISE HARDWARE"
+PettyCash.tsx:922 Line 8: "gpay-112445848261@okbizaxis"
+PettyCash.tsx:922 Line 9: "From: SUNRISE MEDIA (HDFC Bank)"
+PettyCash.tsx:922 Line 10: "Google Fay + kunallunkad-3@ckhdichank:"
+PettyCash.tsx:922 Line 11: "Google transaction ID"
+PettyCash.tsx:922 Line 12: "CICAgKitIsKZeQ"
+PettyCash.tsx:922 Line 13: "usw"
+PettyCash.tsx:922 Line 14: "1%"
+PettyCash.tsx:924 === END DEBUG LINES ===
+PettyCash.tsx:928 === PLATFORM DETECTION ===
+PettyCash.tsx:929 Detected Platform: googlepay
+PettyCash.tsx:930 === ALL LINES ===
+PettyCash.tsx:932 Line 0: "To SUNRISE HARDWARE"
+PettyCash.tsx:932 Line 1: "furnili tapping bit"
+PettyCash.tsx:932 Line 2: "Completed"
+PettyCash.tsx:932 Line 3: "5 Aug 2025, 9:40 am"
+PettyCash.tsx:932 Line 4: "£1) Hore Bank 0720 v"
+PettyCash.tsx:932 Line 5: "UPI transaction [D"
+PettyCash.tsx:932 Line 6: "109266995483"
+PettyCash.tsx:932 Line 7: "To: SUNRISE HARDWARE"
+PettyCash.tsx:932 Line 8: "gpay-112445848261@okbizaxis"
+PettyCash.tsx:932 Line 9: "From: SUNRISE MEDIA (HDFC Bank)"
+PettyCash.tsx:932 Line 10: "Google Fay + kunallunkad-3@ckhdichank:"
+PettyCash.tsx:932 Line 11: "Google transaction ID"
+PettyCash.tsx:932 Line 12: "CICAgKitIsKZeQ"
+PettyCash.tsx:932 Line 13: "usw"
+PettyCash.tsx:932 Line 14: "1%"
+PettyCash.tsx:619 === GOOGLE PAY SPECIFIC EXTRACTION ===
+PettyCash.tsx:629 GooglePay: Found recipient: SUNRISE HARDWARE
+PettyCash.tsx:410 Checking line for amount: "To SUNRISE HARDWARE"
+PettyCash.tsx:410 Checking line for amount: "furnili tapping bit"
+PettyCash.tsx:657 GooglePay: Found description (service term): furnili tapping bit
+PettyCash.tsx:410 Checking line for amount: "Completed"
+PettyCash.tsx:410 Checking line for amount: "5 Aug 2025, 9:40 am"
+PettyCash.tsx:433 ❌ Rejected amount: "5" (likely date/ID)
+PettyCash.tsx:410 Checking line for amount: "£1) Hore Bank 0720 v"
+PettyCash.tsx:433 ❌ Rejected amount: "1" (likely date/ID)
+PettyCash.tsx:410 Checking line for amount: "UPI transaction [D"
+PettyCash.tsx:410 Checking line for amount: "109266995483"
+PettyCash.tsx:414 ⚠️ Skipping transaction ID: "109266995483"
+PettyCash.tsx:410 Checking line for amount: "To: SUNRISE HARDWARE"
+PettyCash.tsx:410 Checking line for amount: "gpay-112445848261@okbizaxis"
+PettyCash.tsx:430 ✅ Found amount: "gpay-112445848261@okbizaxis" → 112
+PettyCash.tsx:638 GooglePay: Found amount: 112
+PettyCash.tsx:967 === PLATFORM-SPECIFIC EXTRACTION RESULTS ===
+PettyCash.tsx:968 Amount: 112
+PettyCash.tsx:969 Recipient: SUNRISE HARDWARE
+PettyCash.tsx:970 Description: furnili tapping bit
+PettyCash.tsx:987 === DATE EXTRACTION ===
+PettyCash.tsx:988 Extracted Date: 2025-08-05
+PettyCash.tsx:1015 Auto-categorized as: Material
+PettyCash.tsx:1018 === FINAL EXTRACTED DATA ===
+PettyCash.tsx:1019 Platform: googlepay
+PettyCash.tsx:1020 Amount: 112
+PettyCash.tsx:1021 Recipient: SUNRISE HARDWARE
+PettyCash.tsx:1022 Description: furnili tapping bit
+PettyCash.tsx:1023 Category: Material
+PettyCash.tsx:1024 Date: 2025-08-05
