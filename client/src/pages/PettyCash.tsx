@@ -471,24 +471,34 @@ export default function PettyCash() {
       });
       
       const text = result.data.text;
-      console.log('OCR Result:', text);
+      console.log('=== FULL OCR TEXT START ===');
+      console.log(text);
+      console.log('=== FULL OCR TEXT END ===');
       
       const updatedData = { ...formData };
       const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0);
       
       // Detect platform type for specialized parsing
       const platformType = detectPlatformType(text.toLowerCase());
+      console.log('=== PLATFORM DETECTION ===');
       console.log('Detected Platform:', platformType);
-      console.log('OCR Text Lines:', lines);
+      console.log('=== ALL LINES ===');
+      lines.forEach((line, index) => {
+        console.log(`Line ${index}: "${line}"`);
+      });
       
       // Platform-specific amount extraction
       const extractedAmount = extractAmountByPlatform(lines, platformType);
+      console.log('=== AMOUNT EXTRACTION ===');
+      console.log('Extracted Amount:', extractedAmount);
       if (extractedAmount) {
         updatedData.amount = extractedAmount;
       }
       
       // Platform-specific recipient extraction
       const extractedRecipient = extractRecipientByPlatform(lines, platformType);
+      console.log('=== RECIPIENT EXTRACTION ===');
+      console.log('Extracted Recipient:', extractedRecipient);
       if (extractedRecipient) {
         updatedData.paidTo = extractedRecipient;
       }
