@@ -405,9 +405,15 @@ export default function PettyCash() {
       .trim();
   };
 
-  // Enhanced amount extraction with flexible regex for various formats
+  // Enhanced amount extraction with transaction ID filtering
   const extractAmount = (text: string): string | null => {
     console.log(`Checking line for amount: "${text}"`);
+    
+    // First, exclude obvious transaction IDs and account numbers (10+ digits)
+    if (/^\d{10,}$/.test(text.trim())) {
+      console.log(`⚠️ Skipping transaction ID: "${text}"`);
+      return null;
+    }
     
     // Enhanced regex pattern to handle commas, decimals, and various currency formats
     const enhancedRegex = /(?:₹|Rs\.?|INR|¥|amount:?\s*|paid:?\s*)?\s?(\d{1,3}(?:,\d{3})*(?:\.\d{1,2})?)(?:\/-)?/i;
@@ -419,9 +425,12 @@ export default function PettyCash() {
       
       // Validate reasonable amount range and exclude common date patterns
       if (amount >= 10 && amount <= 100000 && 
-          !['2025', '2024', '2026', '1024', '2048'].includes(cleanAmount)) {
+          !['2025', '2024', '2026', '1024', '2048'].includes(cleanAmount) &&
+          cleanAmount.length <= 6) { // Additional check to avoid very long numbers
         console.log(`✅ Found amount: "${text}" → ${amount}`);
         return cleanAmount;
+      } else {
+        console.log(`❌ Rejected amount: "${cleanAmount}" (likely date/ID)`);
       }
     }
     
