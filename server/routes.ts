@@ -4468,6 +4468,68 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+
+
+  // OCR Processing endpoint using OCR.space API (Free tier)
+  app.post('/api/ocr-process', async (req, res) => {
+    try {
+      const { base64Image, filetype } = req.body;
+
+      if (!base64Image) {
+        return res.status(400).json({ 
+          success: false, 
+          error: 'No image provided' 
+        });
+      }
+
+      console.log('Processing OCR with OCR.space API...');
+      
+      // Dynamic import for OCR.space API
+      const ocrSpaceApi = await import('ocr-space-api');
+      
+      // OCR.space API options
+      const options = {
+        apikey: 'helloworld', // Free tier API key
+        language: 'eng',
+        isOverlayRequired: false,
+        detectOrientation: true,
+        isTable: false,
+        scale: true,
+        OCREngine: 2, // Use latest OCR engine for better accuracy
+        base64Image: `data:${filetype};base64,${base64Image}`
+      };
+
+      // Process with OCR.space API
+      const result = await ocrSpaceApi.ocrSpace(options);
+      
+      if (result && result.ParsedResults && result.ParsedResults.length > 0) {
+        const extractedText = result.ParsedResults[0].ParsedText;
+        
+        console.log('OCR.space API Success:', {
+          confidence: result.ParsedResults[0].TextOverlay?.HasOverlay || 'N/A',
+          textLength: extractedText.length
+        });
+
+        return res.json({
+          success: true,
+          text: extractedText,
+          source: 'OCR.space API',
+          confidence: result.ParsedResults[0].TextOverlay?.HasOverlay ? 'High' : 'Medium'
+        });
+      } else {
+        throw new Error('No text found in image');
+      }
+
+    } catch (error) {
+      console.error('OCR.space API Error:', error);
+      return res.status(500).json({
+        success: false,
+        error: 'OCR processing failed',
+        details: (error as Error).message
+      });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

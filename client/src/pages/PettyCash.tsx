@@ -934,17 +934,69 @@ export default function PettyCash() {
     }
   };
 
+  // OCR.space API OCR (Primary - Free tier with high accuracy)
+  const processOCRSpaceAPI = async (file: File): Promise<string | null> => {
+    try {
+      console.log('=== TRYING OCR.SPACE API (PRIMARY) ===');
+      
+      // Convert file to base64
+      const base64 = await new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const result = reader.result as string;
+          resolve(result.split(',')[1]); // Remove data:image/jpeg;base64, prefix
+        };
+        reader.readAsDataURL(file);
+      });
+
+      const response = await fetch('/api/ocr-process', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          base64Image: base64,
+          filetype: file.type
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`OCR.space API error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      if (data.success && data.text) {
+        console.log('✅ OCR.space API successful');
+        return data.text;
+      } else {
+        throw new Error('No text detected by OCR.space API');
+      }
+    } catch (error) {
+      console.log('❌ OCR.space API failed:', (error as Error).message);
+      return null;
+    }
+  };
+
   const processImageWithOCR = async (file: File) => {
     setIsProcessingOCR(true);
     try {
-      // Enhanced Multi-Pass Tesseract OCR for currency detection
-      console.log('=== USING ENHANCED TESSERACT OCR FOR CURRENCY DETECTION ===');
-      const processedFile = await preprocessImageForOCR(file);
-      console.log('Using preprocessed image for Enhanced Tesseract OCR:', processedFile.name);
+      let text = '';
       
-      // Try multiple OCR passes with different optimizations for currency detection
-      let bestResult = '';
-      let bestConfidence = 0;
+      // Try OCR.space API first (primary - much more accurate than Tesseract)
+      const ocrSpaceText = await processOCRSpaceAPI(file);
+      
+      if (ocrSpaceText) {
+        text = ocrSpaceText;
+        console.log('Using OCR.space API results (high accuracy)');
+      } else {
+        // Fallback to Enhanced Multi-Pass Tesseract OCR
+        console.log('=== FALLING BACK TO ENHANCED TESSERACT OCR ===');
+        const processedFile = await preprocessImageForOCR(file);
+        console.log('Using preprocessed image for Enhanced Tesseract OCR:', processedFile.name);
+        
+        // Try multiple OCR passes with different optimizations for currency detection
+        let bestResult = '';
+        let bestConfidence = 0;
         
       // Pass 1: Default OCR settings optimized
       try {
@@ -994,8 +1046,9 @@ export default function PettyCash() {
         console.log('Pass 3 failed:', (e as Error).message);
       }
       
-      const text = bestResult;
-      console.log(`✅ Using best result with ${bestConfidence}% confidence`);
+        text = bestResult;
+        console.log(`✅ Using best result with ${bestConfidence}% confidence`);
+      }
       console.log('=== FULL OCR TEXT START ===');
       console.log(text);
       console.log('=== FULL OCR TEXT END ===');
