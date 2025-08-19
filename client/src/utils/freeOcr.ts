@@ -1,5 +1,7 @@
-// Client-side free OCR utility with multiple engines
+// Client-side free OCR utility with multiple engines and enhanced figure recognition
 // Better accuracy than OCR.space for payment screenshots
+
+import { EnhancedFigureOCR } from './enhancedFigureOcr';
 
 export interface OCRResult {
   text: string;
@@ -9,6 +11,7 @@ export interface OCRResult {
   description: string;
   transactionId: string;
   date: string;
+  confidence?: number;
 }
 
 export class ClientFreeOCR {
@@ -356,7 +359,7 @@ export class ClientFreeOCR {
     return '';
   }
 
-  // Enhanced payment screenshot processing
+  // Enhanced payment screenshot processing with figure recognition
   static async processPaymentScreenshot(file: File, googleApiKey?: string): Promise<OCRResult> {
     try {
       const text = await this.processWithMultipleEngines(file, googleApiKey);
@@ -369,7 +372,8 @@ export class ClientFreeOCR {
           recipient: '',
           description: '',
           transactionId: '',
-          date: ''
+          date: '',
+          confidence: 0
         };
       }
 
@@ -377,21 +381,30 @@ export class ClientFreeOCR {
         .map(line => line.trim())
         .filter(line => line.length > 0);
 
-      const platform = this.detectPlatform(lines);
-      console.log('OCR Debug - Detected platform:', platform);
+      console.log('OCR Debug - Processing with enhanced figure recognition');
+      
+      // Use enhanced figure OCR for better accuracy across all platforms
+      const enhancedResults = EnhancedFigureOCR.processReceiptForAllPlatforms(lines);
+      
+      // Fallback to legacy extraction if enhanced fails
+      const fallbackPlatform = this.detectPlatform(lines);
+      const fallbackAmount = enhancedResults.amount || this.extractAmount(lines, fallbackPlatform);
+      const fallbackDescription = enhancedResults.description || this.extractDescription(lines, fallbackPlatform);
+      const fallbackRecipient = enhancedResults.recipient || this.extractRecipient(lines, fallbackPlatform);
 
       return {
         text,
-        platform,
-        amount: this.extractAmount(lines, platform),
-        recipient: this.extractRecipient(lines, platform),
-        description: this.extractDescription(lines, platform),
+        platform: enhancedResults.platform || fallbackPlatform,
+        amount: fallbackAmount,
+        recipient: fallbackRecipient,
+        description: fallbackDescription,
         transactionId: this.extractTransactionId(lines),
-        date: this.extractDate(lines)
+        date: this.extractDate(lines),
+        confidence: enhancedResults.confidence
       };
       
     } catch (error) {
-      console.error('Payment screenshot processing failed:', error);
+      console.error('Enhanced payment screenshot processing failed:', error);
       return {
         text: '',
         platform: 'unknown',
@@ -399,7 +412,8 @@ export class ClientFreeOCR {
         recipient: '',
         description: '',
         transactionId: '',
-        date: ''
+        date: '',
+        confidence: 0
       };
     }
   }
