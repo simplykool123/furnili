@@ -934,19 +934,80 @@ export default function PettyCash() {
     }
   };
 
+  // Google Vision API OCR (Primary)
+  const processGoogleVisionOCR = async (file: File): Promise<string | null> => {
+    try {
+      console.log('=== TRYING GOOGLE VISION API (PRIMARY) ===');
+      
+      // Convert file to base64
+      const base64 = await new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const result = reader.result as string;
+          resolve(result.split(',')[1]); // Remove data:image/jpeg;base64, prefix
+        };
+        reader.readAsDataURL(file);
+      });
+
+      const apiKey = import.meta.env.VITE_GOOGLE_CLOUD_API_KEY;
+      if (!apiKey || apiKey === 'MISSING_KEY') {
+        throw new Error('Google Cloud API key not configured');
+      }
+
+      const response = await fetch(`https://vision.googleapis.com/v1/images:annotate?key=${apiKey}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          requests: [{
+            image: { content: base64 },
+            features: [{ type: 'TEXT_DETECTION', maxResults: 1 }]
+          }]
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Google Vision API error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      if (data.responses?.[0]?.textAnnotations?.[0]?.description) {
+        console.log('✅ Google Vision API successful');
+        return data.responses[0].textAnnotations[0].description;
+      } else {
+        throw new Error('No text detected by Google Vision API');
+      }
+    } catch (error) {
+      console.log('❌ Google Vision API failed:', error.message);
+      return null;
+    }
+  };
+
   const processImageWithOCR = async (file: File) => {
     setIsProcessingOCR(true);
     try {
-      // Preprocess image for better OCR accuracy (grayscale, contrast, binarization)
-      const processedFile = await preprocessImageForOCR(file);
-      console.log('Using preprocessed image for OCR:', processedFile.name);
+      let text = '';
       
-      // Enhanced OCR settings with preprocessed image
-      const result = await Tesseract.recognize(processedFile, 'eng', {
-        logger: m => console.log(m)
-      });
+      // Try Google Vision API first (primary)
+      const visionText = await processGoogleVisionOCR(file);
       
-      const text = result.data.text;
+      if (visionText) {
+        text = visionText;
+        console.log('Using Google Vision API results');
+      } else {
+        // Fallback to Tesseract OCR with preprocessing
+        console.log('=== FALLING BACK TO TESSERACT OCR ===');
+        const processedFile = await preprocessImageForOCR(file);
+        console.log('Using preprocessed image for Tesseract OCR:', processedFile.name);
+        
+        // Enhanced OCR settings with preprocessed image
+        const result = await Tesseract.recognize(processedFile, 'eng', {
+          logger: m => console.log(m)
+        });
+        
+        text = result.data.text;
+      }
       console.log('=== FULL OCR TEXT START ===');
       console.log(text);
       console.log('=== FULL OCR TEXT END ===');
