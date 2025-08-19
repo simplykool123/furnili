@@ -393,8 +393,71 @@ export default function PettyCash() {
         }
       }
       
-      // Extract purpose/description and order number - look for descriptive text
-      // First, find lines that could contain purpose/order information
+      // Extract purpose/description - Enhanced for Google Pay transactions
+      let bestPurpose = '';
+      let bestPurposeScore = 0;
+      
+      // Look for descriptive text with improved Google Pay detection
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].trim();
+        const lowerLine = line.toLowerCase();
+        
+        // Skip obvious non-descriptive lines
+        if (line.length < 3 || 
+            /^[0-9,\.\s₹]+$/.test(line) || // Just numbers/currency
+            lowerLine.includes('completed') ||
+            lowerLine.includes('transaction') ||
+            lowerLine.includes('powered by') ||
+            lowerLine.includes('google pay') ||
+            lowerLine.includes('upi') ||
+            lowerLine.includes('@') ||
+            /^\d{1,2}\s(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)/i.test(line) || // Dates
+            /^\d{1,2}:\d{2}\s(am|pm)/i.test(line) || // Times
+            /^[A-Z]{2,}\s[A-Z]{2,}/.test(line) || // All caps names like "EDGE INDIA"
+            line === updatedData.paidTo // Skip if same as paidTo
+        ) {
+          continue;
+        }
+
+        // Calculate relevance score for potential purpose lines
+        let score = 0;
+        
+        // Bonus points for containing business-relevant terms
+        const businessTerms = ['furnili', 'edge', 'pati', 'inch', 'pcs', 'pieces', 'material', 'wood', 'steel', 'order', 'for', 'purchase'];
+        businessTerms.forEach(term => {
+          if (lowerLine.includes(term)) {
+            score += 2;
+          }
+        });
+        
+        // Bonus for having multiple words (likely descriptive)
+        const wordCount = line.split(/\s+/).length;
+        if (wordCount >= 3) score += 1;
+        if (wordCount >= 5) score += 2;
+        
+        // Bonus for containing numbers (like dimensions or quantities)
+        if (/\d+/.test(line) && !line.match(/^\d+$/)) {
+          score += 1;
+        }
+        
+        // Special bonus for Google Pay format like "furnili edge pati for 8ftx8inch 36pcs"
+        if (lowerLine.includes('for') && /\d+/.test(line)) {
+          score += 3;
+        }
+        
+        // Update best purpose if this line scores higher
+        if (score > bestPurposeScore && score > 0) {
+          bestPurpose = line;
+          bestPurposeScore = score;
+        }
+      }
+      
+      // Set the best purpose found
+      if (bestPurpose) {
+        updatedData.purpose = bestPurpose;
+      }
+      
+      // Legacy processing for order-specific lines (keep existing logic)
       const purposeLines = lines.filter(line => {
         const lowerLine = line.toLowerCase();
         return line.length > 5 && 
@@ -414,33 +477,35 @@ export default function PettyCash() {
                line.trim() !== updatedData.paidTo; // Don't use the same line as paidTo
       });
       
-      // Process purpose lines - prioritize lines with "order" keyword
-      for (const line of purposeLines) {
-        const purposeText = line.trim();
-        const lowerLine = line.toLowerCase();
-        
-        // Check if this line contains order information
-        if (lowerLine.includes('order')) {
-          // Pattern: "description - name order" or "description name order"
-          const dashSplit = purposeText.split(/\s*[-–]\s*/);
-          if (dashSplit.length >= 2) {
-            // Found dash: "furnili Powder cosring legs - pintu order"
-            updatedData.purpose = dashSplit[0].trim();
-            const orderPart = dashSplit[1].trim();
-            // Extract order name before "order"
-            const orderName = orderPart.replace(/\s+order$/i, '').trim();
-            updatedData.orderNo = orderName.charAt(0).toUpperCase() + orderName.slice(1) + " Order";
-          } else {
-            // No dash, try to split before "order"
-            const orderMatch = purposeText.match(/(.+?)\s+(\w+)\s+order/i);
-            if (orderMatch) {
-              updatedData.purpose = orderMatch[1].trim();
-              updatedData.orderNo = orderMatch[2].charAt(0).toUpperCase() + orderMatch[2].slice(1) + " Order";
+      // Process purpose lines for order information (fallback if no better purpose found)
+      if (!updatedData.purpose) {
+        for (const line of purposeLines) {
+          const purposeText = line.trim();
+          const lowerLine = line.toLowerCase();
+          
+          // Check if this line contains order information
+          if (lowerLine.includes('order')) {
+            // Pattern: "description - name order" or "description name order"
+            const dashSplit = purposeText.split(/\s*[-–]\s*/);
+            if (dashSplit.length >= 2) {
+              // Found dash: "furnili Powder cosring legs - pintu order"
+              updatedData.purpose = dashSplit[0].trim();
+              const orderPart = dashSplit[1].trim();
+              // Extract order name before "order"
+              const orderName = orderPart.replace(/\s+order$/i, '').trim();
+              updatedData.orderNo = orderName.charAt(0).toUpperCase() + orderName.slice(1) + " Order";
             } else {
-              updatedData.purpose = purposeText;
+              // No dash, try to split before "order"
+              const orderMatch = purposeText.match(/(.+?)\s+(\w+)\s+order/i);
+              if (orderMatch) {
+                updatedData.purpose = orderMatch[1].trim();
+                updatedData.orderNo = orderMatch[2].charAt(0).toUpperCase() + orderMatch[2].slice(1) + " Order";
+              } else {
+                updatedData.purpose = purposeText;
+              }
             }
+            break; // Found order info, stop here
           }
-          break; // Found order info, stop here
         }
       }
       
