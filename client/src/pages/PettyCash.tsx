@@ -390,6 +390,10 @@ export default function PettyCash() {
           if (line.includes('to ') && !line.includes('powered')) {
             recipient = lines[i].replace(/.*to\s+/i, '').trim();
           }
+          // Also look for uppercase business names
+          else if (/^[A-Z][A-Z\s&]+[A-Z]$/.test(lines[i]) && lines[i].length > 3) {
+            recipient = lines[i].trim();
+          }
           break;
         case 'phonepe':
           if (line.includes('sent to') || line.includes('paid to')) {
@@ -488,6 +492,7 @@ export default function PettyCash() {
       // Platform-specific amount extraction
       const extractedAmount = extractAmountByPlatform(lines, platformType);
       if (extractedAmount) {
+        // Keep the amount as a clean number without rupee symbol for form processing
         updatedData.amount = extractedAmount;
       }
       
@@ -550,70 +555,75 @@ export default function PettyCash() {
         
         // console.log('CRED OCR Debug - Final extracted purpose:', extractedPurpose);
       } else if (platformType === 'googlepay') {
-        // For Google Pay, look for description that appears between amount and "Completed" status
-        // This appears in the bubble box area of the receipt
-        let foundAmount = false;
-        let foundCompleted = false;
+        // For Google Pay, look for the description that typically appears in the bubble
+        // Common patterns: "To BUSINESS NAME", followed by description text
+        
+        let recipientFound = false;
+        let extractedTo = '';
         
         for (let i = 0; i < lines.length; i++) {
           const line = lines[i].trim();
           const lowerLine = line.toLowerCase();
           
-          // Check if we found the amount line (₹1,520 format)
-          if (!foundAmount && /^₹[\d,]+/.test(line)) {
-            foundAmount = true;
+          // Look for "To [RECIPIENT]" pattern first
+          if (lowerLine.startsWith('to ') && line.length > 3) {
+            extractedTo = line.substring(3).trim(); // Remove "To " prefix
+            recipientFound = true;
+            
+            // The description is usually this "To [RECIPIENT]" line itself
+            extractedPurpose = line;
             continue;
           }
           
-          // Check if we've reached the "Completed" status
-          if (lowerLine.includes('completed')) {
-            foundCompleted = true;
-            break;
-          }
-          
-          // If we're between amount and completed, and this line looks like a description
-          if (foundAmount && !foundCompleted) {
-            // Skip obvious non-description lines
-            if (lowerLine.includes('to ') || 
-                lowerLine.includes('paid to') ||
+          // If we found the recipient, look for additional description in next lines
+          if (recipientFound && !extractedPurpose) {
+            // Skip transaction info lines
+            if (lowerLine.includes('completed') ||
+                lowerLine.includes('transaction') ||
                 lowerLine.includes('google pay') ||
                 lowerLine.includes('upi') ||
-                lowerLine.includes('transaction') ||
-                /^[A-Z\s]+$/.test(line) || // All caps recipient names
-                line.length < 3 ||
-                /^\d/.test(line) || // Lines starting with numbers (dates, etc.)
-                lowerLine.includes('@')) {
+                lowerLine.includes('powered by') ||
+                lowerLine.includes('@') ||
+                /^\d{1,2}\s(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)/i.test(line) ||
+                /^\d{1,2}:\d{2}/.test(line) ||
+                line.length < 3) {
               continue;
             }
             
-            // This should be the description from the bubble box
-            if (line.length > 0) {
-              extractedPurpose = line.trim();
-              break;
-            }
+            // This could be additional description
+            extractedPurpose = line.trim();
+            break;
           }
         }
         
-        // Alternative pattern: Look for business descriptions after recipient name
-        if (!extractedPurpose && extractedRecipient) {
-          let foundRecipient = false;
-          for (const line of lines) {
+        // Alternative: Look for business/vendor descriptions after amount
+        if (!extractedPurpose) {
+          let foundAmount = false;
+          
+          for (let i = 0; i < lines.length; i++) {
+            const line = lines[i].trim();
             const lowerLine = line.toLowerCase();
             
-            // Skip if we found the recipient name
-            if (lowerLine.includes(extractedRecipient.toLowerCase())) {
-              foundRecipient = true;
+            // Check if we found amount line
+            if (!foundAmount && (/^₹[\d,]+/.test(line) || /^\d+$/.test(line))) {
+              foundAmount = true;
               continue;
             }
             
-            // Look for description after recipient but before transaction details
-            if (foundRecipient && 
-                !lowerLine.includes('completed') &&
-                !lowerLine.includes('transaction') &&
-                !lowerLine.includes('upi') &&
-                !lowerLine.includes('@') &&
-                line.length > 3 &&
-                !/^[\d\s:,]+$/.test(line)) {
+            // After finding amount, look for business description
+            if (foundAmount && !lowerLine.includes('completed')) {
+              // Skip transaction details
+              if (lowerLine.includes('google pay') ||
+                  lowerLine.includes('upi') ||
+                  lowerLine.includes('transaction') ||
+                  lowerLine.includes('powered by') ||
+                  /^\d{1,2}\s(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)/i.test(line) ||
+                  /^\d{1,2}:\d{2}/.test(line) ||
+                  line.length < 5) {
+                continue;
+              }
+              
+              // This should be the description
               extractedPurpose = line.trim();
               break;
             }
