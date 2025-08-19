@@ -394,6 +394,150 @@ export default function PettyCash() {
       .trim();
   };
 
+  // Extract amount using robust regex pattern
+  const extractAmount = (text: string): string | null => {
+    const regex = /(?:₹|Rs\.?|INR|¥)?\s?(\d{2,6})(?:\/-)?/i;
+    const match = text.match(regex);
+    if (match && match[1]) {
+      const amount = parseInt(match[1]);
+      // Validate reasonable expense range
+      if (amount >= 50 && amount <= 50000) {
+        return match[1];
+      }
+    }
+    return null;
+  };
+
+  // Platform-specific data extractors
+  const extractCredData = (lines: string[]) => {
+    let recipient = "";
+    let amount = "";
+    let description = "";
+
+    console.log('=== CRED SPECIFIC EXTRACTION ===');
+    
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      console.log(`CRED Line ${i}: "${line}"`);
+
+      // CRED recipient detection - business names, logistics companies
+      if (!recipient && (
+        line.includes("Cargo") || 
+        line.includes("Logistics") ||
+        line.includes("Hardware") ||
+        line.includes("Galaxy") ||
+        line.includes("Enterprise") ||
+        (line.length > 8 && line.length < 40 && /^[A-Z]/.test(line) && 
+         !line.includes('@') && !line.toLowerCase().includes('cred') &&
+         !line.toLowerCase().includes('paid') && !line.includes('|'))
+      )) {
+        recipient = cleanRecipient(line);
+        console.log('CRED: Found recipient:', recipient);
+      }
+
+      // CRED amount detection - look for currency symbols or patterns
+      if (!amount && (/₹|Rs|INR|¥/.test(line))) {
+        const extractedAmount = extractAmount(line);
+        if (extractedAmount) {
+          amount = extractedAmount;
+          console.log('CRED: Found amount:', amount);
+        }
+      }
+
+      // CRED description detection - service/business terms
+      if (!description && (
+        line.toLowerCase().includes("transport") || 
+        line.toLowerCase().includes("repair") ||
+        line.toLowerCase().includes("service") ||
+        line.toLowerCase().includes("compressor") ||
+        line.toLowerCase().includes("furnili") ||
+        line.toLowerCase().includes("fuenlli") ||
+        line.toLowerCase().includes("water") ||
+        line.toLowerCase().includes("tanker") ||
+        // Check for business-related terms
+        (/repair|service|compressor|machine|water|tanker|transport|material|hardware/i.test(line) && line.length < 50)
+      )) {
+        description = line.trim();
+        console.log('CRED: Found description:', description);
+      }
+    }
+
+    return { recipient, amount, description };
+  };
+
+  const extractGooglePayData = (lines: string[]) => {
+    let recipient = "";
+    let amount = "";
+    let description = "";
+
+    console.log('=== GOOGLE PAY SPECIFIC EXTRACTION ===');
+    
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+
+      // Google Pay recipient - usually after "to " 
+      if (!recipient && line.toLowerCase().includes('to ') && !line.toLowerCase().includes('powered')) {
+        recipient = cleanRecipient(line.replace(/.*to\s+/i, '').trim());
+        console.log('GooglePay: Found recipient:', recipient);
+      }
+
+      // Google Pay amount - big, prominent with ₹
+      if (!amount && (/₹/.test(line) || /Rs/.test(line))) {
+        const extractedAmount = extractAmount(line);
+        if (extractedAmount) {
+          amount = extractedAmount;
+          console.log('GooglePay: Found amount:', amount);
+        }
+      }
+
+      // Google Pay description - often in "for" or note sections
+      if (!description && (line.toLowerCase().includes('for ') || 
+          line.toLowerCase().includes('note:') ||
+          /repair|service|payment|bill/i.test(line))) {
+        description = line.replace(/.*(?:for|note:)\s*/i, '').trim();
+        console.log('GooglePay: Found description:', description);
+      }
+    }
+
+    return { recipient, amount, description };
+  };
+
+  const extractPhonePeData = (lines: string[]) => {
+    let recipient = "";
+    let amount = "";
+    let description = "";
+
+    console.log('=== PHONEPE SPECIFIC EXTRACTION ===');
+    
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+
+      // PhonePe recipient - after "Paid to" or "sent to"
+      if (!recipient && (line.toLowerCase().includes('paid to') || line.toLowerCase().includes('sent to'))) {
+        recipient = cleanRecipient(line.replace(/.*(?:paid to|sent to)\s+/i, '').trim());
+        console.log('PhonePe: Found recipient:', recipient);
+      }
+
+      // PhonePe amount - always after "Paid to" context
+      if (!amount && (/₹/.test(line) || /Rs/.test(line))) {
+        const extractedAmount = extractAmount(line);
+        if (extractedAmount) {
+          amount = extractedAmount;
+          console.log('PhonePe: Found amount:', amount);
+        }
+      }
+
+      // PhonePe description - in message or note field
+      if (!description && (line.toLowerCase().includes('message:') || 
+          /repair|service|payment|bill/i.test(line))) {
+        description = line.replace(/.*message:\s*/i, '').trim();
+        console.log('PhonePe: Found description:', description);
+      }
+    }
+
+    return { recipient, amount, description };
+  };
+
   // Enhanced recipient/vendor name extraction
   const extractRecipientByPlatform = (lines: string[], platform: string): string => {
     for (let i = 0; i < lines.length; i++) {
@@ -608,73 +752,49 @@ export default function PettyCash() {
         console.log(`Line ${index}: "${line}"`);
       });
       
-      // Platform-specific amount extraction
-      let extractedAmount = extractAmountByPlatform(lines, platformType);
-      console.log('=== AMOUNT EXTRACTION ===');
-      console.log('Extracted Amount from patterns:', extractedAmount);
+      // Use platform-specific extractors for better accuracy
+      let extractedData = { recipient: "", amount: "", description: "" };
       
-      // Universal robust fallback for amount extraction (works for all platforms)
-      if (!extractedAmount) {
-        console.log('=== ROBUST FALLBACK AMOUNT EXTRACTION ===');
-        console.log('Platform-specific extraction failed, trying robust regex patterns...');
-        
-        // Your suggested robust regex pattern that catches amounts with or without currency symbols
-        const robustPattern = /(?:₹|Rs\.?|INR|¥)?\s?(\d{2,6})(?:\/-)?/gi;
-        const matches = Array.from(text.matchAll(robustPattern));
-        
-        console.log('Found potential amounts:', matches.map(m => m[1]));
-        
-        for (const match of matches) {
-          const amount = parseInt(match[1]);
-          // Validate reasonable expense amount range
-          if (amount >= 50 && amount <= 50000) {
-            extractedAmount = match[1];
-            console.log('✓ Robust fallback found valid amount:', extractedAmount);
-            break;
-          }
-        }
-        
-        // Additional fallback patterns if the first doesn't work
-        if (!extractedAmount) {
-          const additionalPatterns = [
-            /\b(\d{3,5})\s*only\b/gi,           // "600 only" pattern
-            /\b(\d{2,6})\s*rupees?\b/gi,        // "600 rupees" pattern
-            /amount\s*:?\s*(\d{2,6})/gi,        // "Amount: 600" pattern
-            /paid\s*:?\s*(\d{2,6})/gi,          // "Paid: 600" pattern
-          ];
-          
-          for (const pattern of additionalPatterns) {
-            const matches = Array.from(text.matchAll(pattern));
-            for (const match of matches) {
-              const amount = parseInt(match[1]);
-              if (amount >= 50 && amount <= 50000) {
-                extractedAmount = match[1];
-                console.log('✓ Additional pattern found amount:', extractedAmount);
-                break;
-              }
-            }
-            if (extractedAmount) break;
-          }
-        }
-        
-        if (!extractedAmount) {
-          console.log('❌ All amount extraction methods failed. OCR might have missed the amount completely.');
-        }
+      switch (platformType) {
+        case 'cred':
+          extractedData = extractCredData(lines);
+          break;
+        case 'googlepay':
+          extractedData = extractGooglePayData(lines);
+          break;
+        case 'phonepe':
+          extractedData = extractPhonePeData(lines);
+          break;
+        default:
+          // Fallback to old platform-specific extraction for other platforms
+          const extractedAmount = extractAmountByPlatform(lines, platformType);
+          const extractedRecipient = extractRecipientByPlatform(lines, platformType);
+          extractedData = { 
+            amount: extractedAmount, 
+            recipient: extractedRecipient, 
+            description: "" 
+          };
       }
       
-      if (extractedAmount) {
-        updatedData.amount = extractedAmount;
+      console.log('=== PLATFORM-SPECIFIC EXTRACTION RESULTS ===');
+      console.log('Amount:', extractedData.amount);
+      console.log('Recipient:', extractedData.recipient);
+      console.log('Description:', extractedData.description);
+      
+      // Apply extracted data to form
+      if (extractedData.amount) {
+        updatedData.amount = extractedData.amount;
       }
       
-      // Platform-specific recipient extraction
-      const extractedRecipient = extractRecipientByPlatform(lines, platformType);
-      console.log('=== RECIPIENT EXTRACTION ===');
-      console.log('Extracted Recipient:', extractedRecipient);
-      if (extractedRecipient) {
-        updatedData.paidTo = extractedRecipient;
+      if (extractedData.recipient) {
+        updatedData.paidTo = extractedData.recipient;
       }
       
-      // Platform-specific date extraction
+      if (extractedData.description) {
+        updatedData.note = extractedData.description;
+      }
+      
+      // Still extract date using the existing method
       const extractedDate = extractDateByPlatform(text, platformType);
       console.log('=== DATE EXTRACTION ===');
       console.log('Extracted Date:', extractedDate);
@@ -682,424 +802,38 @@ export default function PettyCash() {
         updatedData.date = extractedDate;
       }
 
-      // Platform-specific description extraction
-      let extractedPurpose = '';
+      // Auto-categorize based on description and recipient
+      let autoCategory = 'Other';
+      const combinedText = (extractedData.description + ' ' + extractedData.recipient).toLowerCase();
       
-      if (platformType === 'cred') {
-        console.log('CRED OCR Debug - All lines:', lines);
-        console.log('CRED OCR Debug - Full text for analysis:', text);
-        
-        // CRED receipts follow a consistent pattern - look for description text in specific positions
-        // Pattern: Name -> UPI ID -> Amount -> Description (sometimes missed by line splitting)
-        
-        // Method 1: Look for text between amount and "paid securely by"
-        const amountToCredMatch = text.match(/¥[0-9,]+\s*\n?\s*(.*?)\s*(?:paid securely by|CRED)/i);
-        if (amountToCredMatch && amountToCredMatch[1]) {
-          const potentialDesc = amountToCredMatch[1].trim();
-          if (potentialDesc.length > 2 && potentialDesc.length < 50 && 
-              !potentialDesc.includes('©') && 
-              !potentialDesc.includes('@') &&
-              !potentialDesc.toLowerCase().includes('powered')) {
-            extractedPurpose = potentialDesc;
-            console.log('CRED OCR Debug - Found description between amount and CRED:', extractedPurpose);
-          }
-        }
-        
-        // Method 2: Smart line analysis with improved scoring
-        if (!extractedPurpose) {
-          let potentialDescriptions = [];
-          let amountLineFound = false;
-          
-          for (let i = 0; i < lines.length; i++) {
-            const line = lines[i].trim();
-            console.log('CRED OCR Debug - Analyzing line', i, ':', line);
-            
-            // Track when we pass the amount line
-            if (/^[¥₹][0-9,]+/.test(line)) {
-              amountLineFound = true;
-              console.log('CRED OCR Debug - Found amount line, looking for description after this');
-              continue;
-            }
-            
-            // Skip obvious non-description lines
-            if (!line ||
-                line.length < 3 ||
-                line.includes('|') ||
-                line.toLowerCase().includes('paid') ||
-                line.toLowerCase().includes('cred') ||
-                line.toLowerCase().includes('powered') ||
-                line.toLowerCase().includes('securely') ||
-                line.includes('@') ||
-                line.includes('©') ||
-                /^\d+\s\w{3}\s\d{4}/.test(line) ||
-                /^\d{4,}/.test(line) ||
-                /\d{1,2}:\d{2}/.test(line)) {
-              console.log('CRED OCR Debug - Skipped obvious non-description:', line);
-              continue;
-            }
-            
-            let score = 0;
-            
-            // Higher score for lines that appear after the amount
-            if (amountLineFound) score += 3;
-            
-            // Optimal length for descriptions
-            if (line.length >= 5 && line.length <= 30) score += 2;
-            
-            // Enhanced business/service terms (including common OCR variations)
-            const businessTerms = [
-              // Common services
-              'repair', 'service', 'compressor', 'machine', 'water', 'tanker', 'transport', 'material', 'hardware', 
-              // Materials
-              'steel', 'wood', 'cement', 'sand', 'brick', 'tile', 'paint', 'wire',
-              // Categories  
-              'food', 'fuel', 'tools', 'electric', 'plumber', 'carpenter', 'mason',
-              // Business names (common in receipts)
-              'furnili', 'fuenlli', 'galaxy', 'hardware', 'enterprise', 'traders', 'suppliers',
-              // OCR variations of common words
-              'compresser', 'compressar', 'repalr', 'servlce', 'materlal'
-            ];
-            for (const term of businessTerms) {
-              if (line.toLowerCase().includes(term)) {
-                score += 4;
-                console.log('CRED OCR Debug - Business term found:', term);
-                break;
-              }
-            }
-            
-            // Common service words
-            const serviceWords = ['fix', 'install', 'buy', 'purchase', 'payment', 'bill', 'charge', 'fee'];
-            for (const word of serviceWords) {
-              if (line.toLowerCase().includes(word)) {
-                score += 2;
-                break;
-              }
-            }
-            
-            // Penalize recipient-like patterns
-            if (/^[A-Z][a-z]+(\s[A-Z][a-z]+){2,}$/.test(line)) {
-              score -= 4; // Likely a person's name
-              console.log('CRED OCR Debug - Penalized as person name:', line);
-            }
-            
-            // Penalize single words that are likely names
-            if (line.split(' ').length === 1 && /^[A-Z][a-z]+$/.test(line)) {
-              score -= 2;
-            }
-            
-            if (score > 0) {
-              potentialDescriptions.push({ line, score, index: i });
-              console.log('CRED OCR Debug - Potential description:', line, 'Score:', score);
-            } else {
-              console.log('CRED OCR Debug - Low score, skipped:', line, 'Score:', score);
-            }
-          }
-          
-          // Pick the highest scoring description
-          if (potentialDescriptions.length > 0) {
-            const bestDescription = potentialDescriptions.sort((a, b) => b.score - a.score)[0];
-            extractedPurpose = bestDescription.line;
-            console.log('CRED OCR Debug - Selected best description:', extractedPurpose, 'Score:', bestDescription.score);
-          }
-        }
-        
-        // Method 3: Fallback - look for any reasonable text that could be a description
-        if (!extractedPurpose) {
-          console.log('CRED OCR Debug - No description found, using fallback method');
-          
-          // Try to find any text that looks like a service/product description
-          for (const line of lines) {
-            if (line.trim() &&
-                line.length >= 3 &&
-                line.length <= 40 &&
-                !line.includes('@') &&
-                !line.includes('©') &&
-                !line.toLowerCase().includes('paid') &&
-                !line.toLowerCase().includes('cred') &&
-                !line.toLowerCase().includes('powered') &&
-                !/^[A-Z][a-z]+(\s[A-Z][a-z]+){2,}$/.test(line) && // Not a full name
-                !/^\d/.test(line)) { // Not starting with number
-              
-              extractedPurpose = line.trim();
-              console.log('CRED OCR Debug - Fallback description found:', extractedPurpose);
-              break;
-            }
-          }
-        }
-        
-        console.log('CRED OCR Debug - Final extracted purpose:', extractedPurpose);
-      } else if (platformType === 'googlepay') {
-        // For Google Pay, look for description that appears between amount and "Completed" status
-        // This appears in the bubble box area of the receipt
-        let foundAmount = false;
-        let foundCompleted = false;
-        
-        for (let i = 0; i < lines.length; i++) {
-          const line = lines[i].trim();
-          const lowerLine = line.toLowerCase();
-          
-          // Check if we found the amount line (₹1,520 format)
-          if (!foundAmount && /^₹[\d,]+/.test(line)) {
-            foundAmount = true;
-            continue;
-          }
-          
-          // Check if we've reached the "Completed" status
-          if (lowerLine.includes('completed')) {
-            foundCompleted = true;
-            break;
-          }
-          
-          // If we're between amount and completed, and this line looks like a description
-          if (foundAmount && !foundCompleted) {
-            // Skip obvious non-description lines
-            if (lowerLine.includes('to ') || 
-                lowerLine.includes('paid to') ||
-                lowerLine.includes('google pay') ||
-                lowerLine.includes('upi') ||
-                lowerLine.includes('transaction') ||
-                /^[A-Z\s]+$/.test(line) || // All caps recipient names
-                line.length < 3 ||
-                /^\d/.test(line) || // Lines starting with numbers (dates, etc.)
-                lowerLine.includes('@')) {
-              continue;
-            }
-            
-            // This should be the description from the bubble box
-            if (line.length > 0) {
-              extractedPurpose = line.trim();
-              break;
-            }
-          }
-        }
-        
-        // Alternative pattern: Look for business descriptions after recipient name
-        if (!extractedPurpose && extractedRecipient) {
-          let foundRecipient = false;
-          for (const line of lines) {
-            const lowerLine = line.toLowerCase();
-            
-            // Skip if we found the recipient name
-            if (lowerLine.includes(extractedRecipient.toLowerCase())) {
-              foundRecipient = true;
-              continue;
-            }
-            
-            // Look for description after recipient but before transaction details
-            if (foundRecipient && 
-                !lowerLine.includes('completed') &&
-                !lowerLine.includes('transaction') &&
-                !lowerLine.includes('upi') &&
-                !lowerLine.includes('@') &&
-                line.length > 3 &&
-                !/^[\d\s:,]+$/.test(line)) {
-              extractedPurpose = line.trim();
-              break;
-            }
-          }
-        }
+      if (/transport|cargo|logistics|vehicle|fuel|petrol|diesel/i.test(combinedText)) {
+        autoCategory = 'Transport';
+      } else if (/repair|service|maintenance|compressor|machine|electric|plumber/i.test(combinedText)) {
+        autoCategory = 'Repair';
+      } else if (/hardware|material|steel|wood|cement|sand|brick|wire/i.test(combinedText)) {
+        autoCategory = 'Material';
+      } else if (/food|lunch|dinner|tea|breakfast|restaurant/i.test(combinedText)) {
+        autoCategory = 'Food';
+      } else if (/tool|equipment|drill|hammer|saw/i.test(combinedText)) {
+        autoCategory = 'Tools';
+      } else if (/office|stationary|paper|pen|computer/i.test(combinedText)) {
+        autoCategory = 'Office';
+      } else if (/site|construction|building|project/i.test(combinedText)) {
+        autoCategory = 'Site';
       }
       
-      // Set the purpose based on what we found
-      console.log('=== PURPOSE EXTRACTION ===');
-      console.log('Final extracted purpose:', extractedPurpose);
-      if (extractedPurpose) {
-        updatedData.purpose = extractedPurpose;
-      } else if (extractedRecipient && platformType === 'googlepay') {
-        updatedData.purpose = `Payment to ${extractedRecipient}`;
-      } else if (extractedRecipient) {
-        updatedData.purpose = `Payment to ${extractedRecipient}`;
-      } else if (platformType !== 'generic') {
-        const platformNames = {
-          googlepay: 'Google Pay',
-          phonepe: 'PhonePe', 
-          paytm: 'Paytm',
-          amazonpay: 'Amazon Pay',
-          bhimupi: 'BHIM UPI',
-          cred: 'CRED',
-          bank: 'Bank Transfer',
-          cash: 'Cash Payment'
-        };
-        updatedData.purpose = `${platformNames[platformType as keyof typeof platformNames] || 'Digital'} payment`;
+      if (autoCategory !== 'Other') {
+        updatedData.category = autoCategory;
+        console.log('Auto-categorized as:', autoCategory);
       }
-      
-      // Enhanced Paid By and Paid To extraction
-      for (let i = 0; i < lines.length; i++) {
-        const line = lines[i];
         
-        // Pattern 1: "Name paid" - extract the name before "paid"
-        if (line.toLowerCase().includes('paid') && !line.toLowerCase().includes('securely')) {
-          const paidByMatch = line.match(/^(.+?)\s+paid/i);
-          if (paidByMatch) {
-            const paidByName = paidByMatch[1].trim();
-            // Find user ID by name (more flexible matching)
-            const matchingUser = users.find((user: any) => {
-              const userName = (user.name || user.username || '').toLowerCase();
-              const extractedName = paidByName.toLowerCase();
-              return userName.includes(extractedName) || extractedName.includes(userName);
-            });
-            if (matchingUser) {
-              updatedData.paidBy = matchingUser.id.toString();
-            }
-          }
-          
-          // Look for recipient in next few lines
-          for (let j = i + 1; j < Math.min(i + 4, lines.length); j++) {
-            const nextLine = lines[j].trim();
-            // Check if it looks like a name (contains letters, reasonable length)
-            if (/^[a-zA-Z\s.]+$/.test(nextLine) && nextLine.length > 2 && nextLine.length < 50 && !nextLine.includes('@')) {
-              // Skip common UPI terms
-              const skipTerms = ['transaction', 'successful', 'completed', 'bank', 'upi', 'payment', 'sent', 'received'];
-              if (!skipTerms.some(term => nextLine.toLowerCase().includes(term))) {
-                updatedData.paidTo = nextLine;
-                break;
-              }
-            }
-          }
-          break;
-        }
-        
-        // Pattern 2: "To: Name" format
-        const toMatch = line.match(/^to:\s*(.+)/i);
-        if (toMatch && !updatedData.paidTo) {
-          const name = toMatch[1].trim();
-          if (name.length > 2 && name.length < 50 && /^[a-zA-Z\s.]+$/.test(name)) {
-            updatedData.paidTo = name;
-          }
-        }
-      }
-      
-      // Extract purpose/description - Enhanced for Google Pay transactions
-      let bestPurpose = '';
-      let bestPurposeScore = 0;
-      
-      // Look for descriptive text with improved Google Pay detection
-      for (let i = 0; i < lines.length; i++) {
-        const line = lines[i].trim();
-        const lowerLine = line.toLowerCase();
-        
-        // Skip obvious non-descriptive lines
-        if (line.length < 3 || 
-            /^[0-9,\.\s₹]+$/.test(line) || // Just numbers/currency
-            lowerLine.includes('completed') ||
-            lowerLine.includes('transaction') ||
-            lowerLine.includes('powered by') ||
-            lowerLine.includes('google pay') ||
-            lowerLine.includes('upi') ||
-            lowerLine.includes('@') ||
-            /^\d{1,2}\s(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)/i.test(line) || // Dates
-            /^\d{1,2}:\d{2}\s(am|pm)/i.test(line) || // Times
-            /^[A-Z]{2,}\s[A-Z]{2,}/.test(line) || // All caps names like "EDGE INDIA"
-            line === updatedData.paidTo // Skip if same as paidTo
-        ) {
-          continue;
-        }
-
-        // Calculate relevance score for potential purpose lines
-        let score = 0;
-        
-        // Bonus points for containing business-relevant terms
-        const businessTerms = ['furnili', 'edge', 'pati', 'inch', 'pcs', 'pieces', 'material', 'wood', 'steel', 'order', 'for', 'purchase'];
-        businessTerms.forEach(term => {
-          if (lowerLine.includes(term)) {
-            score += 2;
-          }
-        });
-        
-        // Bonus for having multiple words (likely descriptive)
-        const wordCount = line.split(/\s+/).length;
-        if (wordCount >= 3) score += 1;
-        if (wordCount >= 5) score += 2;
-        
-        // Bonus for containing numbers (like dimensions or quantities)
-        if (/\d+/.test(line) && !line.match(/^\d+$/)) {
-          score += 1;
-        }
-        
-        // Special bonus for Google Pay format like "furnili edge pati for 8ftx8inch 36pcs"
-        if (lowerLine.includes('for') && /\d+/.test(line)) {
-          score += 3;
-        }
-        
-        // Update best purpose if this line scores higher
-        if (score > bestPurposeScore && score > 0) {
-          bestPurpose = line;
-          bestPurposeScore = score;
-        }
-      }
-      
-      // Set the best purpose found, but only if we don't already have a platform-specific purpose
-      if (bestPurpose && !updatedData.purpose) {
-        updatedData.purpose = bestPurpose;
-      }
-      
-      // Legacy processing for order-specific lines (keep existing logic)
-      const purposeLines = lines.filter(line => {
-        const lowerLine = line.toLowerCase();
-        return line.length > 5 && 
-               !lowerLine.includes('paid') && 
-               !lowerLine.includes('@') && 
-               !lowerLine.includes('txn') &&
-               !lowerLine.includes('powered') &&
-               !lowerLine.includes('cred') &&
-               !lowerLine.includes('securely') &&
-               !/^[0-9,\.\s₹]+$/.test(line) &&
-               !lowerLine.includes('jul') &&
-               !lowerLine.includes('pm') &&
-               !lowerLine.includes('am') &&
-               !/^\d{4}$/.test(line) && // Skip year numbers
-               line.includes(' ') && // Ensure it has multiple words
-               !/^[A-Z\s]+$/.test(line) && // Skip all-caps names like "DOLLY VIKESH OSWAL"
-               line.trim() !== updatedData.paidTo; // Don't use the same line as paidTo
-      });
-      
-      // Process purpose lines for order information (fallback if no better purpose found)
-      if (!updatedData.purpose) {
-        for (const line of purposeLines) {
-          const purposeText = line.trim();
-          const lowerLine = line.toLowerCase();
-          
-          // Check if this line contains order information
-          if (lowerLine.includes('order')) {
-            // Pattern: "description - name order" or "description name order"
-            const dashSplit = purposeText.split(/\s*[-–]\s*/);
-            if (dashSplit.length >= 2) {
-              // Found dash: "furnili Powder cosring legs - pintu order"
-              updatedData.purpose = dashSplit[0].trim();
-              const orderPart = dashSplit[1].trim();
-              // Extract order name before "order"
-              const orderName = orderPart.replace(/\s+order$/i, '').trim();
-              updatedData.orderNo = orderName.charAt(0).toUpperCase() + orderName.slice(1) + " Order";
-            } else {
-              // No dash, try to split before "order"
-              const orderMatch = purposeText.match(/(.+?)\s+(\w+)\s+order/i);
-              if (orderMatch) {
-                updatedData.purpose = orderMatch[1].trim();
-                updatedData.orderNo = orderMatch[2].charAt(0).toUpperCase() + orderMatch[2].slice(1) + " Order";
-              } else {
-                updatedData.purpose = purposeText;
-              }
-            }
-            break; // Found order info, stop here
-          }
-        }
-      }
-      
-      // If no order info found, use the first descriptive line as purpose
-      if (!updatedData.purpose && purposeLines.length > 0) {
-        updatedData.purpose = purposeLines[0].trim();
-      }
-      
-      // Extract date
-      const dateMatch = text.match(/(\d{1,2})\s+(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)\s+(\d{4})/i);
-      if (dateMatch) {
-        const [, day, month, year] = dateMatch;
-        const monthNum = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'].indexOf(month.toUpperCase()) + 1;
-        if (monthNum > 0) {
-          const formattedDate = `${year}-${String(monthNum).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-          updatedData.date = formattedDate;
-        }
-      }
+      console.log('=== FINAL EXTRACTED DATA ===');
+      console.log('Platform:', platformType);
+      console.log('Amount:', updatedData.amount);
+      console.log('Recipient:', updatedData.paidTo);
+      console.log('Description:', updatedData.note);
+      console.log('Category:', updatedData.category);
+      console.log('Date:', updatedData.date);
       
       setFormData(prev => ({ ...updatedData, receiptImage: prev.receiptImage }));
       toast({ title: "Payment details extracted from screenshot", description: "Review and submit the expense" });
