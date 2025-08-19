@@ -97,8 +97,14 @@ export class OCRService {
     date: string;
   }> {
     try {
-      // Try EasyOCR first for better accuracy
-      const lines = await this.extractTextWithEasyOCR(imagePath);
+      // Try OCR.space first for better accuracy, fallback to Tesseract
+      let lines: string[] = [];
+      try {
+        lines = await this.extractTextWithOCRSpace(imagePath);
+      } catch (error) {
+        console.log('OCR.space failed, using Tesseract fallback');
+        lines = await this.extractTextWithTesseract(imagePath);
+      }
       
       const platform = this.detectPlatform(lines);
       console.log('OCR Debug - Detected platform:', platform);
