@@ -196,7 +196,7 @@ export default function PettyCash() {
   };
 
   // Fetch expenses and stats - filter by user for staff role
-  const { data: expenses = [] } = useQuery({
+  const { data: expenses = [], isLoading: isExpensesLoading } = useQuery({
     queryKey: user?.role === 'staff' ? ["/api/petty-cash", { userId: user.id }] : ["/api/petty-cash"],
     queryFn: () => {
       const url = user?.role === 'staff' ? `/api/petty-cash?userId=${user.id}` : "/api/petty-cash";
