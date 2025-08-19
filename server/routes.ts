@@ -6,9 +6,6 @@ import { z } from "zod";
 import { storage } from "./storage";
 import { authenticateToken, requireRole, generateToken, comparePassword, type AuthRequest } from "./middleware/auth";
 import { productImageUpload, boqFileUpload, receiptImageUpload, csvFileUpload, projectFileUpload } from "./utils/fileUpload";
-import sharp from "sharp";
-import path from "path";
-import fs from "fs/promises";
 import { 
   exportProductsCSV, 
   exportRequestsCSV, 
@@ -4465,101 +4462,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error uploading product image:", error);
       res.status(500).json({ error: "Failed to upload image" });
-    }
-  });
-
-
-
-  // OCR Processing endpoint using OCR.space API (Free tier)
-  app.post('/api/ocr-process', async (req, res) => {
-    try {
-      const { base64Image, filetype } = req.body;
-
-      if (!base64Image) {
-        return res.status(400).json({ 
-          success: false, 
-          error: 'No image provided' 
-        });
-      }
-
-      console.log('Processing OCR with OCR.space API...');
-      
-      // Dynamic import for OCR.space API
-      const ocrSpaceApi = await import('ocr-space-api');
-      
-      // OCR.space API options - use user-provided API key
-      const options = {
-        apikey: process.env.OCR_SPACE_API_KEY || 'helloworld', // Use user key or fallback
-        language: 'eng',
-        isOverlayRequired: false,
-        detectOrientation: true,
-        isTable: false,
-        scale: true,
-        OCREngine: 2, // Use latest OCR engine for better accuracy
-        base64Image: `data:${filetype};base64,${base64Image}`
-      };
-
-      console.log('Using API key:', process.env.OCR_SPACE_API_KEY ? 'User provided' : 'Free tier fallback');
-
-      // The OCR.space API doesn't support base64 image processing directly
-      // We need to save the image temporarily and use parseImageFromLocalFile
-      const fs = await import('fs');
-      const path = await import('path');
-      const tempDir = path.join(process.cwd(), 'temp');
-      
-      // Ensure temp directory exists
-      if (!fs.existsSync(tempDir)) {
-        fs.mkdirSync(tempDir, { recursive: true });
-      }
-      
-      const tempFileName = `temp_ocr_${Date.now()}.${filetype.split('/')[1]}`;
-      const tempFilePath = path.join(tempDir, tempFileName);
-      
-      // Write base64 image to temporary file
-      const imageBuffer = Buffer.from(base64Image, 'base64');
-      fs.writeFileSync(tempFilePath, imageBuffer);
-      
-      console.log('Using parseImageFromLocalFile with temp file:', tempFileName);
-      
-      // Use the correct function from the API
-      const ocrFunction = ocrSpaceApi.default || ocrSpaceApi;
-      const result = await ocrFunction.parseImageFromLocalFile(tempFilePath, {
-        apikey: process.env.OCR_SPACE_API_KEY || 'helloworld',
-        language: 'eng',
-        isOverlayRequired: false,
-        detectOrientation: true,
-        isTable: false,
-        OCREngine: 2
-      });
-      
-      // Clean up temporary file
-      fs.unlinkSync(tempFilePath);
-      
-      if (result && result.ParsedResults && result.ParsedResults.length > 0) {
-        const extractedText = result.ParsedResults[0].ParsedText;
-        
-        console.log('OCR.space API Success:', {
-          confidence: result.ParsedResults[0].TextOverlay?.HasOverlay || 'N/A',
-          textLength: extractedText.length
-        });
-
-        return res.json({
-          success: true,
-          text: extractedText,
-          source: 'OCR.space API',
-          confidence: result.ParsedResults[0].TextOverlay?.HasOverlay ? 'High' : 'Medium'
-        });
-      } else {
-        throw new Error('No text found in image');
-      }
-
-    } catch (error) {
-      console.error('OCR.space API Error:', error);
-      return res.status(500).json({
-        success: false,
-        error: 'OCR processing failed',
-        details: (error as Error).message
-      });
     }
   });
 
