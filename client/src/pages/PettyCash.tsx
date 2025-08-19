@@ -332,68 +332,16 @@ export default function PettyCash() {
 
   // Enhanced amount extraction with platform-specific patterns
   const extractAmountByPlatform = (lines: string[], platform: string): string => {
+    const allCandidates: Array<{amount: string, confidence: number, source: string}> = [];
+    
+    // Collect candidates from all lines using new candidate-based approach
     for (const line of lines) {
-      let amountMatch = null;
-      
-      switch (platform) {
-        case 'googlepay':
-          // Google Pay: "₹500", "Amount: ₹500", "Paid ₹500", "Rs 500", "Rs. 500", standalone numbers
-          amountMatch = line.match(/(?:paid|amount|rs\.?|₹)?\s*₹?\s?([0-9,]+\.?[0-9]*)/i);
-          // Also try to match standalone currency amounts
-          if (!amountMatch) {
-            amountMatch = line.match(/^₹?\s?([0-9,]+\.?[0-9]*)$/);
-          }
-          // Try Rs format commonly used in Google Pay
-          if (!amountMatch) {
-            amountMatch = line.match(/rs\.?\s?([0-9,]+\.?[0-9]*)/i);
-          }
-          break;
-        case 'phonepe':
-          // PhonePe: "₹500 sent", "Amount ₹500"
-          amountMatch = line.match(/(?:amount|sent|paid)?\s*₹\s?([0-9,]+\.?[0-9]*)/i);
-          break;
-        case 'paytm':
-          // Paytm: "₹500.00", "Amount: Rs 500"
-          amountMatch = line.match(/(?:amount|rs|₹)\s?([0-9,]+\.?[0-9]*)/i);
-          break;
-        case 'cred':
-          // CRED: Enhanced pattern matching with robust regex fallback
-          // Sometimes OCR doesn't capture the ₹ symbol clearly (shows as ¥ or missing)
-          amountMatch = line.match(/[₹¥]\s?([0-9,]+\.?[0-9]*)/);
-          if (!amountMatch) {
-            // Robust fallback pattern: Rs, INR, or standalone amounts with optional /-
-            amountMatch = line.match(/(?:Rs\.?|INR)?\s?(\d{2,6})(?:\/-)?/i);
-          }
-          if (!amountMatch) {
-            // Try standalone number that could be amount (600, 12000, etc.)
-            amountMatch = line.match(/^([0-9,]+\.?[0-9]*)$/);
-          }
-          break;
-        case 'bank':
-          // Bank: "Debited ₹500", "Amount: INR 500"
-          amountMatch = line.match(/(?:debited|credited|amount|inr)\s*₹?\s?([0-9,]+\.?[0-9]*)/i);
-          break;
-        default:
-          // Generic patterns - try multiple formats
-          amountMatch = line.match(/₹\s?([0-9,]+\.?[0-9]*)/);
-          if (!amountMatch) {
-            amountMatch = line.match(/rs\.?\s?([0-9,]+\.?[0-9]*)/i);
-          }
-          if (!amountMatch) {
-            // Try standalone number that could be amount
-            amountMatch = line.match(/^([0-9,]+\.?[0-9]*)$/);
-          }
-      }
-      
-      if (amountMatch) {
-        const amount = parseFloat(amountMatch[1].replace(/,/g, ''));
-        // Validate reasonable amount range
-        if (amount >= 1 && amount <= 100000) {
-          return amountMatch[1].replace(/,/g, '');
-        }
-      }
+      const candidates = extractAmountCandidates(line);
+      allCandidates.push(...candidates);
     }
-    return '';
+    
+    // Use smart selection to pick the best candidate
+    return selectBestAmount(allCandidates);
   };
 
   // Clean recipient name from OCR artifacts
@@ -405,94 +353,136 @@ export default function PettyCash() {
       .trim();
   };
 
-  // Enhanced amount extraction with comprehensive filtering
-  const extractAmount = (text: string): string | null => {
+  // Enhanced amount extraction with comprehensive filtering and multiple candidate detection
+  const extractAmountCandidates = (text: string): Array<{amount: string, confidence: number, source: string}> => {
     console.log(`Checking line for amount: "${text}"`);
+    
+    const candidates: Array<{amount: string, confidence: number, source: string}> = [];
     
     // Skip obviously wrong patterns
     if (/^\d{10,}$/.test(text.trim())) {
       console.log(`⚠️ Skipping transaction ID: "${text}"`);
-      return null;
+      return candidates;
     }
     
     // Skip email addresses and phone numbers
     if (text.includes('@') || text.includes('gpay-') || text.includes('phonepe-')) {
       console.log(`⚠️ Skipping email/phone pattern: "${text}"`);
-      return null;
+      return candidates;
     }
     
-    // Priority 1: Look for explicit currency symbols first
+    // Priority 1: Look for explicit currency symbols first - expanded patterns
     const currencyPatterns = [
-      /₹\s*(\d{1,3}(?:,\d{3})*(?:\.\d{1,2})?)/g,
-      /Rs\.?\s+(\d{1,3}(?:,\d{3})*(?:\.\d{1,2})?)/ig,
-      /INR\s+(\d{1,3}(?:,\d{3})*(?:\.\d{1,2})?)/ig
+      { pattern: /₹\s*(\d{1,4}(?:,\d{3})*(?:\.\d{1,2})?)/g, confidence: 0.9, source: 'currency_symbol' },
+      { pattern: /Rs\.?\s*(\d{1,4}(?:,\d{3})*(?:\.\d{1,2})?)/ig, confidence: 0.8, source: 'rs_symbol' },
+      { pattern: /INR\s*(\d{1,4}(?:,\d{3})*(?:\.\d{1,2})?)/ig, confidence: 0.8, source: 'inr_symbol' },
+      { pattern: /(\d{1,4}(?:,\d{3})*(?:\.\d{1,2})?)\s*₹/g, confidence: 0.9, source: 'amount_currency' },
+      { pattern: /(\d{1,4}(?:,\d{3})*(?:\.\d{1,2})?)\s*rs?\.?\s*$/ig, confidence: 0.7, source: 'amount_rs' },
     ];
     
-    for (const pattern of currencyPatterns) {
-      const match = text.match(pattern);
-      if (match) {
+    for (const {pattern, confidence, source} of currencyPatterns) {
+      const matches = Array.from(text.matchAll(pattern));
+      for (const match of matches) {
         const cleanAmount = match[1].replace(/,/g, '');
         const amount = parseFloat(cleanAmount);
         if (amount >= 10 && amount <= 100000) {
-          console.log(`✅ Found currency amount: "${text}" → ${amount}`);
-          return cleanAmount;
+          candidates.push({amount: cleanAmount, confidence, source});
+          console.log(`✅ Found currency amount: "${text}" → ${amount} (confidence: ${confidence})`);
         }
       }
     }
     
     // Priority 2: Context-based extraction (paid, sent, amount)
     const contextPatterns = [
-      /(?:paid|sent|amount|total|debited|credited)\s*:?\s*₹?\s*(\d{1,3}(?:,\d{3})*(?:\.\d{1,2})?)/i,
-      /(?:paid|sent|amount|total|debited|credited)\s*:?\s*Rs\.?\s*(\d{1,3}(?:,\d{3})*(?:\.\d{1,2})?)/i
+      { pattern: /(?:paid|sent|amount|total|debited|credited)\s*:?\s*₹?\s*(\d{1,4}(?:,\d{3})*(?:\.\d{1,2})?)/i, confidence: 0.85, source: 'contextual' },
+      { pattern: /(?:paid|sent|amount|total|debited|credited)\s*:?\s*Rs\.?\s*(\d{1,4}(?:,\d{3})*(?:\.\d{1,2})?)/i, confidence: 0.75, source: 'contextual_rs' }
     ];
     
-    for (const pattern of contextPatterns) {
+    for (const {pattern, confidence, source} of contextPatterns) {
       const match = text.match(pattern);
       if (match) {
         const cleanAmount = match[1].replace(/,/g, '');
         const amount = parseFloat(cleanAmount);
         if (amount >= 10 && amount <= 100000) {
-          console.log(`✅ Found contextual amount: "${text}" → ${amount}`);
-          return cleanAmount;
+          candidates.push({amount: cleanAmount, confidence, source});
+          console.log(`✅ Found contextual amount: "${text}" → ${amount} (confidence: ${confidence})`);
         }
       }
     }
     
-    // Priority 2.5: Handle corrupted OCR currency symbols like "f£H +orc sank 0720 v" -> 720
-    const corruptedCurrencyPatterns = [
-      /[^\d]*(\d{2,4})\s*v?\s*$/i,  // Extract 2-4 digit numbers at end, handles "f£H +orc sank 0720 v"
-      /[f£H£₹]\s*[^\d]*(\d{2,4})/i, // Corrupted currency symbol followed by amount
-      /[\w\s]*sank\s*[0]*(\d{2,4})/i, // Specific pattern for "sank 0720"
-    ];
-    
-    for (const pattern of corruptedCurrencyPatterns) {
-      const match = text.match(pattern);
-      if (match) {
-        const cleanAmount = match[1];
-        const amount = parseFloat(cleanAmount);
-        if (amount >= 50 && amount <= 50000 && 
-            !['2025', '2024', '2026'].includes(cleanAmount)) {
-          console.log(`✅ Found corrupted currency amount: "${text}" → ${amount}`);
-          return cleanAmount;
+    // Priority 2.5: Handle corrupted OCR currency symbols - be more selective
+    if (text.match(/[f£H₹]|sank/i)) {
+      const corruptedPatterns = [
+        { pattern: /[f£H₹]\s*[^\d]*?(\d{2,3})\s*[^\d]*$/i, confidence: 0.4, source: 'corrupted_symbol' },
+        { pattern: /sank\s*[0]*(\d{2,3})\b/i, confidence: 0.3, source: 'corrupted_sank' },
+      ];
+      
+      for (const {pattern, confidence, source} of corruptedPatterns) {
+        const match = text.match(pattern);
+        if (match) {
+          const cleanAmount = match[1];
+          const amount = parseFloat(cleanAmount);
+          if (amount >= 10 && amount <= 5000 && 
+              !['2025', '2024', '2026'].includes(cleanAmount) &&
+              cleanAmount.length <= 4) {
+            candidates.push({amount: cleanAmount, confidence, source});
+            console.log(`⚠️ Found corrupted currency amount: "${text}" → ${amount} (confidence: ${confidence})`);
+          }
         }
       }
     }
     
     // Priority 3: Standalone reasonable numbers (last resort)
-    const standaloneMatch = text.match(/^(\d{2,5})(?:\.\d{1,2})?$/);
+    const standaloneMatch = text.match(/^(\d{2,4})(?:\.\d{1,2})?$/);
     if (standaloneMatch) {
       const cleanAmount = standaloneMatch[1];
       const amount = parseFloat(cleanAmount);
       if (amount >= 50 && amount <= 50000 && 
           !['2025', '2024', '2026'].includes(cleanAmount)) {
-        console.log(`✅ Found standalone amount: "${text}" → ${amount}`);
-        return cleanAmount;
-      } else {
-        console.log(`❌ Rejected standalone: "${cleanAmount}" (likely date/invalid)`);
+        candidates.push({amount: cleanAmount, confidence: 0.2, source: 'standalone'});
+        console.log(`⚠️ Found standalone amount: "${text}" → ${amount} (low confidence)`);
       }
     }
     
-    return null;
+    return candidates;
+  };
+
+  // Smart amount selection from candidates
+  const selectBestAmount = (allCandidates: Array<{amount: string, confidence: number, source: string}>): string => {
+    if (allCandidates.length === 0) return '';
+    
+    console.log(`=== EVALUATING ${allCandidates.length} AMOUNT CANDIDATES ===`);
+    allCandidates.forEach(c => console.log(`Candidate: ₹${c.amount} (confidence: ${c.confidence}, source: ${c.source})`));
+    
+    // Sort by confidence and business logic
+    const sorted = allCandidates.sort((a, b) => {
+      // Prefer higher confidence
+      if (b.confidence !== a.confidence) return b.confidence - a.confidence;
+      
+      // Prefer typical transaction ranges (₹50-₹2000 are more common than ₹500+)
+      const amountA = parseFloat(a.amount);
+      const amountB = parseFloat(b.amount);
+      
+      const isTypicalRangeA = amountA >= 50 && amountA <= 2000;
+      const isTypicalRangeB = amountB >= 50 && amountB <= 2000;
+      
+      if (isTypicalRangeA && !isTypicalRangeB) return -1;
+      if (!isTypicalRangeA && isTypicalRangeB) return 1;
+      
+      // Prefer smaller amounts when uncertain (₹150 vs ₹720)
+      return amountA - amountB;
+    });
+    
+    const selected = sorted[0];
+    console.log(`✅ Selected: ₹${selected.amount} (confidence: ${selected.confidence}, source: ${selected.source})`);
+    return selected.amount;
+  };
+
+  // Legacy compatibility function for single-line amount extraction
+  const extractAmount = (text: string): string | null => {
+    const candidates = extractAmountCandidates(text);
+    if (candidates.length === 0) return null;
+    return selectBestAmount(candidates) || null;
   };
 
   // Smart fallback for missing amounts - look around "paid" lines
