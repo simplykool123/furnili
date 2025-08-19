@@ -1,0 +1,83 @@
+Pasted image details: {originalName: 'WhatsApp Image 2025-08-16 at 17.01.15.jpeg', newName: 'pasted-receipt-1755618896105.jpg', type: 'image/jpeg', size: 67631}
+PettyCash.tsx:950 Processing file: {name: 'pasted-receipt-1755618896105.jpg', type: 'image/jpeg', size: 67631, lastModified: 1755618896105}
+PettyCash.tsx:731 === PREPROCESSING IMAGE FOR BETTER OCR ===
+PettyCash.tsx:757 Preprocessing image: grayscale conversion, contrast enhancement, and binarization
+PettyCash.tsx:789 Image preprocessed successfully: processed_pasted-receipt-1755618896105.jpg Size: 45732
+PettyCash.tsx:818 Using preprocessed image for OCR: processed_pasted-receipt-1755618896105.jpg
+PettyCash.tsx:822 {status: 'loading tesseract core', progress: 0, userJobId: 'Job-0-7c9c8'}
+PettyCash.tsx:822 {status: 'loading tesseract core', progress: 1, userJobId: 'Job-0-7c9c8'}
+PettyCash.tsx:822 {workerId: 'Worker-0-409ed', status: 'initializing tesseract', progress: 0, userJobId: 'Job-0-7c9c8'}
+PettyCash.tsx:822 {workerId: 'Worker-0-409ed', status: 'initializing tesseract', progress: 1, userJobId: 'Job-0-7c9c8'}
+PettyCash.tsx:822 {workerId: 'Worker-0-409ed', status: 'loading language traineddata', progress: 0, userJobId: 'Job-1-e4714'}
+PettyCash.tsx:822 {workerId: 'Worker-0-409ed', status: 'loading language traineddata', progress: 0.5, userJobId: 'Job-1-e4714'}
+PettyCash.tsx:822 {workerId: 'Worker-0-409ed', status: 'loading language traineddata', progress: 1, userJobId: 'Job-1-e4714'}
+PettyCash.tsx:822 {workerId: 'Worker-0-409ed', status: 'initializing api', progress: 0, userJobId: 'Job-2-52af4'}
+PettyCash.tsx:822 {workerId: 'Worker-0-409ed', status: 'initializing api', progress: 1, userJobId: 'Job-2-52af4'}
+PettyCash.tsx:822 {workerId: 'Worker-0-409ed', jobId: 'Job-0-7c9c8', status: 'recognizing text', progress: 0, userJobId: 'Job-3-328cb'}
+PettyCash.tsx:822 {workerId: 'Worker-0-409ed', jobId: 'Job-0-7c9c8', status: 'recognizing text', progress: 0.05714285714285714, userJobId: 'Job-3-328cb'}
+PettyCash.tsx:822 {workerId: 'Worker-0-409ed', jobId: 'Job-0-7c9c8', status: 'recognizing text', progress: 0.12857142857142856, userJobId: 'Job-3-328cb'}
+PettyCash.tsx:822 {workerId: 'Worker-0-409ed', jobId: 'Job-0-7c9c8', status: 'recognizing text', progress: 0.18571428571428572, userJobId: 'Job-3-328cb'}
+PettyCash.tsx:822 {workerId: 'Worker-0-409ed', jobId: 'Job-0-7c9c8', status: 'recognizing text', progress: 0.2571428571428571, userJobId: 'Job-3-328cb'}
+PettyCash.tsx:822 {workerId: 'Worker-0-409ed', jobId: 'Job-0-7c9c8', status: 'recognizing text', progress: 0.3142857142857143, userJobId: 'Job-3-328cb'}
+PettyCash.tsx:822 {workerId: 'Worker-0-409ed', jobId: 'Job-0-7c9c8', status: 'recognizing text', progress: 0.38571428571428573, userJobId: 'Job-3-328cb'}
+PettyCash.tsx:822 {workerId: 'Worker-0-409ed', jobId: 'Job-0-7c9c8', status: 'recognizing text', progress: 0.44285714285714284, userJobId: 'Job-3-328cb'}
+PettyCash.tsx:822 {workerId: 'Worker-0-409ed', jobId: 'Job-0-7c9c8', status: 'recognizing text', progress: 0.5142857142857142, userJobId: 'Job-3-328cb'}
+PettyCash.tsx:822 {workerId: 'Worker-0-409ed', jobId: 'Job-0-7c9c8', status: 'recognizing text', progress: 0.5714285714285714, userJobId: 'Job-3-328cb'}
+PettyCash.tsx:822 {workerId: 'Worker-0-409ed', jobId: 'Job-0-7c9c8', status: 'recognizing text', progress: 0.6428571428571429, userJobId: 'Job-3-328cb'}
+PettyCash.tsx:822 {workerId: 'Worker-0-409ed', jobId: 'Job-0-7c9c8', status: 'recognizing text', progress: 1, userJobId: 'Job-3-328cb'}
+PettyCash.tsx:826 === FULL OCR TEXT START ===
+PettyCash.tsx:827 |
+Vishal Sonigra paid
+Kalayatan Cargo And Logistics...
+paytm-74375550aptys
+glue transport furnili
+paid securely by
+CRED
+powered by Lip
+16 AUG 2025, 5:00PM TXN ID: 559419149585
+
+PettyCash.tsx:828 === FULL OCR TEXT END ===
+PettyCash.tsx:835 === PLATFORM DETECTION ===
+PettyCash.tsx:836 Detected Platform: cred
+PettyCash.tsx:837 === ALL LINES ===
+PettyCash.tsx:839 Line 0: "|"
+PettyCash.tsx:839 Line 1: "Vishal Sonigra paid"
+PettyCash.tsx:839 Line 2: "Kalayatan Cargo And Logistics..."
+PettyCash.tsx:839 Line 3: "paytm-74375550aptys"
+PettyCash.tsx:839 Line 4: "glue transport furnili"
+PettyCash.tsx:839 Line 5: "paid securely by"
+PettyCash.tsx:839 Line 6: "CRED"
+PettyCash.tsx:839 Line 7: "powered by Lip"
+PettyCash.tsx:839 Line 8: "16 AUG 2025, 5:00PM TXN ID: 559419149585"
+PettyCash.tsx:486 === CRED SPECIFIC EXTRACTION ===
+PettyCash.tsx:490 CRED Line 0: "|"
+PettyCash.tsx:490 CRED Line 1: "Vishal Sonigra paid"
+PettyCash.tsx:490 CRED Line 2: "Kalayatan Cargo And Logistics..."
+PettyCash.tsx:504 CRED: Found recipient: Kalayatan Cargo And Logistics
+PettyCash.tsx:490 CRED Line 3: "paytm-74375550aptys"
+PettyCash.tsx:490 CRED Line 4: "glue transport furnili"
+PettyCash.tsx:530 CRED: Found description: glue transport furnili
+PettyCash.tsx:490 CRED Line 5: "paid securely by"
+PettyCash.tsx:490 CRED Line 6: "CRED"
+PettyCash.tsx:490 CRED Line 7: "powered by Lip"
+PettyCash.tsx:490 CRED Line 8: "16 AUG 2025, 5:00PM TXN ID: 559419149585"
+PettyCash.tsx:536 CRED: No amount found, trying fallback extraction...
+PettyCash.tsx:413 === FALLBACK AMOUNT EXTRACTION ===
+PettyCash.tsx:418 Found "paid" at line 1: "Vishal Sonigra paid"
+PettyCash.tsx:418 Found "paid" at line 5: "paid securely by"
+PettyCash.tsx:451 ❌ Fallback amount extraction failed - no amounts found near "paid"
+PettyCash.tsx:454 === FINAL AMOUNT FALLBACK ===
+PettyCash.tsx:874 === PLATFORM-SPECIFIC EXTRACTION RESULTS ===
+PettyCash.tsx:875 Amount: 
+PettyCash.tsx:876 Recipient: Kalayatan Cargo And Logistics
+PettyCash.tsx:877 Description: glue transport furnili
+PettyCash.tsx:894 === DATE EXTRACTION ===
+PettyCash.tsx:895 Extracted Date: 2025-08-16
+PettyCash.tsx:922 Auto-categorized as: Transport
+PettyCash.tsx:925 === FINAL EXTRACTED DATA ===
+PettyCash.tsx:926 Platform: cred
+PettyCash.tsx:927 Amount: 
+PettyCash.tsx:928 Recipient: Kalayatan Cargo And Logistics
+PettyCash.tsx:929 Description: glue transport furnili
+PettyCash.tsx:930 Category: Transport
+PettyCash.tsx:931 Date: 2025-08-16

@@ -472,6 +472,26 @@ export default function PettyCash() {
           return amountKeyword[1];
         }
       }
+      
+      // Look for encoded amounts in paytm/UPI strings
+      const encodedAmount = line.match(/paytm-(\d{2,5})/i);
+      if (encodedAmount) {
+        const amount = parseInt(encodedAmount[1]);
+        if (amount >= 50 && amount <= 50000) {
+          console.log(`Found encoded amount in paytm string: "${line}" → ${amount}`);
+          return encodedAmount[1];
+        }
+      }
+      
+      // Look for amounts in transaction IDs or reference numbers
+      const refAmount = line.match(/(?:txn|ref|id)[\s:-]*(\d{2,5})/i);
+      if (refAmount) {
+        const amount = parseInt(refAmount[1]);
+        if (amount >= 50 && amount <= 50000) {
+          console.log(`Found amount in reference: "${line}" → ${amount}`);
+          return refAmount[1];
+        }
+      }
     }
     
     return null;
@@ -886,7 +906,7 @@ export default function PettyCash() {
       }
       
       if (extractedData.description) {
-        updatedData.note = extractedData.description;
+        updatedData.purpose = extractedData.description;
       }
       
       // Still extract date using the existing method
@@ -926,7 +946,7 @@ export default function PettyCash() {
       console.log('Platform:', platformType);
       console.log('Amount:', updatedData.amount);
       console.log('Recipient:', updatedData.paidTo);
-      console.log('Description:', updatedData.note);
+      console.log('Description:', updatedData.purpose);
       console.log('Category:', updatedData.category);
       console.log('Date:', updatedData.date);
       
