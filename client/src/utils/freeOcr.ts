@@ -424,93 +424,122 @@ export class ClientFreeOCR {
   }
 
   private static extractAmount(lines: string[], platform: string): string {
-    console.log('OCR Debug - Generic amount extraction for platform:', platform);
+    console.log('OCR Debug - Bubble-focused amount extraction for platform:', platform);
     
-    // GENERIC APPROACH: Look for patterns where description is followed by amount
-    // This works for all payment apps: "Description + Rupee Symbol + Amount"
+    // BUBBLE-FOCUSED APPROACH: Description is always in bubble, amount follows
+    // Look for bubble indicators and extract full bubble content
     
-    // Step 1: Find business/transaction context lines
-    const contextLines = lines.filter(line => {
-      const lower = line.toLowerCase();
-      return lower.includes('furnili') || 
-             lower.includes('tools') ||
-             lower.includes('completed') ||
-             lower.includes('payment') ||
-             lower.includes('sent') ||
-             lower.includes('received') ||
-             /to\s+[A-Z][a-z]+/i.test(line); // "To PERSON NAME" pattern
-    });
+    // Step 1: Find bubble/dialog lines (key insight from user)
+    const bubbleIndicators = [
+      'furnili', 'tools', 'fevixol', 'ashish', 'order', 'material', 'steel', 'wood',
+      'completed', 'payment', 'sent', 'received', 'success'
+    ];
     
-    console.log('OCR Debug - Context lines found:', contextLines);
+    const bubbleLines = [];
+    const bubbleContext = [];
     
-    // Step 2: Look for amounts near context lines
     for (let i = 0; i < lines.length; i++) {
-      const currentLine = lines[i];
-      const isContextLine = contextLines.some(ctx => ctx === currentLine);
+      const line = lines[i];
+      const lower = line.toLowerCase();
       
-      if (isContextLine) {
-        // Check next 3 lines and previous 2 lines for amounts
+      // Identify bubble content (description lines)
+      const isBubbleLine = bubbleIndicators.some(indicator => lower.includes(indicator));
+      
+      if (isBubbleLine) {
+        console.log(`OCR Debug - Found bubble description line: "${line}"`);
+        bubbleLines.push(i);
+        bubbleContext.push(line);
+        
+        // Look in surrounding lines for the complete bubble content
+        // Bubble typically spans 2-4 lines with description + amount
         for (let j = Math.max(0, i - 2); j <= Math.min(lines.length - 1, i + 3); j++) {
-          if (j === i) continue; // Skip the context line itself
-          
-          const checkLine = lines[j];
-          const amount = this.extractAmountFromLine(checkLine);
+          const surroundingLine = lines[j];
+          const amount = this.extractAmountFromLine(surroundingLine);
           
           if (amount && this.isValidIndianAmount(amount)) {
-            console.log(`OCR Debug - Found amount "${amount}" near context line "${currentLine}"`);
+            console.log(`OCR Debug - Found amount "${amount}" in bubble near "${line}"`);
             return amount;
           }
         }
       }
     }
     
-    // Step 3: Enhanced patterns for all payment apps
-    const genericAmountPatterns = [
+    console.log('OCR Debug - Bubble context found:', bubbleContext);
+    
+    // Step 2: Extract from bubble clusters (complete bubble content extraction)
+    if (bubbleLines.length > 0) {
+      // Look at all lines within bubble clusters for amounts
+      const bubbleClusterLines = new Set();
+      
+      for (const bubbleLineIndex of bubbleLines) {
+        // Add surrounding lines to cluster (bubbles span multiple lines)
+        for (let k = Math.max(0, bubbleLineIndex - 2); k <= Math.min(lines.length - 1, bubbleLineIndex + 3); k++) {
+          bubbleClusterLines.add(k);
+        }
+      }
+      
+      console.log(`OCR Debug - Analyzing bubble cluster of ${bubbleClusterLines.size} lines`);
+      
+      // Extract all amounts from bubble cluster
+      const clusterAmounts = [];
+      for (const lineIndex of bubbleClusterLines) {
+        const line = lines[lineIndex];
+        if (this.shouldSkipLine(line)) continue;
+        
+        const amount = this.extractAmountFromLine(line);
+        if (amount && this.isValidIndianAmount(amount)) {
+          clusterAmounts.push(amount);
+          console.log(`OCR Debug - Found bubble cluster amount: "${amount}" in line: "${line}"`);
+        }
+      }
+      
+      // Return first valid amount from bubble cluster
+      if (clusterAmounts.length > 0) {
+        return clusterAmounts[0].replace(/,/g, '');
+      }
+    }
+    
+    // Step 3: Fallback patterns for all lines (if bubble approach fails)
+    const fallbackAmountPatterns = [
       // Direct rupee patterns
       /₹\s*([0-9,]+(?:\.[0-9]{2})?)/,  
       /Rs\.?\s*([0-9,]+(?:\.[0-9]{2})?)/i,
       /INR\s*([0-9,]+(?:\.[0-9]{2})?)/i,
       
-      // Common misread symbols
+      // Common misread symbols (critical for Indian payments)
       /£\s*([0-9,]+(?:\.[0-9]{2})?)/,  // £ instead of ₹
       /&\s*([0-9,]+(?:\.[0-9]{2})?)/,  // & instead of ₹
       /@\s*([0-9,]+(?:\.[0-9]{2})?)/,  // @ instead of ₹
       /\$\s*([0-9,]+(?:\.[0-9]{2})?)/,  // $ instead of ₹
-      
-      // Context-based patterns
-      /(?:amount|paid|sent|received|total)[:\s]*([0-9,]+(?:\.[0-9]{2})?)/gi,
-      /(?:payment\s+of|sent)[:\s]*([0-9,]+(?:\.[0-9]{2})?)/gi,
     ];
     
-    // Step 4: Apply patterns to all lines
     for (const line of lines) {
-      // Skip obvious non-amount lines
       if (this.shouldSkipLine(line)) continue;
       
-      for (const pattern of genericAmountPatterns) {
+      for (const pattern of fallbackAmountPatterns) {
         const match = line.match(pattern);
         if (match && this.isValidIndianAmount(match[1])) {
-          console.log('OCR Debug - Pattern match found:', match[1], 'in line:', line);
+          console.log('OCR Debug - Fallback pattern found:', match[1], 'in line:', line);
           return match[1].replace(/,/g, '');
         }
       }
     }
     
-    // Step 5: Look for reasonable standalone numbers as last resort
+    // Step 4: Last resort - reasonable standalone numbers
     for (const line of lines) {
       if (this.shouldSkipLine(line)) continue;
       
       const standaloneMatch = line.match(/^([0-9,]+(?:\.[0-9]{2})?)$/);
       if (standaloneMatch && this.isValidIndianAmount(standaloneMatch[1])) {
         const amount = parseFloat(standaloneMatch[1].replace(/,/g, ''));
-        if (amount >= 10 && amount <= 99999) { // Reasonable transaction range
+        if (amount >= 10 && amount <= 99999) {
           console.log('OCR Debug - Found standalone amount:', standaloneMatch[1]);
           return standaloneMatch[1].replace(/,/g, '');
         }
       }
     }
     
-    console.log('OCR Debug - No valid amount found in any extraction method');
+    console.log('OCR Debug - No valid amount found using bubble-focused extraction');
     return '';
   }
 
@@ -584,23 +613,53 @@ export class ClientFreeOCR {
   }
 
   private static extractDescription(lines: string[], platform: string): string {
-    const businessTerms = ['furnili', 'fevixol', 'ashish', 'order', 'steel', 'wood', 'material'];
+    console.log('OCR Debug - Extracting description from bubble content');
+    
+    // BUBBLE EXTRACTION: Description is the main content in payment bubbles
+    const bubbleTerms = [
+      'furnili', 'fevixol', 'ashish', 'order', 'steel', 'wood', 'material', 'tools',
+      'payment', 'purchase', 'bill', 'invoice', 'service'
+    ];
+    
+    // Look for the main bubble description line
+    const descriptionCandidates = [];
     
     for (const line of lines) {
       const lowerLine = line.toLowerCase();
       
-      // Skip system lines
+      // Skip system/UI lines that aren't part of bubble content
       if (lowerLine.includes('google pay') || 
           lowerLine.includes('transaction') ||
-          lowerLine.includes('completed') ||
-          /^\d+$/.test(line)) {
+          lowerLine.includes('upi') ||
+          lowerLine.includes('bank') ||
+          /^\d+$/.test(line) ||
+          /\d{10,}/.test(line)) {
         continue;
       }
       
-      // Find business-related descriptions
-      if (businessTerms.some(term => lowerLine.includes(term))) {
-        return line.trim();
+      // Prioritize business/bubble content
+      const hasBusinessTerm = bubbleTerms.some(term => lowerLine.includes(term));
+      if (hasBusinessTerm) {
+        console.log(`OCR Debug - Found bubble description: "${line}"`);
+        descriptionCandidates.push({ line, priority: 10 });
       }
+      
+      // Also consider "To: PERSON" patterns as bubble content
+      if (/^to[:\s]+[A-Z][a-z\s]+/i.test(line)) {
+        descriptionCandidates.push({ line, priority: 5 });
+      }
+      
+      // Consider any meaningful text that could be bubble content
+      if (line.length > 5 && line.length < 50 && /[a-zA-Z]/.test(line)) {
+        descriptionCandidates.push({ line, priority: 1 });
+      }
+    }
+    
+    // Return the highest priority bubble description
+    if (descriptionCandidates.length > 0) {
+      const bestCandidate = descriptionCandidates.sort((a, b) => b.priority - a.priority)[0];
+      console.log(`OCR Debug - Selected bubble description: "${bestCandidate.line}"`);
+      return bestCandidate.line.trim();
     }
     
     return '';
