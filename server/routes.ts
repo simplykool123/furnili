@@ -2437,35 +2437,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/petty-cash", authenticateToken, receiptImageUpload.single("receipt"), async (req: AuthRequest, res) => {
     try {
-      console.log("=== PETTY CASH EXPENSE SUBMISSION ===");
-      console.log("File uploaded:", req.file ? {
-        originalname: req.file.originalname,
-        mimetype: req.file.mimetype,
-        size: req.file.size,
-        path: req.file.path,
-        fieldname: req.file.fieldname
-      } : "No file");
-      console.log("Request body:", req.body);
+      // console.log("=== PETTY CASH EXPENSE SUBMISSION ===");
+      // console.log("File uploaded:", req.file ? {
+      //   originalname: req.file.originalname,
+      //   mimetype: req.file.mimetype,
+      //   size: req.file.size,
+      //   path: req.file.path,
+      //   fieldname: req.file.fieldname
+      // } : "No file");
+      // console.log("Request body:", req.body);
       
       // First create the expense without image to get the ID
       const expenseData = {
-        category: req.body.category,
+        category: req.body.category || null,
         amount: parseFloat(req.body.amount),
-        vendor: req.body.vendor, // Changed from paidTo to vendor
-        description: req.body.description, // Changed from note to description
-        projectId: req.body.projectId ? parseInt(req.body.projectId) : undefined,
-        orderNo: req.body.orderNo,
-        paidBy: req.body.paidBy ? parseInt(req.body.paidBy) : undefined,
+        vendor: req.body.vendor || null,
+        description: req.body.description || null,
+        projectId: req.body.projectId && req.body.projectId !== "" ? parseInt(req.body.projectId) : null,
+        orderNo: req.body.orderNo || null,
+        paidBy: req.body.paidBy && req.body.paidBy !== "" ? parseInt(req.body.paidBy) : null,
         expenseDate: new Date(req.body.expenseDate),
         addedBy: req.user!.id,
         receiptImageUrl: null,
         status: req.body.status || "expense", // Default to expense status, allow income
       };
       
-      console.log("Constructed expense data:", expenseData);
+      // console.log("Constructed expense data:", expenseData);
       
       const expense = await storage.createPettyCashExpense(expenseData);
-      console.log("Expense created successfully:", expense.id);
+      // console.log("Expense created successfully:", expense.id);
       
       // If there's an uploaded file, rename it with the expense ID
       if (req.file) {
@@ -2488,7 +2488,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Move file from temp location to new name
         fs.renameSync(req.file.path, newPath);
-        console.log(`Receipt image renamed from ${req.file.path} to ${newPath}`);
+        // console.log(`Receipt image renamed from ${req.file.path} to ${newPath}`);
         
         // Update expense with new image path
         await storage.updatePettyCashExpense(expense.id, {
@@ -2555,7 +2555,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Move file from temp location to new name
         fs.renameSync(req.file.path, newPath);
-        console.log(`Receipt image renamed from ${req.file.path} to ${newPath}`);
+        // console.log(`Receipt image renamed from ${req.file.path} to ${newPath}`);
         
         // Update funds with new image path
         await storage.updatePettyCashExpense(funds.id, {
@@ -2642,7 +2642,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Move file from temp location to new name
         fs.renameSync(req.file.path, newPath);
-        console.log(`Receipt image renamed from ${req.file.path} to ${newPath}`);
+        // console.log(`Receipt image renamed from ${req.file.path} to ${newPath}`);
         
         // Update expense with new image path
         await storage.updatePettyCashExpense(id, {

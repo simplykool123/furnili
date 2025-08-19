@@ -467,19 +467,19 @@ export default function PettyCash() {
     try {
       // Enhanced OCR settings for better accuracy across platforms
       const result = await Tesseract.recognize(file, 'eng', {
-        logger: m => console.log(m)
+        logger: m => {} // console.log(m)
       });
       
       const text = result.data.text;
-      console.log('OCR Result:', text);
+      // console.log('OCR Result:', text);
       
       const updatedData = { ...formData };
       const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0);
       
       // Detect platform type for specialized parsing
       const platformType = detectPlatformType(text.toLowerCase());
-      console.log('Detected Platform:', platformType);
-      console.log('OCR Text Lines:', lines);
+      // console.log('Detected Platform:', platformType);
+      // console.log('OCR Text Lines:', lines);
       
       // Platform-specific amount extraction
       const extractedAmount = extractAmountByPlatform(lines, platformType);
@@ -503,7 +503,7 @@ export default function PettyCash() {
       let extractedPurpose = '';
       
       if (platformType === 'cred') {
-        console.log('CRED OCR Debug - All lines:', lines);
+        // console.log('CRED OCR Debug - All lines:', lines);
         
         // For CRED, look for description that appears after the amount but before transaction details
         let foundAmount = false;
@@ -514,12 +514,12 @@ export default function PettyCash() {
           // Check if we found the amount line (₹600, ₹12,000 format)
           if (!foundAmount && /₹[\d,]+/.test(line)) {
             foundAmount = true;
-            console.log('CRED OCR Debug - Found amount at line', i, ':', line);
+            // console.log('CRED OCR Debug - Found amount at line', i, ':', line);
             
             // Look at the immediate next few lines for description
             for (let j = i + 1; j < Math.min(i + 3, lines.length); j++) {
               const nextLine = lines[j].trim();
-              console.log('CRED OCR Debug - Checking line', j, ':', nextLine);
+              // console.log('CRED OCR Debug - Checking line', j, ':', nextLine);
               
               // This should be the business description - look for simple text lines
               // Skip empty lines and lines with transaction info
@@ -533,18 +533,18 @@ export default function PettyCash() {
                   !nextLine.includes('2025') &&
                   !/\d{4,}/.test(nextLine) && // No long numbers (transaction IDs)
                   !/\d{1,2}:\d{2}/.test(nextLine)) { // No time formats
-                console.log('CRED OCR Debug - Found potential description:', nextLine);
+                // console.log('CRED OCR Debug - Found potential description:', nextLine);
                 extractedPurpose = nextLine;
                 break;
               } else {
-                console.log('CRED OCR Debug - Skipped line (transaction info):', nextLine);
+                // console.log('CRED OCR Debug - Skipped line (transaction info):', nextLine);
               }
             }
             break;
           }
         }
         
-        console.log('CRED OCR Debug - Final extracted purpose:', extractedPurpose);
+        // console.log('CRED OCR Debug - Final extracted purpose:', extractedPurpose);
       } else if (platformType === 'googlepay') {
         // For Google Pay, look for description that appears between amount and "Completed" status
         // This appears in the bubble box area of the receipt
@@ -819,7 +819,7 @@ export default function PettyCash() {
       setFormData(prev => ({ ...updatedData, receiptImage: prev.receiptImage }));
       toast({ title: "Payment details extracted from screenshot", description: "Review and submit the expense" });
     } catch (error) {
-      console.error('OCR Error:', error);
+      // console.error('OCR Error:', error);
       toast({ title: "OCR processing failed", description: "Please fill the details manually", variant: "destructive" });
     }
     setIsProcessingOCR(false);
@@ -914,22 +914,22 @@ export default function PettyCash() {
     formDataToSend.append('orderNo', formData.orderNo);
     
     if (formData.receiptImage) {
-      console.log("Appending receipt file:", {
-        name: formData.receiptImage.name,
-        type: formData.receiptImage.type,
-        size: formData.receiptImage.size
-      });
+      // console.log("Appending receipt file:", {
+      //   name: formData.receiptImage.name,
+      //   type: formData.receiptImage.type,
+      //   size: formData.receiptImage.size
+      // });
       formDataToSend.append('receipt', formData.receiptImage);
     } else {
-      console.log("No receipt file to append");
+      // console.log("No receipt file to append");
     }
     
     // Log all FormData entries for debugging
-    console.log("FormData entries:");
-    const entries = Array.from(formDataToSend.entries());
-    entries.forEach(([key, value]) => {
-      console.log(key, value);
-    });
+    // console.log("FormData entries:");
+    // const entries = Array.from(formDataToSend.entries());
+    // entries.forEach(([key, value]) => {
+    //   console.log(key, value);
+    // });
     
     addExpenseMutation.mutate(formDataToSend);
   };
