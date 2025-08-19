@@ -346,9 +346,13 @@ export default function PettyCash() {
           amountMatch = line.match(/(?:amount|rs|₹)\s?([0-9,]+\.?[0-9]*)/i);
           break;
         case 'cred':
-          // CRED: Look for standalone amount patterns, not just with ₹ symbol
-          // Sometimes OCR doesn't capture the ₹ symbol clearly
-          amountMatch = line.match(/₹\s?([0-9,]+\.?[0-9]*)/);
+          // CRED: Enhanced pattern matching with robust regex fallback
+          // Sometimes OCR doesn't capture the ₹ symbol clearly (shows as ¥ or missing)
+          amountMatch = line.match(/[₹¥]\s?([0-9,]+\.?[0-9]*)/);
+          if (!amountMatch) {
+            // Robust fallback pattern: Rs, INR, or standalone amounts with optional /-
+            amountMatch = line.match(/(?:Rs\.?|INR)?\s?(\d{2,6})(?:\/-)?/i);
+          }
           if (!amountMatch) {
             // Try standalone number that could be amount (600, 12000, etc.)
             amountMatch = line.match(/^([0-9,]+\.?[0-9]*)$/);
@@ -600,50 +604,52 @@ export default function PettyCash() {
       console.log('=== AMOUNT EXTRACTION ===');
       console.log('Extracted Amount from patterns:', extractedAmount);
       
-      // For CRED, if no amount found, try OCR preprocessing to find ₹600 pattern
-      if (!extractedAmount && platformType === 'cred') {
-        console.log('CRED: Trying to find ₹ amount in full text...');
-        const fullTextAmountMatch = text.match(/₹\s*([0-9,]+\.?[0-9]*)/);
-        if (fullTextAmountMatch) {
-          extractedAmount = fullTextAmountMatch[1].replace(/,/g, '');
-          console.log('CRED: Found amount in full text:', extractedAmount);
-        } else {
-          console.log('CRED: No ₹ symbol found, trying alternative patterns...');
-          // Sometimes OCR misses ₹ symbol entirely, look for standalone amounts
-          // Try patterns that might indicate amount like Rs, INR, or context-based detection
-          const alternativePatterns = [
-            /Rs\.?\s*([0-9,]+\.?[0-9]*)/i,
-            /INR\s*([0-9,]+\.?[0-9]*)/i,
-            /amount\s*:?\s*([0-9,]+\.?[0-9]*)/i,
-            // Look for 3-4 digit numbers that could be amounts (600, 1200, etc.)
-            /\b([0-9]{3,5})\b/g
+      // Universal robust fallback for amount extraction (works for all platforms)
+      if (!extractedAmount) {
+        console.log('=== ROBUST FALLBACK AMOUNT EXTRACTION ===');
+        console.log('Platform-specific extraction failed, trying robust regex patterns...');
+        
+        // Your suggested robust regex pattern that catches amounts with or without currency symbols
+        const robustPattern = /(?:₹|Rs\.?|INR|¥)?\s?(\d{2,6})(?:\/-)?/gi;
+        const matches = Array.from(text.matchAll(robustPattern));
+        
+        console.log('Found potential amounts:', matches.map(m => m[1]));
+        
+        for (const match of matches) {
+          const amount = parseInt(match[1]);
+          // Validate reasonable expense amount range
+          if (amount >= 50 && amount <= 50000) {
+            extractedAmount = match[1];
+            console.log('✓ Robust fallback found valid amount:', extractedAmount);
+            break;
+          }
+        }
+        
+        // Additional fallback patterns if the first doesn't work
+        if (!extractedAmount) {
+          const additionalPatterns = [
+            /\b(\d{3,5})\s*only\b/gi,           // "600 only" pattern
+            /\b(\d{2,6})\s*rupees?\b/gi,        // "600 rupees" pattern
+            /amount\s*:?\s*(\d{2,6})/gi,        // "Amount: 600" pattern
+            /paid\s*:?\s*(\d{2,6})/gi,          // "Paid: 600" pattern
           ];
           
-          // First try to find ¥ symbol (OCR sometimes captures this instead of ₹)
-          const yenMatch = text.match(/¥\s*([0-9,]+\.?[0-9]*)/);
-          if (yenMatch) {
-            extractedAmount = yenMatch[1].replace(/,/g, '');
-            console.log('CRED: Found amount with ¥ symbol:', extractedAmount);
-          } else {
-            // Try alternative patterns
-            for (const pattern of alternativePatterns) {
-              const match = text.match(pattern);
-              if (match && match[1]) {
-                const amount = parseFloat(match[1].replace(/,/g, ''));
-                if (amount >= 50 && amount <= 50000) { // Reasonable range for expenses
-                  extractedAmount = match[1].replace(/,/g, '');
-                  console.log('CRED: Found amount using alternative pattern:', extractedAmount);
-                  break;
-                }
+          for (const pattern of additionalPatterns) {
+            const matches = Array.from(text.matchAll(pattern));
+            for (const match of matches) {
+              const amount = parseInt(match[1]);
+              if (amount >= 50 && amount <= 50000) {
+                extractedAmount = match[1];
+                console.log('✓ Additional pattern found amount:', extractedAmount);
+                break;
               }
             }
+            if (extractedAmount) break;
           }
-          
-          // Last resort: Manual amount extraction for CRED (we know it should be 600)
-          if (!extractedAmount) {
-            console.log('CRED: All extraction methods failed. OCR might have missed the amount completely.');
-            console.log('CRED: Expected amount is ₹600 based on visual receipt, but OCR did not capture it.');
-          }
+        }
+        
+        if (!extractedAmount) {
+          console.log('❌ All amount extraction methods failed. OCR might have missed the amount completely.');
         }
       }
       
