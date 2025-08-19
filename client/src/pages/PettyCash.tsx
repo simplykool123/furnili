@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { toast } from "@/hooks/use-toast";
 import { authenticatedApiRequest, authService } from "@/lib/auth";
@@ -1519,6 +1519,7 @@ export default function PettyCash() {
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>Add New Expense</DialogTitle>
+            <DialogDescription>Record a new petty cash expense with receipt details</DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Amount and Date */}
@@ -1709,6 +1710,7 @@ export default function PettyCash() {
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>Edit Expense</DialogTitle>
+            <DialogDescription>Update the details of this petty cash expense</DialogDescription>
           </DialogHeader>
           <form onSubmit={(e) => {
             e.preventDefault();
@@ -1864,7 +1866,7 @@ export default function PettyCash() {
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>Add Funds (Income)</DialogTitle>
-            <p className="text-sm text-gray-600">Add money to petty cash fund</p>
+            <DialogDescription>Add money to petty cash fund</DialogDescription>
           </DialogHeader>
           <form onSubmit={(e) => {
             e.preventDefault();
