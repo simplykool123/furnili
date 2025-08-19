@@ -1990,6 +1990,12 @@ export default function PettyCash() {
             <DialogTitle>
               {selectedExpenseDetails?.status === 'income' ? 'Credit Details' : 'Expense Details'}
             </DialogTitle>
+            <DialogDescription>
+              {selectedExpenseDetails?.status === 'income' 
+                ? 'View detailed information about this credit transaction'
+                : 'View detailed information about this expense transaction'
+              }
+            </DialogDescription>
           </DialogHeader>
           {selectedExpenseDetails && (
             <div className="space-y-4">
