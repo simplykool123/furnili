@@ -371,6 +371,29 @@ export default function PettyCash() {
       return candidates;
     }
     
+    // Priority 0: Special comma-formatted amounts (like "74,9500" = ₹749.50)
+    const commaFormattedPattern = /\b(\d{1,3},\d{4})\b/g;
+    const commaMatches = Array.from(text.matchAll(commaFormattedPattern));
+    
+    for (const match of commaMatches) {
+      const rawAmount = match[1];
+      // Handle "74,9500" format - treat last two digits as decimal
+      const parts = rawAmount.split(',');
+      const wholePart = parts[0];
+      const decimalPart = parts[1];
+      // Convert "74,9500" to 749.50
+      const convertedAmount = parseFloat(`${wholePart}${decimalPart.substring(0, 2)}.${decimalPart.substring(2)}`);
+      
+      if (!isNaN(convertedAmount) && convertedAmount >= 10 && convertedAmount <= 100000) {
+        candidates.push({
+          amount: convertedAmount.toString(),
+          confidence: 0.95, // Very high confidence for comma-formatted amounts
+          source: 'comma_formatted'
+        });
+        console.log(`💰 Found comma-formatted amount: "${rawAmount}" → ₹${convertedAmount} (confidence: 0.95)`);
+      }
+    }
+
     // Priority 1: Look for explicit currency symbols first - expanded patterns
     const currencyPatterns = [
       { pattern: /₹\s*(\d{1,4}(?:,\d{3})*(?:\.\d{1,2})?)/g, confidence: 0.9, source: 'currency_symbol' },
