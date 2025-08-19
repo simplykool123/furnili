@@ -377,12 +377,13 @@ export default function PettyCash() {
     
     for (const match of commaMatches) {
       const rawAmount = match[1];
-      // Handle "74,9500" format - treat last two digits as decimal
+      // Handle Indian comma format: "74,9500" = ₹7,500 (not ₹749.50)
       const parts = rawAmount.split(',');
       const wholePart = parts[0];
       const decimalPart = parts[1];
-      // Convert "74,9500" to 749.50
-      const convertedAmount = parseFloat(`${wholePart}${decimalPart.substring(0, 2)}.${decimalPart.substring(2)}`);
+      
+      // Indian format: "7,4500" means 7,450 rupees (remove last two zeros)
+      const convertedAmount = parseFloat(`${wholePart}${decimalPart.substring(0, 2)}`);
       
       if (!isNaN(convertedAmount) && convertedAmount >= 10 && convertedAmount <= 100000) {
         candidates.push({
