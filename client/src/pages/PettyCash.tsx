@@ -60,10 +60,11 @@ const categories = ["Material", "Transport", "Site", "Office", "Food", "Fuel", "
 export default function PettyCash() {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("all");
-  const [selectedPaidBy, setSelectedPaidBy] = useState("all");
-  const [dateFilter, setDateFilter] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("All Categories");
+  const [selectedPaidBy, setSelectedPaidBy] = useState("All Staff");
+  const [dateFilter, setDateFilter] = useState("All Time");
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const [showAddExpenseDialog, setShowAddExpenseDialog] = useState(false);
   const [showAddFundsDialog, setShowAddFundsDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [editingExpense, setEditingExpense] = useState<PettyCashExpense | null>(null);
