@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import multer from 'multer';
-import { ocrService } from '../ocr';
+import { freeOcrService } from '../freeOcr';
 import path from 'path';
 import fs from 'fs';
 
@@ -34,8 +34,8 @@ router.post('/process-payment-screenshot', upload.single('image'), async (req, r
 
     console.log('Processing payment screenshot:', req.file.originalname);
 
-    // Process the uploaded image
-    const result = await ocrService.processPaymentScreenshot(req.file.path);
+    // Process the uploaded image with enhanced free OCR
+    const result = await freeOcrService.processPaymentScreenshot(req.file.path);
 
     // Clean up uploaded file
     fs.unlink(req.file.path, (err) => {
@@ -72,7 +72,7 @@ router.post('/extract-text', upload.single('image'), async (req, res) => {
       return res.status(400).json({ error: 'No image file provided' });
     }
 
-    const lines = await ocrService.extractTextWithOCRSpace(req.file.path);
+    const lines = await freeOcrService.processWithMultipleEngines(req.file.path);
 
     // Clean up uploaded file
     fs.unlink(req.file.path, (err) => {
