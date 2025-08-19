@@ -18,7 +18,7 @@ import FurniliLayout from "@/components/Layout/FurniliLayout";
 
 export default function WhatsAppExport() {
   const { toast } = useToast();
-  const { isMobile } = useIsMobile();
+  const isMobile = useIsMobile();
   const [selectedTemplate, setSelectedTemplate] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [customMessage, setCustomMessage] = useState("");

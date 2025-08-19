@@ -372,9 +372,9 @@ class OCRService {
       }
     }
 
-    console.log('Header found at row:', headerRowIndex);
+    // console.log('Header found at row:', headerRowIndex);
     if (headerRowIndex >= 0) {
-      console.log('Header row:', data[headerRowIndex]);
+      // console.log('Header row:', data[headerRowIndex]);
     }
 
     // Parse data rows after header

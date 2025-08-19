@@ -9,8 +9,8 @@ if (!process.env.DATABASE_URL) {
 }
 
 // Log connection attempt for debugging
-console.log('Attempting to connect to database...');
-console.log('Database URL format:', process.env.DATABASE_URL?.replace(/:([^:@]+)@/, ':****@'));
+// console.log('Attempting to connect to database...');
+// console.log('Database URL format:', process.env.DATABASE_URL?.replace(/:([^:@]+)@/, ':****@'));
 
 export const pool = new Pool({ 
   connectionString: process.env.DATABASE_URL,
@@ -24,7 +24,7 @@ export const pool = new Pool({
 
 // Test connection with better error handling
 pool.on('connect', () => {
-  console.log('✓ Connected to Supabase database successfully');
+  // console.log('✓ Connected to Supabase database successfully');
 });
 
 pool.on('error', (err) => {

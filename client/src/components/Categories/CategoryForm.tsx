@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -119,17 +119,17 @@ export function CategoryForm({ category, onSuccess }: CategoryFormProps) {
   const isActive = watch("isActive");
 
   return (
-    <DialogContent className="max-w-[90vw] sm:max-w-md max-h-[90vh]" aria-describedby="category-form-description">
+    <DialogContent className="max-w-[90vw] sm:max-w-md max-h-[90vh]">
       <DialogHeader>
         <DialogTitle>
           {category ? "Edit Category" : "Add Category"}
         </DialogTitle>
-        <p id="category-form-description" className="text-sm text-muted-foreground">
+        <DialogDescription>
           {category 
             ? "Update the category information below." 
             : "Create a new category for organizing products."
           }
-        </p>
+        </DialogDescription>
       </DialogHeader>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">

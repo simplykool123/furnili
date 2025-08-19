@@ -11,7 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FileText, Upload, CheckCircle, AlertCircle, Download, Eye, Zap, Target } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 import { autoMatchBOQItems, findProductMatches, Product } from "@/lib/fuzzyMatch";
 import RequestFormSimplified from "@/components/Requests/RequestFormSimplified";
 
@@ -609,6 +609,9 @@ export default function BOQUpload() {
           <div className="max-h-[85vh] flex flex-col">
             <DialogHeader className="flex-shrink-0">
               <DialogTitle>Create Material Request from BOQ</DialogTitle>
+              <DialogDescription>
+                Generate a material request using the matched items from the uploaded BOQ document
+              </DialogDescription>
             </DialogHeader>
             <div className="flex-1 overflow-y-auto mt-4">
             <RequestFormSimplified
