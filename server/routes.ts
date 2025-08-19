@@ -2447,7 +2447,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } : "No file");
       console.log("Request body:", req.body);
       
-      // Manually construct expense data to bypass strict Zod validation
+      // First create the expense without image to get the ID
       const expenseData = {
         category: req.body.category,
         amount: parseFloat(req.body.amount),
@@ -2458,7 +2458,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         paidBy: req.body.paidBy ? parseInt(req.body.paidBy) : undefined,
         expenseDate: new Date(req.body.expenseDate),
         addedBy: req.user!.id,
-        receiptImageUrl: req.file?.path || null,
+        receiptImageUrl: null,
         status: req.body.status || "expense", // Default to expense status, allow income
       };
       
@@ -2466,7 +2466,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const expense = await storage.createPettyCashExpense(expenseData);
       console.log("Expense created successfully:", expense.id);
-      res.json(expense);
+      
+      // If there's an uploaded file, rename it with the expense ID
+      if (req.file) {
+        const fs = require('fs');
+        const path = require('path');
+        
+        // Get file extension from mimetype or original name
+        let extension = '.png'; // default
+        if (req.file.mimetype === 'image/jpeg') extension = '.jpg';
+        else if (req.file.mimetype === 'image/png') extension = '.png';
+        else if (req.file.originalname) {
+          const ext = path.extname(req.file.originalname);
+          if (ext) extension = ext;
+        }
+        
+        // Create new filename with zero-padded ID: 001.png, 012.jpg, etc.
+        const paddedId = expense.id.toString().padStart(3, '0');
+        const newFileName = `${paddedId}${extension}`;
+        const newPath = `uploads/receipts/${newFileName}`;
+        
+        // Move file from temp location to new name
+        fs.renameSync(req.file.path, newPath);
+        console.log(`Receipt image renamed from ${req.file.path} to ${newPath}`);
+        
+        // Update expense with new image path
+        await storage.updatePettyCashExpense(expense.id, {
+          receiptImageUrl: newPath
+        });
+        
+        // Return updated expense
+        const updatedExpenses = await storage.getPettyCashExpenses();
+        const updatedExpense = updatedExpenses.find(e => e.id === expense.id);
+        res.json(updatedExpense || expense);
+      } else {
+        res.json(expense);
+      }
     } catch (error) {
       console.error("Failed to add expense:", error);
       if (error instanceof z.ZodError) {
@@ -2482,6 +2517,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Funds file uploaded:", req.file);
       console.log("Funds request body:", req.body);
       
+      // First create the funds entry without image to get the ID
       const fundsData = {
         category: "", // Funds don't need category
         amount: parseFloat(req.body.amount),
@@ -2491,12 +2527,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
         paidBy: req.body.receivedBy ? parseInt(req.body.receivedBy) : undefined, // Staff member who received funds
         expenseDate: new Date(req.body.expenseDate),
         addedBy: req.user!.id,
-        receiptImageUrl: req.file?.path || null,
+        receiptImageUrl: null,
         status: "income", // Always income for funds
       };
       
       const funds = await storage.createPettyCashExpense(fundsData);
-      res.json(funds);
+      console.log("Funds entry created successfully:", funds.id);
+      
+      // If there's an uploaded file, rename it with the funds ID
+      if (req.file) {
+        const fs = require('fs');
+        const path = require('path');
+        
+        // Get file extension from mimetype or original name
+        let extension = '.png'; // default
+        if (req.file.mimetype === 'image/jpeg') extension = '.jpg';
+        else if (req.file.mimetype === 'image/png') extension = '.png';
+        else if (req.file.originalname) {
+          const ext = path.extname(req.file.originalname);
+          if (ext) extension = ext;
+        }
+        
+        // Create new filename with zero-padded ID: 001.png, 012.jpg, etc.
+        const paddedId = funds.id.toString().padStart(3, '0');
+        const newFileName = `${paddedId}${extension}`;
+        const newPath = `uploads/receipts/${newFileName}`;
+        
+        // Move file from temp location to new name
+        fs.renameSync(req.file.path, newPath);
+        console.log(`Receipt image renamed from ${req.file.path} to ${newPath}`);
+        
+        // Update funds with new image path
+        await storage.updatePettyCashExpense(funds.id, {
+          receiptImageUrl: newPath
+        });
+        
+        // Return updated funds entry
+        const updatedFunds = await storage.getPettyCashExpenses();
+        const updatedFund = updatedFunds.find(f => f.id === funds.id);
+        res.json(updatedFund || funds);
+      } else {
+        res.json(funds);
+      }
     } catch (error) {
       console.error("Failed to add funds:", error);
       if (error instanceof z.ZodError) {
