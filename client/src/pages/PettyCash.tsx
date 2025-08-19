@@ -312,6 +312,7 @@ export default function PettyCash() {
     if (text.includes('paytm')) return 'paytm';
     if (text.includes('amazon pay') || text.includes('amazonpay')) return 'amazonpay';
     if (text.includes('bhim upi') || text.includes('bhim')) return 'bhimupi';
+    if (text.includes('cred') || text.includes('paid securely by')) return 'cred';
     if (text.includes('bank') || text.includes('neft') || text.includes('rtgs')) return 'bank';
     if (text.includes('cash') || text.includes('receipt')) return 'cash';
     return 'generic';
@@ -342,6 +343,10 @@ export default function PettyCash() {
         case 'paytm':
           // Paytm: "₹500.00", "Amount: Rs 500"
           amountMatch = line.match(/(?:amount|rs|₹)\s?([0-9,]+\.?[0-9]*)/i);
+          break;
+        case 'cred':
+          // CRED: "₹12,000" format
+          amountMatch = line.match(/^₹\s?([0-9,]+\.?[0-9]*)$/);
           break;
         case 'bank':
           // Bank: "Debited ₹500", "Amount: INR 500"
@@ -390,6 +395,13 @@ export default function PettyCash() {
         case 'paytm':
           if (line.includes('paid to') || line.includes('sent to')) {
             recipient = lines[i].replace(/.*(?:paid to|sent to)\s+/i, '').trim();
+          }
+          break;
+        case 'cred':
+          // CRED: Look for recipient name (usually largest text after payer info)
+          if (!line.includes('paid') && !line.includes('@') && !line.includes('cred') && 
+              line.length > 5 && /^[A-Z][a-z\s]+/.test(line)) {
+            recipient = line.trim();
           }
           break;
         case 'bank':
@@ -487,10 +499,47 @@ export default function PettyCash() {
         updatedData.date = extractedDate;
       }
 
-      // Google Pay specific description extraction from bubble box
+      // Platform-specific description extraction
       let extractedPurpose = '';
       
-      if (platformType === 'googlepay') {
+      if (platformType === 'cred') {
+        // For CRED, look for description that appears after the amount
+        let foundAmount = false;
+        
+        for (let i = 0; i < lines.length; i++) {
+          const line = lines[i].trim();
+          const lowerLine = line.toLowerCase();
+          
+          // Check if we found the amount line (₹12,000 format)
+          if (!foundAmount && /^₹[\d,]+/.test(line)) {
+            foundAmount = true;
+            
+            // Look at the next few lines for description
+            for (let j = i + 1; j < Math.min(i + 4, lines.length); j++) {
+              const nextLine = lines[j].trim();
+              const nextLowerLine = nextLine.toLowerCase();
+              
+              // Skip obvious non-description lines
+              if (nextLowerLine.includes('paid securely') ||
+                  nextLowerLine.includes('cred') ||
+                  nextLowerLine.includes('powered by') ||
+                  nextLowerLine.includes('txn id') ||
+                  nextLowerLine.includes('@') ||
+                  /^\d+\s\w{3}/.test(nextLine) || // Date format
+                  nextLine.length < 3) {
+                continue;
+              }
+              
+              // This should be the description
+              if (nextLine.length > 0 && !extractedPurpose) {
+                extractedPurpose = nextLine;
+                break;
+              }
+            }
+            break;
+          }
+        }
+      } else if (platformType === 'googlepay') {
         // For Google Pay, look for description that appears between amount and "Completed" status
         // This appears in the bubble box area of the receipt
         let foundAmount = false;
@@ -576,6 +625,7 @@ export default function PettyCash() {
           paytm: 'Paytm',
           amazonpay: 'Amazon Pay',
           bhimupi: 'BHIM UPI',
+          cred: 'CRED',
           bank: 'Bank Transfer',
           cash: 'Cash Payment'
         };
