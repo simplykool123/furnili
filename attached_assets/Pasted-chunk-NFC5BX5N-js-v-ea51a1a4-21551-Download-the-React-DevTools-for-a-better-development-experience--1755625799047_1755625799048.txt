@@ -1,0 +1,186 @@
+chunk-NFC5BX5N.js?v=ea51a1a4:21551 Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+chunk-LIY4DVB2.js?v=ea51a1a4:339 Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+(anonymous) @ chunk-LIY4DVB2.js?v=ea51a1a4:339
+commitHookEffectListMount @ chunk-NFC5BX5N.js?v=ea51a1a4:16915
+commitPassiveMountOnFiber @ chunk-NFC5BX5N.js?v=ea51a1a4:18156
+commitPassiveMountEffects_complete @ chunk-NFC5BX5N.js?v=ea51a1a4:18129
+commitPassiveMountEffects_begin @ chunk-NFC5BX5N.js?v=ea51a1a4:18119
+commitPassiveMountEffects @ chunk-NFC5BX5N.js?v=ea51a1a4:18109
+flushPassiveEffectsImpl @ chunk-NFC5BX5N.js?v=ea51a1a4:19490
+flushPassiveEffects @ chunk-NFC5BX5N.js?v=ea51a1a4:19447
+commitRootImpl @ chunk-NFC5BX5N.js?v=ea51a1a4:19416
+commitRoot @ chunk-NFC5BX5N.js?v=ea51a1a4:19277
+performSyncWorkOnRoot @ chunk-NFC5BX5N.js?v=ea51a1a4:18895
+flushSyncCallbacks @ chunk-NFC5BX5N.js?v=ea51a1a4:9119
+(anonymous) @ chunk-NFC5BX5N.js?v=ea51a1a4:18627
+PettyCash.tsx:1255 Pasted image details: {originalName: 'WhatsApp Image 2025-08-19 at 18.48.55.jpeg', newName: 'pasted-receipt-1755625772338.jpg', type: 'image/jpeg', size: 38807}
+PettyCash.tsx:1201 Processing file: {name: 'pasted-receipt-1755625772338.jpg', type: 'image/jpeg', size: 38807, lastModified: 1755625772338}
+PettyCash.tsx:950 === TRYING OCR.SPACE API (PRIMARY) ===
+PettyCash.tsx:962  POST https://c5906033-bfeb-4ac5-b032-6406c5147d39-00-2smvucpzymdj8.worf.replit.dev/api/ocr-process 500 (Internal Server Error)
+processOCRSpaceAPI @ PettyCash.tsx:962
+await in processOCRSpaceAPI
+processImageWithOCR @ PettyCash.tsx:996
+processFile @ PettyCash.tsx:1212
+handlePaste @ PettyCash.tsx:1262
+callCallback2 @ chunk-NFC5BX5N.js?v=ea51a1a4:3674
+invokeGuardedCallbackDev @ chunk-NFC5BX5N.js?v=ea51a1a4:3699
+invokeGuardedCallback @ chunk-NFC5BX5N.js?v=ea51a1a4:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-NFC5BX5N.js?v=ea51a1a4:3736
+executeDispatch @ chunk-NFC5BX5N.js?v=ea51a1a4:7014
+processDispatchQueueItemsInOrder @ chunk-NFC5BX5N.js?v=ea51a1a4:7034
+processDispatchQueue @ chunk-NFC5BX5N.js?v=ea51a1a4:7043
+dispatchEventsForPlugins @ chunk-NFC5BX5N.js?v=ea51a1a4:7051
+(anonymous) @ chunk-NFC5BX5N.js?v=ea51a1a4:7174
+batchedUpdates$1 @ chunk-NFC5BX5N.js?v=ea51a1a4:18913
+batchedUpdates @ chunk-NFC5BX5N.js?v=ea51a1a4:3579
+dispatchEventForPluginEventSystem @ chunk-NFC5BX5N.js?v=ea51a1a4:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-NFC5BX5N.js?v=ea51a1a4:5478
+dispatchEvent @ chunk-NFC5BX5N.js?v=ea51a1a4:5472
+dispatchDiscreteEvent @ chunk-NFC5BX5N.js?v=ea51a1a4:5449
+PettyCash.tsx:985 ❌ OCR.space API failed: OCR.space API error: 500
+PettyCash.tsx:1003 === FALLING BACK TO ENHANCED TESSERACT OCR ===
+PettyCash.tsx:865 === PREPROCESSING IMAGE FOR BETTER OCR ===
+PettyCash.tsx:891 Preprocessing image: grayscale conversion, contrast enhancement, and binarization
+PettyCash.tsx:923 Image preprocessed successfully: processed_pasted-receipt-1755625772338.jpg Size: 37716
+PettyCash.tsx:1005 Using preprocessed image for Enhanced Tesseract OCR: processed_pasted-receipt-1755625772338.jpg
+PettyCash.tsx:1013 OCR Pass 1: Default optimized settings
+PettyCash.tsx:1015 Pass 1: 0%
+PettyCash.tsx:1015 Pass 1: 4%
+PettyCash.tsx:1015 Pass 1: 9%
+PettyCash.tsx:1015 Pass 1: 13%
+PettyCash.tsx:1015 Pass 1: 17%
+PettyCash.tsx:1015 Pass 1: 21%
+PettyCash.tsx:1015 Pass 1: 26%
+PettyCash.tsx:1015 Pass 1: 30%
+PettyCash.tsx:1015 Pass 1: 36%
+PettyCash.tsx:1015 Pass 1: 40%
+PettyCash.tsx:1015 Pass 1: 44%
+PettyCash.tsx:1015 Pass 1: 49%
+PettyCash.tsx:1015 Pass 1: 53%
+PettyCash.tsx:1015 Pass 1: 57%
+PettyCash.tsx:1015 Pass 1: 61%
+PettyCash.tsx:1015 Pass 1: 66%
+PettyCash.tsx:1015 Pass 1: 100%
+PettyCash.tsx:1022 Pass 1 confidence: 74%
+PettyCash.tsx:1029 OCR Pass 2: Enhanced quality settings
+PettyCash.tsx:1031 Pass 2: 0%
+PettyCash.tsx:1031 Pass 2: 4%
+PettyCash.tsx:1031 Pass 2: 9%
+PettyCash.tsx:1031 Pass 2: 13%
+PettyCash.tsx:1031 Pass 2: 17%
+PettyCash.tsx:1031 Pass 2: 21%
+PettyCash.tsx:1031 Pass 2: 26%
+PettyCash.tsx:1031 Pass 2: 30%
+PettyCash.tsx:1031 Pass 2: 36%
+PettyCash.tsx:1031 Pass 2: 40%
+PettyCash.tsx:1031 Pass 2: 44%
+PettyCash.tsx:1031 Pass 2: 49%
+PettyCash.tsx:1031 Pass 2: 53%
+PettyCash.tsx:1031 Pass 2: 57%
+PettyCash.tsx:1031 Pass 2: 61%
+PettyCash.tsx:1031 Pass 2: 66%
+PettyCash.tsx:1031 Pass 2: 100%
+PettyCash.tsx:1038 Pass 2 confidence: 74%
+PettyCash.tsx:1045 OCR Pass 3: Alternative approach
+PettyCash.tsx:1047 Pass 3: 0%
+PettyCash.tsx:1047 Pass 3: 4%
+PettyCash.tsx:1047 Pass 3: 9%
+PettyCash.tsx:1047 Pass 3: 13%
+PettyCash.tsx:1047 Pass 3: 17%
+PettyCash.tsx:1047 Pass 3: 21%
+PettyCash.tsx:1047 Pass 3: 26%
+PettyCash.tsx:1047 Pass 3: 30%
+PettyCash.tsx:1047 Pass 3: 36%
+PettyCash.tsx:1047 Pass 3: 40%
+PettyCash.tsx:1047 Pass 3: 44%
+PettyCash.tsx:1047 Pass 3: 49%
+PettyCash.tsx:1047 Pass 3: 53%
+PettyCash.tsx:1047 Pass 3: 57%
+PettyCash.tsx:1047 Pass 3: 61%
+PettyCash.tsx:1047 Pass 3: 66%
+PettyCash.tsx:1047 Pass 3: 100%
+PettyCash.tsx:1054 Pass 3 confidence: 81%
+PettyCash.tsx:1060 ✅ Using best result with 81% confidence
+PettyCash.tsx:1062 === FULL OCR TEXT START ===
+PettyCash.tsx:1063 To SUNRISE HARDWARE
+furnili tapping bit
+© Completed
+5 Aug 2025, 9:40 am
+
+f£H +orc sank 0720 v
+UPI transaction ID
+109266995483
+To: SUNRISE HARDWARE
+gpay-11244548261@okbizaxis
+From: SUNRISE MEDIA (HDFC Bank)
+Google Pay + kunallunkad-3@okhdfcbank
+Google transaction ID
+CICAgKitlskzeQ
+
+Li
+
+G Pay
+
+PettyCash.tsx:1064 === FULL OCR TEXT END ===
+PettyCash.tsx:1070 === DEBUG: ALL EXTRACTED LINES ===
+PettyCash.tsx:1072 Line 0: "To SUNRISE HARDWARE"
+PettyCash.tsx:1072 Line 1: "furnili tapping bit"
+PettyCash.tsx:1072 Line 2: "© Completed"
+PettyCash.tsx:1072 Line 3: "5 Aug 2025, 9:40 am"
+PettyCash.tsx:1072 Line 4: "f£H +orc sank 0720 v"
+PettyCash.tsx:1072 Line 5: "UPI transaction ID"
+PettyCash.tsx:1072 Line 6: "109266995483"
+PettyCash.tsx:1072 Line 7: "To: SUNRISE HARDWARE"
+PettyCash.tsx:1072 Line 8: "gpay-11244548261@okbizaxis"
+PettyCash.tsx:1072 Line 9: "From: SUNRISE MEDIA (HDFC Bank)"
+PettyCash.tsx:1072 Line 10: "Google Pay + kunallunkad-3@okhdfcbank"
+PettyCash.tsx:1072 Line 11: "Google transaction ID"
+PettyCash.tsx:1072 Line 12: "CICAgKitlskzeQ"
+PettyCash.tsx:1072 Line 13: "Li"
+PettyCash.tsx:1072 Line 14: "G Pay"
+PettyCash.tsx:1074 === END DEBUG LINES ===
+PettyCash.tsx:1078 === PLATFORM DETECTION ===
+PettyCash.tsx:1079 Detected Platform: googlepay
+PettyCash.tsx:1080 === ALL LINES ===
+PettyCash.tsx:1082 Line 0: "To SUNRISE HARDWARE"
+PettyCash.tsx:1082 Line 1: "furnili tapping bit"
+PettyCash.tsx:1082 Line 2: "© Completed"
+PettyCash.tsx:1082 Line 3: "5 Aug 2025, 9:40 am"
+PettyCash.tsx:1082 Line 4: "f£H +orc sank 0720 v"
+PettyCash.tsx:1082 Line 5: "UPI transaction ID"
+PettyCash.tsx:1082 Line 6: "109266995483"
+PettyCash.tsx:1082 Line 7: "To: SUNRISE HARDWARE"
+PettyCash.tsx:1082 Line 8: "gpay-11244548261@okbizaxis"
+PettyCash.tsx:1082 Line 9: "From: SUNRISE MEDIA (HDFC Bank)"
+PettyCash.tsx:1082 Line 10: "Google Pay + kunallunkad-3@okhdfcbank"
+PettyCash.tsx:1082 Line 11: "Google transaction ID"
+PettyCash.tsx:1082 Line 12: "CICAgKitlskzeQ"
+PettyCash.tsx:1082 Line 13: "Li"
+PettyCash.tsx:1082 Line 14: "G Pay"
+PettyCash.tsx:667 === GOOGLE PAY SPECIFIC EXTRACTION ===
+PettyCash.tsx:677 GooglePay: Found recipient: SUNRISE HARDWARE
+PettyCash.tsx:358 Checking line for amount: "To SUNRISE HARDWARE"
+PettyCash.tsx:358 Checking line for amount: "furnili tapping bit"
+PettyCash.tsx:705 GooglePay: Found description (service term): furnili tapping bit
+PettyCash.tsx:358 Checking line for amount: "© Completed"
+PettyCash.tsx:358 Checking line for amount: "5 Aug 2025, 9:40 am"
+PettyCash.tsx:358 Checking line for amount: "f£H +orc sank 0720 v"
+PettyCash.tsx:429 ⚠️ Found corrupted currency amount: "f£H +orc sank 0720 v" → 720 (confidence: 0.3)
+PettyCash.tsx:454 === EVALUATING 1 AMOUNT CANDIDATES ===
+PettyCash.tsx:455 Candidate: ₹720 (confidence: 0.3, source: corrupted_sank)
+PettyCash.tsx:477 ✅ Selected: ₹720 (confidence: 0.3, source: corrupted_sank)
+PettyCash.tsx:686 GooglePay: Found amount: 720
+PettyCash.tsx:1117 === PLATFORM-SPECIFIC EXTRACTION RESULTS ===
+PettyCash.tsx:1118 Amount: 720
+PettyCash.tsx:1119 Recipient: SUNRISE HARDWARE
+PettyCash.tsx:1120 Description: furnili tapping bit
+PettyCash.tsx:1145 === DATE EXTRACTION ===
+PettyCash.tsx:1146 Extracted Date: 2025-08-05
+PettyCash.tsx:1173 Auto-categorized as: Material
+PettyCash.tsx:1176 === FINAL EXTRACTED DATA ===
+PettyCash.tsx:1177 Platform: googlepay
+PettyCash.tsx:1178 Amount: 720
+PettyCash.tsx:1179 Recipient: SUNRISE HARDWARE
+PettyCash.tsx:1180 Description: furnili tapping bit
+PettyCash.tsx:1181 Category: Material
+PettyCash.tsx:1182 Date: 2025-08-05

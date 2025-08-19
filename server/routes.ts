@@ -4499,8 +4499,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         base64Image: `data:${filetype};base64,${base64Image}`
       };
 
-      // Process with OCR.space API - use default export
-      const result = await ocrSpaceApi.default.ocrSpace(options);
+      // Process with OCR.space API - handle different module exports
+      const ocrFunction = ocrSpaceApi.default?.ocrSpace || ocrSpaceApi.ocrSpace || ocrSpaceApi.default;
+      const result = await ocrFunction(options);
       
       if (result && result.ParsedResults && result.ParsedResults.length > 0) {
         const extractedText = result.ParsedResults[0].ParsedText;
