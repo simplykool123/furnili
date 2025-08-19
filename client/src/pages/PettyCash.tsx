@@ -408,6 +408,75 @@ export default function PettyCash() {
     return null;
   };
 
+  // Smart fallback for missing amounts - look around "paid" lines
+  const fallbackAmountExtraction = (lines: string[]): string | null => {
+    console.log('=== FALLBACK AMOUNT EXTRACTION ===');
+    
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      if (line.toLowerCase().includes("paid")) {
+        console.log(`Found "paid" at line ${i}: "${line}"`);
+        
+        // Check current line first
+        const currentAmount = extractAmount(line);
+        if (currentAmount) {
+          console.log('Found amount in same line as "paid":', currentAmount);
+          return currentAmount;
+        }
+        
+        // Check next 2 lines after "paid"
+        for (let j = 1; j <= 2; j++) {
+          if (i + j < lines.length) {
+            const nextLine = lines[i + j];
+            const nextAmount = extractAmount(nextLine);
+            if (nextAmount) {
+              console.log(`Found amount ${j} line(s) after "paid": "${nextLine}" → ${nextAmount}`);
+              return nextAmount;
+            }
+          }
+        }
+        
+        // Check 1 line before "paid" as well
+        if (i > 0) {
+          const prevLine = lines[i - 1];
+          const prevAmount = extractAmount(prevLine);
+          if (prevAmount) {
+            console.log(`Found amount 1 line before "paid": "${prevLine}" → ${prevAmount}`);
+            return prevAmount;
+          }
+        }
+      }
+    }
+    
+    console.log('❌ Fallback amount extraction failed - no amounts found near "paid"');
+    
+    // Final fallback - look for standalone numbers that could be amounts
+    console.log('=== FINAL AMOUNT FALLBACK ===');
+    for (const line of lines) {
+      // Look for clean number patterns (not dates, times, or IDs)
+      const cleanNumber = line.match(/^\s*(\d{2,5})\s*$/);
+      if (cleanNumber) {
+        const amount = parseInt(cleanNumber[1]);
+        if (amount >= 50 && amount <= 50000) {
+          console.log(`Found standalone amount: "${line}" → ${amount}`);
+          return cleanNumber[1];
+        }
+      }
+      
+      // Look for "amount" or "total" keywords
+      const amountKeyword = line.match(/(?:amount|total|sum)[\s:]*(\d{2,5})/i);
+      if (amountKeyword) {
+        const amount = parseInt(amountKeyword[1]);
+        if (amount >= 50 && amount <= 50000) {
+          console.log(`Found amount with keyword: "${line}" → ${amount}`);
+          return amountKeyword[1];
+        }
+      }
+    }
+    
+    return null;
+  };
+
   // Platform-specific data extractors
   const extractCredData = (lines: string[]) => {
     let recipient = "";
@@ -462,6 +531,12 @@ export default function PettyCash() {
       }
     }
 
+    // Apply smart fallback if amount is missing
+    if (!amount) {
+      console.log('CRED: No amount found, trying fallback extraction...');
+      amount = fallbackAmountExtraction(lines) || "";
+    }
+
     return { recipient, amount, description };
   };
 
@@ -499,6 +574,12 @@ export default function PettyCash() {
       }
     }
 
+    // Apply smart fallback if amount is missing
+    if (!amount) {
+      console.log('GooglePay: No amount found, trying fallback extraction...');
+      amount = fallbackAmountExtraction(lines) || "";
+    }
+
     return { recipient, amount, description };
   };
 
@@ -533,6 +614,12 @@ export default function PettyCash() {
         description = line.replace(/.*message:\s*/i, '').trim();
         console.log('PhonePe: Found description:', description);
       }
+    }
+
+    // Apply smart fallback if amount is missing
+    if (!amount) {
+      console.log('PhonePe: No amount found, trying fallback extraction...');
+      amount = fallbackAmountExtraction(lines) || "";
     }
 
     return { recipient, amount, description };
@@ -769,8 +856,16 @@ export default function PettyCash() {
           // Fallback to old platform-specific extraction for other platforms
           const extractedAmount = extractAmountByPlatform(lines, platformType);
           const extractedRecipient = extractRecipientByPlatform(lines, platformType);
+          let fallbackAmount = extractedAmount;
+          
+          // If still no amount found, try smart fallback
+          if (!fallbackAmount) {
+            console.log('Generic platform: No amount found, trying smart fallback...');
+            fallbackAmount = fallbackAmountExtraction(lines) || "";
+          }
+          
           extractedData = { 
-            amount: extractedAmount, 
+            amount: fallbackAmount, 
             recipient: extractedRecipient, 
             description: "" 
           };
