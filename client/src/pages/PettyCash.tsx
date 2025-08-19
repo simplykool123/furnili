@@ -996,17 +996,71 @@ export default function PettyCash() {
         text = visionText;
         console.log('Using Google Vision API results');
       } else {
-        // Fallback to Tesseract OCR with preprocessing
-        console.log('=== FALLING BACK TO TESSERACT OCR ===');
+        // Fallback to Enhanced Tesseract OCR with currency-optimized settings
+        console.log('=== USING ENHANCED TESSERACT OCR FOR CURRENCY DETECTION ===');
         const processedFile = await preprocessImageForOCR(file);
-        console.log('Using preprocessed image for Tesseract OCR:', processedFile.name);
+        console.log('Using preprocessed image for Enhanced Tesseract OCR:', processedFile.name);
         
-        // Enhanced OCR settings with preprocessed image
-        const result = await Tesseract.recognize(processedFile, 'eng', {
-          logger: m => console.log(m)
-        });
+        // Try multiple OCR passes with different optimizations for currency detection
+        let bestResult = '';
+        let bestConfidence = 0;
         
-        text = result.data.text;
+        // Pass 1: Currency-optimized settings
+        try {
+          console.log('OCR Pass 1: Currency symbols and numbers focused');
+          const result1 = await Tesseract.recognize(processedFile, 'eng', {
+            tessedit_char_whitelist: '0123456789.,₹$£€¥RsINRToPaidAmountCompleted:-@abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ ',
+            tessedit_pageseg_mode: Tesseract.PSM.AUTO,
+            tessedit_ocr_engine_mode: Tesseract.OEM.TESSERACT_LSTM_COMBINED,
+            logger: m => m.status === 'recognizing text' && console.log(`Pass 1: ${Math.round(m.progress * 100)}%`)
+          });
+          
+          if (result1.data.confidence > bestConfidence) {
+            bestResult = result1.data.text;
+            bestConfidence = result1.data.confidence;
+          }
+          console.log(`Pass 1 confidence: ${result1.data.confidence}%`);
+        } catch (e) {
+          console.log('Pass 1 failed:', e.message);
+        }
+        
+        // Pass 2: Single block mode for receipt layouts
+        try {
+          console.log('OCR Pass 2: Single block receipt layout');
+          const result2 = await Tesseract.recognize(processedFile, 'eng', {
+            tessedit_pageseg_mode: Tesseract.PSM.SINGLE_BLOCK,
+            tessedit_ocr_engine_mode: Tesseract.OEM.TESSERACT_LSTM_COMBINED,
+            logger: m => m.status === 'recognizing text' && console.log(`Pass 2: ${Math.round(m.progress * 100)}%`)
+          });
+          
+          if (result2.data.confidence > bestConfidence) {
+            bestResult = result2.data.text;
+            bestConfidence = result2.data.confidence;
+          }
+          console.log(`Pass 2 confidence: ${result2.data.confidence}%`);
+        } catch (e) {
+          console.log('Pass 2 failed:', e.message);
+        }
+        
+        // Pass 3: Treat as single uniform text block
+        try {
+          console.log('OCR Pass 3: Uniform text block');
+          const result3 = await Tesseract.recognize(processedFile, 'eng', {
+            tessedit_pageseg_mode: Tesseract.PSM.SINGLE_UNIFORM_BLOCK,
+            logger: m => m.status === 'recognizing text' && console.log(`Pass 3: ${Math.round(m.progress * 100)}%`)
+          });
+          
+          if (result3.data.confidence > bestConfidence) {
+            bestResult = result3.data.text;
+            bestConfidence = result3.data.confidence;
+          }
+          console.log(`Pass 3 confidence: ${result3.data.confidence}%`);
+        } catch (e) {
+          console.log('Pass 3 failed:', e.message);
+        }
+        
+        text = bestResult;
+        console.log(`✅ Using best result with ${bestConfidence}% confidence`);
       }
       console.log('=== FULL OCR TEXT START ===');
       console.log(text);
