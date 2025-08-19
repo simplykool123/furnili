@@ -703,6 +703,23 @@ export default function PettyCash() {
     addExpenseMutation.mutate(formDataToSend);
   };
 
+  const handleFundsSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    const formDataToSend = new FormData();
+    formDataToSend.append('date', fundsFormData.date);
+    formDataToSend.append('amount', fundsFormData.amount);
+    formDataToSend.append('source', fundsFormData.source);
+    formDataToSend.append('receivedBy', fundsFormData.receivedBy);
+    formDataToSend.append('purpose', fundsFormData.purpose);
+    
+    if (fundsFormData.receiptImage) {
+      formDataToSend.append('receipt', fundsFormData.receiptImage);
+    }
+    
+    addFundsMutation.mutate(formDataToSend);
+  };
+
   // Filtering logic
   const filteredExpenses = expenses?.filter((expense) => {
     const matchesSearch = expense.vendor.toLowerCase().includes(searchTerm.toLowerCase()) ||
