@@ -503,6 +503,16 @@ export default function PettyCash() {
           return refAmount[1];
         }
       }
+      
+      // Google Pay specific - look for amounts in UPI ID patterns or bank account refs
+      const gpayAmount = line.match(/(?:XXXXXXXX|652926|bank).*?(\d{2,5})/i);
+      if (gpayAmount) {
+        const amount = parseInt(gpayAmount[1]);
+        if (amount >= 50 && amount <= 50000) {
+          console.log(`Found Google Pay amount pattern: "${line}" → ${amount}`);
+          return gpayAmount[1];
+        }
+      }
     }
     
     return null;
@@ -580,67 +590,33 @@ export default function PettyCash() {
     
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
-      console.log(`GooglePay Line ${i}: "${line}"`);
 
-      // Google Pay recipient detection - multiple patterns
-      if (!recipient) {
-        // Pattern 1: "to [name]" or "To [name]"
-        if (line.toLowerCase().includes('to ') && !line.toLowerCase().includes('powered') && !line.toLowerCase().includes('google')) {
-          const toMatch = line.match(/to\s+(.+)/i);
-          if (toMatch) {
-            recipient = cleanRecipient(toMatch[1].trim());
-            console.log('GooglePay: Found recipient (to pattern):', recipient);
-          }
-        }
-        // Pattern 2: Business names that are standalone and capitalized
-        else if (line.length > 5 && line.length < 40 && /^[A-Z]/.test(line) && 
-                 !line.includes('@') && !line.toLowerCase().includes('google') &&
-                 !line.toLowerCase().includes('pay') && !line.includes('₹') &&
-                 !line.toLowerCase().includes('sent') && !line.toLowerCase().includes('received')) {
-          recipient = cleanRecipient(line);
-          console.log('GooglePay: Found recipient (business name):', recipient);
+      // Google Pay recipient - "to " pattern or business names
+      if (!recipient && (line.toLowerCase().includes('to ') || line.toLowerCase().includes('to:'))) {
+        const cleanedRecipient = line.replace(/.*to:?\s+/i, '').trim();
+        if (cleanedRecipient.length > 3) {
+          recipient = cleanRecipient(cleanedRecipient);
+          console.log('GooglePay: Found recipient:', recipient);
         }
       }
 
-      // Google Pay amount detection - enhanced patterns
+      // Google Pay amount - look for any currency or number patterns  
       if (!amount) {
-        // Pattern 1: Lines with currency symbols
-        if (/₹|Rs\.?|INR/i.test(line)) {
-          const extractedAmount = extractAmount(line);
-          if (extractedAmount) {
-            amount = extractedAmount;
-            console.log('GooglePay: Found amount (currency symbol):', amount);
-          }
-        }
-        // Pattern 2: Amount in context of "sent" or "paid"
-        else if (/sent|paid|transferred/i.test(line)) {
-          const extractedAmount = extractAmount(line);
-          if (extractedAmount) {
-            amount = extractedAmount;
-            console.log('GooglePay: Found amount (payment context):', amount);
-          }
+        const extractedAmount = extractAmount(line);
+        if (extractedAmount) {
+          amount = extractedAmount;
+          console.log('GooglePay: Found amount:', amount);
         }
       }
 
-      // Google Pay description detection - enhanced patterns
-      if (!description) {
-        // Pattern 1: "for [description]"
-        if (line.toLowerCase().includes('for ') && line.length < 60) {
-          const forMatch = line.match(/for\s+(.+)/i);
-          if (forMatch) {
-            description = forMatch[1].trim();
-            console.log('GooglePay: Found description (for pattern):', description);
-          }
-        }
-        // Pattern 2: Note or message fields
-        else if (line.toLowerCase().includes('note:') || line.toLowerCase().includes('message:')) {
-          description = line.replace(/.*(?:note|message):\s*/i, '').trim();
-          console.log('GooglePay: Found description (note pattern):', description);
-        }
-        // Pattern 3: Business/service related terms
-        else if (/repair|service|transport|material|hardware|payment|bill|fuel|food/i.test(line) && line.length < 50) {
-          description = line.trim();
-          console.log('GooglePay: Found description (service pattern):', description);
+      // Google Pay description - business terms or "for" patterns
+      if (!description && (
+        line.toLowerCase().includes('for ') || 
+        /repair|service|hardware|transport|material|fuel|food|bill/i.test(line)
+      )) {
+        description = line.replace(/.*for\s+/i, '').trim() || line.trim();
+        if (description.length < 50) {
+          console.log('GooglePay: Found description:', description);
         }
       }
     }
