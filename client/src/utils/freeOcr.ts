@@ -4,6 +4,7 @@
 import { EnhancedFigureOCR } from './enhancedFigureOcr';
 import { TesseractConfig } from './tesseractConfig';
 import { PaymentAmountDetector } from './paymentAmountDetector';
+import { PaymentDescriptionDetector } from './paymentDescriptionDetector';
 
 export interface OCRResult {
   text: string;
@@ -73,11 +74,11 @@ export class ClientFreeOCR {
       
       // Enhanced preprocessing for better figure recognition
       const canvas = await this.fileToCanvas(file);
-      const optimizedCanvas = await this.preprocessImageForFigureRecognition(canvas);
+      const optimizedCanvas = await this.preprocessImageForRupeeRecognition(canvas);
       
       // Convert to high-quality blob
       const optimizedBlob = await new Promise<Blob>((resolve) => {
-        optimizedCanvas.toBlob((blob) => resolve(blob!), 'image/png', 0.95);
+        optimizedCanvas.toBlob((blob: Blob | null) => resolve(blob!), 'image/png', 0.95);
       });
       
       // Create enhanced worker with optimized configuration
@@ -243,28 +244,7 @@ export class ClientFreeOCR {
     return finalCorrected;
   }
 
-  // Standard Tesseract fallback
-  static async tryStandardTesseract(file: File): Promise<string> {
-    try {
-      console.log('OCR Debug - Using standard Tesseract fallback');
-      
-      if (!(window as any).Tesseract) {
-        throw new Error('Tesseract.js not available');
-      }
 
-      const worker = await (window as any).Tesseract.createWorker();
-      await worker.loadLanguage('eng');
-      await worker.initialize('eng');
-      
-      const { data: { text } } = await worker.recognize(file);
-      await worker.terminate();
-      
-      return text;
-      
-    } catch (error) {
-      throw new Error(`Standard Tesseract failed: ${error}`);
-    }
-  }
 
   // Standard Tesseract with proper Tesseract.js integration
   static async tryStandardTesseract(file: File): Promise<string> {
@@ -376,12 +356,25 @@ export class ClientFreeOCR {
         }
       }
       
+      // Enhanced description detection
+      let finalDescription = enhancedResults.description;
+      if (!finalDescription || finalDescription.toLowerCase().includes('from:') || finalDescription.toLowerCase().includes('to:')) {
+        console.log('OCR Debug - Enhanced OCR missed description or got sender/receiver info, trying description detector');
+        const descriptionDetection = PaymentDescriptionDetector.detectPaymentDescription(lines, enhancedResults.platform);
+        if (descriptionDetection.confidence > 0.3) {
+          finalDescription = descriptionDetection.description;
+          console.log(`OCR Debug - Description detector found: ${finalDescription} (confidence: ${descriptionDetection.confidence}, source: ${descriptionDetection.source})`);
+        }
+      }
+      
       // Fallback to legacy extraction if all enhanced methods fail
       const fallbackPlatform = this.detectPlatform(lines);
       if (!finalAmount) {
         finalAmount = this.extractAmount(lines, fallbackPlatform);
       }
-      const fallbackDescription = enhancedResults.description || this.extractDescription(lines, fallbackPlatform);
+      if (!finalDescription) {
+        finalDescription = this.extractDescription(lines, fallbackPlatform);
+      }
       const fallbackRecipient = enhancedResults.recipient || this.extractRecipient(lines, fallbackPlatform);
 
       return {
@@ -389,7 +382,7 @@ export class ClientFreeOCR {
         platform: enhancedResults.platform || fallbackPlatform,
         amount: finalAmount,
         recipient: fallbackRecipient,
-        description: fallbackDescription,
+        description: finalDescription,
         transactionId: this.extractTransactionId(lines),
         date: this.extractDate(lines),
         confidence: enhancedResults.confidence
