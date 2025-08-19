@@ -1,7 +1,7 @@
 import { Link, useLocation } from "wouter";
 import { cn } from "@/lib/utils";
 import { authService } from "@/lib/auth";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import ChangePassword from "@/components/ChangePassword";
 import ProjectManagementIcon from "@/components/icons/ProjectManagementIcon";
 import { 
@@ -100,6 +100,8 @@ export default function Sidebar({ onItemClick, collapsed = false, onToggleCollap
   const [location] = useLocation();
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [floatingMenu, setFloatingMenu] = useState<{name: string, subItems: any[], position: {x: number, y: number}} | null>(null);
+  const floatingMenuRef = useRef<HTMLDivElement>(null);
   const user = authService.getUser();
 
   // Wait for auth initialization
@@ -134,6 +136,32 @@ export default function Sidebar({ onItemClick, collapsed = false, onToggleCollap
     authService.logout();
     window.location.href = '/login';
   };
+
+  // Handle floating menu for collapsed sidebar
+  const handleCollapsedMenuClick = (event: React.MouseEvent, item: any) => {
+    if (collapsed && item.isCollapsible && item.subItems) {
+      const rect = event.currentTarget.getBoundingClientRect();
+      setFloatingMenu({
+        name: item.name,
+        subItems: item.subItems,
+        position: { x: rect.right + 8, y: rect.top }
+      });
+    }
+  };
+
+  // Close floating menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (floatingMenuRef.current && !floatingMenuRef.current.contains(event.target as Node)) {
+        setFloatingMenu(null);
+      }
+    };
+
+    if (floatingMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [floatingMenu]);
 
   const toggleExpanded = (itemName: string) => {
     setExpandedItems(prev => 
@@ -231,7 +259,7 @@ export default function Sidebar({ onItemClick, collapsed = false, onToggleCollap
                 <div key={item.name} className="space-y-1">
                   {/* Parent Menu Item */}
                   <button
-                    onClick={() => collapsed ? null : toggleExpanded(item.name)}
+                    onClick={(e) => collapsed ? handleCollapsedMenuClick(e, item) : toggleExpanded(item.name)}
                     className={cn(
                       "flex items-center w-full rounded-lg font-medium text-xs group",
                       collapsed ? "justify-center p-2" : "justify-between px-2 py-1.5",
@@ -305,6 +333,41 @@ export default function Sidebar({ onItemClick, collapsed = false, onToggleCollap
           })}
         </div>
       </nav>
+
+      {/* Floating Menu for Collapsed Sidebar */}
+      {floatingMenu && (
+        <div 
+          ref={floatingMenuRef}
+          className="fixed z-50 bg-white shadow-xl rounded-lg border border-gray-200 py-2 min-w-48"
+          style={{ 
+            left: floatingMenu.position.x, 
+            top: floatingMenu.position.y 
+          }}
+        >
+          <div className="px-3 py-2 border-b border-gray-100">
+            <h3 className="font-semibold text-sm text-gray-900">{floatingMenu.name}</h3>
+          </div>
+          <div className="py-1">
+            {floatingMenu.subItems.map((subItem) => (
+              subItem.href ? (
+                <Link
+                  key={subItem.name}
+                  href={subItem.href}
+                  className="flex items-center space-x-3 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                  onClick={() => {
+                    setFloatingMenu(null);
+                    onItemClick?.();
+                  }}
+                >
+                  <subItem.icon className="w-4 h-4 text-gray-500" />
+                  <span>{subItem.name}</span>
+                </Link>
+              ) : null
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* User Actions */}
       <div className="p-2 border-t border-primary-foreground/20 space-y-1">
         {/* Change Password */}
