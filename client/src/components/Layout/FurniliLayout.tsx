@@ -28,35 +28,54 @@ export default function FurniliLayout({
   const [isHovering, setIsHovering] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
   
-  // Simple mobile detection with safe initialization
-  const [isMobile, setIsMobile] = useState(() => {
-    // Safe initial check
-    if (typeof window === 'undefined') return false;
-    return window.innerWidth < 1024;
-  });
+  // Simple mobile detection without hooks to avoid conflicts
+  const [isMobile, setIsMobile] = useState(false);
   
   useEffect(() => {
     const checkMobile = () => {
-      if (typeof window !== 'undefined') {
-        setIsMobile(window.innerWidth < 1024);
-      }
+      setIsMobile(window.innerWidth < 1024);
     };
     
-    // Initial check
     checkMobile();
-    
     const handleResize = () => checkMobile();
     window.addEventListener('resize', handleResize);
     
-    // Quick initialization
-    setIsInitialized(true);
+    const timer = setTimeout(() => {
+      setIsInitialized(true);
+    }, 100);
     
     return () => {
       window.removeEventListener('resize', handleResize);
+      clearTimeout(timer);
     };
   }, []);
 
-  // Remove loading state that might block rendering
+  // Show minimal loading state during initialization
+  if (!isInitialized) {
+    return (
+      <div className="flex min-h-screen bg-gray-50">
+        <div className="w-16 bg-white border-r border-gray-200 flex flex-col">
+          <div className="p-4">
+            <div className="h-8 w-8 bg-gray-200 rounded animate-pulse"></div>
+          </div>
+          <div className="flex-1 p-2 space-y-2">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="h-8 bg-gray-100 rounded animate-pulse"></div>
+            ))}
+          </div>
+        </div>
+        <div className="flex-1 p-6">
+          <div className="h-6 w-48 bg-gray-200 rounded animate-pulse mb-2"></div>
+          <div className="h-4 w-32 bg-gray-100 rounded animate-pulse mb-6"></div>
+          <div className="space-y-4">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="h-32 bg-gray-100 rounded animate-pulse"></div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // For mobile devices, we still use the same layout but with responsive design
 
