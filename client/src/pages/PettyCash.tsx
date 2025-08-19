@@ -307,15 +307,26 @@ export default function PettyCash() {
 
   // Platform detection for specialized OCR parsing
   const detectPlatformType = (text: string): string => {
+    const lowerText = text.toLowerCase();
+    
     // CRED detection should come first and be more specific
-    if (text.includes('cred') || text.includes('paid securely by') || text.includes('powered by lif')) return 'cred';
-    if (text.includes('google pay') || text.includes('gpay')) return 'googlepay';
-    if (text.includes('phonepe') || text.includes('phone pe')) return 'phonepe';
-    if (text.includes('paytm')) return 'paytm';
-    if (text.includes('amazon pay') || text.includes('amazonpay')) return 'amazonpay';
-    if (text.includes('bhim upi') || text.includes('bhim')) return 'bhimupi';
-    if (text.includes('bank') || text.includes('neft') || text.includes('rtgs')) return 'bank';
-    if (text.includes('cash') || text.includes('receipt')) return 'cash';
+    if (lowerText.includes('cred') || lowerText.includes('paid securely by') || lowerText.includes('powered by lif')) return 'cred';
+    
+    // Google Pay detection - enhanced patterns
+    if (lowerText.includes('google pay') || lowerText.includes('gpay') || 
+        lowerText.includes('g pay') || lowerText.includes('googleplay') ||
+        (lowerText.includes('google') && (lowerText.includes('paid') || lowerText.includes('sent')))) return 'googlepay';
+    
+    // PhonePe detection
+    if (lowerText.includes('phonepe') || lowerText.includes('phone pe') || lowerText.includes('phonpe')) return 'phonepe';
+    
+    // Other platforms
+    if (lowerText.includes('paytm')) return 'paytm';
+    if (lowerText.includes('amazon pay') || lowerText.includes('amazonpay')) return 'amazonpay';
+    if (lowerText.includes('bhim upi') || lowerText.includes('bhim')) return 'bhimupi';
+    if (lowerText.includes('bank') || lowerText.includes('neft') || lowerText.includes('rtgs')) return 'bank';
+    if (lowerText.includes('cash') || lowerText.includes('receipt')) return 'cash';
+    
     return 'generic';
   };
 
@@ -569,28 +580,68 @@ export default function PettyCash() {
     
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
+      console.log(`GooglePay Line ${i}: "${line}"`);
 
-      // Google Pay recipient - usually after "to " 
-      if (!recipient && line.toLowerCase().includes('to ') && !line.toLowerCase().includes('powered')) {
-        recipient = cleanRecipient(line.replace(/.*to\s+/i, '').trim());
-        console.log('GooglePay: Found recipient:', recipient);
-      }
-
-      // Google Pay amount - big, prominent with ₹
-      if (!amount && (/₹/.test(line) || /Rs/.test(line))) {
-        const extractedAmount = extractAmount(line);
-        if (extractedAmount) {
-          amount = extractedAmount;
-          console.log('GooglePay: Found amount:', amount);
+      // Google Pay recipient detection - multiple patterns
+      if (!recipient) {
+        // Pattern 1: "to [name]" or "To [name]"
+        if (line.toLowerCase().includes('to ') && !line.toLowerCase().includes('powered') && !line.toLowerCase().includes('google')) {
+          const toMatch = line.match(/to\s+(.+)/i);
+          if (toMatch) {
+            recipient = cleanRecipient(toMatch[1].trim());
+            console.log('GooglePay: Found recipient (to pattern):', recipient);
+          }
+        }
+        // Pattern 2: Business names that are standalone and capitalized
+        else if (line.length > 5 && line.length < 40 && /^[A-Z]/.test(line) && 
+                 !line.includes('@') && !line.toLowerCase().includes('google') &&
+                 !line.toLowerCase().includes('pay') && !line.includes('₹') &&
+                 !line.toLowerCase().includes('sent') && !line.toLowerCase().includes('received')) {
+          recipient = cleanRecipient(line);
+          console.log('GooglePay: Found recipient (business name):', recipient);
         }
       }
 
-      // Google Pay description - often in "for" or note sections
-      if (!description && (line.toLowerCase().includes('for ') || 
-          line.toLowerCase().includes('note:') ||
-          /repair|service|payment|bill/i.test(line))) {
-        description = line.replace(/.*(?:for|note:)\s*/i, '').trim();
-        console.log('GooglePay: Found description:', description);
+      // Google Pay amount detection - enhanced patterns
+      if (!amount) {
+        // Pattern 1: Lines with currency symbols
+        if (/₹|Rs\.?|INR/i.test(line)) {
+          const extractedAmount = extractAmount(line);
+          if (extractedAmount) {
+            amount = extractedAmount;
+            console.log('GooglePay: Found amount (currency symbol):', amount);
+          }
+        }
+        // Pattern 2: Amount in context of "sent" or "paid"
+        else if (/sent|paid|transferred/i.test(line)) {
+          const extractedAmount = extractAmount(line);
+          if (extractedAmount) {
+            amount = extractedAmount;
+            console.log('GooglePay: Found amount (payment context):', amount);
+          }
+        }
+      }
+
+      // Google Pay description detection - enhanced patterns
+      if (!description) {
+        // Pattern 1: "for [description]"
+        if (line.toLowerCase().includes('for ') && line.length < 60) {
+          const forMatch = line.match(/for\s+(.+)/i);
+          if (forMatch) {
+            description = forMatch[1].trim();
+            console.log('GooglePay: Found description (for pattern):', description);
+          }
+        }
+        // Pattern 2: Note or message fields
+        else if (line.toLowerCase().includes('note:') || line.toLowerCase().includes('message:')) {
+          description = line.replace(/.*(?:note|message):\s*/i, '').trim();
+          console.log('GooglePay: Found description (note pattern):', description);
+        }
+        // Pattern 3: Business/service related terms
+        else if (/repair|service|transport|material|hardware|payment|bill|fuel|food/i.test(line) && line.length < 50) {
+          description = line.trim();
+          console.log('GooglePay: Found description (service pattern):', description);
+        }
       }
     }
 

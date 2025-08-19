@@ -1,0 +1,58 @@
+=== FULL OCR TEXT START ===
+PettyCash.tsx:847 To HARIOM HARDWARE AND ELECTRICALS
+furrili thirst
+Completed
+10 Aug 2025, 7:43 pm
+(TaT] HDFC Bank
+~
+652926 XXXXXXXX80
+UPI transaction ID
+109595532100
+To: HARIOM HARDWARE AND ELECTRICALS
+PhonePe - q755064728:8vbl
+From: KUNAL LUNKAD (HDFC Bank)
+Google Pay + kunallurikad-4 Gokhdfcbank
+Google transaction ID
+CICAGKIDNGTTIw
++ Pay
+
+PettyCash.tsx:848 === FULL OCR TEXT END ===
+PettyCash.tsx:855 === PLATFORM DETECTION ===
+PettyCash.tsx:856 Detected Platform: googlepay
+PettyCash.tsx:857 === ALL LINES ===
+PettyCash.tsx:859 Line 0: "To HARIOM HARDWARE AND ELECTRICALS"
+PettyCash.tsx:859 Line 1: "furrili thirst"
+PettyCash.tsx:859 Line 2: "Completed"
+PettyCash.tsx:859 Line 3: "10 Aug 2025, 7:43 pm"
+PettyCash.tsx:859 Line 4: "(TaT] HDFC Bank"
+PettyCash.tsx:859 Line 5: "~"
+PettyCash.tsx:859 Line 6: "652926 XXXXXXXX80"
+PettyCash.tsx:859 Line 7: "UPI transaction ID"
+PettyCash.tsx:859 Line 8: "109595532100"
+PettyCash.tsx:859 Line 9: "To: HARIOM HARDWARE AND ELECTRICALS"
+PettyCash.tsx:859 Line 10: "PhonePe - q755064728:8vbl"
+PettyCash.tsx:859 Line 11: "From: KUNAL LUNKAD (HDFC Bank)"
+PettyCash.tsx:859 Line 12: "Google Pay + kunallurikad-4 Gokhdfcbank"
+PettyCash.tsx:859 Line 13: "Google transaction ID"
+PettyCash.tsx:859 Line 14: "CICAGKIDNGTTIw"
+PettyCash.tsx:859 Line 15: "+ Pay"
+PettyCash.tsx:568 === GOOGLE PAY SPECIFIC EXTRACTION ===
+PettyCash.tsx:576 GooglePay: Found recipient: HARIOM HARDWARE AND ELECTRICALS
+PettyCash.tsx:599 GooglePay: No amount found, trying fallback extraction...
+PettyCash.tsx:413 === FALLBACK AMOUNT EXTRACTION ===
+PettyCash.tsx:451 ❌ Fallback amount extraction failed - no amounts found near "paid"
+PettyCash.tsx:454 === FINAL AMOUNT FALLBACK ===
+PettyCash.tsx:894 === PLATFORM-SPECIFIC EXTRACTION RESULTS ===
+PettyCash.tsx:895 Amount: 
+PettyCash.tsx:896 Recipient: HARIOM HARDWARE AND ELECTRICALS
+PettyCash.tsx:897 Description: 
+PettyCash.tsx:914 === DATE EXTRACTION ===
+PettyCash.tsx:915 Extracted Date: 2025-08-10
+PettyCash.tsx:942 Auto-categorized as: Repair
+PettyCash.tsx:945 === FINAL EXTRACTED DATA ===
+PettyCash.tsx:946 Platform: googlepay
+PettyCash.tsx:947 Amount: 
+PettyCash.tsx:948 Recipient: HARIOM HARDWARE AND ELECTRICALS
+PettyCash.tsx:949 Description: 
+PettyCash.tsx:950 Category: Repair
+PettyCash.tsx:951 Date: 2025-08-10
