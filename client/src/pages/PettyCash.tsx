@@ -427,14 +427,35 @@ export default function PettyCash() {
         // More flexible amount range for GPay - sometimes smaller amounts are valid
         const minAmount = platform === 'googlepay' ? 1 : 10;
         
-        // Validate reasonable amount range and exclude common date fragments
-        if (amount >= minAmount && amount <= 100000 && // Flexible minimum based on platform
-            amount !== 2025 && amount !== 2024 && amount !== 2023) { // Exclude common years
+        // Validate reasonable amount range and exclude transaction IDs/years
+        if (amount >= minAmount && amount <= 100000 && // Reasonable transaction amount range
+            amount !== 2025 && amount !== 2024 && amount !== 2023 && // Exclude common years
+            String(amount).length <= 6) { // Exclude long transaction IDs like 109214778705
           console.log('OCR Debug - Valid amount found:', amountMatch[1]);
           return amountMatch[1].replace(/,/g, '');
+        } else {
+          console.log('OCR Debug - Amount rejected (out of range or transaction ID):', amount);
         }
       }
     }
+
+    console.log('OCR Debug - No valid amount found in any line');
+    
+    // Last resort: look for any reasonable numbers that might be amounts
+    for (const line of lines) {
+      const numbers = line.match(/\b\d{2,5}\b/g); // Look for 2-5 digit numbers
+      if (numbers) {
+        for (const numStr of numbers) {
+          const num = parseInt(numStr);
+          if (num >= 10 && num <= 50000 && // Reasonable expense range
+              numStr !== '2025' && numStr !== '2024' && numStr !== '2023') {
+            console.log('OCR Debug - Found fallback amount:', numStr);
+            return numStr;
+          }
+        }
+      }
+    }
+
     return '';
   };
 
@@ -695,6 +716,17 @@ export default function PettyCash() {
           } else if (meaningfulLines.length > 1) {
             // Combine related descriptions, avoiding redundancy
             extractedPurpose = meaningfulLines.join(' ');
+          } else {
+            // If no meaningful lines found, fallback to any business-related content
+            const fallbackLine = descriptionLines.find(line => 
+              ['furnili', 'table', 'courier', 'steel', 'wood', 'material', 'hardware'].some(term => 
+                line.toLowerCase().includes(term)
+              )
+            );
+            if (fallbackLine) {
+              extractedPurpose = fallbackLine;
+              console.log('OCR Debug - Using fallback description:', fallbackLine);
+            }
           }
         }
         
