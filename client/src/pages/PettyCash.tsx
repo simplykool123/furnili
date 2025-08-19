@@ -414,7 +414,8 @@ export default function PettyCash() {
               !line.includes('|') && // Skip transaction info
               line.length > 10 && 
               /^[A-Z]/.test(line) && // Starts with capital letter
-              !/^\d/.test(line)) { // Not starting with number
+              !/^\d/.test(line) && // Not starting with number
+              !/vishal|sonigra/i.test(line)) { // Skip payer name
             recipient = line.trim();
           }
           break;
@@ -502,9 +503,30 @@ export default function PettyCash() {
       });
       
       // Platform-specific amount extraction
-      const extractedAmount = extractAmountByPlatform(lines, platformType);
+      let extractedAmount = extractAmountByPlatform(lines, platformType);
       console.log('=== AMOUNT EXTRACTION ===');
-      console.log('Extracted Amount:', extractedAmount);
+      console.log('Extracted Amount from patterns:', extractedAmount);
+      
+      // For CRED, if no amount found, try OCR preprocessing to find ₹600 pattern
+      if (!extractedAmount && platformType === 'cred') {
+        console.log('CRED: Trying to find ₹ amount in full text...');
+        const fullTextAmountMatch = text.match(/₹\s*([0-9,]+\.?[0-9]*)/);
+        if (fullTextAmountMatch) {
+          extractedAmount = fullTextAmountMatch[1].replace(/,/g, '');
+          console.log('CRED: Found amount in full text:', extractedAmount);
+        } else {
+          // Sometimes OCR misses ₹ symbol, try looking for standalone amounts in context
+          const contextAmountMatch = text.match(/(\d{2,6})\s*(?:paid|transport|furnili|logistics)/i);
+          if (contextAmountMatch) {
+            const amount = parseFloat(contextAmountMatch[1]);
+            if (amount >= 10 && amount <= 50000) { // Reasonable range
+              extractedAmount = contextAmountMatch[1];
+              console.log('CRED: Found contextual amount:', extractedAmount);
+            }
+          }
+        }
+      }
+      
       if (extractedAmount) {
         updatedData.amount = extractedAmount;
       }
