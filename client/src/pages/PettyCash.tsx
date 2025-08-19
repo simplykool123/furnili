@@ -504,13 +504,17 @@ export default function PettyCash() {
         }
       }
       
-      // Google Pay specific - look for amounts in UPI ID patterns or bank account refs
-      const gpayAmount = line.match(/(?:XXXXXXXX|652926|bank).*?(\d{2,5})/i);
-      if (gpayAmount) {
-        const amount = parseInt(gpayAmount[1]);
-        if (amount >= 50 && amount <= 50000) {
-          console.log(`Found Google Pay amount pattern: "${line}" → ${amount}`);
-          return gpayAmount[1];
+      // Google Pay specific - be more careful about account number patterns
+      // Only extract from UPI patterns if it looks like a transaction amount, not account digits
+      if (line.includes('XXXXXXXX') && !line.includes('652926')) {
+        const gpayAmount = line.match(/(\d{2,5})/);
+        if (gpayAmount) {
+          const amount = parseInt(gpayAmount[1]);
+          // Be more conservative - avoid common account number endings
+          if (amount >= 100 && amount <= 10000 && !['80', '26', '92'].includes(gpayAmount[1])) {
+            console.log(`Found potential Google Pay amount: "${line}" → ${amount}`);
+            return gpayAmount[1];
+          }
         }
       }
     }
@@ -609,14 +613,23 @@ export default function PettyCash() {
         }
       }
 
-      // Google Pay description - business terms or "for" patterns
-      if (!description && (
-        line.toLowerCase().includes('for ') || 
-        /repair|service|hardware|transport|material|fuel|food|bill/i.test(line)
-      )) {
-        description = line.replace(/.*for\s+/i, '').trim() || line.trim();
-        if (description.length < 50) {
-          console.log('GooglePay: Found description:', description);
+      // Google Pay description - prioritize actual service descriptions over recipient names
+      if (!description) {
+        // Skip lines that are just recipient names or dates or transaction info
+        const skipPatterns = /^(to:|from:|completed|transaction|google|pay|upi|bank|hdfc)/i;
+        const isRecipient = line.toLowerCase().includes('hardware') || 
+                           line.toLowerCase().includes('electricals') ||
+                           line.toLowerCase().includes('enterprise');
+        
+        if (!skipPatterns.test(line) && !isRecipient && line.length > 5 && line.length < 50) {
+          // Look for actual service/item descriptions
+          if (line.toLowerCase().includes('for ')) {
+            description = line.replace(/.*for\s+/i, '').trim();
+            console.log('GooglePay: Found description (for pattern):', description);
+          } else if (/furnili|thirst|repair|service|transport|material|fuel|food|bill/i.test(line)) {
+            description = line.trim();
+            console.log('GooglePay: Found description (service term):', description);
+          }
         }
       }
     }
