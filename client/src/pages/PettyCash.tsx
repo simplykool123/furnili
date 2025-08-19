@@ -405,17 +405,42 @@ export default function PettyCash() {
       .trim();
   };
 
-  // Extract amount using robust regex pattern
+  // Extract amount using robust regex pattern with priority for rupee symbols
   const extractAmount = (text: string): string | null => {
-    const regex = /(?:₹|Rs\.?|INR|¥)?\s?(\d{2,6})(?:\/-)?/i;
-    const match = text.match(regex);
-    if (match && match[1]) {
-      const amount = parseInt(match[1]);
-      // Validate reasonable expense range
-      if (amount >= 50 && amount <= 50000) {
-        return match[1];
+    console.log(`Checking line for amount: "${text}"`);
+    
+    // High priority: explicit rupee symbol patterns (₹ is big and bold in screenshots)
+    const rupeePatterns = [
+      /₹\s*([0-9,]+\.?\d*)/,           // ₹2025 or ₹ 2025
+      /\u20B9\s*([0-9,]+\.?\d*)/,     // Unicode rupee symbol
+      /Rs\.?\s+([0-9,]+\.?\d*)/i,     // Rs. 2025 or Rs 2025
+      /INR\s*([0-9,]+\.?\d*)/i,       // INR 2025
+      /amount\s*:?\s*₹?\s*([0-9,]+\.?\d*)/i, // Amount: ₹2025
+      /paid\s*₹?\s*([0-9,]+\.?\d*)/i,        // Paid ₹2025
+    ];
+    
+    for (const pattern of rupeePatterns) {
+      const match = text.match(pattern);
+      if (match && match[1]) {
+        const amount = parseInt(match[1].replace(/,/g, ''));
+        if (amount >= 10 && amount <= 100000) {
+          console.log(`✅ Found amount with rupee pattern: "${text}" → ${amount}`);
+          return match[1].replace(/,/g, '');
+        }
       }
     }
+    
+    // Lower priority: standalone numbers (only if no rupee symbol found)
+    const standaloneMatch = text.match(/^([0-9,]+\.?\d*)$/);
+    if (standaloneMatch && standaloneMatch[1]) {
+      const amount = parseInt(standaloneMatch[1].replace(/,/g, ''));
+      // Be very selective for standalone numbers - avoid dates like "2025"
+      if (amount >= 50 && amount <= 10000 && amount !== 2025) {
+        console.log(`⚠️  Found standalone amount: "${text}" → ${amount}`);
+        return standaloneMatch[1].replace(/,/g, '');
+      }
+    }
+    
     return null;
   };
 

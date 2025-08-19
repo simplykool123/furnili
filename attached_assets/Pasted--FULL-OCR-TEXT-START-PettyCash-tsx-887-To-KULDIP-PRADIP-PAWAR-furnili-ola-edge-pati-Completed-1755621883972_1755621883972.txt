@@ -1,0 +1,53 @@
+=== FULL OCR TEXT START ===
+PettyCash.tsx:887 To KULDIP PRADIP PAWAR
+furnili ola edge pati
+Completed
+6 Aug 2025, 3:25 pm
+ey) Hore Bank 0720 v
+UPI transaction ID
+109344009725
+To: KULDIP PRADIP PAWAR
+PhonePe - 955205247 1dyhl
+From: SUNRISE MEDIA (HDFC Bank)
+Google Pay + kunallurkad-3@ckhdfclank
+Google transaction ID
+CICAGHKjtarkiTg
+Lim
++ Pay
+
+PettyCash.tsx:888 === FULL OCR TEXT END ===
+PettyCash.tsx:895 === PLATFORM DETECTION ===
+PettyCash.tsx:896 Detected Platform: googlepay
+PettyCash.tsx:897 === ALL LINES ===
+PettyCash.tsx:899 Line 0: "To KULDIP PRADIP PAWAR"
+PettyCash.tsx:899 Line 1: "furnili ola edge pati"
+PettyCash.tsx:899 Line 2: "Completed"
+PettyCash.tsx:899 Line 3: "6 Aug 2025, 3:25 pm"
+PettyCash.tsx:899 Line 4: "ey) Hore Bank 0720 v"
+PettyCash.tsx:899 Line 5: "UPI transaction ID"
+PettyCash.tsx:899 Line 6: "109344009725"
+PettyCash.tsx:899 Line 7: "To: KULDIP PRADIP PAWAR"
+PettyCash.tsx:899 Line 8: "PhonePe - 955205247 1dyhl"
+PettyCash.tsx:899 Line 9: "From: SUNRISE MEDIA (HDFC Bank)"
+PettyCash.tsx:899 Line 10: "Google Pay + kunallurkad-3@ckhdfclank"
+PettyCash.tsx:899 Line 11: "Google transaction ID"
+PettyCash.tsx:899 Line 12: "CICAGHKjtarkiTg"
+PettyCash.tsx:899 Line 13: "Lim"
+PettyCash.tsx:899 Line 14: "+ Pay"
+PettyCash.tsx:593 === GOOGLE PAY SPECIFIC EXTRACTION ===
+PettyCash.tsx:603 GooglePay: Found recipient: KULDIP PRADIP PAWAR
+PettyCash.tsx:631 GooglePay: Found description (service term): furnili ola edge pati
+PettyCash.tsx:612 GooglePay: Found amount: 2025
+PettyCash.tsx:934 === PLATFORM-SPECIFIC EXTRACTION RESULTS ===
+PettyCash.tsx:935 Amount: 2025
+PettyCash.tsx:936 Recipient: KULDIP PRADIP PAWAR
+PettyCash.tsx:937 Description: furnili ola edge pati
+PettyCash.tsx:954 === DATE EXTRACTION ===
+PettyCash.tsx:955 Extracted Date: 2025-08-06
+PettyCash.tsx:985 === FINAL EXTRACTED DATA ===
+PettyCash.tsx:986 Platform: googlepay
+PettyCash.tsx:987 Amount: 2025
+PettyCash.tsx:988 Recipient: KULDIP PRADIP PAWAR
+PettyCash.tsx:989 Description: furnili ola edge pati
+PettyCash.tsx:990 Category: 
+PettyCash.tsx:991 Date: 2025-08-06
