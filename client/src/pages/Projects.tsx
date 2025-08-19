@@ -47,7 +47,7 @@ export default function Projects() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [location, setLocation] = useLocation();
-  const { isMobile } = useIsMobile();
+  const isMobile = useIsMobile();
 
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isCreateClientDialogOpen, setIsCreateClientDialogOpen] = useState(false);
@@ -220,8 +220,8 @@ export default function Projects() {
     projectForm.reset({
       name: project.name,
       description: project.description || "",
-      clientId: project.clientId?.toString() || "",
-      stage: project.stage,
+      clientId: Number(project.clientId) || 0,
+      stage: project.stage as any,
       budget: project.budget || 0,
       differentSiteLocation: project.differentSiteLocation || false,
       siteAddressLine1: project.siteAddressLine1 || "",
@@ -427,7 +427,7 @@ export default function Projects() {
                     onClick={() => setLocation(`/projects/${project.id}`)}
                   >
                     <TableCell className="text-gray-600">
-                      {project.formatted_created_at || (project.createdAt ? new Date(project.createdAt).toLocaleDateString('en-GB', {
+                      {(project as any).formatted_created_at || (project.createdAt ? new Date(project.createdAt).toLocaleDateString('en-GB', {
                         day: '2-digit',
                         month: '2-digit', 
                         year: 'numeric'
@@ -443,7 +443,7 @@ export default function Projects() {
                       {getClientName(project)}
                     </TableCell>
                     <TableCell className="text-gray-600">
-                      {project.city || project.siteCity || project.client_city || 'N/A'}
+                      {(project as any).city || project.siteCity || (project as any).client_city || 'N/A'}
                     </TableCell>
                     <TableCell>
                       <Badge variant="secondary" className={getStageColor(project.stage)}>

@@ -1280,7 +1280,7 @@ export default function PettyCash() {
               <div>
                 <Label htmlFor="category-filter" className={`${isMobile ? 'text-sm' : ''}`}>Category</Label>
                 <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                  <SelectTrigger className={`w-full ${isMobile ? 'h-9 text-sm' : 'lg:w-[150px]'}`}>
+                  <SelectTrigger id="category-filter" className={`w-full ${isMobile ? 'h-9 text-sm' : 'lg:w-[150px]'}`}>
                     <SelectValue placeholder="All Categories" />
                   </SelectTrigger>
                   <SelectContent>
@@ -1297,7 +1297,7 @@ export default function PettyCash() {
                 <div>
                   <Label htmlFor="paid-by-filter" className={`${isMobile ? 'text-sm' : ''}`}>Paid By</Label>
                   <Select value={selectedPaidBy} onValueChange={setSelectedPaidBy}>
-                    <SelectTrigger className={`w-full ${isMobile ? 'h-9 text-sm' : 'lg:w-[150px]'}`}>
+                    <SelectTrigger id="paid-by-filter" className={`w-full ${isMobile ? 'h-9 text-sm' : 'lg:w-[150px]'}`}>
                       <SelectValue placeholder="All Staff" />
                     </SelectTrigger>
                     <SelectContent>
@@ -1566,7 +1566,7 @@ export default function PettyCash() {
                   value={formData.paidBy} 
                   onValueChange={(value) => setFormData(prev => ({ ...prev, paidBy: value }))}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger id="paidBy">
                     <SelectValue placeholder="Select staff member" />
                   </SelectTrigger>
                   <SelectContent>
@@ -1600,7 +1600,7 @@ export default function PettyCash() {
                   value={formData.projectId} 
                   onValueChange={(value) => setFormData(prev => ({ ...prev, projectId: value }))}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger id="projectId">
                     <SelectValue placeholder="Select project" />
                   </SelectTrigger>
                   <SelectContent>
@@ -1804,7 +1804,7 @@ export default function PettyCash() {
                   value={formData.projectId} 
                   onValueChange={(value) => setFormData(prev => ({ ...prev, projectId: value }))}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger id="edit-projectId">
                     <SelectValue placeholder="Select project" />
                   </SelectTrigger>
                   <SelectContent>
@@ -1822,7 +1822,7 @@ export default function PettyCash() {
                   value={formData.category} 
                   onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger id="edit-category">
                     <SelectValue placeholder="Select category" />
                   </SelectTrigger>
                   <SelectContent>
@@ -1927,7 +1927,7 @@ export default function PettyCash() {
                   onValueChange={(value) => setFundsFormData(prev => ({ ...prev, receivedBy: value }))}
                   required
                 >
-                  <SelectTrigger>
+                  <SelectTrigger id="funds-receivedBy">
                     <SelectValue placeholder="Select staff member" />
                   </SelectTrigger>
                   <SelectContent>
