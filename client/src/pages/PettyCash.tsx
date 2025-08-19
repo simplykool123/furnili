@@ -371,27 +371,55 @@ export default function PettyCash() {
       return candidates;
     }
     
-    // Priority 0: Special comma-formatted amounts (like "74,9500" = ₹749.50)
-    const commaFormattedPattern = /\b(\d{1,3},\d{4})\b/g;
+    // Priority 0: Universal comma-formatted amounts - handles ALL formats intelligently
+    const commaFormattedPattern = /\b(\d{1,4},\d{2,5})\b/g;
     const commaMatches = Array.from(text.matchAll(commaFormattedPattern));
     
     for (const match of commaMatches) {
       const rawAmount = match[1];
-      // Handle Indian comma format: "74,9500" = ₹7,500 (not ₹749.50)
       const parts = rawAmount.split(',');
-      const wholePart = parts[0];
-      const decimalPart = parts[1];
+      const beforeComma = parts[0];
+      const afterComma = parts[1];
       
-      // Indian format: "74,9500" means 7,500 rupees (treat as whole hundreds, remove last two zeros)
-      const convertedAmount = parseFloat(`${wholePart}${decimalPart.substring(0, 1)}00`);
+      // Smart conversion based on common UPI amount patterns:
+      let convertedAmount = 0;
       
-      if (!isNaN(convertedAmount) && convertedAmount >= 10 && convertedAmount <= 100000) {
+      if (afterComma.length === 4) {
+        // Format like "74,9500" or "12,3400" 
+        // Most likely: first 1-2 digits are significant, last 2 are padding zeros
+        if (afterComma.endsWith('00')) {
+          // "74,9500" → 7495 (remove trailing zeros)
+          convertedAmount = parseFloat(`${beforeComma}${afterComma.substring(0, 2)}`);
+        } else {
+          // Try multiple interpretations and pick the most reasonable
+          const option1 = parseFloat(`${beforeComma}${afterComma.substring(0, 2)}`); // 74,95xx → 7495
+          const option2 = parseFloat(`${beforeComma}${afterComma.substring(0, 1)}00`); // 74,9xxx → 7500
+          const option3 = parseFloat(`${beforeComma}${afterComma}`); // 74,9500 → 749500
+          
+          // Pick the most reasonable amount (between ₹10 - ₹50,000)
+          if (option2 >= 10 && option2 <= 50000 && option2 % 100 === 0) {
+            convertedAmount = option2; // Prefer round hundreds
+          } else if (option1 >= 10 && option1 <= 50000) {
+            convertedAmount = option1;
+          } else if (option3 >= 10 && option3 <= 100000) {
+            convertedAmount = option3;
+          }
+        }
+      } else if (afterComma.length === 3) {
+        // Format like "7,500" or "12,350"
+        convertedAmount = parseFloat(`${beforeComma}${afterComma}`);
+      } else if (afterComma.length === 2) {
+        // Format like "75,00" → 7500
+        convertedAmount = parseFloat(`${beforeComma}${afterComma}`);
+      }
+      
+      if (convertedAmount >= 10 && convertedAmount <= 100000) {
         candidates.push({
           amount: convertedAmount.toString(),
-          confidence: 0.95, // Very high confidence for comma-formatted amounts
+          confidence: 0.95,
           source: 'comma_formatted'
         });
-        console.log(`💰 Found comma-formatted amount: "${rawAmount}" → ₹${convertedAmount} (confidence: 0.95)`);
+        console.log(`💰 Smart comma conversion: "${rawAmount}" → ₹${convertedAmount} (confidence: 0.95)`);
       }
     }
 
