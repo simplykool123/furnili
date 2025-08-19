@@ -2,6 +2,7 @@
 // Better accuracy than OCR.space for payment screenshots
 
 import { EnhancedFigureOCR } from './enhancedFigureOcr';
+import { TesseractConfig } from './tesseractConfig';
 
 export interface OCRResult {
   text: string;
@@ -64,84 +65,42 @@ export class ClientFreeOCR {
     }
   }
 
-  // Enhanced Tesseract with advanced rupee sign recognition
+  // Enhanced Tesseract with advanced figure recognition and preprocessing  
   static async tryEnhancedTesseract(file: File): Promise<string> {
     try {
-      console.log('OCR Debug - Using advanced rupee symbol OCR with preprocessing');
+      console.log('OCR Debug - Using enhanced Tesseract.js with advanced figure recognition');
       
-      // Use specialized rupee OCR for better accuracy
-      return await this.tryRupeeSpecializedOCR(file);
+      // Enhanced preprocessing for better figure recognition
+      const canvas = await this.fileToCanvas(file);
+      const optimizedCanvas = await this.preprocessImageForFigureRecognition(canvas);
+      
+      // Convert to high-quality blob
+      const optimizedBlob = await new Promise<Blob>((resolve) => {
+        optimizedCanvas.toBlob((blob) => resolve(blob!), 'image/png', 0.95);
+      });
+      
+      // Create enhanced worker with optimized configuration
+      const worker = await TesseractConfig.createEnhancedWorker();
+      
+      const { data: { text, confidence } } = await worker.recognize(optimizedBlob);
+      await worker.terminate();
+      
+      console.log(`OCR Debug - Enhanced Tesseract confidence: ${confidence}%`);
+      
+      if (confidence > 60) {
+        return this.correctRupeeSymbolErrors(text);
+      } else {
+        console.log('OCR Debug - Low confidence, trying standard fallback');
+        throw new Error('Low confidence result');
+      }
       
     } catch (error) {
-      console.log('OCR Debug - Rupee specialized OCR failed, trying standard enhanced');
-      return await this.tryStandardEnhancedTesseract(file);
+      console.log('OCR Debug - Enhanced Tesseract failed:', error);
+      return await this.tryStandardTesseract(file);
     }
   }
 
-  // Rupee-specialized OCR with image preprocessing
-  private static async tryRupeeSpecializedOCR(file: File): Promise<string> {
-    if (!(window as any).Tesseract) {
-      throw new Error('Tesseract.js not available');
-    }
 
-    // Preprocess image for better rupee symbol recognition
-    const canvas = await this.fileToCanvas(file);
-    const enhancedCanvas = await this.preprocessImageForRupeeRecognition(canvas);
-    
-    // Convert enhanced canvas to blob
-    const enhancedBlob = await new Promise<Blob>((resolve) => {
-      enhancedCanvas.toBlob((blob) => resolve(blob!), 'image/png');
-    });
-
-    const worker = await (window as any).Tesseract.createWorker();
-    await worker.loadLanguage('eng');
-    await worker.initialize('eng');
-    
-    // Apply rupee-optimized configuration
-    await worker.setParameters({
-      tessedit_char_whitelist: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz ₹£$@.-/:(),',
-      tessedit_pageseg_mode: '6',
-      preserve_interword_spaces: '1',
-      user_defined_dpi: '300',
-      tessedit_ocr_engine_mode: '1',
-      tessedit_char_blacklist: '',
-      textord_really_old_xheight: '1',
-      tessedit_write_images: '0',
-      classify_enable_learning: '1',
-      classify_enable_adaptive_matcher: '1'
-    });
-    
-    const { data: { text, confidence } } = await worker.recognize(enhancedBlob);
-    await worker.terminate();
-    
-    console.log(`OCR Debug - Rupee-specialized OCR confidence: ${confidence}%`);
-    return this.correctRupeeSymbolErrors(text);
-  }
-
-  // Standard enhanced Tesseract fallback
-  private static async tryStandardEnhancedTesseract(file: File): Promise<string> {
-    if (!(window as any).Tesseract) {
-      throw new Error('Tesseract.js not available');
-    }
-
-    const worker = await (window as any).Tesseract.createWorker();
-    await worker.loadLanguage('eng');
-    await worker.initialize('eng');
-    
-    await worker.setParameters({
-      tessedit_char_whitelist: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz ₹£$@.-/:(),',
-      tessedit_pageseg_mode: '6',
-      preserve_interword_spaces: '1',
-      user_defined_dpi: '300',
-      tessedit_ocr_engine_mode: '1'
-    });
-    
-    const { data: { text, confidence } } = await worker.recognize(file);
-    await worker.terminate();
-    
-    console.log(`OCR Debug - Standard enhanced confidence: ${confidence}%`);
-    return this.correctRupeeSymbolErrors(text);
-  }
 
   // Convert file to canvas for preprocessing
   private static async fileToCanvas(file: File): Promise<HTMLCanvasElement> {
@@ -306,6 +265,25 @@ export class ClientFreeOCR {
     }
   }
 
+  // Standard Tesseract with proper Tesseract.js integration
+  static async tryStandardTesseract(file: File): Promise<string> {
+    try {
+      console.log('OCR Debug - Using standard Tesseract.js fallback');
+      
+      // Create standard worker with basic configuration
+      const worker = await TesseractConfig.createStandardWorker();
+      
+      const { data: { text, confidence } } = await worker.recognize(file);
+      await worker.terminate();
+      
+      console.log(`OCR Debug - Standard Tesseract confidence: ${confidence}%`);
+      return this.correctRupeeSymbolErrors(text);
+      
+    } catch (error) {
+      throw new Error(`Tesseract.js standard failed: ${error}`);
+    }
+  }
+
   // Multi-engine processing optimized for generic receipt processing
   static async processWithMultipleEngines(file: File, googleApiKey?: string): Promise<string> {
     console.log('OCR Debug - Starting generic multi-engine OCR for all receipt types');
@@ -319,18 +297,18 @@ export class ClientFreeOCR {
         description: 'Best for clean text and symbols'
       },
       {
-        name: 'Rupee-Enhanced Tesseract',
+        name: 'Enhanced Tesseract',
         method: () => this.tryEnhancedTesseract(file),
         available: true,
         priority: 2,
-        description: 'Optimized for Indian payment screenshots'
+        description: 'Advanced figure recognition with optimized preprocessing'
       },
       {
         name: 'Standard Tesseract',
         method: () => this.tryStandardTesseract(file),
         available: true,
         priority: 3,
-        description: 'Reliable fallback for all text'
+        description: 'Standard Tesseract.js with currency symbol support'
       }
     ];
 
