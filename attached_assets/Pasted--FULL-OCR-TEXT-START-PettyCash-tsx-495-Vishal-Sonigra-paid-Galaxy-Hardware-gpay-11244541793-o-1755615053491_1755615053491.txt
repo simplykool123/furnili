@@ -1,0 +1,48 @@
+=== FULL OCR TEXT START ===
+PettyCash.tsx:495 Vishal Sonigra paid
+Galaxy Hardware
+gpay-11244541793@okbizaxis
+
+¥1,300
+manual eb machine glue 1030
+paid securely by
+CRED
+powered by LIF/p
+14 AUG 2025, 12:42PM | TXN ID: 559215797347
+
+PettyCash.tsx:496 === FULL OCR TEXT END ===
+PettyCash.tsx:503 === PLATFORM DETECTION ===
+PettyCash.tsx:504 Detected Platform: cred
+PettyCash.tsx:505 === ALL LINES ===
+PettyCash.tsx:507 Line 0: "Vishal Sonigra paid"
+PettyCash.tsx:507 Line 1: "Galaxy Hardware"
+PettyCash.tsx:507 Line 2: "gpay-11244541793@okbizaxis"
+PettyCash.tsx:507 Line 3: "¥1,300"
+PettyCash.tsx:507 Line 4: "manual eb machine glue 1030"
+PettyCash.tsx:507 Line 5: "paid securely by"
+PettyCash.tsx:507 Line 6: "CRED"
+PettyCash.tsx:507 Line 7: "powered by LIF/p"
+PettyCash.tsx:507 Line 8: "14 AUG 2025, 12:42PM | TXN ID: 559215797347"
+PettyCash.tsx:512 === AMOUNT EXTRACTION ===
+PettyCash.tsx:513 Extracted Amount from patterns: 
+PettyCash.tsx:517 CRED: Trying to find ₹ amount in full text...
+PettyCash.tsx:523 CRED: No ₹ symbol found, trying alternative patterns...
+PettyCash.tsx:538 CRED: Found amount with ¥ symbol: 1300
+PettyCash.tsx:568 === RECIPIENT EXTRACTION ===
+PettyCash.tsx:569 Extracted Recipient: 
+PettyCash.tsx:576 === DATE EXTRACTION ===
+PettyCash.tsx:577 Extracted Date: 2025-08-14
+PettyCash.tsx:586 CRED OCR Debug - All lines: (9) ['Vishal Sonigra paid', 'Galaxy Hardware', 'gpay-11244541793@okbizaxis', '¥1,300', 'manual eb machine glue 1030', 'paid securely by', 'CRED', 'powered by LIF/p', '14 AUG 2025, 12:42PM | TXN ID: 559215797347']
+PettyCash.tsx:592 CRED OCR Debug - Checking line 0 : Vishal Sonigra paid
+PettyCash.tsx:619 CRED OCR Debug - Skipped line: Vishal Sonigra paid
+PettyCash.tsx:592 CRED OCR Debug - Checking line 1 : Galaxy Hardware
+PettyCash.tsx:619 CRED OCR Debug - Skipped line: Galaxy Hardware
+PettyCash.tsx:592 CRED OCR Debug - Checking line 2 : gpay-11244541793@okbizaxis
+PettyCash.tsx:619 CRED OCR Debug - Skipped line: gpay-11244541793@okbizaxis
+PettyCash.tsx:592 CRED OCR Debug - Checking line 3 : ¥1,300
+PettyCash.tsx:619 CRED OCR Debug - Skipped line: ¥1,300
+PettyCash.tsx:592 CRED OCR Debug - Checking line 4 : manual eb machine glue 1030
+PettyCash.tsx:615 CRED OCR Debug - Found potential description: manual eb machine glue 1030
+PettyCash.tsx:623 CRED OCR Debug - Final extracted purpose: manual eb machine glue 1030
+PettyCash.tsx:697 === PURPOSE EXTRACTION ===
+PettyCash.tsx:698 Final extracted purpose: manual eb machine glue 1030
