@@ -1,0 +1,98 @@
+chunk-NFC5BX5N.js?v=0ce8a908:21551 Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+PettyCash.tsx:1056 Pasted image details: {originalName: 'WhatsApp Image 2025-08-19 at 18.51.17.jpeg', newName: 'pasted-receipt-1755638405449.jpg', type: 'image/jpeg', size: 41481}
+PettyCash.tsx:1002 Processing file: {name: 'pasted-receipt-1755638405449.jpg', type: 'image/jpeg', size: 41481, lastModified: 1755638405449}
+PettyCash.tsx:327 OCR Debug - Platform: googlepay
+PettyCash.tsx:328 OCR Debug - All lines: (15) ['To Moiz Husain Kapadia', 'fevixol furnili ashish order', '© Completed', '25 Jul 2025, 10:32 am', '£1 Hore Bank 6970 v', 'UPI transaction ID', '108666466917', 'To: Moiz Husain Kapadia', 'paytmqré8fdav@ptys', 'From: KUNAL LUNKAD (HDFC Bank)', 'Google Pay « kunallunkad-5@okhdfcbank', 'Google transaction ID', 'CICAgK|Zj6mFbw', 'Liz', 'G Pay']
+PettyCash.tsx:345 OCR Debug - Sorted lines: (15) ['108666466917', '25 Jul 2025, 10:32 am', 'paytmqré8fdav@ptys', 'CICAgK|Zj6mFbw', 'Google Pay « kunallunkad-5@okhdfcbank', '£1 Hore Bank 6970 v', 'To Moiz Husain Kapadia', 'fevixol furnili ashish order', '© Completed', 'UPI transaction ID', 'To: Moiz Husain Kapadia', 'From: KUNAL LUNKAD (HDFC Bank)', 'Google transaction ID', 'Liz', 'G Pay']
+PettyCash.tsx:352 OCR Debug - Processing GPay line: 108666466917
+PettyCash.tsx:361 OCR Debug - Priority 1 (₹) match: null
+PettyCash.tsx:366 OCR Debug - Priority 2 (context) match: null
+PettyCash.tsx:372 OCR Debug - Priority 3 (Rs) match: null
+PettyCash.tsx:384 OCR Debug - Priority 4 (standalone) match: (2) ['108666466917', '108666466917', index: 0, input: '108666466917', groups: undefined]
+PettyCash.tsx:423 OCR Debug - Found amount match: (2) ['108666466917', '108666466917', index: 0, input: '108666466917', groups: undefined]
+PettyCash.tsx:425 OCR Debug - Parsed amount: 108666466917
+PettyCash.tsx:437 OCR Debug - Amount rejected (out of range or transaction ID): 108666466917
+PettyCash.tsx:352 OCR Debug - Processing GPay line: 25 Jul 2025, 10:32 am
+PettyCash.tsx:352 OCR Debug - Processing GPay line: paytmqré8fdav@ptys
+PettyCash.tsx:361 OCR Debug - Priority 1 (₹) match: null
+PettyCash.tsx:366 OCR Debug - Priority 2 (context) match: null
+PettyCash.tsx:372 OCR Debug - Priority 3 (Rs) match: null
+PettyCash.tsx:384 OCR Debug - Priority 4 (standalone) match: null
+PettyCash.tsx:390 OCR Debug - Priority 5 (currency indicators) match: null
+PettyCash.tsx:352 OCR Debug - Processing GPay line: CICAgK|Zj6mFbw
+PettyCash.tsx:361 OCR Debug - Priority 1 (₹) match: null
+PettyCash.tsx:366 OCR Debug - Priority 2 (context) match: null
+PettyCash.tsx:372 OCR Debug - Priority 3 (Rs) match: null
+PettyCash.tsx:384 OCR Debug - Priority 4 (standalone) match: null
+PettyCash.tsx:390 OCR Debug - Priority 5 (currency indicators) match: null
+PettyCash.tsx:352 OCR Debug - Processing GPay line: Google Pay « kunallunkad-5@okhdfcbank
+PettyCash.tsx:361 OCR Debug - Priority 1 (₹) match: null
+PettyCash.tsx:366 OCR Debug - Priority 2 (context) match: null
+PettyCash.tsx:372 OCR Debug - Priority 3 (Rs) match: null
+PettyCash.tsx:384 OCR Debug - Priority 4 (standalone) match: null
+PettyCash.tsx:390 OCR Debug - Priority 5 (currency indicators) match: null
+PettyCash.tsx:352 OCR Debug - Processing GPay line: £1 Hore Bank 6970 v
+PettyCash.tsx:361 OCR Debug - Priority 1 (₹) match: null
+PettyCash.tsx:366 OCR Debug - Priority 2 (context) match: null
+PettyCash.tsx:372 OCR Debug - Priority 3 (Rs) match: null
+PettyCash.tsx:384 OCR Debug - Priority 4 (standalone) match: null
+PettyCash.tsx:390 OCR Debug - Priority 5 (currency indicators) match: null
+PettyCash.tsx:352 OCR Debug - Processing GPay line: To Moiz Husain Kapadia
+PettyCash.tsx:361 OCR Debug - Priority 1 (₹) match: null
+PettyCash.tsx:366 OCR Debug - Priority 2 (context) match: null
+PettyCash.tsx:372 OCR Debug - Priority 3 (Rs) match: null
+PettyCash.tsx:384 OCR Debug - Priority 4 (standalone) match: null
+PettyCash.tsx:390 OCR Debug - Priority 5 (currency indicators) match: null
+PettyCash.tsx:352 OCR Debug - Processing GPay line: fevixol furnili ashish order
+PettyCash.tsx:361 OCR Debug - Priority 1 (₹) match: null
+PettyCash.tsx:366 OCR Debug - Priority 2 (context) match: null
+PettyCash.tsx:372 OCR Debug - Priority 3 (Rs) match: null
+PettyCash.tsx:384 OCR Debug - Priority 4 (standalone) match: null
+PettyCash.tsx:390 OCR Debug - Priority 5 (currency indicators) match: null
+PettyCash.tsx:352 OCR Debug - Processing GPay line: © Completed
+PettyCash.tsx:361 OCR Debug - Priority 1 (₹) match: null
+PettyCash.tsx:366 OCR Debug - Priority 2 (context) match: null
+PettyCash.tsx:372 OCR Debug - Priority 3 (Rs) match: null
+PettyCash.tsx:384 OCR Debug - Priority 4 (standalone) match: null
+PettyCash.tsx:390 OCR Debug - Priority 5 (currency indicators) match: null
+PettyCash.tsx:352 OCR Debug - Processing GPay line: UPI transaction ID
+PettyCash.tsx:361 OCR Debug - Priority 1 (₹) match: null
+PettyCash.tsx:366 OCR Debug - Priority 2 (context) match: null
+PettyCash.tsx:372 OCR Debug - Priority 3 (Rs) match: null
+PettyCash.tsx:384 OCR Debug - Priority 4 (standalone) match: null
+PettyCash.tsx:390 OCR Debug - Priority 5 (currency indicators) match: null
+PettyCash.tsx:352 OCR Debug - Processing GPay line: To: Moiz Husain Kapadia
+PettyCash.tsx:361 OCR Debug - Priority 1 (₹) match: null
+PettyCash.tsx:366 OCR Debug - Priority 2 (context) match: null
+PettyCash.tsx:372 OCR Debug - Priority 3 (Rs) match: null
+PettyCash.tsx:384 OCR Debug - Priority 4 (standalone) match: null
+PettyCash.tsx:390 OCR Debug - Priority 5 (currency indicators) match: null
+PettyCash.tsx:352 OCR Debug - Processing GPay line: From: KUNAL LUNKAD (HDFC Bank)
+PettyCash.tsx:361 OCR Debug - Priority 1 (₹) match: null
+PettyCash.tsx:366 OCR Debug - Priority 2 (context) match: null
+PettyCash.tsx:372 OCR Debug - Priority 3 (Rs) match: null
+PettyCash.tsx:384 OCR Debug - Priority 4 (standalone) match: null
+PettyCash.tsx:390 OCR Debug - Priority 5 (currency indicators) match: null
+PettyCash.tsx:352 OCR Debug - Processing GPay line: Google transaction ID
+PettyCash.tsx:361 OCR Debug - Priority 1 (₹) match: null
+PettyCash.tsx:366 OCR Debug - Priority 2 (context) match: null
+PettyCash.tsx:372 OCR Debug - Priority 3 (Rs) match: null
+PettyCash.tsx:384 OCR Debug - Priority 4 (standalone) match: null
+PettyCash.tsx:390 OCR Debug - Priority 5 (currency indicators) match: null
+PettyCash.tsx:352 OCR Debug - Processing GPay line: Liz
+PettyCash.tsx:361 OCR Debug - Priority 1 (₹) match: null
+PettyCash.tsx:366 OCR Debug - Priority 2 (context) match: null
+PettyCash.tsx:372 OCR Debug - Priority 3 (Rs) match: null
+PettyCash.tsx:384 OCR Debug - Priority 4 (standalone) match: null
+PettyCash.tsx:390 OCR Debug - Priority 5 (currency indicators) match: null
+PettyCash.tsx:352 OCR Debug - Processing GPay line: G Pay
+PettyCash.tsx:361 OCR Debug - Priority 1 (₹) match: null
+PettyCash.tsx:366 OCR Debug - Priority 2 (context) match: null
+PettyCash.tsx:372 OCR Debug - Priority 3 (Rs) match: null
+PettyCash.tsx:384 OCR Debug - Priority 4 (standalone) match: null
+PettyCash.tsx:390 OCR Debug - Priority 5 (currency indicators) match: null
+PettyCash.tsx:442 OCR Debug - No valid amount found in any line
+PettyCash.tsx:452 OCR Debug - Found fallback amount: 25
+PettyCash.tsx:684 OCR Debug - GPay description lines: (7) ['fevixol furnili ashish order', '£1 Hore Bank 6970 v', 'To: Moiz Husain Kapadia', 'From: KUNAL LUNKAD (HDFC Bank)', 'CICAgK|Zj6mFbw', 'Liz', 'G Pay']
+PettyCash.tsx:694 OCR Debug - Filtering out corrupted text: £1 Hore Bank 6970 v
+PettyCash.tsx:712 OCR Debug - Meaningful lines after filtering: (4) ['fevixol furnili ashish order', 'To: Moiz Husain Kapadia', 'From: KUNAL LUNKAD (HDFC Bank)', 'G Pay']0: "fevixol furnili ashish order"1: "To: Moiz Husain Kapadia"2: "From: KUNAL LUNKAD (HDFC Bank)"3: "G Pay"length: 4[[Prototype]]: Array(0)
