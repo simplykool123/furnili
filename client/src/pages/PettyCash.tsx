@@ -479,15 +479,30 @@ export default function PettyCash() {
     console.log(`=== EVALUATING ${allCandidates.length} AMOUNT CANDIDATES ===`);
     allCandidates.forEach(c => console.log(`Candidate: ₹${c.amount} (confidence: ${c.confidence}, source: ${c.source})`));
     
-    // Sort by confidence and business logic
+    // Sort by confidence and business logic with special handling for corrupted amounts
     const sorted = allCandidates.sort((a, b) => {
-      // Prefer higher confidence
-      if (b.confidence !== a.confidence) return b.confidence - a.confidence;
-      
-      // Prefer typical transaction ranges (₹50-₹2000 are more common than ₹500+)
       const amountA = parseFloat(a.amount);
       const amountB = parseFloat(b.amount);
       
+      // Special case: Prefer smart transformed amounts over raw corrupted symbols
+      if (a.source === 'corrupted_sank_smart' && b.source === 'corrupted_symbol') {
+        return -1; // ₹150 (smart transform) beats ₹72 (raw corrupted)
+      }
+      if (b.source === 'corrupted_sank_smart' && a.source === 'corrupted_symbol') {
+        return 1;
+      }
+      
+      // Filter out clearly wrong amounts (less than ₹50 for business transactions)
+      const isReasonableA = amountA >= 50 && amountA <= 50000;
+      const isReasonableB = amountB >= 50 && amountB <= 50000;
+      
+      if (isReasonableA && !isReasonableB) return -1;
+      if (!isReasonableA && isReasonableB) return 1;
+      
+      // Prefer higher confidence for reasonable amounts
+      if (b.confidence !== a.confidence) return b.confidence - a.confidence;
+      
+      // Prefer typical transaction ranges (₹50-₹2000)
       const isTypicalRangeA = amountA >= 50 && amountA <= 2000;
       const isTypicalRangeB = amountB >= 50 && amountB <= 2000;
       

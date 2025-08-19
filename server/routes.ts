@@ -4487,9 +4487,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Dynamic import for OCR.space API
       const ocrSpaceApi = await import('ocr-space-api');
       
-      // OCR.space API options
+      // OCR.space API options - use user-provided API key
       const options = {
-        apikey: 'helloworld', // Free tier API key
+        apikey: process.env.OCR_SPACE_API_KEY || 'helloworld', // Use user key or fallback
         language: 'eng',
         isOverlayRequired: false,
         detectOrientation: true,
@@ -4499,9 +4499,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
         base64Image: `data:${filetype};base64,${base64Image}`
       };
 
-      // Process with OCR.space API - handle different module exports
-      const ocrFunction = ocrSpaceApi.default?.ocrSpace || ocrSpaceApi.ocrSpace || ocrSpaceApi.default;
-      const result = await ocrFunction(options);
+      console.log('Using API key:', process.env.OCR_SPACE_API_KEY ? 'User provided' : 'Free tier fallback');
+
+      // Try multiple approaches to call OCR.space API
+      let result;
+      if (ocrSpaceApi.default && typeof ocrSpaceApi.default.ocrSpace === 'function') {
+        result = await ocrSpaceApi.default.ocrSpace(options);
+      } else if (typeof ocrSpaceApi.ocrSpace === 'function') {
+        result = await ocrSpaceApi.ocrSpace(options);
+      } else if (typeof ocrSpaceApi.default === 'function') {
+        result = await ocrSpaceApi.default(options);
+      } else {
+        // Try to access the function via namespace
+        const ocrFunction = ocrSpaceApi.default || ocrSpaceApi;
+        if (ocrFunction && typeof ocrFunction === 'object') {
+          const funcKeys = Object.keys(ocrFunction);
+          console.log('Available OCR function keys:', funcKeys);
+          
+          // Try common function names
+          if (typeof ocrFunction.ocrSpace === 'function') {
+            result = await ocrFunction.ocrSpace(options);
+          } else if (typeof ocrFunction.ocr === 'function') {
+            result = await ocrFunction.ocr(options);
+          } else {
+            throw new Error(`OCR function not found. Available keys: ${funcKeys.join(', ')}`);
+          }
+        } else {
+          throw new Error('OCR.space API module structure not recognized');
+        }
+      }
       
       if (result && result.ParsedResults && result.ParsedResults.length > 0) {
         const extractedText = result.ParsedResults[0].ParsedText;
