@@ -458,6 +458,26 @@ export default function PettyCash() {
       }
     }
     
+    // Priority 2.5: Handle corrupted OCR currency symbols like "f£H +orc sank 0720 v" -> 720
+    const corruptedCurrencyPatterns = [
+      /[^\d]*(\d{2,4})\s*v?\s*$/i,  // Extract 2-4 digit numbers at end, handles "f£H +orc sank 0720 v"
+      /[f£H£₹]\s*[^\d]*(\d{2,4})/i, // Corrupted currency symbol followed by amount
+      /[\w\s]*sank\s*[0]*(\d{2,4})/i, // Specific pattern for "sank 0720"
+    ];
+    
+    for (const pattern of corruptedCurrencyPatterns) {
+      const match = text.match(pattern);
+      if (match) {
+        const cleanAmount = match[1];
+        const amount = parseFloat(cleanAmount);
+        if (amount >= 50 && amount <= 50000 && 
+            !['2025', '2024', '2026'].includes(cleanAmount)) {
+          console.log(`✅ Found corrupted currency amount: "${text}" → ${amount}`);
+          return cleanAmount;
+        }
+      }
+    }
+    
     // Priority 3: Standalone reasonable numbers (last resort)
     const standaloneMatch = text.match(/^(\d{2,5})(?:\.\d{1,2})?$/);
     if (standaloneMatch) {
