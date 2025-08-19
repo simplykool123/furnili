@@ -1,47 +1,44 @@
+// Fixed App.tsx without double layout wrapping
 import { Switch, Route } from "wouter";
-import { queryClient } from "./lib/queryClient";
-import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
-import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { queryClient } from "@/lib/queryClient";
+import { ReactNode } from "react";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { authService } from "@/lib/auth";
 import { useEffect, useState } from "react";
 import LoginSimple from "@/pages/LoginSimple";
-import Layout from "@/components/Layout/Layout";
 import Dashboard from "@/pages/Dashboard";
 import Products from "@/pages/Products";
 import BOQ from "@/pages/BOQ";
 import MaterialRequests from "@/pages/MaterialRequests";
+import InventoryMovement from "@/pages/InventoryMovement";
+import InventoryOptimization from "@/pages/InventoryOptimization";
 import Reports from "@/pages/Reports";
 import Users from "@/pages/Users";
-import Categories from "@/pages/Categories";
 import Attendance from "@/pages/Attendance";
 import PettyCash from "@/pages/PettyCash";
+import Projects from "@/pages/Projects";
+import Categories from "@/pages/Categories";
+import Suppliers from "@/pages/Suppliers";
+import Clients from "@/pages/Clients";
+import SalesProducts from "@/pages/SalesProducts";
 import OCRWizard from "@/pages/OCRWizard";
-import TaskManagement from "@/pages/TaskManagement";
-import TaskDetail from "@/pages/TaskDetail";
 import PriceComparison from "@/pages/PriceComparison";
-import ProductComparison from "@/pages/ProductComparison";
-import WhatsAppExport from "@/pages/WhatsAppExport";
-import InventoryMovement from "@/pages/InventoryMovement";
 import DisplaySettings from "@/pages/DisplaySettings";
 import Backups from "@/pages/Backups";
 import SystemFlowchart from "@/pages/SystemFlowchart";
-
-import Projects from "@/pages/Projects";
-import ProjectDetail from "@/pages/ProjectDetail";
-import CreateQuote from "@/pages/CreateQuote";
-import EditQuote from "@/pages/EditQuote";
-import SalesProducts from "@/pages/SalesProducts";
-import Clients from "@/pages/Clients";
+import WhatsAppExport from "@/pages/WhatsAppExport";
+import ProductComparison from "@/pages/ProductComparison";
 import PurchaseOrders from "@/pages/PurchaseOrders";
-import Suppliers from "@/pages/Suppliers";
-import InventoryOptimization from "@/pages/InventoryOptimization";
-import Activities from "@/pages/Activities";
+import ProjectDetail from "@/pages/ProjectDetail";
+import TaskManagement from "@/pages/TaskManagement";
 
-import NotFound from "@/pages/not-found";
+interface ProtectedRouteProps {
+  children: ReactNode;
+}
 
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
+function ProtectedRoute({ children }: ProtectedRouteProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
@@ -93,67 +90,52 @@ function Router() {
         }}
       </Route>
       
+      {/* All routes without layout wrappers since components handle their own layouts */}
       <Route path="/dashboard">
         <ProtectedRoute>
-          <Layout>
-            <Dashboard />
-          </Layout>
+          <Dashboard />
         </ProtectedRoute>
       </Route>
       
       <Route path="/">
         <ProtectedRoute>
-          <Layout>
-            <Dashboard />
-          </Layout>
+          <Dashboard />
         </ProtectedRoute>
       </Route>
       
       <Route path="/products">
         <ProtectedRoute>
-          <Layout>
-            <Products />
-          </Layout>
+          <Products />
         </ProtectedRoute>
       </Route>
       
       <Route path="/categories">
         <ProtectedRoute>
-          <Layout>
-            <Categories />
-          </Layout>
+          <Categories />
         </ProtectedRoute>
       </Route>
       
       <Route path="/boq">
         <ProtectedRoute>
-          <Layout>
-            <BOQ />
-          </Layout>
+          <BOQ />
         </ProtectedRoute>
       </Route>
       
       <Route path="/requests">
         <ProtectedRoute>
-          <Layout>
-            <MaterialRequests />
-          </Layout>
+          <MaterialRequests />
         </ProtectedRoute>
       </Route>
       
       <Route path="/material-requests">
         <ProtectedRoute>
-          <Layout>
-            <MaterialRequests />
-          </Layout>
+          <MaterialRequests />
         </ProtectedRoute>
       </Route>
       
       <Route path="/inventory-movement">
         <ProtectedRoute>
-          <Layout>
-            <InventoryMovement />
-          </Layout>
+          <InventoryMovement />
         </ProtectedRoute>
       </Route>
       
@@ -165,33 +147,25 @@ function Router() {
       
       <Route path="/reports">
         <ProtectedRoute>
-          <Layout>
-            <Reports />
-          </Layout>
+          <Reports />
         </ProtectedRoute>
       </Route>
       
       <Route path="/users">
         <ProtectedRoute>
-          <Layout>
-            <Users />
-          </Layout>
+          <Users />
         </ProtectedRoute>
       </Route>
       
       <Route path="/attendance">
         <ProtectedRoute>
-          <Layout>
-            <Attendance />
-          </Layout>
+          <Attendance />
         </ProtectedRoute>
       </Route>
       
       <Route path="/petty-cash">
         <ProtectedRoute>
-          <Layout>
-            <PettyCash />
-          </Layout>
+          <PettyCash />
         </ProtectedRoute>
       </Route>
       
@@ -203,37 +177,31 @@ function Router() {
       
       <Route path="/projects">
         <ProtectedRoute>
-          <Layout>
-            <Projects />
-          </Layout>
+          <Projects />
         </ProtectedRoute>
       </Route>
       
       <Route path="/projects/:projectId">
         <ProtectedRoute>
-          <Layout>
-            <ProjectDetail />
-          </Layout>
+          <ProjectDetail />
         </ProtectedRoute>
       </Route>
       
       <Route path="/projects/:projectId/:tab">
         <ProtectedRoute>
-          <Layout>
-            <ProjectDetail />
-          </Layout>
+          <ProjectDetail />
         </ProtectedRoute>
       </Route>
       
       <Route path="/projects/:projectId/quotes/create">
         <ProtectedRoute>
-          <CreateQuote />
+          <ProjectDetail />
         </ProtectedRoute>
       </Route>
       
-      <Route path="/projects/:projectId/quotes/:quoteId/edit">
+      <Route path="/suppliers">
         <ProtectedRoute>
-          <EditQuote />
+          <Suppliers />
         </ProtectedRoute>
       </Route>
       
@@ -243,33 +211,15 @@ function Router() {
         </ProtectedRoute>
       </Route>
       
-      <Route path="/tasks">
+      <Route path="/sales-products">
         <ProtectedRoute>
-          <TaskManagement />
-        </ProtectedRoute>
-      </Route>
-      
-      <Route path="/tasks/:id">
-        <ProtectedRoute>
-          <TaskDetail />
+          <SalesProducts />
         </ProtectedRoute>
       </Route>
       
       <Route path="/price-comparison">
         <ProtectedRoute>
           <PriceComparison />
-        </ProtectedRoute>
-      </Route>
-      
-      <Route path="/product-comparison">
-        <ProtectedRoute>
-          <ProductComparison />
-        </ProtectedRoute>
-      </Route>
-      
-      <Route path="/whatsapp">
-        <ProtectedRoute>
-          <WhatsAppExport />
         </ProtectedRoute>
       </Route>
       
@@ -284,57 +234,47 @@ function Router() {
           <Backups />
         </ProtectedRoute>
       </Route>
-
+      
       <Route path="/system-flowchart">
         <ProtectedRoute>
           <SystemFlowchart />
         </ProtectedRoute>
       </Route>
-
-      <Route path="/sales-products">
+      
+      <Route path="/whatsapp">
         <ProtectedRoute>
-          <SalesProducts />
+          <WhatsAppExport />
         </ProtectedRoute>
       </Route>
-
+      
+      <Route path="/product-comparison">
+        <ProtectedRoute>
+          <ProductComparison />
+        </ProtectedRoute>
+      </Route>
+      
       <Route path="/purchase-orders">
         <ProtectedRoute>
           <PurchaseOrders />
         </ProtectedRoute>
       </Route>
-
-      <Route path="/suppliers">
-        <ProtectedRoute>
-          <Suppliers />
-        </ProtectedRoute>
-      </Route>
-
-
       
-      <Route path="/activities">
+      <Route path="/tasks">
         <ProtectedRoute>
-          <Layout>
-            <Activities />
-          </Layout>
+          <TaskManagement />
         </ProtectedRoute>
       </Route>
-
-      <Route component={NotFound} />
     </Switch>
   );
 }
 
-function App() {
+export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Router />
-        </TooltipProvider>
+        <Router />
+        <Toaster />
       </ThemeProvider>
     </QueryClientProvider>
   );
 }
-
-export default App;
