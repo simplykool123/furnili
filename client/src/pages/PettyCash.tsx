@@ -55,7 +55,7 @@ interface PersonalPettyCashStats {
 }
 
 const paymentModes = ["UPI", "GPay", "PhonePe", "Paytm", "Cash", "Bank Transfer", "Card", "Cheque"];
-const categories = ["Material", "Transport", "Site", "Office", "Food", "Fuel", "Repair", "Other"];
+const categories = ["Material", "Transport", "Site", "Office", "Food", "Fuel", "Repair", "Tools", "Other"];
 
 export default function PettyCash() {
   const [activeTab, setActiveTab] = useState("dashboard");
