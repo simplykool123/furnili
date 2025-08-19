@@ -1973,7 +1973,10 @@ export default function PettyCash() {
         </CardContent>
       </Card>
       {/* Add Expense Dialog */}
-      <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+      <Dialog open={showAddDialog} onOpenChange={(open) => {
+        setShowAddDialog(open);
+        if (!open) resetForm(); // Reset form when dialog closes
+      }}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>Add New Expense</DialogTitle>
@@ -2152,7 +2155,10 @@ export default function PettyCash() {
             </div>
 
             <div className="flex justify-end gap-2 pt-4">
-              <Button type="button" variant="outline" onClick={() => setShowAddDialog(false)}>
+              <Button type="button" variant="outline" onClick={() => {
+                resetForm();
+                setShowAddDialog(false);
+              }}>
                 Cancel
               </Button>
               <Button type="submit" disabled={addExpenseMutation.isPending || isProcessingOCR}>
@@ -2318,7 +2324,10 @@ export default function PettyCash() {
       </Dialog>
 
       {/* Add Funds Dialog */}
-      <Dialog open={showAddFundsDialog} onOpenChange={setShowAddFundsDialog}>
+      <Dialog open={showAddFundsDialog} onOpenChange={(open) => {
+        setShowAddFundsDialog(open);
+        if (!open) resetFundsForm(); // Reset form when dialog closes
+      }}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>Add Funds (Income)</DialogTitle>
@@ -2428,7 +2437,10 @@ export default function PettyCash() {
             </div>
 
             <div className="flex justify-end gap-2 pt-4">
-              <Button type="button" variant="outline" onClick={() => setShowAddFundsDialog(false)}>
+              <Button type="button" variant="outline" onClick={() => {
+                resetFundsForm();
+                setShowAddFundsDialog(false);
+              }}>
                 Cancel
               </Button>
               <Button type="submit" disabled={addFundsMutation.isPending} className="bg-green-600 hover:bg-green-700 text-white">
