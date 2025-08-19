@@ -305,13 +305,144 @@ export default function PettyCash() {
     });
   };
 
-  // Enhanced OCR processing for UPI payment screenshots with improved parsing
+  // Platform detection for specialized OCR parsing
+  const detectPlatformType = (text: string): string => {
+    if (text.includes('google pay') || text.includes('gpay')) return 'googlepay';
+    if (text.includes('phonepe') || text.includes('phone pe')) return 'phonepe';
+    if (text.includes('paytm')) return 'paytm';
+    if (text.includes('amazon pay') || text.includes('amazonpay')) return 'amazonpay';
+    if (text.includes('bhim upi') || text.includes('bhim')) return 'bhimupi';
+    if (text.includes('bank') || text.includes('neft') || text.includes('rtgs')) return 'bank';
+    if (text.includes('cash') || text.includes('receipt')) return 'cash';
+    return 'generic';
+  };
+
+  // Enhanced amount extraction with platform-specific patterns
+  const extractAmountByPlatform = (lines: string[], platform: string): string => {
+    for (const line of lines) {
+      let amountMatch = null;
+      
+      switch (platform) {
+        case 'googlepay':
+          // Google Pay: "₹500", "Amount: ₹500", "Paid ₹500"
+          amountMatch = line.match(/(?:paid|amount)?\s*₹\s?([0-9,]+\.?[0-9]*)/i);
+          break;
+        case 'phonepe':
+          // PhonePe: "₹500 sent", "Amount ₹500"
+          amountMatch = line.match(/(?:amount|sent|paid)?\s*₹\s?([0-9,]+\.?[0-9]*)/i);
+          break;
+        case 'paytm':
+          // Paytm: "₹500.00", "Amount: Rs 500"
+          amountMatch = line.match(/(?:amount|rs|₹)\s?([0-9,]+\.?[0-9]*)/i);
+          break;
+        case 'bank':
+          // Bank: "Debited ₹500", "Amount: INR 500"
+          amountMatch = line.match(/(?:debited|credited|amount|inr)\s*₹?\s?([0-9,]+\.?[0-9]*)/i);
+          break;
+        default:
+          // Generic patterns
+          amountMatch = line.match(/₹\s?([0-9,]+\.?[0-9]*)/);
+      }
+      
+      if (amountMatch) {
+        const amount = parseFloat(amountMatch[1].replace(/,/g, ''));
+        // Validate reasonable amount range
+        if (amount >= 1 && amount <= 100000) {
+          return amountMatch[1].replace(/,/g, '');
+        }
+      }
+    }
+    return '';
+  };
+
+  // Enhanced recipient/vendor name extraction
+  const extractRecipientByPlatform = (lines: string[], platform: string): string => {
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].toLowerCase();
+      let recipient = '';
+      
+      switch (platform) {
+        case 'googlepay':
+          if (line.includes('to ') && !line.includes('powered')) {
+            recipient = lines[i].replace(/.*to\s+/i, '').trim();
+          }
+          break;
+        case 'phonepe':
+          if (line.includes('sent to') || line.includes('paid to')) {
+            recipient = lines[i].replace(/.*(?:sent to|paid to)\s+/i, '').trim();
+          }
+          break;
+        case 'paytm':
+          if (line.includes('paid to') || line.includes('sent to')) {
+            recipient = lines[i].replace(/.*(?:paid to|sent to)\s+/i, '').trim();
+          }
+          break;
+        case 'bank':
+          if (line.includes('beneficiary') || line.includes('payee')) {
+            recipient = lines[i + 1] || '';
+          }
+          break;
+      }
+      
+      if (recipient && recipient.length > 2 && recipient.length < 50) {
+        return recipient.replace(/[^a-zA-Z0-9\s]/g, '').trim();
+      }
+    }
+    return '';
+  };
+
+  // Enhanced date extraction with platform-specific formats
+  const extractDateByPlatform = (text: string, platform: string): string => {
+    let dateMatch = null;
+    
+    switch (platform) {
+      case 'googlepay':
+      case 'phonepe':
+        // Format: "15 Aug 2025, 2:30 PM"
+        dateMatch = text.match(/(\d{1,2})\s+(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\s+(\d{4})/i);
+        break;
+      case 'paytm':
+        // Format: "Aug 15, 2025"
+        dateMatch = text.match(/(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\s+(\d{1,2}),?\s+(\d{4})/i);
+        if (dateMatch) {
+          const [, month, day, year] = dateMatch;
+          dateMatch = [null, day, month, year];
+        }
+        break;
+      case 'bank':
+        // Format: "15/08/2025" or "15-08-2025"
+        dateMatch = text.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+        if (dateMatch) {
+          const [, day, month, year] = dateMatch;
+          const monthNames = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+          const monthName = monthNames[parseInt(month) - 1];
+          dateMatch = [null, day, monthName, year];
+        }
+        break;
+      default:
+        dateMatch = text.match(/(\d{1,2})\s+(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\s+(\d{4})/i);
+    }
+    
+    if (dateMatch) {
+      const [, day, month, year] = dateMatch;
+      const monthNum = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'].indexOf(month.toLowerCase()) + 1;
+      if (monthNum > 0) {
+        return `${year}-${String(monthNum).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      }
+    }
+    
+    return '';
+  };
+
+  // Enhanced OCR processing with multi-platform support
   const processImageWithOCR = async (file: File) => {
     setIsProcessingOCR(true);
     try {
-      // Enhanced OCR settings for better accuracy
+      // Enhanced OCR settings for better accuracy across platforms
       const result = await Tesseract.recognize(file, 'eng', {
-        logger: m => console.log(m)
+        logger: m => console.log(m),
+        tessedit_char_whitelist: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz₹@.-:/, ',
+        tessedit_pageseg_mode: Tesseract.PSM.SPARSE_TEXT
       });
       
       const text = result.data.text;
@@ -320,31 +451,26 @@ export default function PettyCash() {
       const updatedData = { ...formData };
       const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0);
       
-      // Enhanced amount extraction with multiple patterns
-      for (const line of lines) {
-        // Pattern 1: Standalone amount with ₹ symbol
-        let amountMatch = line.match(/₹\s?([0-9,]+\.?[0-9]*)/);
-        if (!amountMatch) {
-          // Pattern 2: Amount after "Paid" or "Amount"
-          amountMatch = line.match(/(?:paid|amount)[:\s]+₹?\s?([0-9,]+\.?[0-9]*)/i);
-        }
-        if (!amountMatch) {
-          // Pattern 3: Standalone number (likely amount)
-          amountMatch = line.match(/^([0-9,]+\.?[0-9]*)$/);
-          // Validate it's a reasonable amount (between 1 and 100000)
-          if (amountMatch) {
-            const amount = parseFloat(amountMatch[1].replace(/,/g, ''));
-            if (amount < 1 || amount > 100000) {
-              amountMatch = null;
-            }
-          }
-        }
-        
-        if (amountMatch) {
-          const amount = amountMatch[1].replace(/,/g, '');
-          updatedData.amount = amount;
-          break;
-        }
+      // Detect platform type for specialized parsing
+      const platformType = detectPlatformType(text.toLowerCase());
+      console.log('Detected Platform:', platformType);
+      
+      // Platform-specific amount extraction
+      const extractedAmount = extractAmountByPlatform(lines, platformType);
+      if (extractedAmount) {
+        updatedData.amount = extractedAmount;
+      }
+      
+      // Platform-specific recipient extraction
+      const extractedRecipient = extractRecipientByPlatform(lines, platformType);
+      if (extractedRecipient) {
+        updatedData.paidTo = extractedRecipient;
+      }
+      
+      // Platform-specific date extraction
+      const extractedDate = extractDateByPlatform(text, platformType);
+      if (extractedDate) {
+        updatedData.date = extractedDate;
       }
       
       // Enhanced Paid By and Paid To extraction
