@@ -519,22 +519,24 @@ export default function PettyCash() {
               const nextLine = lines[j].trim();
               const nextLowerLine = nextLine.toLowerCase();
               
-              // Skip obvious non-description lines
+              // Skip obvious non-description lines (transaction details, dates, etc.)
               if (nextLowerLine.includes('paid securely') ||
                   nextLowerLine.includes('cred') ||
                   nextLowerLine.includes('powered by') ||
                   nextLowerLine.includes('txn id') ||
                   nextLowerLine.includes('transaction') ||
                   nextLowerLine.includes('@') ||
-                  /^\d+\s*\|\s*aug|jan|feb|mar|apr|may|jun|jul|sep|oct|nov|dec/i.test(nextLine) || // Date format with |
-                  /^\d{1,2}\s\w{3}\s\d{4}/.test(nextLine) || // Date format
-                  /\d{1,2}:\d{2}(am|pm)/i.test(nextLine) || // Time format
+                  nextLine.includes('|') || // Skip any line with | (transaction info)
+                  /^\d/.test(nextLine) || // Skip lines starting with numbers (dates, IDs)
+                  /\d{4,}/.test(nextLine) || // Skip lines with long numbers (transaction IDs)
+                  /\d{1,2}:\d{2}/.test(nextLine) || // Skip time formats
+                  /(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)/i.test(nextLine) || // Skip dates
                   nextLine.length < 3) {
                 continue;
               }
               
-              // Look for meaningful business descriptions - simple text without complex formatting
-              if (/^[a-z\s]{3,30}$/i.test(nextLine) && !nextLine.includes('|')) {
+              // Look for business descriptions - simple text without numbers or special chars
+              if (/^[a-z\s]+$/i.test(nextLine) && nextLine.length >= 3 && nextLine.length <= 40) {
                 extractedPurpose = nextLine;
                 break;
               }
