@@ -345,8 +345,8 @@ export default function PettyCash() {
           amountMatch = line.match(/(?:amount|rs|₹)\s?([0-9,]+\.?[0-9]*)/i);
           break;
         case 'cred':
-          // CRED: "₹12,000" format
-          amountMatch = line.match(/^₹\s?([0-9,]+\.?[0-9]*)$/);
+          // CRED: "₹600", "₹12,000" format - more flexible matching
+          amountMatch = line.match(/₹\s?([0-9,]+\.?[0-9]*)/);
           break;
         case 'bank':
           // Bank: "Debited ₹500", "Amount: INR 500"
@@ -510,12 +510,12 @@ export default function PettyCash() {
           const line = lines[i].trim();
           const lowerLine = line.toLowerCase();
           
-          // Check if we found the amount line (₹12,000 format)
-          if (!foundAmount && /^₹[\d,]+/.test(line)) {
+          // Check if we found the amount line (₹600, ₹12,000 format)
+          if (!foundAmount && /₹[\d,]+/.test(line)) {
             foundAmount = true;
             
             // Look at the next few lines for description
-            for (let j = i + 1; j < Math.min(i + 4, lines.length); j++) {
+            for (let j = i + 1; j < Math.min(i + 5, lines.length); j++) {
               const nextLine = lines[j].trim();
               const nextLowerLine = nextLine.toLowerCase();
               
@@ -524,14 +524,17 @@ export default function PettyCash() {
                   nextLowerLine.includes('cred') ||
                   nextLowerLine.includes('powered by') ||
                   nextLowerLine.includes('txn id') ||
+                  nextLowerLine.includes('transaction') ||
                   nextLowerLine.includes('@') ||
-                  /^\d+\s\w{3}/.test(nextLine) || // Date format
+                  /^\d+\s*\|\s*aug|jan|feb|mar|apr|may|jun|jul|sep|oct|nov|dec/i.test(nextLine) || // Date format with |
+                  /^\d{1,2}\s\w{3}\s\d{4}/.test(nextLine) || // Date format
+                  /\d{1,2}:\d{2}(am|pm)/i.test(nextLine) || // Time format
                   nextLine.length < 3) {
                 continue;
               }
               
-              // This should be the description
-              if (nextLine.length > 0 && !extractedPurpose) {
+              // Look for meaningful business descriptions - simple text without complex formatting
+              if (/^[a-z\s]{3,30}$/i.test(nextLine) && !nextLine.includes('|')) {
                 extractedPurpose = nextLine;
                 break;
               }
