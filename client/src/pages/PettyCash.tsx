@@ -324,6 +324,9 @@ export default function PettyCash() {
 
   // Enhanced amount extraction with platform-specific patterns
   const extractAmountByPlatform = (lines: string[], platform: string): string => {
+    console.log('OCR Debug - Platform:', platform);
+    console.log('OCR Debug - All lines:', lines);
+    
     // For GPay, first look for prominent amounts (usually larger and with currency symbols)
     // Sort lines by potential prominence (currency symbols, larger numbers)
     const sortedLines = [...lines].sort((a, b) => {
@@ -339,11 +342,15 @@ export default function PettyCash() {
       return parseInt(bNum) - parseInt(aNum);
     });
     
+    console.log('OCR Debug - Sorted lines:', sortedLines);
+    
     for (const line of sortedLines) {
       let amountMatch = null;
       
       switch (platform) {
         case 'googlepay':
+          console.log('OCR Debug - Processing GPay line:', line);
+          
           // Google Pay: Prioritize rupee symbol amounts first, then contextual amounts
           // Skip amounts that appear to be part of dates (like 25/07/2025)
           if (!/\d{1,2}\/\d{1,2}\/\d{4}/.test(line) && // Skip date formats
@@ -351,20 +358,36 @@ export default function PettyCash() {
             
             // Priority 1: ₹ symbol amounts (most likely transaction amount)
             amountMatch = line.match(/₹\s?([0-9,]+\.?[0-9]*)/);
+            console.log('OCR Debug - Priority 1 (₹) match:', amountMatch);
             
             // Priority 2: Context-based amounts with keywords
             if (!amountMatch) {
-              amountMatch = line.match(/(?:paid|amount|sent)\s*₹?\s?([0-9,]+\.?[0-9]*)/i);
+              amountMatch = line.match(/(?:paid|amount|sent|received)\s*₹?\s?([0-9,]+\.?[0-9]*)/i);
+              console.log('OCR Debug - Priority 2 (context) match:', amountMatch);
             }
             
             // Priority 3: Rs format
             if (!amountMatch) {
               amountMatch = line.match(/rs\.?\s?([0-9,]+\.?[0-9]*)/i);
+              console.log('OCR Debug - Priority 3 (Rs) match:', amountMatch);
             }
             
-            // Priority 4: Standalone numbers (only if they look like amounts, not dates)
-            if (!amountMatch && !/^\d{1,2}$/.test(line.trim())) { // Skip small single/double digit numbers that could be from dates
-              amountMatch = line.match(/^([0-9,]+\.?[0-9]*)$/);
+            // Priority 4: Standalone large numbers (likely transaction amounts)
+            if (!amountMatch && !/^\d{1,2}$/.test(line.trim())) { // Skip small single/double digit numbers
+              const standaloneMatch = line.match(/^([0-9,]+\.?[0-9]*)$/);
+              if (standaloneMatch) {
+                const num = parseFloat(standaloneMatch[1].replace(/,/g, ''));
+                if (num >= 50) { // Only accept larger standalone numbers as likely amounts
+                  amountMatch = standaloneMatch;
+                }
+              }
+              console.log('OCR Debug - Priority 4 (standalone) match:', amountMatch);
+            }
+            
+            // Priority 5: Any number followed by common currency indicators
+            if (!amountMatch) {
+              amountMatch = line.match(/([0-9,]+\.?[0-9]*)\s*(?:rupees?|rs\.?|₹)/i);
+              console.log('OCR Debug - Priority 5 (currency indicators) match:', amountMatch);
             }
           }
           break;
@@ -397,10 +420,17 @@ export default function PettyCash() {
       }
       
       if (amountMatch) {
+        console.log('OCR Debug - Found amount match:', amountMatch);
         const amount = parseFloat(amountMatch[1].replace(/,/g, ''));
+        console.log('OCR Debug - Parsed amount:', amount);
+        
+        // More flexible amount range for GPay - sometimes smaller amounts are valid
+        const minAmount = platform === 'googlepay' ? 1 : 10;
+        
         // Validate reasonable amount range and exclude common date fragments
-        if (amount >= 10 && amount <= 100000 && // Increase minimum to avoid date fragments like "25"
+        if (amount >= minAmount && amount <= 100000 && // Flexible minimum based on platform
             amount !== 2025 && amount !== 2024 && amount !== 2023) { // Exclude common years
+          console.log('OCR Debug - Valid amount found:', amountMatch[1]);
           return amountMatch[1].replace(/,/g, '');
         }
       }
@@ -630,15 +660,35 @@ export default function PettyCash() {
           }
         }
         
+        console.log('OCR Debug - GPay description lines:', descriptionLines);
+        
         // Build the complete description from all relevant lines
         if (descriptionLines.length > 0) {
-          // Filter out duplicate content and combine meaningful descriptions
+          // Filter out corrupted/garbage OCR text and meaningless content
           const meaningfulLines = descriptionLines.filter(line => {
             const lowerLine = line.toLowerCase();
+            
+            // Skip corrupted OCR patterns like "£1 Hore Bank 0720 v"
+            if (/£\d+|hore|bank.*\d{4}|0720\s*v/i.test(line)) {
+              console.log('OCR Debug - Filtering out corrupted text:', line);
+              return false;
+            }
+            
+            // Skip generic/metadata lines
+            if (lowerLine.includes('transaction') || 
+                lowerLine.includes('completed') ||
+                lowerLine.includes('success') ||
+                lowerLine.includes('upi id') ||
+                /^\d+$/.test(line.trim())) {
+              return false;
+            }
+            
             // Keep lines that contain business context or descriptive information
             return line.split(' ').length >= 2 || 
-                   ['furnili', 'steel', 'wood', 'material', 'thiner', 'paint', 'hardware', 'purchase', 'order', 'supply', 'for', 'cleaning', 'tops', 'edge', 'pati'].some(term => lowerLine.includes(term));
+                   ['furnili', 'steel', 'wood', 'material', 'thiner', 'paint', 'hardware', 'purchase', 'order', 'supply', 'for', 'cleaning', 'tops', 'edge', 'pati', 'fevixol', 'ashish'].some(term => lowerLine.includes(term));
           });
+          
+          console.log('OCR Debug - Meaningful lines after filtering:', meaningfulLines);
           
           if (meaningfulLines.length === 1) {
             extractedPurpose = meaningfulLines[0];
