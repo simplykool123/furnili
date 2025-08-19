@@ -385,6 +385,15 @@ export default function PettyCash() {
     return '';
   };
 
+  // Clean recipient name from OCR artifacts
+  const cleanRecipient = (line: string): string => {
+    return line
+      .replace(/\.\.\.$/, "")  // Remove trailing triple dots
+      .replace(/\.+$/, "")     // Remove any trailing dots
+      .replace(/[^a-zA-Z0-9\s&]/g, '') // Remove special chars but keep &
+      .trim();
+  };
+
   // Enhanced recipient/vendor name extraction
   const extractRecipientByPlatform = (lines: string[], platform: string): string => {
     for (let i = 0; i < lines.length; i++) {
@@ -394,17 +403,17 @@ export default function PettyCash() {
       switch (platform) {
         case 'googlepay':
           if (line.includes('to ') && !line.includes('powered')) {
-            recipient = lines[i].replace(/.*to\s+/i, '').trim();
+            recipient = cleanRecipient(lines[i].replace(/.*to\s+/i, '').trim());
           }
           break;
         case 'phonepe':
           if (line.includes('sent to') || line.includes('paid to')) {
-            recipient = lines[i].replace(/.*(?:sent to|paid to)\s+/i, '').trim();
+            recipient = cleanRecipient(lines[i].replace(/.*(?:sent to|paid to)\s+/i, '').trim());
           }
           break;
         case 'paytm':
           if (line.includes('paid to') || line.includes('sent to')) {
-            recipient = lines[i].replace(/.*(?:paid to|sent to)\s+/i, '').trim();
+            recipient = cleanRecipient(lines[i].replace(/.*(?:paid to|sent to)\s+/i, '').trim());
           }
           break;
         case 'cred':
@@ -420,19 +429,19 @@ export default function PettyCash() {
               /^[A-Z]/.test(line) && // Starts with capital letter
               !/^\d/.test(line) && // Not starting with number
               !/vishal|sonigra/i.test(line)) { // Skip payer name
-            // Clean up recipient name (remove trailing dots)
-            recipient = line.replace(/\.+$/, '').trim();
+            // Clean up recipient name using the cleanup function
+            recipient = cleanRecipient(lines[i]);
           }
           break;
         case 'bank':
           if (line.includes('beneficiary') || line.includes('payee')) {
-            recipient = lines[i + 1] || '';
+            recipient = cleanRecipient(lines[i + 1] || '');
           }
           break;
       }
       
       if (recipient && recipient.length > 2 && recipient.length < 50) {
-        return recipient.replace(/[^a-zA-Z0-9\s]/g, '').trim();
+        return recipient;
       }
     }
     return '';
@@ -737,8 +746,19 @@ export default function PettyCash() {
             // Optimal length for descriptions
             if (line.length >= 5 && line.length <= 30) score += 2;
             
-            // Business/service terms
-            const businessTerms = ['repair', 'service', 'compressor', 'machine', 'water', 'tanker', 'transport', 'furnili', 'material', 'hardware', 'steel', 'wood', 'food', 'fuel', 'tools', 'electric', 'plumber', 'carpenter'];
+            // Enhanced business/service terms (including common OCR variations)
+            const businessTerms = [
+              // Common services
+              'repair', 'service', 'compressor', 'machine', 'water', 'tanker', 'transport', 'material', 'hardware', 
+              // Materials
+              'steel', 'wood', 'cement', 'sand', 'brick', 'tile', 'paint', 'wire',
+              // Categories  
+              'food', 'fuel', 'tools', 'electric', 'plumber', 'carpenter', 'mason',
+              // Business names (common in receipts)
+              'furnili', 'fuenlli', 'galaxy', 'hardware', 'enterprise', 'traders', 'suppliers',
+              // OCR variations of common words
+              'compresser', 'compressar', 'repalr', 'servlce', 'materlal'
+            ];
             for (const term of businessTerms) {
               if (line.toLowerCase().includes(term)) {
                 score += 4;
