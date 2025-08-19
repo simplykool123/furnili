@@ -529,7 +529,7 @@ export default function PettyCash() {
           
           for (const pattern of alternativePatterns) {
             const match = text.match(pattern);
-            if (match) {
+            if (match && match[1]) {
               const amount = parseFloat(match[1].replace(/,/g, ''));
               if (amount >= 50 && amount <= 50000) { // Reasonable range for expenses
                 extractedAmount = match[1].replace(/,/g, '');
