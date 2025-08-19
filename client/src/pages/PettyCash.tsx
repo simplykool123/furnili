@@ -453,8 +453,8 @@ export default function PettyCash() {
         }
         break;
       case 'cred':
-        // CRED format: "16 |AUG 2025, 5:00PM | TXN ID: 559419149585"
-        dateMatch = text.match(/(\d{1,2})\s*\|\s*(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\s+(\d{4})/i);
+        // CRED format: "16 |AUG 2025, 5:00PM | TXN ID: 559419149585" or "14 AUG 2025, 12:42PM | TXN ID: ..."
+        dateMatch = text.match(/(\d{1,2})\s*\|?\s*(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\s+(\d{4})/i);
         break;
       case 'bank':
         // Format: "15/08/2025" or "15-08-2025"
@@ -531,14 +531,22 @@ export default function PettyCash() {
             /\b([0-9]{3,5})\b/g
           ];
           
-          for (const pattern of alternativePatterns) {
-            const match = text.match(pattern);
-            if (match && match[1]) {
-              const amount = parseFloat(match[1].replace(/,/g, ''));
-              if (amount >= 50 && amount <= 50000) { // Reasonable range for expenses
-                extractedAmount = match[1].replace(/,/g, '');
-                console.log('CRED: Found amount using alternative pattern:', extractedAmount);
-                break;
+          // First try to find ¥ symbol (OCR sometimes captures this instead of ₹)
+          const yenMatch = text.match(/¥\s*([0-9,]+\.?[0-9]*)/);
+          if (yenMatch) {
+            extractedAmount = yenMatch[1].replace(/,/g, '');
+            console.log('CRED: Found amount with ¥ symbol:', extractedAmount);
+          } else {
+            // Try alternative patterns
+            for (const pattern of alternativePatterns) {
+              const match = text.match(pattern);
+              if (match && match[1]) {
+                const amount = parseFloat(match[1].replace(/,/g, ''));
+                if (amount >= 50 && amount <= 50000) { // Reasonable range for expenses
+                  extractedAmount = match[1].replace(/,/g, '');
+                  console.log('CRED: Found amount using alternative pattern:', extractedAmount);
+                  break;
+                }
               }
             }
           }
@@ -578,15 +586,14 @@ export default function PettyCash() {
         console.log('CRED OCR Debug - All lines:', lines);
         
         // For CRED, look for the business description which appears as simple text
-        // Based on the debug output, "glue transport furnili" is at Line 3
+        // Skip recipient names, amounts, transaction details, etc.
         for (let i = 0; i < lines.length; i++) {
           const line = lines[i].trim();
           console.log('CRED OCR Debug - Checking line', i, ':', line);
           
-          // Look for business descriptions - simple text without special characters
-          // Skip transaction info, platform mentions, email addresses
-          if (line.length >= 3 && 
-              line.length <= 50 && 
+          // Look for business descriptions - avoid recipient names and transaction details
+          if (line.length >= 8 && // Longer descriptions are more likely to be purpose
+              line.length <= 100 && 
               !line.includes('|') && // Skip transaction info
               !line.toLowerCase().includes('paid') &&
               !line.toLowerCase().includes('cred') &&
@@ -594,10 +601,17 @@ export default function PettyCash() {
               !line.toLowerCase().includes('securely') &&
               !line.includes('@') && // Skip email addresses
               !line.includes('paytm-') && // Skip payment IDs
+              !line.includes('gpay-') && // Skip gpay IDs
               !/^\d+\s\w{3}\s\d{4}/.test(line) && // Skip dates
-              !/\d{4,}/.test(line) && // No long numbers (transaction IDs)
+              !/^\d{4,}/.test(line) && // No long transaction IDs
               !/\d{1,2}:\d{2}/.test(line) && // No time formats
-              /^[a-z\s]+$/i.test(line)) { // Only letters and spaces
+              !/^¥/.test(line) && // Skip amount lines starting with ¥
+              !/^₹/.test(line) && // Skip amount lines starting with ₹
+              // Skip simple recipient names (usually 1-2 words, all caps or title case)
+              !(line.split(' ').length <= 2 && /^[A-Z][a-z]*(\s[A-Z][a-z]*)*$/.test(line)) &&
+              // Look for descriptions with multiple words, numbers, or specific business terms
+              (line.split(' ').length >= 3 || /\d/.test(line) || 
+               /machine|glue|transport|furnili|material|hardware|steel|wood/.test(line.toLowerCase()))) {
             console.log('CRED OCR Debug - Found potential description:', line);
             extractedPurpose = line;
             break;
