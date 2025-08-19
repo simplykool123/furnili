@@ -324,20 +324,48 @@ export default function PettyCash() {
 
   // Enhanced amount extraction with platform-specific patterns
   const extractAmountByPlatform = (lines: string[], platform: string): string => {
-    for (const line of lines) {
+    // For GPay, first look for prominent amounts (usually larger and with currency symbols)
+    // Sort lines by potential prominence (currency symbols, larger numbers)
+    const sortedLines = [...lines].sort((a, b) => {
+      // Prioritize lines with rupee symbols
+      const aHasRupee = /₹/.test(a);
+      const bHasRupee = /₹/.test(b);
+      if (aHasRupee && !bHasRupee) return -1;
+      if (bHasRupee && !aHasRupee) return 1;
+      
+      // Then prioritize lines with larger numbers
+      const aNum = (a.match(/\d+/) || ['0'])[0];
+      const bNum = (b.match(/\d+/) || ['0'])[0];
+      return parseInt(bNum) - parseInt(aNum);
+    });
+    
+    for (const line of sortedLines) {
       let amountMatch = null;
       
       switch (platform) {
         case 'googlepay':
-          // Google Pay: "₹500", "Amount: ₹500", "Paid ₹500", "Rs 500", "Rs. 500", standalone numbers
-          amountMatch = line.match(/(?:paid|amount|rs\.?|₹)?\s*₹?\s?([0-9,]+\.?[0-9]*)/i);
-          // Also try to match standalone currency amounts
-          if (!amountMatch) {
-            amountMatch = line.match(/^₹?\s?([0-9,]+\.?[0-9]*)$/);
-          }
-          // Try Rs format commonly used in Google Pay
-          if (!amountMatch) {
-            amountMatch = line.match(/rs\.?\s?([0-9,]+\.?[0-9]*)/i);
+          // Google Pay: Prioritize rupee symbol amounts first, then contextual amounts
+          // Skip amounts that appear to be part of dates (like 25/07/2025)
+          if (!/\d{1,2}\/\d{1,2}\/\d{4}/.test(line) && // Skip date formats
+              !/\d{1,2}\s+(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)/i.test(line)) { // Skip date formats
+            
+            // Priority 1: ₹ symbol amounts (most likely transaction amount)
+            amountMatch = line.match(/₹\s?([0-9,]+\.?[0-9]*)/);
+            
+            // Priority 2: Context-based amounts with keywords
+            if (!amountMatch) {
+              amountMatch = line.match(/(?:paid|amount|sent)\s*₹?\s?([0-9,]+\.?[0-9]*)/i);
+            }
+            
+            // Priority 3: Rs format
+            if (!amountMatch) {
+              amountMatch = line.match(/rs\.?\s?([0-9,]+\.?[0-9]*)/i);
+            }
+            
+            // Priority 4: Standalone numbers (only if they look like amounts, not dates)
+            if (!amountMatch && !/^\d{1,2}$/.test(line.trim())) { // Skip small single/double digit numbers that could be from dates
+              amountMatch = line.match(/^([0-9,]+\.?[0-9]*)$/);
+            }
           }
           break;
         case 'phonepe':
@@ -370,8 +398,9 @@ export default function PettyCash() {
       
       if (amountMatch) {
         const amount = parseFloat(amountMatch[1].replace(/,/g, ''));
-        // Validate reasonable amount range
-        if (amount >= 1 && amount <= 100000) {
+        // Validate reasonable amount range and exclude common date fragments
+        if (amount >= 10 && amount <= 100000 && // Increase minimum to avoid date fragments like "25"
+            amount !== 2025 && amount !== 2024 && amount !== 2023) { // Exclude common years
           return amountMatch[1].replace(/,/g, '');
         }
       }
