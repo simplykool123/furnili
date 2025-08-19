@@ -18,6 +18,9 @@ app.use('/uploads', express.static('uploads', {
       res.setHeader('Content-Type', 'image/gif');
     } else if (path.includes('.pdf')) {
       res.setHeader('Content-Type', 'application/pdf');
+    } else if (path.includes('/receipts/')) {
+      // For receipt files without extensions, assume they are images
+      res.setHeader('Content-Type', 'image/jpeg');
     }
   }
 }));
