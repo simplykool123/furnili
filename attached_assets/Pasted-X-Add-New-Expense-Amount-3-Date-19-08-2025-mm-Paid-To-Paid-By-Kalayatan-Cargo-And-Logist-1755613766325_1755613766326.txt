@@ -1,0 +1,49 @@
+X
+Add New Expense
+Amount (3) * Date *
+19/08/2025 [mm]
+Paid To * Paid By *
+Kalayatan Cargo And Logistic Vishal v
+Purpose / Description *
+16 |AUG 2025, 5:00PM | TXN ID: 559419149585
+7
+Project ID * Category
+Select project Select category
+Proof Attachment (GPay, CRED, Invoice, etc.)
+Upload UPI payment screenshot for automatic data extraction (GPay,
+PhonePe, CRED)
+Cancel Add Expense
+Payment details extracted from screenshot
+Review and submit the expense
+
+PettyCash.tsx:490 === FULL OCR TEXT END ===
+PettyCash.tsx:497 === PLATFORM DETECTION ===
+PettyCash.tsx:498 Detected Platform: cred
+PettyCash.tsx:499 === ALL LINES ===
+PettyCash.tsx:501 Line 0: "X"
+PettyCash.tsx:501 Line 1: "Add New Expense"
+PettyCash.tsx:501 Line 2: "Amount (3) * Date *"
+PettyCash.tsx:501 Line 3: "19/08/2025 [mm]"
+PettyCash.tsx:501 Line 4: "Paid To * Paid By *"
+PettyCash.tsx:501 Line 5: "Kalayatan Cargo And Logistic Vishal v"
+PettyCash.tsx:501 Line 6: "Purpose / Description *"
+PettyCash.tsx:501 Line 7: "16 |AUG 2025, 5:00PM | TXN ID: 559419149585"
+PettyCash.tsx:501 Line 8: "7"
+PettyCash.tsx:501 Line 9: "Project ID * Category"
+PettyCash.tsx:501 Line 10: "Select project Select category"
+PettyCash.tsx:501 Line 11: "Proof Attachment (GPay, CRED, Invoice, etc.)"
+PettyCash.tsx:501 Line 12: "Upload UPI payment screenshot for automatic data extraction (GPay,"
+PettyCash.tsx:501 Line 13: "PhonePe, CRED)"
+PettyCash.tsx:501 Line 14: "Cancel Add Expense"
+PettyCash.tsx:501 Line 15: "Payment details extracted from screenshot"
+PettyCash.tsx:501 Line 16: "Review and submit the expense"
+PettyCash.tsx:506 === AMOUNT EXTRACTION ===
+PettyCash.tsx:507 Extracted Amount: 7
+PettyCash.tsx:514 === RECIPIENT EXTRACTION ===
+PettyCash.tsx:515 Extracted Recipient: 
+PettyCash.tsx:530 CRED OCR Debug - All lines: (17) ['X', 'Add New Expense', 'Amount (3) * Date *', '19/08/2025 [mm]', 'Paid To * Paid By *', 'Kalayatan Cargo And Logistic Vishal v', 'Purpose / Description *', '16 |AUG 2025, 5:00PM | TXN ID: 559419149585', '7', 'Project ID * Category', 'Select project Select category', 'Proof Attachment (GPay, CRED, Invoice, etc.)', 'Upload UPI payment screenshot for automatic data extraction (GPay,', 'PhonePe, CRED)', 'Cancel Add Expense', 'Payment details extracted from screenshot', 'Review and submit the expense']
+PettyCash.tsx:536 CRED OCR Debug - Checking line 0 : X
+PettyCash.tsx:557 CRED OCR Debug - Skipped line: X
+PettyCash.tsx:536 CRED OCR Debug - Checking line 1 : Add New Expense
+PettyCash.tsx:553 CRED OCR Debug - Found potential description: Add New Expense
+PettyCash.tsx:561 CRED OCR Debug - Final extracted purpose: Add New Expense
