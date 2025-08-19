@@ -16,7 +16,7 @@ export default function MaterialRequests() {
   const [, setLocation] = useLocation();
   const [selectedProjectId, setSelectedProjectId] = useState<number | undefined>();
   const user = authService.getUser();
-  const { isMobile } = useIsMobile();
+  const isMobile = useIsMobile();
 
   // Parse projectId from URL parameters
   useEffect(() => {

@@ -509,6 +509,7 @@ export default function Projects() {
           <div className="flex flex-col max-h-[90vh]">
           <DialogHeader className="p-4 border-b flex-shrink-0">
             <DialogTitle className="text-lg font-semibold">New Project</DialogTitle>
+            <DialogDescription>Create a new project with client details and specifications</DialogDescription>
           </DialogHeader>
 
           <div className="flex-1 overflow-y-auto p-4">

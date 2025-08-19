@@ -3,7 +3,7 @@ import ProductTable from "@/components/Products/ProductTable";
 import ProductForm from "@/components/Products/ProductForm";
 import BulkImportModal from "@/components/Products/BulkImportModal";
 import BulkExportModal from "@/components/Products/BulkExportModal";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { authService } from "@/lib/auth";
@@ -106,7 +106,9 @@ export default function Products() {
               <DialogTitle className="text-xl font-semibold text-foreground">
                 {editingProduct ? 'Edit Product' : 'Add New Product'}
               </DialogTitle>
-              
+              <DialogDescription>
+                {editingProduct ? 'Update product details and specifications' : 'Add a new product to your inventory with details and specifications'}
+              </DialogDescription>
           </DialogHeader>
           <div className={`${isMobile ? 'flex-1 overflow-y-auto' : 'flex-1 overflow-y-auto px-6'}`}>
             <ProductForm 
