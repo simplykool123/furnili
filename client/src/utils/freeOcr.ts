@@ -3,6 +3,7 @@
 
 import { EnhancedFigureOCR } from './enhancedFigureOcr';
 import { TesseractConfig } from './tesseractConfig';
+import { PaymentAmountDetector } from './paymentAmountDetector';
 
 export interface OCRResult {
   text: string;
@@ -359,21 +360,34 @@ export class ClientFreeOCR {
         .map(line => line.trim())
         .filter(line => line.length > 0);
 
-      console.log('OCR Debug - Processing with enhanced figure recognition');
+      console.log('OCR Debug - Processing with enhanced figure recognition and payment detection');
       
       // Use enhanced figure OCR for better accuracy across all platforms
       const enhancedResults = EnhancedFigureOCR.processReceiptForAllPlatforms(lines);
       
-      // Fallback to legacy extraction if enhanced fails
+      // If enhanced OCR didn't find amount, use specialized payment amount detector
+      let finalAmount = enhancedResults.amount;
+      if (!finalAmount || parseFloat(finalAmount) < 1) {
+        console.log('OCR Debug - Enhanced OCR missed amount, trying payment amount detector');
+        const paymentDetection = PaymentAmountDetector.detectPaymentAmount(lines);
+        if (paymentDetection.confidence > 0.3) {
+          finalAmount = paymentDetection.amount;
+          console.log(`OCR Debug - Payment detector found amount: ${finalAmount} (confidence: ${paymentDetection.confidence}, source: ${paymentDetection.source})`);
+        }
+      }
+      
+      // Fallback to legacy extraction if all enhanced methods fail
       const fallbackPlatform = this.detectPlatform(lines);
-      const fallbackAmount = enhancedResults.amount || this.extractAmount(lines, fallbackPlatform);
+      if (!finalAmount) {
+        finalAmount = this.extractAmount(lines, fallbackPlatform);
+      }
       const fallbackDescription = enhancedResults.description || this.extractDescription(lines, fallbackPlatform);
       const fallbackRecipient = enhancedResults.recipient || this.extractRecipient(lines, fallbackPlatform);
 
       return {
         text,
         platform: enhancedResults.platform || fallbackPlatform,
-        amount: fallbackAmount,
+        amount: finalAmount,
         recipient: fallbackRecipient,
         description: fallbackDescription,
         transactionId: this.extractTransactionId(lines),
