@@ -487,40 +487,82 @@ export default function PettyCash() {
         updatedData.date = extractedDate;
       }
 
-      // Enhanced description extraction - Look for business purpose before creating generic descriptions
+      // Google Pay specific description extraction from bubble box
       let extractedPurpose = '';
       
-      // First, try to find meaningful business descriptions
-      for (const line of lines) {
-        const trimmedLine = line.trim().toLowerCase();
+      if (platformType === 'googlepay') {
+        // For Google Pay, look for description that appears between amount and "Completed" status
+        // This appears in the bubble box area of the receipt
+        let foundAmount = false;
+        let foundCompleted = false;
         
-        // Skip obvious non-purpose lines
-        if (trimmedLine.includes('google pay') || 
-            trimmedLine.includes('transaction') || 
-            trimmedLine.includes('completed') ||
-            trimmedLine.includes('powered by') ||
-            trimmedLine.includes('upi') ||
-            /^\d+$/.test(trimmedLine) || // Just numbers
-            /^₹\s*\d/.test(trimmedLine) || // Currency amounts
-            /^\d{1,2}\s\w{3}/.test(trimmedLine) || // Dates
-            trimmedLine.length < 3 ||
-            trimmedLine === extractedRecipient?.toLowerCase()) {
-          continue;
+        for (let i = 0; i < lines.length; i++) {
+          const line = lines[i].trim();
+          const lowerLine = line.toLowerCase();
+          
+          // Check if we found the amount line (₹1,520 format)
+          if (!foundAmount && /^₹[\d,]+/.test(line)) {
+            foundAmount = true;
+            continue;
+          }
+          
+          // Check if we've reached the "Completed" status
+          if (lowerLine.includes('completed')) {
+            foundCompleted = true;
+            break;
+          }
+          
+          // If we're between amount and completed, and this line looks like a description
+          if (foundAmount && !foundCompleted) {
+            // Skip obvious non-description lines
+            if (lowerLine.includes('to ') || 
+                lowerLine.includes('paid to') ||
+                lowerLine.includes('google pay') ||
+                lowerLine.includes('upi') ||
+                lowerLine.includes('transaction') ||
+                /^[A-Z\s]+$/.test(line) || // All caps recipient names
+                line.length < 3 ||
+                /^\d/.test(line) || // Lines starting with numbers (dates, etc.)
+                lowerLine.includes('@')) {
+              continue;
+            }
+            
+            // This should be the description from the bubble box
+            if (line.length > 0) {
+              extractedPurpose = line.trim();
+              break;
+            }
+          }
         }
         
-        // Look for business-relevant descriptions
-        if (trimmedLine.includes('furnili') || 
-            trimmedLine.includes('thinet') ||
-            trimmedLine.includes('material') ||
-            trimmedLine.includes('hardware') ||
-            trimmedLine.includes('order') ||
-            /^[a-z\s]{3,30}$/.test(trimmedLine)) { // Simple text descriptions
-          extractedPurpose = line.trim();
-          break;
+        // Alternative pattern: Look for business descriptions after recipient name
+        if (!extractedPurpose && extractedRecipient) {
+          let foundRecipient = false;
+          for (const line of lines) {
+            const lowerLine = line.toLowerCase();
+            
+            // Skip if we found the recipient name
+            if (lowerLine.includes(extractedRecipient.toLowerCase())) {
+              foundRecipient = true;
+              continue;
+            }
+            
+            // Look for description after recipient but before transaction details
+            if (foundRecipient && 
+                !lowerLine.includes('completed') &&
+                !lowerLine.includes('transaction') &&
+                !lowerLine.includes('upi') &&
+                !lowerLine.includes('@') &&
+                line.length > 3 &&
+                !/^[\d\s:,]+$/.test(line)) {
+              extractedPurpose = line.trim();
+              break;
+            }
+          }
         }
       }
       
-      // Use extracted purpose or create meaningful fallback
+      // Set the purpose based on what we found
       if (extractedPurpose) {
         updatedData.purpose = extractedPurpose;
       } else if (extractedRecipient && platformType === 'googlepay') {
