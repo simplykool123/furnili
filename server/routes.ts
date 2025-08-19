@@ -21,7 +21,7 @@ import { canOrderMaterials, getMaterialRequestEligibleProjects, getStageDisplayN
 import { setupQuotesRoutes } from "./quotesRoutes";
 import { ObjectStorageService } from "./objectStorage";
 import { db } from "./db";
-
+import ocrRoutes from "./routes/ocr";
 import { eq, and, gt } from "drizzle-orm";
 import { projectFiles, users, suppliers, products, purchaseOrders, purchaseOrderItems, stockMovements } from "@shared/schema";
 
@@ -4570,7 +4570,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-
+  // OCR Routes
+  app.use("/api/ocr", ocrRoutes);
 
   const httpServer = createServer(app);
   return httpServer;

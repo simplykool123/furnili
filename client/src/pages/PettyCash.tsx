@@ -550,7 +550,6 @@ export default function PettyCash() {
   };
 
   // Enhanced OCR processing with multi-platform support
-  // OCR Integration Point - Replace this function with your chosen OCR solution
   const processImageWithOCR = async (file: File) => {
     setIsProcessingOCR(true);
     try {
