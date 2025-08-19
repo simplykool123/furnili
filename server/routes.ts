@@ -6,6 +6,9 @@ import { z } from "zod";
 import { storage } from "./storage";
 import { authenticateToken, requireRole, generateToken, comparePassword, type AuthRequest } from "./middleware/auth";
 import { productImageUpload, boqFileUpload, receiptImageUpload, csvFileUpload, projectFileUpload } from "./utils/fileUpload";
+import sharp from "sharp";
+import path from "path";
+import fs from "fs/promises";
 import { 
   exportProductsCSV, 
   exportRequestsCSV, 

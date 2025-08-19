@@ -482,11 +482,99 @@ export default function PettyCash() {
   };
 
   // Enhanced OCR processing with multi-platform support
+  const preprocessImageForOCR = async (file: File): Promise<File> => {
+    try {
+      console.log('=== PREPROCESSING IMAGE FOR BETTER OCR ===');
+      
+      // Create canvas for image preprocessing
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      if (!ctx) throw new Error('Could not get canvas context');
+      
+      // Load image
+      const img = new Image();
+      const imageUrl = URL.createObjectURL(file);
+      
+      return new Promise((resolve, reject) => {
+        img.onload = () => {
+          try {
+            // Scale up image for better text recognition (minimum 1200px on larger side)
+            const scale = Math.max(1, 1200 / Math.max(img.width, img.height));
+            canvas.width = img.width * scale;
+            canvas.height = img.height * scale;
+            
+            // Draw original image
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            
+            // Get image data for processing
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const data = imageData.data;
+            
+            console.log('Preprocessing image: grayscale conversion, contrast enhancement, and binarization');
+            
+            // Apply image processing filters for better OCR
+            for (let i = 0; i < data.length; i += 4) {
+              // Convert to grayscale using luminance formula (better than simple averaging)
+              const gray = Math.round(0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2]);
+              
+              // Enhance contrast and apply threshold (binarization for clear text)
+              // This converts stylized ₹ symbols to clear black text on white background
+              const enhanced = gray > 180 ? 255 : 0;
+              
+              data[i] = enhanced;     // Red
+              data[i + 1] = enhanced; // Green  
+              data[i + 2] = enhanced; // Blue
+              // Alpha channel remains unchanged
+            }
+            
+            // Apply the processed image data back to canvas
+            ctx.putImageData(imageData, 0, 0);
+            
+            // Convert canvas to blob and create processed file
+            canvas.toBlob((blob) => {
+              if (!blob) {
+                reject(new Error('Could not process image'));
+                return;
+              }
+              
+              const processedFile = new File([blob], 'processed_' + file.name, {
+                type: 'image/png',
+                lastModified: Date.now()
+              });
+              
+              console.log('Image preprocessed successfully:', processedFile.name, 'Size:', processedFile.size);
+              URL.revokeObjectURL(imageUrl);
+              resolve(processedFile);
+            }, 'image/png', 1.0);
+            
+          } catch (error) {
+            URL.revokeObjectURL(imageUrl);
+            reject(error);
+          }
+        };
+        
+        img.onerror = () => {
+          URL.revokeObjectURL(imageUrl);
+          reject(new Error('Could not load image'));
+        };
+        
+        img.src = imageUrl;
+      });
+    } catch (error) {
+      console.error('Image preprocessing failed:', error);
+      return file; // Return original file if preprocessing fails
+    }
+  };
+
   const processImageWithOCR = async (file: File) => {
     setIsProcessingOCR(true);
     try {
-      // Enhanced OCR settings for better accuracy across platforms
-      const result = await Tesseract.recognize(file, 'eng', {
+      // Preprocess image for better OCR accuracy (grayscale, contrast, binarization)
+      const processedFile = await preprocessImageForOCR(file);
+      console.log('Using preprocessed image for OCR:', processedFile.name);
+      
+      // Enhanced OCR settings with preprocessed image
+      const result = await Tesseract.recognize(processedFile, 'eng', {
         logger: m => console.log(m)
       });
       
@@ -590,7 +678,7 @@ export default function PettyCash() {
         // Pattern: Name -> UPI ID -> Amount -> Description (sometimes missed by line splitting)
         
         // Method 1: Look for text between amount and "paid securely by"
-        const amountToCredMatch = text.match(/¥[0-9,]+\s*\n?\s*(.*?)\s*(?:paid securely by|CRED)/is);
+        const amountToCredMatch = text.match(/¥[0-9,]+\s*\n?\s*(.*?)\s*(?:paid securely by|CRED)/i);
         if (amountToCredMatch && amountToCredMatch[1]) {
           const potentialDesc = amountToCredMatch[1].trim();
           if (potentialDesc.length > 2 && potentialDesc.length < 50 && 
