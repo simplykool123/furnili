@@ -1,3 +1,5 @@
+// Temporary file to rewrite FurniliLayout properly
+
 import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { ChevronRight } from 'lucide-react';
@@ -14,21 +16,20 @@ interface FurniliLayoutProps {
   className?: string;
 }
 
-export default function FurniliLayout({ 
-  children, 
-  title, 
-  subtitle, 
-  showAddButton, 
+export default function FurniliLayout({
+  children,
+  title,
+  subtitle,
+  showAddButton = false,
   onAddClick,
   actions,
   className 
 }: FurniliLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(true); // Start collapsed
-  const [isHovering, setIsHovering] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
   const [isInitialized, setIsInitialized] = useState(false);
   
-  // Simple mobile detection without hooks to avoid conflicts
+  // Simple mobile detection
   const [isMobile, setIsMobile] = useState(false);
   
   useEffect(() => {
@@ -50,17 +51,14 @@ export default function FurniliLayout({
     };
   }, []);
 
-  // Show minimal loading state during initialization
   if (!isInitialized) {
     return (
-      <div className="flex min-h-screen bg-gray-50">
-        <div className="w-16 bg-white border-r border-gray-200 flex flex-col">
-          <div className="p-4">
-            <div className="h-8 w-8 bg-gray-200 rounded animate-pulse"></div>
-          </div>
-          <div className="flex-1 p-2 space-y-2">
-            {[...Array(6)].map((_, i) => (
-              <div key={i} className="h-8 bg-gray-100 rounded animate-pulse"></div>
+      <div className="flex min-h-screen">
+        <div className="w-64 bg-amber-100 animate-pulse">
+          <div className="h-16 bg-amber-200 rounded m-2 mb-4"></div>
+          <div className="space-y-2 p-2">
+            {[...Array(8)].map((_, i) => (
+              <div key={i} className="h-10 bg-amber-200 rounded"></div>
             ))}
           </div>
         </div>
@@ -77,10 +75,6 @@ export default function FurniliLayout({
     );
   }
 
-  // For mobile devices, we still use the same layout but with responsive design
-
-  // No auto-hide - sidebar stays open once expanded
-
   return (
     <div className="furnili-page">
       {/* Background Pattern */}
@@ -91,17 +85,12 @@ export default function FurniliLayout({
       </div>
 
       <div className="flex min-h-screen">
-        {/* Sidebar - Always Fixed - Only show on desktop */}
+        {/* Desktop Sidebar - Only show on desktop */}
         {!isMobile && (
           <div className={cn(
-            "fixed inset-y-0 left-0 z-50 transform transition-all duration-300 ease-in-out",
+            "fixed inset-y-0 left-0 z-50 transition-all duration-300 ease-in-out",
             sidebarCollapsed ? "w-16" : "w-64"
-          )}
-          onClick={() => {
-            if (sidebarCollapsed) {
-              setSidebarCollapsed(false);
-            }
-          }}>
+          )}>
             <div className="furnili-sidebar h-full shadow-xl border-r border-border/50">
               <Sidebar 
                 onItemClick={() => {}} 
@@ -112,7 +101,7 @@ export default function FurniliLayout({
           </div>
         )}
 
-        {/* Mobile Sidebar - Only show when needed */}
+        {/* Mobile Sidebar */}
         {isMobile && (
           <>
             <div className={cn(
@@ -138,7 +127,7 @@ export default function FurniliLayout({
           </>
         )}
 
-        {/* Sidebar Toggle Button for Desktop */}
+        {/* Desktop Expand Button */}
         {!isMobile && sidebarCollapsed && (
           <button
             onClick={() => setSidebarCollapsed(false)}
