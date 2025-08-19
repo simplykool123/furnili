@@ -807,8 +807,8 @@ export default function PettyCash() {
         }
       }
       
-      // Set the best purpose found
-      if (bestPurpose) {
+      // Set the best purpose found, but only if we don't already have a platform-specific purpose
+      if (bestPurpose && !updatedData.purpose) {
         updatedData.purpose = bestPurpose;
       }
       
