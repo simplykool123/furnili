@@ -5,6 +5,7 @@ import { EnhancedFigureOCR } from './enhancedFigureOcr';
 import { TesseractConfig } from './tesseractConfig';
 import { PaymentAmountDetector } from './paymentAmountDetector';
 import { PaymentDescriptionDetector } from './paymentDescriptionDetector';
+import { UniversalReceiptOCR } from './universalReceiptOcr';
 
 export interface OCRResult {
   text: string;
@@ -342,32 +343,47 @@ export class ClientFreeOCR {
 
       console.log('OCR Debug - Processing with enhanced figure recognition and payment detection');
       
-      // Use enhanced figure OCR for better accuracy across all platforms
-      const enhancedResults = EnhancedFigureOCR.processReceiptForAllPlatforms(lines);
+      // Use Universal Receipt OCR for comprehensive detection across all receipt types
+      console.log('OCR Debug - Using Universal Receipt OCR for comprehensive extraction');
       
-      // If enhanced OCR didn't find amount, use specialized payment amount detector
-      let finalAmount = enhancedResults.amount;
+      const universalAmountResult = UniversalReceiptOCR.detectUniversalAmount(lines);
+      const universalDescriptionResult = UniversalReceiptOCR.detectBubbleDescription(lines);
+      
+      // Use universal results as primary, fallback to enhanced methods
+      let finalAmount = universalAmountResult.amount;
+      let finalDescription = universalDescriptionResult.description;
+      
+      // If universal detection failed, try enhanced methods
       if (!finalAmount || parseFloat(finalAmount) < 1) {
-        console.log('OCR Debug - Enhanced OCR missed amount, trying payment amount detector');
-        const paymentDetection = PaymentAmountDetector.detectPaymentAmount(lines);
-        if (paymentDetection.confidence > 0.3) {
-          finalAmount = paymentDetection.amount;
-          console.log(`OCR Debug - Payment detector found amount: ${finalAmount} (confidence: ${paymentDetection.confidence}, source: ${paymentDetection.source})`);
+        console.log('OCR Debug - Universal amount detection failed, trying enhanced methods');
+        const enhancedResults = EnhancedFigureOCR.processReceiptForAllPlatforms(lines);
+        
+        if (enhancedResults.amount && parseFloat(enhancedResults.amount) >= 1) {
+          finalAmount = enhancedResults.amount;
+        } else {
+          // Final fallback to payment detector
+          const paymentDetection = PaymentAmountDetector.detectPaymentAmount(lines);
+          if (paymentDetection.confidence > 0.3) {
+            finalAmount = paymentDetection.amount;
+          }
         }
       }
       
-      // Enhanced description detection
-      let finalDescription = enhancedResults.description;
-      if (!finalDescription || finalDescription.toLowerCase().includes('from:') || finalDescription.toLowerCase().includes('to:')) {
-        console.log('OCR Debug - Enhanced OCR missed description or got sender/receiver info, trying description detector');
-        const descriptionDetection = PaymentDescriptionDetector.detectPaymentDescription(lines, enhancedResults.platform);
+      // If universal description failed or got sender/receiver info, try enhanced methods
+      if (!finalDescription || finalDescription.toLowerCase().includes('from:') || 
+          finalDescription.toLowerCase().includes('to:') || finalDescription === 'Payment') {
+        console.log('OCR Debug - Universal description detection needs enhancement');
+        const descriptionDetection = PaymentDescriptionDetector.detectPaymentDescription(lines, 'universal');
         if (descriptionDetection.confidence > 0.3) {
           finalDescription = descriptionDetection.description;
-          console.log(`OCR Debug - Description detector found: ${finalDescription} (confidence: ${descriptionDetection.confidence}, source: ${descriptionDetection.source})`);
         }
       }
       
-      // Fallback to legacy extraction if all enhanced methods fail
+      console.log(`OCR Debug - Final Results: Amount=${finalAmount}, Description=${finalDescription}`);
+      console.log(`OCR Debug - Universal Amount: ${universalAmountResult.amount} (confidence: ${universalAmountResult.confidence}, source: ${universalAmountResult.source})`);
+      console.log(`OCR Debug - Universal Description: ${universalDescriptionResult.description} (confidence: ${universalDescriptionResult.confidence}, source: ${universalDescriptionResult.source})`);
+      
+      // Fallback to legacy extraction if all methods fail
       const fallbackPlatform = this.detectPlatform(lines);
       if (!finalAmount) {
         finalAmount = this.extractAmount(lines, fallbackPlatform);
@@ -375,17 +391,17 @@ export class ClientFreeOCR {
       if (!finalDescription) {
         finalDescription = this.extractDescription(lines, fallbackPlatform);
       }
-      const fallbackRecipient = enhancedResults.recipient || this.extractRecipient(lines, fallbackPlatform);
+      const fallbackRecipient = this.extractRecipient(lines, fallbackPlatform);
 
       return {
         text,
-        platform: enhancedResults.platform || fallbackPlatform,
+        platform: fallbackPlatform,
         amount: finalAmount,
         recipient: fallbackRecipient,
         description: finalDescription,
         transactionId: this.extractTransactionId(lines),
         date: this.extractDate(lines),
-        confidence: enhancedResults.confidence
+        confidence: Math.max(universalAmountResult.confidence, universalDescriptionResult.confidence)
       };
       
     } catch (error) {
