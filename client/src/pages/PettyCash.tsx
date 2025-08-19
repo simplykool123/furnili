@@ -503,47 +503,48 @@ export default function PettyCash() {
       let extractedPurpose = '';
       
       if (platformType === 'cred') {
-        // For CRED, look for description that appears after the amount
+        console.log('CRED OCR Debug - All lines:', lines);
+        
+        // For CRED, look for description that appears after the amount but before transaction details
         let foundAmount = false;
         
         for (let i = 0; i < lines.length; i++) {
           const line = lines[i].trim();
-          const lowerLine = line.toLowerCase();
           
           // Check if we found the amount line (₹600, ₹12,000 format)
           if (!foundAmount && /₹[\d,]+/.test(line)) {
             foundAmount = true;
+            console.log('CRED OCR Debug - Found amount at line', i, ':', line);
             
-            // Look at the next few lines for description
-            for (let j = i + 1; j < Math.min(i + 5, lines.length); j++) {
+            // Look at the immediate next few lines for description
+            for (let j = i + 1; j < Math.min(i + 3, lines.length); j++) {
               const nextLine = lines[j].trim();
-              const nextLowerLine = nextLine.toLowerCase();
+              console.log('CRED OCR Debug - Checking line', j, ':', nextLine);
               
-              // Skip obvious non-description lines (transaction details, dates, etc.)
-              if (nextLowerLine.includes('paid securely') ||
-                  nextLowerLine.includes('cred') ||
-                  nextLowerLine.includes('powered by') ||
-                  nextLowerLine.includes('txn id') ||
-                  nextLowerLine.includes('transaction') ||
-                  nextLowerLine.includes('@') ||
-                  nextLine.includes('|') || // Skip any line with | (transaction info)
-                  /^\d/.test(nextLine) || // Skip lines starting with numbers (dates, IDs)
-                  /\d{4,}/.test(nextLine) || // Skip lines with long numbers (transaction IDs)
-                  /\d{1,2}:\d{2}/.test(nextLine) || // Skip time formats
-                  /(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)/i.test(nextLine) || // Skip dates
-                  nextLine.length < 3) {
-                continue;
-              }
-              
-              // Look for business descriptions - simple text without numbers or special chars
-              if (/^[a-z\s]+$/i.test(nextLine) && nextLine.length >= 3 && nextLine.length <= 40) {
+              // This should be the business description - look for simple text lines
+              // Skip empty lines and lines with transaction info
+              if (nextLine.length >= 3 && 
+                  nextLine.length <= 50 && 
+                  !nextLine.includes('|') && 
+                  !nextLine.includes('paid securely') &&
+                  !nextLine.includes('powered by') &&
+                  !nextLine.includes('TXN ID') &&
+                  !nextLine.includes('AUG') &&
+                  !nextLine.includes('2025') &&
+                  !/\d{4,}/.test(nextLine) && // No long numbers (transaction IDs)
+                  !/\d{1,2}:\d{2}/.test(nextLine)) { // No time formats
+                console.log('CRED OCR Debug - Found potential description:', nextLine);
                 extractedPurpose = nextLine;
                 break;
+              } else {
+                console.log('CRED OCR Debug - Skipped line (transaction info):', nextLine);
               }
             }
             break;
           }
         }
+        
+        console.log('CRED OCR Debug - Final extracted purpose:', extractedPurpose);
       } else if (platformType === 'googlepay') {
         // For Google Pay, look for description that appears between amount and "Completed" status
         // This appears in the bubble box area of the receipt
