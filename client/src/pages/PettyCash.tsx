@@ -584,78 +584,133 @@ export default function PettyCash() {
       
       if (platformType === 'cred') {
         console.log('CRED OCR Debug - All lines:', lines);
+        console.log('CRED OCR Debug - Full text for analysis:', text);
         
-        // For CRED, look for the business description which appears in the white box
-        // The pattern: recipient name is usually after "paid", description is a simple short phrase after amount
-        let potentialDescriptions = [];
+        // CRED receipts follow a consistent pattern - look for description text in specific positions
+        // Pattern: Name -> UPI ID -> Amount -> Description (sometimes missed by line splitting)
         
-        for (let i = 0; i < lines.length; i++) {
-          const line = lines[i].trim();
-          console.log('CRED OCR Debug - Checking line', i, ':', line);
-          
-          // Skip obvious non-description lines
-          if (!line ||
-              line.includes('|') || // Transaction info
-              line.toLowerCase().includes('paid') ||
-              line.toLowerCase().includes('cred') ||
-              line.toLowerCase().includes('powered') ||
-              line.toLowerCase().includes('securely') ||
-              line.includes('@') || // Email/UPI addresses
-              line.includes('paytm-') || // Payment IDs
-              line.includes('gpay-') || // GPay IDs
-              /^\d+\s\w{3}\s\d{4}/.test(line) || // Dates
-              /^\d{4,}/.test(line) || // Long transaction IDs
-              /\d{1,2}:\d{2}/.test(line) || // Time formats
-              /^[¥₹]/.test(line) || // Amount lines
-              line.includes('©') // Copyright symbols from UPI IDs
-          ) {
-            console.log('CRED OCR Debug - Skipped obvious non-description:', line);
-            continue;
-          }
-          
-          // Score potential descriptions
-          let score = 0;
-          
-          // Short, simple phrases are more likely to be descriptions (2-20 characters)
-          if (line.length >= 2 && line.length <= 20) score += 3;
-          
-          // Business-related terms get high priority
-          const businessTerms = ['water', 'tanker', 'machine', 'glue', 'transport', 'furnili', 'material', 'hardware', 'steel', 'wood', 'food', 'fuel', 'repair', 'tools'];
-          for (const term of businessTerms) {
-            if (line.toLowerCase().includes(term)) {
-              score += 5;
-              break;
-            }
-          }
-          
-          // Simple words without complex formatting are more likely descriptions
-          if (/^[a-zA-Z\s]+$/.test(line) && line.split(' ').length <= 3) {
-            score += 2;
-          }
-          
-          // Avoid long names (likely recipients)
-          if (line.split(' ').length > 3) {
-            score -= 2;
-          }
-          
-          // Avoid title case names (like "Ghotre Dnyanoba Bhujangrao")
-          if (/^[A-Z][a-z]+(\s[A-Z][a-z]+)+$/.test(line)) {
-            score -= 3;
-          }
-          
-          if (score > 0) {
-            potentialDescriptions.push({ line, score, index: i });
-            console.log('CRED OCR Debug - Potential description:', line, 'Score:', score);
-          } else {
-            console.log('CRED OCR Debug - Skipped low-score line:', line);
+        // Method 1: Look for text between amount and "paid securely by"
+        const amountToCredMatch = text.match(/¥[0-9,]+\s*\n?\s*(.*?)\s*(?:paid securely by|CRED)/is);
+        if (amountToCredMatch && amountToCredMatch[1]) {
+          const potentialDesc = amountToCredMatch[1].trim();
+          if (potentialDesc.length > 2 && potentialDesc.length < 50 && 
+              !potentialDesc.includes('©') && 
+              !potentialDesc.includes('@') &&
+              !potentialDesc.toLowerCase().includes('powered')) {
+            extractedPurpose = potentialDesc;
+            console.log('CRED OCR Debug - Found description between amount and CRED:', extractedPurpose);
           }
         }
         
-        // Pick the highest scoring description
-        if (potentialDescriptions.length > 0) {
-          const bestDescription = potentialDescriptions.sort((a, b) => b.score - a.score)[0];
-          extractedPurpose = bestDescription.line;
-          console.log('CRED OCR Debug - Selected best description:', extractedPurpose);
+        // Method 2: Smart line analysis with improved scoring
+        if (!extractedPurpose) {
+          let potentialDescriptions = [];
+          let amountLineFound = false;
+          
+          for (let i = 0; i < lines.length; i++) {
+            const line = lines[i].trim();
+            console.log('CRED OCR Debug - Analyzing line', i, ':', line);
+            
+            // Track when we pass the amount line
+            if (/^[¥₹][0-9,]+/.test(line)) {
+              amountLineFound = true;
+              console.log('CRED OCR Debug - Found amount line, looking for description after this');
+              continue;
+            }
+            
+            // Skip obvious non-description lines
+            if (!line ||
+                line.length < 3 ||
+                line.includes('|') ||
+                line.toLowerCase().includes('paid') ||
+                line.toLowerCase().includes('cred') ||
+                line.toLowerCase().includes('powered') ||
+                line.toLowerCase().includes('securely') ||
+                line.includes('@') ||
+                line.includes('©') ||
+                /^\d+\s\w{3}\s\d{4}/.test(line) ||
+                /^\d{4,}/.test(line) ||
+                /\d{1,2}:\d{2}/.test(line)) {
+              console.log('CRED OCR Debug - Skipped obvious non-description:', line);
+              continue;
+            }
+            
+            let score = 0;
+            
+            // Higher score for lines that appear after the amount
+            if (amountLineFound) score += 3;
+            
+            // Optimal length for descriptions
+            if (line.length >= 5 && line.length <= 30) score += 2;
+            
+            // Business/service terms
+            const businessTerms = ['repair', 'service', 'compressor', 'machine', 'water', 'tanker', 'transport', 'furnili', 'material', 'hardware', 'steel', 'wood', 'food', 'fuel', 'tools', 'electric', 'plumber', 'carpenter'];
+            for (const term of businessTerms) {
+              if (line.toLowerCase().includes(term)) {
+                score += 4;
+                console.log('CRED OCR Debug - Business term found:', term);
+                break;
+              }
+            }
+            
+            // Common service words
+            const serviceWords = ['fix', 'install', 'buy', 'purchase', 'payment', 'bill', 'charge', 'fee'];
+            for (const word of serviceWords) {
+              if (line.toLowerCase().includes(word)) {
+                score += 2;
+                break;
+              }
+            }
+            
+            // Penalize recipient-like patterns
+            if (/^[A-Z][a-z]+(\s[A-Z][a-z]+){2,}$/.test(line)) {
+              score -= 4; // Likely a person's name
+              console.log('CRED OCR Debug - Penalized as person name:', line);
+            }
+            
+            // Penalize single words that are likely names
+            if (line.split(' ').length === 1 && /^[A-Z][a-z]+$/.test(line)) {
+              score -= 2;
+            }
+            
+            if (score > 0) {
+              potentialDescriptions.push({ line, score, index: i });
+              console.log('CRED OCR Debug - Potential description:', line, 'Score:', score);
+            } else {
+              console.log('CRED OCR Debug - Low score, skipped:', line, 'Score:', score);
+            }
+          }
+          
+          // Pick the highest scoring description
+          if (potentialDescriptions.length > 0) {
+            const bestDescription = potentialDescriptions.sort((a, b) => b.score - a.score)[0];
+            extractedPurpose = bestDescription.line;
+            console.log('CRED OCR Debug - Selected best description:', extractedPurpose, 'Score:', bestDescription.score);
+          }
+        }
+        
+        // Method 3: Fallback - look for any reasonable text that could be a description
+        if (!extractedPurpose) {
+          console.log('CRED OCR Debug - No description found, using fallback method');
+          
+          // Try to find any text that looks like a service/product description
+          for (const line of lines) {
+            if (line.trim() &&
+                line.length >= 3 &&
+                line.length <= 40 &&
+                !line.includes('@') &&
+                !line.includes('©') &&
+                !line.toLowerCase().includes('paid') &&
+                !line.toLowerCase().includes('cred') &&
+                !line.toLowerCase().includes('powered') &&
+                !/^[A-Z][a-z]+(\s[A-Z][a-z]+){2,}$/.test(line) && // Not a full name
+                !/^\d/.test(line)) { // Not starting with number
+              
+              extractedPurpose = line.trim();
+              console.log('CRED OCR Debug - Fallback description found:', extractedPurpose);
+              break;
+            }
+          }
         }
         
         console.log('CRED OCR Debug - Final extracted purpose:', extractedPurpose);
