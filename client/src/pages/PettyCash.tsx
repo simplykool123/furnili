@@ -19,7 +19,7 @@ import { format } from "date-fns";
 import FurniliLayout from "@/components/Layout/FurniliLayout";
 import FurniliCard from "@/components/UI/FurniliCard";
 import FurniliButton from "@/components/UI/FurniliButton";
-import { Plus, Search, Filter, Download, Upload, Camera, Eye, Share2, Pencil, Trash2, ChevronDown, ChevronUp, TrendingDown, TrendingUp, Wallet, Calendar } from "lucide-react";
+import { Plus, Search, Filter, Download, Upload, Camera, Eye, Share2, Pencil, Trash2, ChevronDown, ChevronUp, TrendingDown, TrendingUp, Wallet, Calendar, Users } from "lucide-react";
 import { ClientFreeOCR } from '@/utils/freeOcr';
 
 interface PettyCashExpense {
@@ -615,20 +615,76 @@ export default function PettyCash() {
     }
   };
 
-  const processFile = (file: File) => {
+  const processFile = (file: File, isForFunds: boolean = false) => {
     console.log('Processing file:', {
       name: file.name,
       type: file.type,
       size: file.size,
-      lastModified: file.lastModified
+      lastModified: file.lastModified,
+      isForFunds
     });
     
-    setFormData(prev => ({ ...prev, receiptImage: file }));
-    
-    // Auto-process with OCR if it's an image
-    if (file.type.startsWith('image/')) {
+    if (isForFunds) {
+      processImageWithOCRForFunds(file);
+    } else {
       processImageWithOCR(file);
     }
+  };
+
+  // Enhanced OCR processing for funds form
+  const processImageWithOCRForFunds = async (file: File) => {
+    setIsProcessingOCR(true);
+    try {
+      console.log('OCR Debug - Using Universal Receipt OCR System for Funds');
+      
+      // Use new Universal Receipt OCR system
+      const ocrResult = await ClientFreeOCR.processPaymentScreenshot(file);
+      
+      if (!ocrResult || !ocrResult.text) {
+        throw new Error('No text extracted from image');
+      }
+      
+      console.log('OCR Debug - Universal OCR Results for Funds:', {
+        platform: ocrResult.platform,
+        amount: ocrResult.amount,
+        description: ocrResult.description,
+        recipient: ocrResult.recipient,
+        confidence: ocrResult.confidence
+      });
+      
+      const updatedData = { ...fundsFormData };
+      
+      // Use Universal OCR results for funds
+      if (ocrResult.amount && parseFloat(ocrResult.amount) > 0) {
+        updatedData.amount = ocrResult.amount;
+      }
+      
+      // Use Universal OCR recipient as source
+      if (ocrResult.recipient && ocrResult.recipient.trim().length > 0) {
+        updatedData.source = ocrResult.recipient;
+      }
+      
+      // Use Universal OCR date extraction
+      if (ocrResult.date) {
+        updatedData.date = ocrResult.date;
+      }
+      
+      // Use Universal OCR description extraction
+      if (ocrResult.description && ocrResult.description.trim().length > 0) {
+        updatedData.purpose = ocrResult.description;
+      }
+      
+      setFundsFormData(prev => ({ ...updatedData, receiptImage: prev.receiptImage }));
+      toast({ 
+        title: "Universal OCR extraction completed for funds", 
+        description: `Amount: ₹${updatedData.amount}, Source: ${updatedData.source}` 
+      });
+      
+    } catch (error) {
+      console.error('Universal OCR Error for Funds:', error);
+      toast({ title: "OCR processing failed", description: "Please fill the details manually", variant: "destructive" });
+    }
+    setIsProcessingOCR(false);
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -662,20 +718,19 @@ export default function PettyCash() {
     if (imageItem) {
       const file = imageItem.getAsFile();
       if (file) {
-        // Create a new file with proper naming for pasted images
         const timestamp = Date.now();
-        const extension = file.type.includes('png') ? '.png' : '.jpg';
-        const renamedFile = new File([file], `pasted-receipt-${timestamp}${extension}`, {
+        const renamedFile = new File([file], `pasted-image-${timestamp}.png`, {
           type: file.type,
-          lastModified: Date.now(),
+          lastModified: timestamp,
         });
         
-        console.log('Pasted image details:', {
-          originalName: file.name,
+        setFormData(prev => ({ 
+          ...prev, 
+          receiptImage: renamedFile,
           newName: renamedFile.name,
           type: renamedFile.type,
           size: renamedFile.size
-        });
+        }));
         
         processFile(renamedFile);
         toast({ title: "Image pasted", description: "Processing with OCR...", });
@@ -703,25 +758,8 @@ export default function PettyCash() {
     addExpenseMutation.mutate(formDataToSend);
   };
 
-  const handleFundsSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    const formDataToSend = new FormData();
-    formDataToSend.append('date', fundsFormData.date);
-    formDataToSend.append('amount', fundsFormData.amount);
-    formDataToSend.append('source', fundsFormData.source);
-    formDataToSend.append('receivedBy', fundsFormData.receivedBy);
-    formDataToSend.append('purpose', fundsFormData.purpose);
-    
-    if (fundsFormData.receiptImage) {
-      formDataToSend.append('receipt', fundsFormData.receiptImage);
-    }
-    
-    addFundsMutation.mutate(formDataToSend);
-  };
-
   // Filtering logic
-  const filteredExpenses = expenses?.filter((expense) => {
+  const filteredExpenses = expenses?.filter((expense: any) => {
     const matchesSearch = expense.vendor.toLowerCase().includes(searchTerm.toLowerCase()) ||
       expense.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       expense.paidBy.toLowerCase().includes(searchTerm.toLowerCase());
@@ -753,8 +791,8 @@ export default function PettyCash() {
   }) || [];
 
   // Get unique categories and staff for filter dropdowns
-  const categories = Array.from(new Set(expenses?.map(e => e.category).filter(Boolean))) || [];
-  const staffMembers = Array.from(new Set(expenses?.map(e => e.paidBy).filter(Boolean))) || [];
+  const availableCategories = Array.from(new Set(expenses?.map((e: any) => e.category).filter(Boolean))) || [];
+  const staffMembers = Array.from(new Set(expenses?.map((e: any) => e.paidBy).filter(Boolean))) || [];
 
   const resetFormData = () => {
     setFormData({
@@ -770,8 +808,25 @@ export default function PettyCash() {
     });
   };
 
+  const handleFundsSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    const formDataToSend = new FormData();
+    formDataToSend.append('date', fundsFormData.date);
+    formDataToSend.append('amount', fundsFormData.amount);
+    formDataToSend.append('source', fundsFormData.source);
+    formDataToSend.append('receivedBy', fundsFormData.receivedBy);
+    formDataToSend.append('purpose', fundsFormData.purpose);
+    
+    if (fundsFormData.receiptImage) {
+      formDataToSend.append('receipt', fundsFormData.receiptImage);
+    }
+    
+    addFundsMutation.mutate(formDataToSend);
+  };
+
   return (
-    <FurniliLayout>
+    <FurniliLayout title="Petty Cash Management" subtitle="Track expenses and manage cash flow">
       <div className="p-6 space-y-6">
         {/* Header */}
         <div className="flex justify-between items-center">
@@ -838,6 +893,53 @@ export default function PettyCash() {
           </div>
         )}
 
+        {/* Individual Staff Balances */}
+        {staffBalances && staffBalances.length > 0 && (
+          <FurniliCard className="p-4">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold">Individual Staff Balances</h3>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowStaffBalances(!showStaffBalances)}
+              >
+                <Users className="h-4 w-4 mr-2" />
+                {showStaffBalances ? 'Hide' : 'Show'} Details
+              </Button>
+            </div>
+            
+            {showStaffBalances && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {staffBalances.map((balance: any) => (
+                  <div key={balance.userId} className="p-3 border rounded-lg">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium">{balance.userName}</p>
+                        <p className="text-sm text-gray-600">
+                          Expenses: ₹{balance.totalExpenses?.toLocaleString() || '0'}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          Funds: ₹{balance.totalFunds?.toLocaleString() || '0'}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className={`text-lg font-semibold ${
+                          (balance.totalFunds || 0) - (balance.totalExpenses || 0) >= 0 
+                            ? 'text-green-600' 
+                            : 'text-red-600'
+                        }`}>
+                          ₹{((balance.totalFunds || 0) - (balance.totalExpenses || 0)).toLocaleString()}
+                        </p>
+                        <p className="text-xs text-gray-500">Balance</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </FurniliCard>
+        )}
+
         {/* Filters and Search */}
         <FurniliCard className="p-4">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -857,7 +959,7 @@ export default function PettyCash() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="All Categories">All Categories</SelectItem>
-                {categories.map((category) => (
+                {availableCategories.map((category) => (
                   <SelectItem key={category} value={category}>{category}</SelectItem>
                 ))}
               </SelectContent>
@@ -1198,6 +1300,23 @@ export default function PettyCash() {
               </div>
 
               <div>
+                <Label htmlFor="funds-receivedBy">Received By</Label>
+                <Select
+                  value={fundsFormData.receivedBy}
+                  onValueChange={(value) => setFundsFormData(prev => ({ ...prev, receivedBy: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select staff member" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {users.map((user) => (
+                      <SelectItem key={user.id} value={user.username}>{user.username}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
                 <Label htmlFor="funds-purpose">Purpose</Label>
                 <Input
                   id="funds-purpose"
@@ -1206,6 +1325,58 @@ export default function PettyCash() {
                   onChange={(e) => setFundsFormData(prev => ({ ...prev, purpose: e.target.value }))}
                   placeholder="Reason for adding funds"
                 />
+              </div>
+
+              {/* Receipt Image Upload with OCR Support */}
+              <div>
+                <Label htmlFor="funds-receipt">Receipt Image</Label>
+                <div className="mt-1">
+                  <input
+                    id="funds-receipt"
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        setFundsFormData(prev => ({ ...prev, receiptImage: file }));
+                        // Process with OCR for funds
+                        processFile(file, true); // true indicates it's for funds form
+                      }
+                    }}
+                    onPaste={handlePaste}
+                  />
+                  {fundsFormData.receiptImage ? (
+                    <div className="flex items-center justify-between p-2 border rounded">
+                      <span className="text-sm text-gray-600">{fundsFormData.receiptImage.name}</span>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setFundsFormData(prev => ({ ...prev, receiptImage: null }))}
+                      >
+                        Remove
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
+                      <label
+                        htmlFor="funds-receipt"
+                        className="text-blue-600 hover:text-blue-700 cursor-pointer font-medium"
+                      >
+                        Upload UPI payment screenshot for automatic data extraction (GPay, PhonePe, CRED)
+                      </label>
+                    </div>
+                  )}
+                </div>
+                {isProcessingOCR && (
+                  <div className="text-center py-2">
+                    <div className="inline-flex items-center space-x-2 text-sm text-blue-600">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                      <span>Processing image with OCR...</span>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="flex justify-end space-x-2">
