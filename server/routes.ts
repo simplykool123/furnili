@@ -4501,33 +4501,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log('Using API key:', process.env.OCR_SPACE_API_KEY ? 'User provided' : 'Free tier fallback');
 
-      // Try multiple approaches to call OCR.space API
-      let result;
-      if (ocrSpaceApi.default && typeof ocrSpaceApi.default.ocrSpace === 'function') {
-        result = await ocrSpaceApi.default.ocrSpace(options);
-      } else if (typeof ocrSpaceApi.ocrSpace === 'function') {
-        result = await ocrSpaceApi.ocrSpace(options);
-      } else if (typeof ocrSpaceApi.default === 'function') {
-        result = await ocrSpaceApi.default(options);
-      } else {
-        // Try to access the function via namespace
-        const ocrFunction = ocrSpaceApi.default || ocrSpaceApi;
-        if (ocrFunction && typeof ocrFunction === 'object') {
-          const funcKeys = Object.keys(ocrFunction);
-          console.log('Available OCR function keys:', funcKeys);
-          
-          // Try common function names
-          if (typeof ocrFunction.ocrSpace === 'function') {
-            result = await ocrFunction.ocrSpace(options);
-          } else if (typeof ocrFunction.ocr === 'function') {
-            result = await ocrFunction.ocr(options);
-          } else {
-            throw new Error(`OCR function not found. Available keys: ${funcKeys.join(', ')}`);
-          }
-        } else {
-          throw new Error('OCR.space API module structure not recognized');
-        }
+      // The OCR.space API doesn't support base64 image processing directly
+      // We need to save the image temporarily and use parseImageFromLocalFile
+      const fs = await import('fs');
+      const path = await import('path');
+      const tempDir = path.join(process.cwd(), 'temp');
+      
+      // Ensure temp directory exists
+      if (!fs.existsSync(tempDir)) {
+        fs.mkdirSync(tempDir, { recursive: true });
       }
+      
+      const tempFileName = `temp_ocr_${Date.now()}.${filetype.split('/')[1]}`;
+      const tempFilePath = path.join(tempDir, tempFileName);
+      
+      // Write base64 image to temporary file
+      const imageBuffer = Buffer.from(base64Image, 'base64');
+      fs.writeFileSync(tempFilePath, imageBuffer);
+      
+      console.log('Using parseImageFromLocalFile with temp file:', tempFileName);
+      
+      // Use the correct function from the API
+      const ocrFunction = ocrSpaceApi.default || ocrSpaceApi;
+      const result = await ocrFunction.parseImageFromLocalFile(tempFilePath, {
+        apikey: process.env.OCR_SPACE_API_KEY || 'helloworld',
+        language: 'eng',
+        isOverlayRequired: false,
+        detectOrientation: true,
+        isTable: false,
+        OCREngine: 2
+      });
+      
+      // Clean up temporary file
+      fs.unlinkSync(tempFilePath);
       
       if (result && result.ParsedResults && result.ParsedResults.length > 0) {
         const extractedText = result.ParsedResults[0].ParsedText;
