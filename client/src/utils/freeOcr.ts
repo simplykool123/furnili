@@ -187,60 +187,97 @@ export class ClientFreeOCR {
     return canvas;
   }
 
-  // Comprehensive post-processing for rupee symbol corrections
+  // Generic post-processing for ALL payment apps - focuses on common OCR errors
   private static correctRupeeSymbolErrors(text: string): string {
     let corrected = text;
     
-    console.log('OCR Debug - Original text before rupee corrections:', text.slice(0, 200));
+    console.log('OCR Debug - Starting generic OCR corrections for all payment apps');
     
-    // Common misrecognitions of rupee symbol - comprehensive list
-    const rupeeReplacements = [
-      // Most common misreads
-      { pattern: /£(\d)/g, replacement: '₹$1' },           // £500 -> ₹500
-      { pattern: /&(\d)/g, replacement: '₹$1' },           // &500 -> ₹500
-      { pattern: /¢(\d)/g, replacement: '₹$1' },           // ¢500 -> ₹500
-      { pattern: /@(\d)/g, replacement: '₹$1' },           // @500 -> ₹500
-      { pattern: /\$(\d)/g, replacement: '₹$1' },          // $500 -> ₹500
-      { pattern: /€(\d)/g, replacement: '₹$1' },           // €500 -> ₹500
+    // UNIVERSAL CORRECTIONS - work for all payment platforms
+    
+    // 1. Fix common rupee symbol misreads (most critical for Indian payments)
+    const universalRupeeReplacements = [
+      // Critical symbols that are often misread as rupee
+      { pattern: /£(\s*\d)/g, replacement: '₹$1', name: 'Pound to Rupee' },
+      { pattern: /&(\s*\d)/g, replacement: '₹$1', name: 'Ampersand to Rupee' },
+      { pattern: /¢(\s*\d)/g, replacement: '₹$1', name: 'Cent to Rupee' },
+      { pattern: /@(\s*\d)/g, replacement: '₹$1', name: 'At symbol to Rupee' },
+      { pattern: /\$(\s*\d)/g, replacement: '₹$1', name: 'Dollar to Rupee' },
+      { pattern: /€(\s*\d)/g, replacement: '₹$1', name: 'Euro to Rupee' },
+      { pattern: /¥(\s*\d)/g, replacement: '₹$1', name: 'Yen to Rupee' },
       
-      // Text-based formats
-      { pattern: /Rs\.?\s*(\d)/gi, replacement: '₹$1' },   // Rs 500 -> ₹500
-      { pattern: /INR\s*(\d)/gi, replacement: '₹$1' },     // INR 500 -> ₹500
-      { pattern: /Rupees?\s*(\d)/gi, replacement: '₹$1' }, // Rupees 500 -> ₹500
-      
-      // OCR spacing errors
-      { pattern: /₹\s+(\d)/g, replacement: '₹$1' },        // ₹ 500 -> ₹500
-      { pattern: /(\d)\s*₹/g, replacement: '$1₹' },        // 500 ₹ -> 500₹
-      
-      // Context-based corrections for payment apps
-      { pattern: /Amount[:\s]*(\d)/gi, replacement: 'Amount: ₹$1' },
-      { pattern: /Paid[:\s]*(\d)/gi, replacement: 'Paid: ₹$1' },
-      { pattern: /Sent[:\s]*(\d)/gi, replacement: 'Sent: ₹$1' },
+      // Text-based currency indicators
+      { pattern: /Rs\.?\s*(\d)/gi, replacement: '₹$1', name: 'Rs text to symbol' },
+      { pattern: /INR\s*(\d)/gi, replacement: '₹$1', name: 'INR text to symbol' },
+      { pattern: /Rupees?\s*(\d)/gi, replacement: '₹$1', name: 'Rupees text to symbol' },
+      { pattern: /RUPEE\s*(\d)/gi, replacement: '₹$1', name: 'RUPEE text to symbol' },
     ];
     
-    // Apply all corrections
-    for (const { pattern, replacement } of rupeeReplacements) {
+    // 2. Fix spacing and formatting issues (universal for all platforms)
+    const spacingCorrections = [
+      { pattern: /₹\s+(\d)/g, replacement: '₹$1', name: 'Remove space after rupee' },
+      { pattern: /(\d)\s*₹/g, replacement: '₹$1', name: 'Move rupee before amount' },
+      { pattern: /(\d)\s+(\d)/g, replacement: '$1$2', name: 'Remove space in numbers' },
+    ];
+    
+    // Apply rupee symbol corrections
+    let correctionCount = 0;
+    for (const { pattern, replacement, name } of universalRupeeReplacements) {
       const beforeCorrection = corrected;
       corrected = corrected.replace(pattern, replacement);
       if (corrected !== beforeCorrection) {
-        console.log(`OCR Debug - Applied rupee correction: ${pattern.toString()}`);
+        correctionCount++;
+        console.log(`OCR Debug - Applied ${name} correction`);
       }
     }
     
-    // Apply context-aware corrections for Indian payment apps
-    if (/google pay|gpay|phonepe|paytm|cred|upi/i.test(corrected)) {
-      console.log('OCR Debug - Applying Indian payment app context corrections');
-      
-      // Business name followed by amount pattern
-      corrected = corrected.replace(/(furnili|fevixol|ashish|steel|wood)\s+(\d+)/gi, '$1\n₹$2');
-      
-      // Common payment success patterns
-      corrected = corrected.replace(/successfully\s+sent\s+(\d+)/gi, 'successfully sent ₹$1');
-      corrected = corrected.replace(/payment\s+of\s+(\d+)/gi, 'payment of ₹$1');
+    // Apply spacing corrections
+    for (const { pattern, replacement, name } of spacingCorrections) {
+      const beforeCorrection = corrected;
+      corrected = corrected.replace(pattern, replacement);
+      if (corrected !== beforeCorrection) {
+        correctionCount++;
+        console.log(`OCR Debug - Applied ${name} correction`);
+      }
     }
     
-    console.log('OCR Debug - Text after all rupee corrections:', corrected.slice(0, 200));
-    return corrected;
+    // 3. Context-based improvements for better amount detection
+    // Add context markers that help with amount extraction
+    const contextMarkers = [
+      { pattern: /(paid|sent|received)\s+(\d)/gi, replacement: '$1 ₹$2', name: 'Add rupee to payment context' },
+      { pattern: /(amount|total)\s*[:=]\s*(\d)/gi, replacement: '$1: ₹$2', name: 'Add rupee to amount context' },
+      { pattern: /(transfer|payment)\s+(\d)/gi, replacement: '$1 ₹$2', name: 'Add rupee to transfer context' },
+    ];
+    
+    for (const { pattern, replacement, name } of contextMarkers) {
+      const beforeCorrection = corrected;
+      corrected = corrected.replace(pattern, replacement);
+      if (corrected !== beforeCorrection) {
+        correctionCount++;
+        console.log(`OCR Debug - Applied ${name} correction`);
+      }
+    }
+    
+    console.log(`OCR Debug - Applied ${correctionCount} total corrections to improve amount detection`);
+    
+    // 4. Line-level improvements for better parsing
+    const lines = corrected.split('\n');
+    const improvedLines = lines.map(line => {
+      // If line contains business context + number, ensure rupee symbol is present
+      if (/furnili|tools|material|order|payment/i.test(line) && /\d{1,6}/.test(line) && !/₹/.test(line)) {
+        return line.replace(/(\d+)/g, '₹$1');
+      }
+      return line;
+    });
+    
+    const finalCorrected = improvedLines.join('\n');
+    
+    if (finalCorrected !== corrected) {
+      console.log('OCR Debug - Applied business context rupee symbol enhancement');
+    }
+    
+    console.log('OCR Debug - Completed generic OCR corrections, enhanced text ready for parsing');
+    return finalCorrected;
   }
 
   // Standard Tesseract fallback
@@ -266,48 +303,56 @@ export class ClientFreeOCR {
     }
   }
 
-  // Multi-engine processing with best-first approach
+  // Multi-engine processing optimized for generic receipt processing
   static async processWithMultipleEngines(file: File, googleApiKey?: string): Promise<string> {
-    console.log('OCR Debug - Starting enhanced multi-engine OCR processing');
+    console.log('OCR Debug - Starting generic multi-engine OCR for all receipt types');
     
     const engines = [
       {
         name: 'Google Vision',
         method: () => this.tryGoogleVisionOCR(file, googleApiKey),
         available: !!googleApiKey,
-        priority: 1
+        priority: 1,
+        description: 'Best for clean text and symbols'
       },
       {
-        name: 'Enhanced Tesseract',
+        name: 'Rupee-Enhanced Tesseract',
         method: () => this.tryEnhancedTesseract(file),
         available: true,
-        priority: 2
+        priority: 2,
+        description: 'Optimized for Indian payment screenshots'
       },
       {
         name: 'Standard Tesseract',
         method: () => this.tryStandardTesseract(file),
         available: true,
-        priority: 3
+        priority: 3,
+        description: 'Reliable fallback for all text'
       }
     ];
 
-    // Try available engines in priority order
+    // Try engines and apply post-processing to each result
     for (const engine of engines.filter(e => e.available)) {
       try {
-        console.log(`OCR Debug - Trying ${engine.name} (priority ${engine.priority})`);
-        const result = await engine.method();
+        console.log(`OCR Debug - Attempting ${engine.name} - ${engine.description}`);
+        const rawResult = await engine.method();
         
-        if (result && result.trim().length > 0) {
-          console.log(`OCR Debug - ${engine.name} succeeded`);
-          return result;
+        if (rawResult && rawResult.trim().length > 0) {
+          // Apply universal corrections regardless of OCR engine
+          const correctedResult = this.correctRupeeSymbolErrors(rawResult);
+          
+          console.log(`OCR Debug - ${engine.name} succeeded with ${correctedResult.split('\n').length} lines`);
+          console.log(`OCR Debug - Sample text: ${correctedResult.slice(0, 100)}...`);
+          
+          return correctedResult;
         }
       } catch (error) {
-        console.log(`OCR Debug - ${engine.name} failed:`, error.message);
+        console.log(`OCR Debug - ${engine.name} failed: ${error instanceof Error ? error.message : String(error)}`);
         continue;
       }
     }
     
-    console.log('OCR Debug - All engines failed');
+    console.log('OCR Debug - All OCR engines failed to extract text');
     return '';
   }
 
@@ -379,58 +424,130 @@ export class ClientFreeOCR {
   }
 
   private static extractAmount(lines: string[], platform: string): string {
-    console.log('OCR Debug - Enhanced rupee-aware amount extraction for platform:', platform);
+    console.log('OCR Debug - Generic amount extraction for platform:', platform);
     
-    // Enhanced patterns prioritizing rupee symbol recognition
-    const amountPatterns = [
-      /₹\s*([0-9,]+(?:\.[0-9]{2})?)/,  // ₹500, ₹1,500.00
-      /(?:amount|paid|sent|received)[:\s]*₹\s*([0-9,]+(?:\.[0-9]{2})?)/gi, // Amount: ₹500
-      /rs\.?\s*([0-9,]+(?:\.[0-9]{2})?)/i,  // Rs 500, Rs. 1500
-      /(?:paid|sent|amount)\s*₹?\s*([0-9,]+(?:\.[0-9]{2})?)/i,  // Paid ₹500
-      /INR\s*([0-9,]+(?:\.[0-9]{2})?)/gi,  // INR 500
-    ];
-
-    // Sort lines by likelihood of containing amounts (prioritize rupee symbol)
-    const sortedLines = [...lines].sort((a, b) => {
-      const aScore = (/₹/.test(a) ? 20 : 0) + (/amount|paid|sent/i.test(a) ? 10 : 0);
-      const bScore = (/₹/.test(b) ? 20 : 0) + (/amount|paid|sent/i.test(b) ? 10 : 0);
-      return bScore - aScore;
+    // GENERIC APPROACH: Look for patterns where description is followed by amount
+    // This works for all payment apps: "Description + Rupee Symbol + Amount"
+    
+    // Step 1: Find business/transaction context lines
+    const contextLines = lines.filter(line => {
+      const lower = line.toLowerCase();
+      return lower.includes('furnili') || 
+             lower.includes('tools') ||
+             lower.includes('completed') ||
+             lower.includes('payment') ||
+             lower.includes('sent') ||
+             lower.includes('received') ||
+             /to\s+[A-Z][a-z]+/i.test(line); // "To PERSON NAME" pattern
     });
-
-    for (const line of sortedLines) {
-      // Skip obvious non-amount lines
-      if (/\d{1,2}\/\d{1,2}\/\d{4}/.test(line) || // Skip dates
-          /\d{10,}/.test(line) || // Skip transaction IDs
-          line.toLowerCase().includes('jul') ||
-          line.toLowerCase().includes('am') ||
-          line.toLowerCase().includes('pm') ||
-          line.toLowerCase().includes('2025')) {
-        continue;
+    
+    console.log('OCR Debug - Context lines found:', contextLines);
+    
+    // Step 2: Look for amounts near context lines
+    for (let i = 0; i < lines.length; i++) {
+      const currentLine = lines[i];
+      const isContextLine = contextLines.some(ctx => ctx === currentLine);
+      
+      if (isContextLine) {
+        // Check next 3 lines and previous 2 lines for amounts
+        for (let j = Math.max(0, i - 2); j <= Math.min(lines.length - 1, i + 3); j++) {
+          if (j === i) continue; // Skip the context line itself
+          
+          const checkLine = lines[j];
+          const amount = this.extractAmountFromLine(checkLine);
+          
+          if (amount && this.isValidIndianAmount(amount)) {
+            console.log(`OCR Debug - Found amount "${amount}" near context line "${currentLine}"`);
+            return amount;
+          }
+        }
       }
-
-      for (const pattern of amountPatterns) {
+    }
+    
+    // Step 3: Enhanced patterns for all payment apps
+    const genericAmountPatterns = [
+      // Direct rupee patterns
+      /₹\s*([0-9,]+(?:\.[0-9]{2})?)/,  
+      /Rs\.?\s*([0-9,]+(?:\.[0-9]{2})?)/i,
+      /INR\s*([0-9,]+(?:\.[0-9]{2})?)/i,
+      
+      // Common misread symbols
+      /£\s*([0-9,]+(?:\.[0-9]{2})?)/,  // £ instead of ₹
+      /&\s*([0-9,]+(?:\.[0-9]{2})?)/,  // & instead of ₹
+      /@\s*([0-9,]+(?:\.[0-9]{2})?)/,  // @ instead of ₹
+      /\$\s*([0-9,]+(?:\.[0-9]{2})?)/,  // $ instead of ₹
+      
+      // Context-based patterns
+      /(?:amount|paid|sent|received|total)[:\s]*([0-9,]+(?:\.[0-9]{2})?)/gi,
+      /(?:payment\s+of|sent)[:\s]*([0-9,]+(?:\.[0-9]{2})?)/gi,
+    ];
+    
+    // Step 4: Apply patterns to all lines
+    for (const line of lines) {
+      // Skip obvious non-amount lines
+      if (this.shouldSkipLine(line)) continue;
+      
+      for (const pattern of genericAmountPatterns) {
         const match = line.match(pattern);
         if (match && this.isValidIndianAmount(match[1])) {
-          console.log('OCR Debug - Enhanced rupee amount found:', match[1]);
+          console.log('OCR Debug - Pattern match found:', match[1], 'in line:', line);
           return match[1].replace(/,/g, '');
         }
       }
     }
-
-    // If no clear amount pattern found, look for reasonable standalone numbers
-    // but be more strict to avoid picking up dates
+    
+    // Step 5: Look for reasonable standalone numbers as last resort
     for (const line of lines) {
+      if (this.shouldSkipLine(line)) continue;
+      
       const standaloneMatch = line.match(/^([0-9,]+(?:\.[0-9]{2})?)$/);
       if (standaloneMatch && this.isValidIndianAmount(standaloneMatch[1])) {
         const amount = parseFloat(standaloneMatch[1].replace(/,/g, ''));
-        if (amount >= 100 && amount <= 50000) { // Stricter range for standalone numbers
-          console.log('OCR Debug - Found valid standalone amount:', standaloneMatch[1]);
+        if (amount >= 10 && amount <= 99999) { // Reasonable transaction range
+          console.log('OCR Debug - Found standalone amount:', standaloneMatch[1]);
           return standaloneMatch[1].replace(/,/g, '');
         }
       }
     }
     
+    console.log('OCR Debug - No valid amount found in any extraction method');
     return '';
+  }
+
+  // Extract amount from a single line
+  private static extractAmountFromLine(line: string): string | null {
+    // All possible amount patterns in a single line
+    const patterns = [
+      /₹\s*([0-9,]+(?:\.[0-9]{2})?)/,
+      /Rs\.?\s*([0-9,]+(?:\.[0-9]{2})?)/i,
+      /£\s*([0-9,]+(?:\.[0-9]{2})?)/,
+      /&\s*([0-9,]+(?:\.[0-9]{2})?)/,
+      /@\s*([0-9,]+(?:\.[0-9]{2})?)/,
+      /\$\s*([0-9,]+(?:\.[0-9]{2})?)/,
+      /^([0-9,]+(?:\.[0-9]{2})?)$/,  // Standalone number
+    ];
+    
+    for (const pattern of patterns) {
+      const match = line.match(pattern);
+      if (match) {
+        return match[1];
+      }
+    }
+    
+    return null;
+  }
+
+  // Determine if a line should be skipped for amount extraction
+  private static shouldSkipLine(line: string): boolean {
+    return /\d{1,2}\/\d{1,2}\/\d{4}/.test(line) || // Dates
+           /\d{10,}/.test(line) || // Transaction IDs (10+ digits)
+           line.toLowerCase().includes('jul') ||
+           line.toLowerCase().includes('am') ||
+           line.toLowerCase().includes('pm') ||
+           line.toLowerCase().includes('2025') ||
+           line.toLowerCase().includes('2024') ||
+           line.toLowerCase().includes('transaction id') ||
+           line.toLowerCase().includes('upi');
   }
 
   // Validate if extracted amount looks reasonable for Indian transactions
