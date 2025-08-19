@@ -779,22 +779,23 @@ export default function PettyCash() {
         }
       }
 
-      // Google Pay description - prioritize actual service descriptions over recipient names
+      // Google Pay description - capture full service description
       if (!description) {
-        // Skip lines that are just recipient names or dates or transaction info
-        const skipPatterns = /^(to:|from:|completed|transaction|google|pay|upi|bank|hdfc)/i;
-        const isRecipient = line.toLowerCase().includes('hardware') || 
-                           line.toLowerCase().includes('electricals') ||
-                           line.toLowerCase().includes('enterprise');
+        // Skip lines that are just recipient names, dates, transaction info, or system text
+        const skipPatterns = /^(to:|from:|completed|transaction|google|pay|upi|bank|hdfc|\+91|₹|rs\.|[0-9\s\-\+]+$)/i;
+        const isPhoneNumber = /^[\+\d\s\-]{8,}$/.test(line.trim());
+        const isTransactionId = line.length > 15 && /^[A-Z0-9]+$/.test(line);
         
-        if (!skipPatterns.test(line) && !isRecipient && line.length > 5 && line.length < 50) {
-          // Look for actual service/item descriptions
-          if (line.toLowerCase().includes('for ')) {
-            description = line.replace(/.*for\s+/i, '').trim();
-            console.log('GooglePay: Found description (for pattern):', description);
-          } else if (/furnili|thirst|repair|service|transport|material|fuel|food|bill/i.test(line)) {
-            description = line.trim();
-            console.log('GooglePay: Found description (service term):', description);
+        if (!skipPatterns.test(line) && !isPhoneNumber && !isTransactionId && 
+            line.length > 5 && line.length < 100) {
+          
+          // Check if this looks like a service description
+          const serviceLikePhrases = /cilender|cylinder|furnili|thirst|repair|service|transport|material|fuel|food|bill|labor|labour|work|supply|purchase|payment|gas/i;
+          
+          if (serviceLikePhrases.test(line)) {
+            // Take the full line as description, just clean it up
+            description = line.trim().replace(/^[©\-\s]+|[©\-\s]+$/g, ''); // Remove leading/trailing symbols
+            console.log('GooglePay: Found full description:', description);
           }
         }
       }
