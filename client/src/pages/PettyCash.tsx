@@ -589,48 +589,71 @@ export default function PettyCash() {
               continue;
             }
             
-            // Look for business-related descriptions like "furnili thinet", "steel purchase", etc.
-            if (line.length >= 3 && line.length <= 50 && 
+            // Look for business-related descriptions like "furnili thinet for cleaning tops"
+            if (line.length >= 3 && line.length <= 100 && 
                 !line.match(/^[A-Z\s&]+$/) && // Skip all-caps business names
                 !/^\d+$/.test(line)) { // Skip standalone numbers
-              extractedPurpose = line.trim();
-              break;
+              
+              // For GPay, accept longer descriptive text that includes full context
+              const businessTerms = ['furnili', 'steel', 'wood', 'material', 'thiner', 'paint', 'hardware', 'purchase', 'order', 'supply', 'for', 'cleaning', 'tops'];
+              const hasBusinessTerm = businessTerms.some(term => line.toLowerCase().includes(term));
+              
+              if (hasBusinessTerm || line.split(' ').length >= 2) {
+                extractedPurpose = line.trim();
+                break;
+              }
             }
           }
         }
         
-        // Alternative: Look for business/product descriptions anywhere in the text
+        // Alternative: Look for complete business descriptions from GPay bubble
         if (!extractedPurpose) {
-          // Look for descriptive text that's not transaction metadata
+          // For GPay, collect all descriptive lines that appear in the payment bubble
+          const potentialDescriptions = [];
+          
           for (const line of lines) {
             const lowerLine = line.toLowerCase();
             
-            // Skip transaction metadata and recipient info
+            // Skip obvious transaction metadata
             if (lowerLine.includes('google pay') ||
                 lowerLine.includes('upi') ||
                 lowerLine.includes('transaction') ||
                 lowerLine.includes('completed') ||
                 lowerLine.includes('powered by') ||
                 lowerLine.includes('success') ||
+                lowerLine.includes('sent') ||
                 lowerLine.startsWith('to ') ||
                 lowerLine.includes('@') ||
                 /^₹[\d,]+/.test(line) || // Skip amounts
                 /^\d+$/.test(line) || // Skip standalone numbers
                 /^\d{1,2}\s(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)/i.test(line) ||
                 /^\d{1,2}:\d{2}/.test(line) ||
-                line.match(/^[A-Z\s&]+$/) || // Skip all-caps business names
-                line.length < 3 || line.length > 50) {
+                line.match(/^[A-Z\s&]+$/) || // Skip all-caps business names like "HARIOM HARDWARE"
+                line.length < 3 || line.length > 100) {
               continue;
             }
             
-            // Look for business-related descriptions containing common terms
-            const businessTerms = ['furnili', 'steel', 'wood', 'material', 'thiner', 'paint', 'hardware', 'purchase', 'order', 'supply'];
+            // Collect all descriptive text that could be part of the payment purpose
+            // This includes business terms, product descriptions, or general descriptive text
+            const businessTerms = ['furnili', 'steel', 'wood', 'material', 'thiner', 'paint', 'hardware', 'purchase', 'order', 'supply', 'for', 'cleaning', 'tops'];
             const hasBusinessTerm = businessTerms.some(term => lowerLine.includes(term));
             
             // Accept lines with business terms or reasonable descriptive text
-            if (hasBusinessTerm || (line.split(' ').length >= 2 && line.split(' ').length <= 6)) {
-              extractedPurpose = line.trim();
-              break;
+            if (hasBusinessTerm || (line.split(' ').length >= 2 && line.split(' ').length <= 10)) {
+              potentialDescriptions.push(line.trim());
+            }
+          }
+          
+          // Combine all potential descriptions into a complete description
+          if (potentialDescriptions.length > 0) {
+            // For GPay, typically the full description is either one comprehensive line
+            // or multiple related lines that should be combined
+            if (potentialDescriptions.length === 1) {
+              extractedPurpose = potentialDescriptions[0];
+            } else {
+              // Combine multiple descriptive lines, but avoid duplicates
+              const uniqueDescriptions = [...new Set(potentialDescriptions)];
+              extractedPurpose = uniqueDescriptions.join(' - ');
             }
           }
         }
