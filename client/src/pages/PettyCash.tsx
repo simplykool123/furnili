@@ -105,6 +105,33 @@ export default function PettyCash() {
 
   const [isProcessingOCR, setIsProcessingOCR] = useState(false);
 
+  // Reset form to initial state
+  const resetFormData = () => {
+    setFormData({
+      date: format(new Date(), "yyyy-MM-dd"),
+      amount: "",
+      paidTo: "",
+      paidBy: user ? user.id.toString() : "",
+      purpose: "",
+      projectId: "",
+      orderNo: "",
+      receiptImage: null,
+      category: "",
+    });
+  };
+
+  // Reset funds form to initial state
+  const resetFundsFormData = () => {
+    setFundsFormData({
+      date: format(new Date(), "yyyy-MM-dd"),
+      amount: "",
+      source: "",
+      receivedBy: "",
+      purpose: "",
+      receiptImage: null,
+    });
+  };
+
   // Edit expense mutation
   const editExpenseMutation = useMutation({
     mutationFn: async ({ id, expenseData }: { id: number, expenseData: FormData }) => {
@@ -239,12 +266,12 @@ export default function PettyCash() {
       queryClient.invalidateQueries({ queryKey: ["/api/petty-cash/my-stats"] });
       queryClient.invalidateQueries({ queryKey: ["/api/petty-cash/staff-balances"] });
       setShowAddDialog(false);
-      resetForm();
+      resetFormData();
       toast({ title: "Expense added successfully" });
     },
     onError: (error) => {
       toast({ title: "Failed to add expense", variant: "destructive" });
-      console.error("Error adding expense:", error);
+      // console.error("Error adding expense:", error);
     },
   });
 
@@ -271,39 +298,16 @@ export default function PettyCash() {
       queryClient.invalidateQueries({ queryKey: ["/api/petty-cash/my-stats"] });
       queryClient.invalidateQueries({ queryKey: ["/api/petty-cash/staff-balances"] });
       setShowAddFundsDialog(false);
-      resetFundsForm();
+      resetFundsFormData();
       toast({ title: "Funds added successfully" });
     },
     onError: (error) => {
       toast({ title: "Failed to add funds", variant: "destructive" });
-      console.error("Error adding funds:", error);
+      // console.error("Error adding funds:", error);
     },
   });
 
-  const resetForm = () => {
-    setFormData({
-      date: format(new Date(), "yyyy-MM-dd"),
-      amount: "",
-      paidTo: "",
-      paidBy: user ? user.id.toString() : "", // Always default to current user
-      purpose: "",
-      projectId: "",
-      orderNo: "",
-      receiptImage: null,
-      category: "",
-    });
-  };
 
-  const resetFundsForm = () => {
-    setFundsFormData({
-      date: format(new Date(), "yyyy-MM-dd"),
-      amount: "",
-      source: "",
-      receivedBy: user ? user.id.toString() : "", // Default to current user
-      purpose: "",
-      receiptImage: null,
-    });
-  };
 
   // Platform detection for specialized OCR parsing
   const detectPlatformType = (text: string): string => {
@@ -1008,12 +1012,18 @@ export default function PettyCash() {
           <div>
           </div>
         <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-          <Button onClick={() => setShowAddDialog(true)} className={`flex-1 sm:flex-none ${isMobile ? 'h-9 text-sm' : ''}`}>
+          <Button onClick={() => {
+            resetFormData();
+            setShowAddDialog(true);
+          }} className={`flex-1 sm:flex-none ${isMobile ? 'h-9 text-sm' : ''}`}>
             <Plus className="mr-2 h-4 w-4" />
             Add Expense
           </Button>
           {user?.role !== 'staff' && (
-            <Button onClick={() => setShowAddFundsDialog(true)} variant="outline" className={`flex-1 sm:flex-none bg-green-50 border-green-200 hover:bg-green-100 text-green-700 ${isMobile ? 'h-9 text-sm' : ''}`}>
+            <Button onClick={() => {
+              resetFundsFormData();
+              setShowAddFundsDialog(true);
+            }} variant="outline" className={`flex-1 sm:flex-none bg-green-50 border-green-200 hover:bg-green-100 text-green-700 ${isMobile ? 'h-9 text-sm' : ''}`}>
               <Plus className="mr-2 h-4 w-4" />
               Add Funds
             </Button>
@@ -1695,7 +1705,10 @@ export default function PettyCash() {
             </div>
 
             <div className="flex justify-end gap-2 pt-4">
-              <Button type="button" variant="outline" onClick={() => setShowAddDialog(false)}>
+              <Button type="button" variant="outline" onClick={() => {
+                resetFormData();
+                setShowAddDialog(false);
+              }}>
                 Cancel
               </Button>
               <Button type="submit" disabled={addExpenseMutation.isPending || isProcessingOCR}>
@@ -1972,7 +1985,10 @@ export default function PettyCash() {
             </div>
 
             <div className="flex justify-end gap-2 pt-4">
-              <Button type="button" variant="outline" onClick={() => setShowAddFundsDialog(false)}>
+              <Button type="button" variant="outline" onClick={() => {
+                resetFundsFormData();
+                setShowAddFundsDialog(false);
+              }}>
                 Cancel
               </Button>
               <Button type="submit" disabled={addFundsMutation.isPending} className="bg-green-600 hover:bg-green-700 text-white">
