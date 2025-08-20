@@ -690,9 +690,18 @@ export default function PettyCash() {
           const meaningfulLines = descriptionLines.filter(line => {
             const lowerLine = line.toLowerCase();
             
-            // Skip corrupted OCR patterns like "£1 Hore Bank 0720 v"
-            if (/£\d+|hore|bank.*\d{4}|0720\s*v/i.test(line)) {
+            // Skip corrupted OCR patterns like "£1 Hore Bank 0720 v", "fEH +orc sank 0720 v"
+            if (/£\d+|[£¥€]\d+|hore|bank.*\d{4}|0720\s*[vV]|[fF][eE][hH]\s*\+|\+orc|sank\s*\d{4}/i.test(line)) {
               console.log('OCR Debug - Filtering out corrupted text:', line);
+              return false;
+            }
+            
+            // Skip generic corrupted patterns common in OCR
+            if (/^[^a-zA-Z]*[a-zA-Z]{1,2}[^a-zA-Z]*$/.test(line) || // Single/double letters with symbols
+                /^[^\w]*\w{1,3}[^\w]*$/.test(line) || // Very short words with symbols
+                /[+#@$%^&*]{2,}/.test(line) || // Multiple special characters
+                /\b[a-zA-Z]\+[a-zA-Z]/.test(line)) { // Letters connected with +
+              console.log('OCR Debug - Filtering out corrupted pattern:', line);
               return false;
             }
             
@@ -784,25 +793,44 @@ export default function PettyCash() {
         }
       }
       
-      // Set the purpose based on what we found
+      // Enhanced description cleaning and validation
       if (extractedPurpose) {
-        updatedData.purpose = extractedPurpose;
-      } else if (extractedRecipient && platformType === 'googlepay') {
-        updatedData.purpose = `Payment to ${extractedRecipient}`;
-      } else if (extractedRecipient) {
-        updatedData.purpose = `Payment to ${extractedRecipient}`;
-      } else if (platformType !== 'generic') {
-        const platformNames = {
-          googlepay: 'Google Pay',
-          phonepe: 'PhonePe', 
-          paytm: 'Paytm',
-          amazonpay: 'Amazon Pay',
-          bhimupi: 'BHIM UPI',
-          cred: 'CRED',
-          bank: 'Bank Transfer',
-          cash: 'Cash Payment'
-        };
-        updatedData.purpose = `${platformNames[platformType as keyof typeof platformNames] || 'Digital'} payment`;
+        // Clean up the extracted purpose
+        let cleanPurpose = extractedPurpose
+          .replace(/[£¥€]/g, '₹') // Replace foreign currency symbols
+          .replace(/[+#@$%^&*]{2,}/g, ' ') // Replace multiple special chars with space
+          .replace(/\b[fF][eE][hH]\b/g, '') // Remove common OCR errors like "fEH"
+          .replace(/\b[oO][rR][cC]\b/g, '') // Remove "orc" OCR errors
+          .replace(/\bsank\b/gi, '') // Remove "sank" OCR errors
+          .replace(/\b\d{4}\s*[vV]\b/g, '') // Remove patterns like "0720 v"
+          .replace(/\s+/g, ' ') // Multiple spaces to single
+          .trim();
+        
+        // Only use if it's meaningful after cleaning
+        if (cleanPurpose.length > 3 && !/^[^a-zA-Z]*$/.test(cleanPurpose)) {
+          updatedData.purpose = cleanPurpose;
+        }
+      }
+      
+      // Set fallback purpose if none found or if cleaned purpose is too short
+      if (!updatedData.purpose || updatedData.purpose.length < 3) {
+        if (extractedRecipient && platformType === 'googlepay') {
+          updatedData.purpose = `Payment to ${extractedRecipient}`;
+        } else if (extractedRecipient) {
+          updatedData.purpose = `Payment to ${extractedRecipient}`;
+        } else if (platformType !== 'generic') {
+          const platformNames = {
+            googlepay: 'Google Pay',
+            phonepe: 'PhonePe', 
+            paytm: 'Paytm',
+            amazonpay: 'Amazon Pay',
+            bhimupi: 'BHIM UPI',
+            cred: 'CRED',
+            bank: 'Bank Transfer',
+            cash: 'Cash Payment'
+          };
+          updatedData.purpose = `${platformNames[platformType as keyof typeof platformNames] || 'Digital'} payment`;
+        }
       }
       
       // Enhanced Paid By and Paid To extraction
@@ -881,12 +909,22 @@ export default function PettyCash() {
         let score = 0;
         
         // Bonus points for containing business-relevant terms
-        const businessTerms = ['furnili', 'edge', 'pati', 'inch', 'pcs', 'pieces', 'material', 'wood', 'steel', 'order', 'for', 'purchase'];
+        const businessTerms = ['furnili', 'edge', 'pati', 'inch', 'pcs', 'pieces', 'material', 'wood', 'steel', 'order', 'for', 'purchase', 'hardware', 'tools', 'paint', 'supply', 'delivery'];
         businessTerms.forEach(term => {
           if (lowerLine.includes(term)) {
             score += 2;
           }
         });
+        
+        // Penalty for obvious OCR errors
+        const ocrErrorPatterns = ['£', 'hore', 'orc', 'sank', 'feh', '+'];
+        let errorPenalty = 0;
+        ocrErrorPatterns.forEach(pattern => {
+          if (lowerLine.includes(pattern)) {
+            errorPenalty += 3;
+          }
+        });
+        score -= errorPenalty;
         
         // Bonus for having multiple words (likely descriptive)
         const wordCount = line.split(/\s+/).length;
@@ -910,9 +948,22 @@ export default function PettyCash() {
         }
       }
       
-      // Set the best purpose found
-      if (bestPurpose) {
-        updatedData.purpose = bestPurpose;
+      // Set the best purpose found (only if it's meaningful and clean)
+      if (bestPurpose && bestPurposeScore > 0) {
+        // Final cleaning of the best purpose
+        let cleanedPurpose = bestPurpose
+          .replace(/[£¥€]/g, '₹')
+          .replace(/[+#@$%^&*]{2,}/g, ' ')
+          .replace(/\b[fF][eE][hH]\b/g, '')
+          .replace(/\b[oO][rR][cC]\b/g, '')
+          .replace(/\bsank\b/gi, '')
+          .replace(/\b\d{4}\s*[vV]\b/g, '')
+          .replace(/\s+/g, ' ')
+          .trim();
+        
+        if (cleanedPurpose.length > 3 && !/^[^a-zA-Z]*$/.test(cleanedPurpose)) {
+          updatedData.purpose = cleanedPurpose;
+        }
       }
       
       // Legacy processing for order-specific lines (keep existing logic)
