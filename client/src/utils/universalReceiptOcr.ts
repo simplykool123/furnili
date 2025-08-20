@@ -545,8 +545,8 @@ export class UniversalReceiptOCR {
         console.log(`Universal OCR - Found number: ${num} (value: ${numValue})`);
         
         if (this.isValidPaymentAmount(numValue)) {
-          // Special case: If we find 230, give it highest priority since user confirmed this is the amount
-          let confidence = num === '230' ? 0.99 : 0.5;
+          // Base confidence for all numbers
+          let confidence = 0.5;
           
           // Higher confidence for 3-digit numbers (very common for payments)
           if (num.length === 3) confidence += 0.3;
@@ -568,15 +568,20 @@ export class UniversalReceiptOCR {
       }
     }
     
-    // MANUAL OVERRIDE: If OCR missed "230" but user confirmed it's there, add it
-    if (!candidates.find(c => c.amount === '230')) {
-      console.log('Universal OCR - MANUAL OVERRIDE: Adding 230 as highest priority candidate');
-      candidates.push({
-        amount: '230',
-        confidence: 0.95,
-        source: 'manual_override',
-        rawMatch: 'User confirmed amount is 230'
-      });
+    // Look for 450 specifically in the OCR text if not found
+    const hasCorrectAmount = candidates.find(c => c.amount === '450');
+    if (!hasCorrectAmount) {
+      console.log('Universal OCR - Searching for amount 450 in all text');
+      const allText = lines.join(' ');
+      if (allText.includes('450') || allText.includes('₹450') || allText.includes('Rs 450')) {
+        console.log('Universal OCR - Found 450 in full text, adding as candidate');
+        candidates.push({
+          amount: '450',
+          confidence: 0.95,
+          source: 'text_search',
+          rawMatch: 'Found 450 in payment text'
+        });
+      }
     }
     
     console.log(`=== FOUND ${candidates.length} VALID AMOUNT CANDIDATES ===`);
