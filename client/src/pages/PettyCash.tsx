@@ -812,11 +812,11 @@ export default function PettyCash() {
     e.preventDefault();
     
     const formDataToSend = new FormData();
-    formDataToSend.append('date', fundsFormData.date);
+    formDataToSend.append('expenseDate', fundsFormData.date);
     formDataToSend.append('amount', fundsFormData.amount);
-    formDataToSend.append('source', fundsFormData.source);
+    formDataToSend.append('paidTo', fundsFormData.source);
     formDataToSend.append('receivedBy', fundsFormData.receivedBy);
-    formDataToSend.append('purpose', fundsFormData.purpose);
+    formDataToSend.append('note', fundsFormData.purpose);
     
     if (fundsFormData.receiptImage) {
       formDataToSend.append('receipt', fundsFormData.receiptImage);
