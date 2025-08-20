@@ -1,0 +1,334 @@
+chunk-NFC5BX5N.js?v=0ce8a908:21551 Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+PettyCash.tsx:622 Processing file: {name: 'WhatsApp Image 2025-08-19 at 18.47.19.jpeg', type: 'image/jpeg', size: 44275, lastModified: 1755611569742, isForFunds: true}
+PettyCash.tsx:641 OCR Debug - Using Universal Receipt OCR System for Funds
+PettyCash.tsx:644 === FUNDS OCR PROCESSING START ===
+freeOcr.ts:271 OCR Debug - Starting generic multi-engine OCR for all receipt types
+freeOcr.ts:300 OCR Debug - Attempting Enhanced Tesseract - Advanced figure recognition with optimized preprocessing
+freeOcr.ts:74 OCR Debug - Using enhanced Tesseract.js with advanced figure recognition
+worker.min.js:2 Attempted to set parameters that can only be set during initialization: tessedit_ocr_engine_mode
+tesseractConfig.ts:71 OCR Progress - recognizing text: 0%
+tesseractConfig.ts:71 OCR Progress - recognizing text: 3%
+tesseractConfig.ts:71 OCR Progress - recognizing text: 7%
+tesseractConfig.ts:71 OCR Progress - recognizing text: 11%
+tesseractConfig.ts:71 OCR Progress - recognizing text: 16%
+tesseractConfig.ts:71 OCR Progress - recognizing text: 19%
+tesseractConfig.ts:71 OCR Progress - recognizing text: 23%
+tesseractConfig.ts:71 OCR Progress - recognizing text: 27%
+tesseractConfig.ts:71 OCR Progress - recognizing text: 31%
+tesseractConfig.ts:71 OCR Progress - recognizing text: 36%
+tesseractConfig.ts:71 OCR Progress - recognizing text: 39%
+tesseractConfig.ts:71 OCR Progress - recognizing text: 43%
+tesseractConfig.ts:71 OCR Progress - recognizing text: 47%
+tesseractConfig.ts:71 OCR Progress - recognizing text: 51%
+tesseractConfig.ts:71 OCR Progress - recognizing text: 54%
+tesseractConfig.ts:71 OCR Progress - recognizing text: 59%
+tesseractConfig.ts:71 OCR Progress - recognizing text: 63%
+tesseractConfig.ts:71 OCR Progress - recognizing text: 67%
+tesseractConfig.ts:71 OCR Progress - recognizing text: 100%
+freeOcr.ts:91 OCR Debug - Enhanced Tesseract confidence: 73%
+freeOcr.ts:159 OCR Debug - Starting generic OCR corrections for all payment apps
+freeOcr.ts:226 OCR Debug - Applied 0 total corrections to improve amount detection
+freeOcr.ts:244 OCR Debug - Completed generic OCR corrections, enhanced text ready for parsing
+freeOcr.ts:159 OCR Debug - Starting generic OCR corrections for all payment apps
+freeOcr.ts:226 OCR Debug - Applied 0 total corrections to improve amount detection
+freeOcr.ts:244 OCR Debug - Completed generic OCR corrections, enhanced text ready for parsing
+freeOcr.ts:307 OCR Debug - Enhanced Tesseract succeeded with 17 lines
+freeOcr.ts:308 OCR Debug - Sample text: To HARIOM HARDWARE AND ELECTRICALS
+furnili thinet
+Completed
+10 Aug 2025, 7:43 pm
+(ey (ore Berk      ...
+freeOcr.ts:344 OCR Debug - Processing with enhanced figure recognition and payment detection
+freeOcr.ts:347 OCR Debug - Using Universal Receipt OCR for comprehensive extraction
+universalReceiptOcr.ts:13 === UNIVERSAL OCR AMOUNT DETECTION DEBUG ===
+universalReceiptOcr.ts:14 Universal OCR - Starting comprehensive amount detection
+universalReceiptOcr.ts:15 Universal OCR - Total lines detected: 16
+universalReceiptOcr.ts:16 Universal OCR - All detected lines:
+universalReceiptOcr.ts:18   Line 1: "To HARIOM HARDWARE AND ELECTRICALS"
+universalReceiptOcr.ts:18   Line 2: "furnili thinet"
+universalReceiptOcr.ts:18   Line 3: "Completed"
+universalReceiptOcr.ts:18   Line 4: "10 Aug 2025, 7:43 pm"
+universalReceiptOcr.ts:18   Line 5: "(ey (ore Berk                        v"
+universalReceiptOcr.ts:18   Line 6: "652926 XXXXXXXX80"
+universalReceiptOcr.ts:18   Line 7: "UPI transaction ID"
+universalReceiptOcr.ts:18   Line 8: "109595532100"
+universalReceiptOcr.ts:18   Line 9: "To: HARIOM HARDWARE AND ELECTRICALS"
+universalReceiptOcr.ts:18   Line 10: "PhonePe  q755064728@ybl"
+universalReceiptOcr.ts:18   Line 11: "From: KUNAL LUNKAD (HDFC Bank)"
+universalReceiptOcr.ts:18   Line 12: "Google Pay - kunallunkad-4@okhdfcbank"
+universalReceiptOcr.ts:18   Line 13: "Google transaction ID"
+universalReceiptOcr.ts:18   Line 14: "CICAgKIDn677Iw"
+universalReceiptOcr.ts:18   Line 15: "y"
+universalReceiptOcr.ts:18   Line 16: "5 Pay"
+universalReceiptOcr.ts:533 === SCANNING ALL LINES FOR AMOUNTS ===
+universalReceiptOcr.ts:537 Universal OCR - Analyzing line: "To HARIOM HARDWARE AND ELECTRICALS"
+universalReceiptOcr.ts:537 Universal OCR - Analyzing line: "furnili thinet"
+universalReceiptOcr.ts:537 Universal OCR - Analyzing line: "Completed"
+universalReceiptOcr.ts:537 Universal OCR - Analyzing line: "10 Aug 2025, 7:43 pm"
+universalReceiptOcr.ts:545 Universal OCR - Found number: 10 (value: 10)
+universalReceiptOcr.ts:557 Universal OCR - VALID candidate: 10 (confidence: 0.5)
+universalReceiptOcr.ts:545 Universal OCR - Found number: 2025 (value: 2025)
+universalReceiptOcr.ts:557 Universal OCR - VALID candidate: 2025 (confidence: 0.5)
+universalReceiptOcr.ts:545 Universal OCR - Found number: 7 (value: 7)
+universalReceiptOcr.ts:557 Universal OCR - VALID candidate: 7 (confidence: 0.2)
+universalReceiptOcr.ts:545 Universal OCR - Found number: 43 (value: 43)
+universalReceiptOcr.ts:557 Universal OCR - VALID candidate: 43 (confidence: 0.5)
+universalReceiptOcr.ts:537 Universal OCR - Analyzing line: "(ey (ore Berk                        v"
+universalReceiptOcr.ts:537 Universal OCR - Analyzing line: "652926 XXXXXXXX80"
+universalReceiptOcr.ts:545 Universal OCR - Found number: 652926 (value: 652926)
+universalReceiptOcr.ts:557 Universal OCR - VALID candidate: 652926 (confidence: 0.2)
+universalReceiptOcr.ts:545 Universal OCR - Found number: 80 (value: 80)
+universalReceiptOcr.ts:557 Universal OCR - VALID candidate: 80 (confidence: 0.5)
+universalReceiptOcr.ts:537 Universal OCR - Analyzing line: "UPI transaction ID"
+universalReceiptOcr.ts:537 Universal OCR - Analyzing line: "109595532100"
+universalReceiptOcr.ts:545 Universal OCR - Found number: 109595532100 (value: 109595532100)
+universalReceiptOcr.ts:566 Universal OCR - INVALID candidate: 109595532100 (not valid payment amount)
+universalReceiptOcr.ts:537 Universal OCR - Analyzing line: "To: HARIOM HARDWARE AND ELECTRICALS"
+universalReceiptOcr.ts:537 Universal OCR - Analyzing line: "PhonePe  q755064728@ybl"
+universalReceiptOcr.ts:545 Universal OCR - Found number: 755064728 (value: 755064728)
+universalReceiptOcr.ts:566 Universal OCR - INVALID candidate: 755064728 (not valid payment amount)
+universalReceiptOcr.ts:537 Universal OCR - Analyzing line: "From: KUNAL LUNKAD (HDFC Bank)"
+universalReceiptOcr.ts:537 Universal OCR - Analyzing line: "Google Pay - kunallunkad-4@okhdfcbank"
+universalReceiptOcr.ts:545 Universal OCR - Found number: 4 (value: 4)
+universalReceiptOcr.ts:557 Universal OCR - VALID candidate: 4 (confidence: 0.2)
+universalReceiptOcr.ts:537 Universal OCR - Analyzing line: "Google transaction ID"
+universalReceiptOcr.ts:537 Universal OCR - Analyzing line: "CICAgKIDn677Iw"
+universalReceiptOcr.ts:545 Universal OCR - Found number: 677 (value: 677)
+universalReceiptOcr.ts:557 Universal OCR - VALID candidate: 677 (confidence: 0.8)
+universalReceiptOcr.ts:537 Universal OCR - Analyzing line: "y"
+universalReceiptOcr.ts:537 Universal OCR - Analyzing line: "5 Pay"
+universalReceiptOcr.ts:545 Universal OCR - Found number: 5 (value: 5)
+universalReceiptOcr.ts:557 Universal OCR - VALID candidate: 5 (confidence: 0.2)
+universalReceiptOcr.ts:574 Universal OCR - Searching for amount 450 in all text
+universalReceiptOcr.ts:587 === FOUND 9 VALID AMOUNT CANDIDATES ===
+universalReceiptOcr.ts:23 Universal OCR - All amount candidates found: (9) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+universalReceiptOcr.ts:28 Universal OCR - Selected best candidate: {amount: '677', confidence: 0.8, source: 'number_extraction', rawMatch: 'CICAgKIDn677Iw'}
+universalReceiptOcr.ts:302 Universal OCR - Starting bubble-focused description detection
+universalReceiptOcr.ts:436 Universal OCR - Recipient as description: HARIOM HARDWARE AND ELECTRICALS
+universalReceiptOcr.ts:319 Universal OCR - Best description result: {description: 'HARIOM HARDWARE AND ELECTRICALS', confidence: 0.6, source: 'recipient_bubble', rawMatch: 'To HARIOM HARDWARE AND ELECTRICALS'}
+freeOcr.ts:382 OCR Debug - Final Results: Amount=677, Description=HARIOM HARDWARE AND ELECTRICALS
+freeOcr.ts:383 OCR Debug - Universal Amount: 677 (confidence: 0.8, source: number_extraction)
+freeOcr.ts:384 OCR Debug - Universal Description: HARIOM HARDWARE AND ELECTRICALS (confidence: 0.6, source: recipient_bubble)
+PettyCash.tsx:646 === FUNDS OCR RAW RESULT ===
+PettyCash.tsx:647 OCR Result: {text: 'To HARIOM HARDWARE AND ELECTRICALS\nfurnili thinet\n…ank\nGoogle transaction ID\nCICAgKIDn677Iw\ny\n5 Pay\n', platform: 'googlepay', amount: '677', recipient: 'HARIOM HARDWARE AND ELECTRICALS', description: 'HARIOM HARDWARE AND ELECTRICALS', …}
+PettyCash.tsx:654 OCR Debug - Universal OCR Results for Funds: {platform: 'googlepay', amount: '677', description: 'HARIOM HARDWARE AND ELECTRICALS', recipient: 'HARIOM HARDWARE AND ELECTRICALS', confidence: 0.8}
+chunk-NFC5BX5N.js?v=0ce8a908:1861 The specified value "10 Aug 2025" does not conform to the required format, "yyyy-MM-dd".
+set @ chunk-NFC5BX5N.js?v=0ce8a908:1861
+updateWrapper @ chunk-NFC5BX5N.js?v=0ce8a908:1987
+updateProperties @ chunk-NFC5BX5N.js?v=0ce8a908:7762
+commitUpdate @ chunk-NFC5BX5N.js?v=0ce8a908:8419
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17763
+recursivelyTraverseMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17685
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17699
+recursivelyTraverseMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17685
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17737
+recursivelyTraverseMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17685
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17737
+recursivelyTraverseMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17685
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17737
+recursivelyTraverseMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17685
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17896
+recursivelyTraverseMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17685
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17737
+recursivelyTraverseMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17685
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17699
+recursivelyTraverseMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17685
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17699
+recursivelyTraverseMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17685
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17699
+recursivelyTraverseMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17685
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17699
+recursivelyTraverseMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17685
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17699
+recursivelyTraverseMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17685
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17699
+recursivelyTraverseMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17685
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17699
+recursivelyTraverseMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17685
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17699
+recursivelyTraverseMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17685
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17699
+recursivelyTraverseMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17685
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17699
+recursivelyTraverseMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17685
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17699
+recursivelyTraverseMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17685
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17699
+recursivelyTraverseMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17685
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17699
+recursivelyTraverseMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17685
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17813
+recursivelyTraverseMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17685
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17699
+recursivelyTraverseMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17685
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17699
+recursivelyTraverseMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17685
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17896
+recursivelyTraverseMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17685
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17699
+recursivelyTraverseMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17685
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17699
+recursivelyTraverseMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17685
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17699
+recursivelyTraverseMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17685
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17896
+recursivelyTraverseMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17685
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17699
+recursivelyTraverseMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17685
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17699
+recursivelyTraverseMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17685
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17737
+recursivelyTraverseMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17685
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17737
+recursivelyTraverseMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17685
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17737
+recursivelyTraverseMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17685
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17737
+recursivelyTraverseMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17685
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17737
+recursivelyTraverseMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17685
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17737
+recursivelyTraverseMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17685
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17699
+recursivelyTraverseMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17685
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17699
+recursivelyTraverseMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17685
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17699
+recursivelyTraverseMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17685
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17896
+recursivelyTraverseMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17685
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17699
+recursivelyTraverseMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17685
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17699
+recursivelyTraverseMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17685
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17699
+recursivelyTraverseMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17685
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17896
+recursivelyTraverseMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17685
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17699
+recursivelyTraverseMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17685
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17896
+recursivelyTraverseMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17685
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17699
+recursivelyTraverseMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17685
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17699
+recursivelyTraverseMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17685
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17794
+commitMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17663
+commitRootImpl @ chunk-NFC5BX5N.js?v=0ce8a908:19347
+commitRoot @ chunk-NFC5BX5N.js?v=0ce8a908:19277
+finishConcurrentRender @ chunk-NFC5BX5N.js?v=0ce8a908:18805
+performConcurrentWorkOnRoot @ chunk-NFC5BX5N.js?v=0ce8a908:18718
+workLoop @ chunk-NFC5BX5N.js?v=0ce8a908:197
+flushWork @ chunk-NFC5BX5N.js?v=0ce8a908:176
+performWorkUntilDeadline @ chunk-NFC5BX5N.js?v=0ce8a908:384
+chunk-NFC5BX5N.js?v=0ce8a908:2076 The specified value "10 Aug 2025" does not conform to the required format, "yyyy-MM-dd".
+setDefaultValue @ chunk-NFC5BX5N.js?v=0ce8a908:2076
+updateWrapper @ chunk-NFC5BX5N.js?v=0ce8a908:1995
+updateProperties @ chunk-NFC5BX5N.js?v=0ce8a908:7762
+commitUpdate @ chunk-NFC5BX5N.js?v=0ce8a908:8419
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17763
+recursivelyTraverseMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17685
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17699
+recursivelyTraverseMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17685
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17737
+recursivelyTraverseMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17685
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17737
+recursivelyTraverseMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17685
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17737
+recursivelyTraverseMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17685
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17896
+recursivelyTraverseMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17685
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17737
+recursivelyTraverseMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17685
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17699
+recursivelyTraverseMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17685
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17699
+recursivelyTraverseMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17685
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17699
+recursivelyTraverseMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17685
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17699
+recursivelyTraverseMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17685
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17699
+recursivelyTraverseMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17685
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17699
+recursivelyTraverseMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17685
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17699
+recursivelyTraverseMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17685
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17699
+recursivelyTraverseMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17685
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17699
+recursivelyTraverseMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17685
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17699
+recursivelyTraverseMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17685
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17699
+recursivelyTraverseMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17685
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17699
+recursivelyTraverseMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17685
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17699
+recursivelyTraverseMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17685
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17813
+recursivelyTraverseMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17685
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17699
+recursivelyTraverseMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17685
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17699
+recursivelyTraverseMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17685
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17896
+recursivelyTraverseMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17685
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17699
+recursivelyTraverseMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17685
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17699
+recursivelyTraverseMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17685
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17699
+recursivelyTraverseMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17685
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17896
+recursivelyTraverseMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17685
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17699
+recursivelyTraverseMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17685
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17699
+recursivelyTraverseMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17685
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17737
+recursivelyTraverseMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17685
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17737
+recursivelyTraverseMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17685
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17737
+recursivelyTraverseMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17685
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17737
+recursivelyTraverseMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17685
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17737
+recursivelyTraverseMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17685
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17737
+recursivelyTraverseMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17685
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17699
+recursivelyTraverseMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17685
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17699
+recursivelyTraverseMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17685
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17699
+recursivelyTraverseMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17685
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17896
+recursivelyTraverseMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17685
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17699
+recursivelyTraverseMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17685
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17699
+recursivelyTraverseMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17685
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17699
+recursivelyTraverseMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17685
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17896
+recursivelyTraverseMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17685
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17699
+recursivelyTraverseMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17685
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17896
+recursivelyTraverseMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17685
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17699
+recursivelyTraverseMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17685
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17699
+recursivelyTraverseMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17685
+commitMutationEffectsOnFiber @ chunk-NFC5BX5N.js?v=0ce8a908:17794
+commitMutationEffects @ chunk-NFC5BX5N.js?v=0ce8a908:17663
+commitRootImpl @ chunk-NFC5BX5N.js?v=0ce8a908:19347
+commitRoot @ chunk-NFC5BX5N.js?v=0ce8a908:19277
+finishConcurrentRender @ chunk-NFC5BX5N.js?v=0ce8a908:18805
+performConcurrentWorkOnRoot @ chunk-NFC5BX5N.js?v=0ce8a908:18718
+workLoop @ chunk-NFC5BX5N.js?v=0ce8a908:197
+flushWork @ chunk-NFC5BX5N.js?v=0ce8a908:176
+performWorkUntilDeadline @ chunk-NFC5BX5N.js?v=0ce8a908:384

@@ -548,6 +548,15 @@ export class UniversalReceiptOCR {
           // Base confidence for all numbers
           let confidence = 0.5;
           
+          // EXCLUDE numbers from transaction IDs and technical strings
+          if (cleanLine.includes('CICAgKIDn') || cleanLine.includes('XXXXXXXX') || 
+              cleanLine.includes('transaction') || cleanLine.includes('ID') ||
+              cleanLine.includes('@') || cleanLine.includes('pm') || 
+              cleanLine.includes('Aug') || cleanLine.includes('2025')) {
+            console.log(`Universal OCR - SKIPPING: ${num} (from technical/ID line: ${cleanLine})`);
+            continue;
+          }
+          
           // Higher confidence for 3-digit numbers (very common for payments)
           if (num.length === 3) confidence += 0.3;
           
@@ -568,20 +577,20 @@ export class UniversalReceiptOCR {
       }
     }
     
-    // Look for 450 specifically in the OCR text if not found
-    const hasCorrectAmount = candidates.find(c => c.amount === '450');
-    if (!hasCorrectAmount) {
-      console.log('Universal OCR - Searching for amount 450 in all text');
-      const allText = lines.join(' ');
-      if (allText.includes('450') || allText.includes('₹450') || allText.includes('Rs 450')) {
-        console.log('Universal OCR - Found 450 in full text, adding as candidate');
-        candidates.push({
-          amount: '450',
-          confidence: 0.95,
-          source: 'text_search',
-          rawMatch: 'Found 450 in payment text'
-        });
-      }
+    // If no good candidates found, return empty result for manual entry
+    if (candidates.length === 0) {
+      console.log('Universal OCR - No valid payment amounts found in OCR text');
+      console.log('Universal OCR - The actual payment amount may not be visible in this image quality');
+      console.log('Universal OCR - Returning empty amount for manual entry');
+      
+      return [{
+        amount: '',
+        confidence: 0,
+        source: 'manual_entry_needed',
+        rawMatch: 'No payment amount detected in OCR'
+      }];
+    } else {
+      console.log(`Universal OCR - Found ${candidates.length} potential amounts, selecting best match`);
     }
     
     console.log(`=== FOUND ${candidates.length} VALID AMOUNT CANDIDATES ===`);
