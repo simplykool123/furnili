@@ -52,7 +52,7 @@ export class PaymentAmountDetector {
       // Look for standalone numbers that are reasonable payment amounts
       const cleanLine = line.trim();
       
-      // Match standalone numbers (1-6 digits, possibly with decimals)
+      // Match standalone numbers (1-6 digits, possibly with decimals) - PRIORITIZE 3-DIGIT AMOUNTS
       const standaloneMatch = cleanLine.match(/^[\s₹£$@€¥¢&]*(\d{1,6}(?:\.\d{2})?)[\s]*$/);
       if (standaloneMatch) {
         const amount = standaloneMatch[1];
@@ -60,10 +60,12 @@ export class PaymentAmountDetector {
         
         // Check if it's in reasonable payment range (₹1 to ₹99,999)
         if (numValue >= 1 && numValue <= 99999) {
-          console.log(`OCR Debug - Found standalone amount: ${amount}`);
+          // Prioritize 3-digit amounts (more likely to be payment amounts)
+          const confidence = amount.length === 3 ? 0.95 : 0.9;
+          console.log(`OCR Debug - Found standalone amount: ${amount} (confidence: ${confidence})`);
           return {
             amount: amount,
-            confidence: 0.9,
+            confidence: confidence,
             source: 'standalone_large_display'
           };
         }

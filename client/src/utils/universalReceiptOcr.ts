@@ -10,32 +10,28 @@ export class UniversalReceiptOCR {
     source: string;
     rawMatch: string;
   } {
+    console.log('=== UNIVERSAL OCR AMOUNT DETECTION DEBUG ===');
     console.log('Universal OCR - Starting comprehensive amount detection');
+    console.log('Universal OCR - Total lines detected:', lines.length);
+    console.log('Universal OCR - All detected lines:');
+    lines.forEach((line, index) => {
+      console.log(`  Line ${index + 1}: "${line}"`);
+    });
     
-    // Strategy 1: Large standalone amounts (most prominent displays)
-    const largeAmountResult = this.detectLargeAmounts(lines);
-    if (largeAmountResult.confidence > 0.85) return largeAmountResult;
+    // Strategy 1: Look for ALL standalone numbers first and rank them
+    const allAmountCandidates = this.findAllAmountCandidates(lines);
+    console.log('Universal OCR - All amount candidates found:', allAmountCandidates);
     
-    // Strategy 2: Comma-separated amounts (₹1,234.56 format)
-    const commaAmountResult = this.detectCommaSeparatedAmounts(lines);
-    if (commaAmountResult.confidence > 0.8) return commaAmountResult;
+    if (allAmountCandidates.length > 0) {
+      // Return the highest confidence candidate
+      const bestCandidate = allAmountCandidates[0];
+      console.log('Universal OCR - Selected best candidate:', bestCandidate);
+      return bestCandidate;
+    }
     
-    // Strategy 3: Currency symbol prefixed amounts
-    const currencyAmountResult = this.detectCurrencyPrefixedAmounts(lines);
-    if (currencyAmountResult.confidence > 0.75) return currencyAmountResult;
-    
-    // Strategy 4: Bubble-context amounts (near payment bubbles)
-    const bubbleAmountResult = this.detectBubbleContextAmounts(lines);
-    if (bubbleAmountResult.confidence > 0.7) return bubbleAmountResult;
-    
-    // Strategy 5: Pattern-based detection with enhanced patterns
-    const patternAmountResult = this.detectPatternBasedAmounts(lines);
-    if (patternAmountResult.confidence > 0.6) return patternAmountResult;
-    
-    // Strategy 6: Context-aware detection (near keywords)
+    // Fallback: Legacy detection strategies
     const contextAmountResult = this.detectContextAwareAmounts(lines);
-    
-    console.log('Universal OCR - Best amount result:', contextAmountResult);
+    console.log('Universal OCR - Fallback result:', contextAmountResult);
     return contextAmountResult;
   }
   
@@ -46,10 +42,12 @@ export class UniversalReceiptOCR {
     for (const line of lines) {
       const cleanLine = line.trim();
       
-      // Match standalone large amounts with various formats
+      // Match standalone large amounts with various formats - PRIORITIZE 3-DIGIT NUMBERS
       const patterns = [
+        /^[\s₹£$@€¥¢&]*(\d{3}(?:\.\d{2})?)[\s]*$/,  // ₹672 (3-digit priority)
         /^[\s₹£$@€¥¢&]*(\d{1,6}(?:\.\d{2})?)[\s]*$/,  // ₹1234
         /^[\s₹£$@€¥¢&]*(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)[\s]*$/, // ₹1,234.56
+        /^(\d{3}(?:\.\d{2})?)[\s₹£$@€¥¢&]*$/,  // 672₹ (3-digit priority)
         /^(\d{1,6}(?:\.\d{2})?)[\s₹£$@€¥¢&]*$/,  // 1234₹
         /^(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)[\s₹£$@€¥¢&]*$/ // 1,234.56₹
       ];
@@ -62,10 +60,12 @@ export class UniversalReceiptOCR {
           const numValue = parseFloat(cleanAmount);
           
           if (this.isValidPaymentAmount(numValue)) {
-            console.log(`Universal OCR - Large amount found: ${rawAmount}`);
+            // Prioritize 3-digit amounts as they're most likely to be correct payment amounts
+            const confidence = rawAmount.replace(/,/g, '').length === 3 ? 0.95 : 0.9;
+            console.log(`Universal OCR - Large amount found: ${rawAmount} (confidence: ${confidence})`);
             return {
               amount: cleanAmount,
-              confidence: 0.9,
+              confidence: confidence,
               source: 'large_standalone',
               rawMatch: line
             };
