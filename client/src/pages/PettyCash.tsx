@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useIsMobile, MobileCard, MobileHeading, MobileText } from "@/components/Mobile/MobileOptimizer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { toast } from "@/hooks/use-toast";
 import { authenticatedApiRequest, authService } from "@/lib/auth";
@@ -57,7 +57,7 @@ interface PersonalPettyCashStats {
 const paymentModes = ["UPI", "GPay", "PhonePe", "Paytm", "Cash", "Bank Transfer", "Card", "Cheque"];
 const categories = ["Material", "Transport", "Site", "Office", "Food", "Fuel", "Repair", "Tools", "Other"];
 
-export default function PettyCash() {
+export default function PettyCash(): JSX.Element {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -208,7 +208,7 @@ export default function PettyCash() {
   };
 
   // Fetch expenses and stats - filter by user for staff role
-  const { data: expenses = [] } = useQuery({
+  const { data: expenses = [], isLoading: expensesLoading } = useQuery({
     queryKey: user?.role === 'staff' ? ["/api/petty-cash", { userId: user.id }] : ["/api/petty-cash"],
     queryFn: () => {
       const url = user?.role === 'staff' ? `/api/petty-cash?userId=${user.id}` : "/api/petty-cash";
@@ -216,8 +216,19 @@ export default function PettyCash() {
     },
   });
 
+  // Filter expenses based on search and filters
+  const filteredExpenses = expenses.filter((expense: PettyCashExpense) => {
+    const matchesSearch = expense.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         expense.vendor?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = selectedCategory === "all" || expense.category === selectedCategory;
+    const matchesPaidBy = selectedPaidBy === "all" || expense.user?.id?.toString() === selectedPaidBy;
+    const matchesDate = !dateFilter || expense.expenseDate.startsWith(dateFilter);
+    
+    return matchesSearch && matchesCategory && matchesPaidBy && matchesDate;
+  });
+
   // Fetch stats - personal for staff, global for others
-  const { data: stats } = useQuery({
+  const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: user?.role === 'staff' ? ["/api/petty-cash/my-stats"] : ["/api/petty-cash/stats"],
     queryFn: () => {
       const endpoint = user?.role === 'staff' ? "/api/petty-cash/my-stats" : "/api/petty-cash/stats";
@@ -490,7 +501,7 @@ export default function PettyCash() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  ₹{stats.data ? stats.data.totalExpenses.toLocaleString() : 0}
+                  ₹{stats ? stats.totalExpenses?.toLocaleString() || 0 : 0}
                 </div>
               </CardContent>
             </Card>
@@ -500,7 +511,7 @@ export default function PettyCash() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  ₹{stats.data ? stats.data.totalIncome.toLocaleString() : 0}
+                  ₹{stats ? stats.totalIncome?.toLocaleString() || 0 : 0}
                 </div>
               </CardContent>
             </Card>
@@ -510,7 +521,7 @@ export default function PettyCash() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  ₹{stats.data ? stats.data.currentBalance.toLocaleString() : 0}
+                  ₹{stats ? (stats.balance?.toLocaleString() || stats.currentBalance?.toLocaleString() || 0) : 0}
                 </div>
               </CardContent>
             </Card>
@@ -533,7 +544,7 @@ export default function PettyCash() {
 
           <Card>
             <CardContent className="p-6">
-              {expenses.isLoading ? (
+              {expensesLoading ? (
                 <div className="text-center py-4">Loading expenses...</div>
               ) : filteredExpenses.length === 0 ? (
                 <div className="text-center py-4 text-muted-foreground">
