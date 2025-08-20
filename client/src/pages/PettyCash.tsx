@@ -19,8 +19,8 @@ import { format } from "date-fns";
 import FurniliLayout from "@/components/Layout/FurniliLayout";
 import FurniliCard from "@/components/UI/FurniliCard";
 import FurniliButton from "@/components/UI/FurniliButton";
-import { Plus, Search, Filter, Download, Upload, Camera, Eye, Share2, Pencil, Trash2, ChevronDown, ChevronUp, TrendingDown, TrendingUp, Wallet, Calendar, Users } from "lucide-react";
-import { ClientFreeOCR } from '@/utils/freeOcr';
+import { Plus, Search, Filter, Download, Upload, Camera, Eye, Share2, Pencil, Trash2, ChevronDown, ChevronUp, TrendingDown, TrendingUp, Wallet, Calendar } from "lucide-react";
+import Tesseract from 'tesseract.js';
 
 interface PettyCashExpense {
   id: number;
@@ -60,11 +60,10 @@ const categories = ["Material", "Transport", "Site", "Office", "Food", "Fuel", "
 export default function PettyCash() {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("All Categories");
-  const [selectedPaidBy, setSelectedPaidBy] = useState("All Staff");
-  const [dateFilter, setDateFilter] = useState("All Time");
+  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [selectedPaidBy, setSelectedPaidBy] = useState("all");
+  const [dateFilter, setDateFilter] = useState("");
   const [showAddDialog, setShowAddDialog] = useState(false);
-  const [showAddExpenseDialog, setShowAddExpenseDialog] = useState(false);
   const [showAddFundsDialog, setShowAddFundsDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [editingExpense, setEditingExpense] = useState<PettyCashExpense | null>(null);
@@ -107,7 +106,19 @@ export default function PettyCash() {
   const [isProcessingOCR, setIsProcessingOCR] = useState(false);
 
   // Reset form to initial state
-
+  const resetFormData = () => {
+    setFormData({
+      date: format(new Date(), "yyyy-MM-dd"),
+      amount: "",
+      paidTo: "",
+      paidBy: user ? user.id.toString() : "",
+      purpose: "",
+      projectId: "",
+      orderNo: "",
+      receiptImage: null,
+      category: "",
+    });
+  };
 
   // Reset funds form to initial state
   const resetFundsFormData = () => {
@@ -197,7 +208,7 @@ export default function PettyCash() {
   };
 
   // Fetch expenses and stats - filter by user for staff role
-  const { data: expenses = [], isLoading: isExpensesLoading } = useQuery({
+  const { data: expenses = [] } = useQuery({
     queryKey: user?.role === 'staff' ? ["/api/petty-cash", { userId: user.id }] : ["/api/petty-cash"],
     queryFn: () => {
       const url = user?.role === 'staff' ? `/api/petty-cash?userId=${user.id}` : "/api/petty-cash";
@@ -539,73 +550,443 @@ export default function PettyCash() {
   };
 
   // Enhanced OCR processing with multi-platform support
+  // OCR Integration Point - Replace this function with your chosen OCR solution
   const processImageWithOCR = async (file: File) => {
     setIsProcessingOCR(true);
     try {
-      console.log('OCR Debug - Using Universal Receipt OCR System');
-      
-      // Use new Universal Receipt OCR system with comprehensive detection
-      const ocrResult = await ClientFreeOCR.processPaymentScreenshot(file);
-      
-      if (!ocrResult || !ocrResult.text) {
-        throw new Error('No text extracted from image');
-      }
-      
-      console.log('OCR Debug - Universal OCR Results:', {
-        platform: ocrResult.platform,
-        amount: ocrResult.amount,
-        description: ocrResult.description,
-        recipient: ocrResult.recipient,
-        confidence: ocrResult.confidence
+      // Enhanced OCR settings for better accuracy across platforms
+      const result = await Tesseract.recognize(file, 'eng', {
+        logger: m => {} // console.log(m)
       });
       
+      const text = result.data.text;
+      // console.log('OCR Result:', text);
+      
       const updatedData = { ...formData };
+      const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0);
       
-      // Use Universal OCR results
-      if (ocrResult.amount && parseFloat(ocrResult.amount) > 0) {
-        updatedData.amount = ocrResult.amount;
+      // Detect platform type for specialized parsing
+      const platformType = detectPlatformType(text.toLowerCase());
+      // console.log('Detected Platform:', platformType);
+      // console.log('OCR Text Lines:', lines);
+      
+      // Platform-specific amount extraction
+      const extractedAmount = extractAmountByPlatform(lines, platformType);
+      if (extractedAmount) {
+        // Keep the amount as a clean number without rupee symbol for form processing
+        updatedData.amount = extractedAmount;
       }
       
-      // Use Universal OCR recipient extraction
-      if (ocrResult.recipient && ocrResult.recipient.trim().length > 0) {
-        updatedData.paidTo = ocrResult.recipient;
+      // Platform-specific recipient extraction
+      const extractedRecipient = extractRecipientByPlatform(lines, platformType);
+      if (extractedRecipient) {
+        updatedData.paidTo = extractedRecipient;
       }
       
-      // Use Universal OCR date extraction
-      if (ocrResult.date) {
-        updatedData.date = ocrResult.date;
+      // Platform-specific date extraction
+      const extractedDate = extractDateByPlatform(text, platformType);
+      if (extractedDate) {
+        updatedData.date = extractedDate;
       }
+
+      // Platform-specific description extraction
+      let extractedPurpose = '';
       
-      // Use Universal OCR description extraction
-      if (ocrResult.description && ocrResult.description.trim().length > 0) {
-        updatedData.purpose = ocrResult.description;
-      }
-      
-      // Fallback date extraction if not provided by Universal OCR
-      if (!ocrResult.date) {
-        const text = ocrResult.text;
-        const dateMatch = text.match(/(\d{1,2})\s+(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)\s+(\d{4})/i);
-        if (dateMatch) {
-          const [, day, month, year] = dateMatch;
-          const monthNum = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'].indexOf(month.toUpperCase()) + 1;
-          if (monthNum > 0) {
-            const formattedDate = `${year}-${String(monthNum).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-            updatedData.date = formattedDate;
+      if (platformType === 'cred') {
+        // console.log('CRED OCR Debug - All lines:', lines);
+        
+        // For CRED, look for description that appears after the amount but before transaction details
+        let foundAmount = false;
+        
+        for (let i = 0; i < lines.length; i++) {
+          const line = lines[i].trim();
+          
+          // Check if we found the amount line (₹600, ₹12,000 format)
+          if (!foundAmount && /₹[\d,]+/.test(line)) {
+            foundAmount = true;
+            // console.log('CRED OCR Debug - Found amount at line', i, ':', line);
+            
+            // Look at the immediate next few lines for description
+            for (let j = i + 1; j < Math.min(i + 3, lines.length); j++) {
+              const nextLine = lines[j].trim();
+              // console.log('CRED OCR Debug - Checking line', j, ':', nextLine);
+              
+              // This should be the business description - look for simple text lines
+              // Skip empty lines and lines with transaction info
+              if (nextLine.length >= 3 && 
+                  nextLine.length <= 50 && 
+                  !nextLine.includes('|') && 
+                  !nextLine.includes('paid securely') &&
+                  !nextLine.includes('powered by') &&
+                  !nextLine.includes('TXN ID') &&
+                  !nextLine.includes('AUG') &&
+                  !nextLine.includes('2025') &&
+                  !/\d{4,}/.test(nextLine) && // No long numbers (transaction IDs)
+                  !/\d{1,2}:\d{2}/.test(nextLine)) { // No time formats
+                // console.log('CRED OCR Debug - Found potential description:', nextLine);
+                extractedPurpose = nextLine;
+                break;
+              } else {
+                // console.log('CRED OCR Debug - Skipped line (transaction info):', nextLine);
+              }
+            }
+            break;
+          }
+        }
+        
+        // console.log('CRED OCR Debug - Final extracted purpose:', extractedPurpose);
+      } else if (platformType === 'googlepay') {
+        // For Google Pay, extract the complete description from the payment bubble
+        // GPay bubble typically contains the full transaction context
+        
+        let recipientLine = '';
+        let descriptionLines = [];
+        
+        // First pass: identify all content lines and separate recipient from description
+        for (let i = 0; i < lines.length; i++) {
+          const line = lines[i].trim();
+          const lowerLine = line.toLowerCase();
+          
+          // Skip obvious system/transaction lines
+          if (lowerLine.includes('google pay') ||
+              lowerLine.includes('upi') ||
+              lowerLine.includes('transaction') ||
+              lowerLine.includes('completed') ||
+              lowerLine.includes('success') ||
+              lowerLine.includes('sent') ||
+              lowerLine.includes('powered by') ||
+              lowerLine.includes('@') ||
+              /^₹[\d,]+/.test(line) ||
+              /^\d+$/.test(line) ||
+              /^\d{1,2}\s(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)/i.test(line) ||
+              /^\d{1,2}:\d{2}/.test(line) ||
+              line.length < 3) {
+            continue;
+          }
+          
+          // Identify recipient line (usually "To [RECIPIENT]" format)
+          if (lowerLine.startsWith('to ') && line.length > 3) {
+            recipientLine = line;
+            continue;
+          }
+          
+          // Collect potential description lines
+          if (line.length >= 3 && line.length <= 150) {
+            // Check if this is descriptive content (not just recipient names)
+            const isAllCaps = /^[A-Z\s&]+$/.test(line);
+            const isBusinessName = isAllCaps && line.length > 10;
+            
+            if (!isBusinessName) {
+              descriptionLines.push(line.trim());
+            }
+          }
+        }
+        
+        console.log('OCR Debug - GPay description lines:', descriptionLines);
+        
+        // Build the complete description from all relevant lines
+        if (descriptionLines.length > 0) {
+          // Filter out corrupted/garbage OCR text and meaningless content
+          const meaningfulLines = descriptionLines.filter(line => {
+            const lowerLine = line.toLowerCase();
+            
+            // Skip corrupted OCR patterns like "£1 Hore Bank 0720 v"
+            if (/£\d+|hore|bank.*\d{4}|0720\s*v/i.test(line)) {
+              console.log('OCR Debug - Filtering out corrupted text:', line);
+              return false;
+            }
+            
+            // Skip generic/metadata lines
+            if (lowerLine.includes('transaction') || 
+                lowerLine.includes('completed') ||
+                lowerLine.includes('success') ||
+                lowerLine.includes('upi id') ||
+                /^\d+$/.test(line.trim())) {
+              return false;
+            }
+            
+            // Keep lines that contain business context or descriptive information
+            return line.split(' ').length >= 2 || 
+                   ['furnili', 'steel', 'wood', 'material', 'thiner', 'paint', 'hardware', 'purchase', 'order', 'supply', 'for', 'cleaning', 'tops', 'edge', 'pati', 'fevixol', 'ashish'].some(term => lowerLine.includes(term));
+          });
+          
+          console.log('OCR Debug - Meaningful lines after filtering:', meaningfulLines);
+          
+          if (meaningfulLines.length === 1) {
+            extractedPurpose = meaningfulLines[0];
+          } else if (meaningfulLines.length > 1) {
+            // Combine related descriptions, avoiding redundancy
+            extractedPurpose = meaningfulLines.join(' ');
+          } else {
+            // If no meaningful lines found, fallback to any business-related content
+            const fallbackLine = descriptionLines.find(line => 
+              ['furnili', 'table', 'courier', 'steel', 'wood', 'material', 'hardware'].some(term => 
+                line.toLowerCase().includes(term)
+              )
+            );
+            if (fallbackLine) {
+              extractedPurpose = fallbackLine;
+              console.log('OCR Debug - Using fallback description:', fallbackLine);
+            }
+          }
+        }
+        
+        // Alternative: Look for complete business descriptions from GPay bubble
+        if (!extractedPurpose) {
+          // For GPay, collect all descriptive lines that appear in the payment bubble
+          const potentialDescriptions = [];
+          
+          for (const line of lines) {
+            const lowerLine = line.toLowerCase();
+            
+            // Skip obvious transaction metadata
+            if (lowerLine.includes('google pay') ||
+                lowerLine.includes('upi') ||
+                lowerLine.includes('transaction') ||
+                lowerLine.includes('completed') ||
+                lowerLine.includes('powered by') ||
+                lowerLine.includes('success') ||
+                lowerLine.includes('sent') ||
+                lowerLine.startsWith('to ') ||
+                lowerLine.includes('@') ||
+                /^₹[\d,]+/.test(line) || // Skip amounts
+                /^\d+$/.test(line) || // Skip standalone numbers
+                /^\d{1,2}\s(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)/i.test(line) ||
+                /^\d{1,2}:\d{2}/.test(line) ||
+                line.match(/^[A-Z\s&]+$/) || // Skip all-caps business names like "HARIOM HARDWARE"
+                line.length < 3 || line.length > 100) {
+              continue;
+            }
+            
+            // Collect all descriptive text that could be part of the payment purpose
+            // This includes business terms, product descriptions, or general descriptive text
+            const businessTerms = ['furnili', 'steel', 'wood', 'material', 'thiner', 'paint', 'hardware', 'purchase', 'order', 'supply', 'for', 'cleaning', 'tops'];
+            const hasBusinessTerm = businessTerms.some(term => lowerLine.includes(term));
+            
+            // Accept lines with business terms or reasonable descriptive text
+            if (hasBusinessTerm || (line.split(' ').length >= 2 && line.split(' ').length <= 10)) {
+              potentialDescriptions.push(line.trim());
+            }
+          }
+          
+          // Combine all potential descriptions into a complete description
+          if (potentialDescriptions.length > 0) {
+            // For GPay, typically the full description is either one comprehensive line
+            // or multiple related lines that should be combined
+            if (potentialDescriptions.length === 1) {
+              extractedPurpose = potentialDescriptions[0];
+            } else {
+              // Combine multiple descriptive lines, but avoid duplicates
+              const uniqueDescriptions = Array.from(new Set(potentialDescriptions));
+              extractedPurpose = uniqueDescriptions.join(' - ');
+            }
           }
         }
       }
       
-      setFormData(prev => ({ ...updatedData, receiptImage: prev.receiptImage }));
-      toast({ 
-        title: "Universal OCR extraction completed", 
-        description: `Amount: ₹${updatedData.amount}, Purpose: ${updatedData.purpose}` 
+      // Set the purpose based on what we found
+      if (extractedPurpose) {
+        updatedData.purpose = extractedPurpose;
+      } else if (extractedRecipient && platformType === 'googlepay') {
+        updatedData.purpose = `Payment to ${extractedRecipient}`;
+      } else if (extractedRecipient) {
+        updatedData.purpose = `Payment to ${extractedRecipient}`;
+      } else if (platformType !== 'generic') {
+        const platformNames = {
+          googlepay: 'Google Pay',
+          phonepe: 'PhonePe', 
+          paytm: 'Paytm',
+          amazonpay: 'Amazon Pay',
+          bhimupi: 'BHIM UPI',
+          cred: 'CRED',
+          bank: 'Bank Transfer',
+          cash: 'Cash Payment'
+        };
+        updatedData.purpose = `${platformNames[platformType as keyof typeof platformNames] || 'Digital'} payment`;
+      }
+      
+      // Enhanced Paid By and Paid To extraction
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        
+        // Pattern 1: "Name paid" - extract the name before "paid"
+        if (line.toLowerCase().includes('paid') && !line.toLowerCase().includes('securely')) {
+          const paidByMatch = line.match(/^(.+?)\s+paid/i);
+          if (paidByMatch) {
+            const paidByName = paidByMatch[1].trim();
+            // Find user ID by name (more flexible matching)
+            const matchingUser = users.find((user: any) => {
+              const userName = (user.name || user.username || '').toLowerCase();
+              const extractedName = paidByName.toLowerCase();
+              return userName.includes(extractedName) || extractedName.includes(userName);
+            });
+            if (matchingUser) {
+              updatedData.paidBy = matchingUser.id.toString();
+            }
+          }
+          
+          // Look for recipient in next few lines
+          for (let j = i + 1; j < Math.min(i + 4, lines.length); j++) {
+            const nextLine = lines[j].trim();
+            // Check if it looks like a name (contains letters, reasonable length)
+            if (/^[a-zA-Z\s.]+$/.test(nextLine) && nextLine.length > 2 && nextLine.length < 50 && !nextLine.includes('@')) {
+              // Skip common UPI terms
+              const skipTerms = ['transaction', 'successful', 'completed', 'bank', 'upi', 'payment', 'sent', 'received'];
+              if (!skipTerms.some(term => nextLine.toLowerCase().includes(term))) {
+                updatedData.paidTo = nextLine;
+                break;
+              }
+            }
+          }
+          break;
+        }
+        
+        // Pattern 2: "To: Name" format
+        const toMatch = line.match(/^to:\s*(.+)/i);
+        if (toMatch && !updatedData.paidTo) {
+          const name = toMatch[1].trim();
+          if (name.length > 2 && name.length < 50 && /^[a-zA-Z\s.]+$/.test(name)) {
+            updatedData.paidTo = name;
+          }
+        }
+      }
+      
+      // Extract purpose/description - Enhanced for Google Pay transactions
+      let bestPurpose = '';
+      let bestPurposeScore = 0;
+      
+      // Look for descriptive text with improved Google Pay detection
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].trim();
+        const lowerLine = line.toLowerCase();
+        
+        // Skip obvious non-descriptive lines
+        if (line.length < 3 || 
+            /^[0-9,\.\s₹]+$/.test(line) || // Just numbers/currency
+            lowerLine.includes('completed') ||
+            lowerLine.includes('transaction') ||
+            lowerLine.includes('powered by') ||
+            lowerLine.includes('google pay') ||
+            lowerLine.includes('upi') ||
+            lowerLine.includes('@') ||
+            /^\d{1,2}\s(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)/i.test(line) || // Dates
+            /^\d{1,2}:\d{2}\s(am|pm)/i.test(line) || // Times
+            /^[A-Z]{2,}\s[A-Z]{2,}/.test(line) || // All caps names like "EDGE INDIA"
+            line === updatedData.paidTo // Skip if same as paidTo
+        ) {
+          continue;
+        }
+
+        // Calculate relevance score for potential purpose lines
+        let score = 0;
+        
+        // Bonus points for containing business-relevant terms
+        const businessTerms = ['furnili', 'edge', 'pati', 'inch', 'pcs', 'pieces', 'material', 'wood', 'steel', 'order', 'for', 'purchase'];
+        businessTerms.forEach(term => {
+          if (lowerLine.includes(term)) {
+            score += 2;
+          }
+        });
+        
+        // Bonus for having multiple words (likely descriptive)
+        const wordCount = line.split(/\s+/).length;
+        if (wordCount >= 3) score += 1;
+        if (wordCount >= 5) score += 2;
+        
+        // Bonus for containing numbers (like dimensions or quantities)
+        if (/\d+/.test(line) && !line.match(/^\d+$/)) {
+          score += 1;
+        }
+        
+        // Special bonus for Google Pay format like "furnili edge pati for 8ftx8inch 36pcs"
+        if (lowerLine.includes('for') && /\d+/.test(line)) {
+          score += 3;
+        }
+        
+        // Update best purpose if this line scores higher
+        if (score > bestPurposeScore && score > 0) {
+          bestPurpose = line;
+          bestPurposeScore = score;
+        }
+      }
+      
+      // Set the best purpose found
+      if (bestPurpose) {
+        updatedData.purpose = bestPurpose;
+      }
+      
+      // Legacy processing for order-specific lines (keep existing logic)
+      const purposeLines = lines.filter(line => {
+        const lowerLine = line.toLowerCase();
+        return line.length > 5 && 
+               !lowerLine.includes('paid') && 
+               !lowerLine.includes('@') && 
+               !lowerLine.includes('txn') &&
+               !lowerLine.includes('powered') &&
+               !lowerLine.includes('cred') &&
+               !lowerLine.includes('securely') &&
+               !/^[0-9,\.\s₹]+$/.test(line) &&
+               !lowerLine.includes('jul') &&
+               !lowerLine.includes('pm') &&
+               !lowerLine.includes('am') &&
+               !/^\d{4}$/.test(line) && // Skip year numbers
+               line.includes(' ') && // Ensure it has multiple words
+               !/^[A-Z\s]+$/.test(line) && // Skip all-caps names like "DOLLY VIKESH OSWAL"
+               line.trim() !== updatedData.paidTo; // Don't use the same line as paidTo
       });
       
+      // Process purpose lines for order information (fallback if no better purpose found)
+      if (!updatedData.purpose) {
+        for (const line of purposeLines) {
+          const purposeText = line.trim();
+          const lowerLine = line.toLowerCase();
+          
+          // Check if this line contains order information
+          if (lowerLine.includes('order')) {
+            // Pattern: "description - name order" or "description name order"
+            const dashSplit = purposeText.split(/\s*[-–]\s*/);
+            if (dashSplit.length >= 2) {
+              // Found dash: "furnili Powder cosring legs - pintu order"
+              updatedData.purpose = dashSplit[0].trim();
+              const orderPart = dashSplit[1].trim();
+              // Extract order name before "order"
+              const orderName = orderPart.replace(/\s+order$/i, '').trim();
+              updatedData.orderNo = orderName.charAt(0).toUpperCase() + orderName.slice(1) + " Order";
+            } else {
+              // No dash, try to split before "order"
+              const orderMatch = purposeText.match(/(.+?)\s+(\w+)\s+order/i);
+              if (orderMatch) {
+                updatedData.purpose = orderMatch[1].trim();
+                updatedData.orderNo = orderMatch[2].charAt(0).toUpperCase() + orderMatch[2].slice(1) + " Order";
+              } else {
+                updatedData.purpose = purposeText;
+              }
+            }
+            break; // Found order info, stop here
+          }
+        }
+      }
+      
+      // If no order info found, use the first descriptive line as purpose
+      if (!updatedData.purpose && purposeLines.length > 0) {
+        updatedData.purpose = purposeLines[0].trim();
+      }
+      
+      // Extract date
+      const dateMatch = text.match(/(\d{1,2})\s+(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)\s+(\d{4})/i);
+      if (dateMatch) {
+        const [, day, month, year] = dateMatch;
+        const monthNum = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'].indexOf(month.toUpperCase()) + 1;
+        if (monthNum > 0) {
+          const formattedDate = `${year}-${String(monthNum).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+          updatedData.date = formattedDate;
+        }
+      }
+      
+      setFormData(prev => ({ ...updatedData, receiptImage: prev.receiptImage }));
+      toast({ title: "Payment details extracted from screenshot", description: "Review and submit the expense" });
     } catch (error) {
-      console.error('=== FUNDS OCR ERROR ===');
-      console.error('Error details:', error);
-      console.error('Error message:', error.message);
-      console.error('Error stack:', error.stack);
+      // console.error('OCR Error:', error);
       toast({ title: "OCR processing failed", description: "Please fill the details manually", variant: "destructive" });
     }
     setIsProcessingOCR(false);
@@ -618,80 +999,20 @@ export default function PettyCash() {
     }
   };
 
-  const processFile = (file: File, isForFunds: boolean = false) => {
+  const processFile = (file: File) => {
     console.log('Processing file:', {
       name: file.name,
       type: file.type,
       size: file.size,
-      lastModified: file.lastModified,
-      isForFunds
+      lastModified: file.lastModified
     });
     
-    if (isForFunds) {
-      processImageWithOCRForFunds(file);
-    } else {
+    setFormData(prev => ({ ...prev, receiptImage: file }));
+    
+    // Auto-process with OCR if it's an image
+    if (file.type.startsWith('image/')) {
       processImageWithOCR(file);
     }
-  };
-
-  // Enhanced OCR processing for funds form
-  const processImageWithOCRForFunds = async (file: File) => {
-    setIsProcessingOCR(true);
-    try {
-      console.log('OCR Debug - Using Universal Receipt OCR System for Funds');
-      
-      // Use new Universal Receipt OCR system with comprehensive debugging
-      console.log('=== FUNDS OCR PROCESSING START ===');
-      const ocrResult = await ClientFreeOCR.processPaymentScreenshot(file);
-      console.log('=== FUNDS OCR RAW RESULT ===');
-      console.log('OCR Result:', ocrResult);
-      
-      if (!ocrResult || !ocrResult.text) {
-        console.log('=== FUNDS OCR FAILED - NO TEXT ===');
-        throw new Error('No text extracted from image');
-      }
-      
-      console.log('OCR Debug - Universal OCR Results for Funds:', {
-        platform: ocrResult.platform,
-        amount: ocrResult.amount,
-        description: ocrResult.description,
-        recipient: ocrResult.recipient,
-        confidence: ocrResult.confidence
-      });
-      
-      const updatedData = { ...fundsFormData };
-      
-      // Use Universal OCR results for funds
-      if (ocrResult.amount && parseFloat(ocrResult.amount) > 0) {
-        updatedData.amount = ocrResult.amount;
-      }
-      
-      // Use Universal OCR recipient as source
-      if (ocrResult.recipient && ocrResult.recipient.trim().length > 0) {
-        updatedData.source = ocrResult.recipient;
-      }
-      
-      // Use Universal OCR date extraction
-      if (ocrResult.date) {
-        updatedData.date = ocrResult.date;
-      }
-      
-      // Use Universal OCR description extraction
-      if (ocrResult.description && ocrResult.description.trim().length > 0) {
-        updatedData.purpose = ocrResult.description;
-      }
-      
-      setFundsFormData(prev => ({ ...updatedData, receiptImage: prev.receiptImage }));
-      toast({ 
-        title: "Universal OCR extraction completed for funds", 
-        description: `Amount: ₹${updatedData.amount}, Source: ${updatedData.source}` 
-      });
-      
-    } catch (error) {
-      console.error('Universal OCR Error for Funds:', error);
-      toast({ title: "OCR processing failed", description: "Please fill the details manually", variant: "destructive" });
-    }
-    setIsProcessingOCR(false);
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -725,19 +1046,20 @@ export default function PettyCash() {
     if (imageItem) {
       const file = imageItem.getAsFile();
       if (file) {
+        // Create a new file with proper naming for pasted images
         const timestamp = Date.now();
-        const renamedFile = new File([file], `pasted-image-${timestamp}.png`, {
+        const extension = file.type.includes('png') ? '.png' : '.jpg';
+        const renamedFile = new File([file], `pasted-receipt-${timestamp}${extension}`, {
           type: file.type,
-          lastModified: timestamp,
+          lastModified: Date.now(),
         });
         
-        setFormData(prev => ({ 
-          ...prev, 
-          receiptImage: renamedFile,
+        console.log('Pasted image details:', {
+          originalName: file.name,
           newName: renamedFile.name,
           type: renamedFile.type,
           size: renamedFile.size
-        }));
+        });
         
         processFile(renamedFile);
         toast({ title: "Image pasted", description: "Processing with OCR...", });
@@ -750,763 +1072,1214 @@ export default function PettyCash() {
     
     const formDataToSend = new FormData();
     formDataToSend.append('expenseDate', formData.date);
-    formDataToSend.append('vendor', formData.paidTo);
+    formDataToSend.append('vendor', formData.paidTo); // Changed from paidTo to vendor
     formDataToSend.append('amount', formData.amount);
     formDataToSend.append('paidBy', formData.paidBy);
-    formDataToSend.append('description', formData.purpose);
+    formDataToSend.append('description', formData.purpose); // Changed from note to description
     formDataToSend.append('category', formData.category);
     formDataToSend.append('projectId', formData.projectId);
     formDataToSend.append('orderNo', formData.orderNo);
     
     if (formData.receiptImage) {
+      // console.log("Appending receipt file:", {
+      //   name: formData.receiptImage.name,
+      //   type: formData.receiptImage.type,
+      //   size: formData.receiptImage.size
+      // });
       formDataToSend.append('receipt', formData.receiptImage);
+    } else {
+      // console.log("No receipt file to append");
     }
+    
+    // Log all FormData entries for debugging
+    // console.log("FormData entries:");
+    // const entries = Array.from(formDataToSend.entries());
+    // entries.forEach(([key, value]) => {
+    //   console.log(key, value);
+    // });
     
     addExpenseMutation.mutate(formDataToSend);
   };
 
-  // Filtering logic
-  const filteredExpenses = expenses?.filter((expense: any) => {
-    const matchesSearch = expense.vendor.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      expense.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      expense.paidBy.toLowerCase().includes(searchTerm.toLowerCase());
+  // Filter expenses
+  const filteredExpenses = expenses.filter((expense: PettyCashExpense) => {
+    const matchesSearch = expense.vendor?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (expense.description?.toLowerCase().includes(searchTerm.toLowerCase()) || false);
+    const matchesCategory = !selectedCategory || selectedCategory === 'all' || expense.category === selectedCategory;
+    const paidByName = expense.user?.name || expense.user?.username || '';
+    const matchesPaidBy = !selectedPaidBy || selectedPaidBy === 'all' || paidByName === selectedPaidBy;
+    const matchesDate = !dateFilter || expense.expenseDate.startsWith(dateFilter);
     
-    const matchesCategory = selectedCategory === 'All Categories' || expense.category === selectedCategory;
-    const matchesPaidBy = selectedPaidBy === 'All Staff' || expense.paidBy === selectedPaidBy;
-    
-    if (dateFilter !== 'All Time') {
-      const expenseDate = new Date(expense.expenseDate);
-      const today = new Date();
-      
-      switch (dateFilter) {
-        case 'Today':
-          return matchesSearch && matchesCategory && matchesPaidBy && 
-                 expenseDate.toDateString() === today.toDateString();
-        case 'This Week':
-          const weekStart = new Date(today.setDate(today.getDate() - today.getDay()));
-          return matchesSearch && matchesCategory && matchesPaidBy && expenseDate >= weekStart;
-        case 'This Month':
-          return matchesSearch && matchesCategory && matchesPaidBy &&
-                 expenseDate.getMonth() === today.getMonth() && 
-                 expenseDate.getFullYear() === today.getFullYear();
-        default:
-          return matchesSearch && matchesCategory && matchesPaidBy;
-      }
-    }
-    
-    return matchesSearch && matchesCategory && matchesPaidBy;
-  }) || [];
+    return matchesSearch && matchesCategory && matchesPaidBy && matchesDate;
+  });
 
-  // Get unique categories and staff for filter dropdowns
-  const availableCategories = Array.from(new Set(expenses?.map((e: any) => e.category).filter(Boolean))) || [];
-  const staffMembers = Array.from(new Set(expenses?.map((e: any) => e.paidBy).filter(Boolean))) || [];
+  // Export functions
+  const exportToWhatsApp = () => {
+    // Calculate totals
+    const totalIncome = filteredExpenses
+      .filter((expense: PettyCashExpense) => expense.status === 'income')
+      .reduce((sum: number, expense: PettyCashExpense) => sum + expense.amount, 0);
+    const totalExpenses = filteredExpenses
+      .filter((expense: PettyCashExpense) => expense.status === 'expense')
+      .reduce((sum: number, expense: PettyCashExpense) => sum + expense.amount, 0);
+    const netTotal = totalIncome - totalExpenses;
 
-  const resetFormData = () => {
-    setFormData({
-      date: new Date().toISOString().split('T')[0],
-      amount: '',
-      paidTo: '',
-      paidBy: users[0]?.username || '',
-      purpose: '',
-      projectId: '',
-      orderNo: '',
-      receiptImage: null,
-      category: '',
-    });
+    const message = filteredExpenses.map((expense: PettyCashExpense) => 
+      `${format(new Date(expense.expenseDate), 'dd MMM yyyy')} - ${expense.status === 'income' ? 'Credit' : 'Debit'} - ${expense.status === 'income' ? '+' : '-'}₹${expense.amount.toLocaleString()} - ${expense.vendor} - ${expense.category} - ${expense.description || ''}`
+    ).join('\n');
+    
+    const totals = `\n\n📊 SUMMARY:\n💰 Total Income: +₹${totalIncome.toLocaleString()}\n💸 Total Expenses: -₹${totalExpenses.toLocaleString()}\n📈 Net Total: ${netTotal >= 0 ? '+' : ''}₹${netTotal.toLocaleString()}`;
+    
+    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(`💰 Petty Cash Report\n📅 ${format(new Date(), 'dd MMM yyyy')}\n\n${message}${totals}`)}`;
+    window.open(whatsappUrl, '_blank');
   };
 
-  const handleFundsSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const exportToExcel = () => {
+    // Calculate totals
+    const totalIncome = filteredExpenses
+      .filter((expense: PettyCashExpense) => expense.status === 'income')
+      .reduce((sum: number, expense: PettyCashExpense) => sum + expense.amount, 0);
+    const totalExpenses = filteredExpenses
+      .filter((expense: PettyCashExpense) => expense.status === 'expense')
+      .reduce((sum: number, expense: PettyCashExpense) => sum + expense.amount, 0);
+    const netTotal = totalIncome - totalExpenses;
+
+    const csvContent = [
+      'Date,Type,Amount,Paid To/Source,Paid By,Purpose,Category,Project ID,Description',
+      ...filteredExpenses.map((expense: PettyCashExpense) => 
+        `${format(new Date(expense.expenseDate), 'dd MMM yyyy')},"${expense.status === 'income' ? 'Credit' : 'Debit'}","${expense.status === 'income' ? '+' : '-'}₹${expense.amount.toLocaleString()}","${expense.vendor}","${expense.user?.name || expense.user?.username || 'N/A'}","${expense.description || ''}","${expense.category}","${expense.projectId || '-'}","${expense.description || ''}"`
+      ),
+      '',
+      'TOTALS:',
+      `Total Income,+₹${totalIncome.toLocaleString()}`,
+      `Total Expenses,-₹${totalExpenses.toLocaleString()}`,
+      `Net Total,${netTotal >= 0 ? '+' : ''}₹${netTotal.toLocaleString()}`
+    ].join('\n');
     
-    const formDataToSend = new FormData();
-    formDataToSend.append('expenseDate', fundsFormData.date);
-    formDataToSend.append('amount', fundsFormData.amount);
-    formDataToSend.append('paidTo', fundsFormData.source);
-    formDataToSend.append('receivedBy', fundsFormData.receivedBy);
-    formDataToSend.append('note', fundsFormData.purpose);
-    
-    if (fundsFormData.receiptImage) {
-      formDataToSend.append('receipt', fundsFormData.receiptImage);
-    }
-    
-    addFundsMutation.mutate(formDataToSend);
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `petty-cash-${format(new Date(), 'yyyy-MM-dd')}.csv`;
+    link.click();
+    window.URL.revokeObjectURL(url);
   };
 
   return (
-    <FurniliLayout title="Petty Cash Management" subtitle="Track expenses and manage cash flow">
-      <div className="p-6 space-y-6">
-        {/* Header */}
-        <div className="flex justify-between items-center">
+    <FurniliLayout
+      title={user?.role === 'staff' ? "My Petty Cash" : "Petty Cash Management"}
+      subtitle={user?.role === 'staff' ? "Track my expenses and cash received" : "Track expenses and manage cash flow"}
+    >
+      <div className="space-y-4 sm:space-y-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-0">
           <div>
-            <h1 className="text-2xl font-semibold text-gray-900">Petty Cash Management</h1>
-            <p className="text-sm text-gray-600 mt-1">Track expenses and manage cash flow</p>
           </div>
-          
-          <div className="flex gap-3">
-            <FurniliButton
-              onClick={() => setShowAddFundsDialog(true)}
-              className="bg-green-600 hover:bg-green-700 text-white"
-            >
-              <Plus className="h-4 w-4" />
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+          <Button onClick={() => {
+            resetFormData();
+            setShowAddDialog(true);
+          }} className={`flex-1 sm:flex-none ${isMobile ? 'h-9 text-sm' : ''}`}>
+            <Plus className="mr-2 h-4 w-4" />
+            Add Expense
+          </Button>
+          {user?.role !== 'staff' && (
+            <Button onClick={() => {
+              resetFundsFormData();
+              setShowAddFundsDialog(true);
+            }} variant="outline" className={`flex-1 sm:flex-none bg-green-50 border-green-200 hover:bg-green-100 text-green-700 ${isMobile ? 'h-9 text-sm' : ''}`}>
+              <Plus className="mr-2 h-4 w-4" />
               Add Funds
-            </FurniliButton>
-            <FurniliButton
-              onClick={() => {
-                resetFormData();
-                setShowAddExpenseDialog(true);
-              }}
-              className="bg-primary hover:bg-primary/90 text-white"
-            >
-              <Plus className="h-4 w-4" />
-              Add Expense
-            </FurniliButton>
-          </div>
+            </Button>
+          )}
         </div>
-
-        {/* Stats Cards */}
-        {stats && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <FurniliCard className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Total Income</p>
-                  <p className="text-2xl font-bold text-green-600">₹{stats.totalIncome?.toLocaleString() || '0'}</p>
-                </div>
-                <TrendingUp className="h-8 w-8 text-green-600" />
+      </div>
+      {/* Stats Cards */}
+      {stats && (
+        <>
+          {/* Mobile Compact Stats - Single Line */}
+          {isMobile && (
+            <Card className="p-3">
+              {user?.role === 'staff' ? (
+                // Personal stats for staff users
+                (<div className="grid grid-cols-3 gap-2 text-center">
+                  <div className="space-y-1">
+                    <div className="text-xs font-medium text-gray-600">My Expenses</div>
+                    <div className="text-sm font-bold text-red-600">-₹{(stats as PersonalPettyCashStats).myExpenses?.toLocaleString()}</div>
+                    <div className="text-xs text-red-500">Money Spent</div>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="text-xs font-medium text-gray-600">Cash Given to Me</div>
+                    <div className="text-sm font-bold text-green-600">+₹{(stats as PersonalPettyCashStats).cashGivenToMe?.toLocaleString()}</div>
+                    <div className="text-xs text-green-500">Received</div>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="text-xs font-medium text-gray-600">My Balance</div>
+                    <div className={`text-sm font-bold ${(stats as PersonalPettyCashStats).myBalance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                      {(stats as PersonalPettyCashStats).myBalance >= 0 ? '+' : ''}₹{(stats as PersonalPettyCashStats).myBalance?.toLocaleString()}
+                    </div>
+                    <div className={`text-xs ${(stats as PersonalPettyCashStats).myBalance >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                      {(stats as PersonalPettyCashStats).myBalance >= 0 ? 'Available' : 'Deficit'}
+                    </div>
+                  </div>
+                </div>)
+              ) : (
+                // Global stats for admin users
+                (<div className="grid grid-cols-3 gap-2 text-center">
+                  <div className="space-y-1">
+                    <div className="text-xs font-medium text-gray-600">Total Expenses</div>
+                    <div className="text-sm font-bold text-red-600">-₹{(stats as PettyCashStats).totalExpenses?.toLocaleString()}</div>
+                    <div className="text-xs text-red-500">Money Out</div>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="text-xs font-medium text-gray-600">Total Funds</div>
+                    <div className="text-sm font-bold text-green-600">+₹{(stats as PettyCashStats).totalIncome?.toLocaleString()}</div>
+                    <div className="text-xs text-green-500">Money In</div>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="text-xs font-medium text-gray-600">Current Balance</div>
+                    <div className={`text-sm font-bold ${(stats as PettyCashStats).balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                      {(stats as PettyCashStats).balance >= 0 ? '+' : ''}₹{(stats as PettyCashStats).balance?.toLocaleString()}
+                    </div>
+                    <div className={`text-xs ${(stats as PettyCashStats).balance >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                      {(stats as PettyCashStats).balance >= 0 ? 'Available' : 'Deficit'}
+                    </div>
+                  </div>
+                </div>)
+              )}
+              {/* This Month Stats on Mobile */}
+              <div className="mt-3 pt-3 border-t text-center">
+                <div className="text-xs font-medium text-gray-600">This Month</div>
+                <div className="text-lg font-bold">₹{user?.role === 'staff' ? 
+                  (stats as PersonalPettyCashStats).thisMonth?.toLocaleString() : 
+                  (stats as PettyCashStats).currentMonthExpenses?.toLocaleString()}</div>
               </div>
-            </FurniliCard>
+            </Card>
+          )}
+          
+          {/* Desktop Stats Cards */}
+          {!isMobile && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
+              {user?.role === 'staff' ? (
+                // Personal stats cards for staff users
+                (<>
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">My Expenses</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold text-red-600">-₹{(stats as PersonalPettyCashStats).myExpenses?.toLocaleString()}</div>
+                      <p className="text-xs text-red-500 mt-1">Money Spent</p>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">Cash Given to Me</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold text-green-600">+₹{(stats as PersonalPettyCashStats).cashGivenToMe?.toLocaleString()}</div>
+                      <p className="text-xs text-green-500 mt-1">Received</p>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">My Balance</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className={`text-2xl font-bold ${(stats as PersonalPettyCashStats).myBalance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        {(stats as PersonalPettyCashStats).myBalance >= 0 ? '+' : ''}₹{(stats as PersonalPettyCashStats).myBalance?.toLocaleString()}
+                      </div>
+                      <p className={`text-xs mt-1 ${(stats as PersonalPettyCashStats).myBalance >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                        {(stats as PersonalPettyCashStats).myBalance >= 0 ? 'Available' : 'Deficit'}
+                      </p>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">This Month</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">₹{(stats as PersonalPettyCashStats).thisMonth?.toLocaleString()}</div>
+                    </CardContent>
+                  </Card>
+                </>)
+              ) : (
+                // Global stats cards for admin users
+                (<>
+                  <Card className="border-l-4 border-l-red-500">
+                    <CardContent className="p-3">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-xs text-gray-600 mb-1">Total Expenses (Debit)</p>
+                          <p className="text-lg font-bold text-red-600">-₹{(stats as PettyCashStats).totalExpenses?.toLocaleString()}</p>
+                          <p className="text-[10px] text-gray-500">Money Out</p>
+                        </div>
+                        <div className="h-6 w-6 bg-red-100 rounded-full flex items-center justify-center">
+                          <Download className="h-3 w-3 text-red-600" />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card className="border-l-4 border-l-green-500">
+                    <CardContent className="p-3">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-xs text-gray-600 mb-1">Total Funds (Credit)</p>
+                          <p className="text-lg font-bold text-green-600">+₹{(stats as PettyCashStats).totalIncome?.toLocaleString()}</p>
+                          <p className="text-[10px] text-gray-500">Money In</p>
+                        </div>
+                        <div className="h-6 w-6 bg-green-100 rounded-full flex items-center justify-center">
+                          <Upload className="h-3 w-3 text-green-600" />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card className={`border-l-4 ${(stats as PettyCashStats).balance >= 0 ? 'border-l-green-500' : 'border-l-red-500'}`}>
+                    <CardContent className="p-3">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-xs text-gray-600 mb-1">Current Balance</p>
+                          <p className={`text-lg font-bold ${(stats as PettyCashStats).balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                            {(stats as PettyCashStats).balance >= 0 ? '+' : ''}₹{(stats as PettyCashStats).balance?.toLocaleString()}
+                          </p>
+                          <p className="text-[10px] text-gray-500">Available Funds</p>
+                        </div>
+                        <div className={`h-6 w-6 rounded-full flex items-center justify-center ${
+                          (stats as PettyCashStats).balance >= 0 ? 'bg-green-100' : 'bg-red-100'
+                        }`}>
+                          <Wallet className={`h-3 w-3 ${(stats as PettyCashStats).balance >= 0 ? 'text-green-600' : 'text-red-600'}`} />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card className="border-l-4 border-l-blue-500">
+                    <CardContent className="p-3">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-xs text-gray-600 mb-1">This Month</p>
+                          <p className="text-lg font-bold text-gray-900">₹{(stats as PettyCashStats).currentMonthExpenses?.toLocaleString()}</p>
+                          <p className="text-[10px] text-gray-500">Monthly Damage</p>
+                        </div>
+                        <div className="h-6 w-6 bg-blue-100 rounded-full flex items-center justify-center">
+                          <Calendar className="h-3 w-3 text-blue-600" />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </>)
+              )}
+            </div>
+          )}
+        </>
+      )}
 
-            <FurniliCard className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Total Expenses</p>
-                  <p className="text-2xl font-bold text-red-600">₹{stats.totalExpenses?.toLocaleString() || '0'}</p>
-                </div>
-                <TrendingDown className="h-8 w-8 text-red-600" />
+      {/* Staff Balances - Hide for staff users */}
+      {user?.role !== 'staff' && staffBalances.length > 0 && (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Individual Staff Balances</CardTitle>
+                <p className="text-sm text-gray-600">Track funds received vs spent by each staff member</p>
               </div>
-            </FurniliCard>
-
-            <FurniliCard className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Current Balance</p>
-                  <p className={`text-2xl font-bold ${(stats.totalIncome || 0) - (stats.totalExpenses || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                    ₹{((stats.totalIncome || 0) - (stats.totalExpenses || 0)).toLocaleString()}
-                  </p>
-                </div>
-                <Wallet className="h-8 w-8 text-blue-600" />
-              </div>
-            </FurniliCard>
-          </div>
-        )}
-
-        {/* Individual Staff Balances */}
-        {staffBalances && staffBalances.length > 0 && (
-          <FurniliCard className="p-4">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold">Individual Staff Balances</h3>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setShowStaffBalances(!showStaffBalances)}
+                className="flex items-center gap-2"
               >
-                <Users className="h-4 w-4 mr-2" />
-                {showStaffBalances ? 'Hide' : 'Show'} Details
+                {showStaffBalances ? (
+                  <>
+                    <ChevronUp className="h-4 w-4" />
+                    Hide
+                  </>
+                ) : (
+                  <>
+                    <ChevronDown className="h-4 w-4" />
+                    Show
+                  </>
+                )}
               </Button>
             </div>
-            
-            {showStaffBalances && (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {staffBalances.map((balance: any) => (
-                  <div key={balance.userId} className="p-3 border rounded-lg">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-medium">{balance.userName}</p>
-                        <p className="text-sm text-gray-600">
-                          Expenses: ₹{balance.totalExpenses?.toLocaleString() || '0'}
-                        </p>
-                        <p className="text-sm text-gray-600">
-                          Funds: ₹{balance.totalFunds?.toLocaleString() || '0'}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p className={`text-lg font-semibold ${
-                          (balance.totalFunds || 0) - (balance.totalExpenses || 0) >= 0 
-                            ? 'text-green-600' 
-                            : 'text-red-600'
-                        }`}>
-                          ₹{((balance.totalFunds || 0) - (balance.totalExpenses || 0)).toLocaleString()}
-                        </p>
-                        <p className="text-xs text-gray-500">Balance</p>
-                      </div>
+          </CardHeader>
+          {showStaffBalances && (
+            <CardContent>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {staffBalances.map((staff: any) => (
+                <div key={staff.userId} className="p-4 border rounded-lg bg-gray-50">
+                  <div className="font-medium text-sm mb-2">{staff.userName}</div>
+                  <div className="space-y-1 text-xs">
+                    <div className="flex justify-between">
+                      <span className="text-green-600">Received:</span>
+                      <span className="font-medium text-green-600">+₹{(staff.received ?? 0).toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-red-600">Spent:</span>
+                      <span className="font-medium text-red-600">-₹{(staff.spent ?? 0).toLocaleString()}</span>
+                    </div>
+                    <hr className="my-2" />
+                    <div className="flex justify-between">
+                      <span className="font-medium">Balance:</span>
+                      <span className={`font-bold ${(staff.balance ?? 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        {(staff.balance ?? 0) >= 0 ? '+' : ''}₹{(staff.balance ?? 0).toLocaleString()}
+                      </span>
                     </div>
                   </div>
+                </div>
                 ))}
               </div>
-            )}
-          </FurniliCard>
-        )}
+            </CardContent>
+          )}
+        </Card>
+      )}
 
-        {/* Filters and Search */}
-        <FurniliCard className="p-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-              <Input
-                placeholder="Search expenses..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-            
-            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-              <SelectTrigger>
-                <SelectValue placeholder="Category" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="All Categories">All Categories</SelectItem>
-                {availableCategories.map((category) => (
-                  <SelectItem key={category} value={category}>{category}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Select value={selectedPaidBy} onValueChange={setSelectedPaidBy}>
-              <SelectTrigger>
-                <SelectValue placeholder="Staff Member" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="All Staff">All Staff</SelectItem>
-                {staffMembers.map((staff) => (
-                  <SelectItem key={staff} value={staff}>{staff}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Select value={dateFilter} onValueChange={setDateFilter}>
-              <SelectTrigger>
-                <SelectValue placeholder="Date Range" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="All Time">All Time</SelectItem>
-                <SelectItem value="Today">Today</SelectItem>
-                <SelectItem value="This Week">This Week</SelectItem>
-                <SelectItem value="This Month">This Month</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </FurniliCard>
-
-        {/* Expenses List */}
-        <FurniliCard className="p-6">
-          <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <h3 className="text-lg font-semibold">Recent Transactions</h3>
-              <div className="text-sm text-gray-600">
-                Showing {filteredExpenses.length} of {expenses?.length || 0} transactions
+      {/* Filters */}
+      <Card>
+        <CardContent className={`${isMobile ? 'pt-4' : 'pt-6'}`}>
+          <div className={`${isMobile ? 'space-y-3' : 'grid grid-cols-1 sm:grid-cols-2 lg:flex lg:flex-wrap gap-3 lg:gap-4'}`}>
+            <div className={`${isMobile ? '' : 'lg:flex-1 lg:min-w-[200px] sm:col-span-2'}`}>
+              <Label htmlFor="search" className={`${isMobile ? 'text-sm' : ''}`}>Search</Label>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  id="search"
+                  placeholder="Search by name or note..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className={`pl-10 ${isMobile ? 'h-9 text-sm' : ''}`}
+                />
               </div>
             </div>
-
-            {isExpensesLoading ? (
-              <div className="text-center py-8">Loading expenses...</div>
-            ) : filteredExpenses.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">No expenses found</div>
-            ) : (
-              <div className="space-y-2">
-                {filteredExpenses.map((expense) => (
-                  <div key={expense.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors">
-                    <div className="flex items-center space-x-4">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center ${expense.status === 'income' ? 'bg-green-100' : 'bg-red-100'}`}>
-                        {expense.status === 'income' ? (
-                          <TrendingUp className={`h-5 w-5 ${expense.status === 'income' ? 'text-green-600' : 'text-red-600'}`} />
-                        ) : (
-                          <TrendingDown className={`h-5 w-5 ${expense.status === 'income' ? 'text-green-600' : 'text-red-600'}`} />
-                        )}
-                      </div>
-                      <div>
-                        <div className="font-medium">{expense.vendor}</div>
-                        <div className="text-sm text-gray-600">{expense.description || 'No description'}</div>
-                        <div className="text-xs text-gray-500">
-                          {format(new Date(expense.expenseDate), 'dd/MM/yyyy')} • {expense.paidBy}
-                          {expense.category && ` • ${expense.category}`}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <div className={`text-lg font-semibold ${expense.status === 'income' ? 'text-green-600' : 'text-red-600'}`}>
-                        {expense.status === 'income' ? '+' : ''}₹{expense.amount.toLocaleString()}
-                      </div>
-                      <div className="flex items-center space-x-1">
-                        <button
-                          onClick={() => {
-                            setSelectedExpenseDetails(expense);
-                            setShowExpenseDetailsDialog(true);
-                          }}
-                          className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
-                          title="View Details"
-                        >
-                          <Eye className="h-4 w-4" />
-                        </button>
-                        {expense.receiptImageUrl && (
-                          <button
-                            onClick={() => {
-                              setSelectedImage(expense.receiptImageUrl || "");
-                              setShowImageDialog(true);
-                            }}
-                            className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
-                            title="View Receipt"
-                          >
-                            <Camera className="h-4 w-4" />
-                          </button>
-                        )}
-                        <button
-                          onClick={() => setExpenseToDelete(expense)}
-                          className="p-1 text-gray-400 hover:text-red-600 transition-colors"
-                          title="Delete"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+            <div className={`${isMobile ? 'grid grid-cols-2 gap-3' : 'contents'}`}>
+              <div>
+                <Label htmlFor="category-filter" className={`${isMobile ? 'text-sm' : ''}`}>Category</Label>
+                <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                  <SelectTrigger id="category-filter" className={`w-full ${isMobile ? 'h-9 text-sm' : 'lg:w-[150px]'}`}>
+                    <SelectValue placeholder="All Categories" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Categories</SelectItem>
+                    {categories.map((category) => (
+                      <SelectItem key={category} value={category}>
+                        {category}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
-            )}
-          </div>
-        </FurniliCard>
-
-        {/* Add Expense Dialog */}
-        <Dialog open={showAddExpenseDialog} onOpenChange={setShowAddExpenseDialog}>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Add New Expense</DialogTitle>
-              <DialogDescription>Record a new petty cash expense with receipt details</DialogDescription>
-            </DialogHeader>
-            
-            <form onSubmit={handleSubmit} className="space-y-3">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <Label htmlFor="amount" className="text-xs">Amount (₹) *</Label>
-                  <Input
-                    id="amount"
-                    type="text"
-                    value={formData.amount}
-                    onChange={(e) => setFormData(prev => ({ ...prev, amount: e.target.value }))}
-                    placeholder="0.00"
-                    className="h-8"
-                    required
-                  />
-                </div>
-                <div className="space-y-1">
-                  <Label htmlFor="date" className="text-xs">Date *</Label>
-                  <Input
-                    id="date"
-                    type="date"
-                    value={formData.date}
-                    onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
-                    className="h-8"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <Label htmlFor="paidTo" className="text-xs">Paid To *</Label>
-                  <Input
-                    id="paidTo"
-                    type="text"
-                    value={formData.paidTo}
-                    onChange={(e) => setFormData(prev => ({ ...prev, paidTo: e.target.value }))}
-                    placeholder="Vendor/Supplier name"
-                    className="h-8"
-                    required
-                  />
-                </div>
-                <div className="space-y-1">
-                  <Label htmlFor="paidBy" className="text-xs">Paid By *</Label>
-                  <Select value={formData.paidBy} onValueChange={(value) => setFormData(prev => ({ ...prev, paidBy: value }))}>
-                    <SelectTrigger className="h-8">
-                      <SelectValue placeholder="Select staff member" />
+              {user?.role !== 'staff' && (
+                <div>
+                  <Label htmlFor="paid-by-filter" className={`${isMobile ? 'text-sm' : ''}`}>Paid By</Label>
+                  <Select value={selectedPaidBy} onValueChange={setSelectedPaidBy}>
+                    <SelectTrigger id="paid-by-filter" className={`w-full ${isMobile ? 'h-9 text-sm' : 'lg:w-[150px]'}`}>
+                      <SelectValue placeholder="All Staff" />
                     </SelectTrigger>
                     <SelectContent>
-                      {users?.map((user) => (
-                        <SelectItem key={user.id} value={user.username}>
-                          {user.username}
+                      <SelectItem value="all">All Staff</SelectItem>
+                      {users.map((user: any) => (
+                        <SelectItem key={user.id} value={user.name || user.username}>
+                          {user.name || user.username}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
+              )}
+              <div className={`${user?.role === 'staff' ? 'col-span-1' : ''}`}>
+                <Label htmlFor="date-filter" className={`${isMobile ? 'text-sm' : ''}`}>Date</Label>
+                <Input
+                  id="date-filter"
+                  type="date"
+                  value={dateFilter}
+                  onChange={(e) => setDateFilter(e.target.value)}
+                  className={`w-full ${isMobile ? 'h-9 text-sm' : 'lg:w-[150px]'}`}
+                />
               </div>
-
-              <div className="space-y-1">
-                <Label htmlFor="purpose" className="text-xs">Purpose / Description *</Label>
-                <textarea
-                  id="purpose"
-                  value={formData.purpose}
-                  onChange={(e) => setFormData(prev => ({ ...prev, purpose: e.target.value }))}
-                  placeholder="What was this expense for?"
-                  className="w-full min-h-[60px] p-2 border rounded-md resize-none text-sm"
-                  rows={2}
+            </div>
+            <div className={`${isMobile ? 'grid grid-cols-2 gap-2' : 'flex flex-col sm:flex-row items-stretch sm:items-end gap-2 sm:col-span-2 lg:col-span-1'}`}>
+              <Button variant="outline" onClick={exportToWhatsApp} className={`${isMobile ? 'h-9 text-sm' : 'flex-1 sm:flex-none'}`}>
+                <Share2 className="mr-2 h-4 w-4" />
+                {isMobile ? 'WhatsApp' : 'WhatsApp'}
+              </Button>
+              <Button variant="outline" onClick={exportToExcel} className={`${isMobile ? 'h-9 text-sm' : 'flex-1 sm:flex-none'}`}>
+                <Download className="mr-2 h-4 w-4" />
+                {isMobile ? 'Excel' : 'Excel'}
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+      {/* Expenses Table */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Expense History ({filteredExpenses.length} entries)</CardTitle>
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow className="text-xs">
+                  <TableHead className="py-2 px-3 w-20">Date</TableHead>
+                  <TableHead className="py-2 px-3 w-16">Type</TableHead>
+                  <TableHead className="py-2 px-3 w-20 text-right">Amount</TableHead>
+                  <TableHead className="py-2 px-3 min-w-[120px]">Paid To/Source</TableHead>
+                  <TableHead className="py-2 px-3 w-20">Paid / Received By</TableHead>
+                  <TableHead className="py-2 px-3 min-w-[150px]">Purpose</TableHead>
+                  <TableHead className="py-2 px-3 w-20">Category</TableHead>
+                  <TableHead className="py-2 px-3 w-32">Project & Client</TableHead>
+                  <TableHead className="py-2 px-3 w-16">Receipt</TableHead>
+                  <TableHead className="py-2 px-3 w-20 text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredExpenses.map((expense: PettyCashExpense) => (
+                  <TableRow 
+                    key={expense.id} 
+                    className="text-xs hover:bg-gray-50 cursor-pointer" 
+                    onClick={() => handleShowExpenseDetails(expense)}
+                  >
+                    <TableCell className="py-2 px-3 text-gray-700 text-xs">
+                      {format(new Date(expense.expenseDate), 'dd/MM/yy')}
+                    </TableCell>
+                    <TableCell className="py-2 px-3">
+                      <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
+                        expense.status === 'income' 
+                          ? 'bg-green-100 text-green-800' 
+                          : 'bg-red-100 text-red-800'
+                      }`}>
+                        {expense.status === 'income' ? 'Credit' : 'Debit'}
+                      </span>
+                    </TableCell>
+                    <TableCell className={`py-2 px-3 font-bold text-right ${
+                      expense.status === 'income' ? 'text-green-600' : 'text-red-600'
+                    }`}>
+                      {expense.status === 'income' ? '+' : '-'}₹{expense.amount.toLocaleString()}
+                    </TableCell>
+                    <TableCell className="py-2 px-3 font-medium max-w-[120px]">
+                      <div className="truncate" title={expense.vendor}>{expense.vendor}</div>
+                    </TableCell>
+                    <TableCell className="py-2 px-3 text-gray-600">
+                      <div className="truncate max-w-[80px]" title={expense.user?.name || expense.user?.username || 'N/A'}>
+                        {expense.user?.name || expense.user?.username || 'N/A'}
+                      </div>
+                    </TableCell>
+                    <TableCell className="py-2 px-3 max-w-[150px]">
+                      <div className="truncate text-gray-700" title={expense.description || '-'}>
+                        {expense.description || '-'}
+                      </div>
+                    </TableCell>
+                    <TableCell className="py-2 px-3">
+                      <Badge variant="outline" className="text-[10px] px-1 py-0.5">{expense.category}</Badge>
+                    </TableCell>
+                    <TableCell className="py-2 px-3 text-gray-700 text-xs">
+                      {expense.projectId && expense.project ? (
+                        <div className="text-center" title={`${expense.project.name}`}>
+                          <div className="font-medium">{expense.project.code}</div>
+                          <div className="text-[10px] text-gray-500 truncate">{expense.project.name}</div>
+                        </div>
+                      ) : expense.projectId ? (
+                        <div className="text-center">{expense.projectId}</div>
+                      ) : (
+                        <span className="text-gray-400 text-center block">-</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="py-2 px-3">
+                      {expense.receiptImageUrl ? (
+                        <img 
+                          src={expense.receiptImageUrl}
+                          alt="Receipt"
+                          className="w-6 h-6 object-cover rounded cursor-pointer border mx-auto"
+                          onClick={(e) => {
+                            e.stopPropagation(); // Prevent row click
+                            setSelectedImage(expense.receiptImageUrl || "");
+                            setShowImageDialog(true);
+                          }}
+                          title="Click to view full image"
+                        />
+                      ) : (
+                        <span className="text-gray-400 text-center block text-[10px]">No receipt</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="py-2 px-3 text-right">
+                      <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
+                        {/* Only show edit/delete for creator or admin */}
+                        {(expense.addedBy === user?.id || user?.role === 'admin') && (
+                          <>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation(); // Prevent row click
+                                handleEditExpense(expense);
+                              }}
+                              title="Edit expense"
+                              className="h-6 w-6 p-0"
+                            >
+                              <Pencil className="h-3 w-3" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation(); // Prevent row click
+                                handleDeleteExpense(expense);
+                              }}
+                              className="text-red-600 hover:text-red-700 h-6 w-6 p-0"
+                              title="Delete expense"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </>
+                        )}
+                      </div>
+                    </TableCell>
+                </TableRow>
+              ))}
+              {filteredExpenses.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={10} className="text-center text-gray-500 py-8">
+                    No expenses found matching your filters
+                  </TableCell>
+                </TableRow>
+              )}
+              {/* Total Row */}
+              {filteredExpenses.length > 0 && (
+                <TableRow className="bg-gray-50 border-t-2">
+                  <TableCell colSpan={2} className="py-3 px-3">
+                    <div className="text-gray-700 text-xs font-medium">TOTAL</div>
+                  </TableCell>
+                  <TableCell className="py-3 px-3" colSpan={8}>
+                    {(() => {
+                      const totalIncome = filteredExpenses
+                        .filter((expense: PettyCashExpense) => expense.status === 'income')
+                        .reduce((sum: number, expense: PettyCashExpense) => sum + expense.amount, 0);
+                      const totalExpenses = filteredExpenses
+                        .filter((expense: PettyCashExpense) => expense.status === 'expense')
+                        .reduce((sum: number, expense: PettyCashExpense) => sum + expense.amount, 0);
+                      const netTotal = totalIncome - totalExpenses;
+                      return (
+                        <div className="grid grid-cols-3 gap-2">
+                          <div className="flex justify-between items-center bg-green-50 px-2 py-1.5 rounded border border-green-200">
+                            <span className="text-green-700 text-xs">Received:</span>
+                            <span className="text-green-600 text-xs font-semibold">+₹{totalIncome.toLocaleString()}</span>
+                          </div>
+                          <div className="flex justify-between items-center bg-red-50 px-2 py-1.5 rounded border border-red-200">
+                            <span className="text-red-700 text-xs">Spent:</span>
+                            <span className="text-red-600 text-xs font-semibold">-₹{totalExpenses.toLocaleString()}</span>
+                          </div>
+                          <div className={`flex justify-between items-center px-2 py-1.5 rounded border ${
+                            netTotal >= 0 
+                              ? 'bg-green-100 border-green-300' 
+                              : 'bg-red-100 border-red-300'
+                          }`}>
+                            <span className={`text-xs ${netTotal >= 0 ? 'text-green-700' : 'text-red-700'}`}>Balance:</span>
+                            <span className={`text-xs font-semibold ${netTotal >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                              {netTotal >= 0 ? '+' : ''}₹{netTotal.toLocaleString()}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+          </div>
+        </CardContent>
+      </Card>
+      {/* Add Expense Dialog */}
+      <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Add New Expense</DialogTitle>
+            <DialogDescription>Record a new petty cash expense with receipt details</DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Amount and Date */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="amount">Amount (₹) *</Label>
+                <Input
+                  id="amount"
+                  type="number"
+                  step="0.01"
+                  placeholder=""
+                  value={formData.amount}
+                  onChange={(e) => setFormData(prev => ({ ...prev, amount: e.target.value }))}
                   required
                 />
               </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <Label htmlFor="projectId" className="text-xs">Project ID *</Label>
-                  <Select value={formData.projectId} onValueChange={(value) => setFormData(prev => ({ ...prev, projectId: value }))}>
-                    <SelectTrigger className="h-8">
-                      <SelectValue placeholder="Select project" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {projects?.map((project) => (
-                        <SelectItem key={project.id} value={project.id.toString()}>
-                          {project.code} - {project.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-1">
-                  <Label htmlFor="category" className="text-xs">Category</Label>
-                  <Select value={formData.category} onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}>
-                    <SelectTrigger className="h-8">
-                      <SelectValue placeholder="Select category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Transport">Transport</SelectItem>
-                      <SelectItem value="Materials">Materials</SelectItem>
-                      <SelectItem value="Food">Food & Beverages</SelectItem>
-                      <SelectItem value="Office">Office Supplies</SelectItem>
-                      <SelectItem value="Utilities">Utilities</SelectItem>
-                      <SelectItem value="Maintenance">Maintenance</SelectItem>
-                      <SelectItem value="Other">Other</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+              <div>
+                <Label htmlFor="date">Date *</Label>
+                <Input
+                  id="date"
+                  type="date"
+                  value={formData.date}
+                  onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
+                  required
+                />
               </div>
-
-              <div className="space-y-1">
-                <Label className="text-xs">Proof Attachment (GPay, CRED, Invoice, etc.)</Label>
-                <div
-                  className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors cursor-pointer"
-                  onDrop={handleDrop}
-                  onDragOver={handleDragOver}
-                  onDragLeave={handleDragLeave}
-                  onPaste={handlePaste}
-                  tabIndex={0}
+            </div>
+            
+            {/* Paid To and Paid By */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="paidTo">Paid To *</Label>
+                <Input
+                  id="paidTo"
+                  placeholder=""
+                  value={formData.paidTo}
+                  onChange={(e) => setFormData(prev => ({ ...prev, paidTo: e.target.value }))}
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="paidBy">Paid By *</Label>
+                <Select 
+                  value={formData.paidBy} 
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, paidBy: value }))}
                 >
-                  {formData.receiptImage ? (
-                    <div className="flex items-center justify-center space-x-2">
-                      <Upload className="h-5 w-5 text-green-500" />
-                      <span className="text-sm font-medium text-green-700">
+                  <SelectTrigger id="paidBy">
+                    <SelectValue placeholder="Select staff member" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {users.map((user: any) => (
+                      <SelectItem key={user.id} value={user.id.toString()}>
+                        {user.name || user.username}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Purpose and Order No */}
+            <div>
+              <Label htmlFor="purpose">Purpose / Description *</Label>
+              <Textarea
+                id="purpose"
+                placeholder="For what Purpose"
+                value={formData.purpose}
+                onChange={(e) => setFormData(prev => ({ ...prev, purpose: e.target.value }))}
+                required
+                rows={3}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="projectId">Project ID *</Label>
+                <Select 
+                  value={formData.projectId} 
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, projectId: value }))}
+                >
+                  <SelectTrigger id="projectId">
+                    <SelectValue placeholder="Select project" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {projects.map((project: any) => (
+                      <SelectItem key={project.id} value={project.id.toString()}>
+                        {project.code} - {project.name} ({project.client_name || 'No Client'})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="category">Category </Label>
+                <Select 
+                  value={formData.category} 
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((category) => (
+                      <SelectItem key={category} value={category}>
+                        {category}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Enhanced Proof Attachment with Drag & Drop and Paste */}
+            <div>
+              <Label htmlFor="receipt">Proof Attachment (GPay, CRED, Invoice, etc.)</Label>
+              <div 
+                className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
+                  isProcessingOCR ? 'border-blue-300 bg-blue-50' : 'border-gray-300 hover:border-gray-400'
+                }`}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+                onPaste={handlePaste}
+                tabIndex={0}
+              >
+                {formData.receiptImage ? (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-center gap-2">
+                      <Upload className="h-5 w-5 text-green-600" />
+                      <span className="text-sm font-medium text-green-600">
                         {formData.receiptImage.name}
                       </span>
                     </div>
-                  ) : (
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-center">
-                        <Camera className="h-8 w-8 text-gray-400" />
-                      </div>
-                      <div className="text-sm text-gray-600">
-                        <input
-                          type="file"
-                          id="receipt-upload"
-                          className="hidden"
-                          accept="image/*"
-                          onChange={handleImageUpload}
-                        />
-                        <label
-                          htmlFor="receipt-upload"
-                          className="text-blue-600 hover:text-blue-700 cursor-pointer font-medium"
-                        >
-                          Upload UPI payment screenshot for automatic data extraction (GPay, PhonePe, CRED)
-                        </label>
-                      </div>
+                    {isProcessingOCR && (
+                      <Badge variant="secondary" className="animate-pulse">
+                        Processing OCR...
+                      </Badge>
+                    )}
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-center gap-2">
+                      <Upload className="h-8 w-8 text-gray-400" />
+                      <Camera className="h-8 w-8 text-gray-400" />
                     </div>
-                  )}
-                </div>
-                {isProcessingOCR && (
-                  <div className="text-center py-2">
-                    <div className="inline-flex items-center space-x-2 text-sm text-blue-600">
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-                      <span>Processing image with OCR...</span>
+                    <div className="text-sm text-gray-600">
+                      <strong>Drag & drop</strong> an image here, or{" "}
+                      <label htmlFor="receipt" className="text-amber-600 cursor-pointer hover:underline">
+                        choose file
+                      </label>
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      Or press <kbd className="px-1 bg-gray-100 rounded">Ctrl+V</kbd> to paste screenshot
                     </div>
                   </div>
                 )}
+                <input
+                  id="receipt"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  className="hidden"
+                />
               </div>
-
-              <div className="flex justify-end space-x-2 pt-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setShowAddExpenseDialog(false)}
-                  disabled={addExpenseMutation.isPending}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={addExpenseMutation.isPending || !formData.amount || !formData.paidTo || !formData.purpose}
-                  className="bg-primary hover:bg-primary/90"
-                >
-                  {addExpenseMutation.isPending ? "Adding..." : "Add Expense"}
-                </Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
-
-        {/* Add Funds Dialog */}
-        <Dialog open={showAddFundsDialog} onOpenChange={setShowAddFundsDialog}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Add Funds to Petty Cash</DialogTitle>
-              <DialogDescription>Record incoming funds to the petty cash</DialogDescription>
-            </DialogHeader>
-            
-            <form onSubmit={handleFundsSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="funds-amount">Amount (₹) *</Label>
-                  <Input
-                    id="funds-amount"
-                    type="number"
-                    step="0.01"
-                    value={fundsFormData.amount}
-                    onChange={(e) => setFundsFormData(prev => ({ ...prev, amount: e.target.value }))}
-                    placeholder="0.00"
-                    required
-                  />
+              <div className="flex items-center gap-2 mt-2">
+                <div className="h-4 w-4 rounded-full bg-green-100 flex items-center justify-center">
+                  <Camera className="h-2.5 w-2.5 text-green-600" />
                 </div>
-                <div>
-                  <Label htmlFor="funds-date">Date *</Label>
-                  <Input
-                    id="funds-date"
-                    type="date"
-                    value={fundsFormData.date}
-                    onChange={(e) => setFundsFormData(prev => ({ ...prev, date: e.target.value }))}
-                    required
-                  />
-                </div>
+                <p className="text-xs text-gray-600">
+                  Upload UPI payment screenshot for automatic data extraction (GPay, PhonePe, CRED)
+                </p>
               </div>
+            </div>
 
+            <div className="flex justify-end gap-2 pt-4">
+              <Button type="button" variant="outline" onClick={() => {
+                resetFormData();
+                setShowAddDialog(false);
+              }}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={addExpenseMutation.isPending || isProcessingOCR}>
+                {addExpenseMutation.isPending ? "Adding..." : "Add Expense"}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+      {/* Edit Expense Dialog */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Edit Expense</DialogTitle>
+            <DialogDescription>Update the details of this petty cash expense</DialogDescription>
+          </DialogHeader>
+          <form onSubmit={(e) => {
+            e.preventDefault();
+            const formPayload = new FormData();
+            formPayload.append('expenseDate', formData.date);
+            formPayload.append('amount', formData.amount);
+            formPayload.append('vendor', formData.paidTo); // Changed from paidTo to vendor
+            formPayload.append('paidBy', formData.paidBy);
+            formPayload.append('description', formData.purpose); // Changed from note to description
+            formPayload.append('projectId', formData.projectId);
+            formPayload.append('orderNo', formData.orderNo);
+            formPayload.append('category', formData.category);
+            if (formData.receiptImage) {
+              formPayload.append('receipt', formData.receiptImage);
+            }
+            editExpenseMutation.mutate({ id: editingExpense!.id, expenseData: formPayload });
+          }} className="space-y-4">
+            {/* Same form fields as add dialog */}
+            <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="funds-source">Source *</Label>
+                <Label htmlFor="edit-amount">Amount *</Label>
                 <Input
-                  id="funds-source"
-                  type="text"
-                  value={fundsFormData.source}
-                  onChange={(e) => setFundsFormData(prev => ({ ...prev, source: e.target.value }))}
-                  placeholder="e.g., Bank transfer, Cash from office"
+                  id="edit-amount"
+                  type="number"
+                  placeholder="2700"
+                  step="0.01"
+                  value={formData.amount}
+                  onChange={(e) => setFormData(prev => ({ ...prev, amount: e.target.value }))}
                   required
                 />
               </div>
-
               <div>
-                <Label htmlFor="funds-receivedBy">Received By</Label>
-                <Select
-                  value={fundsFormData.receivedBy}
-                  onValueChange={(value) => setFundsFormData(prev => ({ ...prev, receivedBy: value }))}
+                <Label htmlFor="edit-date">Date *</Label>
+                <Input
+                  id="edit-date"
+                  type="date"
+                  value={formData.date}
+                  onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="edit-paidTo">Paid To *</Label>
+                <Input
+                  id="edit-paidTo"
+                  placeholder="Dolly Vikesh Oswal"
+                  value={formData.paidTo}
+                  onChange={(e) => setFormData(prev => ({ ...prev, paidTo: e.target.value }))}
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="edit-paidBy">Paid By *</Label>
+                <Select 
+                  value={formData.paidBy}
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, paidBy: value }))}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select staff member" />
                   </SelectTrigger>
                   <SelectContent>
-                    {users.map((user) => (
-                      <SelectItem key={user.id} value={user.username}>{user.username}</SelectItem>
+                    {users.map((user: any) => (
+                      <SelectItem key={user.id} value={user.id.toString()}>
+                        {user.name || user.username}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
+            </div>
 
+            <div>
+              <Label htmlFor="edit-purpose">Purpose / Description *</Label>
+              <Textarea
+                id="edit-purpose"
+                placeholder="Furnili powder coating for legs – Pintu order"
+                value={formData.purpose}
+                onChange={(e) => setFormData(prev => ({ ...prev, purpose: e.target.value }))}
+                required
+                rows={3}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="funds-purpose">Purpose</Label>
+                <Label htmlFor="edit-projectId">Project ID *</Label>
+                <Select 
+                  value={formData.projectId} 
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, projectId: value }))}
+                >
+                  <SelectTrigger id="edit-projectId">
+                    <SelectValue placeholder="Select project" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {projects.map((project: any) => (
+                      <SelectItem key={project.id} value={project.id.toString()}>
+                        {project.code} - {project.name} ({project.client_name || 'No Client'})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="edit-category">Category (For Reports)</Label>
+                <Select 
+                  value={formData.category} 
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}
+                >
+                  <SelectTrigger id="edit-category">
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((category) => (
+                      <SelectItem key={category} value={category}>
+                        {category}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="edit-receipt">Update Receipt Attachment</Label>
+              <Input
+                id="edit-receipt"
+                type="file"
+                accept="image/*"
+                onChange={(e) => setFormData(prev => ({ ...prev, receiptImage: e.target.files?.[0] || null }))}
+              />
+              <p className="text-sm text-gray-500 mt-1">
+                📱 Leave blank to keep existing receipt
+              </p>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-4">
+              <Button type="button" variant="outline" onClick={() => setShowEditDialog(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={editExpenseMutation.isPending}>
+                {editExpenseMutation.isPending ? "Updating..." : "Update Expense"}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Funds Dialog */}
+      <Dialog open={showAddFundsDialog} onOpenChange={setShowAddFundsDialog}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Add Funds (Income)</DialogTitle>
+            <DialogDescription>Add money to petty cash fund</DialogDescription>
+          </DialogHeader>
+          <form onSubmit={(e) => {
+            e.preventDefault();
+            const formDataToSend = new FormData();
+            formDataToSend.append('expenseDate', fundsFormData.date);
+            formDataToSend.append('paidTo', fundsFormData.source);
+            formDataToSend.append('amount', fundsFormData.amount);
+            formDataToSend.append('note', fundsFormData.purpose);
+            formDataToSend.append('receivedBy', fundsFormData.receivedBy);
+            formDataToSend.append('status', 'income');
+            
+            if (fundsFormData.receiptImage) {
+              formDataToSend.append('receipt', fundsFormData.receiptImage);
+            }
+            
+            addFundsMutation.mutate(formDataToSend);
+          }} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="funds-amount">Amount *</Label>
                 <Input
-                  id="funds-purpose"
-                  type="text"
-                  value={fundsFormData.purpose}
-                  onChange={(e) => setFundsFormData(prev => ({ ...prev, purpose: e.target.value }))}
-                  placeholder="Reason for adding funds"
+                  id="funds-amount"
+                  type="number"
+                  placeholder="5000"
+                  step="0.01"
+                  value={fundsFormData.amount}
+                  onChange={(e) => setFundsFormData(prev => ({ ...prev, amount: e.target.value }))}
+                  required
                 />
               </div>
-
-              {/* Receipt Image Upload with OCR Support */}
               <div>
-                <Label htmlFor="funds-receipt">Receipt Image</Label>
-                <div className="mt-1">
-                  <input
-                    id="funds-receipt"
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        setFundsFormData(prev => ({ ...prev, receiptImage: file }));
-                        // Process with OCR for funds
-                        processFile(file, true); // true indicates it's for funds form
-                      }
-                    }}
-                    onPaste={handlePaste}
-                  />
-                  {fundsFormData.receiptImage ? (
-                    <div className="flex items-center justify-between p-2 border rounded">
-                      <span className="text-sm text-gray-600">{fundsFormData.receiptImage.name}</span>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setFundsFormData(prev => ({ ...prev, receiptImage: null }))}
-                      >
-                        Remove
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
-                      <label
-                        htmlFor="funds-receipt"
-                        className="text-blue-600 hover:text-blue-700 cursor-pointer font-medium"
-                      >
-                        Upload UPI payment screenshot for automatic data extraction (GPay, PhonePe, CRED)
-                      </label>
-                    </div>
-                  )}
-                </div>
-                {isProcessingOCR && (
-                  <div className="text-center py-2">
-                    <div className="inline-flex items-center space-x-2 text-sm text-blue-600">
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-                      <span>Processing image with OCR...</span>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              <div className="flex justify-end space-x-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setShowAddFundsDialog(false)}
-                  disabled={addFundsMutation.isPending}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={addFundsMutation.isPending}
-                  className="bg-green-600 hover:bg-green-700"
-                >
-                  {addFundsMutation.isPending ? "Adding..." : "Add Funds"}
-                </Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
-
-        {/* Image Preview Dialog */}
-        <Dialog open={showImageDialog} onOpenChange={setShowImageDialog}>
-          <DialogContent className="max-w-4xl">
-            <DialogHeader>
-              <DialogTitle>Receipt Image</DialogTitle>
-            </DialogHeader>
-            {selectedImage && (
-              <div className="flex justify-center">
-                <img 
-                  src={selectedImage} 
-                  alt="Receipt" 
-                  className="max-w-full max-h-[70vh] object-contain"
+                <Label htmlFor="funds-date">Date *</Label>
+                <Input
+                  id="funds-date"
+                  type="date"
+                  value={fundsFormData.date}
+                  onChange={(e) => setFundsFormData(prev => ({ ...prev, date: e.target.value }))}
+                  required
                 />
               </div>
-            )}
-          </DialogContent>
-        </Dialog>
+            </div>
 
-        {/* Expense Details Dialog */}
-        <Dialog open={showExpenseDetailsDialog} onOpenChange={setShowExpenseDetailsDialog}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Expense Details</DialogTitle>
-            </DialogHeader>
-            {selectedExpenseDetails && (
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <div className="text-sm font-medium text-gray-600">
-                      {selectedExpenseDetails.status === 'income' ? 'Source' : 'Vendor'}
-                    </div>
-                    <div className="text-sm">{selectedExpenseDetails.vendor}</div>
-                  </div>
-                  <div>
-                    <div className="text-sm font-medium text-gray-600">Amount</div>
-                    <div className={`text-sm font-bold ${
-                      selectedExpenseDetails.status === 'income' ? 'text-green-600' : 'text-red-600'
-                    }`}>
-                      {selectedExpenseDetails.status === 'income' ? '+' : ''}₹{selectedExpenseDetails.amount.toLocaleString()}
-                    </div>
-                  </div>
-                </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="funds-source">Source *</Label>
+                <Input
+                  id="funds-source"
+                  placeholder="Cash from office, Bank transfer, etc."
+                  value={fundsFormData.source}
+                  onChange={(e) => setFundsFormData(prev => ({ ...prev, source: e.target.value }))}
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="funds-receivedBy">Received By (Staff) *</Label>
+                <Select 
+                  value={fundsFormData.receivedBy || ""} 
+                  onValueChange={(value) => setFundsFormData(prev => ({ ...prev, receivedBy: value }))}
+                  required
+                >
+                  <SelectTrigger id="funds-receivedBy">
+                    <SelectValue placeholder="Select staff member" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {users?.map((user: any) => (
+                      <SelectItem key={user.id} value={user.id.toString()}>
+                        {user.name || user.username}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <div className="text-sm font-medium text-gray-600">Date</div>
-                    <div className="text-sm">{format(new Date(selectedExpenseDetails.expenseDate), 'dd/MM/yyyy')}</div>
-                  </div>
-                  <div>
-                    <div className="text-sm font-medium text-gray-600">Project</div>
-                    <div className="text-sm">
-                      {selectedExpenseDetails.projectId && selectedExpenseDetails.project ? 
-                        `${selectedExpenseDetails.project.code} - ${selectedExpenseDetails.project.name}` : 
-                        selectedExpenseDetails.projectId ? selectedExpenseDetails.projectId : '-'
-                      }
-                    </div>
-                  </div>
-                </div>
+            <div>
+              <Label htmlFor="funds-purpose">Purpose / Description *</Label>
+              <Textarea
+                id="funds-purpose"
+                placeholder="Petty cash fund replenishment"
+                value={fundsFormData.purpose}
+                onChange={(e) => setFundsFormData(prev => ({ ...prev, purpose: e.target.value }))}
+                required
+                rows={3}
+              />
+            </div>
 
+            <div>
+              <Label htmlFor="funds-receipt">Proof Attachment (Optional)</Label>
+              <Input
+                id="funds-receipt"
+                type="file"
+                accept="image/*"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    setFundsFormData(prev => ({ ...prev, receiptImage: file }));
+                  }
+                }}
+              />
+              <p className="text-sm text-gray-500 mt-1">
+                Upload bank transfer receipt, cash deposit slip, etc.
+              </p>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-4">
+              <Button type="button" variant="outline" onClick={() => {
+                resetFundsFormData();
+                setShowAddFundsDialog(false);
+              }}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={addFundsMutation.isPending} className="bg-green-600 hover:bg-green-700 text-white">
+                {addFundsMutation.isPending ? "Adding..." : "Add Funds"}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Transaction Details Dialog - Optimized Layout for Both Credit and Expense */}
+      <Dialog open={showExpenseDetailsDialog} onOpenChange={setShowExpenseDetailsDialog}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>
+              {selectedExpenseDetails?.status === 'income' ? 'Credit Details' : 'Expense Details'}
+            </DialogTitle>
+            <DialogDescription>
+              {selectedExpenseDetails?.status === 'income' 
+                ? 'View detailed information about this credit transaction'
+                : 'View detailed information about this expense transaction'
+              }
+            </DialogDescription>
+          </DialogHeader>
+          {selectedExpenseDetails && (
+            <div className="space-y-4">
+              {/* Two columns layout for better space utilization */}
+              <div className="grid grid-cols-2 gap-4">
                 <div>
                   <div className="text-sm font-medium text-gray-600">
-                    {selectedExpenseDetails.status === 'income' ? 'Purpose' : 'Description'}
+                    {selectedExpenseDetails.status === 'income' ? 'Received By' : 'Paid By'}
                   </div>
-                  <div className="text-sm">{selectedExpenseDetails.description || '-'}</div>
+                  <div className="text-sm">{selectedExpenseDetails.user?.name || selectedExpenseDetails.user?.username || 'N/A'}</div>
                 </div>
-
-                {selectedExpenseDetails.receiptImageUrl && (
-                  <div>
-                    <div className="text-sm font-medium text-gray-600 mb-2">Receipt</div>
-                    <div className="flex justify-center">
-                      <img 
-                        src={selectedExpenseDetails.receiptImageUrl}
-                        alt="Receipt" 
-                        className="max-w-full max-h-[200px] object-contain rounded-lg border cursor-pointer"
-                        onClick={() => {
-                          setSelectedImage(selectedExpenseDetails.receiptImageUrl || "");
-                          setShowImageDialog(true);
-                          setShowExpenseDetailsDialog(false);
-                        }}
-                        title="Click to view full size"
-                      />
-                    </div>
-                  </div>
-                )}
+                <div>
+                  <div className="text-sm font-medium text-gray-600">Category</div>
+                  <div className="text-sm">{selectedExpenseDetails.category}</div>
+                </div>
               </div>
-            )}
-          </DialogContent>
-        </Dialog>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <div className="text-sm font-medium text-gray-600">
+                    {selectedExpenseDetails.status === 'income' ? 'Source' : 'Vendor'}
+                  </div>
+                  <div className="text-sm">{selectedExpenseDetails.vendor}</div>
+                </div>
+                <div>
+                  <div className="text-sm font-medium text-gray-600">Amount</div>
+                  <div className={`text-sm font-bold ${
+                    selectedExpenseDetails.status === 'income' ? 'text-green-600' : 'text-red-600'
+                  }`}>
+                    {selectedExpenseDetails.status === 'income' ? '+' : ''}₹{selectedExpenseDetails.amount.toLocaleString()}
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <div className="text-sm font-medium text-gray-600">Date</div>
+                  <div className="text-sm">{format(new Date(selectedExpenseDetails.expenseDate), 'dd/MM/yyyy')}</div>
+                </div>
+                <div>
+                  <div className="text-sm font-medium text-gray-600">Project</div>
+                  <div className="text-sm">
+                    {selectedExpenseDetails.projectId && selectedExpenseDetails.project ? 
+                      `${selectedExpenseDetails.project.code} - ${selectedExpenseDetails.project.name}` : 
+                      selectedExpenseDetails.projectId ? selectedExpenseDetails.projectId : '-'
+                    }
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <div className="text-sm font-medium text-gray-600">
+                  {selectedExpenseDetails.status === 'income' ? 'Purpose' : 'Description'}
+                </div>
+                <div className="text-sm">{selectedExpenseDetails.description || '-'}</div>
+              </div>
+
+              {selectedExpenseDetails.receiptImageUrl && (
+                <div>
+                  <div className="text-sm font-medium text-gray-600 mb-2">Receipt</div>
+                  <div className="flex justify-center">
+                    <img 
+                      src={selectedExpenseDetails.receiptImageUrl}
+                      alt="Receipt" 
+                      className="max-w-full max-h-[200px] object-contain rounded-lg border cursor-pointer"
+                      onClick={() => {
+                        setSelectedImage(selectedExpenseDetails.receiptImageUrl || "");
+                        setShowImageDialog(true);
+                        setShowExpenseDetailsDialog(false);
+                      }}
+                      title="Click to view full size"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Image Preview Dialog */}
+      <Dialog open={showImageDialog} onOpenChange={setShowImageDialog}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Receipt Image</DialogTitle>
+          </DialogHeader>
+          {selectedImage && (
+            <div className="flex justify-center">
+              <img 
+                src={selectedImage} 
+                alt="Receipt" 
+                className="max-w-full max-h-[500px] object-contain rounded-lg"
+              />
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={!!expenseToDelete} onOpenChange={() => setExpenseToDelete(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Expense</AlertDialogTitle>
+            <AlertDialogTitle>Are you Freaking Sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete this expense? This action cannot be undone.
-              <br />
-              <strong>Amount:</strong> ₹{expenseToDelete?.amount}
-              <br />
-              <strong>Vendor:</strong> {expenseToDelete?.vendor}
+              This action cannot be undone. This will permanently delete the expense record for "₹{expenseToDelete?.amount} to {expenseToDelete?.vendor}" and remove it from all calculations.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
