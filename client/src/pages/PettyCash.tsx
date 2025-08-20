@@ -602,7 +602,10 @@ export default function PettyCash() {
       });
       
     } catch (error) {
-      console.error('Universal OCR Error:', error);
+      console.error('=== FUNDS OCR ERROR ===');
+      console.error('Error details:', error);
+      console.error('Error message:', error.message);
+      console.error('Error stack:', error.stack);
       toast({ title: "OCR processing failed", description: "Please fill the details manually", variant: "destructive" });
     }
     setIsProcessingOCR(false);
@@ -637,10 +640,14 @@ export default function PettyCash() {
     try {
       console.log('OCR Debug - Using Universal Receipt OCR System for Funds');
       
-      // Use new Universal Receipt OCR system
+      // Use new Universal Receipt OCR system with comprehensive debugging
+      console.log('=== FUNDS OCR PROCESSING START ===');
       const ocrResult = await ClientFreeOCR.processPaymentScreenshot(file);
+      console.log('=== FUNDS OCR RAW RESULT ===');
+      console.log('OCR Result:', ocrResult);
       
       if (!ocrResult || !ocrResult.text) {
+        console.log('=== FUNDS OCR FAILED - NO TEXT ===');
         throw new Error('No text extracted from image');
       }
       
