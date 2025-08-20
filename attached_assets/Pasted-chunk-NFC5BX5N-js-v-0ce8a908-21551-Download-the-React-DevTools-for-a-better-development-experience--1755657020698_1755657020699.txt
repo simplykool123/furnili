@@ -1,0 +1,110 @@
+chunk-NFC5BX5N.js?v=0ce8a908:21551 Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+PettyCash.tsx:622 Processing file: {name: 'WhatsApp Image 2025-08-19 at 18.47.19.jpeg', type: 'image/jpeg', size: 44275, lastModified: 1755611569742, isForFunds: true}
+PettyCash.tsx:641 OCR Debug - Using Universal Receipt OCR System for Funds
+PettyCash.tsx:644 === FUNDS OCR PROCESSING START ===
+freeOcr.ts:271 OCR Debug - Starting generic multi-engine OCR for all receipt types
+freeOcr.ts:300 OCR Debug - Attempting Enhanced Tesseract - Advanced figure recognition with optimized preprocessing
+freeOcr.ts:74 OCR Debug - Using enhanced Tesseract.js with advanced figure recognition
+worker.min.js:2 Attempted to set parameters that can only be set during initialization: tessedit_ocr_engine_mode
+tesseractConfig.ts:71 OCR Progress - recognizing text: 0%
+tesseractConfig.ts:71 OCR Progress - recognizing text: 3%
+tesseractConfig.ts:71 OCR Progress - recognizing text: 7%
+tesseractConfig.ts:71 OCR Progress - recognizing text: 11%
+tesseractConfig.ts:71 OCR Progress - recognizing text: 16%
+tesseractConfig.ts:71 OCR Progress - recognizing text: 19%
+tesseractConfig.ts:71 OCR Progress - recognizing text: 23%
+tesseractConfig.ts:71 OCR Progress - recognizing text: 27%
+tesseractConfig.ts:71 OCR Progress - recognizing text: 31%
+tesseractConfig.ts:71 OCR Progress - recognizing text: 36%
+tesseractConfig.ts:71 OCR Progress - recognizing text: 39%
+tesseractConfig.ts:71 OCR Progress - recognizing text: 43%
+tesseractConfig.ts:71 OCR Progress - recognizing text: 47%
+tesseractConfig.ts:71 OCR Progress - recognizing text: 51%
+tesseractConfig.ts:71 OCR Progress - recognizing text: 54%
+tesseractConfig.ts:71 OCR Progress - recognizing text: 59%
+tesseractConfig.ts:71 OCR Progress - recognizing text: 63%
+tesseractConfig.ts:71 OCR Progress - recognizing text: 67%
+tesseractConfig.ts:71 OCR Progress - recognizing text: 100%
+freeOcr.ts:91 OCR Debug - Enhanced Tesseract confidence: 73%
+freeOcr.ts:159 OCR Debug - Starting generic OCR corrections for all payment apps
+freeOcr.ts:226 OCR Debug - Applied 0 total corrections to improve amount detection
+freeOcr.ts:244 OCR Debug - Completed generic OCR corrections, enhanced text ready for parsing
+freeOcr.ts:159 OCR Debug - Starting generic OCR corrections for all payment apps
+freeOcr.ts:226 OCR Debug - Applied 0 total corrections to improve amount detection
+freeOcr.ts:244 OCR Debug - Completed generic OCR corrections, enhanced text ready for parsing
+freeOcr.ts:307 OCR Debug - Enhanced Tesseract succeeded with 17 lines
+freeOcr.ts:308 OCR Debug - Sample text: To HARIOM HARDWARE AND ELECTRICALS
+furnili thinet
+Completed
+10 Aug 2025, 7:43 pm
+(ey (ore Berk      ...
+freeOcr.ts:344 OCR Debug - Processing with enhanced figure recognition and payment detection
+freeOcr.ts:347 OCR Debug - Using Universal Receipt OCR for comprehensive extraction
+universalReceiptOcr.ts:13 === UNIVERSAL OCR AMOUNT DETECTION DEBUG ===
+universalReceiptOcr.ts:14 Universal OCR - Starting comprehensive amount detection
+universalReceiptOcr.ts:15 Universal OCR - Total lines detected: 16
+universalReceiptOcr.ts:16 Universal OCR - All detected lines:
+universalReceiptOcr.ts:18   Line 1: "To HARIOM HARDWARE AND ELECTRICALS"
+universalReceiptOcr.ts:18   Line 2: "furnili thinet"
+universalReceiptOcr.ts:18   Line 3: "Completed"
+universalReceiptOcr.ts:18   Line 4: "10 Aug 2025, 7:43 pm"
+universalReceiptOcr.ts:18   Line 5: "(ey (ore Berk                        v"
+universalReceiptOcr.ts:18   Line 6: "652926 XXXXXXXX80"
+universalReceiptOcr.ts:18   Line 7: "UPI transaction ID"
+universalReceiptOcr.ts:18   Line 8: "109595532100"
+universalReceiptOcr.ts:18   Line 9: "To: HARIOM HARDWARE AND ELECTRICALS"
+universalReceiptOcr.ts:18   Line 10: "PhonePe  q755064728@ybl"
+universalReceiptOcr.ts:18   Line 11: "From: KUNAL LUNKAD (HDFC Bank)"
+universalReceiptOcr.ts:18   Line 12: "Google Pay - kunallunkad-4@okhdfcbank"
+universalReceiptOcr.ts:18   Line 13: "Google transaction ID"
+universalReceiptOcr.ts:18   Line 14: "CICAgKIDn677Iw"
+universalReceiptOcr.ts:18   Line 15: "y"
+universalReceiptOcr.ts:18   Line 16: "5 Pay"
+freeOcr.ts:408 Enhanced payment screenshot processing failed: TypeError: this.findAllAmountCandidates is not a function
+    at UniversalReceiptOCR.detectUniversalAmount (universalReceiptOcr.ts:22:38)
+    at ClientFreeOCR.processPaymentScreenshot (freeOcr.ts:349:57)
+    at async processImageWithOCRForFunds (PettyCash.tsx:645:25)
+processPaymentScreenshot @ freeOcr.ts:408
+await in processPaymentScreenshot
+processImageWithOCRForFunds @ PettyCash.tsx:645
+processFile @ PettyCash.tsx:631
+onChange @ PettyCash.tsx:1351
+callCallback2 @ chunk-NFC5BX5N.js?v=0ce8a908:3674
+invokeGuardedCallbackDev @ chunk-NFC5BX5N.js?v=0ce8a908:3699
+invokeGuardedCallback @ chunk-NFC5BX5N.js?v=0ce8a908:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-NFC5BX5N.js?v=0ce8a908:3736
+executeDispatch @ chunk-NFC5BX5N.js?v=0ce8a908:7014
+processDispatchQueueItemsInOrder @ chunk-NFC5BX5N.js?v=0ce8a908:7034
+processDispatchQueue @ chunk-NFC5BX5N.js?v=0ce8a908:7043
+dispatchEventsForPlugins @ chunk-NFC5BX5N.js?v=0ce8a908:7051
+(anonymous) @ chunk-NFC5BX5N.js?v=0ce8a908:7174
+batchedUpdates$1 @ chunk-NFC5BX5N.js?v=0ce8a908:18913
+batchedUpdates @ chunk-NFC5BX5N.js?v=0ce8a908:3579
+dispatchEventForPluginEventSystem @ chunk-NFC5BX5N.js?v=0ce8a908:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-NFC5BX5N.js?v=0ce8a908:5478
+dispatchEvent @ chunk-NFC5BX5N.js?v=0ce8a908:5472
+dispatchDiscreteEvent @ chunk-NFC5BX5N.js?v=0ce8a908:5449
+PettyCash.tsx:646 === FUNDS OCR RAW RESULT ===
+PettyCash.tsx:647 OCR Result: {text: '', platform: 'unknown', amount: '', recipient: '', description: '', …}
+PettyCash.tsx:650 === FUNDS OCR FAILED - NO TEXT ===
+PettyCash.tsx:691 Universal OCR Error for Funds: Error: No text extracted from image
+    at processImageWithOCRForFunds (PettyCash.tsx:651:15)
+processImageWithOCRForFunds @ PettyCash.tsx:691
+await in processImageWithOCRForFunds
+processFile @ PettyCash.tsx:631
+onChange @ PettyCash.tsx:1351
+callCallback2 @ chunk-NFC5BX5N.js?v=0ce8a908:3674
+invokeGuardedCallbackDev @ chunk-NFC5BX5N.js?v=0ce8a908:3699
+invokeGuardedCallback @ chunk-NFC5BX5N.js?v=0ce8a908:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-NFC5BX5N.js?v=0ce8a908:3736
+executeDispatch @ chunk-NFC5BX5N.js?v=0ce8a908:7014
+processDispatchQueueItemsInOrder @ chunk-NFC5BX5N.js?v=0ce8a908:7034
+processDispatchQueue @ chunk-NFC5BX5N.js?v=0ce8a908:7043
+dispatchEventsForPlugins @ chunk-NFC5BX5N.js?v=0ce8a908:7051
+(anonymous) @ chunk-NFC5BX5N.js?v=0ce8a908:7174
+batchedUpdates$1 @ chunk-NFC5BX5N.js?v=0ce8a908:18913
+batchedUpdates @ chunk-NFC5BX5N.js?v=0ce8a908:3579
+dispatchEventForPluginEventSystem @ chunk-NFC5BX5N.js?v=0ce8a908:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-NFC5BX5N.js?v=0ce8a908:5478
+dispatchEvent @ chunk-NFC5BX5N.js?v=0ce8a908:5472
+dispatchDiscreteEvent @ chunk-NFC5BX5N.js?v=0ce8a908:5449
