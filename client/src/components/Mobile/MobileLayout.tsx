@@ -54,16 +54,16 @@ export default function MobileLayout({
   return (
     <div className={cn("min-h-screen bg-background", className)}>
       {/* Mobile Header */}
-      <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 safe-area-inset-top">
         <div className="flex h-14 items-center px-4">
           {/* Menu Button */}
           <Button
             variant="ghost"
             size="sm"
-            className="mr-2 px-2"
+            className="mr-2 px-2 hover:bg-furnili-brown/10"
             onClick={() => setSidebarOpen(true)}
           >
-            <Menu className="h-5 w-5" />
+            <Menu className="h-5 w-5 text-furnili-brown" />
             <span className="sr-only">Open menu</span>
           </Button>
 
@@ -111,8 +111,9 @@ export default function MobileLayout({
 
       {/* Main Content */}
       <main className={cn(
-        "flex-1 p-4 pb-20", // Extra bottom padding for mobile
-        isTouch && "touch-manipulation" // Optimize touch interactions
+        "flex-1 p-3 pb-20 min-h-0", // Reduced padding for mobile, min-h-0 for flex
+        isTouch && "touch-manipulation", // Optimize touch interactions
+        "overflow-x-hidden" // Prevent horizontal scroll
       )}>
         {children}
       </main>

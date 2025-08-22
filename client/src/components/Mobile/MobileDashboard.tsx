@@ -71,9 +71,9 @@ export default function MobileDashboard({ stats, tasks, isLoading }: MobileDashb
   ];
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3 w-full max-w-full overflow-hidden">
       {/* Mobile Tabs */}
-      <div className="flex bg-muted rounded-lg p-1">
+      <div className="flex bg-muted rounded-lg p-1 w-full">
         {tabs.map((tab) => (
           <button
             key={tab.id}
@@ -93,21 +93,21 @@ export default function MobileDashboard({ stats, tasks, isLoading }: MobileDashb
       {/* Overview Tab */}
       {activeTab === 'overview' && (
         <div className="space-y-4">
-          {/* Quick Stats Grid */}
-          <div className="grid grid-cols-2 gap-3">
+          {/* Quick Stats Grid - Optimized for mobile */}
+          <div className="grid grid-cols-2 gap-3 w-full">
             {quickStats.map((stat) => (
-              <Link key={stat.title} href={stat.href}>
-                <Card className="cursor-pointer hover:shadow-md transition-shadow">
-                  <CardContent className="p-4">
+              <Link key={stat.title} href={stat.href} className="block">
+                <Card className="cursor-pointer hover:shadow-md transition-shadow h-full">
+                  <CardContent className="p-3">
                     <div className="flex items-center space-x-3">
-                      <div className={`w-12 h-12 rounded-lg ${stat.color} flex items-center justify-center`}>
-                        <stat.icon className="h-6 w-6 text-white" />
+                      <div className={`w-10 h-10 rounded-lg ${stat.color} flex items-center justify-center flex-shrink-0`}>
+                        <stat.icon className="h-5 w-5 text-white" />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="text-sm font-medium text-muted-foreground">
+                        <p className="text-xs font-medium text-muted-foreground mb-1">
                           {stat.title}
                         </p>
-                        <p className="text-lg font-bold truncate">
+                        <p className="text-sm font-bold truncate">
                           {stat.value}
                         </p>
                       </div>
