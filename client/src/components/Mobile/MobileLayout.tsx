@@ -1,11 +1,9 @@
-import { useState, useEffect, lazy, Suspense } from 'react';
+import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
-import { Menu, X, ChevronLeft } from 'lucide-react';
+import { Menu, ChevronLeft } from 'lucide-react';
 import { useIsMobile, useTouchDevice } from './MobileOptimizer';
 import { Button } from '@/components/ui/button';
-
-// Lazy load components for better performance
-const MobileSidebar = lazy(() => import('./MobileSidebar'));
+import SimpleMobileSidebar from './SimpleMobileSidebar';
 
 interface MobileLayoutProps {
   children: React.ReactNode;
@@ -30,23 +28,10 @@ export default function MobileLayout({
   const isMobile = useIsMobile();
   const isTouch = useTouchDevice();
 
-  // Close sidebar on route change
+  // Auto-close sidebar on route changes
   useEffect(() => {
     setSidebarOpen(false);
   }, [title]);
-
-  // Prevent body scroll when sidebar is open
-  useEffect(() => {
-    if (sidebarOpen && isMobile) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
-    }
-    
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
-  }, [sidebarOpen, isMobile]);
 
   // Mobile layout component - render for all devices
   // Parent component handles mobile detection
@@ -102,12 +87,10 @@ export default function MobileLayout({
       </header>
 
       {/* Mobile Sidebar */}
-      <Suspense fallback={null}>
-        <MobileSidebar 
-          open={sidebarOpen} 
-          onClose={() => setSidebarOpen(false)} 
-        />
-      </Suspense>
+      <SimpleMobileSidebar 
+        open={sidebarOpen} 
+        onClose={() => setSidebarOpen(false)} 
+      />
 
       {/* Main Content */}
       <main className={cn(
