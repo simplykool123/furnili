@@ -47,6 +47,7 @@ export default function MobileLayout({
             size="sm"
             className="mr-2 px-2 hover:bg-furnili-brown/10"
             onClick={() => setSidebarOpen(true)}
+            data-hamburger
           >
             <Menu className="h-5 w-5 text-furnili-brown" />
             <span className="sr-only">Open menu</span>

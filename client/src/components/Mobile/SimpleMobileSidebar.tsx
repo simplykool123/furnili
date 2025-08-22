@@ -24,15 +24,21 @@ export default function SimpleMobileSidebar({ open, onClose }: SimpleMobileSideb
 
     const handleClickOutside = (e: MouseEvent) => {
       const target = e.target as Element;
-      if (target?.closest('[data-sidebar]')) return;
+      // Don't close if clicking inside sidebar or hamburger menu
+      if (target?.closest('[data-sidebar]') || target?.closest('[data-hamburger]')) return;
       onClose();
     };
 
+    // Add a small delay to avoid immediate closing when opening
+    const timer = setTimeout(() => {
+      document.addEventListener('click', handleClickOutside);
+    }, 100);
+
     document.addEventListener('keydown', handleEscape);
-    document.addEventListener('click', handleClickOutside);
     document.body.style.overflow = 'hidden';
 
     return () => {
+      clearTimeout(timer);
       document.removeEventListener('keydown', handleEscape);
       document.removeEventListener('click', handleClickOutside);
       document.body.style.overflow = 'unset';
@@ -55,7 +61,7 @@ export default function SimpleMobileSidebar({ open, onClose }: SimpleMobileSideb
   return (
     <div className="fixed inset-0 z-50 md:hidden">
       {/* Backdrop */}
-      <div className="fixed inset-0 bg-black/50" />
+      <div className="fixed inset-0 bg-black/50" onClick={onClose} />
       
       {/* Sidebar */}
       <div 
