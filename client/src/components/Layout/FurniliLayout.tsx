@@ -28,12 +28,12 @@ export default function FurniliLayout({
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
   
-  // Simple mobile detection
+  // Simple mobile detection - use same breakpoint as other components
   const [isMobile, setIsMobile] = useState(false);
   
   useEffect(() => {
     const checkMobile = () => {
-      setIsMobile(window.innerWidth < 1024);
+      setIsMobile(window.innerWidth < 768);
     };
     
     checkMobile();
@@ -44,6 +44,19 @@ export default function FurniliLayout({
       window.removeEventListener('resize', handleResize);
     };
   }, []);
+
+  // Prevent body scroll when mobile sidebar is open
+  useEffect(() => {
+    if (isMobile && sidebarOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isMobile, sidebarOpen]);
 
   return (
     <div className="furnili-page">
@@ -74,8 +87,16 @@ export default function FurniliLayout({
         {/* Mobile Sidebar */}
         {isMobile && (
           <>
+            {/* Mobile overlay */}
+            {sidebarOpen && (
+              <div 
+                className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm" 
+                onClick={() => setSidebarOpen(false)}
+              />
+            )}
+            
             <div className={cn(
-              "fixed inset-y-0 left-0 z-50 w-64 transform transition-all duration-300 ease-in-out",
+              "fixed inset-y-0 left-0 z-50 w-64 max-w-[85vw] transform transition-all duration-300 ease-in-out",
               sidebarOpen ? "translate-x-0" : "-translate-x-full"
             )}>
               <div className="furnili-sidebar h-full shadow-xl border-r border-border/50">
@@ -86,14 +107,6 @@ export default function FurniliLayout({
                 />
               </div>
             </div>
-            
-            {/* Mobile overlay */}
-            {sidebarOpen && (
-              <div 
-                className="fixed inset-0 z-40 bg-black/20 backdrop-blur-sm" 
-                onClick={() => setSidebarOpen(false)}
-              />
-            )}
           </>
         )}
 
