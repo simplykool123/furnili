@@ -59,10 +59,11 @@ export default function MobileSidebar({ open, onClose }: MobileSidebarProps) {
       {/* Backdrop */}
       <div
         className={cn(
-          "fixed inset-0 z-50 bg-black/50 transition-opacity",
+          "fixed inset-0 z-40 bg-black/50 transition-opacity cursor-pointer",
           open ? "opacity-100" : "opacity-0 pointer-events-none"
         )}
         onClick={onClose}
+        onTouchEnd={onClose}
       />
 
       {/* Sidebar */}
@@ -73,6 +74,7 @@ export default function MobileSidebar({ open, onClose }: MobileSidebarProps) {
           "fixed inset-y-0 left-0 z-50 w-72 max-w-[85vw] bg-background border-r shadow-2xl transform transition-transform duration-300 ease-out",
           open ? "translate-x-0" : "-translate-x-full"
         )}
+        onClick={(e) => e.stopPropagation()}
       >
         <div className="flex flex-col h-full">
           {/* Header */}
@@ -86,7 +88,15 @@ export default function MobileSidebar({ open, onClose }: MobileSidebarProps) {
                 <p className="text-xs text-muted-foreground">Management System</p>
               </div>
             </div>
-            <Button variant="ghost" size="sm" onClick={onClose}>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={(e) => {
+                e.stopPropagation();
+                onClose();
+              }}
+              className="hover:bg-red-100 hover:text-red-600"
+            >
               <X className="h-5 w-5" />
             </Button>
           </div>
