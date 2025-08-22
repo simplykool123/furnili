@@ -7,7 +7,7 @@ import { authService } from "@/lib/auth";
 import { Plus, FileText } from "lucide-react";
 import { useLocation } from "wouter";
 import { useIsMobile, MobileCard, MobileHeading, MobileText } from "@/components/Mobile/MobileOptimizer";
-import FurniliLayout from "@/components/Layout/FurniliLayout";
+import ResponsiveLayout from "@/components/Layout/ResponsiveLayout";
 import FurniliCard from "@/components/UI/FurniliCard";
 import FurniliButton from "@/components/UI/FurniliButton";
 
@@ -32,7 +32,7 @@ export default function MaterialRequests() {
   const canUploadBOQ = user && ['manager', 'admin', 'staff'].includes(user.role);
 
   return (
-    <FurniliLayout
+    <ResponsiveLayout
       title="Material Requests"
       subtitle="Manage and track material request workflows"
     >
@@ -87,6 +87,6 @@ export default function MaterialRequests() {
           </div>
         </DialogContent>
       </Dialog>
-    </FurniliLayout>
+    </ResponsiveLayout>
   );
 }

@@ -18,7 +18,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useEffect } from "react";
-import FurniliLayout from "@/components/Layout/FurniliLayout";
+import ResponsiveLayout from "@/components/Layout/ResponsiveLayout";
 
 const userSchema = z.object({
   username: z.string().min(3, "Username must be at least 3 characters"),
@@ -264,7 +264,7 @@ export default function Users() {
   }
 
   return (
-    <FurniliLayout
+    <ResponsiveLayout
       title="System Users"
       subtitle="Manage user accounts and roles"
     >
@@ -660,6 +660,6 @@ export default function Users() {
           </AlertDialogContent>
         </AlertDialog>
       </div>
-    </FurniliLayout>
+    </ResponsiveLayout>
   );
 }

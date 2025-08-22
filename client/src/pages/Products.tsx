@@ -10,7 +10,7 @@ import { authService } from "@/lib/auth";
 import MobileProductTable from "@/components/Mobile/MobileProductTable";
 import { useIsMobile } from "@/components/Mobile/MobileOptimizer";
 import type { Product } from "@shared/schema";
-import FurniliLayout from "@/components/Layout/FurniliLayout";
+import ResponsiveLayout from "@/components/Layout/ResponsiveLayout";
 import FurniliCard from "@/components/UI/FurniliCard";
 import FurniliButton from "@/components/UI/FurniliButton";
 
@@ -46,7 +46,7 @@ export default function Products() {
   }, [canManageProducts]);
 
   return (
-    <FurniliLayout
+    <ResponsiveLayout
       title="Products"
       subtitle="Manage your raw materials, finishing goods, assemblies and seasonal items"
       showAddButton={canManageProducts || false}
@@ -78,7 +78,7 @@ export default function Products() {
             // Transform product for form compatibility
             const formProduct = {
               ...product,
-              price: product.pricePerUnit
+              pricePerUnit: product.pricePerUnit
             };
             setEditingProduct(formProduct as any);
             setShowAddProduct(true);
@@ -126,6 +126,6 @@ export default function Products() {
           </div>
         </DialogContent>
       </Dialog>
-    </FurniliLayout>
+    </ResponsiveLayout>
   );
 }

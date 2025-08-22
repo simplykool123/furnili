@@ -22,7 +22,7 @@ import { apiRequest } from "@/lib/queryClient";
 import type { Project, Client } from "@shared/schema";
 import { insertClientSchema } from "@shared/schema";
 import { getCitiesByState } from "@/data/indianCities";
-import FurniliLayout from "@/components/Layout/FurniliLayout";
+import ResponsiveLayout from "@/components/Layout/ResponsiveLayout";
 import FurniliCard from "@/components/UI/FurniliCard";
 import FurniliButton from "@/components/UI/FurniliButton";
 import { useIsMobile } from "@/components/Mobile/MobileOptimizer";
@@ -332,7 +332,7 @@ export default function Projects() {
   }
 
   return (
-    <FurniliLayout
+    <ResponsiveLayout
       title="Project Studio"
       subtitle="Manage your projects, clients, and project details"
     >
@@ -1508,6 +1508,6 @@ export default function Projects() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </FurniliLayout>
+    </ResponsiveLayout>
   );
 }

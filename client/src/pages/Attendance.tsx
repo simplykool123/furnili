@@ -19,7 +19,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { authenticatedApiRequest } from "@/lib/auth";
-import FurniliLayout from "@/components/Layout/FurniliLayout";
+import ResponsiveLayout from "@/components/Layout/ResponsiveLayout";
 import FurniliCard from "@/components/UI/FurniliCard";
 import FurniliButton from "@/components/UI/FurniliButton";
 import { 
@@ -1351,7 +1351,7 @@ export default function Attendance() {
   const hasCheckedOutToday = currentUserAttendance?.checkOutTime;
 
   return (
-    <FurniliLayout
+    <ResponsiveLayout
       title={user?.role === 'staff' || user?.role === 'store_incharge' ? "My Attendance" : "Staff Attendance & Payroll"}
       subtitle={user?.role === 'staff' || user?.role === 'store_incharge' ? "View your attendance and check in/out" : "Complete staff management system"}
     >
@@ -2644,6 +2644,6 @@ export default function Attendance() {
           </div>
         </DialogContent>
       </Dialog>
-    </FurniliLayout>
+    </ResponsiveLayout>
   );
 };
