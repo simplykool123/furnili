@@ -14,7 +14,7 @@ interface MobileSidebarProps {
 
 export default function MobileSidebar({ open, onClose }: MobileSidebarProps) {
   const [location] = useLocation();
-  const user = authService.getCurrentUser();
+  const user = authService.getUser();
   const sidebarRef = useRef<HTMLDivElement>(null);
 
   // Close on escape key
@@ -97,12 +97,12 @@ export default function MobileSidebar({ open, onClose }: MobileSidebarProps) {
               <div className="flex items-center space-x-3">
                 <div className="w-10 h-10 bg-furnili-brown/10 rounded-full flex items-center justify-center">
                   <span className="text-furnili-brown font-semibold">
-                    {user.name?.charAt(0) || user.username?.charAt(0) || 'U'}
+                    {user.name?.charAt(0) || 'U'}
                   </span>
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="font-medium text-sm truncate">
-                    {user.name || user.username}
+                    {user.name || 'User'}
                   </p>
                   <p className="text-xs text-muted-foreground capitalize">
                     {user.role?.replace('_', ' ')}
@@ -154,7 +154,7 @@ export default function MobileSidebar({ open, onClose }: MobileSidebarProps) {
                 return (
                   <Link
                     key={item.href}
-                    href={item.href}
+                    href={item.href || '#'}
                     onClick={handleLinkClick}
                   >
                     <Button
