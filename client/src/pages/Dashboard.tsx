@@ -301,7 +301,7 @@ export default function Dashboard() {
         title={`Welcome back, ${currentUser?.name || 'Admin'}!`}
         subtitle="Here's your business overview and key metrics for today."
       >
-        <MobileDashboard stats={stats || {}} tasks={tasks || []} isLoading={isLoading} />
+        <MobileDashboard stats={stats || {}} tasks={pendingTasks || []} isLoading={isLoading} />
       </FurniliLayout>
     );
   }
