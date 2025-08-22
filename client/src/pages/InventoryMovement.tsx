@@ -18,7 +18,7 @@ import { authService } from "@/lib/auth";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import FurniliLayout from "@/components/Layout/FurniliLayout";
+import ResponsiveLayout from "@/components/Layout/ResponsiveLayout";
 
 const movementSchema = z.object({
   productId: z.string().min(1, "Product is required"),
@@ -177,7 +177,7 @@ export default function InventoryMovement() {
   }
 
   return (
-    <FurniliLayout
+    <ResponsiveLayout
       title="Stock Movement"
       subtitle="Track and manage stock movements"
     >
@@ -625,6 +625,6 @@ export default function InventoryMovement() {
         </DialogContent>
       </Dialog>
       </div>
-    </FurniliLayout>
+    </ResponsiveLayout>
   );
 }

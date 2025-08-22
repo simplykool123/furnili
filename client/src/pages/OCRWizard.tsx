@@ -13,7 +13,7 @@ import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import Tesseract from 'tesseract.js';
-import FurniliLayout from "@/components/Layout/FurniliLayout";
+import ResponsiveLayout from "@/components/Layout/ResponsiveLayout";
 
 interface OCRResult {
   text: string;
@@ -284,7 +284,7 @@ export default function OCRWizard() {
   };
 
   return (
-    <FurniliLayout
+    <ResponsiveLayout
       title="AI-Powered OCR Enhancement Wizard"
       subtitle="Advanced OCR processing with AI-powered field extraction and enhancement"
     >
@@ -602,6 +602,6 @@ export default function OCRWizard() {
           </Card>
         </TabsContent>
       </Tabs>
-    </FurniliLayout>
+    </ResponsiveLayout>
   );
 }

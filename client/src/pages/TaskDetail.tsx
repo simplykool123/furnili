@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ArrowLeft, Clock, User, Calendar, AlertTriangle, CheckCircle, Calendar as CalendarIcon } from "lucide-react";
 import { useState } from "react";
 import { authService, authenticatedApiRequest } from "@/lib/auth";
-import FurniliLayout from "@/components/Layout/FurniliLayout";
+import ResponsiveLayout from "@/components/Layout/ResponsiveLayout";
 
 interface Task {
   id: number;
@@ -116,7 +116,7 @@ export default function TaskDetail() {
   const canUpdateStatus = isAdmin || (currentUser && task.assignedTo === currentUser.id);
 
   return (
-    <FurniliLayout
+    <ResponsiveLayout
       title="Task Details"
       subtitle="View and manage task information"
     >
@@ -298,6 +298,6 @@ export default function TaskDetail() {
         </CardContent>
       </Card>
       </div>
-    </FurniliLayout>
+    </ResponsiveLayout>
   );
 }

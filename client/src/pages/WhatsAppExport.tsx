@@ -14,7 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
 import { authenticatedApiRequest } from "@/lib/auth";
 import { Plus, MessageCircle, Send, Phone, Download, Copy } from "lucide-react";
-import FurniliLayout from "@/components/Layout/FurniliLayout";
+import ResponsiveLayout from "@/components/Layout/ResponsiveLayout";
 
 export default function WhatsAppExport() {
   const { toast } = useToast();
@@ -264,7 +264,7 @@ export default function WhatsAppExport() {
   };
 
   return (
-    <FurniliLayout
+    <ResponsiveLayout
       title="WhatsApp Business Export"
       subtitle="Generate and share professional business messages with clients and suppliers"
     >
@@ -474,6 +474,6 @@ export default function WhatsAppExport() {
         </CardContent>
       </Card>
       </div>
-    </FurniliLayout>
+    </ResponsiveLayout>
   );
 }

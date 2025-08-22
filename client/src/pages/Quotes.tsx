@@ -15,7 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import FurniliLayout from "@/components/Layout/FurniliLayout";
+import ResponsiveLayout from "@/components/Layout/ResponsiveLayout";
 import FurniliCard from "@/components/UI/FurniliCard";
 import FurniliStatsCard from "@/components/UI/FurniliStatsCard";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -363,7 +363,7 @@ export default function Quotes() {
 
   if (isLoading) {
     return (
-      <FurniliLayout title="Quotes Management" subtitle="Professional quote generation and management">
+      <ResponsiveLayout title="Quotes Management" subtitle="Professional quote generation and management">
         <div className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             {[1, 2, 3, 4].map((i) => (
@@ -372,12 +372,12 @@ export default function Quotes() {
           </div>
           <div className="h-96 bg-gray-200 animate-pulse rounded-xl"></div>
         </div>
-      </FurniliLayout>
+      </ResponsiveLayout>
     );
   }
 
   return (
-    <FurniliLayout title="Quotes Management" subtitle="Professional quote generation and management">
+    <ResponsiveLayout title="Quotes Management" subtitle="Professional quote generation and management">
       <div className="space-y-6">
         {/* Stats Cards - Mobile Optimized */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
@@ -713,7 +713,7 @@ export default function Quotes() {
           </AlertDialogContent>
         </AlertDialog>
       </div>
-    </FurniliLayout>
+    </ResponsiveLayout>
   );
 }
 

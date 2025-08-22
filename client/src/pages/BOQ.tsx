@@ -2,7 +2,7 @@ import BOQUpload from "@/components/BOQ/BOQUpload";
 import { authService } from "@/lib/auth";
 import { useEffect } from "react";
 import { useIsMobile, MobileCard, MobileHeading, MobileText } from "@/components/Mobile/MobileOptimizer";
-import FurniliLayout from "@/components/Layout/FurniliLayout";
+import ResponsiveLayout from "@/components/Layout/ResponsiveLayout";
 
 export default function BOQ() {
   const user = authService.getUser();
@@ -18,11 +18,11 @@ export default function BOQ() {
   }
 
   return (
-    <FurniliLayout 
+    <ResponsiveLayout 
       title="BOQ Upload" 
       subtitle="Upload and process Bill of Quantities documents"
     >
       <BOQUpload />
-    </FurniliLayout>
+    </ResponsiveLayout>
   );
 }

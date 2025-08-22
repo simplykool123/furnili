@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, Grid3X3, List, Share, FileDown, MessageCircle } from "lucide-react";
 import type { Category } from "@shared/schema";
-import FurniliLayout from "@/components/Layout/FurniliLayout";
+import ResponsiveLayout from "@/components/Layout/ResponsiveLayout";
 
 interface Product {
   id: number;
@@ -205,7 +205,7 @@ export default function ProductComparison() {
   }
 
   return (
-    <FurniliLayout
+    <ResponsiveLayout
       title="Compare Material"
       subtitle="Compare materials by category and find the best prices"
     >
@@ -292,6 +292,6 @@ export default function ProductComparison() {
         </CardContent>
       </Card>
       </div>
-    </FurniliLayout>
+    </ResponsiveLayout>
   );
 }

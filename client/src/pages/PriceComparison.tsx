@@ -12,7 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
 import { authenticatedApiRequest } from "@/lib/auth";
 import { Plus, TrendingDown, TrendingUp, DollarSign, BarChart3 } from "lucide-react";
-import FurniliLayout from "@/components/Layout/FurniliLayout";
+import ResponsiveLayout from "@/components/Layout/ResponsiveLayout";
 
 export default function PriceComparison() {
   const { toast } = useToast();
@@ -148,7 +148,7 @@ export default function PriceComparison() {
   }, 0) || 0;
 
   return (
-    <FurniliLayout
+    <ResponsiveLayout
       title="Price Comparison"
       subtitle="Compare supplier prices and find the best deals"
     >
@@ -452,6 +452,6 @@ export default function PriceComparison() {
         </CardContent>
       </Card>
       </div>
-    </FurniliLayout>
+    </ResponsiveLayout>
   );
 }

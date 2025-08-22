@@ -13,7 +13,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
-import FurniliLayout from "@/components/Layout/FurniliLayout";
+import ResponsiveLayout from "@/components/Layout/ResponsiveLayout";
 import FurniliCard from "@/components/UI/FurniliCard";
 import FurniliStatsCard from "@/components/UI/FurniliStatsCard";
 import { apiRequest } from "@/lib/queryClient";
@@ -490,7 +490,7 @@ export default function Clients() {
   );
 
   return (
-    <FurniliLayout title="Client Management" subtitle="Manage client information and contact details">
+    <ResponsiveLayout title="Client Management" subtitle="Manage client information and contact details">
       <div className="space-y-4 sm:space-y-6">
         {/* Header Actions */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-0">
@@ -652,6 +652,6 @@ export default function Clients() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </FurniliLayout>
+    </ResponsiveLayout>
   );
 }

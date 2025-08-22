@@ -21,7 +21,7 @@ import {
   DollarSign,
   Clock
 } from "lucide-react";
-import FurniliLayout from "@/components/Layout/FurniliLayout";
+import ResponsiveLayout from "@/components/Layout/ResponsiveLayout";
 
 interface OptimizationData {
   reorderPoints: any[];
@@ -77,21 +77,21 @@ export default function InventoryOptimization() {
 
   if (isLoading) {
     return (
-      <FurniliLayout
+      <ResponsiveLayout
         title="Inventory Optimization"
         subtitle="Intelligent inventory management and forecasting"
       >
         <div className="flex items-center justify-center h-64">
           <RefreshCw className="h-8 w-8 animate-spin text-furnili-brown" />
         </div>
-      </FurniliLayout>
+      </ResponsiveLayout>
     );
   }
 
   const { reorderPoints = [], deadStock = [], seasonalForecast = [], summary } = optimizationData || {};
 
   return (
-    <FurniliLayout
+    <ResponsiveLayout
       title="Inventory Optimization"
       subtitle="AI-powered inventory management and demand forecasting"
     >
@@ -360,6 +360,6 @@ export default function InventoryOptimization() {
           </Card>
         </TabsContent>
       </Tabs>
-    </FurniliLayout>
+    </ResponsiveLayout>
   );
 }

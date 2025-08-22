@@ -15,7 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
 import { authenticatedApiRequest, authService } from "@/lib/auth";
 import { Plus, CheckCircle2, Clock, AlertCircle, User, Calendar, Search, Filter, CalendarIcon } from "lucide-react";
-import FurniliLayout from "@/components/Layout/FurniliLayout";
+import ResponsiveLayout from "@/components/Layout/ResponsiveLayout";
 import TaskCalendar from "@/components/Calendar/TaskCalendar";
 
 export default function TaskManagement() {
@@ -177,7 +177,7 @@ export default function TaskManagement() {
   }
 
   return (
-    <FurniliLayout
+    <ResponsiveLayout
       title="Task Management"
       subtitle={isAdmin ? "Manage all tasks" : "Your assigned tasks"}
     >
@@ -575,6 +575,6 @@ export default function TaskManagement() {
           <TaskCalendar tasks={Array.isArray(tasks) ? tasks : []} />
         </TabsContent>
       </Tabs>
-    </FurniliLayout>
+    </ResponsiveLayout>
   );
 }

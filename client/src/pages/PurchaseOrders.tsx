@@ -14,7 +14,7 @@ import { Plus, Send, Package, FileText, Eye, CheckCircle, XCircle, Clock, AlertT
 import { Autocomplete } from "@/components/ui/autocomplete";
 import { format } from "date-fns";
 import { apiRequest } from "@/lib/queryClient";
-import FurniliLayout from "@/components/Layout/FurniliLayout";
+import ResponsiveLayout from "@/components/Layout/ResponsiveLayout";
 import type { PurchaseOrderWithDetails, Supplier, Product } from "@shared/schema";
 // @ts-ignore
 import html2pdf from "html2pdf.js";
@@ -259,7 +259,7 @@ export default function PurchaseOrders() {
   };
 
   return (
-    <FurniliLayout 
+    <ResponsiveLayout 
       title="Purchase Orders" 
       subtitle="Manage your purchase orders and suppliers"
       actions={
@@ -574,7 +574,7 @@ export default function PurchaseOrders() {
         </AlertDialogContent>
       </AlertDialog>
       </div>
-    </FurniliLayout>
+    </ResponsiveLayout>
   );
 }
 

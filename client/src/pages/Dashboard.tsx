@@ -35,7 +35,7 @@ import { useLocation } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { authenticatedApiRequest } from "@/lib/auth";
-import FurniliLayout from "@/components/Layout/FurniliLayout";
+import ResponsiveLayout from "@/components/Layout/ResponsiveLayout";
 import FurniliCard from "@/components/UI/FurniliCard";
 import FurniliButton from "@/components/UI/FurniliButton";
 import FurniliStatsCard from "@/components/UI/FurniliStatsCard";
@@ -308,7 +308,7 @@ export default function Dashboard() {
   }
 
   return (
-    <FurniliLayout
+    <ResponsiveLayout
       title={`Welcome back, ${currentUser?.name || 'Admin'}!`}
       subtitle="Here's your business overview and key metrics for today."
     >
@@ -938,6 +938,6 @@ export default function Dashboard() {
           )}
         </div>
       )}
-    </FurniliLayout>
+    </ResponsiveLayout>
   );
 }

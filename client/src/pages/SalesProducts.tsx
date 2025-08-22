@@ -17,7 +17,7 @@ import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import type { SalesProduct } from "@shared/schema";
-import FurniliLayout from "@/components/Layout/FurniliLayout";
+import ResponsiveLayout from "@/components/Layout/ResponsiveLayout";
 import FurniliCard from "@/components/UI/FurniliCard";
 import FurniliButton from "@/components/UI/FurniliButton";
 
@@ -518,7 +518,7 @@ export default function SalesProducts() {
   const isMobile = window.innerWidth < 768;
 
   return (
-    <FurniliLayout title="Sales Products" subtitle="Manage sellable products for quotes and orders">
+    <ResponsiveLayout title="Sales Products" subtitle="Manage sellable products for quotes and orders">
       <div className="space-y-4">
         
         {/* Compact Header with inline Add Product */}
@@ -747,6 +747,6 @@ export default function SalesProducts() {
           </AlertDialogContent>
         </AlertDialog>
       </div>
-    </FurniliLayout>
+    </ResponsiveLayout>
   );
 }

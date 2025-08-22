@@ -91,7 +91,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { Project, Client } from "@shared/schema";
 import { useLocation } from "wouter";
 import { Link } from "wouter";
-import FurniliLayout from "@/components/Layout/FurniliLayout";
+import ResponsiveLayout from "@/components/Layout/ResponsiveLayout";
 import FurniliCard from "@/components/UI/FurniliCard";
 import FurniliButton from "@/components/UI/FurniliButton";
 import ProjectQuotes from "@/components/Project/ProjectQuotes";

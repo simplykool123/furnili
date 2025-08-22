@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Download, FileArchive, Clock, Shield } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { authenticatedApiRequest } from "@/lib/auth";
-import FurniliLayout from "@/components/Layout/FurniliLayout";
+import ResponsiveLayout from "@/components/Layout/ResponsiveLayout";
 
 // Get user from localStorage
 const getUser = () => {
@@ -98,7 +98,7 @@ export default function Backups() {
   };
 
   return (
-    <FurniliLayout
+    <ResponsiveLayout
       title="Data Backups"
       subtitle="Export and manage your business data"
     >
@@ -213,6 +213,6 @@ export default function Backups() {
         </Card>
       </div>
       </div>
-    </FurniliLayout>
+    </ResponsiveLayout>
   );
 }

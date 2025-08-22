@@ -1,4 +1,4 @@
-import FurniliLayout from "@/components/Layout/FurniliLayout";
+import ResponsiveLayout from "@/components/Layout/ResponsiveLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Download, Maximize2, Minimize2, RefreshCw } from "lucide-react";
@@ -47,7 +47,7 @@ export default function SystemFlowchart() {
   }, []);
 
   return (
-    <FurniliLayout title="Workflow" subtitle="Complete workflow and module integration diagram">
+    <ResponsiveLayout title="Workflow" subtitle="Complete workflow and module integration diagram">
       <div className="container mx-auto px-4 py-6">
         <div className="flex items-center justify-between mb-6">
           <div>
@@ -217,6 +217,6 @@ export default function SystemFlowchart() {
           </div>
         )}
       </div>
-    </FurniliLayout>
+    </ResponsiveLayout>
   );
 }

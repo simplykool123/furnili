@@ -15,7 +15,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Plus, Search, Building, Phone, Mail, MapPin, Edit, Trash2, Star, Package } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
-import FurniliLayout from "@/components/Layout/FurniliLayout";
+import ResponsiveLayout from "@/components/Layout/ResponsiveLayout";
 import type { Supplier } from "@shared/schema";
 
 const supplierFormSchema = z.object({
@@ -123,7 +123,7 @@ export default function Suppliers() {
   };
 
   return (
-    <FurniliLayout 
+    <ResponsiveLayout 
       title="Suppliers" 
       subtitle="Manage your supplier database"
       actions={
@@ -292,7 +292,7 @@ export default function Suppliers() {
         </Dialog>
       )}
       </div>
-    </FurniliLayout>
+    </ResponsiveLayout>
   );
 }
 

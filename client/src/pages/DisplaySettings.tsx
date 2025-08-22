@@ -3,13 +3,13 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useTheme } from "@/contexts/ThemeContext";
 import { Moon, Sun } from "lucide-react";
-import FurniliLayout from "@/components/Layout/FurniliLayout";
+import ResponsiveLayout from "@/components/Layout/ResponsiveLayout";
 
 export default function DisplaySettings() {
   const { theme, toggleTheme } = useTheme();
 
   return (
-    <FurniliLayout
+    <ResponsiveLayout
       title="Theme & Layout"
       subtitle="Customize how the application looks and feels"
     >
@@ -72,6 +72,6 @@ export default function DisplaySettings() {
         </CardContent>
       </Card>
       </div>
-    </FurniliLayout>
+    </ResponsiveLayout>
   );
 }

@@ -6,7 +6,7 @@ import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import { Plus, Package, Tag, Users, Settings } from "lucide-react";
 import { CategoryForm } from "@/components/Categories/CategoryForm";
 import { CategoryTable } from "@/components/Categories/CategoryTable";
-import FurniliLayout from "@/components/Layout/FurniliLayout";
+import ResponsiveLayout from "@/components/Layout/ResponsiveLayout";
 import type { Category } from "@shared/schema";
 
 export default function Categories() {
@@ -30,7 +30,7 @@ export default function Categories() {
   const activeCategories = categories.filter(cat => cat.isActive).length;
 
   return (
-    <FurniliLayout
+    <ResponsiveLayout
       title="Categories Management"
       subtitle="Organize and manage product categories"
     >
@@ -108,6 +108,6 @@ export default function Categories() {
           <CategoryForm onSuccess={() => setIsCreating(false)} />
         </Dialog>
       </div>
-    </FurniliLayout>
+    </ResponsiveLayout>
   );
 }
