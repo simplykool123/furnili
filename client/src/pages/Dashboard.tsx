@@ -29,6 +29,7 @@ import { useState, useEffect } from "react";
 import StockWarnings from "@/components/Dashboard/StockWarnings";
 import MobileDashboard from "@/components/Mobile/MobileDashboard";
 import { useIsMobile } from "@/components/Mobile/MobileOptimizer";
+import MobileLayout from "@/components/Mobile/MobileLayout";
 import { DashboardSkeleton } from "@/components/LoadingOptimizer";
 import { useLocation } from "wouter";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -297,12 +298,12 @@ export default function Dashboard() {
   // Use mobile dashboard for mobile devices
   if (isMobile) {
     return (
-      <FurniliLayout
+      <MobileLayout
         title={`Welcome back, ${currentUser?.name || 'Admin'}!`}
         subtitle="Here's your business overview and key metrics for today."
       >
         <MobileDashboard stats={stats || {}} tasks={pendingTasks || []} isLoading={isLoading} />
-      </FurniliLayout>
+      </MobileLayout>
     );
   }
 
