@@ -68,7 +68,7 @@ const navItems: NavItem[] = [
   },
   {
     name: "Inventory Optimization",
-    href: "/inventory/optimization",
+    href: "/inventory-optimization",
     icon: TrendingUp,
     roles: ["admin", "manager", "staff"]
   },
