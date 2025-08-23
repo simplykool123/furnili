@@ -172,8 +172,9 @@ export default function SimpleMobileSidebar({ isOpen, onClose }: MobileSidebarPr
       {/* Backdrop */}
       {isOpen && (
         <div 
-          className="fixed inset-0 bg-black/50 z-40"
+          className="fixed inset-0 bg-black/60 z-40 backdrop-blur-sm"
           onClick={onClose}
+          style={{ WebkitBackdropFilter: 'blur(2px)' }}
         />
       )}
 
@@ -182,7 +183,7 @@ export default function SimpleMobileSidebar({ isOpen, onClose }: MobileSidebarPr
         fixed inset-y-0 left-0 z-50 w-80 bg-gradient-to-b from-amber-50 to-amber-100 
         transform transition-transform duration-300 ease-in-out
         ${isOpen ? 'translate-x-0' : '-translate-x-full'}
-        border-r border-amber-200/50 shadow-xl
+        border-r border-amber-200/50 shadow-2xl overflow-hidden
       `}>
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-amber-100 to-amber-50 border-b border-amber-200/50">

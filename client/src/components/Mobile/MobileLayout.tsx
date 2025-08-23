@@ -89,7 +89,7 @@ export default function MobileLayout({
 
       {/* Mobile Sidebar */}
       <SimpleMobileSidebar 
-        open={sidebarOpen} 
+        isOpen={sidebarOpen} 
         onClose={() => setSidebarOpen(false)} 
       />
 
