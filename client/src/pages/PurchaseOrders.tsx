@@ -16,6 +16,8 @@ import { format } from "date-fns";
 import { apiRequest } from "@/lib/queryClient";
 import ResponsiveLayout from "@/components/Layout/ResponsiveLayout";
 import type { PurchaseOrderWithDetails, Supplier, Product } from "@shared/schema";
+import { useIsMobile } from "@/components/Mobile/MobileOptimizer";
+import MobileTable from "@/components/Mobile/MobileTable";
 // @ts-ignore
 import html2pdf from "html2pdf.js";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -30,6 +32,7 @@ export default function PurchaseOrders() {
   const [selectedPO, setSelectedPO] = useState<PurchaseOrderWithDetails | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const isMobile = useIsMobile();
 
   // Fetch purchase orders
   const { data: pos = [], isLoading: posLoading } = useQuery<PurchaseOrderWithDetails[]>({
@@ -306,13 +309,32 @@ export default function PurchaseOrders() {
       <div>
 
       <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="all">All</TabsTrigger>
-          <TabsTrigger value="draft">Draft</TabsTrigger>
-          <TabsTrigger value="sent">Sent</TabsTrigger>
-          <TabsTrigger value="received">Received</TabsTrigger>
-          <TabsTrigger value="cancelled">Cancelled</TabsTrigger>
-        </TabsList>
+        {/* Mobile Tab Selector */}
+        <div className="block md:hidden mb-4">
+          <Select value={selectedTab} onValueChange={setSelectedTab}>
+            <SelectTrigger className="w-full h-10 bg-white border-2 border-furnili-brown/20">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Orders</SelectItem>
+              <SelectItem value="draft">Draft</SelectItem>
+              <SelectItem value="sent">Sent</SelectItem>
+              <SelectItem value="received">Received</SelectItem>
+              <SelectItem value="cancelled">Cancelled</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Desktop Tabs */}
+        <div className="hidden md:block">
+          <TabsList className="grid w-full grid-cols-5 bg-furnili-brown/5">
+            <TabsTrigger value="all" className="data-[state=active]:bg-white data-[state=active]:text-furnili-brown">All</TabsTrigger>
+            <TabsTrigger value="draft" className="data-[state=active]:bg-white data-[state=active]:text-furnili-brown">Draft</TabsTrigger>
+            <TabsTrigger value="sent" className="data-[state=active]:bg-white data-[state=active]:text-furnili-brown">Sent</TabsTrigger>
+            <TabsTrigger value="received" className="data-[state=active]:bg-white data-[state=active]:text-furnili-brown">Received</TabsTrigger>
+            <TabsTrigger value="cancelled" className="data-[state=active]:bg-white data-[state=active]:text-furnili-brown">Cancelled</TabsTrigger>
+          </TabsList>
+        </div>
 
         <TabsContent value={selectedTab} className="mt-4">
           {posLoading ? (

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useIsMobile, MobileCard, MobileHeading, MobileText } from "@/components/Mobile/MobileOptimizer";
+import MobileTable from "@/components/Mobile/MobileTable";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -1565,7 +1566,101 @@ export default function PettyCash() {
           <CardTitle>Expense History ({filteredExpenses.length} entries)</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
+          {/* Mobile Cards */}
+          <div className="block md:hidden space-y-2 p-4">
+            {filteredExpenses.map((expense: PettyCashExpense) => (
+              <MobileCard
+                key={expense.id}
+                className="cursor-pointer"
+                onClick={() => handleShowExpenseDetails(expense)}
+              >
+                <div className="flex justify-between items-start mb-2">
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className={`px-1.5 py-0.5 rounded text-xs font-medium ${
+                        expense.status === 'income' 
+                          ? 'bg-green-100 text-green-800' 
+                          : 'bg-red-100 text-red-800'
+                      }`}>
+                        {expense.status === 'income' ? 'Credit' : 'Debit'}
+                      </span>
+                      <Badge variant="outline" className="text-xs">{expense.category}</Badge>
+                    </div>
+                    <div className="text-sm font-medium text-gray-900">{expense.vendor}</div>
+                    <div className="text-xs text-gray-500">{format(new Date(expense.expenseDate), 'dd/MM/yy')}</div>
+                  </div>
+                  <div className="text-right">
+                    <div className={`text-sm font-bold ${
+                      expense.status === 'income' ? 'text-green-600' : 'text-red-600'
+                    }`}>
+                      {expense.status === 'income' ? '+' : '-'}₹{expense.amount.toLocaleString()}
+                    </div>
+                    <div className="text-xs text-gray-500">{expense.user?.name || expense.user?.username || 'N/A'}</div>
+                  </div>
+                </div>
+                {expense.description && (
+                  <div className="text-xs text-gray-600 mb-2">{expense.description}</div>
+                )}
+                {expense.projectId && expense.project && (
+                  <div className="text-xs text-gray-500">
+                    {expense.project.code} - {expense.project.name}
+                  </div>
+                )}
+                <div className="flex justify-between items-center mt-2 pt-2 border-t">
+                  <div className="flex items-center gap-2">
+                    {expense.receiptImageUrl && (
+                      <img 
+                        src={expense.receiptImageUrl}
+                        alt="Receipt"
+                        className="w-6 h-6 object-cover rounded cursor-pointer border"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedImage(expense.receiptImageUrl!);
+                          setShowImageDialog(true);
+                        }}
+                      />
+                    )}
+                  </div>
+                  <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                    {(expense.addedBy === user?.id || user?.role === 'admin') && (
+                      <>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEditExpense(expense);
+                          }}
+                          className="h-8 w-8 p-0 text-blue-600 hover:text-blue-700"
+                        >
+                          <Pencil className="h-3 w-3" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setExpenseToDelete(expense);
+                          }}
+                          className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </MobileCard>
+            ))}
+            {filteredExpenses.length === 0 && (
+              <div className="text-center text-gray-500 py-8">
+                No expenses found matching your filters
+              </div>
+            )}
+          </div>
+
+          {/* Desktop Table */}
+          <div className="hidden md:block overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow className="text-xs">

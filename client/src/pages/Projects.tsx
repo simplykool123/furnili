@@ -25,7 +25,8 @@ import { getCitiesByState } from "@/data/indianCities";
 import ResponsiveLayout from "@/components/Layout/ResponsiveLayout";
 import FurniliCard from "@/components/UI/FurniliCard";
 import FurniliButton from "@/components/UI/FurniliButton";
-import { useIsMobile } from "@/components/Mobile/MobileOptimizer";
+import { useIsMobile, MobileCard } from "@/components/Mobile/MobileOptimizer";
+import MobileTable from "@/components/Mobile/MobileTable";
 import { authService } from "@/lib/auth";
 
 const createProjectSchema = z.object({
@@ -405,8 +406,92 @@ export default function Projects() {
             </div>
           </div>
 
-          {/* Table */}
-          <div className="overflow-x-auto">
+          {/* Mobile Table */}
+          <div className="block md:hidden">
+            <MobileTable
+              data={filteredProjects}
+              columns={[
+                {
+                  key: 'project',
+                  label: 'Project',
+                  render: (project: Project) => (
+                    <div>
+                      <div className="font-medium text-sm">{project.name}</div>
+                      <div className="text-xs text-furnili-brown font-medium">{project.code}</div>
+                      <div className="text-xs text-gray-600 mt-1">{getClientName(project)}</div>
+                      <div className="text-xs text-gray-500">
+                        {(project as any).city || project.siteCity || (project as any).client_city || 'N/A'}
+                      </div>
+                    </div>
+                  )
+                },
+                {
+                  key: 'details',
+                  label: 'Details',
+                  render: (project: Project) => (
+                    <div className="text-right">
+                      <Badge variant="secondary" className={`text-xs mb-2 ${getStageColor(project.stage)}`}>
+                        {project.stage.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                      </Badge>
+                      <div className="text-xs text-gray-500">
+                        {(project as any).formatted_created_at || (project.createdAt ? new Date(project.createdAt).toLocaleDateString('en-GB', {
+                          day: '2-digit',
+                          month: '2-digit', 
+                          year: 'numeric'
+                        }) : 'N/A')}
+                      </div>
+                    </div>
+                  )
+                }
+              ]}
+              onRowClick={(project) => setLocation(`/projects/${project.id}`)}
+              actions={(project: Project) => (
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setLocation(`/projects/${project.id}`);
+                    }}
+                    className="text-gray-500 p-1"
+                  >
+                    <Eye className="h-4 w-4" />
+                  </Button>
+                  {canManageProjects && (
+                    <>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEditProject(project);
+                        }}
+                        className="text-blue-500 p-1"
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteProject(project);
+                        }}
+                        className="text-red-500 p-1"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </>
+                  )}
+                </div>
+              )}
+              emptyMessage="No projects found"
+            />
+          </div>
+
+          {/* Desktop Table */}
+          <div className="hidden md:block overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow className="bg-gray-50">
