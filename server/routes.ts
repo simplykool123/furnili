@@ -24,7 +24,7 @@ import { db } from "./db";
 import { calculateBOM, generateBOMNumber, convertDimensions } from "./utils/bomCalculations";
 
 import { eq, and, gt } from "drizzle-orm";
-import { projectFiles, users, suppliers, products, purchaseOrders, purchaseOrderItems, stockMovements } from "@shared/schema";
+import { projectFiles, users, suppliers, products, purchaseOrders, purchaseOrderItems, stockMovements, bomCalculations, bomItems } from "@shared/schema";
 
 // OpenAI client removed - AI functionality simplified
 import {
@@ -4657,21 +4657,107 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "BOM ID and format are required" });
       }
 
-      // This is a placeholder - you can implement Excel/PDF export later
+      // Get BOM data from database
+      const [bom] = await db.select()
+        .from(bomCalculations)
+        .where(eq(bomCalculations.id, bomId));
+
+      if (!bom) {
+        return res.status(404).json({ message: "BOM not found" });
+      }
+
+      const items = await db.select()
+        .from(bomItems)
+        .where(eq(bomItems.bomId, bomId));
+
       if (format === 'excel') {
-        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        res.setHeader('Content-Disposition', `attachment; filename=BOM-${bomId}.xlsx`);
-        res.send("Excel export not implemented yet");
+        // Create Excel workbook using a simple CSV format for now
+        let csvContent = 'Part Name,Type,Quantity,Unit,Size,Material,Edge Banding,Unit Rate,Total Cost\n';
+        
+        items.forEach(item => {
+          const size = item.length && item.width ? `${item.length}x${item.width}mm` : '';
+          csvContent += `"${item.partName}","${item.itemType}",${item.quantity},"${item.unit}","${size}","${item.materialType || ''}","${item.edgeBandingType || ''}",${item.unitRate || 0},${item.totalCost}\n`;
+        });
+
+        // Add summary
+        csvContent += '\nSUMMARY\n';
+        csvContent += `Total Board Area,${bom.totalBoardArea} sq.ft\n`;
+        csvContent += `Total Edge Banding 2mm,${bom.totalEdgeBanding2mm} ft\n`;
+        csvContent += `Total Edge Banding 0.8mm,${bom.totalEdgeBanding0_8mm} ft\n`;
+        csvContent += `Total Material Cost,₹${bom.totalMaterialCost}\n`;
+        csvContent += `Total Hardware Cost,₹${bom.totalHardwareCost}\n`;
+        csvContent += `TOTAL COST,₹${bom.totalCost}\n`;
+
+        res.setHeader('Content-Type', 'text/csv');
+        res.setHeader('Content-Disposition', `attachment; filename=BOM-${bom.calculationNumber}.csv`);
+        res.send(csvContent);
       } else if (format === 'pdf') {
-        res.setHeader('Content-Type', 'application/pdf');
-        res.setHeader('Content-Disposition', `attachment; filename=BOM-${bomId}.pdf`);
-        res.send("PDF export not implemented yet");
+        // Simple text-based PDF representation for now
+        let pdfContent = `BILL OF MATERIALS - ${bom.calculationNumber}\n`;
+        pdfContent += `Furniture Type: ${bom.unitType}\n`;
+        pdfContent += `Dimensions: ${bom.height}x${bom.width}x${bom.depth}mm\n`;
+        pdfContent += `Board Type: ${bom.boardType} - ${bom.boardThickness}\n`;
+        pdfContent += `Finish: ${bom.finish}\n\n`;
+        pdfContent += 'ITEMS:\n';
+        pdfContent += '='.repeat(80) + '\n';
+        
+        items.forEach(item => {
+          pdfContent += `${item.partName} | ${item.itemType} | Qty: ${item.quantity} | ₹${item.totalCost}\n`;
+        });
+        
+        pdfContent += '='.repeat(80) + '\n';
+        pdfContent += `Total Board Area: ${bom.totalBoardArea} sq.ft\n`;
+        pdfContent += `Total Material Cost: ₹${bom.totalMaterialCost}\n`;
+        pdfContent += `Total Hardware Cost: ₹${bom.totalHardwareCost}\n`;
+        pdfContent += `TOTAL COST: ₹${bom.totalCost}\n`;
+
+        res.setHeader('Content-Type', 'text/plain');
+        res.setHeader('Content-Disposition', `attachment; filename=BOM-${bom.calculationNumber}.txt`);
+        res.send(pdfContent);
       } else {
         res.status(400).json({ message: "Invalid format" });
       }
     } catch (error) {
       console.error("BOM export error:", error);
       res.status(500).json({ message: "Failed to export BOM" });
+    }
+  });
+
+  // Get BOM calculation history
+  app.get("/api/bom/history", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 10;
+      const offset = (page - 1) * limit;
+
+      const calculations = await db.select({
+        id: bomCalculations.id,
+        calculationNumber: bomCalculations.calculationNumber,
+        unitType: bomCalculations.unitType,
+        totalCost: bomCalculations.totalCost,
+        createdAt: bomCalculations.createdAt,
+        createdBy: bomCalculations.createdBy,
+      })
+      .from(bomCalculations)
+      .orderBy(bomCalculations.createdAt)
+      .limit(limit)
+      .offset(offset);
+
+      const total = await db.select({ count: sql`count(*)` })
+        .from(bomCalculations);
+
+      res.json({
+        calculations,
+        pagination: {
+          page,
+          limit,
+          total: Number(total[0].count),
+          totalPages: Math.ceil(Number(total[0].count) / limit),
+        }
+      });
+    } catch (error) {
+      console.error("BOM history error:", error);
+      res.status(500).json({ message: "Failed to get BOM history" });
     }
   });
 
