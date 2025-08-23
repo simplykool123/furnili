@@ -91,6 +91,377 @@ const calculateEdgeBandingLength = (length: number, width: number): number => {
   return mmToFeet(perimeterMm);
 };
 
+// Bed type configurations
+const BED_SIZES = {
+  king: { length: 1980, width: 1829 }, // 78" x 72"
+  queen: { length: 1980, width: 1524 }, // 78" x 60"
+  single: { length: 1980, width: 914 }, // 78" x 36"
+  bunk: { length: 1980, width: 914 }, // 2 layers of single
+  custom: { length: 0, width: 0 } // Will use input dimensions
+};
+
+const BED_STANDARD_HEIGHTS = {
+  base: 406, // 16"
+  headboard: 914, // 36"
+  footboard: 305, // 12"
+};
+
+// Generate panels for bed
+const generateBedPanels = (input: CalculationInput): Panel[] => {
+  const { height, width, depth, boardType, boardThickness, partsConfig } = input;
+  const panels: Panel[] = [];
+  const material = `${boardThickness} ${boardType.toUpperCase()}`;
+  
+  // Use bed dimensions or custom
+  let bedLength = width; // User's width becomes bed length
+  let bedWidth = depth; // User's depth becomes bed width
+  
+  // Auto-set standard bed sizes if specified in notes or unitType
+  if (partsConfig.customParts.find(part => part.name.includes('king'))) {
+    bedLength = BED_SIZES.king.length;
+    bedWidth = BED_SIZES.king.width;
+  } else if (partsConfig.customParts.find(part => part.name.includes('queen'))) {
+    bedLength = BED_SIZES.queen.length;
+    bedWidth = BED_SIZES.queen.width;
+  } else if (partsConfig.customParts.find(part => part.name.includes('single'))) {
+    bedLength = BED_SIZES.single.length;
+    bedWidth = BED_SIZES.single.width;
+  }
+
+  const baseHeight = BED_STANDARD_HEIGHTS.base;
+  const headboardHeight = BED_STANDARD_HEIGHTS.headboard;
+  const footboardHeight = BED_STANDARD_HEIGHTS.footboard;
+  
+  // Main bed panels
+  
+  // Headboard panel (78" × 36" for king)
+  panels.push({
+    panel: "Headboard Panel",
+    qty: 1,
+    size: `${bedLength}mm x ${headboardHeight}mm`,
+    length: bedLength,
+    width: headboardHeight,
+    material,
+    edge_banding: "2mm",
+    area_sqft: mmSqToSqft(bedLength, headboardHeight),
+    edgeBandingLength: calculateEdgeBandingLength(bedLength, headboardHeight),
+  });
+
+  // Footboard panel (78" × 12" for king)
+  panels.push({
+    panel: "Footboard Panel",
+    qty: 1,
+    size: `${bedLength}mm x ${footboardHeight}mm`,
+    length: bedLength,
+    width: footboardHeight,
+    material,
+    edge_banding: "2mm",
+    area_sqft: mmSqToSqft(bedLength, footboardHeight),
+    edgeBandingLength: calculateEdgeBandingLength(bedLength, footboardHeight),
+  });
+
+  // Side panels (2 pieces - 72" × 12" for king)
+  panels.push({
+    panel: "Side Panel",
+    qty: 2,
+    size: `${bedWidth}mm x ${baseHeight}mm`,
+    length: bedWidth,
+    width: baseHeight,
+    material,
+    edge_banding: "2mm",
+    area_sqft: mmSqToSqft(bedWidth, baseHeight) * 2,
+    edgeBandingLength: calculateEdgeBandingLength(bedWidth, baseHeight) * 2,
+  });
+
+  // Base support ply (78" × 72" for king)
+  panels.push({
+    panel: "Base Support Ply",
+    qty: 1,
+    size: `${bedLength}mm x ${bedWidth}mm`,
+    length: bedLength,
+    width: bedWidth,
+    material: `12mm PLY`, // Usually plywood for base
+    edge_banding: "0.8mm",
+    area_sqft: mmSqToSqft(bedLength, bedWidth),
+    edgeBandingLength: calculateEdgeBandingLength(bedLength, bedWidth),
+  });
+
+  // Cushion back panel (if cushion option selected)
+  if (partsConfig.customParts.find(part => part.name.includes('cushion'))) {
+    panels.push({
+      panel: "Cushion Backing Ply",
+      qty: 1,
+      size: `${bedLength}mm x ${headboardHeight}mm`,
+      length: bedLength,
+      width: headboardHeight,
+      material: "12mm PLY",
+      edge_banding: "0.8mm",
+      area_sqft: mmSqToSqft(bedLength, headboardHeight),
+      edgeBandingLength: calculateEdgeBandingLength(bedLength, headboardHeight),
+    });
+  }
+
+  // Storage components based on bed type
+  
+  // Storage shutters (2-3 pieces)
+  if (partsConfig.shutters > 0) {
+    const shutterWidth = bedLength / partsConfig.shutters;
+    const shutterHeight = baseHeight - 50; // Slightly smaller than base
+    
+    panels.push({
+      panel: "Storage Shutter",
+      qty: partsConfig.shutters,
+      size: `${shutterWidth}mm x ${shutterHeight}mm`,
+      length: shutterWidth,
+      width: shutterHeight,
+      material,
+      edge_banding: "2mm",
+      area_sqft: mmSqToSqft(shutterWidth, shutterHeight) * partsConfig.shutters,
+      edgeBandingLength: calculateEdgeBandingLength(shutterWidth, shutterHeight) * partsConfig.shutters,
+    });
+  }
+
+  // Drawer components
+  if (partsConfig.drawers > 0) {
+    const drawerWidth = (bedLength / 2) - 50; // Split bed length, account for sides
+    const drawerDepth = bedWidth - 100; // Account for frame
+    const drawerHeight = 150; // Standard drawer height
+
+    // Drawer box panels (front, back, sides, bottom)
+    panels.push({
+      panel: "Drawer Box Front/Back",
+      qty: partsConfig.drawers * 2,
+      size: `${drawerWidth}mm x ${drawerHeight}mm`,
+      length: drawerWidth,
+      width: drawerHeight,
+      material,
+      edge_banding: "0.8mm",
+      area_sqft: mmSqToSqft(drawerWidth, drawerHeight) * partsConfig.drawers * 2,
+      edgeBandingLength: calculateEdgeBandingLength(drawerWidth, drawerHeight) * partsConfig.drawers * 2,
+    });
+
+    panels.push({
+      panel: "Drawer Box Sides",
+      qty: partsConfig.drawers * 2,
+      size: `${drawerDepth}mm x ${drawerHeight}mm`,
+      length: drawerDepth,
+      width: drawerHeight,
+      material,
+      edge_banding: "0.8mm",
+      area_sqft: mmSqToSqft(drawerDepth, drawerHeight) * partsConfig.drawers * 2,
+      edgeBandingLength: calculateEdgeBandingLength(drawerDepth, drawerHeight) * partsConfig.drawers * 2,
+    });
+
+    panels.push({
+      panel: "Drawer Bottom",
+      qty: partsConfig.drawers,
+      size: `${drawerWidth}mm x ${drawerDepth}mm`,
+      length: drawerWidth,
+      width: drawerDepth,
+      material: "12mm PLY",
+      edge_banding: "0.8mm",
+      area_sqft: mmSqToSqft(drawerWidth, drawerDepth) * partsConfig.drawers,
+      edgeBandingLength: calculateEdgeBandingLength(drawerWidth, drawerDepth) * partsConfig.drawers,
+    });
+  }
+
+  // Bunk bed special components
+  if (partsConfig.customParts.find(part => part.name.includes('bunk'))) {
+    // Additional upper bed frame
+    panels.push({
+      panel: "Upper Bed Frame",
+      qty: 1,
+      size: `${bedLength}mm x ${bedWidth}mm`,
+      length: bedLength,
+      width: bedWidth,
+      material: "12mm PLY",
+      edge_banding: "0.8mm",
+      area_sqft: mmSqToSqft(bedLength, bedWidth),
+      edgeBandingLength: calculateEdgeBandingLength(bedLength, bedWidth),
+    });
+
+    // Ladder panel (12" × 60")
+    panels.push({
+      panel: "Ladder Panel",
+      qty: 1,
+      size: `305mm x 1524mm`,
+      length: 305,
+      width: 1524,
+      material,
+      edge_banding: "2mm",
+      area_sqft: mmSqToSqft(305, 1524),
+      edgeBandingLength: calculateEdgeBandingLength(305, 1524),
+    });
+
+    // Guard rails (2 pcs, 72" × 6")
+    panels.push({
+      panel: "Guard Rail",
+      qty: 2,
+      size: `${bedWidth}mm x 152mm`,
+      length: bedWidth,
+      width: 152,
+      material,
+      edge_banding: "2mm",
+      area_sqft: mmSqToSqft(bedWidth, 152) * 2,
+      edgeBandingLength: calculateEdgeBandingLength(bedWidth, 152) * 2,
+    });
+  }
+
+  return panels;
+};
+
+// Generate hardware for bed
+const generateBedHardware = (input: CalculationInput): Hardware[] => {
+  const { height, partsConfig } = input;
+  const hardware: Hardware[] = [];
+
+  // All beds - Basic connectors and hardware
+  hardware.push({
+    item: "Bed Connectors",
+    qty: 6, // To join head, foot, and sides
+    unit_rate: 15,
+    total_cost: 6 * 15,
+  });
+
+  hardware.push({
+    item: "Dowels & Screws",
+    qty: 20,
+    unit_rate: 2,
+    total_cost: 20 * 2,
+  });
+
+  // Hydraulic bed hardware
+  if (partsConfig.customParts.find(part => part.name.includes('hydraulic'))) {
+    hardware.push({
+      item: "Hydraulic Lift Kit",
+      qty: 2,
+      unit_rate: 800,
+      total_cost: 2 * 800,
+    });
+
+    hardware.push({
+      item: "Gas Lift Frame",
+      qty: 1,
+      unit_rate: 300,
+      total_cost: 300,
+    });
+
+    hardware.push({
+      item: "Heavy Duty Hinges",
+      qty: 2,
+      unit_rate: 50,
+      total_cost: 2 * 50,
+    });
+
+    hardware.push({
+      item: "Hydraulic Handle",
+      qty: 2,
+      unit_rate: DEFAULT_RATES.hardware.handle,
+      total_cost: 2 * DEFAULT_RATES.hardware.handle,
+    });
+  }
+
+  // Storage - Shutter type
+  if (partsConfig.shutters > 0) {
+    hardware.push({
+      item: "Storage Hinges",
+      qty: partsConfig.shutters * 2,
+      unit_rate: DEFAULT_RATES.hardware.hinge,
+      total_cost: partsConfig.shutters * 2 * DEFAULT_RATES.hardware.hinge,
+    });
+
+    hardware.push({
+      item: "Storage Handles",
+      qty: partsConfig.shutters,
+      unit_rate: DEFAULT_RATES.hardware.handle,
+      total_cost: partsConfig.shutters * DEFAULT_RATES.hardware.handle,
+    });
+
+    if (partsConfig.shutters >= 2) {
+      hardware.push({
+        item: "Storage Lock",
+        qty: 1,
+        unit_rate: DEFAULT_RATES.hardware.lock,
+        total_cost: DEFAULT_RATES.hardware.lock,
+      });
+    }
+  }
+
+  // Storage - Drawer type
+  if (partsConfig.drawers > 0) {
+    hardware.push({
+      item: "Drawer Channels",
+      qty: partsConfig.drawers * 2, // Left + right per drawer
+      unit_rate: DEFAULT_RATES.hardware.drawer_slide,
+      total_cost: partsConfig.drawers * 2 * DEFAULT_RATES.hardware.drawer_slide,
+    });
+
+    hardware.push({
+      item: "Drawer Wheels",
+      qty: partsConfig.drawers * 4, // 4 wheels per drawer
+      unit_rate: 8,
+      total_cost: partsConfig.drawers * 4 * 8,
+    });
+
+    hardware.push({
+      item: "Drawer Handles",
+      qty: partsConfig.drawers,
+      unit_rate: DEFAULT_RATES.hardware.handle,
+      total_cost: partsConfig.drawers * DEFAULT_RATES.hardware.handle,
+    });
+
+    hardware.push({
+      item: "Drawer Assembly Screws",
+      qty: partsConfig.drawers * 15, // 10-15 per drawer
+      unit_rate: 1,
+      total_cost: partsConfig.drawers * 15,
+    });
+  }
+
+  // Bunk bed special hardware
+  if (partsConfig.customParts.find(part => part.name.includes('bunk'))) {
+    hardware.push({
+      item: "Bunk Bed Connectors",
+      qty: 10, // Additional connectors for upper bed
+      unit_rate: 20,
+      total_cost: 10 * 20,
+    });
+
+    hardware.push({
+      item: "Safety Rail Brackets",
+      qty: 4, // For guard rails
+      unit_rate: 25,
+      total_cost: 4 * 25,
+    });
+
+    hardware.push({
+      item: "Ladder Brackets",
+      qty: 4,
+      unit_rate: 20,
+      total_cost: 4 * 20,
+    });
+  }
+
+  // Cushion hardware (if cushion option selected)
+  if (partsConfig.customParts.find(part => part.name.includes('cushion'))) {
+    hardware.push({
+      item: "Cushion Foam",
+      qty: 1,
+      unit_rate: 500, // Per sq ft equivalent
+      total_cost: 500,
+    });
+
+    hardware.push({
+      item: "Fabric & Labor",
+      qty: 1,
+      unit_rate: 800,
+      total_cost: 800,
+    });
+  }
+
+  return hardware;
+};
+
 // Generate panels for wardrobe
 const generateWardrobePanels = (input: CalculationInput): Panel[] => {
   const { height, width, depth, boardType, boardThickness, partsConfig } = input;
@@ -244,6 +615,251 @@ const generateWardrobePanels = (input: CalculationInput): Panel[] => {
   return panels;
 };
 
+// Storage Unit Panels Generation
+function generateStorageUnitPanels(input: any) {
+  const panels: Panel[] = [];
+  const { height, width, depth } = input.dimensions;
+  const { shelves, drawers } = input.partsConfig;
+
+  // External panels - 2mm edge banding
+  panels.push(
+    { name: 'Top Panel', type: 'panel', size: `${width}x${depth}`, quantity: 1, edge_band: '2mm', rate: 0 },
+    { name: 'Bottom Panel', type: 'panel', size: `${width}x${depth}`, quantity: 1, edge_band: '2mm', rate: 0 },
+    { name: 'Side Panels', type: 'panel', size: `${height}x${depth}`, quantity: 2, edge_band: '2mm', rate: 0 },
+    { name: 'Back Panel', type: 'panel', size: `${height}x${width}`, quantity: 1, edge_band: '0.8mm', rate: 0 }
+  );
+
+  // Shelves - internal panels with 0.8mm edge banding
+  if (shelves > 0) {
+    panels.push({
+      name: 'Shelves',
+      type: 'panel',
+      size: `${width - 36}x${depth - 18}`,
+      quantity: shelves,
+      edge_band: '0.8mm',
+      rate: 0
+    });
+  }
+
+  // Drawer boxes
+  if (drawers > 0) {
+    const drawerHeight = Math.floor((height - 100) / drawers);
+    panels.push(
+      { name: 'Drawer Fronts', type: 'panel', size: `${width - 3}x${drawerHeight}`, quantity: drawers, edge_band: '2mm', rate: 0 },
+      { name: 'Drawer Sides', type: 'panel', size: `${drawerHeight - 16}x${depth - 50}`, quantity: drawers * 2, edge_band: '0.8mm', rate: 0 },
+      { name: 'Drawer Bottoms', type: 'panel', size: `${width - 36}x${depth - 50}`, quantity: drawers, edge_band: '0.8mm', rate: 0 }
+    );
+  }
+
+  return panels;
+}
+
+// Dresser Panels Generation  
+function generateDresserPanels(input: any) {
+  const panels: Panel[] = [];
+  const { height, width, depth } = input.dimensions;
+  const { drawers, mirror } = input.partsConfig;
+
+  // Main carcass
+  panels.push(
+    { name: 'Top Panel', type: 'panel', size: `${width}x${depth}`, quantity: 1, edge_band: '2mm', rate: 0 },
+    { name: 'Bottom Panel', type: 'panel', size: `${width}x${depth}`, quantity: 1, edge_band: '2mm', rate: 0 },
+    { name: 'Side Panels', type: 'panel', size: `${height}x${depth}`, quantity: 2, edge_band: '2mm', rate: 0 },
+    { name: 'Back Panel', type: 'panel', size: `${height}x${width}`, quantity: 1, edge_band: '0.8mm', rate: 0 }
+  );
+
+  // Drawer components
+  const drawerHeight = Math.floor((height - 50) / drawers);
+  panels.push(
+    { name: 'Drawer Fronts', type: 'panel', size: `${width - 3}x${drawerHeight}`, quantity: drawers, edge_band: '2mm', rate: 0 },
+    { name: 'Drawer Sides', type: 'panel', size: `${drawerHeight - 16}x${depth - 50}`, quantity: drawers * 2, edge_band: '0.8mm', rate: 0 },
+    { name: 'Drawer Backs', type: 'panel', size: `${drawerHeight - 16}x${width - 36}`, quantity: drawers, edge_band: '0.8mm', rate: 0 },
+    { name: 'Drawer Bottoms', type: 'panel', size: `${width - 36}x${depth - 50}`, quantity: drawers, edge_band: '0.8mm', rate: 0 }
+  );
+
+  // Mirror if selected
+  if (mirror) {
+    panels.push({
+      name: 'Mirror Frame',
+      type: 'panel', 
+      size: `${width}x${height + 300}`,
+      quantity: 1,
+      edge_band: '2mm',
+      rate: 0
+    });
+  }
+
+  return panels;
+}
+
+// Kitchen Cabinet Panels - Very Comprehensive
+function generateKitchenCabinetPanels(input: any) {
+  const panels: Panel[] = [];
+  const { height, width, depth } = input.dimensions;
+  const { 
+    cabinetType, 
+    baseCabinets, 
+    wallCabinets, 
+    tallCabinets,
+    island,
+    drawers,
+    shelves,
+    cornerUnit,
+    appliances
+  } = input.partsConfig;
+
+  // Base Cabinets
+  if (baseCabinets > 0) {
+    const baseWidth = Math.floor(width / baseCabinets);
+    panels.push(
+      { name: 'Base Cabinet Tops', type: 'panel', size: `${baseWidth}x${depth}`, quantity: baseCabinets, edge_band: '2mm', rate: 0 },
+      { name: 'Base Cabinet Bottoms', type: 'panel', size: `${baseWidth}x${depth}`, quantity: baseCabinets, edge_band: '2mm', rate: 0 },
+      { name: 'Base Cabinet Sides', type: 'panel', size: `${850}x${depth}`, quantity: baseCabinets * 2, edge_band: '2mm', rate: 0 },
+      { name: 'Base Cabinet Backs', type: 'panel', size: `${850}x${baseWidth}`, quantity: baseCabinets, edge_band: '0.8mm', rate: 0 },
+      { name: 'Base Cabinet Doors', type: 'panel', size: `${baseWidth - 3}x${750}`, quantity: baseCabinets * 2, edge_band: '2mm', rate: 0 }
+    );
+
+    // Base cabinet shelves
+    if (shelves > 0) {
+      panels.push({
+        name: 'Base Cabinet Shelves',
+        type: 'panel',
+        size: `${baseWidth - 36}x${depth - 18}`,
+        quantity: baseCabinets * shelves,
+        edge_band: '0.8mm',
+        rate: 0
+      });
+    }
+  }
+
+  // Wall Cabinets
+  if (wallCabinets > 0) {
+    const wallWidth = Math.floor(width / wallCabinets);
+    panels.push(
+      { name: 'Wall Cabinet Tops', type: 'panel', size: `${wallWidth}x${300}`, quantity: wallCabinets, edge_band: '2mm', rate: 0 },
+      { name: 'Wall Cabinet Bottoms', type: 'panel', size: `${wallWidth}x${300}`, quantity: wallCabinets, edge_band: '2mm', rate: 0 },
+      { name: 'Wall Cabinet Sides', type: 'panel', size: `${700}x${300}`, quantity: wallCabinets * 2, edge_band: '2mm', rate: 0 },
+      { name: 'Wall Cabinet Backs', type: 'panel', size: `${700}x${wallWidth}`, quantity: wallCabinets, edge_band: '0.8mm', rate: 0 },
+      { name: 'Wall Cabinet Doors', type: 'panel', size: `${wallWidth - 3}x${650}`, quantity: wallCabinets * 2, edge_band: '2mm', rate: 0 }
+    );
+
+    // Wall cabinet shelves
+    panels.push({
+      name: 'Wall Cabinet Shelves',
+      type: 'panel',
+      size: `${wallWidth - 36}x${282}`,
+      quantity: wallCabinets * 2,
+      edge_band: '0.8mm', 
+      rate: 0
+    });
+  }
+
+  // Tall Cabinets (Pantry/Appliance Units)
+  if (tallCabinets > 0) {
+    panels.push(
+      { name: 'Tall Cabinet Tops', type: 'panel', size: `${600}x${depth}`, quantity: tallCabinets, edge_band: '2mm', rate: 0 },
+      { name: 'Tall Cabinet Bottoms', type: 'panel', size: `${600}x${depth}`, quantity: tallCabinets, edge_band: '2mm', rate: 0 },
+      { name: 'Tall Cabinet Sides', type: 'panel', size: `${2200}x${depth}`, quantity: tallCabinets * 2, edge_band: '2mm', rate: 0 },
+      { name: 'Tall Cabinet Backs', type: 'panel', size: `${2200}x${600}`, quantity: tallCabinets, edge_band: '0.8mm', rate: 0 },
+      { name: 'Tall Cabinet Doors', type: 'panel', size: `${597}x${1100}`, quantity: tallCabinets * 2, edge_band: '2mm', rate: 0 },
+      { name: 'Tall Cabinet Shelves', type: 'panel', size: `${564}x${depth - 18}`, quantity: tallCabinets * 4, edge_band: '0.8mm', rate: 0 }
+    );
+  }
+
+  // Kitchen Island
+  if (island) {
+    panels.push(
+      { name: 'Island Top', type: 'panel', size: `${1200}x${600}`, quantity: 1, edge_band: '2mm', rate: 0 },
+      { name: 'Island Bottom', type: 'panel', size: `${1200}x${600}`, quantity: 1, edge_band: '2mm', rate: 0 },
+      { name: 'Island Sides', type: 'panel', size: `${850}x${600}`, quantity: 2, edge_band: '2mm', rate: 0 },
+      { name: 'Island Back', type: 'panel', size: `${850}x${1200}`, quantity: 1, edge_band: '0.8mm', rate: 0 },
+      { name: 'Island Doors', type: 'panel', size: `${597}x${750}`, quantity: 4, edge_band: '2mm', rate: 0 }
+    );
+  }
+
+  // Corner Units
+  if (cornerUnit) {
+    panels.push(
+      { name: 'Corner Unit Top', type: 'panel', size: `${900}x${900}`, quantity: 1, edge_band: '2mm', rate: 0 },
+      { name: 'Corner Unit Bottom', type: 'panel', size: `${900}x${900}`, quantity: 1, edge_band: '2mm', rate: 0 },
+      { name: 'Corner Unit Sides', type: 'panel', size: `${850}x${600}`, quantity: 4, edge_band: '2mm', rate: 0 },
+      { name: 'Corner Unit Doors', type: 'panel', size: `${450}x${750}`, quantity: 2, edge_band: '2mm', rate: 0 }
+    );
+  }
+
+  // Drawer boxes for kitchen
+  if (drawers > 0) {
+    const drawerWidth = Math.floor(width / drawers);
+    panels.push(
+      { name: 'Kitchen Drawer Fronts', type: 'panel', size: `${drawerWidth - 3}x${200}`, quantity: drawers, edge_band: '2mm', rate: 0 },
+      { name: 'Kitchen Drawer Sides', type: 'panel', size: `${184}x${depth - 50}`, quantity: drawers * 2, edge_band: '0.8mm', rate: 0 },
+      { name: 'Kitchen Drawer Backs', type: 'panel', size: `${184}x${drawerWidth - 36}`, quantity: drawers, edge_band: '0.8mm', rate: 0 },
+      { name: 'Kitchen Drawer Bottoms', type: 'panel', size: `${drawerWidth - 36}x${depth - 50}`, quantity: drawers, edge_band: '0.8mm', rate: 0 }
+    );
+  }
+
+  return panels;
+}
+
+// Bathroom Vanity Panels
+function generateBathroomVanityPanels(input: any) {
+  const panels: Panel[] = [];
+  const { height, width, depth } = input.dimensions;
+  const { drawers, doors, mirror, sideUnit } = input.partsConfig;
+
+  // Main vanity carcass
+  panels.push(
+    { name: 'Vanity Top', type: 'panel', size: `${width}x${depth}`, quantity: 1, edge_band: '2mm', rate: 0 },
+    { name: 'Vanity Bottom', type: 'panel', size: `${width}x${depth}`, quantity: 1, edge_band: '2mm', rate: 0 },
+    { name: 'Vanity Sides', type: 'panel', size: `${height}x${depth}`, quantity: 2, edge_band: '2mm', rate: 0 },
+    { name: 'Vanity Back', type: 'panel', size: `${height}x${width}`, quantity: 1, edge_band: '0.8mm', rate: 0 }
+  );
+
+  // Doors
+  if (doors > 0) {
+    const doorWidth = Math.floor((width - 3) / doors);
+    panels.push({
+      name: 'Vanity Doors',
+      type: 'panel',
+      size: `${doorWidth}x${height - 100}`,
+      quantity: doors,
+      edge_band: '2mm',
+      rate: 0
+    });
+  }
+
+  // Drawers
+  if (drawers > 0) {
+    const drawerHeight = Math.floor((height - 50) / drawers);
+    panels.push(
+      { name: 'Vanity Drawer Fronts', type: 'panel', size: `${width - 3}x${drawerHeight}`, quantity: drawers, edge_band: '2mm', rate: 0 },
+      { name: 'Vanity Drawer Sides', type: 'panel', size: `${drawerHeight - 16}x${depth - 50}`, quantity: drawers * 2, edge_band: '0.8mm', rate: 0 },
+      { name: 'Vanity Drawer Bottoms', type: 'panel', size: `${width - 36}x${depth - 50}`, quantity: drawers, edge_band: '0.8mm', rate: 0 }
+    );
+  }
+
+  // Mirror cabinet
+  if (mirror) {
+    panels.push(
+      { name: 'Mirror Cabinet Frame', type: 'panel', size: `${width}x${600}`, quantity: 1, edge_band: '2mm', rate: 0 },
+      { name: 'Mirror Cabinet Door', type: 'panel', size: `${width - 3}x${597}`, quantity: 1, edge_band: '2mm', rate: 0 },
+      { name: 'Mirror Cabinet Shelf', type: 'panel', size: `${width - 36}x${150}`, quantity: 2, edge_band: '0.8mm', rate: 0 }
+    );
+  }
+
+  // Side storage unit
+  if (sideUnit) {
+    panels.push(
+      { name: 'Side Unit Top', type: 'panel', size: `${300}x${depth}`, quantity: 1, edge_band: '2mm', rate: 0 },
+      { name: 'Side Unit Bottom', type: 'panel', size: `${300}x${depth}`, quantity: 1, edge_band: '2mm', rate: 0 },
+      { name: 'Side Unit Sides', type: 'panel', size: `${height}x${depth}`, quantity: 2, edge_band: '2mm', rate: 0 },
+      { name: 'Side Unit Door', type: 'panel', size: `${297}x${height - 50}`, quantity: 1, edge_band: '2mm', rate: 0 }
+    );
+  }
+
+  return panels;
+}
+
 // Generate hardware for wardrobe
 const generateWardrobeHardware = (input: CalculationInput): Hardware[] => {
   const { height, partsConfig } = input;
@@ -326,6 +942,320 @@ const generateWardrobeHardware = (input: CalculationInput): Hardware[] => {
   return hardware;
 };
 
+// Generate hardware for storage units and bookshelves
+function generateStorageUnitHardware(input: any) {
+  const hardware: Hardware[] = [];
+  const { shelves, drawers } = input.partsConfig;
+
+  // Shelf supports
+  if (shelves > 0) {
+    hardware.push({
+      item: "Shelf Support Pins",
+      qty: shelves * 4,
+      unit_rate: 5,
+      total_cost: shelves * 4 * 5
+    });
+  }
+
+  // Drawer hardware
+  if (drawers > 0) {
+    hardware.push(
+      {
+        item: "Drawer Slides",
+        qty: drawers * 2,
+        unit_rate: 180,
+        total_cost: drawers * 2 * 180
+      },
+      {
+        item: "Drawer Handles",
+        qty: drawers,
+        unit_rate: 85,
+        total_cost: drawers * 85
+      }
+    );
+  }
+
+  // Basic assembly hardware
+  hardware.push({
+    item: "Assembly Screws & Fittings",
+    qty: 1,
+    unit_rate: 150,
+    total_cost: 150
+  });
+
+  return hardware;
+}
+
+// Generate hardware for dresser
+function generateDresserHardware(input: any) {
+  const hardware: Hardware[] = [];
+  const { drawers, mirror } = input.partsConfig;
+
+  // Drawer hardware
+  hardware.push(
+    {
+      item: "Soft Close Drawer Slides",
+      qty: drawers * 2,
+      unit_rate: 220,
+      total_cost: drawers * 2 * 220
+    },
+    {
+      item: "Dresser Handles",
+      qty: drawers,
+      unit_rate: 120,
+      total_cost: drawers * 120
+    }
+  );
+
+  // Mirror hardware
+  if (mirror) {
+    hardware.push({
+      item: "Mirror Mounting Hardware",
+      qty: 1,
+      unit_rate: 200,
+      total_cost: 200
+    });
+  }
+
+  // Assembly hardware
+  hardware.push({
+    item: "Assembly Hardware & Screws",
+    qty: 1,
+    unit_rate: 180,
+    total_cost: 180
+  });
+
+  return hardware;
+}
+
+// Generate hardware for kitchen cabinets - Very Comprehensive  
+function generateKitchenCabinetHardware(input: any) {
+  const hardware: Hardware[] = [];
+  const { 
+    baseCabinets, 
+    wallCabinets, 
+    tallCabinets, 
+    island, 
+    drawers,
+    cornerUnit
+  } = input.partsConfig;
+
+  // Base cabinet hinges (2 per door)
+  if (baseCabinets > 0) {
+    const baseDoors = baseCabinets * 2;
+    hardware.push(
+      {
+        item: "Base Cabinet Soft Close Hinges",
+        qty: baseDoors * 2,
+        unit_rate: 75,
+        total_cost: baseDoors * 2 * 75
+      },
+      {
+        item: "Base Cabinet Handles",
+        qty: baseDoors,
+        unit_rate: 95,
+        total_cost: baseDoors * 95
+      },
+      {
+        item: "Cabinet Shelf Pins",
+        qty: baseCabinets * 8,
+        unit_rate: 5,
+        total_cost: baseCabinets * 8 * 5
+      }
+    );
+  }
+
+  // Wall cabinet hinges
+  if (wallCabinets > 0) {
+    const wallDoors = wallCabinets * 2;
+    hardware.push(
+      {
+        item: "Wall Cabinet Hinges",
+        qty: wallDoors * 2,
+        unit_rate: 65,
+        total_cost: wallDoors * 2 * 65
+      },
+      {
+        item: "Wall Cabinet Handles",
+        qty: wallDoors,
+        unit_rate: 85,
+        total_cost: wallDoors * 85
+      }
+    );
+  }
+
+  // Tall cabinet hinges  
+  if (tallCabinets > 0) {
+    const tallDoors = tallCabinets * 2;
+    hardware.push(
+      {
+        item: "Tall Cabinet Hinges",
+        qty: tallDoors * 3, // 3 hinges per tall door
+        unit_rate: 75,
+        total_cost: tallDoors * 3 * 75
+      },
+      {
+        item: "Tall Cabinet Handles",
+        qty: tallDoors,
+        unit_rate: 110,
+        total_cost: tallDoors * 110
+      }
+    );
+  }
+
+  // Kitchen drawers with premium slides
+  if (drawers > 0) {
+    hardware.push(
+      {
+        item: "Kitchen Drawer Slides (Heavy Duty)",
+        qty: drawers * 2,
+        unit_rate: 350,
+        total_cost: drawers * 2 * 350
+      },
+      {
+        item: "Kitchen Drawer Handles",
+        qty: drawers,
+        unit_rate: 150,
+        total_cost: drawers * 150
+      }
+    );
+  }
+
+  // Island hardware
+  if (island) {
+    hardware.push(
+      {
+        item: "Island Cabinet Hinges",
+        qty: 8, // 4 doors × 2 hinges
+        unit_rate: 85,
+        total_cost: 8 * 85
+      },
+      {
+        item: "Island Handles",
+        qty: 4,
+        unit_rate: 125,
+        total_cost: 4 * 125
+      }
+    );
+  }
+
+  // Corner unit accessories
+  if (cornerUnit) {
+    hardware.push(
+      {
+        item: "Corner Cabinet Lazy Susan",
+        qty: 1,
+        unit_rate: 1200,
+        total_cost: 1200
+      },
+      {
+        item: "Corner Cabinet Hinges",
+        qty: 4,
+        unit_rate: 95,
+        total_cost: 4 * 95
+      }
+    );
+  }
+
+  // Kitchen accessories
+  hardware.push(
+    {
+      item: "Kitchen Cabinet Door Stoppers",
+      qty: 20,
+      unit_rate: 25,
+      total_cost: 20 * 25
+    },
+    {
+      item: "Kitchen Assembly Hardware",
+      qty: 1,
+      unit_rate: 500,
+      total_cost: 500
+    }
+  );
+
+  return hardware;
+}
+
+// Generate hardware for bathroom vanity
+function generateBathroomVanityHardware(input: any) {
+  const hardware: Hardware[] = [];
+  const { drawers, doors, mirror, sideUnit } = input.partsConfig;
+
+  // Door hinges
+  if (doors > 0) {
+    hardware.push(
+      {
+        item: "Vanity Door Hinges (Soft Close)",
+        qty: doors * 2,
+        unit_rate: 85,
+        total_cost: doors * 2 * 85
+      },
+      {
+        item: "Vanity Door Handles",
+        qty: doors,
+        unit_rate: 110,
+        total_cost: doors * 110
+      }
+    );
+  }
+
+  // Drawer hardware
+  if (drawers > 0) {
+    hardware.push(
+      {
+        item: "Vanity Drawer Slides (Soft Close)",
+        qty: drawers * 2,
+        unit_rate: 200,
+        total_cost: drawers * 2 * 200
+      },
+      {
+        item: "Vanity Drawer Handles",
+        qty: drawers,
+        unit_rate: 95,
+        total_cost: drawers * 95
+      }
+    );
+  }
+
+  // Mirror hardware
+  if (mirror) {
+    hardware.push({
+      item: "Mirror Cabinet Hardware",
+      qty: 1,
+      unit_rate: 250,
+      total_cost: 250
+    });
+  }
+
+  // Side unit hardware
+  if (sideUnit) {
+    hardware.push(
+      {
+        item: "Side Unit Hinges",
+        qty: 2,
+        unit_rate: 75,
+        total_cost: 2 * 75
+      },
+      {
+        item: "Side Unit Handle",
+        qty: 1,
+        unit_rate: 95,
+        total_cost: 95
+      }
+    );
+  }
+
+  // Assembly and mounting hardware
+  hardware.push({
+    item: "Vanity Assembly & Mounting Hardware",
+    qty: 1,
+    unit_rate: 200,
+    total_cost: 200
+  });
+
+  return hardware;
+}
+
 // Calculate BOM for different unit types
 export const calculateBOM = async (input: CalculationInput, boardRates?: any, hardwareRates?: any): Promise<BOMResult> => {
   let panels: Panel[] = [];
@@ -338,6 +1268,11 @@ export const calculateBOM = async (input: CalculationInput, boardRates?: any, ha
 
   // Generate panels and hardware based on unit type
   switch (input.unitType) {
+    case 'bed':
+      panels = generateBedPanels(input);
+      hardware = generateBedHardware(input);
+      break;
+      
     case 'wardrobe':
       panels = generateWardrobePanels(input);
       hardware = generateWardrobeHardware(input);
@@ -345,21 +1280,8 @@ export const calculateBOM = async (input: CalculationInput, boardRates?: any, ha
       
     case 'storage_unit':
     case 'bookshelf':
-      // Similar to wardrobe but simpler
-      panels = generateWardrobePanels({
-        ...input,
-        partsConfig: {
-          ...input.partsConfig,
-          shutters: 0, // Storage units typically don't have shutters
-        }
-      });
-      hardware = generateWardrobeHardware({
-        ...input,
-        partsConfig: {
-          ...input.partsConfig,
-          shutters: 0,
-        }
-      });
+      panels = generateStorageUnitPanels(input);
+      hardware = generateStorageUnitHardware(input);
       break;
       
     case 'tv_panel':
@@ -387,6 +1309,21 @@ export const calculateBOM = async (input: CalculationInput, boardRates?: any, ha
           total_cost: 4 * (hwRates.wall_bracket || 50),
         }
       ];
+      break;
+      
+    case 'dresser':
+      panels = generateDresserPanels(input);
+      hardware = generateDresserHardware(input);
+      break;
+      
+    case 'kitchen_cabinet':
+      panels = generateKitchenCabinetPanels(input);
+      hardware = generateKitchenCabinetHardware(input);
+      break;
+      
+    case 'bathroom_vanity':
+      panels = generateBathroomVanityPanels(input);
+      hardware = generateBathroomVanityHardware(input);
       break;
       
     case 'shoe_rack':

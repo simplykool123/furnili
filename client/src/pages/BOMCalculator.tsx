@@ -392,9 +392,9 @@ export default function BOMCalculator() {
 
       {/* Calculator Section */}
       <div className="px-4 py-2">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
           {/* Input Form */}
-          <Card>
+          <Card className="lg:col-span-2">
             <CardHeader>
               <CardTitle className="flex items-center gap-3">
                 {selectedFurniture && <selectedFurniture.icon className="w-6 h-6 text-furnili-brown" />}
@@ -406,14 +406,14 @@ export default function BOMCalculator() {
             </CardHeader>
             <CardContent>
               <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                   {/* Dimensions */}
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-medium flex items-center gap-2">
-                      <Calculator className="w-5 h-5" />
+                  <div className="space-y-3">
+                    <h3 className="text-base font-medium flex items-center gap-2">
+                      <Calculator className="w-4 h-4" />
                       Dimensions
                     </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-2 gap-3">
                       <FormField
                         control={form.control}
                         name="unitOfMeasure"
@@ -462,7 +462,7 @@ export default function BOMCalculator() {
                       />
                     </div>
 
-                    <div className="grid grid-cols-3 gap-4">
+                    <div className="grid grid-cols-3 gap-2">
                       <FormField
                         control={form.control}
                         name="height"
@@ -473,6 +473,7 @@ export default function BOMCalculator() {
                               <Input
                                 type="number"
                                 placeholder="2400"
+                                className="h-8 text-sm"
                                 {...field}
                                 onChange={(e) => field.onChange(parseFloat(e.target.value))}
                               />
@@ -492,6 +493,7 @@ export default function BOMCalculator() {
                               <Input
                                 type="number"
                                 placeholder="1200"
+                                className="h-8 text-sm"
                                 {...field}
                                 onChange={(e) => field.onChange(parseFloat(e.target.value))}
                               />
@@ -511,6 +513,7 @@ export default function BOMCalculator() {
                               <Input
                                 type="number"
                                 placeholder="600"
+                                className="h-8 text-sm"
                                 {...field}
                                 onChange={(e) => field.onChange(parseFloat(e.target.value))}
                               />
@@ -790,7 +793,7 @@ export default function BOMCalculator() {
           </Card>
 
           {/* Results */}
-          <div className="space-y-6">
+          <div className="lg:col-span-3 space-y-4">
             {bomResult ? (
               <Card>
                 <CardHeader>
