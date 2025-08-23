@@ -15,6 +15,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { useIsMobile } from "@/components/Mobile/MobileOptimizer";
 import MobileTable from "@/components/Mobile/MobileTable";
 import { useToast } from "@/hooks/use-toast";
+import ResponsiveLayout from "@/components/Layout/ResponsiveLayout";
 import { 
   Calculator, 
   Download, 
@@ -206,7 +207,10 @@ export default function BOMCalculator() {
   useEffect(() => {
     if (selectedFurniture) {
       form.setValue('unitType', selectedFurniture.id);
-      form.setValue('partsConfig', selectedFurniture.defaultConfig);
+      form.setValue('partsConfig', {
+        ...selectedFurniture.defaultConfig,
+        customParts: []
+      });
     }
   }, [selectedFurnitureType, selectedFurniture, form]);
 
@@ -233,6 +237,7 @@ export default function BOMCalculator() {
       });
     },
     onError: (error: Error) => {
+      console.error('BOM Calculation Error:', error);
       toast({
         title: "Calculation Failed",
         description: error.message || "Failed to calculate BOM",
@@ -340,25 +345,22 @@ export default function BOMCalculator() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <ResponsiveLayout title="BOM Calculator">
       {/* Hero Section */}
-      <div className="bg-furnili-brown text-white py-12 px-4">
-        <div className="max-w-7xl mx-auto text-center">
-          <h1 className="text-4xl md:text-6xl font-bold mb-4">
-            HOW MUCH
+      <div className="bg-[hsl(28,100%,25%)] text-white py-8 px-4 mb-6 rounded-lg">
+        <div className="text-center">
+          <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">
+            HOW MUCH MATERIALS WOULD YOU NEED?
           </h1>
-          <div className="bg-furnili-brown/80 px-6 py-2 rounded-lg inline-block mb-4">
-            <span className="text-xl md:text-2xl font-bold">MATERIALS WOULD YOU NEED?</span>
-          </div>
-          <p className="text-lg opacity-90">Calculate on your own</p>
+          <p className="text-white/90">Calculate furniture material requirements</p>
         </div>
       </div>
 
       {/* Furniture Type Selector */}
-      <div className="bg-card shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 py-6">
+      <div className="bg-card shadow-sm border rounded-lg mb-6">
+        <div className="px-4 py-6">
           <div className="flex items-center gap-2 mb-4">
-            <div className="bg-furnili-brown text-white px-3 py-1 rounded-full text-sm font-medium">
+            <div className="bg-[hsl(28,100%,25%)] text-white px-3 py-1 rounded-full text-sm font-medium">
               Select Furniture Type
             </div>
           </div>
@@ -373,12 +375,12 @@ export default function BOMCalculator() {
                   onClick={() => setSelectedFurnitureType(furniture.id)}
                   className={`p-4 rounded-xl border-2 transition-all duration-200 text-center ${
                     isSelected 
-                      ? 'border-furnili-brown bg-furnili-brown text-primary-foreground shadow-lg' 
-                      : 'border-border bg-card hover:border-furnili-brown/30 hover:bg-accent'
+                      ? 'border-[hsl(28,100%,25%)] bg-[hsl(28,100%,25%)] text-white shadow-lg' 
+                      : 'border-border bg-card hover:border-[hsl(28,100%,25%)]/30 hover:bg-accent text-foreground'
                   }`}
                 >
-                  <IconComponent className={`w-8 h-8 mx-auto mb-2 ${isSelected ? 'text-primary-foreground' : 'text-furnili-brown'}`} />
-                  <div className={`text-sm font-medium ${isSelected ? 'text-primary-foreground' : 'text-foreground'}`}>
+                  <IconComponent className={`w-8 h-8 mx-auto mb-2 ${isSelected ? 'text-white' : 'text-[hsl(28,100%,25%)]'}`} />
+                  <div className={`text-sm font-medium ${isSelected ? 'text-white' : 'text-foreground'}`}>
                     {furniture.name}
                   </div>
                 </button>
@@ -389,7 +391,7 @@ export default function BOMCalculator() {
       </div>
 
       {/* Calculator Section */}
-      <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="px-4 py-2">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Input Form */}
           <Card>
@@ -970,6 +972,6 @@ export default function BOMCalculator() {
           </div>
         </div>
       </div>
-    </div>
+    </ResponsiveLayout>
   );
 }

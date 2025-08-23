@@ -34,6 +34,7 @@ import {
   Building,
   ShoppingCart,
   Clock,
+  Calculator,
 
 } from "lucide-react";
 
@@ -52,6 +53,7 @@ export const navigation = [
     ]
   },
   { name: 'Material Requests', href: '/requests', icon: PackageSearch, roles: ['admin', 'manager', 'staff', 'store_incharge'] },
+  { name: 'BOM Calculator', href: '/bom-calculator', icon: Calculator, roles: ['admin', 'manager', 'staff', 'store_incharge'] },
   { name: 'Inventory Optimization', href: '/inventory-optimization', icon: TrendingUp, roles: ['admin', 'manager'] },
 
   { name: 'Staff Attendance', href: '/attendance', icon: UserRoundPen, roles: ['admin', 'manager', 'staff', 'store_incharge'] },
