@@ -477,6 +477,7 @@ const staffFormSchema = z.object({
 type StaffFormData = z.infer<typeof staffFormSchema>;
 
 export default function Attendance() {
+  const [activeTab, setActiveTab] = useState("dashboard");
   const { toast } = useToast();
   const user = authService.getUser();
   const isMobile = useIsMobile();
