@@ -10,8 +10,10 @@
 
 /* Mobile optimizations */
 @media (max-width: 768px) {
-  /* Reduce animations on mobile for better performance */
-  *, *::before, *::after {
+  /* Reduce animations on mobile for better performance - EXCEPT sidebar */
+  *:not(.mobile-sidebar):not(.mobile-backdrop), 
+  *:not(.mobile-sidebar):not(.mobile-backdrop)::before, 
+  *:not(.mobile-sidebar):not(.mobile-backdrop)::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;

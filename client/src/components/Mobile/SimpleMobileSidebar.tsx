@@ -169,22 +169,44 @@ export default function SimpleMobileSidebar({ isOpen, onClose }: MobileSidebarPr
 
   return (
     <>
-      {/* Backdrop */}
+      {/* Backdrop - covers entire screen with high z-index */}
       {isOpen && (
         <div 
-          className="fixed inset-0 bg-black/60 z-40 backdrop-blur-sm"
+          className="mobile-backdrop fixed inset-0 z-[999] bg-black/70 backdrop-blur-sm"
           onClick={onClose}
-          style={{ WebkitBackdropFilter: 'blur(2px)' }}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+            backdropFilter: 'blur(4px)',
+            WebkitBackdropFilter: 'blur(4px)',
+            transition: 'all 300ms ease-in-out'
+          }}
         />
       )}
 
-      {/* Sidebar */}
-      <div className={`
-        fixed inset-y-0 left-0 z-50 w-80 bg-gradient-to-b from-amber-50 to-amber-100 
-        transform transition-transform duration-300 ease-in-out
-        ${isOpen ? 'translate-x-0' : '-translate-x-full'}
-        border-r border-amber-200/50 shadow-2xl overflow-hidden
-      `}>
+      {/* Sidebar - positioned above backdrop */}
+      <div 
+        className={`mobile-sidebar fixed inset-y-0 left-0 z-[1000] w-80 max-w-[85vw] bg-gradient-to-b from-amber-50 to-amber-100 transform transition-transform duration-300 ease-in-out ${
+          isOpen ? 'translate-x-0' : '-translate-x-full'
+        } border-r border-amber-200/50 shadow-2xl overflow-hidden`}
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          bottom: 0,
+          width: '320px',
+          maxWidth: '85vw',
+          background: 'linear-gradient(to bottom, #fef7cd, #fde68a)',
+          transform: isOpen ? 'translateX(0)' : 'translateX(-100%)',
+          transition: 'transform 300ms ease-in-out',
+          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+          borderRight: '1px solid rgba(217, 119, 6, 0.2)'
+        }}
+      >
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-amber-100 to-amber-50 border-b border-amber-200/50">
           <div className="flex items-center space-x-3">
@@ -193,7 +215,7 @@ export default function SimpleMobileSidebar({ isOpen, onClose }: MobileSidebarPr
             </div>
             <div>
               <h1 className="text-amber-900 font-bold text-base">Furnili</h1>
-              <p className="text-amber-700 text-xs">Admin</p>
+              <p className="text-amber-700 text-xs">{user.role}</p>
             </div>
           </div>
           <button 
@@ -205,7 +227,7 @@ export default function SimpleMobileSidebar({ isOpen, onClose }: MobileSidebarPr
         </div>
 
         {/* Navigation */}
-        <div className="flex-1 overflow-y-auto py-2 px-2">
+        <div className="flex-1 overflow-y-auto py-2 px-2 h-full">
           {filteredNavItems.map((item) => {
             const isExpanded = expandedItems.includes(item.name);
             const isActive = isActiveRoute(item.href, item.children);
