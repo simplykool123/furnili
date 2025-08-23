@@ -777,8 +777,9 @@ export default function BOMCalculator() {
                   {/* Submit Button */}
                   <Button
                     type="submit"
+                    data-testid="button-calculate-bom"
                     disabled={calculateBOMMutation.isPending}
-                    className="w-full bg-furnili-brown hover:bg-furnili-brown/90 text-lg py-6"
+                    className="w-full bg-[hsl(28,100%,25%)] hover:bg-[hsl(28,100%,20%)] text-white text-lg py-6"
                   >
                     {calculateBOMMutation.isPending ? "Calculating..." : "Calculate BOM"}
                     <Calculator className="w-5 h-5 ml-2" />
