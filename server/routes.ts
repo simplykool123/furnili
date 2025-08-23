@@ -4596,36 +4596,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const bomResult = await calculateBOM(calculationInput);
       
-      // Generate calculation number
-      const calculationNumber = await generateBOMNumber();
-      
-      // Save to database
-      const savedCalculation = await storage.saveBomCalculation({
-        calculationNumber,
-        unitType: bomData.unitType,
-        height,
-        width,
-        depth,
-        unitOfMeasure: bomData.unitOfMeasure,
-        boardType: bomData.boardType,
-        boardThickness: bomData.boardThickness,
-        finish: bomData.finish,
-        projectId: bomData.projectId || null,
-        totalBoardArea: bomResult.totalBoardArea,
-        totalEdgeBanding2mm: bomResult.totalEdgeBanding2mm,
-        totalEdgeBanding0_8mm: bomResult.totalEdgeBanding0_8mm,
-        totalMaterialCost: bomResult.material_cost,
-        totalHardwareCost: bomResult.hardware_cost,
-        totalCost: bomResult.total_cost,
-        partsConfig: bomData.partsConfig,
-        notes: bomData.notes,
-        calculatedBy: req.user!.id,
-      });
+      // Generate simple calculation number (no database for now)
+      const calculationNumber = `BOM-${Date.now()}`;
 
-      // Save BOM items
+      // Format items for display (no database save for now)
       const bomItemsData = [
         ...bomResult.panels.map(panel => ({
-          bomId: savedCalculation.id,
+          id: Math.random(), // temporary ID
           itemType: 'material' as const,
           itemCategory: 'panel',
           partName: panel.panel,
@@ -4641,7 +4618,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           totalCost: panel.area_sqft * (bomResult.material_cost / bomResult.totalBoardArea),
         })),
         ...bomResult.hardware.map(hardware => ({
-          bomId: savedCalculation.id,
+          id: Math.random(), // temporary ID
           itemType: 'hardware' as const,
           itemCategory: 'hardware',
           partName: hardware.item,
@@ -4653,13 +4630,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }))
       ];
 
-      for (const item of bomItemsData) {
-        await storage.saveBomItem(item);
-      }
-
-      // Return the complete result
-      const responseData = {
-        id: savedCalculation.id,
+      // Return calculation results directly
+      res.json({
+        id: Math.random(), // temporary ID
         calculationNumber,
         totalBoardArea: bomResult.totalBoardArea,
         totalEdgeBanding2mm: bomResult.totalEdgeBanding2mm,
@@ -4668,9 +4641,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         totalHardwareCost: bomResult.hardware_cost,
         totalCost: bomResult.total_cost,
         items: bomItemsData,
-      };
-
-      res.json(responseData);
+      });
     } catch (error) {
       console.error("BOM calculation error:", error);
       res.status(500).json({ message: "Failed to calculate BOM" });
