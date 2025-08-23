@@ -23,7 +23,9 @@ import {
   supplierProducts,
   purchaseOrders,
   purchaseOrderItems,
-  auditLogs
+  auditLogs,
+  bomCalculations,
+  bomItems
 } from "@shared/schema";
 import { eq, and, gte, lte, desc, asc, sql, like, or, inArray } from "drizzle-orm";
 import * as bcrypt from "bcryptjs";
@@ -66,7 +68,6 @@ import type {
   InsertTask,
   Supplier,
   InsertSupplier,
-
   SupplierProduct,
   InsertSupplierProduct,
   PurchaseOrder,
@@ -76,6 +77,10 @@ import type {
   PurchaseOrderWithDetails,
   AuditLog,
   InsertAuditLog,
+  BomCalculation,
+  InsertBomCalculation,
+  BomItem,
+  InsertBomItem,
 } from "@shared/schema";
 
 export interface IStorage {
@@ -249,6 +254,12 @@ export interface IStorage {
   // Audit Logs
   createAuditLog(log: InsertAuditLog): Promise<AuditLog>;
   getAuditLogs(filters?: { tableName?: string; recordId?: number; userId?: number }): Promise<AuditLog[]>;
+  
+  // BOM Calculator operations
+  saveBomCalculation(calculation: InsertBomCalculation): Promise<BomCalculation>;
+  saveBomItem(item: InsertBomItem): Promise<BomItem>;
+  getBomCalculation(id: number): Promise<BomCalculation | undefined>;
+  getBomItems(bomId: number): Promise<BomItem[]>;
   
   // Auto PO Generation
   generateAutoPurchaseOrders(userId: number): Promise<PurchaseOrder[]>;
@@ -2236,6 +2247,26 @@ class DatabaseStorage implements IStorage {
     }));
     
     return suggestions;
+  }
+
+  // BOM Calculator operations
+  async saveBomCalculation(calculation: InsertBomCalculation): Promise<BomCalculation> {
+    const result = await db.insert(bomCalculations).values(calculation).returning();
+    return result[0];
+  }
+
+  async saveBomItem(item: InsertBomItem): Promise<BomItem> {
+    const result = await db.insert(bomItems).values(item).returning();
+    return result[0];
+  }
+
+  async getBomCalculation(id: number): Promise<BomCalculation | undefined> {
+    const result = await db.select().from(bomCalculations).where(eq(bomCalculations.id, id)).limit(1);
+    return result[0];
+  }
+
+  async getBomItems(bomId: number): Promise<BomItem[]> {
+    return db.select().from(bomItems).where(eq(bomItems.bomId, bomId));
   }
 }
 

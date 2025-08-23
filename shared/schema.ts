@@ -857,6 +857,78 @@ export const auditLogs = pgTable("audit_logs", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// BOM Calculator Tables
+export const bomCalculations = pgTable("bom_calculations", {
+  id: serial("id").primaryKey(),
+  calculationNumber: text("calculation_number").notNull().unique(), // BOM-001, BOM-002, etc.
+  unitType: text("unit_type").notNull(), // wardrobe, storage_unit, shoe_rack, tv_panel, bed, custom
+  height: real("height").notNull(), // in mm
+  width: real("width").notNull(), // in mm
+  depth: real("depth").notNull(), // in mm
+  unitOfMeasure: text("unit_of_measure").notNull().default("mm"), // mm, ft
+  partsConfig: jsonb("parts_config").default({}), // shelves count, drawers count, shutters count etc
+  boardType: text("board_type").notNull(), // pre_lam_particle_board, mdf, ply, etc
+  boardThickness: text("board_thickness").notNull().default("18mm"), // 18mm, 12mm, 6mm
+  finish: text("finish").notNull(), // laminate, acrylic, paint, etc
+  calculatedBy: integer("calculated_by").references(() => users.id).notNull(),
+  projectId: integer("project_id").references(() => projects.id), // Optional project reference
+  totalBoardArea: real("total_board_area").default(0), // in sqft
+  totalEdgeBanding2mm: real("total_edge_banding_2mm").default(0), // in feet
+  totalEdgeBanding0_8mm: real("total_edge_banding_0_8mm").default(0), // in feet
+  totalMaterialCost: real("total_material_cost").default(0),
+  totalHardwareCost: real("total_hardware_cost").default(0),
+  totalCost: real("total_cost").default(0),
+  status: text("status").default("draft"), // draft, finalized, exported
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const bomItems = pgTable("bom_items", {
+  id: serial("id").primaryKey(),
+  bomId: integer("bom_id").references(() => bomCalculations.id).notNull(),
+  itemType: text("item_type").notNull(), // board, hardware, edge_banding
+  itemCategory: text("item_category").notNull(), // panel, shutter, shelf, drawer, minifix, dowel, lock, etc
+  partName: text("part_name").notNull(), // Left Side Panel, Right Side Panel, Top Shelf, etc
+  materialType: text("material_type"), // board type for panels, hardware type for hardware
+  length: real("length"), // in mm
+  width: real("width"), // in mm
+  thickness: real("thickness"), // in mm
+  quantity: integer("quantity").notNull().default(1),
+  unit: text("unit").notNull().default("pieces"), // pieces, feet, sqft
+  edgeBandingType: text("edge_banding_type"), // 2mm, 0.8mm, none
+  edgeBandingLength: real("edge_banding_length").default(0), // total edge banding needed in feet
+  unitRate: real("unit_rate").default(0),
+  totalCost: real("total_cost").default(0),
+  description: text("description"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const bomHardwareRates = pgTable("bom_hardware_rates", {
+  id: serial("id").primaryKey(),
+  itemName: text("item_name").notNull().unique(), // Minifix, Dowel, Lock, Straightener, etc
+  category: text("category").notNull(), // hardware, edge_banding, board
+  subcategory: text("subcategory"), // fasteners, locking, support, etc
+  unit: text("unit").notNull(), // pieces, feet, sqft
+  currentRate: real("current_rate").notNull(),
+  supplier: text("supplier"),
+  lastUpdated: timestamp("last_updated").defaultNow(),
+  isActive: boolean("is_active").notNull().default(true),
+  notes: text("notes"),
+});
+
+export const bomBoardRates = pgTable("bom_board_rates", {
+  id: serial("id").primaryKey(),
+  boardType: text("board_type").notNull(), // pre_lam_particle_board, mdf, ply
+  thickness: text("thickness").notNull(), // 18mm, 12mm, 6mm
+  finish: text("finish").notNull(), // laminate, acrylic, paint
+  ratePerSqft: real("rate_per_sqft").notNull(),
+  supplier: text("supplier"),
+  lastUpdated: timestamp("last_updated").defaultNow(),
+  isActive: boolean("is_active").notNull().default(true),
+  notes: text("notes"),
+});
+
 // Insert schemas for PO system and brand management
 export const insertSupplierSchema = createInsertSchema(suppliers).omit({ id: true, createdAt: true, updatedAt: true });
 
@@ -876,6 +948,10 @@ export const insertPurchaseOrderItemSchema = createInsertSchema(purchaseOrderIte
   createdAt: true 
 });
 export const insertAuditLogSchema = createInsertSchema(auditLogs).omit({ id: true, createdAt: true });
+export const insertBomCalculation = createInsertSchema(bomCalculations).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertBomItem = createInsertSchema(bomItems).omit({ id: true, createdAt: true });
+export const insertBomHardwareRate = createInsertSchema(bomHardwareRates).omit({ id: true, lastUpdated: true });
+export const insertBomBoardRate = createInsertSchema(bomBoardRates).omit({ id: true, lastUpdated: true });
 
 // PO System and Brand Management Types
 export type Supplier = typeof suppliers.$inferSelect;
@@ -901,7 +977,23 @@ export type SupplierWithStats = Supplier & {
   totalOrders: number;
   totalValue: number;
   lastOrderDate?: Date;
+};
 
+// BOM Calculator Types
+export type BomCalculation = typeof bomCalculations.$inferSelect;
+export type InsertBomCalculation = z.infer<typeof insertBomCalculation>;
+export type BomItem = typeof bomItems.$inferSelect;
+export type InsertBomItem = z.infer<typeof insertBomItem>;
+export type BomHardwareRate = typeof bomHardwareRates.$inferSelect;
+export type InsertBomHardwareRate = z.infer<typeof insertBomHardwareRate>;
+export type BomBoardRate = typeof bomBoardRates.$inferSelect;
+export type InsertBomBoardRate = z.infer<typeof insertBomBoardRate>;
+
+// Extended BOM types for API responses
+export type BomCalculationWithDetails = BomCalculation & {
+  items: BomItem[];
+  calculatedByUser: { name: string };
+  project?: { name: string; code: string };
 };
 
 

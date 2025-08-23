@@ -21,6 +21,7 @@ import { canOrderMaterials, getMaterialRequestEligibleProjects, getStageDisplayN
 import { setupQuotesRoutes } from "./quotesRoutes";
 import { ObjectStorageService } from "./objectStorage";
 import { db } from "./db";
+import { calculateBOM, generateBOMNumber, convertDimensions } from "./utils/bomCalculations";
 
 import { eq, and, gt } from "drizzle-orm";
 import { projectFiles, users, suppliers, products, purchaseOrders, purchaseOrderItems, stockMovements } from "@shared/schema";
@@ -4571,6 +4572,137 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
 
+
+  // BOM Calculator routes
+  app.post("/api/bom/calculate", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const bomData = req.body;
+      
+      // Convert dimensions if needed
+      const { height, width, depth } = convertDimensions(
+        bomData.height,
+        bomData.width,
+        bomData.depth,
+        bomData.unitOfMeasure
+      );
+
+      // Calculate BOM using the calculation engine
+      const calculationInput = {
+        ...bomData,
+        height,
+        width,
+        depth,
+      };
+
+      const bomResult = await calculateBOM(calculationInput);
+      
+      // Generate calculation number
+      const calculationNumber = await generateBOMNumber();
+      
+      // Save to database
+      const savedCalculation = await storage.saveBomCalculation({
+        calculationNumber,
+        unitType: bomData.unitType,
+        height,
+        width,
+        depth,
+        unitOfMeasure: bomData.unitOfMeasure,
+        boardType: bomData.boardType,
+        boardThickness: bomData.boardThickness,
+        finish: bomData.finish,
+        projectId: bomData.projectId || null,
+        totalBoardArea: bomResult.totalBoardArea,
+        totalEdgeBanding2mm: bomResult.totalEdgeBanding2mm,
+        totalEdgeBanding0_8mm: bomResult.totalEdgeBanding0_8mm,
+        totalMaterialCost: bomResult.material_cost,
+        totalHardwareCost: bomResult.hardware_cost,
+        totalCost: bomResult.total_cost,
+        partsConfig: bomData.partsConfig,
+        notes: bomData.notes,
+        calculatedBy: req.user!.id,
+      });
+
+      // Save BOM items
+      const bomItemsData = [
+        ...bomResult.panels.map(panel => ({
+          bomId: savedCalculation.id,
+          itemType: 'material' as const,
+          itemCategory: 'panel',
+          partName: panel.panel,
+          materialType: panel.material,
+          length: panel.length,
+          width: panel.width,
+          thickness: parseInt(bomData.boardThickness.replace('mm', '')),
+          quantity: panel.qty,
+          unit: 'pieces',
+          edgeBandingType: panel.edge_banding,
+          edgeBandingLength: panel.edgeBandingLength,
+          unitRate: panel.area_sqft > 0 ? (bomResult.material_cost / bomResult.totalBoardArea) : 0,
+          totalCost: panel.area_sqft * (bomResult.material_cost / bomResult.totalBoardArea),
+        })),
+        ...bomResult.hardware.map(hardware => ({
+          bomId: savedCalculation.id,
+          itemType: 'hardware' as const,
+          itemCategory: 'hardware',
+          partName: hardware.item,
+          quantity: hardware.qty,
+          unit: 'pieces',
+          edgeBandingLength: 0,
+          unitRate: hardware.unit_rate,
+          totalCost: hardware.total_cost,
+        }))
+      ];
+
+      for (const item of bomItemsData) {
+        await storage.saveBomItem(item);
+      }
+
+      // Return the complete result
+      const responseData = {
+        id: savedCalculation.id,
+        calculationNumber,
+        totalBoardArea: bomResult.totalBoardArea,
+        totalEdgeBanding2mm: bomResult.totalEdgeBanding2mm,
+        totalEdgeBanding0_8mm: bomResult.totalEdgeBanding0_8mm,
+        totalMaterialCost: bomResult.material_cost,
+        totalHardwareCost: bomResult.hardware_cost,
+        totalCost: bomResult.total_cost,
+        items: bomItemsData,
+      };
+
+      res.json(responseData);
+    } catch (error) {
+      console.error("BOM calculation error:", error);
+      res.status(500).json({ message: "Failed to calculate BOM" });
+    }
+  });
+
+  app.get("/api/bom/:id/export", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const bomId = parseInt(req.params.id);
+      const format = req.query.format as string;
+
+      if (!bomId || !format) {
+        return res.status(400).json({ message: "BOM ID and format are required" });
+      }
+
+      // This is a placeholder - you can implement Excel/PDF export later
+      if (format === 'excel') {
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        res.setHeader('Content-Disposition', `attachment; filename=BOM-${bomId}.xlsx`);
+        res.send("Excel export not implemented yet");
+      } else if (format === 'pdf') {
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename=BOM-${bomId}.pdf`);
+        res.send("PDF export not implemented yet");
+      } else {
+        res.status(400).json({ message: "Invalid format" });
+      }
+    } catch (error) {
+      console.error("BOM export error:", error);
+      res.status(500).json({ message: "Failed to export BOM" });
+    }
+  });
 
   const httpServer = createServer(app);
   return httpServer;

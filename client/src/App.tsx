@@ -33,6 +33,7 @@ import ProductComparison from "@/pages/ProductComparison";
 import PurchaseOrders from "@/pages/PurchaseOrders";
 import ProjectDetail from "@/pages/ProjectDetail";
 import TaskManagement from "@/pages/TaskManagement";
+import BOMCalculator from "@/pages/BOMCalculator";
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -262,6 +263,12 @@ function Router() {
       <Route path="/tasks">
         <ProtectedRoute>
           <TaskManagement />
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/bom-calculator">
+        <ProtectedRoute>
+          <BOMCalculator />
         </ProtectedRoute>
       </Route>
     </Switch>
