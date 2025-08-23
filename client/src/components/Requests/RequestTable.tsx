@@ -38,7 +38,7 @@ export default function RequestTable() {
   const [selectedRequest, setSelectedRequest] = useState<MaterialRequest | null>(null);
   const [showDetails, setShowDetails] = useState(false);
   const [activeTab, setActiveTab] = useState("all");
-  const { isMobile } = useIsMobile();
+  const isMobile = useIsMobile();
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -270,66 +270,64 @@ export default function RequestTable() {
   return (
     <div className="space-y-4 sm:space-y-6">
       {/* Mobile Status Filter - Simple Select */}
-      {isMobile && (
-        <div className="mb-4">
-          <Select value={activeTab} onValueChange={setActiveTab}>
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Filter by status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All ({statusCounts.all})</SelectItem>
-              <SelectItem value="pending">Pending ({statusCounts.pending})</SelectItem>
-              <SelectItem value="approved">Approved ({statusCounts.approved})</SelectItem>
-              <SelectItem value="issued">Issued ({statusCounts.issued})</SelectItem>
-              <SelectItem value="rejected">Rejected ({statusCounts.rejected})</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      )}
+      <div className="block md:hidden mb-4">
+        <Select value={activeTab} onValueChange={setActiveTab}>
+          <SelectTrigger className="w-full h-10 text-sm bg-white border-2 border-furnili-brown/20 rounded-lg">
+            <SelectValue placeholder="Filter by status" />
+          </SelectTrigger>
+          <SelectContent className="border-2 border-furnili-brown/20">
+            <SelectItem value="all" className="text-sm">All ({statusCounts.all})</SelectItem>
+            <SelectItem value="pending" className="text-sm">Pending ({statusCounts.pending})</SelectItem>
+            <SelectItem value="approved" className="text-sm">Approved ({statusCounts.approved})</SelectItem>
+            <SelectItem value="issued" className="text-sm">Issued ({statusCounts.issued})</SelectItem>
+            <SelectItem value="rejected" className="text-sm">Rejected ({statusCounts.rejected})</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
 
       {/* Mobile Filters */}
-      {isMobile && (
+      <div className="block md:hidden mb-4">
         <MobileFilters
           filters={mobileFilters}
           onClearAll={() => setFilters({ search: "", status: "", clientName: "" })}
           className="mb-4"
         />
-      )}
+      </div>
 
       {/* Desktop Status Tabs */}
-      {!isMobile && (
+      <div className="hidden md:block">
         <Card>
           <CardContent className="pt-6">
             <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid w-full grid-cols-5">
-                <TabsTrigger value="all" className="flex items-center gap-2">
-                  All Requests
-                  <Badge variant="secondary" className="ml-1">{statusCounts.all}</Badge>
+              <TabsList className="grid w-full grid-cols-5 bg-furnili-brown/5 p-1 rounded-lg">
+                <TabsTrigger value="all" className="flex items-center gap-1 text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:text-furnili-brown">
+                  All
+                  <Badge variant="secondary" className="ml-1 text-xs">{statusCounts.all}</Badge>
                 </TabsTrigger>
-                <TabsTrigger value="pending" className="flex items-center gap-2">
+                <TabsTrigger value="pending" className="flex items-center gap-1 text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:text-furnili-brown">
                   Pending
-                  <Badge className="bg-yellow-100 text-yellow-800 ml-1">{statusCounts.pending}</Badge>
+                  <Badge className="bg-yellow-100 text-yellow-800 ml-1 text-xs">{statusCounts.pending}</Badge>
                 </TabsTrigger>
-                <TabsTrigger value="approved" className="flex items-center gap-2">
+                <TabsTrigger value="approved" className="flex items-center gap-1 text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:text-furnili-brown">
                   Approved
-                  <Badge className="bg-green-100 text-green-800 ml-1">{statusCounts.approved}</Badge>
+                  <Badge className="bg-green-100 text-green-800 ml-1 text-xs">{statusCounts.approved}</Badge>
                 </TabsTrigger>
-                <TabsTrigger value="issued" className="flex items-center gap-2">
+                <TabsTrigger value="issued" className="flex items-center gap-1 text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:text-furnili-brown">
                   Issued
-                  <Badge className="bg-blue-100 text-blue-800 ml-1">{statusCounts.issued}</Badge>
+                  <Badge className="bg-blue-100 text-blue-800 ml-1 text-xs">{statusCounts.issued}</Badge>
                 </TabsTrigger>
-                <TabsTrigger value="rejected" className="flex items-center gap-2">
+                <TabsTrigger value="rejected" className="flex items-center gap-1 text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:text-furnili-brown">
                   Rejected
-                  <Badge className="bg-red-100 text-red-800 ml-1">{statusCounts.rejected}</Badge>
+                  <Badge className="bg-red-100 text-red-800 ml-1 text-xs">{statusCounts.rejected}</Badge>
                 </TabsTrigger>
               </TabsList>
-          </Tabs>
-        </CardContent>
-      </Card>
-      )}
+            </Tabs>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Desktop Filters */}
-      {!isMobile && (
+      <div className="hidden md:block">
         <Card>
           <CardContent className="pt-6">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -373,10 +371,10 @@ export default function RequestTable() {
             </div>
           </CardContent>
         </Card>
-      )}
+      </div>
 
       {/* Mobile Table */}
-      {isMobile ? (
+      <div className="block md:hidden">
         <MobileTable
           data={filteredRequests}
           columns={mobileColumns}
@@ -386,8 +384,10 @@ export default function RequestTable() {
           }}
           emptyMessage="No material requests found"
         />
-      ) : (
-        /* Desktop Table */
+      </div>
+
+      {/* Desktop Table */}
+      <div className="hidden md:block">
         <Card>
           <CardHeader>
             <CardTitle>Material Requests ({filteredRequests.length})</CardTitle>
@@ -516,7 +516,7 @@ export default function RequestTable() {
             </div>
           </CardContent>
         </Card>
-      )}
+      </div>
 
       {/* Request Details Dialog */}
       <Dialog open={showDetails} onOpenChange={setShowDetails}>
