@@ -414,7 +414,7 @@ export default function Projects() {
                 {
                   key: 'project',
                   label: 'Project',
-                  render: (project: Project) => (
+                  render: (value: any, project: Project) => (
                     <div>
                       <div className="font-medium text-sm">{project.name}</div>
                       <div className="text-xs text-furnili-brown font-medium">{project.code}</div>
@@ -428,7 +428,7 @@ export default function Projects() {
                 {
                   key: 'details',
                   label: 'Details',
-                  render: (project: Project) => (
+                  render: (value: any, project: Project) => (
                     <div className="text-right">
                       <Badge variant="secondary" className={`text-xs mb-2 ${getStageColor(project.stage)}`}>
                         {project.stage.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}
