@@ -1545,19 +1545,53 @@ export default function Attendance() {
         )}
       </div>
 
-      {/* Main Tabs */}
-      <Tabs defaultValue="dashboard" className="space-y-4">
-        <TabsList className={`grid w-full ${user?.role === 'staff' || user?.role === 'store_incharge' ? 'grid-cols-2' : 'grid-cols-5'}`}>
-          <TabsTrigger value="dashboard">{user?.role === 'staff' || user?.role === 'store_incharge' ? 'My Attendance' : 'Dashboard'}</TabsTrigger>
-          <TabsTrigger value="checkin">Check In/Out</TabsTrigger>
-          {user?.role !== 'staff' && user?.role !== 'store_incharge' && (
-            <>
-              <TabsTrigger value="attendance">Attendance</TabsTrigger>
-              <TabsTrigger value="staff">Staff Management</TabsTrigger>
-              <TabsTrigger value="payroll">Payroll</TabsTrigger>
-            </>
-          )}
-        </TabsList>
+      {/* Mobile Tab Selector */}
+      <div className="block md:hidden mb-4">
+        <Select value={activeTab} onValueChange={setActiveTab}>
+          <SelectTrigger className="w-full h-10 text-sm bg-white border-2 border-furnili-brown/20 rounded-lg">
+            <SelectValue placeholder="Select section" />
+          </SelectTrigger>
+          <SelectContent className="border-2 border-furnili-brown/20">
+            <SelectItem value="dashboard" className="text-sm">
+              {user?.role === 'staff' || user?.role === 'store_incharge' ? 'My Attendance' : 'Dashboard'}
+            </SelectItem>
+            <SelectItem value="checkin" className="text-sm">Check In/Out</SelectItem>
+            {user?.role !== 'staff' && user?.role !== 'store_incharge' && (
+              <>
+                <SelectItem value="attendance" className="text-sm">Attendance</SelectItem>
+                <SelectItem value="staff" className="text-sm">Staff Management</SelectItem>
+                <SelectItem value="payroll" className="text-sm">Payroll</SelectItem>
+              </>
+            )}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Desktop Tabs */}
+      <Tabs defaultValue="dashboard" value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+        <div className="hidden md:block">
+          <TabsList className={`grid w-full ${user?.role === 'staff' || user?.role === 'store_incharge' ? 'grid-cols-2' : 'grid-cols-5'} bg-furnili-brown/5 p-1 rounded-lg`}>
+            <TabsTrigger value="dashboard" className="text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:text-furnili-brown">
+              {user?.role === 'staff' || user?.role === 'store_incharge' ? 'My Attendance' : 'Dashboard'}
+            </TabsTrigger>
+            <TabsTrigger value="checkin" className="text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:text-furnili-brown">
+              Check In/Out
+            </TabsTrigger>
+            {user?.role !== 'staff' && user?.role !== 'store_incharge' && (
+              <>
+                <TabsTrigger value="attendance" className="text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:text-furnili-brown">
+                  Attendance
+                </TabsTrigger>
+                <TabsTrigger value="staff" className="text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:text-furnili-brown">
+                  Staff Mgmt
+                </TabsTrigger>
+                <TabsTrigger value="payroll" className="text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:text-furnili-brown">
+                  Payroll
+                </TabsTrigger>
+              </>
+            )}
+          </TabsList>
+        </div>
 
         {/* Dashboard Tab */}
         <TabsContent value="dashboard" className="space-y-4">
