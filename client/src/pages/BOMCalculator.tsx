@@ -491,7 +491,7 @@ export default function BOMCalculator() {
   const handleWhatsAppShare = () => {
     if (bomResult) {
       const message = `BOM Calculation ${bomResult.calculationNumber}\n` +
-        `Total Cost: ${formatCurrency(bomResult.totalCost)}\n` +
+        `Total Cost: ${formatCurrency(bomResult.totalCost || 0)}\n` +
         `Board Area: ${bomResult.totalBoardArea} sq.ft\n` +
         `View full details: ${window.location.origin}/bom-calculator`;
       
@@ -1601,7 +1601,7 @@ export default function BOMCalculator() {
                     </div>
                     <div className="text-center p-4 bg-furnili-brown/10 rounded-lg">
                       <p className="text-sm text-furnili-brown font-medium">Total Cost</p>
-                      <p className="text-2xl font-bold text-furnili-brown">{formatCurrency(bomResult.totalCost)}</p>
+                      <p className="text-2xl font-bold text-furnili-brown">{formatCurrency(bomResult.totalCost || 0)}</p>
                     </div>
                   </div>
 
@@ -1831,7 +1831,7 @@ export default function BOMCalculator() {
                       <div className="flex items-center gap-3 text-xl font-bold">
                         <span>Total Cost:</span>
                         <span className="text-[hsl(28,100%,25%)] flex items-center gap-2">
-                          ₹ {bomResult.totalCost.toLocaleString('en-IN')}
+                          ₹ {bomResult.totalCost?.toLocaleString('en-IN') || '0'}
                           <div className="w-6 h-6 bg-green-500 rounded flex items-center justify-center">
                             <span className="text-white text-sm">✓</span>
                           </div>
@@ -1846,16 +1846,16 @@ export default function BOMCalculator() {
                           <div className="space-y-2">
                             <div className="flex justify-between">
                               <span>Material Cost:</span>
-                              <span>{formatCurrency(bomResult.totalMaterialCost)}</span>
+                              <span>{formatCurrency(bomResult.totalMaterialCost || 0)}</span>
                             </div>
                             <div className="flex justify-between">
                               <span>Hardware Cost:</span>
-                              <span>{formatCurrency(bomResult.totalHardwareCost)}</span>
+                              <span>{formatCurrency(bomResult.totalHardwareCost || 0)}</span>
                             </div>
                             <Separator />
                             <div className="flex justify-between font-bold text-lg">
                               <span>Total Tentative Cost:</span>
-                              <span className="text-furnili-brown">{formatCurrency(bomResult.totalCost)}</span>
+                              <span className="text-furnili-brown">{formatCurrency(bomResult.totalCost || 0)}</span>
                             </div>
                           </div>
                         </div>
