@@ -448,7 +448,7 @@ export default function BOMCalculator() {
       </div>
 
       {/* Calculator Section */}
-      <div className="space-y-6 p-6">
+      <div className="space-y-4 p-4">
         {/* Calculator Form */}
         <Card>
           <CardHeader>
@@ -462,14 +462,14 @@ export default function BOMCalculator() {
           </CardHeader>
           <CardContent>
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
                   {/* Dimensions */}
-                  <div className="space-y-3">
-                    <h3 className="text-base font-medium flex items-center gap-2">
+                  <div className="space-y-2">
+                    <h3 className="text-sm font-medium flex items-center gap-2">
                       <Calculator className="w-4 h-4" />
                       Dimensions
                     </h3>
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-2 gap-2">
                       <FormField
                         control={form.control}
                         name="unitOfMeasure"
@@ -581,10 +581,91 @@ export default function BOMCalculator() {
                     </div>
                   </div>
 
+                  {/* Materials */}
+                  <div className="space-y-2">
+                    <h3 className="text-sm font-medium">Materials</h3>
+                    <div className="grid grid-cols-3 gap-2">
+                      <FormField
+                        control={form.control}
+                        name="boardType"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-xs">Board Type</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl>
+                                <SelectTrigger className="h-8 text-xs">
+                                  <SelectValue placeholder="Select board" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {boardTypes.map((type) => (
+                                  <SelectItem key={type.value} value={type.value}>
+                                    {type.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="boardThickness"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-xs">Thickness</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl>
+                                <SelectTrigger className="h-8 text-xs">
+                                  <SelectValue />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {thicknessOptions.map((thickness) => (
+                                  <SelectItem key={thickness.value} value={thickness.value}>
+                                    {thickness.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="finish"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-xs">Finish</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl>
+                                <SelectTrigger className="h-8 text-xs">
+                                  <SelectValue placeholder="Select finish" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {finishTypes.map((finish) => (
+                                  <SelectItem key={finish.value} value={finish.value}>
+                                    {finish.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
+
                   {/* Configuration */}
-                  <div className="space-y-3">
-                    <h3 className="text-base font-medium">Configuration</h3>
-                    <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <h3 className="text-sm font-medium">Configuration</h3>
+                    <div className="grid grid-cols-2 gap-2">
                       
                       {/* Bed-specific configurations */}
                       {selectedFurnitureType === 'bed' && (
@@ -1192,87 +1273,6 @@ export default function BOMCalculator() {
                           </Button>
                         </div>
                       ))}
-                    </div>
-                  </div>
-
-                  {/* Materials */}
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-medium">Materials</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <FormField
-                        control={form.control}
-                        name="boardType"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Board Type</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select board type" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                {boardTypes.map((type) => (
-                                  <SelectItem key={type.value} value={type.value}>
-                                    {type.label}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="boardThickness"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Thickness</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                {thicknessOptions.map((thickness) => (
-                                  <SelectItem key={thickness.value} value={thickness.value}>
-                                    {thickness.label}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="finish"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Finish</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select finish" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                {finishTypes.map((finish) => (
-                                  <SelectItem key={finish.value} value={finish.value}>
-                                    {finish.label}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
                     </div>
                   </div>
 
