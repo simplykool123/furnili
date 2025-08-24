@@ -4799,7 +4799,7 @@ function generateBOMPDFHTML(bom: any, items: any[]): string {
   const currentDate = new Date().toLocaleDateString('en-IN');
   
   // Group items by category for better organization
-  const boards = items.filter(item => item.itemType === 'board');
+  const boards = items.filter(item => item.itemType === 'material');
   const hardware = items.filter(item => item.itemType === 'hardware');
   const edgeBanding = items.filter(item => item.itemType === 'edge_banding');
   
@@ -4810,10 +4810,11 @@ function generateBOMPDFHTML(bom: any, items: any[]): string {
       <meta charset="utf-8">
       <title>BOM ${bom.calculationNumber}</title>
       <style>
-        body { font-family: Arial, sans-serif; margin: 20px; color: #333; font-size: 12px; }
-        .header { display: flex; justify-content: space-between; margin-bottom: 30px; border-bottom: 2px solid #8B4513; padding-bottom: 20px; }
-        .company-info { flex: 1; }
-        .bom-info { flex: 1; text-align: right; }
+        body { font-family: Arial, sans-serif; margin: 10px; color: #333; font-size: 11px; background: white; }
+        .header { border-bottom: 2px solid #8B4513; padding-bottom: 15px; margin-bottom: 20px; }
+        .header-flex { display: table; width: 100%; }
+        .company-info { display: table-cell; width: 50%; vertical-align: top; }
+        .bom-info { display: table-cell; width: 50%; text-align: right; vertical-align: top; }
         .company-name { font-size: 24px; font-weight: bold; color: #8B4513; margin-bottom: 5px; }
         .company-details { font-size: 11px; color: #666; }
         .bom-number { font-size: 20px; font-weight: bold; color: #8B4513; }
@@ -4833,19 +4834,21 @@ function generateBOMPDFHTML(bom: any, items: any[]): string {
     </head>
     <body>
       <div class="header">
-        <div class="company-info">
-          <div class="company-name">FURNILI</div>
-          <div class="company-details">
-            Professional Furniture Solutions<br>
-            Email: info@furnili.com<br>
-            Phone: +91 XXX XXX XXXX
+        <div class="header-flex">
+          <div class="company-info">
+            <div class="company-name">FURNILI</div>
+            <div class="company-details">
+              Professional Furniture Solutions<br>
+              Email: info@furnili.com<br>
+              Phone: +91 XXX XXX XXXX
+            </div>
           </div>
-        </div>
-        <div class="bom-info">
-          <div class="bom-number">BOM ${bom.calculationNumber}</div>
-          <div style="margin-top: 10px; font-size: 12px;">
-            Date: ${currentDate}<br>
-            Status: ${bom.status || 'Draft'}
+          <div class="bom-info">
+            <div class="bom-number">BOM ${bom.calculationNumber}</div>
+            <div style="margin-top: 10px; font-size: 11px;">
+              Date: ${currentDate}<br>
+              Status: ${bom.status || 'Draft'}
+            </div>
           </div>
         </div>
       </div>
