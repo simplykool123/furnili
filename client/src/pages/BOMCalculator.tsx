@@ -448,10 +448,10 @@ export default function BOMCalculator() {
       </div>
 
       {/* Calculator Section */}
-      <div className="px-4 py-2">
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
-          {/* Input Form */}
-          <Card className="lg:col-span-2">
+      <div className="flex h-[calc(100vh-280px)] gap-4 p-4">
+        {/* Left Panel - Input Form */}
+        <div className="w-[400px] flex-shrink-0">
+          <Card className="h-full">
             <CardHeader>
               <CardTitle className="flex items-center gap-3">
                 {selectedFurniture && <selectedFurniture.icon className="w-6 h-6 text-furnili-brown" />}
@@ -1567,9 +1567,10 @@ export default function BOMCalculator() {
                 </CardContent>
               </Card>
             )}
-          </div>
+          </Card>
         </div>
       </div>
+    </div>
     </ResponsiveLayout>
   );
 }
