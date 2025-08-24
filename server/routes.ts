@@ -4724,6 +4724,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
             return results;
           })()
         ] : []),
+        
+        // Add glue calculations
+        ...(() => {
+          const glueItems = [];
+          
+          // Fevicol 750ml per laminate piece
+          if (bomData.finish === 'laminate') {
+            const totalLaminatePieces = bomResult.panels.reduce((sum, panel) => {
+              const isOuter = panel.panel.toLowerCase().includes('shutter') || 
+                             panel.panel.toLowerCase().includes('door') ||
+                             panel.panel.toLowerCase().includes('front');
+              return sum + panel.qty * (isOuter ? 2 : 1); // Both sides for outer
+            }, 0);
+            
+            const feicolBottlesNeeded = Math.ceil(totalLaminatePieces * 0.75); // 750ml per piece
+            
+            glueItems.push({
+              id: Math.random(),
+              itemType: 'material' as const,
+              itemCategory: 'Adhesive',
+              partName: 'Fevicol (750ml)',
+              materialType: 'Laminate Adhesive',
+              quantity: feicolBottlesNeeded,
+              unit: 'bottles',
+              edgeBandingLength: 0,
+              unitRate: 85, // ₹85 per 750ml bottle
+              totalCost: feicolBottlesNeeded * 85,
+              area_sqft: 0,
+            });
+          }
+          
+          // Edge banding glue - ₹3 per meter
+          const totalEdgeBandingLength = bomResult.totalEdgeBanding2mm + bomResult.totalEdgeBanding0_8mm;
+          if (totalEdgeBandingLength > 0) {
+            glueItems.push({
+              id: Math.random(),
+              itemType: 'material' as const,
+              itemCategory: 'Adhesive',
+              partName: 'Edge Banding Glue',
+              materialType: 'PVC Edge Adhesive',
+              quantity: totalEdgeBandingLength,
+              unit: 'meters',
+              edgeBandingLength: 0,
+              unitRate: 3, // ₹3 per meter
+              totalCost: totalEdgeBandingLength * 3,
+              area_sqft: 0,
+            });
+          }
+          
+          return glueItems;
+        })(),
+        
         ...bomResult.hardware.map(hardware => ({
           id: Math.random(), // temporary ID
           itemType: 'hardware' as const,

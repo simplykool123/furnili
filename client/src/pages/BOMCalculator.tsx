@@ -254,6 +254,10 @@ export default function BOMCalculator() {
   const [selectedFurnitureType, setSelectedFurnitureType] = useState<string>("wardrobe");
   const [bomResult, setBomResult] = useState<BomResult | null>(null);
   const [customParts, setCustomParts] = useState<{name: string, quantity: number}[]>([]);
+  const [variableCosts, setVariableCosts] = useState({
+    laborCost: 0,
+    transportCost: 0
+  });
 
   const selectedFurniture = furnitureTypes.find(f => f.id === selectedFurnitureType);
 
@@ -425,6 +429,10 @@ export default function BOMCalculator() {
       // Group edge banding
       else if (item.itemCategory === 'Edge Banding') {
         groupKey = `Edge Band (${item.materialType || 'PVC'})`;
+      }
+      // Group adhesives
+      else if (item.itemCategory === 'Adhesive') {
+        groupKey = item.partName;
       }
       // Everything else grouped by material type or part name
       else {
@@ -1857,11 +1865,65 @@ export default function BOMCalculator() {
                               <span>{formatCurrency(bomResult.totalHardwareCost || 0)}</span>
                             </div>
                             <Separator />
-                            <div className="flex justify-between font-bold text-lg">
-                              <span>Total Tentative Cost:</span>
+                            <div className="flex justify-between font-bold text-lg border-t pt-2">
+                              <span>Sub Total:</span>
                               <span className="text-furnili-brown">{formatCurrency(bomResult.totalCost || 0)}</span>
                             </div>
                           </div>
+                          
+                          {/* Variable Cost Section */}
+                          <div className="space-y-3 mt-6">
+                            <h4 className="font-medium text-furnili-brown">Additional Costs</h4>
+                            
+                            <div className="space-y-2">
+                              <div className="flex justify-between items-center">
+                                <label className="text-sm font-medium">Labour Cost (₹):</label>
+                                <Input
+                                  type="number"
+                                  placeholder="0"
+                                  value={variableCosts.laborCost || ''}
+                                  onChange={(e) => setVariableCosts({
+                                    ...variableCosts,
+                                    laborCost: parseFloat(e.target.value) || 0
+                                  })}
+                                  className="w-32 h-8 text-right"
+                                />
+                              </div>
+                              
+                              <div className="flex justify-between items-center">
+                                <label className="text-sm font-medium">Transport Cost (₹):</label>
+                                <Input
+                                  type="number"
+                                  placeholder="0"
+                                  value={variableCosts.transportCost || ''}
+                                  onChange={(e) => setVariableCosts({
+                                    ...variableCosts,
+                                    transportCost: parseFloat(e.target.value) || 0
+                                  })}
+                                  className="w-32 h-8 text-right"
+                                />
+                              </div>
+                            </div>
+                            
+                            {/* Final Cost Summary with GST */}
+                            <div className="border-t pt-3 space-y-2">
+                              <div className="flex justify-between text-sm">
+                                <span>Materials + Labour + Transport:</span>
+                                <span>{formatCurrency((bomResult.totalCost || 0) + variableCosts.laborCost + variableCosts.transportCost)}</span>
+                              </div>
+                              
+                              <div className="flex justify-between text-sm text-orange-600">
+                                <span>GST (18%):</span>
+                                <span>{formatCurrency(((bomResult.totalCost || 0) + variableCosts.laborCost + variableCosts.transportCost) * 0.18)}</span>
+                              </div>
+                              
+                              <div className="flex justify-between font-bold text-xl border-t pt-2 text-furnili-brown">
+                                <span>Final Total Cost:</span>
+                                <span>{formatCurrency(((bomResult.totalCost || 0) + variableCosts.laborCost + variableCosts.transportCost) * 1.18)}</span>
+                              </div>
+                            </div>
+                          </div>
+                          
                         </div>
                       </div>
                     </div>
