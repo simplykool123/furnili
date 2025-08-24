@@ -108,6 +108,7 @@ interface BomResult {
   id: number;
   calculationNumber: string;
   totalBoardArea: number;
+  boardAreaByThickness: { [thickness: string]: number };
   totalEdgeBanding2mm: number;
   totalEdgeBanding0_8mm: number;
   totalMaterialCost: number;
@@ -154,70 +155,70 @@ const furnitureTypes = [
     name: "Kitchen", 
     icon: Package, 
     description: "Kitchen cabinets and accessories",
-    defaultConfig: { shelves: 0, drawers: 6, shutters: 0, doors: 0, backPanels: 0, exposedSides: false }
+    defaultConfig: { shelves: 0, drawers: 6, shutters: 0, doors: 0, backPanels: 0, exposedSides: false, backThickness: 6, slideColorance: 12.5, boxThickness: 12, bottomThickness: 6, doorClearance: 12 }
   },
   { 
     id: "tv_unit", 
     name: "TV Unit", 
     icon: PanelTop, 
     description: "Entertainment centers and TV stands",
-    defaultConfig: { shelves: 2, drawers: 2, shutters: 0, doors: 0, backPanels: 1, exposedSides: false }
+    defaultConfig: { shelves: 2, drawers: 2, shutters: 0, doors: 0, backPanels: 1, exposedSides: false, backThickness: 6, slideColorance: 12.5, boxThickness: 12, bottomThickness: 6, doorClearance: 12 }
   },
   { 
     id: "storage_unit", 
     name: "Cabinets", 
     icon: Archive, 
     description: "Storage cabinets and units",
-    defaultConfig: { shutters: 2, shelves: 4, drawers: 1, doors: 0, backPanels: 1, exposedSides: false }
+    defaultConfig: { shutters: 2, shelves: 4, drawers: 1, doors: 0, backPanels: 1, exposedSides: false, backThickness: 6, slideColorance: 12.5, boxThickness: 12, bottomThickness: 6, doorClearance: 12 }
   },
   { 
     id: "bookshelf", 
     name: "Bookshelf", 
     icon: Table2, 
     description: "Open and closed bookshelves",
-    defaultConfig: { shelves: 5, drawers: 0, shutters: 0, doors: 0, backPanels: 1, exposedSides: true }
+    defaultConfig: { shelves: 5, drawers: 0, shutters: 0, doors: 0, backPanels: 1, exposedSides: true, backThickness: 6, slideColorance: 12.5, boxThickness: 12, bottomThickness: 6, doorClearance: 12 }
   },
   { 
     id: "dresser", 
     name: "Dresser", 
     icon: Sofa, 
     description: "Bedroom dressers and chests",
-    defaultConfig: { drawers: 6, shelves: 0, shutters: 0, doors: 0, backPanels: 1, exposedSides: false }
+    defaultConfig: { drawers: 6, shelves: 0, shutters: 0, doors: 0, backPanels: 1, exposedSides: false, backThickness: 6, slideColorance: 12.5, boxThickness: 12, bottomThickness: 6, doorClearance: 12 }
   },
   { 
     id: "door", 
     name: "Doors", 
     icon: DoorOpen, 
     description: "Interior and cabinet doors",
-    defaultConfig: { shutters: 1, shelves: 0, drawers: 0, doors: 1, backPanels: 0, exposedSides: false }
+    defaultConfig: { shutters: 1, shelves: 0, drawers: 0, doors: 1, backPanels: 0, exposedSides: false, backThickness: 6, slideColorance: 12.5, boxThickness: 12, bottomThickness: 6, doorClearance: 12 }
   },
   { 
     id: "shoe_rack", 
     name: "Shelving Units", 
     icon: Package, 
     description: "Open shelving and shoe racks",
-    defaultConfig: { shutters: 0, shelves: 5, drawers: 0, doors: 0, backPanels: 1, exposedSides: true }
+    defaultConfig: { shutters: 0, shelves: 5, drawers: 0, doors: 0, backPanels: 1, exposedSides: true, backThickness: 6, slideColorance: 12.5, boxThickness: 12, bottomThickness: 6, doorClearance: 12 }
   },
   { 
     id: "table", 
     name: "Tables", 
     icon: Table2, 
     description: "Dining and work tables",
-    defaultConfig: { shutters: 0, shelves: 0, drawers: 1, doors: 0, backPanels: 0, exposedSides: false }
+    defaultConfig: { shutters: 0, shelves: 0, drawers: 1, doors: 0, backPanels: 0, exposedSides: false, backThickness: 6, slideColorance: 12.5, boxThickness: 12, bottomThickness: 6, doorClearance: 12 }
   },
   { 
     id: "sofa", 
     name: "Sofas and Seating", 
     icon: Sofa, 
     description: "Sofa frames and seating",
-    defaultConfig: { shutters: 0, shelves: 0, drawers: 1, doors: 0, backPanels: 0, exposedSides: false }
+    defaultConfig: { shutters: 0, shelves: 0, drawers: 1, doors: 0, backPanels: 0, exposedSides: false, backThickness: 6, slideColorance: 12.5, boxThickness: 12, bottomThickness: 6, doorClearance: 12 }
   },
   { 
     id: "tv_panel", 
     name: "Paneling", 
     icon: PanelTop, 
     description: "Wall panels and partitions",
-    defaultConfig: { shutters: 1, shelves: 2, drawers: 0, doors: 0, backPanels: 1, exposedSides: false }
+    defaultConfig: { shutters: 1, shelves: 2, drawers: 0, doors: 0, backPanels: 1, exposedSides: false, backThickness: 6, slideColorance: 12.5, boxThickness: 12, bottomThickness: 6, doorClearance: 12 }
   },
 ];
 
