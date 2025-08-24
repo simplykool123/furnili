@@ -4677,6 +4677,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         id: savedBom.id,
         calculationNumber,
         totalBoardArea: bomResult.totalBoardArea,
+        boardAreaByThickness: bomResult.boardAreaByThickness,
         totalEdgeBanding2mm: bomResult.totalEdgeBanding2mm,
         totalEdgeBanding0_8mm: bomResult.totalEdgeBanding0_8mm,
         totalMaterialCost: bomResult.material_cost,
