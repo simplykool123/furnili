@@ -468,6 +468,20 @@ const generateWardrobePanels = (input: CalculationInput): Panel[] => {
   const panels: Panel[] = [];
   const material = `${boardThickness} ${boardType.toUpperCase()}`;
 
+  // Configuration settings
+  const backThickness = 6; // 6mm default back panel thickness
+  const doorClearance = 12; // 10-15mm door clearance
+  const frontClearance = 10; // 10mm front clearance for doors/overhang
+  const slideColorance = 12.5; // 12.5mm clearance per side for telescopic slides
+  const boxThickness = 12; // 12mm drawer box thickness
+  const bottomThickness = 6; // 6mm drawer bottom thickness
+  const backClearance = 15; // 15mm back clearance for drawers
+
+  // Calculate internal dimensions
+  const panelThickness = parseInt(boardThickness.replace('mm', ''));
+  const internalWidth = width - (2 * panelThickness);
+  const internalDepth = depth - backThickness - doorClearance;
+
   // External Panels (2mm edge banding)
   
   // Top panel
@@ -525,7 +539,7 @@ const generateWardrobePanels = (input: CalculationInput): Panel[] => {
     });
   }
 
-  // Back panel (if specified)
+  // Back panel (if specified) - No edge banding
   if (partsConfig.backPanels > 0) {
     panels.push({
       panel: "Back Panel",
@@ -533,19 +547,19 @@ const generateWardrobePanels = (input: CalculationInput): Panel[] => {
       size: `${width}mm x ${height}mm`,
       length: width,
       width: height,
-      material: `6mm ${boardType.toUpperCase()}`, // Usually thinner for back panels
-      edge_banding: "0.8mm",
+      material: `${backThickness}mm ${boardType.toUpperCase()}`, // Configurable back thickness
+      edge_banding: "None", // No edge banding on back panel
       area_sqft: mmSqToSqft(width, height) * partsConfig.backPanels,
-      edgeBandingLength: calculateEdgeBandingLength(width, height) * partsConfig.backPanels,
+      edgeBandingLength: 0, // No edge banding
     });
   }
 
   // Internal Panels (0.8mm edge banding)
   
-  // Shelves
+  // Shelves - corrected depth calculation
   if (partsConfig.shelves > 0) {
-    const shelfWidth = width - 36; // Account for side panel thickness
-    const shelfDepth = depth - 18; // Account for back panel if any
+    const shelfWidth = internalWidth; // Full internal width
+    const shelfDepth = depth - backThickness - frontClearance; // Proper depth calculation
     panels.push({
       panel: "Shelf",
       qty: partsConfig.shelves,
@@ -559,36 +573,68 @@ const generateWardrobePanels = (input: CalculationInput): Panel[] => {
     });
   }
 
-  // Drawer components
+  // Drawer components - corrected calculations
   if (partsConfig.drawers > 0) {
-    const drawerWidth = width - 36; // Account for side panel thickness
-    const drawerDepth = depth - 18;
     const drawerHeight = 150; // Standard drawer height
-
-    // Drawer bottom
+    
+    // Calculate proper drawer dimensions
+    const bayWidth = internalWidth; // Assuming single bay for now
+    const drawerOuterWidth = bayWidth - (2 * slideColorance);
+    const drawerOuterDepth = internalDepth - backClearance;
+    
+    // Drawer bottom (inset inside the box)
+    const drawerBottomWidth = drawerOuterWidth - (2 * boxThickness);
+    const drawerBottomDepth = drawerOuterDepth - boxThickness; // Rear groove
+    
     panels.push({
       panel: "Drawer Bottom",
       qty: partsConfig.drawers,
-      size: `${drawerWidth}mm x ${drawerDepth}mm`,
-      length: drawerWidth,
-      width: drawerDepth,
-      material: `12mm ${boardType.toUpperCase()}`, // Usually thinner for drawer bottoms
-      edge_banding: "0.8mm",
-      area_sqft: mmSqToSqft(drawerWidth, drawerDepth) * partsConfig.drawers,
-      edgeBandingLength: calculateEdgeBandingLength(drawerWidth, drawerDepth) * partsConfig.drawers,
+      size: `${drawerBottomWidth}mm x ${drawerBottomDepth}mm`,
+      length: drawerBottomWidth,
+      width: drawerBottomDepth,
+      material: `${bottomThickness}mm ${boardType.toUpperCase()}`, // 6mm bottom thickness
+      edge_banding: "None", // Drawer bottoms typically don't have edge banding
+      area_sqft: mmSqToSqft(drawerBottomWidth, drawerBottomDepth) * partsConfig.drawers,
+      edgeBandingLength: 0,
     });
 
-    // Drawer sides (4 pieces per drawer: front, back, left, right)
+    // Drawer front (2mm edge banding)
+    panels.push({
+      panel: "Drawer Front",
+      qty: partsConfig.drawers,
+      size: `${drawerOuterWidth}mm x ${drawerHeight}mm`,
+      length: drawerOuterWidth,
+      width: drawerHeight,
+      material: `${boxThickness}mm ${boardType.toUpperCase()}`,
+      edge_banding: "2mm", // Drawer front gets 2mm edge banding
+      area_sqft: mmSqToSqft(drawerOuterWidth, drawerHeight) * partsConfig.drawers,
+      edgeBandingLength: calculateEdgeBandingLength(drawerOuterWidth, drawerHeight) * partsConfig.drawers,
+    });
+
+    // Drawer back (0.8mm edge banding)
+    panels.push({
+      panel: "Drawer Back",
+      qty: partsConfig.drawers,
+      size: `${drawerOuterWidth}mm x ${drawerHeight}mm`,
+      length: drawerOuterWidth,
+      width: drawerHeight,
+      material: `${boxThickness}mm ${boardType.toUpperCase()}`,
+      edge_banding: "0.8mm",
+      area_sqft: mmSqToSqft(drawerOuterWidth, drawerHeight) * partsConfig.drawers,
+      edgeBandingLength: calculateEdgeBandingLength(drawerOuterWidth, drawerHeight) * partsConfig.drawers,
+    });
+
+    // Drawer sides - left and right (0.8mm edge banding)
     panels.push({
       panel: "Drawer Side",
-      qty: partsConfig.drawers * 4,
-      size: `${drawerHeight}mm x ${drawerDepth}mm`,
-      length: drawerHeight,
-      width: drawerDepth,
-      material,
+      qty: partsConfig.drawers * 2,
+      size: `${drawerOuterDepth}mm x ${drawerHeight}mm`,
+      length: drawerOuterDepth,
+      width: drawerHeight,
+      material: `${boxThickness}mm ${boardType.toUpperCase()}`,
       edge_banding: "0.8mm",
-      area_sqft: mmSqToSqft(drawerHeight, drawerDepth) * partsConfig.drawers * 4,
-      edgeBandingLength: calculateEdgeBandingLength(drawerHeight, drawerDepth) * partsConfig.drawers * 4,
+      area_sqft: mmSqToSqft(drawerOuterDepth, drawerHeight) * partsConfig.drawers * 2,
+      edgeBandingLength: calculateEdgeBandingLength(drawerOuterDepth, drawerHeight) * partsConfig.drawers * 2,
     });
   }
 
