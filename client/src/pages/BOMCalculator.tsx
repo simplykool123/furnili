@@ -1355,11 +1355,11 @@ export default function BOMCalculator() {
                     </div>
                     <div className="text-center p-4 bg-accent rounded-lg">
                       <p className="text-sm text-muted-foreground font-medium">Edge Band 2mm</p>
-                      <p className="text-xl font-bold text-foreground">{bomResult.totalEdgeBanding2mm.toFixed(1)} ft</p>
+                      <p className="text-xl font-bold text-foreground">{(bomResult.totalEdgeBanding2mm * 0.3048).toFixed(1)} m</p>
                     </div>
                     <div className="text-center p-4 bg-accent rounded-lg">
                       <p className="text-sm text-muted-foreground font-medium">Edge Band 0.8mm</p>
-                      <p className="text-xl font-bold text-foreground">{bomResult.totalEdgeBanding0_8mm.toFixed(1)} ft</p>
+                      <p className="text-xl font-bold text-foreground">{(bomResult.totalEdgeBanding0_8mm * 0.3048).toFixed(1)} m</p>
                     </div>
                     <div className="text-center p-4 bg-furnili-brown/10 rounded-lg">
                       <p className="text-sm text-furnili-brown font-medium">Total Cost</p>
@@ -1395,12 +1395,12 @@ export default function BOMCalculator() {
                           <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border shadow-sm">
                             <h4 className="font-medium text-sm mb-2 text-gray-700 dark:text-gray-300">2mm Edge Banding</h4>
                             <div className="text-3xl font-bold text-green-600 mb-1">
-                              {Math.ceil((bomResult.totalEdgeBanding2mm * 1.05) / 164)} rolls
+                              {Math.ceil((bomResult.totalEdgeBanding2mm * 0.3048 * 1.05) / 50)} rolls
                             </div>
                             <div className="text-xs text-gray-500 space-y-1">
-                              <div>Net Length: {bomResult.totalEdgeBanding2mm.toFixed(1)} ft</div>
-                              <div>With 5% wastage: {(bomResult.totalEdgeBanding2mm * 1.05).toFixed(1)} ft</div>
-                              <div className="text-gray-400">Standard roll: 164 ft</div>
+                              <div>Net Length: {(bomResult.totalEdgeBanding2mm * 0.3048).toFixed(1)} m</div>
+                              <div>With 5% wastage: {(bomResult.totalEdgeBanding2mm * 0.3048 * 1.05).toFixed(1)} m</div>
+                              <div className="text-gray-400">Standard roll: 50m</div>
                             </div>
                           </div>
                         )}
@@ -1410,12 +1410,12 @@ export default function BOMCalculator() {
                           <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border shadow-sm">
                             <h4 className="font-medium text-sm mb-2 text-gray-700 dark:text-gray-300">0.8mm Edge Banding</h4>
                             <div className="text-3xl font-bold text-purple-600 mb-1">
-                              {Math.ceil((bomResult.totalEdgeBanding0_8mm * 1.05) / 164)} rolls
+                              {Math.ceil((bomResult.totalEdgeBanding0_8mm * 0.3048 * 1.05) / 50)} rolls
                             </div>
                             <div className="text-xs text-gray-500 space-y-1">
-                              <div>Net Length: {bomResult.totalEdgeBanding0_8mm.toFixed(1)} ft</div>
-                              <div>With 5% wastage: {(bomResult.totalEdgeBanding0_8mm * 1.05).toFixed(1)} ft</div>
-                              <div className="text-gray-400">Standard roll: 164 ft</div>
+                              <div>Net Length: {(bomResult.totalEdgeBanding0_8mm * 0.3048).toFixed(1)} m</div>
+                              <div>With 5% wastage: {(bomResult.totalEdgeBanding0_8mm * 0.3048 * 1.05).toFixed(1)} m</div>
+                              <div className="text-gray-400">Standard roll: 50m</div>
                             </div>
                           </div>
                         )}
@@ -1437,10 +1437,10 @@ export default function BOMCalculator() {
                         <div className="text-sm text-green-700 dark:text-green-300">
                           • {Math.ceil((bomResult.totalBoardArea * 1.1) / 32)} sheets of {form.watch('boardType')} board ({form.watch('boardThickness')})
                           {bomResult.totalEdgeBanding2mm > 0 && (
-                            <div>• {Math.ceil((bomResult.totalEdgeBanding2mm * 1.05) / 164)} rolls of 2mm edge banding</div>
+                            <div>• {Math.ceil((bomResult.totalEdgeBanding2mm * 0.3048 * 1.05) / 50)} rolls of 2mm edge banding</div>
                           )}
                           {bomResult.totalEdgeBanding0_8mm > 0 && (
-                            <div>• {Math.ceil((bomResult.totalEdgeBanding0_8mm * 1.05) / 164)} rolls of 0.8mm edge banding</div>
+                            <div>• {Math.ceil((bomResult.totalEdgeBanding0_8mm * 0.3048 * 1.05) / 50)} rolls of 0.8mm edge banding</div>
                           )}
                         </div>
                       </div>
