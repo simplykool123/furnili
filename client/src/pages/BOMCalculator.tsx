@@ -13,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useIsMobile } from "@/components/Mobile/MobileOptimizer";
 import MobileTable from "@/components/Mobile/MobileTable";
 import { useToast } from "@/hooks/use-toast";
@@ -32,7 +33,9 @@ import {
   Package,
   Table2,
   Sofa,
-  PanelTop
+  PanelTop,
+  Eye,
+  ChevronRight
 } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -386,6 +389,73 @@ export default function BOMCalculator() {
 
   const addCustomPart = () => {
     setCustomParts([...customParts, { name: "", quantity: 1 }]);
+  };
+
+  // Group BOM items by material type for consolidated view
+  const getConsolidatedMaterials = (items: BomItem[]) => {
+    const grouped: { [key: string]: { 
+      items: BomItem[], 
+      totalQty: number, 
+      totalArea: number, 
+      avgRate: number, 
+      totalCost: number,
+      unit: string
+    } } = {};
+
+    items.forEach(item => {
+      let groupKey = '';
+      
+      // Group plywood by thickness
+      if (item.itemCategory === 'Board' && item.materialType?.includes('Plywood')) {
+        const thickness = item.materialType.match(/(\d+mm)/)?.[1] || '';
+        groupKey = `${thickness} Plywood`;
+      }
+      // Group laminates
+      else if (item.itemCategory === 'Laminate') {
+        groupKey = item.materialType || 'Laminate';
+      }
+      // Group hardware by type
+      else if (item.itemCategory === 'Hardware') {
+        groupKey = item.materialType || item.partName;
+      }
+      // Group edge banding
+      else if (item.itemCategory === 'Edge Banding') {
+        groupKey = `Edge Band (${item.materialType || 'PVC'})`;
+      }
+      // Everything else grouped by material type or part name
+      else {
+        groupKey = item.materialType || item.partName;
+      }
+
+      if (!grouped[groupKey]) {
+        grouped[groupKey] = {
+          items: [],
+          totalQty: 0,
+          totalArea: 0,
+          avgRate: 0,
+          totalCost: 0,
+          unit: item.unit
+        };
+      }
+
+      grouped[groupKey].items.push(item);
+      grouped[groupKey].totalQty += item.quantity;
+      grouped[groupKey].totalArea += (item.length && item.width) ? 
+        (item.length * item.width * item.quantity) / 144 : 0; // Convert to sqft
+      grouped[groupKey].totalCost += item.totalCost;
+    });
+
+    // Calculate average rates
+    Object.keys(grouped).forEach(key => {
+      const group = grouped[key];
+      if (group.totalArea > 0) {
+        group.avgRate = group.totalCost / group.totalArea;
+      } else {
+        group.avgRate = group.totalCost / group.totalQty;
+      }
+    });
+
+    return grouped;
   };
 
   const updateCustomPart = (index: number, field: 'name' | 'quantity', value: string | number) => {
@@ -1636,91 +1706,137 @@ export default function BOMCalculator() {
                     </CardContent>
                   </Card>
 
-                  {/* BOM Table */}
+                  {/* Consolidated BOM Table */}
                   <div className="space-y-4">
-                    <h3 className="text-lg font-medium">Bill of Materials</h3>
+                    <div className="flex items-center gap-3">
+                      <h3 className="text-lg font-medium">Bill of Materials</h3>
+                      <Badge variant="secondary" className="text-xs">Consolidated View</Badge>
+                    </div>
                     
-                    {isMobile ? (
-                      <MobileTable
-                        data={bomResult.items}
-                        columns={[
-                          {
-                            key: 'partName',
-                            label: 'Part',
-                            render: (value: any, item: BomItem) => (
-                              <div>
-                                <div className="font-medium text-sm">{item.partName}</div>
-                                <div className="text-xs text-gray-600">
-                                  {item.itemCategory} - {item.quantity} {item.unit}
-                                </div>
-                                {item.length && item.width && (
-                                  <div className="text-xs text-gray-500">
-                                    {item.length}×{item.width} mm
-                                  </div>
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow className="bg-muted/50">
+                            <TableHead className="font-semibold">Material / Item</TableHead>
+                            <TableHead className="font-semibold">Qty (Pcs/Nos)</TableHead>
+                            <TableHead className="font-semibold">Area (sqft)</TableHead>
+                            <TableHead className="font-semibold text-right">Rate (₹)</TableHead>
+                            <TableHead className="font-semibold text-right">Cost (₹)</TableHead>
+                            <TableHead className="font-semibold text-center w-12"></TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {Object.entries(getConsolidatedMaterials(bomResult.items)).map(([materialName, group]) => (
+                            <TableRow key={materialName} className="hover:bg-muted/30">
+                              <TableCell className="font-medium">{materialName}</TableCell>
+                              <TableCell>
+                                {group.totalQty > 0 ? (
+                                  `${group.totalQty} ${group.unit}`
+                                ) : (
+                                  '—'
                                 )}
-                              </div>
-                            )
-                          },
-                          {
-                            key: 'cost',
-                            label: 'Cost',
-                            render: (value: any, item: BomItem) => (
-                              <div className="text-right">
-                                <div className="font-medium">{formatCurrency(item.totalCost)}</div>
-                                <div className="text-xs text-gray-600">
-                                  @ {formatCurrency(item.unitRate)}/{item.unit}
-                                </div>
-                                {item.edgeBandingType && (
-                                  <Badge variant="outline" className="text-xs mt-1">
-                                    {item.edgeBandingType} Edge
-                                  </Badge>
-                                )}
-                              </div>
-                            )
-                          }
-                        ]}
-                      />
-                    ) : (
-                      <div className="overflow-x-auto">
-                        <Table>
-                          <TableHeader>
-                            <TableRow>
-                              <TableHead>Part Name</TableHead>
-                              <TableHead>Type</TableHead>
-                              <TableHead>Size (mm)</TableHead>
-                              <TableHead>Qty</TableHead>
-                              <TableHead>Edge Band</TableHead>
-                              <TableHead className="text-right">Rate</TableHead>
-                              <TableHead className="text-right">Amount</TableHead>
+                              </TableCell>
+                              <TableCell>
+                                {group.totalArea > 0 ? `${group.totalArea.toFixed(0)} sqft` : '—'}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                {group.avgRate > 0 ? Math.round(group.avgRate) : '—'}
+                              </TableCell>
+                              <TableCell className="text-right font-semibold">
+                                {group.totalCost.toLocaleString('en-IN')}
+                              </TableCell>
+                              <TableCell className="text-center">
+                                <Dialog>
+                                  <DialogTrigger asChild>
+                                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                      <Eye className="h-4 w-4" />
+                                    </Button>
+                                  </DialogTrigger>
+                                  <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+                                    <DialogHeader>
+                                      <DialogTitle>Detailed Breakdown - {materialName}</DialogTitle>
+                                    </DialogHeader>
+                                    <div className="space-y-4">
+                                      <div className="bg-muted/30 p-4 rounded-lg">
+                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                                          <div>
+                                            <span className="text-muted-foreground">Total Quantity:</span>
+                                            <div className="font-semibold">{group.totalQty} {group.unit}</div>
+                                          </div>
+                                          {group.totalArea > 0 && (
+                                            <div>
+                                              <span className="text-muted-foreground">Total Area:</span>
+                                              <div className="font-semibold">{group.totalArea.toFixed(1)} sqft</div>
+                                            </div>
+                                          )}
+                                          <div>
+                                            <span className="text-muted-foreground">Avg Rate:</span>
+                                            <div className="font-semibold">₹{Math.round(group.avgRate)}</div>
+                                          </div>
+                                          <div>
+                                            <span className="text-muted-foreground">Total Cost:</span>
+                                            <div className="font-semibold text-[hsl(28,100%,25%)]">₹{group.totalCost.toLocaleString('en-IN')}</div>
+                                          </div>
+                                        </div>
+                                      </div>
+                                      
+                                      <div className="overflow-x-auto">
+                                        <Table>
+                                          <TableHeader>
+                                            <TableRow>
+                                              <TableHead>Part Name</TableHead>
+                                              <TableHead>Size (mm)</TableHead>
+                                              <TableHead>Qty</TableHead>
+                                              <TableHead>Edge Band</TableHead>
+                                              <TableHead className="text-right">Rate</TableHead>
+                                              <TableHead className="text-right">Amount</TableHead>
+                                            </TableRow>
+                                          </TableHeader>
+                                          <TableBody>
+                                            {group.items.map((item) => (
+                                              <TableRow key={item.id}>
+                                                <TableCell className="font-medium">{item.partName}</TableCell>
+                                                <TableCell>
+                                                  {item.length && item.width ? 
+                                                    `${item.length} × ${item.width}` : 
+                                                    '-'
+                                                  }
+                                                </TableCell>
+                                                <TableCell>{item.quantity} {item.unit}</TableCell>
+                                                <TableCell>
+                                                  {item.edgeBandingType ? (
+                                                    <Badge variant="outline" className="text-xs">{item.edgeBandingType}</Badge>
+                                                  ) : '-'}
+                                                </TableCell>
+                                                <TableCell className="text-right">{formatCurrency(item.unitRate)}</TableCell>
+                                                <TableCell className="text-right font-medium">{formatCurrency(item.totalCost)}</TableCell>
+                                              </TableRow>
+                                            ))}
+                                          </TableBody>
+                                        </Table>
+                                      </div>
+                                    </div>
+                                  </DialogContent>
+                                </Dialog>
+                              </TableCell>
                             </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {bomResult.items.map((item) => (
-                              <TableRow key={item.id}>
-                                <TableCell className="font-medium">{item.partName}</TableCell>
-                                <TableCell>
-                                  <Badge variant="secondary">{item.itemCategory}</Badge>
-                                </TableCell>
-                                <TableCell>
-                                  {item.length && item.width ? 
-                                    `${item.length} × ${item.width}` : 
-                                    '-'
-                                  }
-                                </TableCell>
-                                <TableCell>{item.quantity} {item.unit}</TableCell>
-                                <TableCell>
-                                  {item.edgeBandingType ? (
-                                    <Badge variant="outline">{item.edgeBandingType}</Badge>
-                                  ) : '-'}
-                                </TableCell>
-                                <TableCell className="text-right">{formatCurrency(item.unitRate)}</TableCell>
-                                <TableCell className="text-right font-medium">{formatCurrency(item.totalCost)}</TableCell>
-                              </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                    
+                    {/* Total Cost Row */}
+                    <div className="flex justify-end pt-4 border-t">
+                      <div className="flex items-center gap-3 text-xl font-bold">
+                        <span>Total Cost:</span>
+                        <span className="text-[hsl(28,100%,25%)] flex items-center gap-2">
+                          ₹ {bomResult.totalCost.toLocaleString('en-IN')}
+                          <div className="w-6 h-6 bg-green-500 rounded flex items-center justify-center">
+                            <span className="text-white text-sm">✓</span>
+                          </div>
+                        </span>
                       </div>
-                    )}
+                    </div>
 
                     {/* Cost Summary */}
                     <div className="border-t pt-4">
