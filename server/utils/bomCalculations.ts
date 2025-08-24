@@ -49,31 +49,163 @@ interface BOMResult {
   boardAreaByThickness: { [thickness: string]: number };
   totalEdgeBanding2mm: number;
   totalEdgeBanding0_8mm: number;
+  // Enhanced modular furniture specific results
+  sheet_optimization?: {
+    sheets_required: number;
+    efficiency: number;
+    waste_allowance: number;
+  };
+  cost_breakdown?: {
+    material_costs: { [category: string]: number };
+    labor_estimate: number;
+    overhead_percentage: number;
+    profit_margin: number;
+  };
+  manufacturing_notes?: string[];
 }
 
-// Default rates (can be overridden by database values)
+// Industry-standard rates for modular furniture (can be overridden by database values)
 const DEFAULT_RATES = {
   board: {
-    pre_lam_particle_board: 80,
-    mdf: 100,
-    ply: 120,
-    solid_wood: 150,
-    hdf: 90,
+    // Plywood rates by thickness (₹ per sqft)
+    "18mm_plywood": 147,
+    "12mm_plywood": 120, 
+    "6mm_plywood": 95,
+    "25mm_plywood": 190,
+    // MDF rates by thickness
+    "18mm_mdf": 110,
+    "12mm_mdf": 85,
+    "6mm_mdf": 65,
+    // Particle board rates
+    "18mm_particle_board": 80,
+    "12mm_particle_board": 60,
+    // Solid wood premium rates
+    "teak": 450,
+    "oak": 380,
+    "sheesham": 320,
+    "mango_wood": 280,
+  },
+  laminate: {
+    // Laminate rates per sqft
+    "outer_laminate": 210,
+    "inner_laminate": 150,
+    "acrylic_finish": 380,
+    "pu_finish": 450,
+    "glass_finish": 520,
+    "membrane_foil": 95,
   },
   edge_banding: {
-    "2mm": 4, // per foot
-    "0.8mm": 2, // per foot
+    "2mm": 8, // per meter - updated to Indian standards
+    "0.8mm": 4, // per meter
+    "1mm": 5, // per meter
+    "3mm": 12, // per meter for thicker panels
   },
   hardware: {
-    hinge: 30,
-    lock: 80,
-    minifix: 10,
-    dowel: 2,
-    straightener: 150,
-    handle: 25,
-    drawer_slide: 120,
-    wall_bracket: 50,
+    // Modular furniture hardware - Indian market rates
+    "soft_close_hinge": 90,
+    "normal_hinge": 30,
+    "concealed_hinge": 60,
+    "piano_hinge": 45,
+    "drawer_slide_soft_close": 180,
+    "drawer_slide_normal": 120,
+    "ball_bearing_slide": 150,
+    "telescopic_slide": 200,
+    "ss_handle": 180,
+    "aluminium_handle": 120,
+    "brass_handle": 250,
+    "plastic_handle": 45,
+    "door_lock": 80,
+    "cam_lock": 25,
+    "magnetic_lock": 65,
+    "minifix": 15,
+    "dowel": 3,
+    "screw_pack": 120, // per box
+    "wall_bracket": 50,
+    "shelf_support": 8,
+    "drawer_organizer": 350,
+    "pull_out_basket": 850,
+    "lazy_susan": 1200,
+    "soft_close_mechanism": 450,
   }
+};
+
+// Industry-standard waste factors for modular furniture manufacturing
+const WASTE_FACTORS = {
+  board: {
+    cutting_waste: 0.12, // 12% cutting waste for sheet goods (industry standard)
+    defect_allowance: 0.05, // 5% for material defects
+    setup_waste: 0.03, // 3% for machine setup and test cuts
+  },
+  edge_banding: {
+    application_waste: 0.15, // 15% waste during edge banding application
+    corner_overlap: 0.05, // 5% for corner overlaps and joints
+  },
+  hardware: {
+    damage_allowance: 0.08, // 8% for damaged or lost hardware
+    installation_extra: 0.02, // 2% extra for installation contingency
+  },
+  laminate: {
+    pattern_matching: 0.18, // 18% waste for pattern matching (wood grain alignment)
+    trimming_waste: 0.10, // 10% for trimming and edge preparation
+  }
+};
+
+// Standard modular furniture dimensions (in mm) - Indian market standards
+const STANDARD_DIMENSIONS = {
+  modular_kitchen: {
+    base_cabinets: {
+      height: [860, 900], // standard counter height
+      depth: [600, 650], // standard depth
+      widths: [300, 400, 450, 500, 600, 800, 900, 1000], // standard widths
+    },
+    wall_cabinets: {
+      height: [600, 700, 800], // wall cabinet heights
+      depth: [300, 350], // wall cabinet depth
+      widths: [300, 400, 450, 500, 600, 800, 900], // wall cabinet widths
+    },
+    tall_units: {
+      height: [2100, 2200, 2400], // tall unit heights
+      depth: [600, 650], // same as base units
+      widths: [450, 500, 600], // tall unit widths
+    }
+  },
+  modular_wardrobe: {
+    standard: {
+      height: [2100, 2200, 2400], // ceiling height based
+      depth: [550, 600, 650], // wardrobe depth
+      widths: [600, 800, 900, 1000, 1200, 1500, 1800, 2000], // modular widths
+    },
+    sliding: {
+      depth: [600, 650], // minimum for sliding doors
+      track_clearance: 100, // space for sliding track
+    }
+  },
+  drawer_dimensions: {
+    heights: [100, 150, 200, 250, 300], // drawer box heights
+    slides: [400, 450, 500, 550, 600], // slide lengths
+  }
+};
+
+// Material optimization for sheet cutting (basic nesting calculation)
+const calculateSheetOptimization = (panels: Panel[], sheetSize = { length: 2440, width: 1220 }): { sheets_required: number, efficiency: number } => {
+  const sheetArea = sheetSize.length * sheetSize.width;
+  let totalPanelArea = 0;
+  
+  panels.forEach(panel => {
+    totalPanelArea += (panel.length * panel.width * panel.qty);
+  });
+  
+  // Add waste factor for cutting optimization
+  const wastedArea = totalPanelArea * (WASTE_FACTORS.board.cutting_waste + WASTE_FACTORS.board.setup_waste);
+  const totalRequiredArea = totalPanelArea + wastedArea;
+  
+  const sheetsRequired = Math.ceil(totalRequiredArea / sheetArea);
+  const efficiency = (totalPanelArea / (sheetsRequired * sheetArea)) * 100;
+  
+  return {
+    sheets_required: sheetsRequired,
+    efficiency: Math.round(efficiency)
+  };
 };
 
 // Convert mm² to sqft
