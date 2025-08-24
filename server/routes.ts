@@ -53,19 +53,47 @@ import {
   insertPurchaseOrderItemSchema,
 } from "@shared/schema";
 
-// Helper function to get board rate based on board type and thickness
-const getBoardRate = (boardType: string, thickness: string): number => {
-  // Map board types to DEFAULT_RATES keys
-  const boardTypeMap: { [key: string]: string } = {
-    'pre_lam_particle_board': `${thickness}_particle_board`,
-    'mdf': `${thickness}_mdf`, 
-    'ply': `${thickness}_plywood`,
-    'solid_wood': 'teak', // Default to teak for solid wood
-    'hdf': `${thickness}_mdf`, // HDF uses MDF rates
-  };
+// Helper function to get rate from products table or fallback to default
+const getBoardRate = async (boardType: string, thickness: string): Promise<number> => {
+  try {
+    // Try to find matching product in database first
+    const searchName = `${thickness} ${boardType}`.toLowerCase();
+    const [product] = await db.select()
+      .from(products)
+      .where(eq(products.isActive, true))
+      .limit(1);
+    
+    // Look for products with matching thickness and board type
+    const matchingProducts = await db.select()
+      .from(products)  
+      .where(eq(products.isActive, true));
+    
+    const match = matchingProducts.find(p => 
+      p.thickness?.includes(thickness.replace('mm', '')) && 
+      p.name.toLowerCase().includes(boardType.toLowerCase())
+    );
+    
+    if (match && match.pricePerUnit) {
+      return match.pricePerUnit;
+    }
+  } catch (error) {
+    console.log('Could not fetch product pricing, using defaults');
+  }
   
-  const rateKey = boardTypeMap[boardType];
-  return DEFAULT_RATES.board[rateKey as keyof typeof DEFAULT_RATES.board] || 80;
+  // Fallback to hardcoded rates
+  const cleanThickness = thickness.replace('mm', '');
+  const cleanBoardType = boardType.toLowerCase();
+  
+  if (cleanBoardType.includes('ply')) {
+    const key = `${cleanThickness}mm_plywood` as keyof typeof DEFAULT_RATES.board;
+    return DEFAULT_RATES.board[key] || DEFAULT_RATES.board['18mm_plywood'];
+  }
+  if (cleanBoardType.includes('mdf')) {
+    const key = `${cleanThickness}mm_mdf` as keyof typeof DEFAULT_RATES.board;
+    return DEFAULT_RATES.board[key] || DEFAULT_RATES.board['18mm_mdf'];  
+  }
+  
+  return 80; // final fallback
 };
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -4611,6 +4639,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const bomResult = await calculateBOM(calculationInput, undefined, undefined, bomData.partsConfig?.exposedSides || false);
       
+      // Get pricing from products table
+      const boardRate = await getBoardRate(bomData.boardType, bomData.boardThickness);
+      
       // Generate simple calculation number (no database for now)
       const calculationNumber = `BOM-${Date.now()}`;
 
@@ -4629,57 +4660,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
           unit: 'pieces',
           edgeBandingType: panel.edge_banding,
           edgeBandingLength: panel.edgeBandingLength,
-          unitRate: getBoardRate(bomData.boardType, bomData.boardThickness),
-          totalCost: panel.area_sqft * getBoardRate(bomData.boardType, bomData.boardThickness),
+          unitRate: boardRate,
+          totalCost: panel.area_sqft * boardRate,
           area_sqft: panel.area_sqft, // Add the area_sqft field
         })),
-        // Add laminate items if finish is laminate
-        ...(bomData.finish === 'laminate' ? bomResult.panels.flatMap(panel => {
-          const isOuterSurface = panel.panel.toLowerCase().includes('shutter') || 
-                                panel.panel.toLowerCase().includes('door') ||
-                                panel.panel.toLowerCase().includes('front') ||
-                                panel.panel.toLowerCase().includes('drawer front');
-          
-          const results = [];
-          
-          if (isOuterSurface) {
-            // Outer surface laminate (both sides)
-            results.push({
-              id: Math.random(),
-              itemType: 'material' as const,
-              itemCategory: 'laminate',
-              partName: `${panel.panel} - Outer Laminate`,
-              materialType: 'Outer Surface Laminate',
-              length: panel.length,
-              width: panel.width,
-              quantity: panel.qty * 2, // Both sides
-              unit: 'sqft',
-              edgeBandingLength: 0,
-              unitRate: 85, // ₹85/sqft for outer
-              totalCost: panel.area_sqft * panel.qty * 2 * 85,
-              area_sqft: panel.area_sqft * panel.qty * 2,
-            });
-          } else {
-            // Inner surface laminate (single side)
-            results.push({
-              id: Math.random(),
-              itemType: 'material' as const,
-              itemCategory: 'laminate', 
-              partName: `${panel.panel} - Inner Laminate`,
-              materialType: 'Inner Surface Laminate',
-              length: panel.length,
-              width: panel.width,
-              quantity: panel.qty,
-              unit: 'sqft',
-              edgeBandingLength: 0,
-              unitRate: 65, // ₹65/sqft for inner
-              totalCost: panel.area_sqft * panel.qty * 65,
-              area_sqft: panel.area_sqft * panel.qty,
-            });
-          }
-          
-          return results;
-        }) : []),
+        // Add laminate items if finish is laminate - FIXED LOGIC
+        ...(bomData.finish === 'laminate' ? [
+          // Group all panels into inner and outer laminate
+          ...(() => {
+            const innerPanels = bomResult.panels.filter(panel => 
+              !panel.panel.toLowerCase().includes('shutter') && 
+              !panel.panel.toLowerCase().includes('door') &&
+              !panel.panel.toLowerCase().includes('front')
+            );
+            const outerPanels = bomResult.panels.filter(panel => 
+              panel.panel.toLowerCase().includes('shutter') || 
+              panel.panel.toLowerCase().includes('door') ||
+              panel.panel.toLowerCase().includes('front')
+            );
+            
+            const results = [];
+            
+            // Inner laminate (single side)
+            if (innerPanels.length > 0) {
+              const totalInnerArea = innerPanels.reduce((sum, panel) => sum + panel.area_sqft, 0);
+              const totalInnerQty = innerPanels.reduce((sum, panel) => sum + panel.qty, 0);
+              
+              results.push({
+                id: Math.random(),
+                itemType: 'material' as const,
+                itemCategory: 'Laminate',
+                partName: 'Inner Surface Laminate',
+                materialType: 'Inner Surface Laminate',
+                quantity: totalInnerQty, // Number of pieces to laminate
+                unit: 'pieces',
+                edgeBandingLength: 0,
+                unitRate: 65, // ₹65/sqft for inner
+                totalCost: totalInnerArea * 65,
+                area_sqft: totalInnerArea, // Total area to laminate
+              });
+            }
+            
+            // Outer laminate (both sides)
+            if (outerPanels.length > 0) {
+              const totalOuterArea = outerPanels.reduce((sum, panel) => sum + panel.area_sqft, 0);
+              const totalOuterQty = outerPanels.reduce((sum, panel) => sum + panel.qty, 0);
+              
+              results.push({
+                id: Math.random(),
+                itemType: 'material' as const,
+                itemCategory: 'Laminate',
+                partName: 'Outer Surface Laminate', 
+                materialType: 'Outer Surface Laminate',
+                quantity: totalOuterQty * 2, // Both sides
+                unit: 'pieces',
+                edgeBandingLength: 0,
+                unitRate: 85, // ₹85/sqft for outer
+                totalCost: totalOuterArea * 2 * 85, // Both sides
+                area_sqft: totalOuterArea * 2, // Both sides total area
+              });
+            }
+            
+            return results;
+          })()
+        ] : []),
         ...bomResult.hardware.map(hardware => ({
           id: Math.random(), // temporary ID
           itemType: 'hardware' as const,
