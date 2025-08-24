@@ -1305,9 +1305,10 @@ export default function BOMCalculator() {
               </Form>
             </CardContent>
           </Card>
+        </div>
 
-          {/* Results */}
-          <div className="lg:col-span-3 space-y-4">
+        {/* Right Panel - Results */}
+        <div className="flex-1 min-w-0">
             {bomResult ? (
               <Card>
                 <CardHeader>
@@ -1567,10 +1568,8 @@ export default function BOMCalculator() {
                 </CardContent>
               </Card>
             )}
-          </Card>
+          </div>
         </div>
-      </div>
-    </div>
     </ResponsiveLayout>
   );
 }
