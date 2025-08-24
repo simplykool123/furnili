@@ -441,8 +441,7 @@ export default function BOMCalculator() {
 
       grouped[groupKey].items.push(item);
       grouped[groupKey].totalQty += item.quantity;
-      grouped[groupKey].totalArea += (item.length && item.width) ? 
-        (item.length * item.width * item.quantity) / 144 : 0; // Convert to sqft
+      grouped[groupKey].totalArea += item.area_sqft || 0; // Use pre-calculated area in sqft
       grouped[groupKey].totalCost += item.totalCost;
     });
 
