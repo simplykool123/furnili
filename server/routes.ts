@@ -4619,9 +4619,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ...bomResult.panels.map(panel => ({
           id: Math.random(), // temporary ID
           itemType: 'material' as const,
-          itemCategory: 'panel',
+          itemCategory: 'Board', // Match what frontend expects
           partName: panel.panel,
-          materialType: panel.material,
+          materialType: `${bomData.boardThickness} ${bomData.boardType.toUpperCase()}`, // e.g. "18mm PLY"
           length: panel.length,
           width: panel.width,
           thickness: parseInt(bomData.boardThickness.replace('mm', '')),
@@ -4683,7 +4683,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ...bomResult.hardware.map(hardware => ({
           id: Math.random(), // temporary ID
           itemType: 'hardware' as const,
-          itemCategory: 'hardware',
+          itemCategory: 'Hardware', // Match what frontend expects
           partName: hardware.item,
           quantity: hardware.qty,
           unit: 'pieces',
@@ -4732,6 +4732,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             edgeBandingLength: item.edgeBandingLength || 0,
             unitRate: item.unitRate || 0,
             totalCost: item.totalCost,
+            areaSqft: item.area_sqft || 0, // Add area_sqft to database with correct name
           }))
         );
       }

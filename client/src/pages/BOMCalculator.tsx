@@ -407,10 +407,12 @@ export default function BOMCalculator() {
     items.forEach(item => {
       let groupKey = '';
       
-      // Group plywood by thickness
-      if (item.itemCategory === 'Board' && item.materialType?.includes('Plywood')) {
-        const thickness = item.materialType.match(/(\d+mm)/)?.[1] || '';
-        groupKey = `${thickness} Plywood`;
+      // Group boards by thickness and type
+      if (item.itemCategory === 'Board') {
+        const thickness = item.materialType?.match(/(\d+mm)/)?.[1] || '';
+        const boardType = item.materialType?.includes('PLY') ? 'PLY' : 
+                         item.materialType?.includes('MDF') ? 'MDF' : 'Board';
+        groupKey = `${thickness} ${boardType}`;
       }
       // Group laminates
       else if (item.itemCategory === 'Laminate') {
@@ -444,10 +446,7 @@ export default function BOMCalculator() {
       grouped[groupKey].totalQty += item.quantity;
       grouped[groupKey].totalArea += item.area_sqft || 0; // Use pre-calculated area in sqft
       
-      // Debug log to see what's being added
-      if (item.area_sqft && item.area_sqft > 0) {
-        console.log(`Adding area for ${item.partName}: ${item.area_sqft} sqft to group ${groupKey}`);
-      }
+      // Remove debug logging
       grouped[groupKey].totalCost += item.totalCost;
     });
 
