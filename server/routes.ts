@@ -4594,7 +4594,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         depth,
       };
 
-      const bomResult = await calculateBOM(calculationInput);
+      const bomResult = await calculateBOM(calculationInput, undefined, undefined, bomData.partsConfig?.exposedSides || false);
       
       // Generate simple calculation number (no database for now)
       const calculationNumber = `BOM-${Date.now()}`;

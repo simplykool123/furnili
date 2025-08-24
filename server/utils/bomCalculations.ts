@@ -85,10 +85,49 @@ const mmToFeet = (mm: number): number => {
   return mm / 304.8;
 };
 
-// Calculate edge banding length for a panel (perimeter)
+// Calculate edge banding length for different scenarios
 const calculateEdgeBandingLength = (length: number, width: number): number => {
   const perimeterMm = 2 * (length + width);
   return mmToFeet(perimeterMm);
+};
+
+// Calculate edge banding for shutters (all 4 edges)
+const calculateShutterEdgeBanding = (height: number, width: number): number => {
+  const perimeterMm = 2 * (height + width);
+  return mmToFeet(perimeterMm);
+};
+
+// Calculate edge banding for carcass front visible edges
+const calculateCarcassFrontEdgeBanding = (height: number, width: number): number => {
+  // 2 × side front (2H) + top & bottom front (2W)
+  const sideFrontMm = 2 * height * 2; // 2 sides × 2 edges per side
+  const topBottomFrontMm = 2 * width; // top + bottom front edges
+  return mmToFeet(sideFrontMm + topBottomFrontMm);
+};
+
+// Calculate edge banding for drawer fronts (all 4 edges)
+const calculateDrawerFrontEdgeBanding = (width: number, height: number): number => {
+  const perimeterMm = 2 * (width + height);
+  return mmToFeet(perimeterMm);
+};
+
+// Calculate edge banding for shelves (front only, or 3 edges if exposed)
+const calculateShelfEdgeBanding = (width: number, depth: number, exposedSides: boolean = false): number => {
+  if (exposedSides) {
+    // Front + two side edges visible
+    const frontMm = width;
+    const sidesMm = 2 * depth;
+    return mmToFeet(frontMm + sidesMm);
+  } else {
+    // Front edge only
+    return mmToFeet(width);
+  }
+};
+
+// Calculate edge banding for drawer sides/back (exposed edges only)
+const calculateDrawerSideBackEdgeBanding = (width: number, height: number): number => {
+  // Only front edge of sides/back are exposed
+  return mmToFeet(height);
 };
 
 // Bed type configurations
@@ -463,7 +502,7 @@ const generateBedHardware = (input: CalculationInput): Hardware[] => {
 };
 
 // Generate panels for wardrobe
-const generateWardrobePanels = (input: CalculationInput): Panel[] => {
+const generateWardrobePanels = (input: CalculationInput, exposedSides: boolean = false): Panel[] => {
   const { height, width, depth, boardType, boardThickness, partsConfig } = input;
   const panels: Panel[] = [];
   const material = `${boardThickness} ${boardType.toUpperCase()}`;
@@ -482,9 +521,9 @@ const generateWardrobePanels = (input: CalculationInput): Panel[] => {
   const internalWidth = width - (2 * panelThickness);
   const internalDepth = depth - backThickness - doorClearance;
 
-  // External Panels (2mm edge banding)
+  // External Panels (2mm edge banding for front visible edges only)
   
-  // Top panel
+  // Top panel - front edge only (2mm)
   panels.push({
     panel: "Top Panel",
     qty: 1,
@@ -494,10 +533,10 @@ const generateWardrobePanels = (input: CalculationInput): Panel[] => {
     material,
     edge_banding: "2mm",
     area_sqft: mmSqToSqft(width, depth),
-    edgeBandingLength: calculateEdgeBandingLength(width, depth),
+    edgeBandingLength: mmToFeet(width), // Front edge only
   });
 
-  // Bottom panel
+  // Bottom panel - front edge only (2mm)
   panels.push({
     panel: "Bottom Panel",
     qty: 1,
@@ -507,23 +546,24 @@ const generateWardrobePanels = (input: CalculationInput): Panel[] => {
     material,
     edge_banding: "2mm",
     area_sqft: mmSqToSqft(width, depth),
-    edgeBandingLength: calculateEdgeBandingLength(width, depth),
+    edgeBandingLength: mmToFeet(width), // Front edge only
   });
 
-  // Side panels (2 pieces)
+  // Side panels - front edge only (2mm), unless exposed sides
+  const sideEdgeBanding = exposedSides ? mmToFeet(height + depth + height) : mmToFeet(height); // 3 edges if exposed, front only if not
   panels.push({
     panel: "Side Panel",
-    qty: 2,
+    qty: exposedSides ? 2 : 2,
     size: `${height}mm x ${depth}mm`,
     length: height,
     width: depth,
     material,
     edge_banding: "2mm",
     area_sqft: mmSqToSqft(height, depth) * 2,
-    edgeBandingLength: calculateEdgeBandingLength(height, depth) * 2,
+    edgeBandingLength: sideEdgeBanding * 2,
   });
 
-  // Shutters
+  // Shutters - all 4 edges (2mm)
   if (partsConfig.shutters > 0) {
     const shutterWidth = width / partsConfig.shutters;
     panels.push({
@@ -535,7 +575,7 @@ const generateWardrobePanels = (input: CalculationInput): Panel[] => {
       material,
       edge_banding: "2mm",
       area_sqft: mmSqToSqft(height, shutterWidth) * partsConfig.shutters,
-      edgeBandingLength: calculateEdgeBandingLength(height, shutterWidth) * partsConfig.shutters,
+      edgeBandingLength: calculateShutterEdgeBanding(height, shutterWidth) * partsConfig.shutters,
     });
   }
 
@@ -556,7 +596,7 @@ const generateWardrobePanels = (input: CalculationInput): Panel[] => {
 
   // Internal Panels (0.8mm edge banding)
   
-  // Shelves - corrected depth calculation
+  // Shelves - front edge only (or 3 edges if exposed sides)
   if (partsConfig.shelves > 0) {
     const shelfWidth = internalWidth; // Full internal width
     const shelfDepth = depth - backThickness - frontClearance; // Proper depth calculation
@@ -569,7 +609,7 @@ const generateWardrobePanels = (input: CalculationInput): Panel[] => {
       material,
       edge_banding: "0.8mm",
       area_sqft: mmSqToSqft(shelfWidth, shelfDepth) * partsConfig.shelves,
-      edgeBandingLength: calculateEdgeBandingLength(shelfWidth, shelfDepth) * partsConfig.shelves,
+      edgeBandingLength: calculateShelfEdgeBanding(shelfWidth, shelfDepth, exposedSides) * partsConfig.shelves,
     });
   }
 
@@ -598,7 +638,7 @@ const generateWardrobePanels = (input: CalculationInput): Panel[] => {
       edgeBandingLength: 0,
     });
 
-    // Drawer front (2mm edge banding)
+    // Drawer front - all 4 edges (2mm edge banding)
     panels.push({
       panel: "Drawer Front",
       qty: partsConfig.drawers,
@@ -606,12 +646,12 @@ const generateWardrobePanels = (input: CalculationInput): Panel[] => {
       length: drawerOuterWidth,
       width: drawerHeight,
       material: `${boxThickness}mm ${boardType.toUpperCase()}`,
-      edge_banding: "2mm", // Drawer front gets 2mm edge banding
+      edge_banding: "2mm", // Drawer front gets 2mm edge banding on all 4 edges
       area_sqft: mmSqToSqft(drawerOuterWidth, drawerHeight) * partsConfig.drawers,
-      edgeBandingLength: calculateEdgeBandingLength(drawerOuterWidth, drawerHeight) * partsConfig.drawers,
+      edgeBandingLength: calculateDrawerFrontEdgeBanding(drawerOuterWidth, drawerHeight) * partsConfig.drawers,
     });
 
-    // Drawer back (0.8mm edge banding)
+    // Drawer back - front edge only (0.8mm edge banding)
     panels.push({
       panel: "Drawer Back",
       qty: partsConfig.drawers,
@@ -621,10 +661,10 @@ const generateWardrobePanels = (input: CalculationInput): Panel[] => {
       material: `${boxThickness}mm ${boardType.toUpperCase()}`,
       edge_banding: "0.8mm",
       area_sqft: mmSqToSqft(drawerOuterWidth, drawerHeight) * partsConfig.drawers,
-      edgeBandingLength: calculateEdgeBandingLength(drawerOuterWidth, drawerHeight) * partsConfig.drawers,
+      edgeBandingLength: calculateDrawerSideBackEdgeBanding(drawerOuterWidth, drawerHeight) * partsConfig.drawers,
     });
 
-    // Drawer sides - left and right (0.8mm edge banding)
+    // Drawer sides - front edge only (0.8mm edge banding)
     panels.push({
       panel: "Drawer Side",
       qty: partsConfig.drawers * 2,
@@ -634,7 +674,7 @@ const generateWardrobePanels = (input: CalculationInput): Panel[] => {
       material: `${boxThickness}mm ${boardType.toUpperCase()}`,
       edge_banding: "0.8mm",
       area_sqft: mmSqToSqft(drawerOuterDepth, drawerHeight) * partsConfig.drawers * 2,
-      edgeBandingLength: calculateEdgeBandingLength(drawerOuterDepth, drawerHeight) * partsConfig.drawers * 2,
+      edgeBandingLength: calculateDrawerSideBackEdgeBanding(drawerOuterDepth, drawerHeight) * partsConfig.drawers * 2,
     });
   }
 
@@ -1303,7 +1343,7 @@ function generateBathroomVanityHardware(input: any) {
 }
 
 // Calculate BOM for different unit types
-export const calculateBOM = async (input: CalculationInput, boardRates?: any, hardwareRates?: any): Promise<BOMResult> => {
+export const calculateBOM = async (input: CalculationInput, boardRates?: any, hardwareRates?: any, exposedSides: boolean = false): Promise<BOMResult> => {
   let panels: Panel[] = [];
   let hardware: Hardware[] = [];
 
@@ -1320,7 +1360,7 @@ export const calculateBOM = async (input: CalculationInput, boardRates?: any, ha
       break;
       
     case 'wardrobe':
-      panels = generateWardrobePanels(input);
+      panels = generateWardrobePanels(input, exposedSides); // Use exposedSides parameter
       hardware = generateWardrobeHardware(input);
       break;
       
@@ -1339,7 +1379,7 @@ export const calculateBOM = async (input: CalculationInput, boardRates?: any, ha
           drawers: 0,
           shutters: Math.max(1, input.partsConfig.shutters), // At least 1 panel
         }
-      });
+      }, false); // Default: no exposed sides
       hardware = [
         ...generateWardrobeHardware({
           ...input,
@@ -1382,7 +1422,7 @@ export const calculateBOM = async (input: CalculationInput, boardRates?: any, ha
           drawers: 0,
           shelves: Math.max(3, input.partsConfig.shelves), // Minimum 3 shelves
         }
-      });
+      }, true); // Shoe racks typically have exposed sides
       hardware = generateWardrobeHardware({
         ...input,
         partsConfig: {
@@ -1395,7 +1435,7 @@ export const calculateBOM = async (input: CalculationInput, boardRates?: any, ha
       
     default:
       // Custom or other types - use wardrobe as template
-      panels = generateWardrobePanels(input);
+      panels = generateWardrobePanels(input, exposedSides); // Use exposedSides parameter
       hardware = generateWardrobeHardware(input);
   }
 

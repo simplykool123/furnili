@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
@@ -54,6 +55,7 @@ const bomCalculationSchema = z.object({
     shutters: z.number().default(0),
     doors: z.number().default(0),
     backPanels: z.number().default(0),
+    exposedSides: z.boolean().default(false),
     
     // Bed specific
     bedType: z.string().optional(),
@@ -128,84 +130,84 @@ const furnitureTypes = [
     name: "Wardrobes", 
     icon: Home, 
     description: "Built-in wardrobes and closets",
-    defaultConfig: { shutters: 2, shelves: 3, drawers: 2, doors: 0, backPanels: 1 }
+    defaultConfig: { shutters: 2, shelves: 3, drawers: 2, doors: 0, backPanels: 1, exposedSides: false }
   },
   { 
     id: "bed", 
     name: "Beds", 
     icon: Bed, 
     description: "Bed frames and storage beds",
-    defaultConfig: { shutters: 0, shelves: 0, drawers: 2, doors: 0, backPanels: 1 }
+    defaultConfig: { shutters: 0, shelves: 0, drawers: 2, doors: 0, backPanels: 1, exposedSides: false }
   },
   { 
     id: "kitchen_cabinet", 
     name: "Kitchen", 
     icon: Package, 
     description: "Kitchen cabinets and accessories",
-    defaultConfig: { shelves: 0, drawers: 6, shutters: 0, doors: 0, backPanels: 0 }
+    defaultConfig: { shelves: 0, drawers: 6, shutters: 0, doors: 0, backPanels: 0, exposedSides: false }
   },
   { 
     id: "tv_unit", 
     name: "TV Unit", 
     icon: PanelTop, 
     description: "Entertainment centers and TV stands",
-    defaultConfig: { shelves: 2, drawers: 2, shutters: 0, doors: 0, backPanels: 1 }
+    defaultConfig: { shelves: 2, drawers: 2, shutters: 0, doors: 0, backPanels: 1, exposedSides: false }
   },
   { 
     id: "storage_unit", 
     name: "Cabinets", 
     icon: Archive, 
     description: "Storage cabinets and units",
-    defaultConfig: { shutters: 2, shelves: 4, drawers: 1, doors: 0, backPanels: 1 }
+    defaultConfig: { shutters: 2, shelves: 4, drawers: 1, doors: 0, backPanels: 1, exposedSides: false }
   },
   { 
     id: "bookshelf", 
     name: "Bookshelf", 
     icon: Table2, 
     description: "Open and closed bookshelves",
-    defaultConfig: { shelves: 5, drawers: 0, shutters: 0, doors: 0, backPanels: 1 }
+    defaultConfig: { shelves: 5, drawers: 0, shutters: 0, doors: 0, backPanels: 1, exposedSides: true }
   },
   { 
     id: "dresser", 
     name: "Dresser", 
     icon: Sofa, 
     description: "Bedroom dressers and chests",
-    defaultConfig: { drawers: 6, shelves: 0, shutters: 0, doors: 0, backPanels: 1 }
+    defaultConfig: { drawers: 6, shelves: 0, shutters: 0, doors: 0, backPanels: 1, exposedSides: false }
   },
   { 
     id: "door", 
     name: "Doors", 
     icon: DoorOpen, 
     description: "Interior and cabinet doors",
-    defaultConfig: { shutters: 1, shelves: 0, drawers: 0, doors: 1, backPanels: 0 }
+    defaultConfig: { shutters: 1, shelves: 0, drawers: 0, doors: 1, backPanels: 0, exposedSides: false }
   },
   { 
     id: "shoe_rack", 
     name: "Shelving Units", 
     icon: Package, 
     description: "Open shelving and shoe racks",
-    defaultConfig: { shutters: 0, shelves: 5, drawers: 0, doors: 0, backPanels: 1 }
+    defaultConfig: { shutters: 0, shelves: 5, drawers: 0, doors: 0, backPanels: 1, exposedSides: true }
   },
   { 
     id: "table", 
     name: "Tables", 
     icon: Table2, 
     description: "Dining and work tables",
-    defaultConfig: { shutters: 0, shelves: 0, drawers: 1, doors: 0, backPanels: 0 }
+    defaultConfig: { shutters: 0, shelves: 0, drawers: 1, doors: 0, backPanels: 0, exposedSides: false }
   },
   { 
     id: "sofa", 
     name: "Sofas and Seating", 
     icon: Sofa, 
     description: "Sofa frames and seating",
-    defaultConfig: { shutters: 0, shelves: 0, drawers: 1, doors: 0, backPanels: 0 }
+    defaultConfig: { shutters: 0, shelves: 0, drawers: 1, doors: 0, backPanels: 0, exposedSides: false }
   },
   { 
     id: "tv_panel", 
     name: "Paneling", 
     icon: PanelTop, 
     description: "Wall panels and partitions",
-    defaultConfig: { shutters: 1, shelves: 2, drawers: 0, doors: 0, backPanels: 1 }
+    defaultConfig: { shutters: 1, shelves: 2, drawers: 0, doors: 0, backPanels: 1, exposedSides: false }
   },
 ];
 
@@ -255,6 +257,7 @@ export default function BOMCalculator() {
         shutters: 0,
         doors: 0,
         backPanels: 0,
+        exposedSides: false,
         customParts: [],
       },
     },
@@ -1226,6 +1229,28 @@ export default function BOMCalculator() {
                                     onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
                                   />
                                 </FormControl>
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name="partsConfig.exposedSides"
+                            render={({ field }) => (
+                              <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                                <FormControl>
+                                  <Checkbox
+                                    checked={field.value}
+                                    onCheckedChange={field.onChange}
+                                  />
+                                </FormControl>
+                                <div className="space-y-1 leading-none">
+                                  <FormLabel className="text-xs font-normal">
+                                    Exposed Left/Right Side
+                                  </FormLabel>
+                                  <p className="text-xs text-muted-foreground">
+                                    Adds 2mm edge banding to side panel edges
+                                  </p>
+                                </div>
                               </FormItem>
                             )}
                           />
