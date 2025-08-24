@@ -46,6 +46,7 @@ interface BOMResult {
   hardware_cost: number;
   total_cost: number;
   totalBoardArea: number;
+  boardAreaByThickness: { [thickness: string]: number };
   totalEdgeBanding2mm: number;
   totalEdgeBanding0_8mm: number;
 }
@@ -1467,6 +1468,7 @@ export const calculateBOM = async (input: CalculationInput, boardRates?: any, ha
   // Calculate costs
   let material_cost = 0;
   let totalBoardArea = 0;
+  let boardAreaByThickness: { [thickness: string]: number } = {};
   let totalEdgeBanding2mm = 0;
   let totalEdgeBanding0_8mm = 0;
 
@@ -1475,6 +1477,15 @@ export const calculateBOM = async (input: CalculationInput, boardRates?: any, ha
     const panelCost = panel.area_sqft * boardRate;
     material_cost += panelCost;
     totalBoardArea += panel.area_sqft;
+    
+    // Group by thickness (extract thickness from material)
+    const thicknessMatch = panel.material.match(/(\d+(?:\.\d+)?)mm/);
+    const thickness = thicknessMatch ? thicknessMatch[1] + 'mm' : 'unknown';
+    
+    if (!boardAreaByThickness[thickness]) {
+      boardAreaByThickness[thickness] = 0;
+    }
+    boardAreaByThickness[thickness] += panel.area_sqft;
     
     // Edge banding costs
     const edgeBandingRate = edgeRates[panel.edge_banding as keyof typeof edgeRates] || 0;
@@ -1500,6 +1511,7 @@ export const calculateBOM = async (input: CalculationInput, boardRates?: any, ha
     hardware_cost,
     total_cost,
     totalBoardArea,
+    boardAreaByThickness,
     totalEdgeBanding2mm,
     totalEdgeBanding0_8mm,
   };
