@@ -429,10 +429,10 @@ const generateBedHardware = (input: CalculationInput): Hardware[] => {
   // Storage - Drawer type
   if (partsConfig.drawers > 0) {
     hardware.push({
-      item: "Drawer Channels",
-      qty: partsConfig.drawers * 2, // Left + right per drawer
-      unit_rate: DEFAULT_RATES.hardware.drawer_slide,
-      total_cost: partsConfig.drawers * 2 * DEFAULT_RATES.hardware.drawer_slide,
+      item: "Drawer Channel Set",
+      qty: partsConfig.drawers, // Count in sets (1 set = 2 pieces)
+      unit_rate: DEFAULT_RATES.hardware.drawer_slide * 2,
+      total_cost: partsConfig.drawers * DEFAULT_RATES.hardware.drawer_slide * 2,
     });
 
     hardware.push({
@@ -948,8 +948,13 @@ function generateBathroomVanityPanels(input: any) {
 
 // Generate hardware for wardrobe
 const generateWardrobeHardware = (input: CalculationInput): Hardware[] => {
-  const { height, partsConfig } = input;
+  const { height, width, depth, boardThickness, partsConfig } = input;
   const hardware: Hardware[] = [];
+
+  // Calculate internal dimensions for hanging rod
+  const panelThickness = parseInt(boardThickness.replace('mm', ''));
+  const internalWidth = width - (2 * panelThickness);
+  const bayClearWidth = internalWidth; // Assuming single bay for now
 
   // Locks - 1 per shutter
   if (partsConfig.shutters > 0) {
@@ -959,6 +964,16 @@ const generateWardrobeHardware = (input: CalculationInput): Hardware[] => {
       unit_rate: DEFAULT_RATES.hardware.lock,
       total_cost: partsConfig.shutters * DEFAULT_RATES.hardware.lock,
     });
+
+    // Optional center-lock for two doors (configurable)
+    if (partsConfig.shutters === 2) {
+      hardware.push({
+        item: "Center Lock Set",
+        qty: 1,
+        unit_rate: DEFAULT_RATES.hardware.lock * 0.8, // Slightly less expensive
+        total_cost: DEFAULT_RATES.hardware.lock * 0.8,
+      });
+    }
   }
 
   // Handles - 1 per shutter, 1 per drawer
@@ -984,21 +999,22 @@ const generateWardrobeHardware = (input: CalculationInput): Hardware[] => {
     });
   }
 
-  // Drawer slides - 2 per drawer
+  // Drawer slides - count in sets (1 set/drawer = 2 pcs)
   if (partsConfig.drawers > 0) {
-    const totalSlides = partsConfig.drawers * 2;
     hardware.push({
-      item: "Drawer Slide",
-      qty: totalSlides,
-      unit_rate: DEFAULT_RATES.hardware.drawer_slide,
-      total_cost: totalSlides * DEFAULT_RATES.hardware.drawer_slide,
+      item: "Drawer Slide Set",
+      qty: partsConfig.drawers, // Show sets, not individual pieces
+      unit_rate: DEFAULT_RATES.hardware.drawer_slide * 2, // Price per set (2 pieces)
+      total_cost: partsConfig.drawers * DEFAULT_RATES.hardware.drawer_slide * 2,
     });
   }
 
-  // Minifix - approximately 3 per joint
-  // Estimate joints: top connections, bottom connections, shelf connections
-  const estimatedJoints = 4 + partsConfig.shelves * 2; // Top/bottom + shelf connections
-  const totalMinifix = estimatedJoints * 3;
+  // Minifix & Dowels based on joints
+  // joints = 4 (top↔sides + bottom↔sides) + partitions*2
+  const partitions = partsConfig.shelves; // Shelves act as partitions
+  const joints = 4 + (partitions * 2);
+  
+  const totalMinifix = Math.ceil(joints * 3); // 3 per joint
   hardware.push({
     item: "Minifix",
     qty: totalMinifix,
@@ -1006,14 +1022,23 @@ const generateWardrobeHardware = (input: CalculationInput): Hardware[] => {
     total_cost: totalMinifix * DEFAULT_RATES.hardware.minifix,
   });
 
-  // Dowels - approximately 5 per joint
-  const totalDowels = estimatedJoints * 5;
+  const totalDowels = Math.ceil(joints * 5); // 5 per joint
   hardware.push({
     item: "Dowel",
     qty: totalDowels,
     unit_rate: DEFAULT_RATES.hardware.dowel,
     total_cost: totalDowels * DEFAULT_RATES.hardware.dowel,
   });
+
+  // Hanging rod with bay clear width
+  if (partsConfig.shutters > 0) { // Only for wardrobes with doors
+    hardware.push({
+      item: `Hanging Rod (${bayClearWidth}mm)`,
+      qty: 1,
+      unit_rate: 150, // Rod price (could add to DEFAULT_RATES)
+      total_cost: 150,
+    });
+  }
 
   // Straightener - if H > 2100mm, 1 per shutter
   if (height > 2100 && partsConfig.shutters > 0) {
@@ -1047,10 +1072,10 @@ function generateStorageUnitHardware(input: any) {
   if (drawers > 0) {
     hardware.push(
       {
-        item: "Drawer Slides",
-        qty: drawers * 2,
-        unit_rate: 180,
-        total_cost: drawers * 2 * 180
+        item: "Drawer Slide Set",
+        qty: drawers, // Count in sets (1 set = 2 pieces)
+        unit_rate: 180 * 2,
+        total_cost: drawers * 180 * 2
       },
       {
         item: "Drawer Handles",
@@ -1080,10 +1105,10 @@ function generateDresserHardware(input: any) {
   // Drawer hardware
   hardware.push(
     {
-      item: "Soft Close Drawer Slides",
-      qty: drawers * 2,
-      unit_rate: 220,
-      total_cost: drawers * 2 * 220
+      item: "Soft Close Drawer Slide Set",
+      qty: drawers, // Count in sets (1 set = 2 pieces)
+      unit_rate: 220 * 2,
+      total_cost: drawers * 220 * 2
     },
     {
       item: "Dresser Handles",
@@ -1193,10 +1218,10 @@ function generateKitchenCabinetHardware(input: any) {
   if (drawers > 0) {
     hardware.push(
       {
-        item: "Kitchen Drawer Slides (Heavy Duty)",
-        qty: drawers * 2,
-        unit_rate: 350,
-        total_cost: drawers * 2 * 350
+        item: "Kitchen Drawer Slide Set (Heavy Duty)",
+        qty: drawers, // Count in sets (1 set = 2 pieces)
+        unit_rate: 350 * 2,
+        total_cost: drawers * 350 * 2
       },
       {
         item: "Kitchen Drawer Handles",
@@ -1289,10 +1314,10 @@ function generateBathroomVanityHardware(input: any) {
   if (drawers > 0) {
     hardware.push(
       {
-        item: "Vanity Drawer Slides (Soft Close)",
-        qty: drawers * 2,
-        unit_rate: 200,
-        total_cost: drawers * 2 * 200
+        item: "Vanity Drawer Slide Set (Soft Close)",
+        qty: drawers, // Count in sets (1 set = 2 pieces)
+        unit_rate: 200 * 2,
+        total_cost: drawers * 200 * 2
       },
       {
         item: "Vanity Drawer Handles",
