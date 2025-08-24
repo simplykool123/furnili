@@ -15,9 +15,10 @@ if (!process.env.DATABASE_URL && !SUPABASE_DATABASE_URL) {
 // console.log('Attempting to connect to database...');
 // console.log('Database URL format:', process.env.DATABASE_URL?.replace(/:([^:@]+)@/, ':****@'));
 
+// Force use Supabase database connection
 export const pool = new Pool({ 
-  connectionString: SUPABASE_DATABASE_URL || process.env.DATABASE_URL,
-  ssl: SUPABASE_DATABASE_URL ? { rejectUnauthorized: false } : {
+  connectionString: SUPABASE_DATABASE_URL, // Always use Supabase
+  ssl: {
     rejectUnauthorized: false
   },
   connectionTimeoutMillis: 15000,
