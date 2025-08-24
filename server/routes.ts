@@ -4759,8 +4759,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         pdfContent += `Hardware Cost: ₹${bom.totalHardwareCost}\n`;
         pdfContent += `TOTAL COST: ₹${bom.totalCost}\n`;
         
-        res.setHeader('Content-Type', 'application/octet-stream');
-        res.setHeader('Content-Disposition', `attachment; filename=BOM-${bom.calculationNumber}.pdf`);
+        res.setHeader('Content-Type', 'text/plain');
+        res.setHeader('Content-Disposition', `attachment; filename=BOM-${bom.calculationNumber}.txt`);
         res.send(pdfContent);
       } else {
         res.status(400).json({ message: "Invalid format" });
