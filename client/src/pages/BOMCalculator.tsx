@@ -401,8 +401,6 @@ export default function BOMCalculator() {
 
   // Group BOM items by material type for consolidated view
   const getConsolidatedMaterials = (items: BomItem[]) => {
-    console.log('=== DEBUG: BOM Items received ===', items);
-    
     const grouped: { [key: string]: { 
       items: BomItem[], 
       totalQty: number, 
@@ -414,8 +412,6 @@ export default function BOMCalculator() {
 
     items.forEach(item => {
       let groupKey = '';
-      
-      console.log(`Processing item: ${item.partName}, category: ${item.itemCategory}`);
       
       // Group boards by thickness and type
       if (item.itemCategory === 'Board') {
@@ -436,15 +432,13 @@ export default function BOMCalculator() {
       else if (item.itemCategory === 'Edge Banding') {
         groupKey = `Edge Band (${item.materialType || 'PVC'})`;
       }
-      // Group adhesives - SHOULD SHOW UP HERE
+      // Group adhesives
       else if (item.itemCategory === 'Adhesive') {
         groupKey = item.partName;
-        console.log(`✅ FOUND ADHESIVE: ${item.partName} - Qty: ${item.quantity} ${item.unit}`);
       }
       // Everything else grouped by material type or part name
       else {
         groupKey = item.materialType || item.partName;
-        console.log(`⚠️ UNGROUPED ITEM: ${item.partName} - Category: ${item.itemCategory}`);
       }
 
       if (!grouped[groupKey]) {
@@ -522,104 +516,185 @@ export default function BOMCalculator() {
 
   return (
     <ResponsiveLayout title="BOM Calculator">
-      {/* Hero Section */}
-      <div className="bg-[hsl(28,100%,25%)] text-white py-8 px-4 mb-6 rounded-lg">
+      {/* Compact Header */}
+      <div className="bg-[hsl(28,100%,25%)] text-white py-3 px-4 mb-3 rounded-lg">
         <div className="text-center">
-          <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">
-            HOW MUCH MATERIALS WOULD YOU NEED?
-          </h1>
-          <p className="text-white/90">Calculate furniture material requirements</p>
+          <h1 className="text-lg font-bold text-white">Material Calculator</h1>
         </div>
       </div>
 
-      {/* Furniture Type Selector */}
-      <div className="bg-card shadow-sm border rounded-lg mb-6">
-        <div className="px-4 py-6">
-          <div className="flex items-center gap-2 mb-4">
-            <div className="bg-[hsl(28,100%,25%)] text-white px-3 py-1 rounded-full text-sm font-medium">
-              Select Furniture Type
-            </div>
-          </div>
-          <div className="flex flex-wrap gap-2 justify-center">
-            {furnitureTypes.map((furniture) => {
-              const IconComponent = furniture.icon;
-              const isSelected = selectedFurnitureType === furniture.id;
-              
-              return (
-                <button
-                  key={furniture.id}
-                  onClick={() => setSelectedFurnitureType(furniture.id)}
-                  className={`p-2 rounded-lg border-2 transition-all duration-200 text-center min-w-[80px] ${
-                    isSelected 
-                      ? 'border-[hsl(28,100%,25%)] bg-[hsl(28,100%,25%)] text-white shadow-lg' 
-                      : 'border-border bg-card hover:border-[hsl(28,100%,25%)]/30 hover:bg-accent text-foreground'
-                  }`}
-                >
-                  <IconComponent className={`w-5 h-5 mx-auto mb-1 ${isSelected ? 'text-white' : 'text-[hsl(28,100%,25%)]'}`} />
-                  <div className={`text-xs font-medium ${isSelected ? 'text-white' : 'text-foreground'}`}>
-                    {furniture.name}
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-
-      {/* Calculator Section */}
-      <div className="space-y-4 p-4">
-        {/* Calculator Form */}
+      {/* Calculator Section - Compact */}
+      <div className="space-y-2 p-2">
+        {/* Calculator Form - Compact */}
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-3">
-              {selectedFurniture && <selectedFurniture.icon className="w-6 h-6 text-furnili-brown" />}
-              <div>
-                <div>{selectedFurniture?.name} Calculator</div>
-                <div className="text-sm text-muted-foreground font-normal">{selectedFurniture?.description}</div>
-              </div>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">
+              <Calculator className="w-4 h-4 inline mr-2" />
+              Wardrobe Calculator
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-2">
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
-                  {/* Dimensions */}
-                  <div className="space-y-2">
-                    <h3 className="text-sm font-medium flex items-center gap-2">
-                      <Calculator className="w-4 h-4" />
-                      Dimensions
-                    </h3>
-                    <div className="grid grid-cols-2 gap-2">
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-2">
+                  {/* Dimensions - Compact */}
+                  <div className="space-y-1">
+                    <h3 className="text-xs font-medium">Dimensions</h3>
+                    <div className="grid grid-cols-3 gap-1">
                       <FormField
                         control={form.control}
                         name="unitOfMeasure"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Unit</FormLabel>
+                            <FormLabel className="text-xs">Unit</FormLabel>
                             <Select onValueChange={field.onChange} defaultValue={field.value}>
                               <FormControl>
-                                <SelectTrigger>
+                                <SelectTrigger className="h-7 text-xs">
                                   <SelectValue />
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
-                                <SelectItem value="mm">Millimeters (mm)</SelectItem>
-                                <SelectItem value="ft">Feet (ft)</SelectItem>
+                                <SelectItem value="mm">mm</SelectItem>
+                                <SelectItem value="ft">ft</SelectItem>
                               </SelectContent>
                             </Select>
-                            <FormMessage />
                           </FormItem>
                         )}
                       />
 
                       <FormField
                         control={form.control}
+                        name="height"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-xs">Height</FormLabel>
+                            <FormControl>
+                              <Input 
+                                {...field} 
+                                type="number" 
+                                className="h-7 text-xs"
+                                value={field.value || ''}
+                                onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                              />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name="width"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-xs">Width</FormLabel>
+                            <FormControl>
+                              <Input 
+                                {...field} 
+                                type="number" 
+                                className="h-7 text-xs"
+                                value={field.value || ''}
+                                onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                              />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    
+                    <div className="grid grid-cols-3 gap-1">
+                      <FormField
+                        control={form.control}
+                        name="depth"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-xs">Depth</FormLabel>
+                            <FormControl>
+                              <Input 
+                                {...field} 
+                                type="number" 
+                                className="h-7 text-xs"
+                                value={field.value || ''}
+                                onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                              />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name="boardType"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-xs">Board</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl>
+                                <SelectTrigger className="h-7 text-xs">
+                                  <SelectValue />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="ply">Plywood</SelectItem>
+                                <SelectItem value="mdf">MDF</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name="boardThickness"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-xs">Thickness</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl>
+                                <SelectTrigger className="h-7 text-xs">
+                                  <SelectValue />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="18mm">18mm</SelectItem>
+                                <SelectItem value="12mm">12mm</SelectItem>
+                                <SelectItem value="6mm">6mm</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-1">
+                      <FormField
+                        control={form.control}
+                        name="finish"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-xs">Finish</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl>
+                                <SelectTrigger className="h-7 text-xs">
+                                  <SelectValue />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="laminate">Laminate</SelectItem>
+                                <SelectItem value="none">None</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
                         name="projectId"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Link to Project (Optional)</FormLabel>
+                            <FormLabel className="text-xs">Project (Optional)</FormLabel>
                             <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value?.toString()}>
                               <FormControl>
-                                <SelectTrigger>
+                                <SelectTrigger className="h-7 text-xs">
                                   <SelectValue placeholder="Select project" />
                                 </SelectTrigger>
                               </FormControl>
@@ -1549,15 +1624,15 @@ export default function BOMCalculator() {
                     )}
                   />
 
-                  {/* Submit Button */}
+                  {/* Compact Submit Button */}
                   <Button
                     type="submit"
                     data-testid="button-calculate-bom"
                     disabled={calculateBOMMutation.isPending}
-                    className="w-full bg-[hsl(28,100%,25%)] hover:bg-[hsl(28,100%,20%)] text-white text-lg py-6"
+                    className="w-full bg-[hsl(28,100%,25%)] hover:bg-[hsl(28,100%,20%)] text-white py-2 text-sm"
                   >
-                    {calculateBOMMutation.isPending ? "Calculating..." : "Calculate BOM"}
-                    <Calculator className="w-5 h-5 ml-2" />
+                    {calculateBOMMutation.isPending ? "Calculating..." : "Calculate"}
+                    <Calculator className="w-4 h-4 ml-1" />
                   </Button>
                 </form>
               </Form>
@@ -1568,20 +1643,21 @@ export default function BOMCalculator() {
         <div>
             {bomResult ? (
               <Card>
-                <CardHeader>
+                <CardHeader className="pb-2">
                   <div className="flex items-center justify-between">
-                    <CardTitle className="flex items-center gap-2">
-                      <FileDown className="w-5 h-5 text-furnili-brown" />
-                      BOM Results - {bomResult.calculationNumber}
+                    <CardTitle className="text-base flex items-center gap-1">
+                      <FileDown className="w-4 h-4 text-furnili-brown" />
+                      Results - {bomResult.calculationNumber}
                     </CardTitle>
-                    <div className="flex gap-2">
+                    <div className="flex gap-1">
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => handleExport('excel')}
                         disabled={exportBOMMutation.isPending}
+                        className="h-7 px-2 text-xs"
                       >
-                        <Download className="w-4 h-4 mr-2" />
+                        <Download className="w-3 h-3 mr-1" />
                         Excel
                       </Button>
                       <Button
@@ -1589,149 +1665,53 @@ export default function BOMCalculator() {
                         size="sm"
                         onClick={() => handleExport('pdf')}
                         disabled={exportBOMMutation.isPending}
+                        className="h-7 px-2 text-xs"
                       >
-                        <FileDown className="w-4 h-4 mr-2" />
+                        <FileDown className="w-3 h-3 mr-1" />
                         PDF
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={handleWhatsAppShare}
-                      >
-                        <MessageSquare className="w-4 h-4 mr-2" />
-                        Share
                       </Button>
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent>
-                  {/* Summary Cards */}
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                    <div className="text-center p-4 bg-accent rounded-lg">
-                      <p className="text-sm text-muted-foreground font-medium">Board Area</p>
-                      <p className="text-xl font-bold text-foreground">{bomResult.totalBoardArea.toFixed(1)} sq.ft</p>
-                    </div>
-                    <div className="text-center p-4 bg-accent rounded-lg">
-                      <p className="text-sm text-muted-foreground font-medium">Edge Band 2mm</p>
-                      <p className="text-xl font-bold text-foreground">{(bomResult.totalEdgeBanding2mm * 0.3048).toFixed(1)} m</p>
-                    </div>
-                    <div className="text-center p-4 bg-accent rounded-lg">
-                      <p className="text-sm text-muted-foreground font-medium">Edge Band 0.8mm</p>
-                      <p className="text-xl font-bold text-foreground">{(bomResult.totalEdgeBanding0_8mm * 0.3048).toFixed(1)} m</p>
-                    </div>
-                    <div className="text-center p-4 bg-furnili-brown/10 rounded-lg">
-                      <p className="text-sm text-furnili-brown font-medium">Total Cost</p>
-                      <p className="text-2xl font-bold text-furnili-brown">{formatCurrency(bomResult.totalCost || 0)}</p>
-                    </div>
-                  </div>
+                <CardContent className="pt-1">
 
-                  {/* Consolidated Material Purchase List */}
-                  <Card className="mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20">
-                    <CardHeader>
-                      <CardTitle className="text-base flex items-center gap-2">
-                        <Package className="w-5 h-5 text-blue-600" />
-                        Material Purchase Requirements
+                  {/* Compact Material Purchase List */}
+                  <Card className="mb-3">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm flex items-center gap-1">
+                        <Package className="w-4 h-4" />
+                        Purchase Requirements
                       </CardTitle>
                     </CardHeader>
-                    <CardContent>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        {/* Board Sheets by Thickness */}
-                        <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border shadow-sm">
-                          <h4 className="font-medium text-sm mb-2 text-gray-700 dark:text-gray-300">Board Sheets Required</h4>
-                          {(() => {
-                            const sheetLength = parseFloat(form.watch('manufacturingSettings.sheetLength') || '8');
-                            const sheetWidth = parseFloat(form.watch('manufacturingSettings.sheetWidth') || '4'); 
-                            const wastage = parseFloat(form.watch('manufacturingSettings.wastagePercent') || '10') / 100;
-                            const sheetArea = sheetLength * sheetWidth;
-                            
-                            return Object.entries(bomResult.boardAreaByThickness || {}).map(([thickness, area]) => (
-                              <div key={thickness} className="mb-3 last:mb-0">
-                                <div className="text-2xl font-bold text-blue-600 mb-1">
-                                  {Math.ceil((area * (1 + wastage)) / sheetArea)} sheets ({thickness})
-                                </div>
-                                <div className="text-xs text-gray-500 space-y-1">
-                                  <div>Net Area: {area.toFixed(1)} sq.ft</div>
-                                  <div>With {form.watch('manufacturingSettings.wastagePercent') || '10'}% wastage: {(area * (1 + wastage)).toFixed(1)} sq.ft</div>
-                                </div>
-                              </div>
-                            ));
-                          })()}
-                          <div className="text-xs text-gray-400 pt-2 border-t">
-                            Sheet: {form.watch('manufacturingSettings.sheetLength') || '8'}'×{form.watch('manufacturingSettings.sheetWidth') || '4'}' ({(parseFloat(form.watch('manufacturingSettings.sheetLength') || '8') * parseFloat(form.watch('manufacturingSettings.sheetWidth') || '4')).toFixed(0)} sq.ft)
+                    <CardContent className="pt-1">
+                      <div className="text-xs space-y-1">
+                        {Object.entries(bomResult.boardAreaByThickness || {}).map(([thickness, area]) => (
+                          <div key={thickness} className="flex justify-between">
+                            <span>{Math.ceil((area * 1.1) / 32)} sheets ({thickness})</span>
+                            <span>{area.toFixed(1)} sq.ft</span>
                           </div>
-                        </div>
-                        
-                        {/* 2mm Edge Banding */}
+                        ))}
                         {bomResult.totalEdgeBanding2mm > 0 && (
-                          <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border shadow-sm">
-                            <h4 className="font-medium text-sm mb-2 text-gray-700 dark:text-gray-300">2mm Edge Banding</h4>
-                            <div className="text-3xl font-bold text-green-600 mb-1">
-                              {Math.ceil((bomResult.totalEdgeBanding2mm * 0.3048 * 1.05) / 50)} rolls
-                            </div>
-                            <div className="text-xs text-gray-500 space-y-1">
-                              <div>Net Length: {(bomResult.totalEdgeBanding2mm * 0.3048).toFixed(1)} m</div>
-                              <div>With 5% wastage: {(bomResult.totalEdgeBanding2mm * 0.3048 * 1.05).toFixed(1)} m</div>
-                              <div className="text-gray-400">Standard roll: 50m</div>
-                            </div>
+                          <div className="flex justify-between">
+                            <span>{Math.ceil((bomResult.totalEdgeBanding2mm * 0.3048 * 1.05) / 50)} rolls 2mm edge</span>
+                            <span>{(bomResult.totalEdgeBanding2mm * 0.3048).toFixed(1)} m</span>
                           </div>
                         )}
-                        
-                        {/* 0.8mm Edge Banding */}
                         {bomResult.totalEdgeBanding0_8mm > 0 && (
-                          <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border shadow-sm">
-                            <h4 className="font-medium text-sm mb-2 text-gray-700 dark:text-gray-300">0.8mm Edge Banding</h4>
-                            <div className="text-3xl font-bold text-purple-600 mb-1">
-                              {Math.ceil((bomResult.totalEdgeBanding0_8mm * 0.3048 * 1.05) / 50)} rolls
-                            </div>
-                            <div className="text-xs text-gray-500 space-y-1">
-                              <div>Net Length: {(bomResult.totalEdgeBanding0_8mm * 0.3048).toFixed(1)} m</div>
-                              <div>With 5% wastage: {(bomResult.totalEdgeBanding0_8mm * 0.3048 * 1.05).toFixed(1)} m</div>
-                              <div className="text-gray-400">Standard roll: 50m</div>
-                            </div>
+                          <div className="flex justify-between">
+                            <span>{Math.ceil((bomResult.totalEdgeBanding0_8mm * 0.3048 * 1.05) / 50)} rolls 0.8mm edge</span>
+                            <span>{(bomResult.totalEdgeBanding0_8mm * 0.3048).toFixed(1)} m</span>
                           </div>
                         )}
-                      </div>
-                      
-                      {/* Cutting Optimization Note */}
-                      <div className="mt-4 p-3 bg-amber-50 dark:bg-amber-950/20 rounded-lg border border-amber-200 dark:border-amber-800">
-                        <div className="flex items-start gap-2">
-                          <div className="w-2 h-2 bg-amber-500 rounded-full mt-2 flex-shrink-0"></div>
-                          <div className="text-sm text-amber-800 dark:text-amber-200">
-                            <strong>Cutting List Optimization:</strong> Sheet counts include wastage allowance. For precise nesting and cutting optimization, use CAD software like OptiCut or consult your panel supplier. Actual sheets required may vary based on cutting efficiency.
-                          </div>
-                        </div>
-                      </div>
-                      
-                      {/* Quick Purchase Summary */}
-                      <div className="mt-4 p-4 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 rounded-lg border border-green-200 dark:border-green-800">
-                        <h4 className="font-medium text-sm mb-2 text-green-800 dark:text-green-200">Quick Purchase Summary</h4>
-                        <div className="text-sm text-green-700 dark:text-green-300">
-                          {(() => {
-                            const sheetLength = parseFloat(form.watch('manufacturingSettings.sheetLength') || '8');
-                            const sheetWidth = parseFloat(form.watch('manufacturingSettings.sheetWidth') || '4'); 
-                            const wastage = parseFloat(form.watch('manufacturingSettings.wastagePercent') || '10') / 100;
-                            const sheetArea = sheetLength * sheetWidth;
-                            
-                            return Object.entries(bomResult.boardAreaByThickness || {}).map(([thickness, area]) => (
-                              <div key={thickness}>• {Math.ceil((area * (1 + wastage)) / sheetArea)} sheets of {form.watch('boardType')} board ({thickness})</div>
-                            ));
-                          })()}
-                          {bomResult.totalEdgeBanding2mm > 0 && (
-                            <div>• {Math.ceil((bomResult.totalEdgeBanding2mm * 0.3048 * 1.05) / 50)} rolls of 2mm edge banding</div>
-                          )}
-                          {bomResult.totalEdgeBanding0_8mm > 0 && (
-                            <div>• {Math.ceil((bomResult.totalEdgeBanding0_8mm * 0.3048 * 1.05) / 50)} rolls of 0.8mm edge banding</div>
-                          )}
-                        </div>
                       </div>
                     </CardContent>
                   </Card>
 
-                  {/* Consolidated BOM Table */}
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-3">
-                      <h3 className="text-lg font-medium">Bill of Materials</h3>
-                      <Badge variant="secondary" className="text-xs">Consolidated View</Badge>
+                  {/* Compact BOM Table */}
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-sm font-medium">Bill of Materials</h3>
+                      <Badge variant="secondary" className="text-xs">Consolidated</Badge>
                     </div>
                     
                     <div className="overflow-x-auto">
