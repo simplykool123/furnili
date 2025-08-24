@@ -523,14 +523,39 @@ export default function BOMCalculator() {
         </div>
       </div>
 
+      {/* Compact Furniture Type Selector */}
+      <div className="mb-3 p-2 bg-card border rounded-lg">
+        <div className="flex flex-wrap gap-1 justify-center">
+          {furnitureTypes.map((furniture) => {
+            const IconComponent = furniture.icon;
+            const isSelected = selectedFurnitureType === furniture.id;
+            
+            return (
+              <button
+                key={furniture.id}
+                onClick={() => setSelectedFurnitureType(furniture.id)}
+                className={`px-2 py-1 rounded text-xs border transition-all ${
+                  isSelected 
+                    ? 'border-[hsl(28,100%,25%)] bg-[hsl(28,100%,25%)] text-white' 
+                    : 'border-border bg-card hover:border-[hsl(28,100%,25%)]/30 text-foreground'
+                }`}
+              >
+                <IconComponent className={`w-3 h-3 inline mr-1 ${isSelected ? 'text-white' : 'text-[hsl(28,100%,25%)]'}`} />
+                {furniture.name}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       {/* Calculator Section - Compact */}
       <div className="space-y-2 p-2">
         {/* Calculator Form - Compact */}
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-base">
-              <Calculator className="w-4 h-4 inline mr-2" />
-              Wardrobe Calculator
+              {selectedFurniture && <selectedFurniture.icon className="w-4 h-4 inline mr-2" />}
+              {selectedFurniture?.name} Calculator
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-2">
