@@ -21,7 +21,7 @@ import { canOrderMaterials, getMaterialRequestEligibleProjects, getStageDisplayN
 import { setupQuotesRoutes } from "./quotesRoutes";
 import { ObjectStorageService } from "./objectStorage";
 import { db } from "./db";
-import { calculateBOM, generateBOMNumber, convertDimensions } from "./utils/bomCalculations";
+import { calculateBOM, generateBOMNumber, convertDimensions, DEFAULT_RATES } from "./utils/bomCalculations";
 
 import { eq, and, gt } from "drizzle-orm";
 import { projectFiles, users, suppliers, products, purchaseOrders, purchaseOrderItems, stockMovements, bomCalculations, bomItems } from "@shared/schema";
@@ -52,6 +52,21 @@ import {
   insertPurchaseOrderSchema,
   insertPurchaseOrderItemSchema,
 } from "@shared/schema";
+
+// Helper function to get board rate based on board type and thickness
+const getBoardRate = (boardType: string, thickness: string): number => {
+  // Map board types to DEFAULT_RATES keys
+  const boardTypeMap: { [key: string]: string } = {
+    'pre_lam_particle_board': `${thickness}_particle_board`,
+    'mdf': `${thickness}_mdf`, 
+    'ply': `${thickness}_plywood`,
+    'solid_wood': 'teak', // Default to teak for solid wood
+    'hdf': `${thickness}_mdf`, // HDF uses MDF rates
+  };
+  
+  const rateKey = boardTypeMap[boardType];
+  return DEFAULT_RATES.board[rateKey as keyof typeof DEFAULT_RATES.board] || 80;
+};
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth routes
@@ -4614,8 +4629,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           unit: 'pieces',
           edgeBandingType: panel.edge_banding,
           edgeBandingLength: panel.edgeBandingLength,
-          unitRate: panel.area_sqft > 0 ? (bomResult.material_cost / bomResult.totalBoardArea) : 0,
-          totalCost: panel.area_sqft * (bomResult.material_cost / bomResult.totalBoardArea),
+          unitRate: getBoardRate(bomData.boardType, bomData.boardThickness),
+          totalCost: panel.area_sqft * getBoardRate(bomData.boardType, bomData.boardThickness),
         })),
         ...bomResult.hardware.map(hardware => ({
           id: Math.random(), // temporary ID

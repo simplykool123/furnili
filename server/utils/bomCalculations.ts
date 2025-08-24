@@ -126,6 +126,13 @@ const DEFAULT_RATES = {
     "pull_out_basket": 850,
     "lazy_susan": 1200,
     "soft_close_mechanism": 450,
+    
+    // Legacy keys for backward compatibility
+    "hinge": 60, // concealed hinge default
+    "handle": 120, // aluminium handle default  
+    "lock": 80, // door lock default
+    "drawer_slide": 150, // ball bearing slide default
+    "straightener": 150, // for wardrobe alignment
   }
 };
 
@@ -1501,6 +1508,8 @@ function generateBathroomVanityHardware(input: any) {
 }
 
 // Calculate BOM for different unit types
+export { DEFAULT_RATES };
+
 export const calculateBOM = async (input: CalculationInput, boardRates?: any, hardwareRates?: any, exposedSides: boolean = false): Promise<BOMResult> => {
   let panels: Panel[] = [];
   let hardware: Hardware[] = [];
