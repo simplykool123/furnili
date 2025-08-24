@@ -48,11 +48,40 @@ const bomCalculationSchema = z.object({
   finish: z.string().min(1, "Finish is required"),
   projectId: z.number().optional(),
   partsConfig: z.object({
+    // General furniture
     shelves: z.number().default(0),
     drawers: z.number().default(0),
     shutters: z.number().default(0),
     doors: z.number().default(0),
     backPanels: z.number().default(0),
+    
+    // Bed specific
+    bedType: z.string().optional(),
+    storage: z.string().optional(),
+    headboard: z.boolean().optional(),
+    footboard: z.boolean().optional(),
+    
+    // Wardrobe specific
+    doorType: z.string().optional(),
+    hangingRods: z.number().optional(),
+    mirror: z.boolean().optional(),
+    
+    // Kitchen specific
+    baseCabinets: z.number().optional(),
+    wallCabinets: z.number().optional(),
+    tallCabinets: z.number().optional(),
+    pulloutShelves: z.number().optional(),
+    lazySusan: z.boolean().optional(),
+    cornerUnit: z.boolean().optional(),
+    island: z.boolean().optional(),
+    
+    // TV Unit specific
+    tvSize: z.string().optional(),
+    glassShelf: z.number().optional(),
+    cableManagement: z.boolean().optional(),
+    ledLighting: z.boolean().optional(),
+    powerOutlets: z.boolean().optional(),
+    
     customParts: z.array(z.object({
       name: z.string(),
       quantity: z.number(),
@@ -109,11 +138,39 @@ const furnitureTypes = [
     defaultConfig: { shutters: 0, shelves: 0, drawers: 2, doors: 0, backPanels: 1 }
   },
   { 
+    id: "kitchen_cabinet", 
+    name: "Kitchen", 
+    icon: Package, 
+    description: "Kitchen cabinets and accessories",
+    defaultConfig: { shelves: 0, drawers: 6, shutters: 0, doors: 0, backPanels: 0 }
+  },
+  { 
+    id: "tv_unit", 
+    name: "TV Unit", 
+    icon: PanelTop, 
+    description: "Entertainment centers and TV stands",
+    defaultConfig: { shelves: 2, drawers: 2, shutters: 0, doors: 0, backPanels: 1 }
+  },
+  { 
     id: "storage_unit", 
     name: "Cabinets", 
     icon: Archive, 
     description: "Storage cabinets and units",
     defaultConfig: { shutters: 2, shelves: 4, drawers: 1, doors: 0, backPanels: 1 }
+  },
+  { 
+    id: "bookshelf", 
+    name: "Bookshelf", 
+    icon: Table2, 
+    description: "Open and closed bookshelves",
+    defaultConfig: { shelves: 5, drawers: 0, shutters: 0, doors: 0, backPanels: 1 }
+  },
+  { 
+    id: "dresser", 
+    name: "Dresser", 
+    icon: Sofa, 
+    description: "Bedroom dressers and chests",
+    defaultConfig: { drawers: 6, shelves: 0, shutters: 0, doors: 0, backPanels: 1 }
   },
   { 
     id: "door", 
@@ -539,18 +596,34 @@ export default function BOMCalculator() {
                             render={({ field }) => (
                               <FormItem>
                                 <FormLabel className="text-xs">Bed Size</FormLabel>
-                                <Select onValueChange={field.onChange} defaultValue={field.value || 'queen'}>
+                                <Select onValueChange={(value) => {
+                                  field.onChange(value);
+                                  // Auto-update dimensions based on bed size
+                                  const bedSizes = {
+                                    single: { width: 900, depth: 1900 },
+                                    queen: { width: 1500, depth: 2000 },
+                                    king: { width: 1800, depth: 2000 },
+                                    king_xl: { width: 2000, depth: 2200 },
+                                    bunk: { width: 900, depth: 1900 }
+                                  };
+                                  const selectedSize = bedSizes[value as keyof typeof bedSizes];
+                                  if (selectedSize) {
+                                    form.setValue('width', selectedSize.width);
+                                    form.setValue('depth', selectedSize.depth);
+                                    form.setValue('height', 900); // Standard bed height
+                                  }
+                                }} defaultValue={field.value || 'queen'}>
                                   <FormControl>
                                     <SelectTrigger className="h-8 text-xs">
                                       <SelectValue />
                                     </SelectTrigger>
                                   </FormControl>
                                   <SelectContent>
-                                    <SelectItem value="single">Single (90cm)</SelectItem>
-                                    <SelectItem value="queen">Queen (150cm)</SelectItem>
-                                    <SelectItem value="king">King (180cm)</SelectItem>
-                                    <SelectItem value="king_xl">King XL (200cm)</SelectItem>
-                                    <SelectItem value="bunk">Bunk Bed</SelectItem>
+                                    <SelectItem value="single">Single (90×190cm)</SelectItem>
+                                    <SelectItem value="queen">Queen (150×200cm)</SelectItem>
+                                    <SelectItem value="king">King (180×200cm)</SelectItem>
+                                    <SelectItem value="king_xl">King XL (200×220cm)</SelectItem>
+                                    <SelectItem value="bunk">Bunk Bed (90×190cm)</SelectItem>
                                   </SelectContent>
                                 </Select>
                               </FormItem>
@@ -1055,18 +1128,20 @@ export default function BOMCalculator() {
                           )}
                           <FormField
                             control={form.control}
-                            name="partsConfig.backPanel"
+                            name="partsConfig.backPanels"
                             render={({ field }) => (
-                              <FormItem className="flex flex-row items-center space-x-2 space-y-0 rounded-md border p-2">
+                              <FormItem>
+                                <FormLabel className="text-xs">Back Panels</FormLabel>
                                 <FormControl>
-                                  <input
-                                    type="checkbox"
-                                    checked={field.value}
-                                    onChange={field.onChange}
-                                    className="h-3 w-3"
+                                  <Input
+                                    type="number"
+                                    min="0"
+                                    max="2"
+                                    className="h-8 text-xs"
+                                    {...field}
+                                    onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
                                   />
                                 </FormControl>
-                                <FormLabel className="text-xs">Back Panel</FormLabel>
                               </FormItem>
                             )}
                           />
@@ -1291,6 +1366,86 @@ export default function BOMCalculator() {
                       <p className="text-2xl font-bold text-furnili-brown">{formatCurrency(bomResult.totalCost)}</p>
                     </div>
                   </div>
+
+                  {/* Consolidated Material Purchase List */}
+                  <Card className="mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20">
+                    <CardHeader>
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <Package className="w-5 h-5 text-blue-600" />
+                        Material Purchase Requirements
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {/* Board Sheets */}
+                        <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border shadow-sm">
+                          <h4 className="font-medium text-sm mb-2 text-gray-700 dark:text-gray-300">Board Sheets Required</h4>
+                          <div className="text-3xl font-bold text-blue-600 mb-1">
+                            {Math.ceil((bomResult.totalBoardArea * 1.1) / 32)} sheets
+                          </div>
+                          <div className="text-xs text-gray-500 space-y-1">
+                            <div>Net Area: {bomResult.totalBoardArea.toFixed(1)} sq.ft</div>
+                            <div>With 10% wastage: {(bomResult.totalBoardArea * 1.1).toFixed(1)} sq.ft</div>
+                            <div className="text-gray-400">Standard sheet: 8'×4' (32 sq.ft)</div>
+                          </div>
+                        </div>
+                        
+                        {/* 2mm Edge Banding */}
+                        {bomResult.totalEdgeBanding2mm > 0 && (
+                          <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border shadow-sm">
+                            <h4 className="font-medium text-sm mb-2 text-gray-700 dark:text-gray-300">2mm Edge Banding</h4>
+                            <div className="text-3xl font-bold text-green-600 mb-1">
+                              {Math.ceil((bomResult.totalEdgeBanding2mm * 1.05) / 164)} rolls
+                            </div>
+                            <div className="text-xs text-gray-500 space-y-1">
+                              <div>Net Length: {bomResult.totalEdgeBanding2mm.toFixed(1)} ft</div>
+                              <div>With 5% wastage: {(bomResult.totalEdgeBanding2mm * 1.05).toFixed(1)} ft</div>
+                              <div className="text-gray-400">Standard roll: 164 ft</div>
+                            </div>
+                          </div>
+                        )}
+                        
+                        {/* 0.8mm Edge Banding */}
+                        {bomResult.totalEdgeBanding0_8mm > 0 && (
+                          <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border shadow-sm">
+                            <h4 className="font-medium text-sm mb-2 text-gray-700 dark:text-gray-300">0.8mm Edge Banding</h4>
+                            <div className="text-3xl font-bold text-purple-600 mb-1">
+                              {Math.ceil((bomResult.totalEdgeBanding0_8mm * 1.05) / 164)} rolls
+                            </div>
+                            <div className="text-xs text-gray-500 space-y-1">
+                              <div>Net Length: {bomResult.totalEdgeBanding0_8mm.toFixed(1)} ft</div>
+                              <div>With 5% wastage: {(bomResult.totalEdgeBanding0_8mm * 1.05).toFixed(1)} ft</div>
+                              <div className="text-gray-400">Standard roll: 164 ft</div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* Cutting Optimization Note */}
+                      <div className="mt-4 p-3 bg-amber-50 dark:bg-amber-950/20 rounded-lg border border-amber-200 dark:border-amber-800">
+                        <div className="flex items-start gap-2">
+                          <div className="w-2 h-2 bg-amber-500 rounded-full mt-2 flex-shrink-0"></div>
+                          <div className="text-sm text-amber-800 dark:text-amber-200">
+                            <strong>Cutting List Optimization:</strong> Sheet counts include wastage allowance. For precise nesting and cutting optimization, use CAD software like OptiCut or consult your panel supplier. Actual sheets required may vary based on cutting efficiency.
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Quick Purchase Summary */}
+                      <div className="mt-4 p-4 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 rounded-lg border border-green-200 dark:border-green-800">
+                        <h4 className="font-medium text-sm mb-2 text-green-800 dark:text-green-200">Quick Purchase Summary</h4>
+                        <div className="text-sm text-green-700 dark:text-green-300">
+                          • {Math.ceil((bomResult.totalBoardArea * 1.1) / 32)} sheets of {form.watch('boardType')} board ({form.watch('boardThickness')})
+                          {bomResult.totalEdgeBanding2mm > 0 && (
+                            <div>• {Math.ceil((bomResult.totalEdgeBanding2mm * 1.05) / 164)} rolls of 2mm edge banding</div>
+                          )}
+                          {bomResult.totalEdgeBanding0_8mm > 0 && (
+                            <div>• {Math.ceil((bomResult.totalEdgeBanding0_8mm * 1.05) / 164)} rolls of 0.8mm edge banding</div>
+                          )}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
 
                   {/* BOM Table */}
                   <div className="space-y-4">
