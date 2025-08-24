@@ -337,7 +337,7 @@ export default function BOMCalculator() {
         const url = window.URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
-        link.download = `BOM-${bomId}.pdf`;
+        link.download = `BOM-${bomId}.txt`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
