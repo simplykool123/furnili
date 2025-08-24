@@ -1548,12 +1548,18 @@ export default function BOMCalculator() {
                         <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border shadow-sm">
                           <h4 className="font-medium text-sm mb-2 text-gray-700 dark:text-gray-300">Board Sheets Required</h4>
                           <div className="text-3xl font-bold text-blue-600 mb-1">
-                            {Math.ceil((bomResult.totalBoardArea * 1.1) / 32)} sheets
+                            {(() => {
+                              const sheetLength = parseFloat(form.watch('manufacturingSettings.sheetLength') || '8');
+                              const sheetWidth = parseFloat(form.watch('manufacturingSettings.sheetWidth') || '4'); 
+                              const wastage = parseFloat(form.watch('manufacturingSettings.wastagePercent') || '10') / 100;
+                              const sheetArea = sheetLength * sheetWidth;
+                              return Math.ceil((bomResult.totalBoardArea * (1 + wastage)) / sheetArea);
+                            })()} sheets
                           </div>
                           <div className="text-xs text-gray-500 space-y-1">
                             <div>Net Area: {bomResult.totalBoardArea.toFixed(1)} sq.ft</div>
-                            <div>With 10% wastage: {(bomResult.totalBoardArea * 1.1).toFixed(1)} sq.ft</div>
-                            <div className="text-gray-400">Standard sheet: 8'×4' (32 sq.ft)</div>
+                            <div>With {form.watch('manufacturingSettings.wastagePercent') || '10'}% wastage: {(bomResult.totalBoardArea * (1 + (parseFloat(form.watch('manufacturingSettings.wastagePercent') || '10') / 100))).toFixed(1)} sq.ft</div>
+                            <div className="text-gray-400">Sheet: {form.watch('manufacturingSettings.sheetLength') || '8'}'×{form.watch('manufacturingSettings.sheetWidth') || '4'}' ({(parseFloat(form.watch('manufacturingSettings.sheetLength') || '8') * parseFloat(form.watch('manufacturingSettings.sheetWidth') || '4')).toFixed(0)} sq.ft)</div>
                           </div>
                         </div>
                         
@@ -1602,7 +1608,13 @@ export default function BOMCalculator() {
                       <div className="mt-4 p-4 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 rounded-lg border border-green-200 dark:border-green-800">
                         <h4 className="font-medium text-sm mb-2 text-green-800 dark:text-green-200">Quick Purchase Summary</h4>
                         <div className="text-sm text-green-700 dark:text-green-300">
-                          • {Math.ceil((bomResult.totalBoardArea * 1.1) / 32)} sheets of {form.watch('boardType')} board ({form.watch('boardThickness')})
+                          • {(() => {
+                              const sheetLength = parseFloat(form.watch('manufacturingSettings.sheetLength') || '8');
+                              const sheetWidth = parseFloat(form.watch('manufacturingSettings.sheetWidth') || '4'); 
+                              const wastage = parseFloat(form.watch('manufacturingSettings.wastagePercent') || '10') / 100;
+                              const sheetArea = sheetLength * sheetWidth;
+                              return Math.ceil((bomResult.totalBoardArea * (1 + wastage)) / sheetArea);
+                            })()} sheets of {form.watch('boardType')} board ({form.watch('boardThickness')})
                           {bomResult.totalEdgeBanding2mm > 0 && (
                             <div>• {Math.ceil((bomResult.totalEdgeBanding2mm * 0.3048 * 1.05) / 50)} rolls of 2mm edge banding</div>
                           )}
