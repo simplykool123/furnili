@@ -132,6 +132,7 @@ interface BomItem {
   edgeBandingLength: number;
   unitRate: number;
   totalCost: number;
+  area_sqft?: number; // Add missing area property
   description?: string;
 }
 

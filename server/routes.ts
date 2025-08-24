@@ -4631,7 +4631,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
           edgeBandingLength: panel.edgeBandingLength,
           unitRate: getBoardRate(bomData.boardType, bomData.boardThickness),
           totalCost: panel.area_sqft * getBoardRate(bomData.boardType, bomData.boardThickness),
+          area_sqft: panel.area_sqft, // Add the area_sqft field
         })),
+        // Add laminate items if finish is laminate
+        ...(bomData.finish === 'laminate' ? bomResult.panels.flatMap(panel => {
+          const isOuterSurface = panel.panel.toLowerCase().includes('shutter') || 
+                                panel.panel.toLowerCase().includes('door') ||
+                                panel.panel.toLowerCase().includes('front') ||
+                                panel.panel.toLowerCase().includes('drawer front');
+          
+          const results = [];
+          
+          if (isOuterSurface) {
+            // Outer surface laminate (both sides)
+            results.push({
+              id: Math.random(),
+              itemType: 'material' as const,
+              itemCategory: 'laminate',
+              partName: `${panel.panel} - Outer Laminate`,
+              materialType: 'Outer Surface Laminate',
+              length: panel.length,
+              width: panel.width,
+              quantity: panel.qty * 2, // Both sides
+              unit: 'sqft',
+              edgeBandingLength: 0,
+              unitRate: 85, // ₹85/sqft for outer
+              totalCost: panel.area_sqft * panel.qty * 2 * 85,
+              area_sqft: panel.area_sqft * panel.qty * 2,
+            });
+          } else {
+            // Inner surface laminate (single side)
+            results.push({
+              id: Math.random(),
+              itemType: 'material' as const,
+              itemCategory: 'laminate', 
+              partName: `${panel.panel} - Inner Laminate`,
+              materialType: 'Inner Surface Laminate',
+              length: panel.length,
+              width: panel.width,
+              quantity: panel.qty,
+              unit: 'sqft',
+              edgeBandingLength: 0,
+              unitRate: 65, // ₹65/sqft for inner
+              totalCost: panel.area_sqft * panel.qty * 65,
+              area_sqft: panel.area_sqft * panel.qty,
+            });
+          }
+          
+          return results;
+        }) : []),
         ...bomResult.hardware.map(hardware => ({
           id: Math.random(), // temporary ID
           itemType: 'hardware' as const,
