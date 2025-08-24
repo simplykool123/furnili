@@ -1479,8 +1479,9 @@ export const calculateBOM = async (input: CalculationInput, boardRates?: any, ha
     totalBoardArea += panel.area_sqft;
     
     // Group by thickness (extract thickness from material)
-    const thicknessMatch = panel.material.match(/(\d+(?:\.\d+)?)mm/);
-    const thickness = thicknessMatch ? thicknessMatch[1] + 'mm' : 'unknown';
+    // Material format is like "18mm PRE_LAM_PARTICLE_BOARD"
+    const thicknessMatch = panel.material.match(/^(\d+(?:\.\d+)?mm)/);
+    const thickness = thicknessMatch ? thicknessMatch[1] : 'unknown';
     
     if (!boardAreaByThickness[thickness]) {
       boardAreaByThickness[thickness] = 0;
