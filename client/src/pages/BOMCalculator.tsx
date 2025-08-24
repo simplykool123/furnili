@@ -443,6 +443,11 @@ export default function BOMCalculator() {
       grouped[groupKey].items.push(item);
       grouped[groupKey].totalQty += item.quantity;
       grouped[groupKey].totalArea += item.area_sqft || 0; // Use pre-calculated area in sqft
+      
+      // Debug log to see what's being added
+      if (item.area_sqft && item.area_sqft > 0) {
+        console.log(`Adding area for ${item.partName}: ${item.area_sqft} sqft to group ${groupKey}`);
+      }
       grouped[groupKey].totalCost += item.totalCost;
     });
 

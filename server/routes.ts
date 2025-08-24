@@ -4690,6 +4690,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           edgeBandingLength: 0,
           unitRate: hardware.unit_rate,
           totalCost: hardware.total_cost,
+          area_sqft: 0, // Hardware items don't have area
         }))
       ];
 
