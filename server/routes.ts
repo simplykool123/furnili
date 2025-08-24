@@ -4738,7 +4738,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               return sum + panel.qty * (isOuter ? 2 : 1); // Both sides for outer
             }, 0);
             
-            const feicolBottlesNeeded = Math.ceil(totalLaminatePieces * 0.75); // 750ml per piece
+            const feicolBottlesNeeded = Math.ceil(totalLaminatePieces / 1.33); // 750ml per laminate piece
             
             glueItems.push({
               id: Math.random(),

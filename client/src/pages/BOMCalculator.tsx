@@ -256,7 +256,9 @@ export default function BOMCalculator() {
   const [customParts, setCustomParts] = useState<{name: string, quantity: number}[]>([]);
   const [variableCosts, setVariableCosts] = useState({
     laborCost: 0,
-    transportCost: 0
+    laborCostType: 'fixed' as 'fixed' | 'percent',
+    transportCost: 0,
+    transportCostType: 'fixed' as 'fixed' | 'percent'
   });
 
   const selectedFurniture = furnitureTypes.find(f => f.id === selectedFurnitureType);
@@ -399,6 +401,8 @@ export default function BOMCalculator() {
 
   // Group BOM items by material type for consolidated view
   const getConsolidatedMaterials = (items: BomItem[]) => {
+    console.log('=== DEBUG: BOM Items received ===', items);
+    
     const grouped: { [key: string]: { 
       items: BomItem[], 
       totalQty: number, 
@@ -410,6 +414,8 @@ export default function BOMCalculator() {
 
     items.forEach(item => {
       let groupKey = '';
+      
+      console.log(`Processing item: ${item.partName}, category: ${item.itemCategory}`);
       
       // Group boards by thickness and type
       if (item.itemCategory === 'Board') {
@@ -430,13 +436,15 @@ export default function BOMCalculator() {
       else if (item.itemCategory === 'Edge Banding') {
         groupKey = `Edge Band (${item.materialType || 'PVC'})`;
       }
-      // Group adhesives
+      // Group adhesives - SHOULD SHOW UP HERE
       else if (item.itemCategory === 'Adhesive') {
         groupKey = item.partName;
+        console.log(`✅ FOUND ADHESIVE: ${item.partName} - Qty: ${item.quantity} ${item.unit}`);
       }
       // Everything else grouped by material type or part name
       else {
         groupKey = item.materialType || item.partName;
+        console.log(`⚠️ UNGROUPED ITEM: ${item.partName} - Category: ${item.itemCategory}`);
       }
 
       if (!grouped[groupKey]) {
@@ -1876,51 +1884,102 @@ export default function BOMCalculator() {
                             <h4 className="font-medium text-furnili-brown">Additional Costs</h4>
                             
                             <div className="space-y-2">
-                              <div className="flex justify-between items-center">
-                                <label className="text-sm font-medium">Labour Cost (₹):</label>
-                                <Input
-                                  type="number"
-                                  placeholder="0"
-                                  value={variableCosts.laborCost || ''}
-                                  onChange={(e) => setVariableCosts({
-                                    ...variableCosts,
-                                    laborCost: parseFloat(e.target.value) || 0
-                                  })}
-                                  className="w-32 h-8 text-right"
-                                />
+                              {/* Labour Cost */}
+                              <div className="flex justify-between items-center gap-2">
+                                <label className="text-sm font-medium">Labour Cost:</label>
+                                <div className="flex items-center gap-1">
+                                  <Input
+                                    type="number"
+                                    placeholder="0"
+                                    value={variableCosts.laborCost || ''}
+                                    onChange={(e) => setVariableCosts({
+                                      ...variableCosts,
+                                      laborCost: parseFloat(e.target.value) || 0
+                                    })}
+                                    className="w-20 h-7 text-right text-xs"
+                                  />
+                                  <Select 
+                                    value={variableCosts.laborCostType} 
+                                    onValueChange={(value: 'fixed' | 'percent') => 
+                                      setVariableCosts({...variableCosts, laborCostType: value})
+                                    }
+                                  >
+                                    <SelectTrigger className="w-16 h-7 text-xs">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="fixed">₹</SelectItem>
+                                      <SelectItem value="percent">%</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
                               </div>
                               
-                              <div className="flex justify-between items-center">
-                                <label className="text-sm font-medium">Transport Cost (₹):</label>
-                                <Input
-                                  type="number"
-                                  placeholder="0"
-                                  value={variableCosts.transportCost || ''}
-                                  onChange={(e) => setVariableCosts({
-                                    ...variableCosts,
-                                    transportCost: parseFloat(e.target.value) || 0
-                                  })}
-                                  className="w-32 h-8 text-right"
-                                />
+                              {/* Transport Cost */}
+                              <div className="flex justify-between items-center gap-2">
+                                <label className="text-sm font-medium">Transport Cost:</label>
+                                <div className="flex items-center gap-1">
+                                  <Input
+                                    type="number"
+                                    placeholder="0"
+                                    value={variableCosts.transportCost || ''}
+                                    onChange={(e) => setVariableCosts({
+                                      ...variableCosts,
+                                      transportCost: parseFloat(e.target.value) || 0
+                                    })}
+                                    className="w-20 h-7 text-right text-xs"
+                                  />
+                                  <Select 
+                                    value={variableCosts.transportCostType} 
+                                    onValueChange={(value: 'fixed' | 'percent') => 
+                                      setVariableCosts({...variableCosts, transportCostType: value})
+                                    }
+                                  >
+                                    <SelectTrigger className="w-16 h-7 text-xs">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="fixed">₹</SelectItem>
+                                      <SelectItem value="percent">%</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
                               </div>
                             </div>
                             
                             {/* Final Cost Summary with GST */}
                             <div className="border-t pt-3 space-y-2">
-                              <div className="flex justify-between text-sm">
-                                <span>Materials + Labour + Transport:</span>
-                                <span>{formatCurrency((bomResult.totalCost || 0) + variableCosts.laborCost + variableCosts.transportCost)}</span>
-                              </div>
-                              
-                              <div className="flex justify-between text-sm text-orange-600">
-                                <span>GST (18%):</span>
-                                <span>{formatCurrency(((bomResult.totalCost || 0) + variableCosts.laborCost + variableCosts.transportCost) * 0.18)}</span>
-                              </div>
-                              
-                              <div className="flex justify-between font-bold text-xl border-t pt-2 text-furnili-brown">
-                                <span>Final Total Cost:</span>
-                                <span>{formatCurrency(((bomResult.totalCost || 0) + variableCosts.laborCost + variableCosts.transportCost) * 1.18)}</span>
-                              </div>
+                              {(() => {
+                                const materialCost = bomResult.totalCost || 0;
+                                const laborAmount = variableCosts.laborCostType === 'percent' 
+                                  ? materialCost * (variableCosts.laborCost / 100)
+                                  : variableCosts.laborCost;
+                                const transportAmount = variableCosts.transportCostType === 'percent'
+                                  ? materialCost * (variableCosts.transportCost / 100)
+                                  : variableCosts.transportCost;
+                                const subtotal = materialCost + laborAmount + transportAmount;
+                                const gstAmount = subtotal * 0.18;
+                                const finalTotal = subtotal + gstAmount;
+                                
+                                return (
+                                  <>
+                                    <div className="flex justify-between text-sm">
+                                      <span>Materials + Labour + Transport:</span>
+                                      <span>{formatCurrency(subtotal)}</span>
+                                    </div>
+                                    
+                                    <div className="flex justify-between text-sm text-orange-600">
+                                      <span>GST (18%):</span>
+                                      <span>{formatCurrency(gstAmount)}</span>
+                                    </div>
+                                    
+                                    <div className="flex justify-between font-bold text-xl border-t pt-2 text-furnili-brown">
+                                      <span>Final Total Cost:</span>
+                                      <span>{formatCurrency(finalTotal)}</span>
+                                    </div>
+                                  </>
+                                );
+                              })()}
                             </div>
                           </div>
                           
