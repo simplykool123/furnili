@@ -4735,91 +4735,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
         res.setHeader('Content-Disposition', `attachment; filename=BOM-${bom.calculationNumber}.csv`);
         res.send(csvContent);
       } else if (format === 'pdf') {
-        // Generate clean HTML for PDF conversion
-        const html = `
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <title>BOM ${bom.calculationNumber}</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 20px; color: #333; }
-        .header { text-align: center; border-bottom: 2px solid #8B4513; padding-bottom: 10px; margin-bottom: 20px; }
-        .logo { font-size: 24px; font-weight: bold; color: #8B4513; }
-        .bom-info { margin: 20px 0; }
-        .bom-info table { width: 100%; border-collapse: collapse; }
-        .bom-info th, .bom-info td { padding: 8px; text-align: left; border-bottom: 1px solid #ddd; }
-        .materials { margin: 20px 0; }
-        .materials table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        .materials th { background-color: #f5f5f5; font-weight: bold; }
-        .materials th, .materials td { padding: 8px; text-align: left; border: 1px solid #ddd; }
-        .summary { margin-top: 20px; background-color: #f9f9f9; padding: 15px; border-radius: 5px; }
-        .summary h3 { margin-top: 0; color: #8B4513; }
-        .total { font-size: 18px; font-weight: bold; color: #8B4513; }
-    </style>
-</head>
-<body>
-    <div class="header">
-        <div class="logo">FURNILI</div>
-        <h2>BILL OF MATERIALS</h2>
-        <p>BOM Number: ${bom.calculationNumber}</p>
-    </div>
-    
-    <div class="bom-info">
-        <table>
-            <tr><th>Furniture:</th><td>${bom.unitType}</td></tr>
-            <tr><th>Dimensions:</th><td>${bom.height} × ${bom.width} × ${bom.depth} mm</td></tr>
-            <tr><th>Board Type:</th><td>${bom.boardType}</td></tr>
-            <tr><th>Thickness:</th><td>${bom.boardThickness}</td></tr>
-            <tr><th>Finish:</th><td>${bom.finish}</td></tr>
-        </table>
-    </div>
-    
-    <div class="materials">
-        <h3>Material List</h3>
-        <table>
-            <thead>
-                <tr>
-                    <th>Part Name</th>
-                    <th>Type</th>
-                    <th>Size (mm)</th>
-                    <th>Qty</th>
-                    <th>Rate</th>
-                    <th>Amount</th>
-                </tr>
-            </thead>
-            <tbody>
-                ${items.map(item => `
-                <tr>
-                    <td>${item.partName}</td>
-                    <td>${item.itemCategory}</td>
-                    <td>${item.length && item.width ? `${item.length} × ${item.width}` : '-'}</td>
-                    <td>${item.quantity} ${item.unit}</td>
-                    <td>₹${item.unitRate}</td>
-                    <td>₹${item.totalCost}</td>
-                </tr>
-                `).join('')}
-            </tbody>
-        </table>
-    </div>
-    
-    <div class="summary">
-        <h3>Cost Summary</h3>
-        <table>
-            <tr><td>Total Board Area:</td><td>${bom.totalBoardArea} sq.ft</td></tr>
-            <tr><td>Material Cost:</td><td>₹${bom.totalMaterialCost}</td></tr>
-            <tr><td>Hardware Cost:</td><td>₹${bom.totalHardwareCost}</td></tr>
-            <tr class="total"><td><strong>TOTAL COST:</strong></td><td><strong>₹${bom.totalCost}</strong></td></tr>
-        </table>
-    </div>
-</body>
-</html>`;
+        // Simple text PDF that works
+        let pdfContent = `FURNILI - BILL OF MATERIALS\n`;
+        pdfContent += `================================\n\n`;
+        pdfContent += `BOM Number: ${bom.calculationNumber}\n`;
+        pdfContent += `Furniture: ${bom.unitType}\n`;
+        pdfContent += `Dimensions: ${bom.height} x ${bom.width} x ${bom.depth} mm\n`;
+        pdfContent += `Board: ${bom.boardType} - ${bom.boardThickness}\n`;
+        pdfContent += `Finish: ${bom.finish}\n\n`;
         
-        res.setHeader('Content-Type', 'application/json');
-        res.json({ 
-          html: html,
-          filename: `BOM-${bom.calculationNumber}.pdf`
+        pdfContent += `MATERIALS:\n`;
+        pdfContent += `${'='.repeat(80)}\n`;
+        items.forEach(item => {
+          const size = item.length && item.width ? ` (${item.length}x${item.width}mm)` : '';
+          pdfContent += `${item.partName}${size}\n`;
+          pdfContent += `  Qty: ${item.quantity} ${item.unit} | Rate: ₹${item.unitRate} | Cost: ₹${item.totalCost}\n\n`;
         });
+        
+        pdfContent += `${'='.repeat(80)}\n`;
+        pdfContent += `SUMMARY:\n`;
+        pdfContent += `Total Board Area: ${bom.totalBoardArea} sq.ft\n`;
+        pdfContent += `Material Cost: ₹${bom.totalMaterialCost}\n`;
+        pdfContent += `Hardware Cost: ₹${bom.totalHardwareCost}\n`;
+        pdfContent += `TOTAL COST: ₹${bom.totalCost}\n`;
+        
+        res.setHeader('Content-Type', 'application/octet-stream');
+        res.setHeader('Content-Disposition', `attachment; filename=BOM-${bom.calculationNumber}.pdf`);
+        res.send(pdfContent);
       } else {
         res.status(400).json({ message: "Invalid format" });
       }
