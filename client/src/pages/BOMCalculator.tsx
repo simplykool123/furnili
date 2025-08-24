@@ -57,6 +57,13 @@ const bomCalculationSchema = z.object({
     backPanels: z.number().default(0),
     exposedSides: z.boolean().default(false),
     
+    // Manufacturing settings
+    backThickness: z.number().default(6), // 6/8/9mm
+    slideColorance: z.number().default(12.5), // 12-13mm
+    boxThickness: z.number().default(12), // 12/15/18mm  
+    bottomThickness: z.number().default(6), // 6/9mm
+    doorClearance: z.number().default(12), // 10-15mm
+    
     // Bed specific
     bedType: z.string().optional(),
     storage: z.string().optional(),
@@ -130,14 +137,14 @@ const furnitureTypes = [
     name: "Wardrobes", 
     icon: Home, 
     description: "Built-in wardrobes and closets",
-    defaultConfig: { shutters: 2, shelves: 3, drawers: 2, doors: 0, backPanels: 1, exposedSides: false }
+    defaultConfig: { shutters: 2, shelves: 3, drawers: 2, doors: 0, backPanels: 1, exposedSides: false, backThickness: 6, slideColorance: 12.5, boxThickness: 12, bottomThickness: 6, doorClearance: 12 }
   },
   { 
     id: "bed", 
     name: "Beds", 
     icon: Bed, 
     description: "Bed frames and storage beds",
-    defaultConfig: { shutters: 0, shelves: 0, drawers: 2, doors: 0, backPanels: 1, exposedSides: false }
+    defaultConfig: { shutters: 0, shelves: 0, drawers: 2, doors: 0, backPanels: 1, exposedSides: false, backThickness: 6, slideColorance: 12.5, boxThickness: 12, bottomThickness: 6, doorClearance: 12 }
   },
   { 
     id: "kitchen_cabinet", 
@@ -258,6 +265,11 @@ export default function BOMCalculator() {
         doors: 0,
         backPanels: 0,
         exposedSides: false,
+        backThickness: 6,
+        slideColorance: 12.5,
+        boxThickness: 12,
+        bottomThickness: 6,
+        doorClearance: 12,
         customParts: [],
       },
     },
@@ -1254,6 +1266,120 @@ export default function BOMCalculator() {
                               </FormItem>
                             )}
                           />
+
+                          {/* Manufacturing Settings */}
+                          <div className="col-span-2 mt-4">
+                            <h4 className="text-xs font-medium text-gray-700 mb-3">Manufacturing Settings</h4>
+                            <div className="grid grid-cols-2 gap-2">
+                              
+                              <FormField
+                                control={form.control}
+                                name="partsConfig.backThickness"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel className="text-xs">Back Panel (mm)</FormLabel>
+                                    <FormControl>
+                                      <Input
+                                        type="number"
+                                        {...field}
+                                        value={field.value || ""}
+                                        onChange={(e) => field.onChange(Number(e.target.value))}
+                                        className="h-8 text-xs"
+                                        placeholder="6, 8, 9"
+                                      />
+                                    </FormControl>
+                                    <FormMessage className="text-xs" />
+                                  </FormItem>
+                                )}
+                              />
+
+                              <FormField
+                                control={form.control}
+                                name="partsConfig.slideColorance"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel className="text-xs">Slide Clearance (mm)</FormLabel>
+                                    <FormControl>
+                                      <Input
+                                        type="number"
+                                        step="0.5"
+                                        {...field}
+                                        value={field.value || ""}
+                                        onChange={(e) => field.onChange(Number(e.target.value))}
+                                        className="h-8 text-xs"
+                                        placeholder="12-13"
+                                      />
+                                    </FormControl>
+                                    <FormMessage className="text-xs" />
+                                  </FormItem>
+                                )}
+                              />
+
+                              <FormField
+                                control={form.control}
+                                name="partsConfig.boxThickness"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel className="text-xs">Box Thickness (mm)</FormLabel>
+                                    <FormControl>
+                                      <Input
+                                        type="number"
+                                        {...field}
+                                        value={field.value || ""}
+                                        onChange={(e) => field.onChange(Number(e.target.value))}
+                                        className="h-8 text-xs"
+                                        placeholder="12, 15, 18"
+                                      />
+                                    </FormControl>
+                                    <FormMessage className="text-xs" />
+                                  </FormItem>
+                                )}
+                              />
+
+                              <FormField
+                                control={form.control}
+                                name="partsConfig.bottomThickness"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel className="text-xs">Bottom Panel (mm)</FormLabel>
+                                    <FormControl>
+                                      <Input
+                                        type="number"
+                                        {...field}
+                                        value={field.value || ""}
+                                        onChange={(e) => field.onChange(Number(e.target.value))}
+                                        className="h-8 text-xs"
+                                        placeholder="6, 9"
+                                      />
+                                    </FormControl>
+                                    <FormMessage className="text-xs" />
+                                  </FormItem>
+                                )}
+                              />
+
+                              <FormField
+                                control={form.control}
+                                name="partsConfig.doorClearance"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel className="text-xs">Door Clearance (mm)</FormLabel>
+                                    <FormControl>
+                                      <Input
+                                        type="number"
+                                        {...field}
+                                        value={field.value || ""}
+                                        onChange={(e) => field.onChange(Number(e.target.value))}
+                                        className="h-8 text-xs"
+                                        placeholder="10-15"
+                                      />
+                                    </FormControl>
+                                    <FormMessage className="text-xs" />
+                                  </FormItem>
+                                )}
+                              />
+
+                            </div>
+                          </div>
                         </>
                       )}
                     </div>

@@ -507,13 +507,13 @@ const generateWardrobePanels = (input: CalculationInput, exposedSides: boolean =
   const panels: Panel[] = [];
   const material = `${boardThickness} ${boardType.toUpperCase()}`;
 
-  // Configuration settings
-  const backThickness = 6; // 6mm default back panel thickness
-  const doorClearance = 12; // 10-15mm door clearance
+  // Configuration settings (user-configurable)
+  const backThickness = partsConfig.backThickness || 6; // User configurable back panel thickness
+  const doorClearance = partsConfig.doorClearance || 12; // User configurable door clearance
   const frontClearance = 10; // 10mm front clearance for doors/overhang
-  const slideColorance = 12.5; // 12.5mm clearance per side for telescopic slides
-  const boxThickness = 12; // 12mm drawer box thickness
-  const bottomThickness = 6; // 6mm drawer bottom thickness
+  const slideColorance = partsConfig.slideColorance || 12.5; // User configurable slide clearance
+  const boxThickness = partsConfig.boxThickness || 12; // User configurable drawer box thickness
+  const bottomThickness = partsConfig.bottomThickness || 6; // User configurable drawer bottom thickness
   const backClearance = 15; // 15mm back clearance for drawers
 
   // Calculate internal dimensions
