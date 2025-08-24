@@ -4734,15 +4734,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
         res.setHeader('Content-Disposition', `attachment; filename=BOM-${bom.calculationNumber}.csv`);
         res.send(csvContent);
       } else if (format === 'pdf') {
-        // Generate professional PDF HTML
-        const html = generateBOMPDFHTML(bom, items);
-
-        // Return HTML for frontend PDF conversion
-        res.setHeader('Content-Type', 'application/json');
-        res.json({ 
-          html: html,
-          filename: `BOM-${bom.calculationNumber}.pdf`
+        // Simple PDF text format that works
+        let pdfContent = `FURNILI - BILL OF MATERIALS\n`;
+        pdfContent += `BOM Number: ${bom.calculationNumber}\n`;
+        pdfContent += `Furniture: ${bom.unitType} (${bom.height}x${bom.width}x${bom.depth}mm)\n`;
+        pdfContent += `Board: ${bom.boardType} - ${bom.boardThickness}\n`;
+        pdfContent += `Finish: ${bom.finish}\n\n`;
+        
+        pdfContent += `MATERIALS:\n`;
+        pdfContent += `${'='.repeat(60)}\n`;
+        items.forEach(item => {
+          const size = item.length && item.width ? ` (${item.length}x${item.width}mm)` : '';
+          pdfContent += `${item.partName}${size}\n`;
+          pdfContent += `  Qty: ${item.quantity} ${item.unit} | Cost: ₹${item.totalCost}\n\n`;
         });
+        
+        pdfContent += `${'='.repeat(60)}\n`;
+        pdfContent += `SUMMARY:\n`;
+        pdfContent += `Total Board Area: ${bom.totalBoardArea} sq.ft\n`;
+        pdfContent += `Material Cost: ₹${bom.totalMaterialCost}\n`;
+        pdfContent += `Hardware Cost: ₹${bom.totalHardwareCost}\n`;
+        pdfContent += `TOTAL COST: ₹${bom.totalCost}\n`;
+        
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename=BOM-${bom.calculationNumber}.pdf`);
+        res.send(pdfContent);
       } else {
         res.status(400).json({ message: "Invalid format" });
       }

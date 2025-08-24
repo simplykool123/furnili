@@ -332,50 +332,23 @@ export default function BOMCalculator() {
       }
       
       if (format === 'pdf') {
-        // For PDF, get HTML and convert to PDF
-        const { html, filename } = await response.json();
-        
-        // Dynamically import html2pdf
-        const { default: html2pdf } = await import('html2pdf.js');
-        
-        // Create a temporary container for the HTML
-        const tempDiv = document.createElement('div');
-        tempDiv.innerHTML = html;
-        tempDiv.style.position = 'absolute';
-        tempDiv.style.left = '-9999px';
-        document.body.appendChild(tempDiv);
-        
-        // Configure PDF options
-        const options = {
-          margin: [0.5, 0.5, 0.5, 0.5],
-          filename: filename,
-          image: { type: 'jpeg', quality: 0.8 },
-          html2canvas: { 
-            scale: 1, 
-            useCORS: true,
-            allowTaint: true,
-            backgroundColor: '#ffffff'
-          },
-          jsPDF: { 
-            unit: 'in', 
-            format: 'a4', 
-            orientation: 'portrait',
-            compress: true
-          }
-        };
-        
-        // Generate and download PDF
-        await html2pdf().set(options).from(tempDiv).save();
-        
-        // Clean up
-        document.body.removeChild(tempDiv);
+        // For PDF, create blob and download directly
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `BOM-${bomId}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
       } else {
         // For Excel/CSV, create blob and download
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
-        link.download = `BOM-${bomId}.${format}`;
+        link.download = `BOM-${bomId}.${format === 'excel' ? 'csv' : format}`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
