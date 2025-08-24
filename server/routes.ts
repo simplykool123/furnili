@@ -4630,9 +4630,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }))
       ];
 
-      // Return calculation results directly
+      // Save BOM calculation to database
+      const [savedBom] = await db.insert(bomCalculations).values({
+        calculationNumber: calculationNumber,
+        unitType: bomData.unitType,
+        height: bomData.height,
+        width: bomData.width,
+        depth: bomData.depth,
+        boardType: bomData.boardType,
+        boardThickness: bomData.boardThickness,
+        finish: bomData.finish,
+        totalBoardArea: bomResult.totalBoardArea,
+        totalEdgeBanding2mm: bomResult.totalEdgeBanding2mm,
+        totalEdgeBanding0_8mm: bomResult.totalEdgeBanding0_8mm,
+        totalMaterialCost: bomResult.material_cost,
+        totalHardwareCost: bomResult.hardware_cost,
+        totalCost: bomResult.total_cost,
+        notes: bomData.notes || '',
+        projectId: bomData.projectId || null,
+        createdBy: req.user?.id || 1,
+      }).returning();
+
+      // Save BOM items to database
+      if (bomItemsData.length > 0) {
+        await db.insert(bomItems).values(
+          bomItemsData.map(item => ({
+            bomId: savedBom.id,
+            partName: item.partName,
+            itemType: item.itemType,
+            itemCategory: item.itemCategory,
+            quantity: item.quantity,
+            unit: item.unit,
+            length: 'length' in item ? item.length : null,
+            width: 'width' in item ? item.width : null,
+            materialType: 'materialType' in item ? item.materialType : null,
+            edgeBandingType: 'edgeBandingType' in item ? item.edgeBandingType : null,
+            edgeBandingLength: item.edgeBandingLength || 0,
+            unitRate: item.unitRate || 0,
+            totalCost: item.totalCost,
+          }))
+        );
+      }
+
+      // Return calculation results with database ID
       res.json({
-        id: Math.random(), // temporary ID
+        id: savedBom.id,
         calculationNumber,
         totalBoardArea: bomResult.totalBoardArea,
         totalEdgeBanding2mm: bomResult.totalEdgeBanding2mm,
