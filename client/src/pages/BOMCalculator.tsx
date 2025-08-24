@@ -1727,42 +1727,42 @@ export default function BOMCalculator() {
                     </div>
                     
                     <div className="overflow-x-auto">
-                      <Table>
+                      <Table className="text-sm border-collapse">
                         <TableHeader>
-                          <TableRow className="bg-muted/50">
-                            <TableHead className="font-semibold">Material / Item</TableHead>
-                            <TableHead className="font-semibold">Qty (Pcs/Nos)</TableHead>
-                            <TableHead className="font-semibold">Area (sqft)</TableHead>
-                            <TableHead className="font-semibold text-right">Rate (₹)</TableHead>
-                            <TableHead className="font-semibold text-right">Cost (₹)</TableHead>
-                            <TableHead className="font-semibold text-center w-12"></TableHead>
+                          <TableRow className="bg-muted/50 h-8 border-b">
+                            <TableHead className="py-1 px-2 text-xs font-semibold">Material / Item</TableHead>
+                            <TableHead className="py-1 px-2 text-xs font-semibold">Qty (Pcs/Nos)</TableHead>
+                            <TableHead className="py-1 px-2 text-xs font-semibold">Area (sqft)</TableHead>
+                            <TableHead className="py-1 px-2 text-xs font-semibold text-right">Rate (₹)</TableHead>
+                            <TableHead className="py-1 px-2 text-xs font-semibold text-right">Cost (₹)</TableHead>
+                            <TableHead className="py-1 px-2 text-xs font-semibold text-center w-8"></TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
                           {Object.entries(getConsolidatedMaterials(bomResult.items)).map(([materialName, group]) => (
-                            <TableRow key={materialName} className="hover:bg-muted/30">
-                              <TableCell className="font-medium">{materialName}</TableCell>
-                              <TableCell>
+                            <TableRow key={materialName} className="hover:bg-muted/20 h-7 border-b border-gray-100">
+                              <TableCell className="py-1 px-2 text-sm font-medium">{materialName}</TableCell>
+                              <TableCell className="py-1 px-2 text-sm">
                                 {group.totalQty > 0 ? (
                                   `${group.totalQty} ${group.unit}`
                                 ) : (
                                   '—'
                                 )}
                               </TableCell>
-                              <TableCell>
+                              <TableCell className="py-1 px-2 text-sm">
                                 {group.totalArea > 0 ? `${group.totalArea.toFixed(0)} sqft` : '—'}
                               </TableCell>
-                              <TableCell className="text-right">
+                              <TableCell className="py-1 px-2 text-sm text-right">
                                 {group.avgRate > 0 ? Math.round(group.avgRate) : '—'}
                               </TableCell>
-                              <TableCell className="text-right font-semibold">
+                              <TableCell className="py-1 px-2 text-sm text-right font-medium">
                                 {group.totalCost.toLocaleString('en-IN')}
                               </TableCell>
-                              <TableCell className="text-center">
+                              <TableCell className="py-1 px-2 text-center">
                                 <Dialog>
                                   <DialogTrigger asChild>
-                                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                                      <Eye className="h-4 w-4" />
+                                    <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                                      <Eye className="h-3 w-3" />
                                     </Button>
                                   </DialogTrigger>
                                   <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
