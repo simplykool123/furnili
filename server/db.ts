@@ -2,7 +2,10 @@ import { Pool } from 'pg';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import * as schema from "@shared/schema";
 
-if (!process.env.DATABASE_URL) {
+// Use Supabase database connection
+const SUPABASE_DATABASE_URL = "postgresql://postgres.qopynbelowyghyciuofo:Furnili@123@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres";
+
+if (!process.env.DATABASE_URL && !SUPABASE_DATABASE_URL) {
   throw new Error(
     "DATABASE_URL must be set. Did you forget to provision a database?",
   );
@@ -13,13 +16,13 @@ if (!process.env.DATABASE_URL) {
 // console.log('Database URL format:', process.env.DATABASE_URL?.replace(/:([^:@]+)@/, ':****@'));
 
 export const pool = new Pool({ 
-  connectionString: process.env.DATABASE_URL,
-  ssl: {
+  connectionString: SUPABASE_DATABASE_URL || process.env.DATABASE_URL,
+  ssl: SUPABASE_DATABASE_URL ? { rejectUnauthorized: false } : {
     rejectUnauthorized: false
   },
-  connectionTimeoutMillis: 10000,
+  connectionTimeoutMillis: 15000,
   idleTimeoutMillis: 30000,
-  max: 20
+  max: 10
 });
 
 // Test connection with better error handling
