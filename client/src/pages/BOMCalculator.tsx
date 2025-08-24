@@ -331,16 +331,46 @@ export default function BOMCalculator() {
         throw new Error('Failed to export BOM');
       }
       
-      // For file downloads, create blob and download
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `BOM-${bomId}.${format}`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
+      if (format === 'pdf') {
+        // For PDF, get HTML and convert to PDF
+        const { html, filename } = await response.json();
+        
+        // Dynamically import html2pdf
+        const { default: html2pdf } = await import('html2pdf.js');
+        
+        // Create a temporary container for the HTML
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = html;
+        tempDiv.style.position = 'absolute';
+        tempDiv.style.left = '-9999px';
+        document.body.appendChild(tempDiv);
+        
+        // Configure PDF options
+        const options = {
+          margin: 0.5,
+          filename: filename,
+          image: { type: 'jpeg', quality: 0.98 },
+          html2canvas: { scale: 2, useCORS: true },
+          jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+        };
+        
+        // Generate and download PDF
+        await html2pdf().set(options).from(tempDiv).save();
+        
+        // Clean up
+        document.body.removeChild(tempDiv);
+      } else {
+        // For Excel/CSV, create blob and download
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `BOM-${bomId}.${format}`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+      }
       
       return { success: true };
     },

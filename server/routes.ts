@@ -4734,28 +4734,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         res.setHeader('Content-Disposition', `attachment; filename=BOM-${bom.calculationNumber}.csv`);
         res.send(csvContent);
       } else if (format === 'pdf') {
-        // Simple text-based PDF representation for now
-        let pdfContent = `BILL OF MATERIALS - ${bom.calculationNumber}\n`;
-        pdfContent += `Furniture Type: ${bom.unitType}\n`;
-        pdfContent += `Dimensions: ${bom.height}x${bom.width}x${bom.depth}mm\n`;
-        pdfContent += `Board Type: ${bom.boardType} - ${bom.boardThickness}\n`;
-        pdfContent += `Finish: ${bom.finish}\n\n`;
-        pdfContent += 'ITEMS:\n';
-        pdfContent += '='.repeat(80) + '\n';
-        
-        items.forEach(item => {
-          pdfContent += `${item.partName} | ${item.itemType} | Qty: ${item.quantity} | ₹${item.totalCost}\n`;
-        });
-        
-        pdfContent += '='.repeat(80) + '\n';
-        pdfContent += `Total Board Area: ${bom.totalBoardArea} sq.ft\n`;
-        pdfContent += `Total Material Cost: ₹${bom.totalMaterialCost}\n`;
-        pdfContent += `Total Hardware Cost: ₹${bom.totalHardwareCost}\n`;
-        pdfContent += `TOTAL COST: ₹${bom.totalCost}\n`;
+        // Generate professional PDF HTML
+        const html = generateBOMPDFHTML(bom, items);
 
-        res.setHeader('Content-Type', 'text/plain');
-        res.setHeader('Content-Disposition', `attachment; filename=BOM-${bom.calculationNumber}.txt`);
-        res.send(pdfContent);
+        // Return HTML for frontend PDF conversion
+        res.setHeader('Content-Type', 'application/json');
+        res.json({ 
+          html: html,
+          filename: `BOM-${bom.calculationNumber}.pdf`
+        });
       } else {
         res.status(400).json({ message: "Invalid format" });
       }
@@ -4805,6 +4792,192 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   const httpServer = createServer(app);
   return httpServer;
+}
+
+// Generate BOM PDF HTML
+function generateBOMPDFHTML(bom: any, items: any[]): string {
+  const currentDate = new Date().toLocaleDateString('en-IN');
+  
+  // Group items by category for better organization
+  const boards = items.filter(item => item.itemType === 'board');
+  const hardware = items.filter(item => item.itemType === 'hardware');
+  const edgeBanding = items.filter(item => item.itemType === 'edge_banding');
+  
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <title>BOM ${bom.calculationNumber}</title>
+      <style>
+        body { font-family: Arial, sans-serif; margin: 20px; color: #333; font-size: 12px; }
+        .header { display: flex; justify-content: space-between; margin-bottom: 30px; border-bottom: 2px solid #8B4513; padding-bottom: 20px; }
+        .company-info { flex: 1; }
+        .bom-info { flex: 1; text-align: right; }
+        .company-name { font-size: 24px; font-weight: bold; color: #8B4513; margin-bottom: 5px; }
+        .company-details { font-size: 11px; color: #666; }
+        .bom-number { font-size: 20px; font-weight: bold; color: #8B4513; }
+        .furniture-details { margin: 20px 0; background: #f8f8f8; padding: 15px; border-radius: 5px; }
+        .section-title { font-weight: bold; color: #8B4513; margin: 20px 0 10px 0; font-size: 14px; }
+        .items-table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+        .items-table th, .items-table td { border: 1px solid #ddd; padding: 6px; text-align: left; font-size: 11px; }
+        .items-table th { background: #8B4513; color: white; font-weight: bold; }
+        .items-table tr:nth-child(even) { background: #f9f9f9; }
+        .summary-section { margin-top: 30px; }
+        .summary-table { width: 100%; max-width: 400px; margin-left: auto; }
+        .summary-table td { padding: 8px; border: 1px solid #ddd; }
+        .summary-table .label { background: #f5f5f5; font-weight: bold; }
+        .total-row { font-weight: bold; font-size: 14px; background: #8B4513; color: white; }
+        .footer { margin-top: 40px; text-align: center; font-size: 10px; color: #666; border-top: 1px solid #ddd; padding-top: 20px; }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <div class="company-info">
+          <div class="company-name">FURNILI</div>
+          <div class="company-details">
+            Professional Furniture Solutions<br>
+            Email: info@furnili.com<br>
+            Phone: +91 XXX XXX XXXX
+          </div>
+        </div>
+        <div class="bom-info">
+          <div class="bom-number">BOM ${bom.calculationNumber}</div>
+          <div style="margin-top: 10px; font-size: 12px;">
+            Date: ${currentDate}<br>
+            Status: ${bom.status || 'Draft'}
+          </div>
+        </div>
+      </div>
+
+      <div class="furniture-details">
+        <strong>Furniture Details:</strong><br>
+        Type: ${bom.unitType.replace(/_/g, ' ').toUpperCase()}<br>
+        Dimensions: ${bom.height} × ${bom.width} × ${bom.depth} mm<br>
+        Board: ${bom.boardType.replace(/_/g, ' ')} - ${bom.boardThickness}<br>
+        Finish: ${bom.finish}<br>
+        ${bom.notes ? `Notes: ${bom.notes}` : ''}
+      </div>
+
+      ${boards.length > 0 ? `
+      <div class="section-title">Board Components</div>
+      <table class="items-table">
+        <thead>
+          <tr>
+            <th>Part Name</th>
+            <th>Dimensions (mm)</th>
+            <th>Qty</th>
+            <th>Edge Banding</th>
+            <th>Area (sq.ft)</th>
+            <th>Rate/sq.ft</th>
+            <th>Cost</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${boards.map(item => `
+            <tr>
+              <td>${item.partName}</td>
+              <td>${item.length && item.width ? `${item.length} × ${item.width}` : '-'}</td>
+              <td>${item.quantity}</td>
+              <td>${item.edgeBandingType || 'None'}</td>
+              <td>${item.areaSqft || 0}</td>
+              <td>₹${item.unitRate || 0}</td>
+              <td>₹${item.totalCost}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+      ` : ''}
+
+      ${hardware.length > 0 ? `
+      <div class="section-title">Hardware Components</div>
+      <table class="items-table">
+        <thead>
+          <tr>
+            <th>Hardware Item</th>
+            <th>Category</th>
+            <th>Quantity</th>
+            <th>Unit</th>
+            <th>Rate/Unit</th>
+            <th>Total Cost</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${hardware.map(item => `
+            <tr>
+              <td>${item.partName}</td>
+              <td>${item.itemCategory}</td>
+              <td>${item.quantity}</td>
+              <td>${item.unit}</td>
+              <td>₹${item.unitRate || 0}</td>
+              <td>₹${item.totalCost}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+      ` : ''}
+
+      ${edgeBanding.length > 0 ? `
+      <div class="section-title">Edge Banding</div>
+      <table class="items-table">
+        <thead>
+          <tr>
+            <th>Type</th>
+            <th>Length (ft)</th>
+            <th>Rate/ft</th>
+            <th>Total Cost</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${edgeBanding.map(item => `
+            <tr>
+              <td>${item.partName}</td>
+              <td>${item.edgeBandingLength || 0}</td>
+              <td>₹${item.unitRate || 0}</td>
+              <td>₹${item.totalCost}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+      ` : ''}
+
+      <div class="summary-section">
+        <div class="section-title">Cost Summary</div>
+        <table class="summary-table">
+          <tr>
+            <td class="label">Total Board Area:</td>
+            <td>${bom.totalBoardArea} sq.ft</td>
+          </tr>
+          <tr>
+            <td class="label">Edge Banding 2mm:</td>
+            <td>${bom.totalEdgeBanding2mm} ft</td>
+          </tr>
+          <tr>
+            <td class="label">Edge Banding 0.8mm:</td>
+            <td>${bom.totalEdgeBanding0_8mm} ft</td>
+          </tr>
+          <tr>
+            <td class="label">Material Cost:</td>
+            <td>₹${bom.totalMaterialCost}</td>
+          </tr>
+          <tr>
+            <td class="label">Hardware Cost:</td>
+            <td>₹${bom.totalHardwareCost}</td>
+          </tr>
+          <tr class="total-row">
+            <td>TOTAL COST:</td>
+            <td>₹${bom.totalCost}</td>
+          </tr>
+        </table>
+      </div>
+
+      <div class="footer">
+        <div>Generated by FURNILI Management System on ${currentDate}</div>
+        <div style="margin-top: 5px;">This is a computer-generated BOM and does not require signature.</div>
+      </div>
+    </body>
+    </html>
+  `;
 }
 
 // Generate Purchase Order PDF HTML (EXACT copy of Quote PDF format)
