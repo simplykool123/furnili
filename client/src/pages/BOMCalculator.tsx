@@ -421,7 +421,7 @@ export default function BOMCalculator() {
               Select Furniture Type
             </div>
           </div>
-          <div className={`grid gap-4 ${isMobile ? 'grid-cols-2' : 'grid-cols-4 lg:grid-cols-8'}`}>
+          <div className="flex flex-wrap gap-2 justify-center">
             {furnitureTypes.map((furniture) => {
               const IconComponent = furniture.icon;
               const isSelected = selectedFurnitureType === furniture.id;
@@ -430,14 +430,14 @@ export default function BOMCalculator() {
                 <button
                   key={furniture.id}
                   onClick={() => setSelectedFurnitureType(furniture.id)}
-                  className={`p-4 rounded-xl border-2 transition-all duration-200 text-center ${
+                  className={`p-2 rounded-lg border-2 transition-all duration-200 text-center min-w-[80px] ${
                     isSelected 
                       ? 'border-[hsl(28,100%,25%)] bg-[hsl(28,100%,25%)] text-white shadow-lg' 
                       : 'border-border bg-card hover:border-[hsl(28,100%,25%)]/30 hover:bg-accent text-foreground'
                   }`}
                 >
-                  <IconComponent className={`w-8 h-8 mx-auto mb-2 ${isSelected ? 'text-white' : 'text-[hsl(28,100%,25%)]'}`} />
-                  <div className={`text-sm font-medium ${isSelected ? 'text-white' : 'text-foreground'}`}>
+                  <IconComponent className={`w-5 h-5 mx-auto mb-1 ${isSelected ? 'text-white' : 'text-[hsl(28,100%,25%)]'}`} />
+                  <div className={`text-xs font-medium ${isSelected ? 'text-white' : 'text-foreground'}`}>
                     {furniture.name}
                   </div>
                 </button>
@@ -448,22 +448,21 @@ export default function BOMCalculator() {
       </div>
 
       {/* Calculator Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 p-6">
-        {/* Left Panel - Input Form */}
-        <div className="lg:col-span-1">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-3">
-                {selectedFurniture && <selectedFurniture.icon className="w-6 h-6 text-furnili-brown" />}
-                <div>
-                  <div>{selectedFurniture?.name} Calculator</div>
-                  <div className="text-sm text-muted-foreground font-normal">{selectedFurniture?.description}</div>
-                </div>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="max-h-[600px] overflow-y-auto">
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <div className="space-y-6 p-6">
+        {/* Calculator Form */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-3">
+              {selectedFurniture && <selectedFurniture.icon className="w-6 h-6 text-furnili-brown" />}
+              <div>
+                <div>{selectedFurniture?.name} Calculator</div>
+                <div className="text-sm text-muted-foreground font-normal">{selectedFurniture?.description}</div>
+              </div>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                   {/* Dimensions */}
                   <div className="space-y-3">
                     <h3 className="text-base font-medium flex items-center gap-2">
@@ -1305,10 +1304,9 @@ export default function BOMCalculator() {
               </Form>
             </CardContent>
           </Card>
-        </div>
 
-        {/* Right Panel - Results */}
-        <div className="lg:col-span-3">
+        {/* Results Section */}
+        <div>
             {bomResult ? (
               <Card>
                 <CardHeader>
