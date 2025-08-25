@@ -401,8 +401,6 @@ export default function BOMCalculator() {
 
   // Group BOM items by material type for consolidated view
   const getConsolidatedMaterials = (items: BomItem[]) => {
-    console.log('=== DEBUG: BOM Items received ===', items);
-    
     const grouped: { [key: string]: { 
       items: BomItem[], 
       totalQty: number, 
@@ -414,8 +412,6 @@ export default function BOMCalculator() {
 
     items.forEach(item => {
       let groupKey = '';
-      
-      console.log(`Processing item: ${item.partName}, category: ${item.itemCategory}`);
       
       // Group boards by thickness and type
       if (item.itemCategory === 'Board') {
@@ -436,15 +432,13 @@ export default function BOMCalculator() {
       else if (item.itemCategory === 'Edge Banding') {
         groupKey = `Edge Band (${item.materialType || 'PVC'})`;
       }
-      // Group adhesives - SHOULD SHOW UP HERE
+      // Group adhesives
       else if (item.itemCategory === 'Adhesive') {
         groupKey = item.partName;
-        console.log(`✅ FOUND ADHESIVE: ${item.partName} - Qty: ${item.quantity} ${item.unit}`);
       }
       // Everything else grouped by material type or part name
       else {
         groupKey = item.materialType || item.partName;
-        console.log(`⚠️ UNGROUPED ITEM: ${item.partName} - Category: ${item.itemCategory}`);
       }
 
       if (!grouped[groupKey]) {
