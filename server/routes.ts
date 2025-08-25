@@ -4819,16 +4819,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
             partName: item.partName,
             itemType: item.itemType,
             itemCategory: item.itemCategory,
-            quantity: item.quantity,
+            quantity: Math.round(item.quantity), // Round to integer as database expects integer
             unit: item.unit,
-            length: 'length' in item ? item.length : null,
-            width: 'width' in item ? item.width : null,
+            length: 'length' in item && item.length ? Math.round(item.length) : null, // Round to integer
+            width: 'width' in item && item.width ? Math.round(item.width) : null, // Round to integer  
             materialType: 'materialType' in item ? item.materialType : null,
             edgeBandingType: 'edgeBandingType' in item ? item.edgeBandingType : null,
-            edgeBandingLength: item.edgeBandingLength || 0,
-            unitRate: item.unitRate || 0,
-            totalCost: item.totalCost,
-            areaSqft: item.area_sqft || 0, // Add area_sqft to database with correct name
+            edgeBandingLength: Math.round((item.edgeBandingLength || 0) * 100) / 100, // Round to 2 decimal places
+            unitRate: Math.round((item.unitRate || 0) * 100) / 100, // Round to 2 decimal places
+            totalCost: Math.round((item.totalCost || 0) * 100) / 100, // Round to 2 decimal places
+            areaSqft: Math.round((item.area_sqft || 0) * 100) / 100, // Round to 2 decimal places
           }))
         );
       }
