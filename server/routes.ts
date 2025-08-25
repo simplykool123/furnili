@@ -4755,20 +4755,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
             });
           }
           
-          // Edge banding glue - ₹3 per meter
+          // Edge banding glue - ₹3 per meter  
           const totalEdgeBandingLength = bomResult.totalEdgeBanding2mm + bomResult.totalEdgeBanding0_8mm;
           if (totalEdgeBandingLength > 0) {
+            const roundedLength = Math.round(totalEdgeBandingLength * 0.3048 * 100) / 100; // Convert feet to meters and round to 2 decimal places
             glueItems.push({
               id: Math.random(),
               itemType: 'material' as const,
               itemCategory: 'Adhesive',
               partName: 'Edge Banding Glue',
               materialType: 'PVC Edge Adhesive',
-              quantity: totalEdgeBandingLength,
+              quantity: roundedLength,
               unit: 'meters',
               edgeBandingLength: 0,
               unitRate: 3, // ₹3 per meter
-              totalCost: totalEdgeBandingLength * 3,
+              totalCost: roundedLength * 3,
               area_sqft: 0,
             });
           }
