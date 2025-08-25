@@ -1997,7 +1997,6 @@ export default function BOMCalculator() {
                       </div>
                     </div>
                   </div>
-                  </div>
                 </CardContent>
               </Card>
             ) : (
