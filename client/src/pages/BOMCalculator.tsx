@@ -35,7 +35,8 @@ import {
   Sofa,
   PanelTop,
   Eye,
-  ChevronRight
+  ChevronRight,
+  X
 } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -399,23 +400,17 @@ export default function BOMCalculator() {
     setCustomParts([...customParts, { name: "", quantity: 1 }]);
   };
 
-  // Group BOM items by material type for consolidated view
-  const getConsolidatedMaterials = (items: BomItem[]) => {
-    const grouped: { [key: string]: { 
-      items: BomItem[], 
-      totalQty: number, 
-      totalArea: number, 
-      avgRate: number, 
-      totalCost: number,
-      unit: string
-    } } = {};
+  // BOM Table Component - Simple consolidated/detailed view
+  const BOMTable = ({ bomItems }: { bomItems: BomItem[] }) => {
+    const [view, setView] = useState<"consolidated" | "detailed">("consolidated");
+    const [selectedMaterial, setSelectedMaterial] = useState<string | null>(null);
 
-    items.forEach(item => {
-      let groupKey = '';
+    // Consolidation logic
+    const consolidated = bomItems.reduce((acc, item) => {
+      let key = '';
       
-      // Group boards by thickness and type
+      // Group by material type and thickness
       if (item.itemCategory === 'Board') {
-        // Extract thickness from part name or material type
         let thickness = '';
         if (item.partName?.includes('18mm') || item.materialType?.includes('18mm')) {
           thickness = '18mm';
@@ -424,73 +419,190 @@ export default function BOMCalculator() {
         } else if (item.partName?.includes('6mm') || item.materialType?.includes('6mm')) {
           thickness = '6mm';
         } else {
-          // Fallback: try to extract from materialType
           thickness = item.materialType?.match(/(\d+mm)/)?.[1] || '18mm';
         }
-        
-        const boardType = item.materialType?.includes('PLY') ? 'PLY' : 
-                         item.materialType?.includes('MDF') ? 'MDF' : 'Board';
-        groupKey = `${thickness} ${boardType}`;
-        
-      }
-      // Group laminates
-      else if (item.itemCategory === 'Laminate') {
-        groupKey = item.materialType || 'Laminate';
-      }
-      // Group hardware by type
-      else if (item.itemCategory === 'Hardware') {
-        groupKey = item.materialType || item.partName;
-      }
-      // Group edge banding
-      else if (item.itemCategory === 'Edge Banding') {
-        groupKey = `Edge Band (${item.materialType || 'PVC'})`;
-      }
-      // Group adhesives
-      else if (item.itemCategory === 'Adhesive') {
-        groupKey = item.partName;
-      }
-      // Everything else grouped by material type or part name
-      else {
-        groupKey = item.materialType || item.partName;
+        const boardType = item.materialType?.includes('PLY') ? 'PLY' : 'MDF';
+        key = `${thickness} ${boardType}`;
+      } else if (item.itemCategory === 'Laminate') {
+        key = item.materialType || 'Laminate';
+      } else if (item.itemCategory === 'Adhesive') {
+        key = item.partName;
+      } else {
+        key = item.materialType || item.partName;
       }
 
-      if (!grouped[groupKey]) {
-        grouped[groupKey] = {
-          items: [],
-          totalQty: 0,
-          totalArea: 0,
-          avgRate: 0,
-          totalCost: 0,
-          unit: item.unit
+      if (!acc[key]) {
+        acc[key] = {
+          name: key,
+          material: item.materialType || '',
+          thickness: item.materialType?.match(/(\d+mm)/)?.[1],
+          qty: 0,
+          area: 0,
+          rate: item.unitRate || 0,
+          cost: 0,
+          unit: item.unit,
+          parts: [] as BomItem[]
         };
       }
-
-      grouped[groupKey].items.push(item);
       
-      // Round quantities properly for different units
+      // Round quantities properly
       let roundedQty = item.quantity;
       if (item.unit === 'meters' || item.unit === 'sqft') {
-        roundedQty = Math.round(item.quantity * 100) / 100; // 2 decimal places
+        roundedQty = Math.round(item.quantity * 100) / 100;
       } else {
-        roundedQty = Math.round(item.quantity); // Whole numbers for pieces/bottles
+        roundedQty = Math.round(item.quantity);
       }
       
-      grouped[groupKey].totalQty += roundedQty;
-      grouped[groupKey].totalArea += Math.round((item.area_sqft || 0) * 100) / 100;
-      grouped[groupKey].totalCost += Math.round((item.totalCost || 0) * 100) / 100;
-    });
+      acc[key].qty += roundedQty;
+      acc[key].area += Math.round((item.area_sqft || 0) * 100) / 100;
+      acc[key].cost += Math.round((item.totalCost || 0) * 100) / 100;
+      acc[key].parts.push(item);
+      return acc;
+    }, {} as Record<string, any>);
 
-    // Calculate average rates
-    Object.keys(grouped).forEach(key => {
-      const group = grouped[key];
-      if (group.totalArea > 0) {
-        group.avgRate = group.totalCost / group.totalArea;
-      } else {
-        group.avgRate = group.totalCost / group.totalQty;
-      }
-    });
+    const consolidatedBOM = Object.values(consolidated);
+    const format = (num: number) => num.toFixed(2);
 
-    return grouped;
+    return (
+      <div className="space-y-4">
+        {/* View Toggle Buttons */}
+        <div className="flex items-center gap-3">
+          <h3 className="text-lg font-medium">Bill of Materials</h3>
+          <div className="flex space-x-2">
+            <Button 
+              variant={view === "consolidated" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setView("consolidated")}
+            >
+              Consolidated BOM
+            </Button>
+            <Button
+              variant={view === "detailed" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setView("detailed")}
+            >
+              Detailed BOM
+            </Button>
+          </div>
+        </div>
+
+        {/* Consolidated View */}
+        {view === "consolidated" && (
+          <div className="overflow-x-auto">
+            <table className="w-full border border-gray-200 rounded-lg text-sm">
+              <thead>
+                <tr className="bg-gray-50 dark:bg-gray-800">
+                  <th className="border-b border-gray-200 p-2 text-left font-semibold">Material</th>
+                  <th className="border-b border-gray-200 p-2 text-left font-semibold">Qty</th>
+                  <th className="border-b border-gray-200 p-2 text-left font-semibold">Area (sqft)</th>
+                  <th className="border-b border-gray-200 p-2 text-right font-semibold">Rate (₹)</th>
+                  <th className="border-b border-gray-200 p-2 text-right font-semibold">Cost (₹)</th>
+                  <th className="border-b border-gray-200 p-2 text-center font-semibold">Details</th>
+                </tr>
+              </thead>
+              <tbody>
+                {consolidatedBOM.map((item: any, i: number) => (
+                  <tr key={i} className="hover:bg-gray-50 dark:hover:bg-gray-800">
+                    <td className="border-b border-gray-100 p-2 font-medium">{item.name}</td>
+                    <td className="border-b border-gray-100 p-2">
+                      {item.unit === 'meters' || item.unit === 'sqft' ? 
+                        `${format(item.qty)} ${item.unit}` : 
+                        `${Math.round(item.qty)} ${item.unit}`
+                      }
+                    </td>
+                    <td className="border-b border-gray-100 p-2">{item.area > 0 ? format(item.area) : '—'}</td>
+                    <td className="border-b border-gray-100 p-2 text-right">{item.rate > 0 ? Math.round(item.rate) : '—'}</td>
+                    <td className="border-b border-gray-100 p-2 text-right font-medium">{Math.round(item.cost).toLocaleString('en-IN')}</td>
+                    <td className="border-b border-gray-100 p-2 text-center">
+                      <Button
+                        variant="link"
+                        size="sm"
+                        onClick={() => setSelectedMaterial(item.name)}
+                        className="text-blue-600 text-xs"
+                      >
+                        Show Details
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {/* Detailed View */}
+        {view === "detailed" && (
+          <div className="overflow-x-auto">
+            <table className="w-full border border-gray-200 rounded-lg text-sm">
+              <thead>
+                <tr className="bg-gray-50 dark:bg-gray-800">
+                  <th className="border-b border-gray-200 p-2 text-left font-semibold">Part</th>
+                  <th className="border-b border-gray-200 p-2 text-left font-semibold">Size (mm)</th>
+                  <th className="border-b border-gray-200 p-2 text-left font-semibold">Qty</th>
+                  <th className="border-b border-gray-200 p-2 text-left font-semibold">Area (sqft)</th>
+                  <th className="border-b border-gray-200 p-2 text-right font-semibold">Rate (₹)</th>
+                  <th className="border-b border-gray-200 p-2 text-right font-semibold">Cost (₹)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {bomItems.map((item, i) => (
+                  <tr key={i} className="hover:bg-gray-50 dark:hover:bg-gray-800">
+                    <td className="border-b border-gray-100 p-2">{item.partName}</td>
+                    <td className="border-b border-gray-100 p-2">
+                      {'length' in item && 'width' in item && item.length && item.width 
+                        ? `${Math.round(item.length)}×${Math.round(item.width)}` 
+                        : '—'}
+                    </td>
+                    <td className="border-b border-gray-100 p-2">{Math.round(item.quantity)} {item.unit}</td>
+                    <td className="border-b border-gray-100 p-2">{item.area_sqft ? format(item.area_sqft) : '—'}</td>
+                    <td className="border-b border-gray-100 p-2 text-right">{item.unitRate ? Math.round(item.unitRate) : '—'}</td>
+                    <td className="border-b border-gray-100 p-2 text-right font-medium">{Math.round(item.totalCost).toLocaleString('en-IN')}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {/* Details Modal */}
+        {selectedMaterial && consolidated[selectedMaterial] && (
+          <div className="mt-4 p-4 border border-gray-200 rounded-lg bg-gray-50 dark:bg-gray-800">
+            <div className="flex justify-between items-center mb-3">
+              <h4 className="font-bold">Details for {selectedMaterial}</h4>
+              <Button variant="ghost" size="sm" onClick={() => setSelectedMaterial(null)}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full border border-gray-200 text-sm">
+                <thead>
+                  <tr className="bg-gray-100 dark:bg-gray-700">
+                    <th className="border-b border-gray-200 p-2 text-left">Part</th>
+                    <th className="border-b border-gray-200 p-2 text-left">Size</th>
+                    <th className="border-b border-gray-200 p-2 text-left">Qty</th>
+                    <th className="border-b border-gray-200 p-2 text-right">Cost</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {consolidated[selectedMaterial]?.parts.map((p: BomItem, j: number) => (
+                    <tr key={j} className="hover:bg-gray-50">
+                      <td className="border-b border-gray-100 p-2">{p.partName}</td>
+                      <td className="border-b border-gray-100 p-2">
+                        {'length' in p && 'width' in p && p.length && p.width 
+                          ? `${Math.round(p.length)}×${Math.round(p.width)}` 
+                          : '—'}
+                      </td>
+                      <td className="border-b border-gray-100 p-2">{Math.round(p.quantity)} {p.unit}</td>
+                      <td className="border-b border-gray-100 p-2 text-right">{Math.round(p.totalCost).toLocaleString('en-IN')}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </div>
+    );
   };
 
   const updateCustomPart = (index: number, field: 'name' | 'quantity', value: string | number) => {
@@ -1741,139 +1853,21 @@ export default function BOMCalculator() {
                     </CardContent>
                   </Card>
 
-                  {/* Consolidated BOM Table */}
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-3">
-                      <h3 className="text-lg font-medium">Bill of Materials</h3>
-                      <Badge variant="secondary" className="text-xs">Consolidated View</Badge>
+                  {/* BOM Table - Consolidated/Detailed View */}
+                  <BOMTable bomItems={bomResult.items} />
+                  
+                  {/* Total Cost Row */}
+                  <div className="flex justify-end pt-4 border-t">
+                    <div className="flex items-center gap-3 text-xl font-bold">
+                      <span>Total Cost:</span>
+                      <span className="text-[hsl(28,100%,25%)] flex items-center gap-2">
+                        ₹ {bomResult.totalCost?.toLocaleString('en-IN') || '0'}
+                        <div className="w-6 h-6 bg-green-500 rounded flex items-center justify-center">
+                          <span className="text-white text-sm">✓</span>
+                        </div>
+                      </span>
                     </div>
-                    
-                    <div className="overflow-x-auto">
-                      <Table className="text-sm border-collapse">
-                        <TableHeader>
-                          <TableRow className="bg-muted/50 h-8 border-b">
-                            <TableHead className="py-1 px-2 text-xs font-semibold">Material / Item</TableHead>
-                            <TableHead className="py-1 px-2 text-xs font-semibold">Qty (Pcs/Nos)</TableHead>
-                            <TableHead className="py-1 px-2 text-xs font-semibold">Area (sqft)</TableHead>
-                            <TableHead className="py-1 px-2 text-xs font-semibold text-right">Rate (₹)</TableHead>
-                            <TableHead className="py-1 px-2 text-xs font-semibold text-right">Cost (₹)</TableHead>
-                            <TableHead className="py-1 px-2 text-xs font-semibold text-center w-8"></TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {Object.entries(getConsolidatedMaterials(bomResult.items)).map(([materialName, group]) => (
-                            <TableRow key={materialName} className="hover:bg-muted/20 h-7 border-b border-gray-100">
-                              <TableCell className="py-1 px-2 text-sm font-medium">{materialName}</TableCell>
-                              <TableCell className="py-1 px-2 text-sm">
-                                {group.totalQty > 0 ? (
-                                  group.unit === 'meters' || group.unit === 'sqft' ? 
-                                    `${group.totalQty.toFixed(2)} ${group.unit}` :
-                                    `${Math.round(group.totalQty)} ${group.unit}`
-                                ) : (
-                                  '—'
-                                )}
-                              </TableCell>
-                              <TableCell className="py-1 px-2 text-sm">
-                                {group.totalArea > 0 ? `${group.totalArea.toFixed(0)} sqft` : '—'}
-                              </TableCell>
-                              <TableCell className="py-1 px-2 text-sm text-right">
-                                {group.avgRate > 0 ? Math.round(group.avgRate) : '—'}
-                              </TableCell>
-                              <TableCell className="py-1 px-2 text-sm text-right font-medium">
-                                {Math.round(group.totalCost).toLocaleString('en-IN')}
-                              </TableCell>
-                              <TableCell className="py-1 px-2 text-center">
-                                <Dialog>
-                                  <DialogTrigger asChild>
-                                    <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
-                                      <Eye className="h-3 w-3" />
-                                    </Button>
-                                  </DialogTrigger>
-                                  <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-                                    <DialogHeader>
-                                      <DialogTitle>Detailed Breakdown - {materialName}</DialogTitle>
-                                    </DialogHeader>
-                                    <div className="space-y-4">
-                                      <div className="bg-muted/30 p-4 rounded-lg">
-                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                                          <div>
-                                            <span className="text-muted-foreground">Total Quantity:</span>
-                                            <div className="font-semibold">{group.totalQty} {group.unit}</div>
-                                          </div>
-                                          {group.totalArea > 0 && (
-                                            <div>
-                                              <span className="text-muted-foreground">Total Area:</span>
-                                              <div className="font-semibold">{group.totalArea.toFixed(1)} sqft</div>
-                                            </div>
-                                          )}
-                                          <div>
-                                            <span className="text-muted-foreground">Avg Rate:</span>
-                                            <div className="font-semibold">₹{Math.round(group.avgRate)}</div>
-                                          </div>
-                                          <div>
-                                            <span className="text-muted-foreground">Total Cost:</span>
-                                            <div className="font-semibold text-[hsl(28,100%,25%)]">₹{group.totalCost.toLocaleString('en-IN')}</div>
-                                          </div>
-                                        </div>
-                                      </div>
-                                      
-                                      <div className="overflow-x-auto">
-                                        <Table>
-                                          <TableHeader>
-                                            <TableRow>
-                                              <TableHead>Part Name</TableHead>
-                                              <TableHead>Size (mm)</TableHead>
-                                              <TableHead>Qty</TableHead>
-                                              <TableHead>Edge Band</TableHead>
-                                              <TableHead className="text-right">Rate</TableHead>
-                                              <TableHead className="text-right">Amount</TableHead>
-                                            </TableRow>
-                                          </TableHeader>
-                                          <TableBody>
-                                            {group.items.map((item) => (
-                                              <TableRow key={item.id}>
-                                                <TableCell className="font-medium">{item.partName}</TableCell>
-                                                <TableCell>
-                                                  {item.length && item.width ? 
-                                                    `${item.length} × ${item.width}` : 
-                                                    '-'
-                                                  }
-                                                </TableCell>
-                                                <TableCell>{item.quantity} {item.unit}</TableCell>
-                                                <TableCell>
-                                                  {item.edgeBandingType ? (
-                                                    <Badge variant="outline" className="text-xs">{item.edgeBandingType}</Badge>
-                                                  ) : '-'}
-                                                </TableCell>
-                                                <TableCell className="text-right">{formatCurrency(item.unitRate)}</TableCell>
-                                                <TableCell className="text-right font-medium">{formatCurrency(item.totalCost)}</TableCell>
-                                              </TableRow>
-                                            ))}
-                                          </TableBody>
-                                        </Table>
-                                      </div>
-                                    </div>
-                                  </DialogContent>
-                                </Dialog>
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </div>
-                    
-                    {/* Total Cost Row */}
-                    <div className="flex justify-end pt-4 border-t">
-                      <div className="flex items-center gap-3 text-xl font-bold">
-                        <span>Total Cost:</span>
-                        <span className="text-[hsl(28,100%,25%)] flex items-center gap-2">
-                          ₹ {bomResult.totalCost?.toLocaleString('en-IN') || '0'}
-                          <div className="w-6 h-6 bg-green-500 rounded flex items-center justify-center">
-                            <span className="text-white text-sm">✓</span>
-                          </div>
-                        </span>
-                      </div>
-                    </div>
+                  </div>
 
                     {/* Cost Summary */}
                     <div className="border-t pt-4">
