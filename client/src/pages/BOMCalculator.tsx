@@ -415,10 +415,24 @@ export default function BOMCalculator() {
       
       // Group boards by thickness and type
       if (item.itemCategory === 'Board') {
-        const thickness = item.materialType?.match(/(\d+mm)/)?.[1] || '';
+        // Extract thickness from part name or material type
+        let thickness = '';
+        if (item.partName?.includes('18mm') || item.materialType?.includes('18mm')) {
+          thickness = '18mm';
+        } else if (item.partName?.includes('12mm') || item.materialType?.includes('12mm')) {
+          thickness = '12mm';
+        } else if (item.partName?.includes('6mm') || item.materialType?.includes('6mm')) {
+          thickness = '6mm';
+        } else {
+          // Fallback: try to extract from materialType
+          thickness = item.materialType?.match(/(\d+mm)/)?.[1] || '18mm';
+        }
+        
         const boardType = item.materialType?.includes('PLY') ? 'PLY' : 
                          item.materialType?.includes('MDF') ? 'MDF' : 'Board';
         groupKey = `${thickness} ${boardType}`;
+        
+        console.log(`🔧 DEBUG BOARD: ${item.partName} -> materialType: ${item.materialType} -> thickness: ${thickness} -> groupKey: ${groupKey}`);
       }
       // Group laminates
       else if (item.itemCategory === 'Laminate') {
