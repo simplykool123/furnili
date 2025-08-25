@@ -1633,9 +1633,9 @@ export default function BOMCalculator() {
                         <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border shadow-sm">
                           <h4 className="font-medium text-sm mb-2 text-gray-700 dark:text-gray-300">Board Sheets Required</h4>
                           {(() => {
-                            const sheetLength = parseFloat(form.watch('manufacturingSettings.sheetLength') || '8');
-                            const sheetWidth = parseFloat(form.watch('manufacturingSettings.sheetWidth') || '4'); 
-                            const wastage = parseFloat(form.watch('manufacturingSettings.wastagePercent') || '10') / 100;
+                            const sheetLength = parseFloat('8' || '8');
+                            const sheetWidth = parseFloat('4' || '4'); 
+                            const wastage = parseFloat('10' || '10') / 100;
                             const sheetArea = sheetLength * sheetWidth;
                             
                             return Object.entries(bomResult.boardAreaByThickness || {}).map(([thickness, area]) => (
@@ -1645,13 +1645,13 @@ export default function BOMCalculator() {
                                 </div>
                                 <div className="text-xs text-gray-500 space-y-1">
                                   <div>Net Area: {area.toFixed(1)} sq.ft</div>
-                                  <div>With {form.watch('manufacturingSettings.wastagePercent') || '10'}% wastage: {(area * (1 + wastage)).toFixed(1)} sq.ft</div>
+                                  <div>With {'10' || '10'}% wastage: {(area * (1 + wastage)).toFixed(1)} sq.ft</div>
                                 </div>
                               </div>
                             ));
                           })()}
                           <div className="text-xs text-gray-400 pt-2 border-t">
-                            Sheet: {form.watch('manufacturingSettings.sheetLength') || '8'}'×{form.watch('manufacturingSettings.sheetWidth') || '4'}' ({(parseFloat(form.watch('manufacturingSettings.sheetLength') || '8') * parseFloat(form.watch('manufacturingSettings.sheetWidth') || '4')).toFixed(0)} sq.ft)
+                            Sheet: {'8' || '8'}'×{'4' || '4'}' ({(parseFloat('8' || '8') * parseFloat('4' || '4')).toFixed(0)} sq.ft)
                           </div>
                         </div>
                         
@@ -1701,9 +1701,9 @@ export default function BOMCalculator() {
                         <h4 className="font-medium text-sm mb-2 text-green-800 dark:text-green-200">Quick Purchase Summary</h4>
                         <div className="text-sm text-green-700 dark:text-green-300">
                           {(() => {
-                            const sheetLength = parseFloat(form.watch('manufacturingSettings.sheetLength') || '8');
-                            const sheetWidth = parseFloat(form.watch('manufacturingSettings.sheetWidth') || '4'); 
-                            const wastage = parseFloat(form.watch('manufacturingSettings.wastagePercent') || '10') / 100;
+                            const sheetLength = parseFloat('8' || '8');
+                            const sheetWidth = parseFloat('4' || '4'); 
+                            const wastage = parseFloat('10' || '10') / 100;
                             const sheetArea = sheetLength * sheetWidth;
                             
                             return Object.entries(bomResult.boardAreaByThickness || {}).map(([thickness, area]) => (
