@@ -432,7 +432,6 @@ export default function BOMCalculator() {
                          item.materialType?.includes('MDF') ? 'MDF' : 'Board';
         groupKey = `${thickness} ${boardType}`;
         
-        console.log(`🔧 DEBUG BOARD: ${item.partName} -> materialType: ${item.materialType} -> thickness: ${thickness} -> groupKey: ${groupKey}`);
       }
       // Group laminates
       else if (item.itemCategory === 'Laminate') {
@@ -467,11 +466,18 @@ export default function BOMCalculator() {
       }
 
       grouped[groupKey].items.push(item);
-      grouped[groupKey].totalQty += item.quantity;
-      grouped[groupKey].totalArea += item.area_sqft || 0; // Use pre-calculated area in sqft
       
-      // Remove debug logging
-      grouped[groupKey].totalCost += item.totalCost;
+      // Round quantities properly for different units
+      let roundedQty = item.quantity;
+      if (item.unit === 'meters' || item.unit === 'sqft') {
+        roundedQty = Math.round(item.quantity * 100) / 100; // 2 decimal places
+      } else {
+        roundedQty = Math.round(item.quantity); // Whole numbers for pieces/bottles
+      }
+      
+      grouped[groupKey].totalQty += roundedQty;
+      grouped[groupKey].totalArea += Math.round((item.area_sqft || 0) * 100) / 100;
+      grouped[groupKey].totalCost += Math.round((item.totalCost || 0) * 100) / 100;
     });
 
     // Calculate average rates
@@ -1760,7 +1766,9 @@ export default function BOMCalculator() {
                               <TableCell className="py-1 px-2 text-sm font-medium">{materialName}</TableCell>
                               <TableCell className="py-1 px-2 text-sm">
                                 {group.totalQty > 0 ? (
-                                  `${group.totalQty} ${group.unit}`
+                                  group.unit === 'meters' || group.unit === 'sqft' ? 
+                                    `${group.totalQty.toFixed(2)} ${group.unit}` :
+                                    `${Math.round(group.totalQty)} ${group.unit}`
                                 ) : (
                                   '—'
                                 )}
@@ -1772,7 +1780,7 @@ export default function BOMCalculator() {
                                 {group.avgRate > 0 ? Math.round(group.avgRate) : '—'}
                               </TableCell>
                               <TableCell className="py-1 px-2 text-sm text-right font-medium">
-                                {group.totalCost.toLocaleString('en-IN')}
+                                {Math.round(group.totalCost).toLocaleString('en-IN')}
                               </TableCell>
                               <TableCell className="py-1 px-2 text-center">
                                 <Dialog>
