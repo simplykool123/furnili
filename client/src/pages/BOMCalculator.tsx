@@ -1853,10 +1853,11 @@ export default function BOMCalculator() {
                     </CardContent>
                   </Card>
 
-                  {/* BOM Table - Consolidated/Detailed View */}
-                  <BOMTable bomItems={bomResult.items} />
-                  
-                  {/* Total Cost Row */}
+                  <div>
+                    {/* BOM Table - Consolidated/Detailed View */}
+                    <BOMTable bomItems={bomResult.items} />
+                    
+                    {/* Total Cost Row */}
                   <div className="flex justify-end pt-4 border-t">
                     <div className="flex items-center gap-3 text-xl font-bold">
                       <span>Total Cost:</span>
@@ -1992,10 +1993,10 @@ export default function BOMCalculator() {
                               })()}
                             </div>
                           </div>
-                          
                         </div>
                       </div>
                     </div>
+                  </div>
                   </div>
                 </CardContent>
               </Card>
