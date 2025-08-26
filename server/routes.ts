@@ -4731,11 +4731,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       );
       
       boardPanels.forEach(panel => {
-        // ✅ CRITICAL FIX: Use each panel's actual thickness and material type
-        const panelThickness = panel.thickness || 18; // mm
-        const materialType = panel.materialType || `${panelThickness}mm ${bomData.boardType.toUpperCase()}`;
+        // ✅ CRITICAL FIX: Use panel's actual materialType from bomCalculations.ts
+        const materialType = panel.materialType; // This already has correct thickness (18mm PLY, 6mm PLY, etc.)
+        const panelThickness = panel.thickness || 18;
         
-        // ✅ CRITICAL FIX: Use thickness-specific rate instead of input rate
+        // ✅ CRITICAL FIX: Use thickness-specific rate
         let panelBoardRate = boardRate; // default
         if (panelThickness === 18) {
           panelBoardRate = DEFAULT_RATES.board["18mm_plywood"] || 147;
@@ -4750,16 +4750,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
           itemType: 'material' as const,
           itemCategory: 'Board',
           partName: panel.panel,
-          materialType: materialType, // ✅ Now shows correct thickness per panel
+          materialType: materialType, // ✅ Uses correct materialType from calculation (6mm PLY, 12mm PLY, etc.)
           length: Math.round(panel.length),
           width: Math.round(panel.width),
-          thickness: panelThickness, // ✅ Actual panel thickness
+          thickness: panelThickness,
           quantity: panel.qty,
           unit: 'pieces',
           edgeBandingType: panel.edge_banding,
           edgeBandingLength: panel.edgeBandingLength,
-          unitRate: panelBoardRate, // ✅ Thickness-specific rate
-          totalCost: panel.area_sqft * panelBoardRate, // ✅ Correct cost calculation
+          unitRate: panelBoardRate,
+          totalCost: panel.area_sqft * panelBoardRate,
           area_sqft: panel.area_sqft,
         });
       });
@@ -4941,6 +4941,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // ✅ USE ADVANCED SHEET OPTIMIZATION WITH FORWARD-LOOKING ALGORITHM
       const sheetOptimization = calculateAdvancedSheetOptimization(boardPanels);
 
+      // ✅ CREATE CONSOLIDATED SHEET PURCHASE REQUIREMENTS (for consolidated view)
+      const consolidatedItems = [];
+      
+      // Add sheet requirements based on optimization results
+      if (bomResult.boardAreaByThickness) {
+        Object.entries(bomResult.boardAreaByThickness).forEach(([thickness, area]) => {
+          const thicknessMm = parseInt(thickness.replace('mm', ''));
+          let rate = 147;
+          let sheetCount = 1;
+          
+          // Calculate sheets needed (8x4 sheet = ~32 sqft)
+          const sheetAreaSqft = 32; // Standard 8x4 plywood sheet
+          sheetCount = Math.ceil(area / sheetAreaSqft);
+          
+          // Set correct rate per thickness
+          if (thicknessMm === 18) {
+            rate = DEFAULT_RATES.board["18mm_plywood"] || 147;
+          } else if (thicknessMm === 12) {
+            rate = DEFAULT_RATES.board["12mm_plywood"] || 120;
+          } else if (thicknessMm === 6) {
+            rate = DEFAULT_RATES.board["6mm_plywood"] || 95;
+          }
+
+          consolidatedItems.push({
+            id: Math.random(),
+            itemType: 'material' as const,
+            itemCategory: 'Board',
+            partName: `${thickness} Plywood Sheet`,
+            materialType: `${thickness} PLY`,
+            length: 2440, // 8 feet
+            width: 1220,  // 4 feet
+            thickness: thicknessMm,
+            quantity: sheetCount, // ✅ ACTUAL SHEETS TO PURCHASE
+            unit: 'sheets', // ✅ SHEETS, not pieces
+            edgeBandingType: 'None',
+            edgeBandingLength: 0,
+            unitRate: rate * sheetAreaSqft, // Rate per sheet 
+            totalCost: sheetCount * rate * sheetAreaSqft,
+            area_sqft: area,
+          });
+        });
+      }
+
+      // Add other consolidated items (hardware, laminate, adhesives stay the same as they are already consolidated)
+      const nonBoardItems = bomItemsData.filter(item => item.itemCategory !== 'Board');
+      consolidatedItems.push(...nonBoardItems);
+
       // Return calculation results with database ID and optimization data
       res.json({
         id: savedBom.id,
@@ -4953,7 +5000,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         totalHardwareCost: bomResult.hardware_cost,
         totalCost: bomResult.total_cost,
         sheetOptimization,
-        items: bomItemsData,
+        items: bomItemsData, // Details view - individual panels
+        consolidatedItems: consolidatedItems, // ✅ Consolidated view - actual purchase requirements
       });
     } catch (error) {
       console.error("BOM calculation error:", error);

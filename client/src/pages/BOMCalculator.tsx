@@ -2028,36 +2028,49 @@ export default function BOMCalculator() {
                             </TableRow>
                           </TableHeader>
                           <TableBody>
-                            {getOrderedConsolidatedMaterials(bomResult.items).map((group) => (
-                            <TableRow key={group.name} className="hover:bg-muted/20 h-7 border-b border-gray-100">
-                              <TableCell className="py-1 px-2 text-sm font-medium">{group.name}</TableCell>
+                            {/* ✅ USE BACKEND CONSOLIDATED ITEMS (actual sheet purchase requirements) */}
+                            {(bomResult.consolidatedItems || getOrderedConsolidatedMaterials(bomResult.items)).map((item) => (
+                            <TableRow key={item.partName || item.name} className="hover:bg-muted/20 h-7 border-b border-gray-100">
+                              <TableCell className="py-1 px-2 text-sm font-medium">
+                                {/* ✅ Handle both consolidatedItems (from backend) and grouped items (fallback) */}
+                                {item.partName || item.materialType || item.name}
+                              </TableCell>
                               <TableCell className="py-1 px-2 text-sm">
-                                {group.isBoard ? (
-                                  // For boards, show sheet count instead of pieces
-                                  (() => {
-                                    const sheetLength = parseFloat('8' || '8');
-                                    const sheetWidth = parseFloat('4' || '4'); 
-                                    const wastage = parseFloat('10' || '10') / 100;
-                                    const sheetArea = sheetLength * sheetWidth;
-                                    const sheetsNeeded = Math.ceil((group.totalArea * (1 + wastage)) / sheetArea);
-                                    return `${sheetsNeeded} sheets (${group.totalArea.toFixed(0)} sqft)`;
-                                  })()
-                                ) : group.totalQty > 0 ? (
-                                  group.unit === 'meters' || group.unit === 'sqft' ? 
-                                    `${group.totalQty.toFixed(2)} ${group.unit}` :
-                                    `${Math.round(group.totalQty)} ${group.unit}`
+                                {/* ✅ Display correct quantity with unit */}
+                                {item.quantity !== undefined ? (
+                                  // Backend consolidatedItems format
+                                  `${Math.round(item.quantity)} ${item.unit || 'pieces'}`
+                                ) : item.totalQty > 0 ? (
+                                  // Fallback grouped items format  
+                                  item.isBoard ? (
+                                    (() => {
+                                      const sheetLength = parseFloat('8' || '8');
+                                      const sheetWidth = parseFloat('4' || '4'); 
+                                      const wastage = parseFloat('10' || '10') / 100;
+                                      const sheetArea = sheetLength * sheetWidth;
+                                      const sheetsNeeded = Math.ceil((item.totalArea * (1 + wastage)) / sheetArea);
+                                      return `${sheetsNeeded} sheets (${item.totalArea.toFixed(0)} sqft)`;
+                                    })()
+                                  ) : item.unit === 'meters' || item.unit === 'sqft' ? 
+                                    `${item.totalQty.toFixed(2)} ${item.unit}` :
+                                    `${Math.round(item.totalQty)} ${item.unit}`
                                 ) : (
                                   '—'
                                 )}
                               </TableCell>
                               <TableCell className="py-1 px-2 text-sm">
-                                {group.totalArea > 0 ? `${group.totalArea.toFixed(0)} sqft` : '—'}
+                                {/* ✅ Handle area from both formats */}
+                                {(item.area_sqft || item.totalArea) > 0 ? 
+                                  `${(item.area_sqft || item.totalArea).toFixed(0)} sqft` : '—'}
                               </TableCell>
                               <TableCell className="py-1 px-2 text-sm text-right">
-                                {group.avgRate > 0 ? Math.round(group.avgRate) : '—'}
+                                {/* ✅ Handle rate from both formats */}
+                                {(item.unitRate || item.avgRate) > 0 ? 
+                                  Math.round(item.unitRate || item.avgRate) : '—'}
                               </TableCell>
                               <TableCell className="py-1 px-2 text-sm text-right font-medium">
-                                {Math.round(group.totalCost).toLocaleString('en-IN')}
+                                {/* ✅ Handle cost from both formats */}
+                                {Math.round(item.totalCost || 0).toLocaleString('en-IN')}
                               </TableCell>
                               <TableCell className="py-1 px-2 text-center">
                                 <Dialog>
@@ -2068,28 +2081,33 @@ export default function BOMCalculator() {
                                   </DialogTrigger>
                                   <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
                                     <DialogHeader>
-                                      <DialogTitle>Detailed Breakdown - {group.name}</DialogTitle>
+                                      <DialogTitle>Detailed Breakdown - {item.partName || item.materialType || item.name}</DialogTitle>
                                     </DialogHeader>
                                     <div className="space-y-4">
                                       <div className="bg-muted/30 p-4 rounded-lg">
                                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                                           <div>
                                             <span className="text-muted-foreground">Total Quantity:</span>
-                                            <div className="font-semibold">{group.totalQty} {group.unit}</div>
+                                            <div className="font-semibold">
+                                              {item.quantity !== undefined ? 
+                                                `${Math.round(item.quantity)} ${item.unit || 'pieces'}` :
+                                                `${item.totalQty} ${item.unit}`
+                                              }
+                                            </div>
                                           </div>
-                                          {group.totalArea > 0 && (
+                                          {(item.area_sqft || item.totalArea) > 0 && (
                                             <div>
                                               <span className="text-muted-foreground">Total Area:</span>
-                                              <div className="font-semibold">{group.totalArea.toFixed(1)} sqft</div>
+                                              <div className="font-semibold">{(item.area_sqft || item.totalArea).toFixed(1)} sqft</div>
                                             </div>
                                           )}
                                           <div>
-                                            <span className="text-muted-foreground">Avg Rate:</span>
-                                            <div className="font-semibold">₹{Math.round(group.avgRate)}</div>
+                                            <span className="text-muted-foreground">Rate:</span>
+                                            <div className="font-semibold">₹{Math.round(item.unitRate || item.avgRate)}</div>
                                           </div>
                                           <div>
                                             <span className="text-muted-foreground">Total Cost:</span>
-                                            <div className="font-semibold text-[hsl(28,100%,25%)]">₹{group.totalCost.toLocaleString('en-IN')}</div>
+                                            <div className="font-semibold text-[hsl(28,100%,25%)]">₹{(item.totalCost || 0).toLocaleString('en-IN')}</div>
                                           </div>
                                         </div>
                                       </div>
@@ -2107,25 +2125,48 @@ export default function BOMCalculator() {
                                             </TableRow>
                                           </TableHeader>
                                           <TableBody>
-                                            {group.items.map((item) => (
-                                              <TableRow key={item.id}>
-                                                <TableCell className="font-medium">{item.partName}</TableCell>
+                                            {/* ✅ Handle both consolidated items and grouped items */}
+                                            {item.items ? (
+                                              // Grouped items with breakdown
+                                              item.items.map((subItem: any) => (
+                                                <TableRow key={subItem.id}>
+                                                  <TableCell className="font-medium">{subItem.partName}</TableCell>
+                                                  <TableCell>
+                                                    {subItem.length && subItem.width ? 
+                                                      `${subItem.length} × ${subItem.width}` : 
+                                                      '-'
+                                                    }
+                                                  </TableCell>
+                                                  <TableCell>{subItem.quantity} {subItem.unit}</TableCell>
+                                                  <TableCell>
+                                                    {subItem.edgeBandingType ? (
+                                                      <Badge variant="outline" className="text-xs">{subItem.edgeBandingType}</Badge>
+                                                    ) : '-'}
+                                                  </TableCell>
+                                                  <TableCell className="text-right">{formatCurrency(subItem.unitRate)}</TableCell>
+                                                  <TableCell className="text-right font-medium">{formatCurrency(subItem.totalCost)}</TableCell>
+                                                </TableRow>
+                                              ))
+                                            ) : (
+                                              // Single consolidated item (like sheet purchase requirement)
+                                              <TableRow>
+                                                <TableCell className="font-medium">{item.partName || item.materialType}</TableCell>
                                                 <TableCell>
                                                   {item.length && item.width ? 
                                                     `${item.length} × ${item.width}` : 
-                                                    '-'
+                                                    'Standard Sheet'
                                                   }
                                                 </TableCell>
-                                                <TableCell>{item.quantity} {item.unit}</TableCell>
+                                                <TableCell>{Math.round(item.quantity || 0)} {item.unit || 'pieces'}</TableCell>
                                                 <TableCell>
-                                                  {item.edgeBandingType ? (
+                                                  {item.edgeBandingType && item.edgeBandingType !== 'None' ? (
                                                     <Badge variant="outline" className="text-xs">{item.edgeBandingType}</Badge>
                                                   ) : '-'}
                                                 </TableCell>
-                                                <TableCell className="text-right">{formatCurrency(item.unitRate)}</TableCell>
-                                                <TableCell className="text-right font-medium">{formatCurrency(item.totalCost)}</TableCell>
+                                                <TableCell className="text-right">{formatCurrency(item.unitRate || 0)}</TableCell>
+                                                <TableCell className="text-right font-medium">{formatCurrency(item.totalCost || 0)}</TableCell>
                                               </TableRow>
-                                            ))}
+                                            )}
                                           </TableBody>
                                         </Table>
                                       </div>
