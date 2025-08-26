@@ -18,6 +18,7 @@ import { useIsMobile } from "@/components/Mobile/MobileOptimizer";
 import MobileTable from "@/components/Mobile/MobileTable";
 import { useToast } from "@/hooks/use-toast";
 import ResponsiveLayout from "@/components/Layout/ResponsiveLayout";
+import FurnitureTechnicalDrawing from "@/components/FurnitureTechnicalDrawing";
 import { 
   Calculator, 
   Download, 
@@ -1944,6 +1945,28 @@ export default function BOMCalculator() {
                       <p className="text-sm text-furnili-brown font-medium">Total Cost</p>
                       <p className="text-2xl font-bold text-furnili-brown">{formatCurrency(bomResult.totalCost || 0)}</p>
                     </div>
+                  </div>
+
+                  {/* Technical Drawing */}
+                  <div className="mb-6">
+                    <FurnitureTechnicalDrawing
+                      bomResult={bomResult}
+                      furnitureType={form.getValues('unitType')}
+                      dimensions={{
+                        width: form.getValues('width'),
+                        height: form.getValues('height'),
+                        depth: form.getValues('depth'),
+                        unitOfMeasure: form.getValues('unitOfMeasure') || 'mm'
+                      }}
+                      configuration={{
+                        shelves: form.getValues('partsConfig.shelfCount') || form.getValues('partsConfig.shelves') || 0,
+                        drawers: form.getValues('partsConfig.drawerCount') || form.getValues('partsConfig.drawers') || 0,
+                        shutters: form.getValues('partsConfig.shutterCount') || form.getValues('partsConfig.shutters') || 0,
+                        doors: form.getValues('partsConfig.doors') || 0,
+                        wardrobeType: form.getValues('partsConfig.wardrobeType') || 'openable',
+                        ...form.getValues('partsConfig')
+                      }}
+                    />
                   </div>
 
                   {/* Consolidated Material Purchase List */}
