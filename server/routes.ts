@@ -4870,10 +4870,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Calculate sheet optimization
-      const boardPanels = bomResult.panels.filter(panel => 
-        !panel.panel.toLowerCase().includes('laminate')
-      );
-      
       const sheetOptimization = calculateSheetOptimization(boardPanels);
 
       // Return calculation results with database ID and optimization data
