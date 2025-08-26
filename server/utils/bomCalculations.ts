@@ -1929,26 +1929,37 @@ export const calculateWardrobeBOM = (data: any) => {
     } as any);
   });
 
-  // ✅ WARDROBE LAMINATE CALCULATION (AREA-BASED)
+  // ✅ WARDROBE LAMINATE CALCULATION - PRECISE FORMULA IMPLEMENTATION
+  let outerLaminateArea = 0;
+  let innerLaminateArea = 0;
+  
   if (finish === 'laminate') {
     panels.forEach(panel => {
-      // Outer Laminate (2-side panels): Shutters, drawer fronts → area × 2
-      const isOuter = panel.panel.toLowerCase().includes('shutter') || 
-                     panel.panel.toLowerCase().includes('drawer front');
+      const panelName = panel.panel.toLowerCase();
       
-      // Inner Laminate (1-side panels): Shelves, carcass sides, partitions → area × 1
-      const isInner = panel.panel.toLowerCase().includes('shelf') ||
-                     panel.panel.toLowerCase().includes('side panel') ||
-                     panel.panel.toLowerCase().includes('top panel') ||
-                     panel.panel.toLowerCase().includes('bottom panel');
-      
-      if (isOuter) {
-        totalLaminateArea += panel.total_area * 2; // Both sides
-      } else if (isInner) {
-        totalLaminateArea += panel.total_area * 1; // One side
+      // Outer laminate (both faces): Shutters, Doors, Drawer Fronts
+      if (panelName.includes('shutter') || panelName.includes('door') || panelName.includes('drawer front')) {
+        outerLaminateArea += panel.total_area * 2; // Both faces
       }
-      // Back panel usually no laminate (painted)
+      // Inner laminate (single face): Side, Top, Bottom, Shelf, Partition
+      else if (panelName.includes('side panel') || panelName.includes('top panel') || 
+               panelName.includes('bottom panel') || panelName.includes('shelf') ||
+               panelName.includes('partition')) {
+        
+        // Exposed carcass end: That exterior face → outer instead of none
+        // So Side panel faces become: inner + outer on an exposed end
+        if (panelName.includes('side panel') && exposedSides) {
+          innerLaminateArea += panel.total_area; // Inner face
+          outerLaminateArea += panel.total_area; // Outer face (exposed to room)
+        } else {
+          innerLaminateArea += panel.total_area; // Single inner face
+        }
+      }
+      // Back: none (no laminate)
     });
+    
+    // Total laminated area = outerArea + innerArea
+    totalLaminateArea = outerLaminateArea + innerLaminateArea;
   }
 
   // 🔸 WARDROBE HARDWARE CALCULATIONS BASED ON TYPE

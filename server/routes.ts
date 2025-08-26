@@ -4762,26 +4762,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       });
       
-      // 2. LAMINATE ITEMS - Only if finish is laminate
+      // 2. LAMINATE ITEMS - PRECISE FORMULA IMPLEMENTATION
       if (bomData.finish === 'laminate') {
-        // Calculate total area for inner laminate (all panels except shutters/doors get single side)
-        const innerPanels = boardPanels.filter(panel => 
-          !panel.panel.toLowerCase().includes('shutter') && 
-          !panel.panel.toLowerCase().includes('door') &&
-          !panel.panel.toLowerCase().includes('front')
-        );
+        let outerLaminateArea = 0;
+        let innerLaminateArea = 0;
         
-        // Calculate total area for outer laminate (shutters/doors get both sides)
-        const outerPanels = boardPanels.filter(panel => 
-          panel.panel.toLowerCase().includes('shutter') || 
-          panel.panel.toLowerCase().includes('door') ||
-          panel.panel.toLowerCase().includes('front')
-        );
-        
-        if (innerPanels.length > 0) {
-          const totalInnerArea = innerPanels.reduce((sum, panel) => sum + panel.area_sqft, 0);
-          const totalInnerQty = innerPanels.reduce((sum, panel) => sum + panel.qty, 0);
+        // Calculate laminate areas using precise formulas
+        boardPanels.forEach(panel => {
+          const panelName = panel.panel.toLowerCase();
           
+          // Outer laminate (both faces): Shutters, Doors, Drawer Fronts
+          if (panelName.includes('shutter') || panelName.includes('door') || panelName.includes('drawer front')) {
+            outerLaminateArea += panel.area_sqft * 2; // Both faces
+          }
+          // Inner laminate (single face): Side, Top, Bottom, Shelf, Partition
+          else if (panelName.includes('side panel') || panelName.includes('top panel') || 
+                   panelName.includes('bottom panel') || panelName.includes('shelf') ||
+                   panelName.includes('partition')) {
+            
+            // Exposed carcass end: inner + outer (instead of inner + none)
+            if (panelName.includes('side panel') && bomData.exposedSides) {
+              innerLaminateArea += panel.area_sqft; // Inner face
+              outerLaminateArea += panel.area_sqft; // Outer face (exposed to room)
+            } else {
+              innerLaminateArea += panel.area_sqft; // Single inner face
+            }
+          }
+          // Back: none (no laminate added)
+        });
+        
+        // Add Inner Laminate item if needed
+        if (innerLaminateArea > 0) {
           bomItemsData.push({
             id: Math.random(),
             itemType: 'material' as const,
@@ -4791,20 +4802,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
             length: 0,
             width: 0,
             thickness: 1,
-            quantity: totalInnerQty,
+            quantity: Math.ceil(innerLaminateArea), // Round up for pieces
             unit: 'pieces',
             edgeBandingType: 'None',
             edgeBandingLength: 0,
             unitRate: 65,
-            totalCost: totalInnerArea * 65,
-            area_sqft: totalInnerArea,
+            totalCost: innerLaminateArea * 65,
+            area_sqft: innerLaminateArea,
           });
         }
         
-        if (outerPanels.length > 0) {
-          const totalOuterArea = outerPanels.reduce((sum, panel) => sum + panel.area_sqft, 0);
-          const totalOuterQty = outerPanels.reduce((sum, panel) => sum + panel.qty, 0);
-          
+        // Add Outer Laminate item if needed
+        if (outerLaminateArea > 0) {
           bomItemsData.push({
             id: Math.random(),
             itemType: 'material' as const,
@@ -4814,21 +4823,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
             length: 0,
             width: 0,
             thickness: 1,
-            quantity: totalOuterQty * 2, // Both sides
+            quantity: Math.ceil(outerLaminateArea), // Round up for pieces
             unit: 'pieces',
             edgeBandingType: 'None',
             edgeBandingLength: 0,
             unitRate: 85,
-            totalCost: totalOuterArea * 2 * 85,
-            area_sqft: totalOuterArea * 2,
+            totalCost: outerLaminateArea * 85,
+            area_sqft: outerLaminateArea,
           });
         }
         
-        // ✅ LAMINATE ADHESIVE (Fevicol SR 750ml): 1 bottle covers 32 sqft laminate area
-        const totalLaminateArea = bomResult.totalLaminateArea;
+        // ✅ LAMINATE ADHESIVE - PRECISE FORMULA: adhesiveBottles = ceil(laminatedArea × (1 + wastePct) / coveragePerBottle)
+        const totalLaminatedArea = outerLaminateArea + innerLaminateArea;
         
-        if (totalLaminateArea > 0) {
-          const bottlesNeeded = Math.ceil(totalLaminateArea / 32); // 1 bottle per 32 sqft
+        if (totalLaminatedArea > 0) {
+          const adhesiveWastePct = 0.10; // 10% waste allowance
+          const coverageSqftPerBottle = 32; // 1 bottle covers 32 sqft
+          const adhesiveBottlePrice = 85;
+          
+          const bottlesNeeded = Math.ceil(totalLaminatedArea * (1 + adhesiveWastePct) / coverageSqftPerBottle);
+          
           bomItemsData.push({
             id: Math.random(),
             itemType: 'material' as const,
@@ -4842,8 +4856,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             unit: 'bottles',
             edgeBandingType: 'None',
             edgeBandingLength: 0,
-            unitRate: 85,
-            totalCost: bottlesNeeded * 85,
+            unitRate: adhesiveBottlePrice,
+            totalCost: bottlesNeeded * adhesiveBottlePrice,
             area_sqft: 0,
           });
         }
