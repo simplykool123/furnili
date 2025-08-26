@@ -4731,21 +4731,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
       );
       
       boardPanels.forEach(panel => {
+        // ✅ CRITICAL FIX: Use each panel's actual thickness and material type
+        const panelThickness = panel.thickness || 18; // mm
+        const materialType = panel.materialType || `${panelThickness}mm ${bomData.boardType.toUpperCase()}`;
+        
+        // ✅ CRITICAL FIX: Use thickness-specific rate instead of input rate
+        let panelBoardRate = boardRate; // default
+        if (panelThickness === 18) {
+          panelBoardRate = DEFAULT_RATES.board["18mm_plywood"] || 147;
+        } else if (panelThickness === 12) {
+          panelBoardRate = DEFAULT_RATES.board["12mm_plywood"] || 120;
+        } else if (panelThickness === 6) {
+          panelBoardRate = DEFAULT_RATES.board["6mm_plywood"] || 95;
+        }
+
         bomItemsData.push({
           id: Math.random(),
           itemType: 'material' as const,
           itemCategory: 'Board',
           partName: panel.panel,
-          materialType: `${bomData.boardThickness} ${bomData.boardType.toUpperCase()}`,
+          materialType: materialType, // ✅ Now shows correct thickness per panel
           length: Math.round(panel.length),
           width: Math.round(panel.width),
-          thickness: parseInt(bomData.boardThickness.replace('mm', '')),
+          thickness: panelThickness, // ✅ Actual panel thickness
           quantity: panel.qty,
           unit: 'pieces',
           edgeBandingType: panel.edge_banding,
           edgeBandingLength: panel.edgeBandingLength,
-          unitRate: boardRate,
-          totalCost: panel.area_sqft * boardRate,
+          unitRate: panelBoardRate, // ✅ Thickness-specific rate
+          totalCost: panel.area_sqft * panelBoardRate, // ✅ Correct cost calculation
           area_sqft: panel.area_sqft,
         });
       });
