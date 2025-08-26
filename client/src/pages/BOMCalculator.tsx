@@ -2068,7 +2068,7 @@ export default function BOMCalculator() {
                                   </DialogTrigger>
                                   <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
                                     <DialogHeader>
-                                      <DialogTitle>Detailed Breakdown - {materialName}</DialogTitle>
+                                      <DialogTitle>Detailed Breakdown - {group.name}</DialogTitle>
                                     </DialogHeader>
                                     <div className="space-y-4">
                                       <div className="bg-muted/30 p-4 rounded-lg">
