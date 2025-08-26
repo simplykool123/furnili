@@ -3315,7 +3315,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Delete from filesystem
       const fs = await import('fs/promises');
       const path = await import('path');
-      const filePath = path.join('uploads/products', file.fileName);
+      const filePath = path.join('uploads/projects', file.fileName);
       
       try {
         await fs.unlink(filePath);
