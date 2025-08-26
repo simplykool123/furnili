@@ -8,6 +8,7 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Settings, DollarSign, Package, Link } from 'lucide-react';
+import ResponsiveLayout from '@/components/Layout/ResponsiveLayout';
 import {
   Dialog,
   DialogContent,
@@ -195,36 +196,32 @@ export default function BOMSettings() {
   }
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">BOM Settings</h1>
-          <p className="text-muted-foreground">
-            Map BOM materials to your existing products for real pricing instead of hardcoded rates.
-          </p>
+    <ResponsiveLayout
+      title="BOM Settings"
+      subtitle="Map BOM materials to your existing products for real pricing instead of hardcoded rates."
+    >
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {Object.entries(DEFAULT_BOM_MATERIALS).map(([category, materials]) => 
+            materials.map(material => (
+              <MaterialCard key={material.type} material={material} />
+            ))
+          )}
         </div>
-      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        {Object.entries(DEFAULT_BOM_MATERIALS).map(([category, materials]) => 
-          materials.map(material => (
-            <MaterialCard key={material.type} material={material} />
-          ))
-        )}
+        <Card className="mt-8">
+          <CardHeader>
+            <CardTitle>How It Works</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2 text-sm text-muted-foreground">
+            <p>• <strong>Default:</strong> Uses hardcoded DEFAULT_RATES for calculations</p>
+            <p>• <strong>Configured:</strong> Linked to product but real pricing disabled</p>
+            <p>• <strong>Real Price:</strong> Uses actual product prices from your inventory</p>
+            <p>• When real pricing is enabled, BOM calculations will use current product prices automatically</p>
+          </CardContent>
+        </Card>
       </div>
-
-      <Card className="mt-8">
-        <CardHeader>
-          <CardTitle>How It Works</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2 text-sm text-muted-foreground">
-          <p>• <strong>Default:</strong> Uses hardcoded DEFAULT_RATES for calculations</p>
-          <p>• <strong>Configured:</strong> Linked to product but real pricing disabled</p>
-          <p>• <strong>Real Price:</strong> Uses actual product prices from your inventory</p>
-          <p>• When real pricing is enabled, BOM calculations will use current product prices automatically</p>
-        </CardContent>
-      </Card>
-    </div>
+    </ResponsiveLayout>
   );
 }
 
