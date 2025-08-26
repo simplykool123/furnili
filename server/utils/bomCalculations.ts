@@ -193,26 +193,129 @@ const STANDARD_DIMENSIONS = {
   }
 };
 
-// Material optimization for sheet cutting (basic nesting calculation)
-const calculateSheetOptimization = (panels: Panel[], sheetSize = { length: 2440, width: 1220 }): { sheets_required: number, efficiency: number } => {
+// Advanced sheet optimization with nesting calculation
+const calculateSheetOptimization = (panels: Panel[], sheetSize = { length: 2440, width: 1220 }): { 
+  sheets_required: number, 
+  efficiency: number, 
+  nesting_layout: any[],
+  sheets_by_thickness: { [thickness: string]: number }
+} => {
   const sheetArea = sheetSize.length * sheetSize.width;
   let totalPanelArea = 0;
+  const sheetsNeeded: { [thickness: string]: number } = {};
+  const nestingLayout: any[] = [];
+  
+  // Group panels by thickness for separate sheet calculations
+  const panelsByThickness: { [thickness: string]: Panel[] } = {};
   
   panels.forEach(panel => {
+    const thickness = panel.material.match(/^(\d+(?:\.\d+)?mm)/)?.[1] || '18mm';
+    if (!panelsByThickness[thickness]) {
+      panelsByThickness[thickness] = [];
+    }
+    
+    // Expand panels by quantity
+    for (let i = 0; i < panel.qty; i++) {
+      panelsByThickness[thickness].push({
+        ...panel,
+        panel: `${panel.panel} (${i + 1})`,
+        qty: 1
+      });
+    }
+    
     totalPanelArea += (panel.length * panel.width * panel.qty);
   });
-  
-  // Add waste factor for cutting optimization
-  const wastedArea = totalPanelArea * (WASTE_FACTORS.board.cutting_waste + WASTE_FACTORS.board.setup_waste);
-  const totalRequiredArea = totalPanelArea + wastedArea;
-  
-  const sheetsRequired = Math.ceil(totalRequiredArea / sheetArea);
-  const efficiency = (totalPanelArea / (sheetsRequired * sheetArea)) * 100;
+
+  // Calculate sheets needed for each thickness
+  Object.entries(panelsByThickness).forEach(([thickness, thicknessPanels]) => {
+    const { sheets, layout } = calculateOptimalNesting(thicknessPanels, sheetSize);
+    sheetsNeeded[thickness] = sheets;
+    nestingLayout.push({
+      thickness,
+      sheets,
+      layout,
+      panels: thicknessPanels.length
+    });
+  });
+
+  const totalSheets = Object.values(sheetsNeeded).reduce((sum, count) => sum + count, 0);
+  const efficiency = totalSheets > 0 ? (totalPanelArea / (totalSheets * sheetArea)) * 100 : 0;
   
   return {
-    sheets_required: sheetsRequired,
-    efficiency: Math.round(efficiency)
+    sheets_required: totalSheets,
+    efficiency: Math.round(efficiency),
+    nesting_layout: nestingLayout,
+    sheets_by_thickness: sheetsNeeded
   };
+};
+
+// Advanced nesting algorithm for optimal sheet usage
+const calculateOptimalNesting = (panels: Panel[], sheetSize = { length: 2440, width: 1220 }) => {
+  // Sort panels by area (largest first) for better nesting
+  const sortedPanels = [...panels].sort((a, b) => (b.length * b.width) - (a.length * a.width));
+  
+  const sheets: any[] = [];
+  let currentSheet = { length: sheetSize.length, width: sheetSize.width, panels: [], utilization: 0 };
+  
+  sortedPanels.forEach(panel => {
+    const panelArea = panel.length * panel.width;
+    
+    // Check if panel fits in current sheet
+    const canFit = canPanelFitInSheet(panel, currentSheet, sheetSize);
+    
+    if (canFit) {
+      // Add panel to current sheet
+      currentSheet.panels.push({
+        name: panel.panel,
+        size: `${panel.length} × ${panel.width}`,
+        area: panelArea
+      });
+      currentSheet.utilization += panelArea;
+    } else {
+      // Start new sheet if current has panels
+      if (currentSheet.panels.length > 0) {
+        sheets.push({
+          ...currentSheet,
+          efficiency: (currentSheet.utilization / (sheetSize.length * sheetSize.width)) * 100
+        });
+      }
+      
+      // Create new sheet with this panel
+      currentSheet = {
+        length: sheetSize.length,
+        width: sheetSize.width,
+        panels: [{
+          name: panel.panel,
+          size: `${panel.length} × ${panel.width}`,
+          area: panelArea
+        }],
+        utilization: panelArea
+      };
+    }
+  });
+  
+  // Add last sheet if it has panels
+  if (currentSheet.panels.length > 0) {
+    sheets.push({
+      ...currentSheet,
+      efficiency: (currentSheet.utilization / (sheetSize.length * sheetSize.width)) * 100
+    });
+  }
+  
+  return {
+    sheets: sheets.length || 1, // At least 1 sheet
+    layout: sheets
+  };
+};
+
+// Check if panel can fit in remaining sheet space
+const canPanelFitInSheet = (panel: Panel, sheet: any, sheetSize: any): boolean => {
+  const panelLength = Math.max(panel.length, panel.width);
+  const panelWidth = Math.min(panel.length, panel.width);
+  
+  // Simple rectangular nesting - check if panel fits in sheet dimensions
+  return (panelLength <= sheetSize.length && panelWidth <= sheetSize.width) ||
+         (panelWidth <= sheetSize.length && panelLength <= sheetSize.width);
 };
 
 // Convert mm² to sqft

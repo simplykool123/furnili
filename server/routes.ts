@@ -4869,7 +4869,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         );
       }
 
-      // Return calculation results with database ID
+      // Calculate sheet optimization
+      const boardPanels = bomResult.panels.filter(panel => 
+        !panel.panel.toLowerCase().includes('laminate')
+      );
+      
+      const sheetOptimization = calculateSheetOptimization(boardPanels);
+
+      // Return calculation results with database ID and optimization data
       res.json({
         id: savedBom.id,
         calculationNumber,
@@ -4880,6 +4887,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         totalMaterialCost: bomResult.material_cost,
         totalHardwareCost: bomResult.hardware_cost,
         totalCost: bomResult.total_cost,
+        sheetOptimization,
         items: bomItemsData,
       });
     } catch (error) {

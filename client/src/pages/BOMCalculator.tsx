@@ -2142,50 +2142,171 @@ export default function BOMCalculator() {
 
                     {/* Details View */}
                     {bomViewMode === 'details' && (
-                      <div className="overflow-x-auto">
-                        <Table className="text-sm border-collapse">
-                          <TableHeader>
-                            <TableRow className="bg-muted/50 h-8 border-b">
-                              <TableHead className="py-1 px-2 text-xs font-semibold">Part Name</TableHead>
-                              <TableHead className="py-1 px-2 text-xs font-semibold">Size (LxW)</TableHead>
-                              <TableHead className="py-1 px-2 text-xs font-semibold">Material</TableHead>
-                              <TableHead className="py-1 px-2 text-xs font-semibold">Qty</TableHead>
-                              <TableHead className="py-1 px-2 text-xs font-semibold">Edge Band</TableHead>
-                              <TableHead className="py-1 px-2 text-xs font-semibold">Area (sqft)</TableHead>
-                              <TableHead className="py-1 px-2 text-xs font-semibold text-right">Rate (₹)</TableHead>
-                              <TableHead className="py-1 px-2 text-xs font-semibold text-right">Cost (₹)</TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {bomResult.items.map((item) => (
-                              <TableRow key={item.id} className="hover:bg-muted/20 h-7 border-b border-gray-100">
-                                <TableCell className="py-1 px-2 text-sm font-medium">{item.partName}</TableCell>
-                                <TableCell className="py-1 px-2 text-sm">
-                                  {item.length && item.width ? 
-                                    `${Math.round(item.length)} × ${Math.round(item.width)}` : 
-                                    '-'
-                                  }
-                                </TableCell>
-                                <TableCell className="py-1 px-2 text-sm">{item.materialType}</TableCell>
-                                <TableCell className="py-1 px-2 text-sm">{item.quantity} {item.unit}</TableCell>
-                                <TableCell className="py-1 px-2 text-sm">
-                                  {item.edgeBandingType ? (
-                                    <Badge variant="outline" className="text-xs">{item.edgeBandingType}</Badge>
-                                  ) : '-'}
-                                </TableCell>
-                                <TableCell className="py-1 px-2 text-sm">
-                                  {item.area_sqft ? `${item.area_sqft.toFixed(1)} sqft` : '-'}
-                                </TableCell>
-                                <TableCell className="py-1 px-2 text-sm text-right">
-                                  {item.unitRate > 0 ? Math.round(item.unitRate) : '-'}
-                                </TableCell>
-                                <TableCell className="py-1 px-2 text-sm text-right font-medium">
-                                  {Math.round(item.totalCost).toLocaleString('en-IN')}
-                                </TableCell>
+                      <div className="space-y-6">
+                        {/* Sheet Optimization Summary */}
+                        <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20">
+                          <CardHeader>
+                            <CardTitle className="text-base flex items-center gap-2">
+                              <Layers className="w-5 h-5 text-blue-600" />
+                              Sheet Optimization & Nesting Analysis
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                              {/* Total Sheets Required */}
+                              <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border shadow-sm">
+                                <h4 className="font-medium text-sm mb-2 text-gray-700 dark:text-gray-300">Total Sheets Required</h4>
+                                <div className="text-3xl font-bold text-blue-600 mb-1">
+                                  {(() => {
+                                    const boardItems = bomResult.items.filter(item => item.itemCategory === 'Board');
+                                    return Object.entries(bomResult.boardAreaByThickness || {}).reduce((total, [thickness, area]) => {
+                                      const sheetArea = 8 * 4; // 8' x 4' sheet
+                                      const wastage = 0.12; // 12% cutting waste
+                                      return total + Math.ceil((area * (1 + wastage)) / sheetArea);
+                                    }, 0);
+                                  })()}
+                                </div>
+                                <div className="text-xs text-gray-500">
+                                  Standard 8' × 4' sheets
+                                </div>
+                              </div>
+                              
+                              {/* Nesting Efficiency */}
+                              <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border shadow-sm">
+                                <h4 className="font-medium text-sm mb-2 text-gray-700 dark:text-gray-300">Nesting Efficiency</h4>
+                                <div className="text-3xl font-bold text-green-600 mb-1">
+                                  {(() => {
+                                    const totalPanelArea = bomResult.totalBoardArea || 0;
+                                    const sheetArea = 8 * 4; // 8' x 4' sheet
+                                    const totalSheets = Object.entries(bomResult.boardAreaByThickness || {}).reduce((total, [thickness, area]) => {
+                                      const wastage = 0.12;
+                                      return total + Math.ceil((area * (1 + wastage)) / sheetArea);
+                                    }, 0);
+                                    const efficiency = totalSheets > 0 ? (totalPanelArea / (totalSheets * sheetArea)) * 100 : 0;
+                                    return Math.round(efficiency);
+                                  })()}%
+                                </div>
+                                <div className="text-xs text-gray-500">
+                                  Material utilization
+                                </div>
+                              </div>
+                              
+                              {/* Waste Area */}
+                              <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border shadow-sm">
+                                <h4 className="font-medium text-sm mb-2 text-gray-700 dark:text-gray-300">Estimated Waste</h4>
+                                <div className="text-3xl font-bold text-orange-600 mb-1">
+                                  {(() => {
+                                    const totalPanelArea = bomResult.totalBoardArea || 0;
+                                    const sheetArea = 8 * 4;
+                                    const totalSheets = Object.entries(bomResult.boardAreaByThickness || {}).reduce((total, [thickness, area]) => {
+                                      const wastage = 0.12;
+                                      return total + Math.ceil((area * (1 + wastage)) / sheetArea);
+                                    }, 0);
+                                    const wasteArea = (totalSheets * sheetArea) - totalPanelArea;
+                                    return Math.round(wasteArea);
+                                  })()}
+                                </div>
+                                <div className="text-xs text-gray-500">
+                                  sq.ft (12% cutting loss)
+                                </div>
+                              </div>
+                            </div>
+                            
+                            {/* Sheet Breakdown by Thickness */}
+                            <div className="mt-4">
+                              <h4 className="font-medium text-sm mb-3 text-gray-700 dark:text-gray-300">Sheet Requirements by Thickness</h4>
+                              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                {Object.entries(bomResult.boardAreaByThickness || {}).map(([thickness, area]) => {
+                                  const sheetArea = 8 * 4;
+                                  const wastage = 0.12;
+                                  const sheetsNeeded = Math.ceil((area * (1 + wastage)) / sheetArea);
+                                  const efficiency = (area / (sheetsNeeded * sheetArea)) * 100;
+                                  
+                                  return (
+                                    <div key={thickness} className="bg-gray-50 dark:bg-gray-700 p-3 rounded border">
+                                      <div className="text-lg font-bold text-gray-800 dark:text-gray-200">{sheetsNeeded}</div>
+                                      <div className="text-xs text-gray-600 dark:text-gray-400">{thickness} sheets</div>
+                                      <div className="text-xs text-green-600">{Math.round(efficiency)}% efficient</div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+
+                        {/* Detailed Panel List */}
+                        <div className="overflow-x-auto">
+                          <Table className="text-sm border-collapse">
+                            <TableHeader>
+                              <TableRow className="bg-muted/50 h-8 border-b">
+                                <TableHead className="py-1 px-2 text-xs font-semibold">Part Name</TableHead>
+                                <TableHead className="py-1 px-2 text-xs font-semibold">Size (L×W mm)</TableHead>
+                                <TableHead className="py-1 px-2 text-xs font-semibold">Material</TableHead>
+                                <TableHead className="py-1 px-2 text-xs font-semibold">Qty</TableHead>
+                                <TableHead className="py-1 px-2 text-xs font-semibold">Edge Band</TableHead>
+                                <TableHead className="py-1 px-2 text-xs font-semibold">Area (sqft)</TableHead>
+                                <TableHead className="py-1 px-2 text-xs font-semibold">Sheet Fit</TableHead>
+                                <TableHead className="py-1 px-2 text-xs font-semibold text-right">Rate (₹)</TableHead>
+                                <TableHead className="py-1 px-2 text-xs font-semibold text-right">Cost (₹)</TableHead>
                               </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
+                            </TableHeader>
+                            <TableBody>
+                              {bomResult.items.map((item) => {
+                                // Calculate if panel fits in standard sheet
+                                const panelLength = item.length || 0;
+                                const panelWidth = item.width || 0;
+                                const sheetLength = 2440; // 8 feet in mm
+                                const sheetWidth = 1220;  // 4 feet in mm
+                                
+                                const fitsInSheet = (panelLength <= sheetLength && panelWidth <= sheetWidth) ||
+                                                  (panelWidth <= sheetLength && panelLength <= sheetWidth);
+                                
+                                const panelsPerSheet = fitsInSheet ? 
+                                  Math.floor((sheetLength / panelLength) * (sheetWidth / panelWidth)) || 
+                                  Math.floor((sheetLength / panelWidth) * (sheetWidth / panelLength)) || 1 : 0;
+                                
+                                return (
+                                  <TableRow key={item.id} className="hover:bg-muted/20 h-7 border-b border-gray-100">
+                                    <TableCell className="py-1 px-2 text-sm font-medium">{item.partName}</TableCell>
+                                    <TableCell className="py-1 px-2 text-sm">
+                                      {item.length && item.width ? 
+                                        `${Math.round(item.length)} × ${Math.round(item.width)}` : 
+                                        '-'
+                                      }
+                                    </TableCell>
+                                    <TableCell className="py-1 px-2 text-sm">{item.materialType}</TableCell>
+                                    <TableCell className="py-1 px-2 text-sm">{item.quantity} {item.unit}</TableCell>
+                                    <TableCell className="py-1 px-2 text-sm">
+                                      {item.edgeBandingType ? (
+                                        <Badge variant="outline" className="text-xs">{item.edgeBandingType}</Badge>
+                                      ) : '-'}
+                                    </TableCell>
+                                    <TableCell className="py-1 px-2 text-sm">
+                                      {item.area_sqft ? `${item.area_sqft.toFixed(1)}` : '-'}
+                                    </TableCell>
+                                    <TableCell className="py-1 px-2 text-sm">
+                                      {item.length && item.width ? (
+                                        <div className="flex items-center gap-1">
+                                          <div className={`w-2 h-2 rounded-full ${fitsInSheet ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                                          <span className="text-xs">
+                                            {fitsInSheet ? `${panelsPerSheet}/sheet` : 'Oversized'}
+                                          </span>
+                                        </div>
+                                      ) : '-'}
+                                    </TableCell>
+                                    <TableCell className="py-1 px-2 text-sm text-right">
+                                      {item.unitRate > 0 ? Math.round(item.unitRate) : '-'}
+                                    </TableCell>
+                                    <TableCell className="py-1 px-2 text-sm text-right font-medium">
+                                      {Math.round(item.totalCost).toLocaleString('en-IN')}
+                                    </TableCell>
+                                  </TableRow>
+                                );
+                              })}
+                            </TableBody>
+                          </Table>
+                        </div>
                       </div>
                     )}
                     
