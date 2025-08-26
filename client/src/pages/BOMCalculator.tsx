@@ -254,6 +254,7 @@ export default function BOMCalculator() {
   const [selectedFurnitureType, setSelectedFurnitureType] = useState<string>("wardrobe");
   const [bomResult, setBomResult] = useState<BomResult | null>(null);
   const [customParts, setCustomParts] = useState<{name: string, quantity: number}[]>([]);
+  const [bomViewMode, setBomViewMode] = useState<'consolidated' | 'details'>('consolidated');
   const [variableCosts, setVariableCosts] = useState({
     laborCost: 0,
     laborCostType: 'fixed' as 'fixed' | 'percent',
@@ -468,13 +469,15 @@ export default function BOMCalculator() {
       totalCost: number,
       unit: string,
       isBoard?: boolean,
-      thickness?: string
+      thickness?: string,
+      order?: number
     } } = {};
 
     items.forEach(item => {
       let groupKey = '';
       let isBoard = false;
       let thickness = '';
+      let order = 999; // Default high order for unknown items
       
       // Group boards by thickness and type
       if (item.itemCategory === 'Board') {
@@ -482,13 +485,20 @@ export default function BOMCalculator() {
         // Extract thickness from part name or material type
         if (item.partName?.includes('18mm') || item.materialType?.includes('18mm')) {
           thickness = '18mm';
+          order = 1;
         } else if (item.partName?.includes('12mm') || item.materialType?.includes('12mm')) {
           thickness = '12mm';
+          order = 2;
+        } else if (item.partName?.includes('8mm') || item.materialType?.includes('8mm')) {
+          thickness = '8mm';
+          order = 3;
         } else if (item.partName?.includes('6mm') || item.materialType?.includes('6mm')) {
           thickness = '6mm';
+          order = 3; // Group with 8mm
         } else {
           // Fallback: try to extract from materialType
           thickness = item.materialType?.match(/(\d+mm)/)?.[1] || '18mm';
+          order = 1;
         }
         
         const boardType = item.materialType?.includes('PLY') ? 'PLY' : 
@@ -496,25 +506,38 @@ export default function BOMCalculator() {
         groupKey = `${thickness} ${boardType}`;
         
       }
-      // Group laminates
-      else if (item.itemCategory === 'Laminate') {
-        groupKey = item.materialType || 'Laminate';
+      // Group laminates with specific ordering
+      else if (item.itemCategory === 'Laminate' || item.materialType?.includes('Laminate')) {
+        if (item.materialType === 'Inner Surface Laminate') {
+          groupKey = 'Inner Surface Laminate';
+          order = 4;
+        } else if (item.materialType === 'Outer Surface Laminate') {
+          groupKey = 'Outer Surface Laminate';  
+          order = 5;
+        } else {
+          groupKey = item.materialType || 'Laminate';
+          order = 6;
+        }
       }
       // Group hardware by type
       else if (item.itemCategory === 'Hardware') {
         groupKey = item.materialType || item.partName;
+        order = 10;
       }
       // Group edge banding
       else if (item.itemCategory === 'Edge Banding') {
         groupKey = `Edge Band (${item.materialType || 'PVC'})`;
+        order = 7;
       }
       // Group adhesives
       else if (item.itemCategory === 'Adhesive') {
         groupKey = item.partName;
+        order = 8;
       }
       // Everything else grouped by material type or part name
       else {
         groupKey = item.materialType || item.partName;
+        order = 9;
       }
 
       if (!grouped[groupKey]) {
@@ -526,7 +549,8 @@ export default function BOMCalculator() {
           totalCost: 0,
           unit: item.unit,
           isBoard,
-          thickness
+          thickness,
+          order
         };
       }
 
@@ -556,6 +580,20 @@ export default function BOMCalculator() {
     });
 
     return grouped;
+  };
+
+  // Get ordered materials for consolidated view (18mm → 12mm → 8mm → inner → outer laminate)
+  const getOrderedConsolidatedMaterials = (items: BomItem[]) => {
+    const consolidated = getConsolidatedMaterials(items);
+    
+    // Sort by order, then by name
+    return Object.entries(consolidated)
+      .sort(([, a], [, b]) => {
+        if (a.order !== b.order) {
+          return (a.order || 999) - (b.order || 999);
+        }
+        return 0; // Keep original order for same order value
+      });
   };
 
   const updateCustomPart = (index: number, field: 'name' | 'quantity', value: string | number) => {
@@ -1804,32 +1842,74 @@ export default function BOMCalculator() {
                           {bomResult.totalEdgeBanding0_8mm > 0 && (
                             <div>• {Math.ceil((bomResult.totalEdgeBanding0_8mm * 0.3048 * 1.05) / 50)} rolls of 0.8mm edge banding</div>
                           )}
+                          {(() => {
+                            // Calculate laminate quantities
+                            const laminateItems = getConsolidatedMaterials(bomResult.items);
+                            const innerLaminate = laminateItems['Inner Surface Laminate'];
+                            const outerLaminate = laminateItems['Outer Surface Laminate'];
+                            
+                            const laminateList = [];
+                            if (innerLaminate && innerLaminate.totalArea > 0) {
+                              laminateList.push(<div key="inner">• {Math.round(innerLaminate.totalQty)} pieces inner laminate ({Math.round(innerLaminate.totalArea)} sqft)</div>);
+                            }
+                            if (outerLaminate && outerLaminate.totalArea > 0) {
+                              laminateList.push(<div key="outer">• {Math.round(outerLaminate.totalQty)} pieces outer laminate ({Math.round(outerLaminate.totalArea)} sqft)</div>);
+                            }
+                            return laminateList;
+                          })()}
                         </div>
                       </div>
                     </CardContent>
                   </Card>
 
-                  {/* Consolidated BOM Table */}
+                  {/* Bill of Materials with Tabs */}
                   <div className="space-y-4">
                     <div className="flex items-center gap-3">
                       <h3 className="text-lg font-medium">Bill of Materials</h3>
-                      <Badge variant="secondary" className="text-xs">Consolidated View</Badge>
                     </div>
                     
-                    <div className="overflow-x-auto">
-                      <Table className="text-sm border-collapse">
-                        <TableHeader>
-                          <TableRow className="bg-muted/50 h-8 border-b">
-                            <TableHead className="py-1 px-2 text-xs font-semibold">Material / Item</TableHead>
-                            <TableHead className="py-1 px-2 text-xs font-semibold">Qty (Pcs/Nos)</TableHead>
-                            <TableHead className="py-1 px-2 text-xs font-semibold">Area (sqft)</TableHead>
-                            <TableHead className="py-1 px-2 text-xs font-semibold text-right">Rate (₹)</TableHead>
-                            <TableHead className="py-1 px-2 text-xs font-semibold text-right">Cost (₹)</TableHead>
-                            <TableHead className="py-1 px-2 text-xs font-semibold text-center w-8"></TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {Object.entries(getConsolidatedMaterials(bomResult.items)).map(([materialName, group]) => (
+                    {/* Tabs */}
+                    <div className="border-b border-gray-200">
+                      <nav className="-mb-px flex space-x-8" aria-label="Tabs">
+                        <button
+                          onClick={() => setBomViewMode('consolidated')}
+                          className={`whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm ${
+                            bomViewMode === 'consolidated'
+                              ? 'border-furnili-brown text-furnili-brown'
+                              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                          }`}
+                        >
+                          Consolidated View
+                        </button>
+                        <button
+                          onClick={() => setBomViewMode('details')}
+                          className={`whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm ${
+                            bomViewMode === 'details'
+                              ? 'border-furnili-brown text-furnili-brown'
+                              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                          }`}
+                        >
+                          Details View
+                        </button>
+                      </nav>
+                    </div>
+                    
+                    {/* Consolidated View */}
+                    {bomViewMode === 'consolidated' && (
+                      <div className="overflow-x-auto">
+                        <Table className="text-sm border-collapse">
+                          <TableHeader>
+                            <TableRow className="bg-muted/50 h-8 border-b">
+                              <TableHead className="py-1 px-2 text-xs font-semibold">Material / Item</TableHead>
+                              <TableHead className="py-1 px-2 text-xs font-semibold">Qty (Pcs/Nos)</TableHead>
+                              <TableHead className="py-1 px-2 text-xs font-semibold">Area (sqft)</TableHead>
+                              <TableHead className="py-1 px-2 text-xs font-semibold text-right">Rate (₹)</TableHead>
+                              <TableHead className="py-1 px-2 text-xs font-semibold text-right">Cost (₹)</TableHead>
+                              <TableHead className="py-1 px-2 text-xs font-semibold text-center w-8"></TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {getOrderedConsolidatedMaterials(bomResult.items).map(([materialName, group]) => (
                             <TableRow key={materialName} className="hover:bg-muted/20 h-7 border-b border-gray-100">
                               <TableCell className="py-1 px-2 text-sm font-medium">{materialName}</TableCell>
                               <TableCell className="py-1 px-2 text-sm">
@@ -1935,10 +2015,60 @@ export default function BOMCalculator() {
                                 </Dialog>
                               </TableCell>
                             </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </div>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    )}
+
+                    {/* Details View */}
+                    {bomViewMode === 'details' && (
+                      <div className="overflow-x-auto">
+                        <Table className="text-sm border-collapse">
+                          <TableHeader>
+                            <TableRow className="bg-muted/50 h-8 border-b">
+                              <TableHead className="py-1 px-2 text-xs font-semibold">Part Name</TableHead>
+                              <TableHead className="py-1 px-2 text-xs font-semibold">Size (LxW)</TableHead>
+                              <TableHead className="py-1 px-2 text-xs font-semibold">Material</TableHead>
+                              <TableHead className="py-1 px-2 text-xs font-semibold">Qty</TableHead>
+                              <TableHead className="py-1 px-2 text-xs font-semibold">Edge Band</TableHead>
+                              <TableHead className="py-1 px-2 text-xs font-semibold">Area (sqft)</TableHead>
+                              <TableHead className="py-1 px-2 text-xs font-semibold text-right">Rate (₹)</TableHead>
+                              <TableHead className="py-1 px-2 text-xs font-semibold text-right">Cost (₹)</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {bomResult.items.map((item) => (
+                              <TableRow key={item.id} className="hover:bg-muted/20 h-7 border-b border-gray-100">
+                                <TableCell className="py-1 px-2 text-sm font-medium">{item.partName}</TableCell>
+                                <TableCell className="py-1 px-2 text-sm">
+                                  {item.length && item.width ? 
+                                    `${item.length} × ${item.width}` : 
+                                    '-'
+                                  }
+                                </TableCell>
+                                <TableCell className="py-1 px-2 text-sm">{item.materialType}</TableCell>
+                                <TableCell className="py-1 px-2 text-sm">{item.quantity} {item.unit}</TableCell>
+                                <TableCell className="py-1 px-2 text-sm">
+                                  {item.edgeBandingType ? (
+                                    <Badge variant="outline" className="text-xs">{item.edgeBandingType}</Badge>
+                                  ) : '-'}
+                                </TableCell>
+                                <TableCell className="py-1 px-2 text-sm">
+                                  {item.area_sqft ? `${item.area_sqft.toFixed(1)} sqft` : '-'}
+                                </TableCell>
+                                <TableCell className="py-1 px-2 text-sm text-right">
+                                  {item.unitRate > 0 ? Math.round(item.unitRate) : '-'}
+                                </TableCell>
+                                <TableCell className="py-1 px-2 text-sm text-right font-medium">
+                                  {Math.round(item.totalCost).toLocaleString('en-IN')}
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    )}
                     
                     {/* Total Cost Row */}
                     <div className="flex justify-end pt-4 border-t">

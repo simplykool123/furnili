@@ -732,6 +732,32 @@ const generateWardrobePanels = (input: CalculationInput, exposedSides: boolean =
       area_sqft: mmSqToSqft(width, height) * partsConfig.backPanels,
       edgeBandingLength: 0, // No edge banding
     });
+
+    // Add inner laminate for backpanel inside surface
+    panels.push({
+      panel: "Back Panel Inner Laminate",
+      qty: partsConfig.backPanels,
+      size: `${width}mm x ${height}mm`,
+      length: width,
+      width: height,
+      material: "Inner Surface Laminate",
+      edge_banding: "None",
+      area_sqft: mmSqToSqft(width, height) * partsConfig.backPanels,
+      edgeBandingLength: 0,
+    });
+
+    // Add outer laminate for backpanel outside surface
+    panels.push({
+      panel: "Back Panel Outer Laminate",
+      qty: partsConfig.backPanels,
+      size: `${width}mm x ${height}mm`,
+      length: width,
+      width: height,
+      material: "Outer Surface Laminate",
+      edge_banding: "None",
+      area_sqft: mmSqToSqft(width, height) * partsConfig.backPanels,
+      edgeBandingLength: 0,
+    });
   }
 
   // Internal Panels (0.8mm edge banding)
