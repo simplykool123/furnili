@@ -4798,8 +4798,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const { calculateLaminateSheets } = await import('./utils/laminate-calculator');
         const laminateSheetResult = calculateLaminateSheets(laminateSummary, laminatePanels);
         
-        // Add Inner Laminate item with SHEET OPTIMIZATION
-        if (laminateSummary.innerAreaSqft > 0) {
+        // ✅ PRE-LAM CHECK: Skip laminate for Pre-Lam boards
+        const isPreLamBoard = bomData.boardType === 'pre_lam_particle_board';
+        console.log(`🔍 Laminate check in routes.ts: boardType='${bomData.boardType}' isPreLam=${isPreLamBoard}`);
+        
+        // Add Inner Laminate item with SHEET OPTIMIZATION (only for non-Pre-Lam)
+        if (!isPreLamBoard && laminateSummary.innerAreaSqft > 0) {
           bomItemsData.push({
             id: Math.random(),
             itemType: 'material' as const,
@@ -4819,8 +4823,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
         }
         
-        // Add Outer Laminate item with SHEET OPTIMIZATION
-        if (laminateSummary.outerAreaSqft > 0) {
+        // Add Outer Laminate item with SHEET OPTIMIZATION (only for non-Pre-Lam)
+        if (!isPreLamBoard && laminateSummary.outerAreaSqft > 0) {
           bomItemsData.push({
             id: Math.random(),
             itemType: 'material' as const,
@@ -4840,8 +4844,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
         }
         
-        // ✅ LAMINATE ADHESIVE - FROM CLEAN CALCULATION
-        if (laminateSummary.adhesiveBottles > 0) {
+        // ✅ LAMINATE ADHESIVE - FROM CLEAN CALCULATION (only for non-Pre-Lam)
+        if (!isPreLamBoard && laminateSummary.adhesiveBottles > 0) {
           bomItemsData.push({
             id: Math.random(),
             itemType: 'material' as const,

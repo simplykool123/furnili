@@ -232,45 +232,44 @@ const splitOversizedPanels = (panels: Panel[], sheetSize = { length: 2440, width
     const panelL = panel.length;
     const panelW = panel.width;
     
-    // Check if panel fits in sheet (considering rotation)
-    const fitsNormally = (panelL <= sheetSize.length && panelW <= sheetSize.width);
-    const fitsRotated = (panelW <= sheetSize.length && panelL <= sheetSize.width);
+    // 🎯 SIMPLE FIX: Check if panel exceeds 4×8 sheet (2440×1220mm)
+    const exceedsLength = panelL > sheetSize.length; // > 2440mm
+    const exceedsWidth = panelW > sheetSize.width;   // > 1220mm
     
-    // 🎯 FIXED: Panel must fit in standard sheet dimensions
-    if (fitsNormally || fitsRotated) {
-      // Panel fits within standard 8×4 sheet, add as-is
+    if (!exceedsLength && !exceedsWidth) {
+      // Panel fits in sheet - no splitting needed
       splitPanels.push(panel);
     } else {
-      // Panel is oversized, split it
-      console.log(`🔧 Splitting oversized panel: ${panel.panel} (${panelL}×${panelW}mm)`);
+      // Panel is oversized - split it properly
+      console.log(`🔧 OVERSIZED: ${panel.panel} (${panelL}×${panelW}mm) exceeds 4×8 sheet (${sheetSize.length}×${sheetSize.width}mm)`);
       
-      // 🎯 FIXED: Use the maximum available sheet dimension for both length and width
-      const maxSheetDimension = Math.max(sheetSize.length, sheetSize.width); // 2440mm
-      const minSheetDimension = Math.min(sheetSize.length, sheetSize.width); // 1220mm
+      // Calculate number of pieces needed
+      const piecesLength = Math.ceil(panelL / sheetSize.length);
+      const piecesWidth = Math.ceil(panelW / sheetSize.width);
       
-      // Calculate how many pieces needed in each dimension
-      const piecesLength = Math.ceil(panelL / maxSheetDimension);
-      const piecesWidth = Math.ceil(panelW / maxSheetDimension);
-      
-      // Calculate dimensions for split pieces (with 10mm kerf allowance)
-      const pieceLength = Math.floor((panelL - (piecesLength - 1) * 10) / piecesLength);
-      const pieceWidth = Math.floor((panelW - (piecesWidth - 1) * 10) / piecesWidth);
+      console.log(`→ Splitting into ${piecesLength} × ${piecesWidth} = ${piecesLength * piecesWidth} pieces`);
       
       // Create split panels
       for (let i = 0; i < piecesLength; i++) {
         for (let j = 0; j < piecesWidth; j++) {
+          // Calculate actual dimensions for this piece
+          const remainingLength = panelL - (i * sheetSize.length);
+          const remainingWidth = panelW - (j * sheetSize.width);
+          
+          const pieceLength = Math.min(sheetSize.length, remainingLength);
+          const pieceWidth = Math.min(sheetSize.width, remainingWidth);
+          
           const splitPanel: Panel = {
             ...panel,
-            panel: `${panel.panel} (Split ${i + 1}×${j + 1})`,
-            length: i === piecesLength - 1 ? panelL - (pieceLength * i) : pieceLength, // Last piece gets remainder
-            width: j === piecesWidth - 1 ? panelW - (pieceWidth * j) : pieceWidth,
-            qty: panel.qty, // Each original panel becomes multiple split pieces
+            panel: `${panel.panel} (Piece ${i + 1}-${j + 1})`,
+            length: pieceLength,
+            width: pieceWidth,
+            qty: panel.qty,
+            area_sqft: (pieceLength * pieceWidth) / 92903 * panel.qty, // Recalculate area
           };
           splitPanels.push(splitPanel);
         }
       }
-      
-      console.log(`✅ Split into ${piecesLength}×${piecesWidth} = ${piecesLength * piecesWidth} pieces (${pieceLength}×${pieceWidth}mm each)`);
     }
   });
   
@@ -899,10 +898,10 @@ const generateWardrobePanels = (input: CalculationInput, exposedSides: boolean =
       edgeBandingLength: 0, // No edge banding
     });
 
-    // 🎯 PRE-LAM BOARD LOGIC: Skip laminate if pre-lam board selected
-    const isPreLamBoard = boardType === 'pre_lam_particle_board';
+    // 🚫 PRE-LAM BOARD CHECK: NO LAMINATE for Pre-Lam boards
+    console.log(`🔍 Board type check: '${boardType}' - Is Pre-Lam? ${boardType === 'pre_lam_particle_board'}`);
     
-    if (!isPreLamBoard) {
+    if (boardType !== 'pre_lam_particle_board') {
       // Add inner laminate for backpanel inside surface (only for non-pre-lam boards)
       panels.push({
         panel: "Back Panel Inner Laminate",
