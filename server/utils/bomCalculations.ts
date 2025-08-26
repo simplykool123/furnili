@@ -877,31 +877,38 @@ const generateWardrobePanels = (input: CalculationInput, exposedSides: boolean =
       edgeBandingLength: 0, // No edge banding
     });
 
-    // Add inner laminate for backpanel inside surface
-    panels.push({
-      panel: "Back Panel Inner Laminate",
-      qty: partsConfig.backPanels,
-      size: `${width}mm x ${height}mm`,
-      length: width,
-      width: height,
-      material: "Inner Surface Laminate",
-      edge_banding: "None",
-      area_sqft: mmSqToSqft(width, height) * partsConfig.backPanels,
-      edgeBandingLength: 0,
-    });
+    // 🎯 PRE-LAM BOARD LOGIC: Skip laminate if pre-lam board selected
+    const isPreLamBoard = input.boardType === 'pre_lam_particle_board';
+    
+    if (!isPreLamBoard) {
+      // Add inner laminate for backpanel inside surface (only for non-pre-lam boards)
+      panels.push({
+        panel: "Back Panel Inner Laminate",
+        qty: partsConfig.backPanels,
+        size: `${width}mm x ${height}mm`,
+        length: width,
+        width: height,
+        material: "Inner Surface Laminate",
+        edge_banding: "None",
+        area_sqft: mmSqToSqft(width, height) * partsConfig.backPanels,
+        edgeBandingLength: 0,
+      });
 
-    // Add outer laminate for backpanel outside surface
-    panels.push({
-      panel: "Back Panel Outer Laminate",
-      qty: partsConfig.backPanels,
-      size: `${width}mm x ${height}mm`,
-      length: width,
-      width: height,
-      material: "Outer Surface Laminate",
-      edge_banding: "None",
-      area_sqft: mmSqToSqft(width, height) * partsConfig.backPanels,
-      edgeBandingLength: 0,
-    });
+      // Add outer laminate for backpanel outside surface (only for non-pre-lam boards)
+      panels.push({
+        panel: "Back Panel Outer Laminate",
+        qty: partsConfig.backPanels,
+        size: `${width}mm x ${height}mm`,
+        length: width,
+        width: height,
+        material: "Outer Surface Laminate",
+        edge_banding: "None",
+        area_sqft: mmSqToSqft(width, height) * partsConfig.backPanels,
+        edgeBandingLength: 0,
+      });
+    } else {
+      console.log('✨ Pre-Lam Board detected: Skipping laminate panels (already pre-applied)');
+    }
   }
 
   // Internal Panels (0.8mm edge banding)
