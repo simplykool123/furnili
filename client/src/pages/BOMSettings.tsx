@@ -8,7 +8,7 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Settings, DollarSign, Package, Link, Filter, Search, Home, Bed, Archive, Package as Cabinet, PanelTop, Table2, Sofa } from 'lucide-react';
+import { Settings, DollarSign, Package, Link, Filter, Search, Home, Bed, Archive, Package as Cabinet, PanelTop, Table2, Sofa, Edit3, Save, X } from 'lucide-react';
 import ResponsiveLayout from '@/components/Layout/ResponsiveLayout';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import {
@@ -22,19 +22,84 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 
+// Get default prices from DEFAULT_RATES (replicated from backend)
+const DEFAULT_RATES = {
+  board: {
+    "18mm_plywood": 147,
+    "12mm_plywood": 120, 
+    "6mm_plywood": 95,
+    "25mm_plywood": 190,
+    "18mm_mdf": 110,
+    "12mm_mdf": 85,
+    "6mm_mdf": 65,
+    "18mm_particle_board": 80,
+    "12mm_particle_board": 60,
+    "pre_lam_particle_board": 95,
+    "teak": 450,
+    "oak": 380,
+    "sheesham": 320,
+    "mango_wood": 280,
+  },
+  laminate: {
+    "outer_laminate": 210,
+    "inner_laminate": 150,
+    "acrylic_finish": 380,
+    "veneer_finish": 320,
+    "paint_finish": 180,
+    "pu_finish": 450,
+    "glass_finish": 520,
+    "membrane_foil": 95,
+  },
+  edge_banding: {
+    "2mm": 8,
+    "0.8mm": 4,
+    "1mm": 5,
+    "3mm": 12,
+  },
+  hardware: {
+    "soft_close_hinge": 90,
+    "normal_hinge": 30,
+    "concealed_hinge": 60,
+    "piano_hinge": 45,
+    "drawer_slide_soft_close": 180,
+    "drawer_slide_normal": 120,
+    "ball_bearing_slide": 150,
+    "telescopic_slide": 200,
+    "ss_handle": 180,
+    "aluminium_handle": 120,
+    "brass_handle": 250,
+    "plastic_handle": 45,
+    "door_lock": 80,
+    "cam_lock": 25,
+    "magnetic_lock": 65,
+    "minifix": 15,
+    "dowel": 3,
+    "screw_pack": 120,
+    "wall_bracket": 50,
+    "shelf_support": 8,
+    "drawer_organizer": 350,
+    "pull_out_basket": 850,
+    "lazy_susan": 1200,
+    "soft_close_mechanism": 450,
+    "hinge": 60,
+    "handle": 120,
+    "lock": 80,
+    "drawer_slide": 150,
+    "straightener": 150,
+  }
+};
+
 // Furniture-specific material mapping
 const FURNITURE_MATERIALS = {
   wardrobe: {
     name: "Wardrobes & Closets",
     icon: Home,
     materials: [
-      // Boards
       { type: '18mm_plywood', name: '18mm Plywood', category: 'board' },
       { type: '6mm_plywood', name: '6mm Plywood', category: 'board' },
       { type: '18mm_mdf', name: '18mm MDF', category: 'board' },
       { type: '18mm_particle_board', name: '18mm Particle Board', category: 'board' },
       { type: 'pre_lam_particle_board', name: 'Pre-Lam Particle Board', category: 'board' },
-      // Hardware
       { type: 'soft_close_hinge', name: 'Soft Close Hinge', category: 'hardware' },
       { type: 'normal_hinge', name: 'Normal Hinge', category: 'hardware' },
       { type: 'drawer_slide_soft_close', name: 'Soft Close Drawer Slide', category: 'hardware' },
@@ -43,12 +108,10 @@ const FURNITURE_MATERIALS = {
       { type: 'minifix', name: 'Minifix', category: 'hardware' },
       { type: 'dowel', name: 'Dowel', category: 'hardware' },
       { type: 'door_lock', name: 'Door Lock', category: 'hardware' },
-      // Laminate & Finish
       { type: 'outer_laminate', name: 'Outer Laminate', category: 'laminate' },
       { type: 'inner_laminate', name: 'Inner Laminate', category: 'laminate' },
       { type: 'acrylic_finish', name: 'Acrylic Finish', category: 'laminate' },
       { type: 'veneer_finish', name: 'Veneer Finish', category: 'laminate' },
-      // Edge Banding
       { type: '2mm', name: '2mm Edge Banding', category: 'edge_banding' },
       { type: '0.8mm', name: '0.8mm Edge Banding', category: 'edge_banding' },
     ]
@@ -144,32 +207,54 @@ export default function BOMSettings() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedMaterial, setSelectedMaterial] = useState<any>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingPrice, setEditingPrice] = useState<string | null>(null);
+  const [editPriceValue, setEditPriceValue] = useState<string>('');
 
-  // Fetch existing BOM settings
-  const { data: settings = [], isLoading } = useQuery({
-    queryKey: ['/api/products'], // Use existing products API
+  // Fetch BOM settings
+  const { data: settings = [], isLoading: settingsLoading } = useQuery({
+    queryKey: ['/api/bom/settings'],
+    queryFn: () => apiRequest('/api/bom/settings'),
+  });
+
+  // Fetch products 
+  const { data: products = [] } = useQuery({
+    queryKey: ['/api/products'],
     queryFn: () => apiRequest('/api/products'),
   });
 
-  // Create/Update BOM setting - Simplified to use existing product system
-  const updateProductMutation = useMutation({
+  // Link material to product
+  const linkMutation = useMutation({
     mutationFn: (data: any) => {
-      return apiRequest(`/api/products/${data.productId}`, { 
-        method: 'PUT', 
-        body: JSON.stringify({ 
-          ...data.product,
-          bomMaterialType: data.materialType,
-          isForBOMPricing: true 
-        }) 
+      return apiRequest('/api/bom/settings', { 
+        method: 'POST', 
+        body: JSON.stringify(data) 
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/products'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/bom/settings'] });
       toast({ title: 'Material linked successfully!' });
       setIsDialogOpen(false);
     },
     onError: () => {
       toast({ title: 'Failed to link material', variant: 'destructive' });
+    }
+  });
+
+  // Update custom default price
+  const updatePriceMutation = useMutation({
+    mutationFn: (data: { materialType: string; price: number }) => {
+      return apiRequest(`/api/bom/default-price/${data.materialType}`, {
+        method: 'PUT',
+        body: JSON.stringify({ price: data.price })
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/bom/settings'] });
+      toast({ title: 'Default price updated successfully!' });
+      setEditingPrice(null);
+    },
+    onError: () => {
+      toast({ title: 'Failed to update default price', variant: 'destructive' });
     }
   });
 
@@ -182,36 +267,65 @@ export default function BOMSettings() {
     material.category.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Get mapped products for current materials
+  // Get setting for a material
+  const getSetting = (materialType: string) => {
+    return settings.find((s: any) => s.bomMaterialType === materialType);
+  };
+
+  // Get mapped product for a material
   const getMappedProduct = (materialType: string) => {
-    return settings.find((product: any) => 
-      product.bomMaterialType === materialType && product.isForBOMPricing
-    );
-  };
-
-  const handleLinkMaterial = (materialType: string, productId: number) => {
-    const product = settings.find((p: any) => p.id === productId);
-    if (product) {
-      updateProductMutation.mutate({
-        productId,
-        materialType,
-        product: { ...product, bomMaterialType: materialType, isForBOMPricing: true }
-      });
+    const setting = getSetting(materialType);
+    if (setting?.linkedProductId) {
+      return products.find((p: any) => p.id === setting.linkedProductId);
     }
+    return null;
   };
 
-  const handleUnlinkMaterial = (materialType: string) => {
-    const mappedProduct = getMappedProduct(materialType);
-    if (mappedProduct) {
-      updateProductMutation.mutate({
-        productId: mappedProduct.id,
-        materialType: null,
-        product: { ...mappedProduct, bomMaterialType: null, isForBOMPricing: false }
-      });
+  // Get the price to display (custom default or system default)
+  const getDefaultPrice = (materialType: string, category: string) => {
+    const setting = getSetting(materialType);
+    if (setting?.customDefaultPrice) {
+      return parseFloat(setting.customDefaultPrice);
     }
+    
+    // Get system default
+    const categoryRates = DEFAULT_RATES[category as keyof typeof DEFAULT_RATES];
+    return categoryRates?.[materialType as keyof typeof categoryRates] || 0;
   };
 
-  if (isLoading) {
+  const handleLinkMaterial = (materialType: string, materialName: string, category: string, productId: number | null) => {
+    const data = {
+      bomMaterialType: materialType,
+      bomMaterialCategory: category,
+      bomMaterialName: materialName,
+      linkedProductId: productId,
+      useRealPricing: productId ? true : false,
+    };
+
+    linkMutation.mutate(data);
+  };
+
+  const startEditingPrice = (materialType: string) => {
+    const currentPrice = getDefaultPrice(materialType, currentMaterials.find(m => m.type === materialType)?.category || '');
+    setEditingPrice(materialType);
+    setEditPriceValue(currentPrice.toString());
+  };
+
+  const savePrice = (materialType: string) => {
+    const price = parseFloat(editPriceValue);
+    if (isNaN(price) || price <= 0) {
+      toast({ title: 'Please enter a valid price', variant: 'destructive' });
+      return;
+    }
+    updatePriceMutation.mutate({ materialType, price });
+  };
+
+  const cancelEdit = () => {
+    setEditingPrice(null);
+    setEditPriceValue('');
+  };
+
+  if (settingsLoading) {
     return <div className="flex items-center justify-center h-96">Loading BOM settings...</div>;
   }
 
@@ -220,7 +334,7 @@ export default function BOMSettings() {
   return (
     <ResponsiveLayout
       title="BOM Material Settings"
-      subtitle="Configure real pricing for materials by linking them to your product inventory"
+      subtitle="Configure default prices and link materials to your product inventory for accurate BOM calculations"
     >
       <div className="space-y-6">
         {/* Furniture Type Filter */}
@@ -283,33 +397,85 @@ export default function BOMSettings() {
                 <TableRow>
                   <TableHead>Material</TableHead>
                   <TableHead>Category</TableHead>
+                  <TableHead>Default Price</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Linked Product</TableHead>
-                  <TableHead>Price</TableHead>
+                  <TableHead>Real Price</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredMaterials.map((material) => {
+                  const setting = getSetting(material.type);
                   const mappedProduct = getMappedProduct(material.type);
+                  const defaultPrice = getDefaultPrice(material.type, material.category);
+                  const isEditingThis = editingPrice === material.type;
+
                   return (
                     <TableRow key={material.type}>
                       <TableCell className="font-medium">{material.name}</TableCell>
                       <TableCell>
                         <Badge variant="outline" className="capitalize">
-                          {material.category}
+                          {material.category.replace('_', ' ')}
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        {mappedProduct ? (
+                        {isEditingThis ? (
+                          <div className="flex items-center gap-2">
+                            <Input
+                              type="number"
+                              value={editPriceValue}
+                              onChange={(e) => setEditPriceValue(e.target.value)}
+                              className="w-20 h-7"
+                              min="0"
+                              step="0.01"
+                            />
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => savePrice(material.type)}
+                              className="h-7 w-7 p-0"
+                            >
+                              <Save className="h-3 w-3" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={cancelEdit}
+                              className="h-7 w-7 p-0"
+                            >
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium">₹{defaultPrice}</span>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => startEditingPrice(material.type)}
+                              className="h-6 w-6 p-0"
+                            >
+                              <Edit3 className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {mappedProduct && setting?.useRealPricing ? (
                           <Badge variant="default" className="bg-green-100 text-green-800">
                             <DollarSign className="h-3 w-3 mr-1" />
                             Real Price
                           </Badge>
+                        ) : mappedProduct ? (
+                          <Badge variant="secondary">
+                            <Link className="h-3 w-3 mr-1" />
+                            Linked
+                          </Badge>
                         ) : (
                           <Badge variant="secondary">
                             <Package className="h-3 w-3 mr-1" />
-                            Default Rate
+                            Default
                           </Badge>
                         )}
                       </TableCell>
@@ -321,10 +487,12 @@ export default function BOMSettings() {
                         )}
                       </TableCell>
                       <TableCell>
-                        {mappedProduct ? (
-                          <span className="font-medium">₹{mappedProduct.pricePerUnit}</span>
+                        {mappedProduct && setting?.useRealPricing ? (
+                          <span className="font-medium text-green-600">₹{mappedProduct.pricePerUnit}</span>
+                        ) : mappedProduct ? (
+                          <span className="text-muted-foreground">Linked but not enabled</span>
                         ) : (
-                          <span className="text-muted-foreground">Default</span>
+                          <span className="text-muted-foreground">—</span>
                         )}
                       </TableCell>
                       <TableCell>
@@ -344,10 +512,9 @@ export default function BOMSettings() {
                           </DialogTrigger>
                           <MaterialLinkDialog 
                             material={material}
-                            mappedProduct={mappedProduct}
-                            products={settings}
-                            onLink={handleLinkMaterial}
-                            onUnlink={handleUnlinkMaterial}
+                            currentSetting={setting}
+                            products={products}
+                            onSave={handleLinkMaterial}
                           />
                         </Dialog>
                       </TableCell>
@@ -363,14 +530,16 @@ export default function BOMSettings() {
   );
 }
 
-function MaterialLinkDialog({ material, mappedProduct, products, onLink, onUnlink }: {
+function MaterialLinkDialog({ material, currentSetting, products, onSave }: {
   material: any;
-  mappedProduct: any;
+  currentSetting: any;
   products: any[];
-  onLink: (materialType: string, productId: number) => void;
-  onUnlink: (materialType: string) => void;
+  onSave: (materialType: string, materialName: string, category: string, productId: number | null) => void;
 }) {
-  const [selectedProductId, setSelectedProductId] = useState<string>(mappedProduct?.id?.toString() || '');
+  const [selectedProductId, setSelectedProductId] = useState<string>(
+    currentSetting?.linkedProductId?.toString() || ''
+  );
+  const [useRealPricing, setUseRealPricing] = useState<boolean>(currentSetting?.useRealPricing || false);
 
   const relevantProducts = products.filter((product: any) => 
     product.name.toLowerCase().includes(material.name.toLowerCase()) ||
@@ -379,11 +548,8 @@ function MaterialLinkDialog({ material, mappedProduct, products, onLink, onUnlin
   );
 
   const handleSave = () => {
-    if (selectedProductId && selectedProductId !== 'none') {
-      onLink(material.type, parseInt(selectedProductId));
-    } else {
-      onUnlink(material.type);
-    }
+    const productId = selectedProductId && selectedProductId !== 'none' ? parseInt(selectedProductId) : null;
+    onSave(material.type, material.name, material.category, productId);
   };
 
   const selectedProduct = products.find(p => p.id.toString() === selectedProductId);
@@ -405,13 +571,17 @@ function MaterialLinkDialog({ material, mappedProduct, products, onLink, onUnlin
               <SelectValue placeholder="Choose a product..." />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="none">No product linked (use default rates)</SelectItem>
-              <SelectItem value="suggested" disabled>--- Suggested Products ---</SelectItem>
-              {relevantProducts.map((product) => (
-                <SelectItem key={product.id} value={product.id.toString()}>
-                  {product.name} - ₹{product.pricePerUnit} ({product.currentStock} in stock)
-                </SelectItem>
-              ))}
+              <SelectItem value="none">No product linked</SelectItem>
+              {relevantProducts.length > 0 && (
+                <>
+                  <SelectItem value="suggested" disabled>--- Suggested Products ---</SelectItem>
+                  {relevantProducts.map((product) => (
+                    <SelectItem key={product.id} value={product.id.toString()}>
+                      {product.name} - ₹{product.pricePerUnit} ({product.currentStock} in stock)
+                    </SelectItem>
+                  ))}
+                </>
+              )}
               {products.length > relevantProducts.length && (
                 <>
                   <SelectItem value="all" disabled>--- All Products ---</SelectItem>
@@ -432,12 +602,17 @@ function MaterialLinkDialog({ material, mappedProduct, products, onLink, onUnlin
             <p className="text-sm"><strong>Price:</strong> ₹{selectedProduct.pricePerUnit} per {selectedProduct.unit}</p>
             <p className="text-sm"><strong>Stock:</strong> {selectedProduct.currentStock} units</p>
             <p className="text-sm"><strong>Category:</strong> {selectedProduct.category}</p>
-          </div>
-        )}
-        
-        {selectedProduct && (
-          <div className="p-2 bg-green-50 border border-green-200 rounded text-sm text-green-800">
-            ✅ BOM calculations will use <strong>₹{selectedProduct.pricePerUnit}</strong> instead of default rates.
+            
+            <div className="flex items-center space-x-2 mt-3">
+              <Switch
+                id="use-real-pricing"
+                checked={useRealPricing}
+                onCheckedChange={setUseRealPricing}
+              />
+              <Label htmlFor="use-real-pricing" className="text-sm">
+                Use real pricing in BOM calculations
+              </Label>
+            </div>
           </div>
         )}
       </div>

@@ -2310,21 +2310,50 @@ class DatabaseStorage implements IStorage {
     return result.rowCount > 0;
   }
 
-  // 🎯 Smart Price Resolution: Check settings → product price → DEFAULT_RATES fallback
+  // 🎯 Smart Price Resolution: Check settings → custom default → product price → DEFAULT_RATES fallback
   async getBomMaterialPrice(bomMaterialType: string): Promise<number | null> {
     // Get BOM setting for this material type
     const setting = await this.getBomSettings(bomMaterialType);
     
-    if (setting && setting.useRealPricing && setting.linkedProductId) {
-      // Get real product price
-      const product = await this.getProduct(setting.linkedProductId);
-      if (product) {
-        return product.pricePerUnit;
+    if (setting) {
+      // Check if real pricing is enabled and product is linked
+      if (setting.useRealPricing && setting.linkedProductId) {
+        const product = await this.getProduct(setting.linkedProductId);
+        if (product) {
+          return product.pricePerUnit;
+        }
+      }
+      
+      // Check if custom default price is set
+      if (setting.customDefaultPrice) {
+        return parseFloat(setting.customDefaultPrice.toString());
       }
     }
     
     // Return null to indicate fallback to DEFAULT_RATES
     return null;
+  }
+
+  // Update custom default price for a material
+  async updateCustomDefaultPrice(bomMaterialType: string, price: number): Promise<BomSettings> {
+    // First ensure the setting exists
+    let setting = await this.getBomSettings(bomMaterialType);
+    
+    if (setting) {
+      // Update existing setting
+      const updated = await this.updateBomSettings(setting.id, { customDefaultPrice: price.toString() });
+      return updated!;
+    } else {
+      // Create new setting with custom default price
+      const newSetting: InsertBomSettings = {
+        bomMaterialType,
+        bomMaterialCategory: 'unknown', // This should be properly categorized
+        bomMaterialName: bomMaterialType,
+        useRealPricing: false,
+        customDefaultPrice: price.toString()
+      };
+      return await this.createBomSettings(newSetting);
+    }
   }
 }
 

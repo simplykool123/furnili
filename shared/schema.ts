@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp, real, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, real, jsonb, numeric } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -912,6 +912,7 @@ export const bomSettings = pgTable("bom_settings", {
   bomMaterialName: text("bom_material_name").notNull(), // '18mm Plywood', 'Soft Close Hinge', etc.
   linkedProductId: integer("linked_product_id").references(() => products.id), // Maps to actual product
   useRealPricing: boolean("use_real_pricing").notNull().default(false), // Enable/disable real pricing
+  customDefaultPrice: numeric("custom_default_price", { precision: 10, scale: 2 }), // Custom default price override
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

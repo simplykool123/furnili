@@ -5199,6 +5199,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update custom default price
+  app.put("/api/bom/default-price/:materialType", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const materialType = req.params.materialType;
+      const { price } = req.body;
+      const settings = await storage.updateCustomDefaultPrice(materialType, parseFloat(price));
+      res.json(settings);
+    } catch (error) {
+      console.error('Error updating custom default price:', error);
+      res.status(500).json({ error: 'Failed to update custom default price' });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
