@@ -4794,7 +4794,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Calculate using the clean typed function
         const laminateSummary = calculateLaminateBOM(laminatePanels, wardrobeTypeClean, rates);
         
-        // Add Inner Laminate item if needed - AREA-BASED LIKE PLY
+        // 🎯 CALCULATE LAMINATE SHEETS - Apply advanced nesting like plywood
+        const { calculateLaminateSheets } = await import('./utils/laminate-calculator');
+        const laminateSheetResult = calculateLaminateSheets(laminateSummary, laminatePanels);
+        
+        // Add Inner Laminate item with SHEET OPTIMIZATION
         if (laminateSummary.innerAreaSqft > 0) {
           bomItemsData.push({
             id: Math.random(),
@@ -4805,8 +4809,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             length: 0,
             width: 0,
             thickness: 1,
-            quantity: Math.round(laminateSummary.innerAreaSqft * 10) / 10, // Show area as quantity (rounded to 1 decimal)
-            unit: 'sqft',
+            quantity: laminateSheetResult.innerSheets,
+            unit: 'sheets',
             edgeBandingType: 'None',
             edgeBandingLength: 0,
             unitRate: 65,
@@ -4815,7 +4819,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
         }
         
-        // Add Outer Laminate item if needed - AREA-BASED LIKE PLY  
+        // Add Outer Laminate item with SHEET OPTIMIZATION
         if (laminateSummary.outerAreaSqft > 0) {
           bomItemsData.push({
             id: Math.random(),
@@ -4826,8 +4830,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             length: 0,
             width: 0,
             thickness: 1,
-            quantity: Math.round(laminateSummary.outerAreaSqft * 10) / 10, // Show area as quantity (rounded to 1 decimal)
-            unit: 'sqft',
+            quantity: laminateSheetResult.outerSheets,
+            unit: 'sheets',
             edgeBandingType: 'None',
             edgeBandingLength: 0,
             unitRate: 85,

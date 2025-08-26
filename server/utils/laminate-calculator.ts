@@ -1,4 +1,7 @@
 // laminate-calculator.ts - Clean TypeScript implementation
+import type { Panel as NestingPanel, NestingOptions } from './nesting';
+import { nestPanels } from './nesting';
+
 export type WardrobeType = "OPENABLE" | "SLIDING" | "WALKIN";
 
 export type PanelKind =
@@ -193,3 +196,120 @@ export function mapWardrobeType(wardrobeType: string): WardrobeType {
 
 function round2(n: number) { return Math.round(n * 100) / 100; }
 function round0(n: number) { return Math.round(n); }
+
+// 🎯 LAMINATE SHEET OPTIMIZATION - Apply same nesting logic as plywood
+export type LaminateSheetResult = {
+  innerSheets: number;
+  outerSheets: number;
+  innerEfficiency: number;
+  outerEfficiency: number;
+  totalSheets: number;
+};
+
+export function calculateLaminateSheets(
+  laminateSummary: LaminateSummary,
+  panels: Panel[],
+  sheetSize = { length: 2440, width: 1220 } // Standard 8x4 laminate sheet
+): LaminateSheetResult {
+  
+  // Standard laminate sheet dimensions (same as plywood)
+  const nestingOptions: NestingOptions = {
+    sheetW: sheetSize.length,
+    sheetH: sheetSize.width,
+    kerf: 1, // Laminate uses thinner kerf (1mm vs 3mm for plywood)
+    marginX: 5, // Smaller margin for laminate (5mm vs 10mm)
+    marginY: 5,
+    sort: "area-desc"
+  };
+
+  let innerSheets = 0, outerSheets = 0;
+  let innerEfficiency = 0, outerEfficiency = 0;
+
+  try {
+    // Create virtual laminate panels for inner surfaces
+    if (laminateSummary.innerAreaSqft > 0) {
+      const innerPanels: NestingPanel[] = [];
+      
+      panels.forEach((panel, index) => {
+        const faces = facesForPanel(panel, "OPENABLE"); // Use OPENABLE as default
+        const panelAreaSqft = areaSqft(panel.w_mm, panel.h_mm);
+        
+        // Add panels that need inner laminate
+        let innerFaces = 0;
+        faces.forEach(face => { if (face === 'inner') innerFaces++; });
+        
+        if (innerFaces > 0) {
+          // Create laminate pieces for each face
+          for (let face = 0; face < innerFaces; face++) {
+            innerPanels.push({
+              id: `inner-${panel.id}-face${face}`,
+              w: panel.w_mm,
+              h: panel.h_mm,
+              qty: panel.qty,
+              allowRotate: true,
+              grain: "none"
+            });
+          }
+        }
+      });
+
+      if (innerPanels.length > 0) {
+        const innerResult = nestPanels(innerPanels, nestingOptions);
+        innerSheets = innerResult.sheets.length;
+        innerEfficiency = innerResult.sheets.reduce((sum, sheet) => 
+          sum + (sheet.utilization || 0), 0) / innerSheets;
+      }
+    }
+
+    // Create virtual laminate panels for outer surfaces
+    if (laminateSummary.outerAreaSqft > 0) {
+      const outerPanels: NestingPanel[] = [];
+      
+      panels.forEach((panel, index) => {
+        const faces = facesForPanel(panel, "OPENABLE"); // Use OPENABLE as default
+        
+        // Add panels that need outer laminate  
+        let outerFaces = 0;
+        faces.forEach(face => { if (face === 'outer') outerFaces++; });
+        
+        if (outerFaces > 0) {
+          // Create laminate pieces for each face
+          for (let face = 0; face < outerFaces; face++) {
+            outerPanels.push({
+              id: `outer-${panel.id}-face${face}`,
+              w: panel.w_mm,
+              h: panel.h_mm, 
+              qty: panel.qty,
+              allowRotate: true,
+              grain: "none"
+            });
+          }
+        }
+      });
+
+      if (outerPanels.length > 0) {
+        const outerResult = nestPanels(outerPanels, nestingOptions);
+        outerSheets = outerResult.sheets.length;
+        outerEfficiency = outerResult.sheets.reduce((sum, sheet) => 
+          sum + (sheet.utilization || 0), 0) / outerSheets;
+      }
+    }
+
+  } catch (error) {
+    console.warn('Laminate sheet optimization failed, using fallback calculation:', error);
+    
+    // Fallback to simple area-based calculation
+    const sheetAreaSqft = (sheetSize.length * sheetSize.width) / MM2_PER_SQFT;
+    innerSheets = Math.ceil(laminateSummary.innerAreaSqft / sheetAreaSqft);
+    outerSheets = Math.ceil(laminateSummary.outerAreaSqft / sheetAreaSqft);
+    innerEfficiency = outerEfficiency = 0.85; // Assume 85% efficiency
+  }
+
+  return {
+    innerSheets,
+    outerSheets,
+    innerEfficiency: Math.round(innerEfficiency * 100) / 100,
+    outerEfficiency: Math.round(outerEfficiency * 100) / 100,
+    totalSheets: innerSheets + outerSheets
+  };
+}
