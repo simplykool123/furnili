@@ -202,6 +202,54 @@ import {
   mapWardrobeType
 } from './laminate-calculator';
 
+// 🎯 AUTO-SPLIT OVERSIZED PANELS - Convert large panels into manageable pieces
+const splitOversizedPanels = (panels: Panel[], sheetSize = { length: 2440, width: 1220 }): Panel[] => {
+  const splitPanels: Panel[] = [];
+  
+  panels.forEach(panel => {
+    const panelL = panel.length;
+    const panelW = panel.width;
+    
+    // Check if panel fits in sheet (considering rotation)
+    const fitsNormally = (panelL <= sheetSize.length && panelW <= sheetSize.width);
+    const fitsRotated = (panelW <= sheetSize.length && panelL <= sheetSize.width);
+    
+    if (fitsNormally || fitsRotated) {
+      // Panel fits, add as-is
+      splitPanels.push(panel);
+    } else {
+      // Panel is oversized, split it
+      console.log(`🔧 Splitting oversized panel: ${panel.panel} (${panelL}×${panelW}mm)`);
+      
+      // Calculate how many pieces needed in each dimension
+      const piecesLength = Math.ceil(panelL / sheetSize.length);
+      const piecesWidth = Math.ceil(panelW / sheetSize.width);
+      
+      // Calculate dimensions for split pieces
+      const pieceLength = Math.floor(panelL / piecesLength);
+      const pieceWidth = Math.floor(panelW / piecesWidth);
+      
+      // Create split panels
+      for (let i = 0; i < piecesLength; i++) {
+        for (let j = 0; j < piecesWidth; j++) {
+          const splitPanel: Panel = {
+            ...panel,
+            panel: `${panel.panel} (Split ${i + 1}×${j + 1})`,
+            length: i === piecesLength - 1 ? panelL - (pieceLength * i) : pieceLength, // Last piece gets remainder
+            width: j === piecesWidth - 1 ? panelW - (pieceWidth * j) : pieceWidth,
+            qty: panel.qty, // Each original panel becomes multiple split pieces
+          };
+          splitPanels.push(splitPanel);
+        }
+      }
+      
+      console.log(`✅ Split into ${piecesLength}×${piecesWidth} = ${piecesLength * piecesWidth} pieces`);
+    }
+  });
+  
+  return splitPanels;
+};
+
 // Advanced sheet optimization with sophisticated nesting calculation
 const calculateSheetOptimization = (panels: Panel[], sheetSize = { length: 2440, width: 1220 }): { 
   sheets_required: number, 
@@ -214,10 +262,14 @@ const calculateSheetOptimization = (panels: Panel[], sheetSize = { length: 2440,
   const sheetsNeeded: { [thickness: string]: number } = {};
   const nestingLayout: any[] = [];
   
-  // Group panels by thickness for separate sheet calculations
+  // 🎯 STEP 1: Auto-split oversized panels before optimization
+  const processedPanels = splitOversizedPanels(panels, sheetSize);
+  console.log(`📦 Panel processing: ${panels.length} original → ${processedPanels.length} after splitting`);
+  
+  // Group processed panels by thickness for separate sheet calculations
   const panelsByThickness: { [thickness: string]: Panel[] } = {};
   
-  panels.forEach(panel => {
+  processedPanels.forEach(panel => {
     const thickness = (panel.materialType || panel.material || '18mm PLY').match(/^(\d+(?:\.\d+)?mm)/)?.[1] || '18mm';
     if (!panelsByThickness[thickness]) {
       panelsByThickness[thickness] = [];
