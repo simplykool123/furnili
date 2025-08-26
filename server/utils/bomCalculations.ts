@@ -2053,7 +2053,11 @@ export const calculateWardrobeBOM = (data: any) => {
   let innerLaminateArea = 0;
   let laminateSummary: any = null;
   
-  if (finish === 'laminate') {
+  // 🎯 PRE-LAM BOARD CHECK: Skip laminate calculation for Pre-Lam boards
+  const actualBoardType = data.boardType || 'ply';
+  const isPreLamBoard = actualBoardType === 'pre_lam_particle_board';
+  
+  if (finish === 'laminate' && !isPreLamBoard) {
     
     // Convert our panels to the clean typed format
     const laminatePanels = panels.map((panel: any, index: number) => ({
@@ -2093,12 +2097,18 @@ export const calculateWardrobeBOM = (data: any) => {
       wardrobeTypeClean, 
       laminateRatesEnhanced,
       finish as any || "laminate", // Pass selected finish type from function parameter
-      data.boardType as any || "ply"    // Pass selected board type from data parameter
+      actualBoardType as any || "ply"    // Pass selected board type from data parameter
     );
     
     outerLaminateArea = laminateSummary.outerAreaSqft;
     innerLaminateArea = laminateSummary.innerAreaSqft;
     totalLaminateArea = laminateSummary.laminatedAreaSqft;
+  } else if (isPreLamBoard) {
+    console.log('🔧 Pre-Lam Particle Board detected in calculateWardrobeBOM: Skipping ALL laminate calculation');
+    outerLaminateArea = 0;
+    innerLaminateArea = 0;
+    totalLaminateArea = 0;
+    laminateSummary = null;
   }
 
   // 🔸 WARDROBE HARDWARE CALCULATIONS BASED ON TYPE
