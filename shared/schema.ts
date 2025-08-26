@@ -277,6 +277,31 @@ export const products = pgTable("products", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// 🎯 DYNAMIC PRICING SYSTEM - MATERIAL MAPPINGS
+// Links BOM material keys to actual products for dynamic pricing
+export const materialMappings = pgTable("material_mappings", {
+  id: serial("id").primaryKey(),
+  materialKey: text("material_key").notNull().unique(), // e.g., "18mm_plywood", "outer_laminate", "soft_close_hinge"
+  productId: integer("product_id").references(() => products.id), // Link to products table
+  materialCategory: text("material_category").notNull(), // "board", "laminate", "hardware", "edge_banding"
+  fallbackRate: real("fallback_rate"), // Backup rate if product is unavailable
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// 🎯 MATERIAL PRICING SETTINGS - Admin configurable rates
+export const materialSettings = pgTable("material_settings", {
+  id: serial("id").primaryKey(),
+  settingKey: text("setting_key").notNull().unique(), // e.g., "default_profit_margin", "labor_cost_multiplier"
+  settingValue: real("setting_value").notNull(),
+  unit: text("unit").default(""), // "percent", "rupees", "sqft", etc.
+  description: text("description"),
+  isActive: boolean("is_active").notNull().default(true),
+  updatedBy: integer("updated_by").references(() => users.id),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 export const materialRequests = pgTable("material_requests", {
   id: serial("id").primaryKey(),
   projectId: integer("project_id").references(() => projects.id).notNull(),

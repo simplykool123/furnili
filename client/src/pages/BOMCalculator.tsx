@@ -37,7 +37,8 @@ import {
   Eye,
   ChevronRight,
   Move3D,
-  Layers
+  Layers,
+  Settings2,
 } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -279,6 +280,22 @@ export default function BOMCalculator() {
   const [selectedFurnitureType, setSelectedFurnitureType] = useState<string>("wardrobe");
   const [bomResult, setBomResult] = useState<BomResult | null>(null);
   
+  // Initialize form first
+  const form = useForm<BomCalculationFormData>({
+    resolver: zodResolver(bomCalculationSchema),
+    defaultValues: {
+      unitType: selectedFurnitureType || 'wardrobe',
+      height: 2200,
+      width: 1200,
+      depth: 600,
+      unitOfMeasure: 'mm',
+      boardType: 'ply',
+      boardThickness: '18mm',
+      finish: 'laminate',
+      partsConfig: selectedFurnitureConfig || {},
+    },
+  });
+
   // 🎯 SMART BOARD TYPE & FINISH INTERCONNECTED LOGIC
   const selectedBoardType = form.watch('boardType');
   const isPreLamBoard = selectedBoardType === 'pre_lam_particle_board';
@@ -300,29 +317,7 @@ export default function BOMCalculator() {
   });
 
   const selectedFurniture = furnitureTypes.find(f => f.id === selectedFurnitureType);
-
-  const form = useForm<BomCalculationFormData>({
-    resolver: zodResolver(bomCalculationSchema),
-    defaultValues: {
-      unitType: selectedFurnitureType,
-      unitOfMeasure: "mm",
-      boardThickness: "18mm",
-      partsConfig: selectedFurniture?.defaultConfig || {
-        shelves: 0,
-        drawers: 0,
-        shutters: 0,
-        doors: 0,
-        backPanels: 0,
-        exposedSides: false,
-        backThickness: 6,
-        slideColorance: 12.5,
-        boxThickness: 12,
-        bottomThickness: 6,
-        doorClearance: 12,
-        customParts: [],
-      },
-    },
-  });
+  const selectedFurnitureConfig = selectedFurniture?.defaultConfig || {};
 
   // Update form when furniture type changes
   useEffect(() => {
@@ -733,7 +728,15 @@ export default function BOMCalculator() {
   };
 
   return (
-    <ResponsiveLayout title="BOM Calculator">
+    <ResponsiveLayout title="BOM Calculator" 
+      titleAction={
+        <Button variant="outline" size="sm" asChild className="gap-2">
+          <a href="/bom-settings">
+            <Settings2 className="h-4 w-4" />
+            Material Settings
+          </a>
+        </Button>
+      }>
       {/* Hero Section */}
       <div className="bg-[hsl(28,100%,25%)] text-white py-8 px-4 mb-6 rounded-lg">
         <div className="text-center">
