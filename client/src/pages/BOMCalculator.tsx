@@ -35,7 +35,9 @@ import {
   Sofa,
   PanelTop,
   Eye,
-  ChevronRight
+  ChevronRight,
+  Move3D,
+  Layers
 } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -77,6 +79,7 @@ const bomCalculationSchema = z.object({
     wardrobeType: z.string().default("openable"), // openable, sliding, walk-in
     hasLoft: z.boolean().default(false),
     loftHeight: z.number().optional(), // height of loft section
+    loftWidth: z.number().optional(), // width of loft section
     shutterCount: z.number().default(2), // renamed from shutters for clarity
     shelfCount: z.number().default(3), // renamed from shelves for clarity
     drawerCount: z.number().default(0), // renamed from drawers for clarity
@@ -150,6 +153,8 @@ const furnitureTypes = [
     defaultConfig: { 
       wardrobeType: "openable", 
       hasLoft: false, 
+      loftHeight: 600,
+      loftWidth: 1200,
       shutterCount: 2, 
       shelfCount: 3, 
       drawerCount: 0, 
@@ -725,71 +730,116 @@ export default function BOMCalculator() {
               </div>
             </div>
             <Form {...form}>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="space-y-4">
+                {/* Wardrobe Type Visual Selection */}
                 <FormField
                   control={form.control}
                   name="partsConfig.wardrobeType"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-sm font-medium">Wardrobe Type</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value || 'openable'}>
-                        <FormControl>
-                          <SelectTrigger className="h-10">
-                            <SelectValue />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="openable">Openable Door</SelectItem>
-                          <SelectItem value="sliding">Sliding Door</SelectItem>
-                          <SelectItem value="walk-in">Walk-in</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="partsConfig.hasLoft"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-col justify-end">
-                      <div className="flex items-center space-x-3 border rounded-lg p-3">
-                        <FormControl>
-                          <input
-                            type="checkbox"
-                            checked={field.value}
-                            onChange={field.onChange}
-                            className="h-4 w-4"
-                          />
-                        </FormControl>
-                        <FormLabel className="text-sm font-medium cursor-pointer">Add Loft Storage?</FormLabel>
+                      <div className="grid grid-cols-3 gap-3">
+                        {[
+                          { value: 'openable', label: 'Openable Door', icon: DoorOpen, desc: 'Hinged doors' },
+                          { value: 'sliding', label: 'Sliding Door', icon: Move3D, desc: 'Sliding panels' },
+                          { value: 'walk-in', label: 'Walk-in', icon: Home, desc: 'Open wardrobe' }
+                        ].map((type) => {
+                          const IconComponent = type.icon;
+                          const isSelected = field.value === type.value;
+                          
+                          return (
+                            <button
+                              key={type.value}
+                              type="button"
+                              onClick={() => field.onChange(type.value)}
+                              className={`p-4 rounded-lg border-2 transition-all duration-200 text-center ${
+                                isSelected 
+                                  ? 'border-[hsl(28,100%,25%)] bg-[hsl(28,100%,25%)] text-white shadow-lg' 
+                                  : 'border-border bg-card hover:border-[hsl(28,100%,25%)]/30 hover:bg-accent'
+                              }`}
+                            >
+                              <IconComponent className={`w-8 h-8 mx-auto mb-2 ${isSelected ? 'text-white' : 'text-[hsl(28,100%,25%)]'}`} />
+                              <div className={`text-sm font-medium ${isSelected ? 'text-white' : 'text-foreground'}`}>
+                                {type.label}
+                              </div>
+                              <div className={`text-xs ${isSelected ? 'text-white/80' : 'text-muted-foreground'}`}>
+                                {type.desc}
+                              </div>
+                            </button>
+                          );
+                        })}
                       </div>
                     </FormItem>
                   )}
                 />
                 
-                {form.watch('partsConfig.hasLoft') && (
+                {/* Loft Option */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <FormField
                     control={form.control}
-                    name="partsConfig.loftHeight"
+                    name="partsConfig.hasLoft"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-sm font-medium">Loft Height (mm)</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            min="300"
-                            max="1000"
-                            placeholder="600"
-                            className="h-10"
-                            {...field}
-                            onChange={(e) => field.onChange(parseInt(e.target.value) || 600)}
-                          />
-                        </FormControl>
+                        <div className="flex items-center space-x-3 border rounded-lg p-3">
+                          <FormControl>
+                            <input
+                              type="checkbox"
+                              checked={field.value}
+                              onChange={field.onChange}
+                              className="h-4 w-4"
+                            />
+                          </FormControl>
+                          <FormLabel className="text-sm font-medium cursor-pointer">Add Loft Storage?</FormLabel>
+                        </div>
                       </FormItem>
                     )}
                   />
-                )}
+                  
+                  {form.watch('partsConfig.hasLoft') && (
+                    <>
+                      <FormField
+                        control={form.control}
+                        name="partsConfig.loftHeight"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-sm font-medium">Loft Height (mm)</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                min="300"
+                                max="1000"
+                                placeholder="600"
+                                className="h-10"
+                                {...field}
+                                onChange={(e) => field.onChange(parseInt(e.target.value) || 600)}
+                              />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="partsConfig.loftWidth"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-sm font-medium">Loft Width (mm)</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                min="600"
+                                max="3000"
+                                placeholder="1200"
+                                className="h-10"
+                                {...field}
+                                onChange={(e) => field.onChange(parseInt(e.target.value) || 1200)}
+                              />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+                    </>
+                  )}
+                </div>
               </div>
             </Form>
           </div>

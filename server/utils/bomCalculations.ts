@@ -1716,6 +1716,7 @@ export const calculateWardrobeBOM = (data: any) => {
   const wardrobeType = partsConfig.wardrobeType || 'openable'; // openable, sliding, walk-in
   const hasLoft = partsConfig.hasLoft || false;
   const loftHeight = partsConfig.loftHeight || 600; // default 600mm
+  const loftWidth = partsConfig.loftWidth || width; // default to main wardrobe width
   const shutterCount = partsConfig.shutterCount || partsConfig.shutters || 2;
   const shelfCount = partsConfig.shelfCount || partsConfig.shelves || 3;
   const drawerCount = partsConfig.drawerCount || partsConfig.drawers || 0;
@@ -1769,17 +1770,17 @@ export const calculateWardrobeBOM = (data: any) => {
       { name: 'Drawer Bottom', length: (width / 2) - 20, width: depth - 30, qty: drawerCount },
     ] : []),
     
-    // 🔸 LOFT PARTS (if hasLoft = true)
+    // 🔸 LOFT PARTS (if hasLoft = true) - Uses custom loft width and height
     ...(hasLoft ? [
       { name: 'Loft Side Panel (L)', length: depth, width: loftHeight, qty: 1 },
       { name: 'Loft Side Panel (R)', length: depth, width: loftHeight, qty: 1 },
-      { name: 'Loft Top Panel', length: width, width: depth, qty: 1 },
-      { name: 'Loft Bottom Panel', length: width, width: depth, qty: 1 },
-      { name: 'Loft Back Panel', length: width, width: loftHeight, qty: 1 }, // 6mm
-      { name: 'Loft Shelf', length: width - 36, width: depth - 20, qty: 1 },
-      // Loft shutters (only for openable/sliding)
+      { name: 'Loft Top Panel', length: loftWidth, width: depth, qty: 1 },
+      { name: 'Loft Bottom Panel', length: loftWidth, width: depth, qty: 1 },
+      { name: 'Loft Back Panel', length: loftWidth, width: loftHeight, qty: 1 }, // 6mm
+      { name: 'Loft Shelf', length: loftWidth - 36, width: depth - 20, qty: 1 },
+      // Loft shutters (only for openable/sliding) - Uses custom loft width
       ...(wardrobeType !== 'walk-in' ? [
-        { name: 'Loft Shutter Panel', length: (width / shutterCount) - 5, width: loftHeight - 10, qty: shutterCount }
+        { name: 'Loft Shutter Panel', length: (loftWidth / shutterCount) - 5, width: loftHeight - 10, qty: shutterCount }
       ] : [])
     ] : []),
     
@@ -2004,7 +2005,7 @@ export const calculateWardrobeBOM = (data: any) => {
 
   console.log('=== WARDROBE CALCULATION RESULTS ===');
   console.log('Wardrobe Type:', wardrobeType);
-  console.log('Has Loft:', hasLoft, hasLoft ? `(Height: ${loftHeight}mm)` : '');
+  console.log('Has Loft:', hasLoft, hasLoft ? `(Height: ${loftHeight}mm, Width: ${loftWidth}mm)` : '');
   console.log('Shutters:', shutterCount, 'Shelves:', shelfCount, 'Drawers:', drawerCount);
   console.log('Total panels:', panels.length);
   console.log('Total board area:', totalBoardArea.toFixed(2), 'sqft');
