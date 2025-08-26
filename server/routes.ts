@@ -19,7 +19,7 @@ import {
 import { createBackupZip } from "./utils/backupExport";
 import { canOrderMaterials, getMaterialRequestEligibleProjects, getStageDisplayName } from "./utils/projectStageValidation";
 import { setupQuotesRoutes } from "./quotesRoutes";
-import { ObjectStorageService } from "./objectStorage";
+// ObjectStorageService removed - using local storage only
 import { db } from "./db";
 import { calculateBOM, generateBOMNumber, convertDimensions, DEFAULT_RATES } from "./utils/bomCalculations";
 
@@ -1758,15 +1758,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "No file uploaded" });
       }
 
-      // Upload to object storage instead of local storage
-      const objectStorageService = new ObjectStorageService();
-      const filePath = await objectStorageService.uploadProductImage(
-        file.buffer,
-        file.originalname || 'upload',
-        file.mimetype
-      );
+      // Save to local storage - no cloud dependencies
+      const fs = await import('fs');
+      const path = await import('path');
       
-      console.log('Image uploaded to object storage:', filePath);
+      const getExtension = (mimetype: string) => {
+        switch (mimetype) {
+          case 'image/jpeg': return 'jpg';
+          case 'image/jpg': return 'jpg';
+          case 'image/png': return 'png';
+          case 'image/gif': return 'gif';
+          case 'image/webp': return 'webp';
+          default: return 'png';
+        }
+      };
+
+      const extension = getExtension(file.mimetype);
+      const filename = `upload-${Date.now()}.${extension}`;
+      const uploadPath = `uploads/${filename}`;
+
+      // Ensure directory exists
+      const uploadDir = path.dirname(uploadPath);
+      if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+      }
+
+      // Write file to disk
+      fs.writeFileSync(uploadPath, file.buffer);
+      
+      const filePath = `/uploads/${filename}`;
+      
+      console.log('Image saved locally:', uploadPath, '-> URL:', filePath);
       
       res.json({ 
         success: true,
@@ -1784,23 +1806,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Serve static files from uploads directory (for legacy files)
   app.use('/uploads', express.static('uploads'));
 
-  // Serve public objects from object storage
-  app.get("/public-objects/:filePath(*)", async (req, res) => {
-    try {
-      const filePath = req.params.filePath;
-      const objectStorageService = new ObjectStorageService();
-      const file = await objectStorageService.searchPublicObject(filePath);
-      
-      if (!file) {
-        return res.status(404).json({ error: "File not found" });
-      }
-      
-      await objectStorageService.downloadObject(file, res);
-    } catch (error) {
-      console.error("Error serving public object:", error);
-      return res.status(500).json({ error: "Internal server error" });
-    }
-  });
+  // Local file serving - all images served from /uploads
 
   // Attendance routes
   app.get("/api/attendance", authenticateToken, async (req: AuthRequest, res) => {
@@ -4574,24 +4580,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Object Storage Routes for Product Images
-  const { ObjectStorageService } = await import("./objectStorage");
-
-  // Serve public objects (product images)
-  app.get("/public-objects/:filePath(*)", async (req, res) => {
-    const filePath = req.params.filePath;
-    const objectStorageService = new ObjectStorageService();
-    try {
-      const file = await objectStorageService.searchPublicObject(filePath);
-      if (!file) {
-        return res.status(404).json({ error: "File not found" });
-      }
-      objectStorageService.downloadObject(file, res);
-    } catch (error) {
-      console.error("Error searching for public object:", error);
-      return res.status(500).json({ error: "Internal server error" });
-    }
-  });
+  // Removed cloud storage - all files now stored locally
 
   // Upload product image - LOCAL STORAGE
   app.post("/api/products/upload-image", authenticateToken, requireRole(['admin', 'manager']), productImageUpload.single('image'), async (req: AuthRequest, res) => {

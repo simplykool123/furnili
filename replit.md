@@ -7,6 +7,14 @@ The Furnili Management System is a comprehensive web application designed to enh
 Preferred communication style: Simple, everyday language.
 Form Layout Requirements: All popup forms must be optimized for screen size with compact layouts - space-y-3 form spacing, h-8 input heights, text-xs labels, max-w-[90vw] mobile width, reduced spacing between rows for maximum space efficiency.
 
+**CRITICAL: LOCAL STORAGE ONLY** - User requires ALL file storage to be local on server (no cloud storage). All images, files, and data must be stored locally in uploads/ folders for VPS deployment. Never use cloud storage services.
+
+Storage Requirements:
+- Product images: uploads/products/
+- All files: Local filesystem only  
+- No cloud dependencies (Google Cloud, AWS, etc.)
+- System designed for VPS deployment
+
 ## System Architecture
 
 ### UI/UX Decisions
