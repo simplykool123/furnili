@@ -2105,20 +2105,32 @@ export const calculateWardrobeBOM = (data: any) => {
   let material_cost = 0;
   let boardAreaByThickness: { [thickness: string]: number } = {};
   
-  // Default board rate (will be overridden by getBoardRate in routes.ts)
-  const defaultBoardRate = DEFAULT_RATES.board["18mm_plywood"] || 147;
-  
   panels.forEach(panel => {
-    // Panel board cost: area × rate per sqft
-    const panelBoardCost = panel.area_sqft * defaultBoardRate;
+    // ✅ CRITICAL FIX: Use correct rate for each thickness
+    let boardRate = 147; // default 18mm rate
+    const thickness = panel.thickness;
+    
+    // Select correct rate based on panel thickness
+    if (thickness === 18) {
+      boardRate = DEFAULT_RATES.board["18mm_plywood"] || 147;
+    } else if (thickness === 12) {
+      boardRate = DEFAULT_RATES.board["12mm_plywood"] || 120;
+    } else if (thickness === 6) {
+      boardRate = DEFAULT_RATES.board["6mm_plywood"] || 95;
+    }
+    
+    // Panel board cost: area × thickness-specific rate per sqft
+    const panelBoardCost = panel.area_sqft * boardRate;
     material_cost += panelBoardCost;
     
+    console.log(`Panel: ${panel.panel}, Thickness: ${thickness}mm, Area: ${panel.area_sqft.toFixed(2)} sqft, Rate: ₹${boardRate}, Cost: ₹${panelBoardCost.toFixed(2)}`);
+    
     // Group by thickness for sheet optimization
-    const thickness = `${panel.thickness}mm`;
-    if (!boardAreaByThickness[thickness]) {
-      boardAreaByThickness[thickness] = 0;
+    const thicknessKey = `${thickness}mm`;
+    if (!boardAreaByThickness[thicknessKey]) {
+      boardAreaByThickness[thicknessKey] = 0;
     }
-    boardAreaByThickness[thickness] += panel.area_sqft;
+    boardAreaByThickness[thicknessKey] += panel.area_sqft;
     
     // Edge banding cost: length × rate per meter
     if (panel.edgeBandingLength && panel.edgeBandingLength > 0) {
@@ -2139,6 +2151,17 @@ export const calculateWardrobeBOM = (data: any) => {
   
   // Calculate total cost
   const total_cost = material_cost + hardware_cost;
+  
+  console.log('=== THICKNESS OPTIMIZATION BREAKDOWN ===');
+  Object.entries(boardAreaByThickness).forEach(([thickness, area]) => {
+    const thicknessMm = parseInt(thickness.replace('mm', ''));
+    let rate = 147;
+    if (thicknessMm === 18) rate = DEFAULT_RATES.board["18mm_plywood"] || 147;
+    else if (thicknessMm === 12) rate = DEFAULT_RATES.board["12mm_plywood"] || 120;
+    else if (thicknessMm === 6) rate = DEFAULT_RATES.board["6mm_plywood"] || 95;
+    const cost = area * rate;
+    console.log(`${thickness} Plywood: ${area.toFixed(2)} sqft @ ₹${rate}/sqft = ₹${cost.toFixed(2)}`);
+  });
   
   console.log('=== COST BREAKDOWN ===');
   console.log('Material cost: ₹' + material_cost.toFixed(2));
