@@ -21,7 +21,7 @@ import { canOrderMaterials, getMaterialRequestEligibleProjects, getStageDisplayN
 import { setupQuotesRoutes } from "./quotesRoutes";
 // ObjectStorageService removed - using local storage only
 import { db } from "./db";
-import { calculateBOM, generateBOMNumber, convertDimensions, DEFAULT_RATES } from "./utils/bomCalculations";
+import { calculateBOM, generateBOMNumber, convertDimensions, DEFAULT_RATES, calculateWardrobeBOM } from "./utils/bomCalculations";
 
 import { eq, and, gt } from "drizzle-orm";
 import { projectFiles, users, suppliers, products, purchaseOrders, purchaseOrderItems, stockMovements, bomCalculations, bomItems } from "@shared/schema";
@@ -4658,7 +4658,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         depth,
       };
 
-      const bomResult = await calculateBOM(calculationInput, undefined, undefined, bomData.partsConfig?.exposedSides || false);
+      // ✅ Use new wardrobe-specific calculation with exact user formulas
+      const bomResult = calculateWardrobeBOM(bomData);
       
       // Get pricing from products table
       const boardRate = await getBoardRate(bomData.boardType, bomData.boardThickness);
@@ -4756,17 +4757,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
         }
         
-        // Add laminate adhesive
-        const totalLaminatePieces = (innerPanels.reduce((sum, panel) => sum + panel.qty, 0)) +
-                                   (outerPanels.reduce((sum, panel) => sum + panel.qty * 2, 0));
+        // ✅ LAMINATE ADHESIVE (Fevicol SR 750ml): 1 bottle covers 32 sqft laminate area
+        const totalLaminateArea = bomResult.totalLaminateArea;
         
-        if (totalLaminatePieces > 0) {
-          const bottlesNeeded = Math.ceil(totalLaminatePieces / 1.33);
+        if (totalLaminateArea > 0) {
+          const bottlesNeeded = Math.ceil(totalLaminateArea / 32); // 1 bottle per 32 sqft
           bomItemsData.push({
             id: Math.random(),
             itemType: 'material' as const,
             itemCategory: 'Adhesive',
-            partName: 'Laminate Adhesive',
+            partName: 'Fevicol SR (750ml)',
             materialType: 'Laminate Adhesive',
             length: 0,
             width: 0,

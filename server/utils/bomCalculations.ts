@@ -1707,3 +1707,224 @@ export const convertDimensions = (height: number, width: number, depth: number, 
   // Already in mm
   return { height, width, depth };
 };
+
+// ✅ WARDROBE-SPECIFIC BOM CALCULATION WITH EXACT USER FORMULAS
+export const calculateWardrobeBOM = (data: any) => {
+  const { height, width, depth, partsConfig, finish } = data;
+  
+  console.log('=== WARDROBE BOM CALCULATION START (USER FORMULAS) ===');
+  console.log('Input data:', { height, width, depth, finish });
+  
+  // WARDROBE-SPECIFIC THICKNESS MAPPING
+  const getThickness = (part: string): number => {
+    if (part.toLowerCase().includes('shutter') || part.toLowerCase().includes('door')) return 18;
+    if (part.toLowerCase().includes('side') || part.toLowerCase().includes('top') || part.toLowerCase().includes('bottom')) return 18;
+    if (part.toLowerCase().includes('shelf')) return 18;
+    if (part.toLowerCase().includes('back')) return 6;
+    if (part.toLowerCase().includes('drawer')) return 12;
+    return 18; // default
+  };
+
+  // ✅ WARDROBE AREA CALCULATION: (Length × Width in mm) ÷ 92903 = sqft
+  const calculateAreaSqft = (length: number, width: number): number => {
+    return (length * width) / 92903;
+  };
+
+  const panels: any[] = [];
+  let totalBoardArea = 0;
+  let totalLaminateArea = 0;
+  let totalEdgeBanding2mm = 0;
+  let totalEdgeBanding0_8mm = 0;
+
+  // WARDROBE PARTS CONFIGURATION
+  const wardrobeParts = [
+    // Main carcass - 18mm PLY
+    { name: 'Side Panel (L)', length: depth, width: height, qty: 1 },
+    { name: 'Side Panel (R)', length: depth, width: height, qty: 1 },
+    { name: 'Top Panel', length: width, width: depth, qty: 1 },
+    { name: 'Bottom Panel', length: width, width: depth, qty: 1 },
+    { name: 'Back Panel', length: width, width: height, qty: 1 }, // 6mm
+    
+    // Shutters - 18mm PLY (outer laminate)
+    { name: 'Shutter Panel', length: (width / (partsConfig.shutterCount || 2)) - 5, width: height - 10, qty: partsConfig.shutterCount || 2 },
+    
+    // Shelves - 18mm PLY (inner laminate)
+    { name: 'Shelf', length: width - 36, width: depth - 20, qty: partsConfig.shelfCount || 3 },
+    
+    // Drawers - 12mm PLY
+    ...(partsConfig.drawerCount > 0 ? [
+      { name: 'Drawer Front', length: (width / 2) - 5, width: 150, qty: partsConfig.drawerCount }, // outer laminate
+      { name: 'Drawer Side', length: depth - 50, width: 150, qty: partsConfig.drawerCount * 2 },
+      { name: 'Drawer Back', length: (width / 2) - 40, width: 120, qty: partsConfig.drawerCount },
+      { name: 'Drawer Bottom', length: (width / 2) - 20, width: depth - 30, qty: partsConfig.drawerCount },
+    ] : []),
+    
+    // Custom parts
+    ...(partsConfig.customParts?.filter((p: any) => p.name.trim()) || []).map((part: any) => ({
+      name: part.name,
+      length: 600, // default size for custom parts
+      width: 300,
+      qty: part.quantity
+    }))
+  ];
+
+  // Process each panel with EXACT WARDROBE FORMULAS
+  wardrobeParts.forEach(part => {
+    const thickness = getThickness(part.name);
+    const area = calculateAreaSqft(part.length, part.width);
+    const totalPartArea = area * part.qty;
+    
+    // Material type based on thickness
+    let materialType = '';
+    if (thickness === 18) materialType = '18mm PLY';
+    else if (thickness === 12) materialType = '12mm PLY';
+    else if (thickness === 6) materialType = '6mm PLY';
+    else materialType = `${thickness}mm PLY`;
+    
+    totalBoardArea += totalPartArea;
+    
+    // ✅ WARDROBE EDGE BANDING LOGIC
+    let edgeBanding2mm = 0;
+    let edgeBanding0_8mm = 0;
+    
+    if (part.name.toLowerCase().includes('shutter')) {
+      // Shutters: 4 sides banded (2mm PVC)
+      edgeBanding2mm = ((part.length + part.width) * 2 / 1000) * part.qty;
+    } else if (part.name.toLowerCase().includes('shelf')) {
+      // Shelves: only front edge banded (0.8mm PVC)
+      edgeBanding0_8mm = (part.length / 1000) * part.qty;
+    } else if (part.name.toLowerCase().includes('side') && !part.name.toLowerCase().includes('drawer')) {
+      // Carcass sides: only vertical front edge (2mm PVC)
+      edgeBanding2mm = (part.width / 1000) * part.qty;
+    } else if (part.name.toLowerCase().includes('drawer side')) {
+      // Drawer sides: top edges only (0.8mm PVC)
+      edgeBanding0_8mm = (part.length / 1000) * part.qty;
+    }
+    
+    totalEdgeBanding2mm += edgeBanding2mm;
+    totalEdgeBanding0_8mm += edgeBanding0_8mm;
+    
+    panels.push({
+      panel: part.name,
+      length: part.length,
+      width: part.width,
+      thickness: thickness,
+      qty: part.qty,
+      area_sqft: area,
+      total_area: totalPartArea,
+      materialType: materialType,
+      edgeBanding2mm: edgeBanding2mm,
+      edgeBanding0_8mm: edgeBanding0_8mm
+    });
+  });
+
+  // ✅ WARDROBE LAMINATE CALCULATION (AREA-BASED)
+  if (finish === 'laminate') {
+    panels.forEach(panel => {
+      // Outer Laminate (2-side panels): Shutters, drawer fronts → area × 2
+      const isOuter = panel.panel.toLowerCase().includes('shutter') || 
+                     panel.panel.toLowerCase().includes('drawer front');
+      
+      // Inner Laminate (1-side panels): Shelves, carcass sides, partitions → area × 1
+      const isInner = panel.panel.toLowerCase().includes('shelf') ||
+                     panel.panel.toLowerCase().includes('side panel') ||
+                     panel.panel.toLowerCase().includes('top panel') ||
+                     panel.panel.toLowerCase().includes('bottom panel');
+      
+      if (isOuter) {
+        totalLaminateArea += panel.total_area * 2; // Both sides
+      } else if (isInner) {
+        totalLaminateArea += panel.total_area * 1; // One side
+      }
+      // Back panel usually no laminate (painted)
+    });
+  }
+
+  // ✅ WARDROBE HARDWARE CALCULATIONS
+  const hardware: any[] = [];
+  
+  const shutterCount = partsConfig.shutterCount || 2;
+  const drawerCount = partsConfig.drawerCount || 0;
+  
+  // Hinges based on shutter height (EXACT WARDROBE LOGIC)
+  const shutterHeight = height;
+  let hingesPerShutter = 2; // ≤ 1200mm → 2 hinges
+  if (shutterHeight > 1800) hingesPerShutter = 4; // > 1800mm → 4 hinges
+  else if (shutterHeight > 1200) hingesPerShutter = 3; // 1200-1800mm → 3 hinges
+  
+  hardware.push({
+    item: 'Soft Close Hinges',
+    qty: shutterCount * hingesPerShutter,
+    unit_rate: 45,
+    total_cost: shutterCount * hingesPerShutter * 45
+  });
+  
+  // Handles: 1 per shutter or drawer front
+  hardware.push({
+    item: 'Handle',
+    qty: shutterCount + drawerCount,
+    unit_rate: 120,
+    total_cost: (shutterCount + drawerCount) * 120
+  });
+  
+  // Drawer Slides: 1 set per drawer (pair of channels)
+  if (drawerCount > 0) {
+    hardware.push({
+      item: 'Drawer Channel (pair)',
+      qty: drawerCount,
+      unit_rate: 280,
+      total_cost: drawerCount * 280
+    });
+  }
+  
+  // Minifix: 2-3 per carcass joint → ~30 per wardrobe
+  hardware.push({
+    item: 'Minifix Connector',
+    qty: 30,
+    unit_rate: 8,
+    total_cost: 30 * 8
+  });
+  
+  // Dowels: ~5 per joint → ~50 per wardrobe
+  hardware.push({
+    item: 'Wooden Dowel',
+    qty: 50,
+    unit_rate: 2,
+    total_cost: 50 * 2
+  });
+  
+  // Hanging Rod: 1 per wardrobe (width = inner width)
+  hardware.push({
+    item: 'Hanging Rod',
+    qty: 1,
+    unit_rate: 150,
+    total_cost: 150
+  });
+  
+  // Straightener: 1 per shutter if height > 2100mm
+  if (shutterHeight > 2100) {
+    hardware.push({
+      item: 'Shutter Straightener',
+      qty: shutterCount,
+      unit_rate: 80,
+      total_cost: shutterCount * 80
+    });
+  }
+
+  console.log('=== WARDROBE CALCULATION RESULTS ===');
+  console.log('Total panels:', panels.length);
+  console.log('Total board area:', totalBoardArea.toFixed(2), 'sqft');
+  console.log('Total laminate area:', totalLaminateArea.toFixed(2), 'sqft');
+  console.log('Edge banding 2mm:', totalEdgeBanding2mm.toFixed(2), 'meters');
+  console.log('Edge banding 0.8mm:', totalEdgeBanding0_8mm.toFixed(2), 'meters');
+  console.log('Hardware items:', hardware.length);
+
+  return {
+    panels,
+    totalBoardArea,
+    totalLaminateArea,
+    totalEdgeBanding2mm,
+    totalEdgeBanding0_8mm,
+    hardware
+  };
+};
