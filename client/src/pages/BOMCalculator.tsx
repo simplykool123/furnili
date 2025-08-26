@@ -96,6 +96,7 @@ const bomCalculationSchema = z.object({
     lazySusan: z.boolean().optional(),
     cornerUnit: z.boolean().optional(),
     island: z.boolean().optional(),
+    kitchenLayout: z.string().optional(),
     
     // TV Unit specific
     tvSize: z.string().optional(),
@@ -181,8 +182,28 @@ const furnitureTypes = [
     id: "kitchen_cabinet", 
     name: "Kitchen", 
     icon: Package, 
-    description: "Kitchen cabinets and accessories",
-    defaultConfig: { shelves: 0, drawers: 6, shutters: 0, doors: 0, backPanels: 0, exposedSides: false, backThickness: 6, slideColorance: 12.5, boxThickness: 12, bottomThickness: 6, doorClearance: 12 }
+    description: "Modular kitchen cabinets and accessories",
+    defaultConfig: { 
+      baseCabinets: 4, 
+      wallCabinets: 4, 
+      tallCabinets: 1, 
+      drawers: 6, 
+      pulloutShelves: 2, 
+      lazySusan: false, 
+      cornerUnit: false, 
+      island: false, 
+      shelves: 2, 
+      shutters: 0, 
+      doors: 0, 
+      backPanels: 1, 
+      exposedSides: false, 
+      backThickness: 6, 
+      slideColorance: 12.5, 
+      boxThickness: 18, 
+      bottomThickness: 6, 
+      doorClearance: 12,
+      kitchenLayout: "L-shaped"
+    }
   },
   { 
     id: "tv_unit", 
@@ -1339,6 +1360,31 @@ export default function BOMCalculator() {
                       {/* Kitchen Cabinet configurations */}
                       {selectedFurnitureType === 'kitchen_cabinet' && (
                         <>
+                          <div className="col-span-2">
+                            <FormField
+                              control={form.control}
+                              name="partsConfig.kitchenLayout"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel className="text-xs">Kitchen Layout</FormLabel>
+                                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                    <FormControl>
+                                      <SelectTrigger className="h-8 text-xs">
+                                        <SelectValue placeholder="Select layout" />
+                                      </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                      <SelectItem value="L-shaped">L-shaped</SelectItem>
+                                      <SelectItem value="U-shaped">U-shaped</SelectItem>
+                                      <SelectItem value="Parallel">Parallel</SelectItem>
+                                      <SelectItem value="Single-line">Single-line</SelectItem>
+                                      <SelectItem value="G-shaped">G-shaped</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </FormItem>
+                              )}
+                            />
+                          </div>
                           <FormField
                             control={form.control}
                             name="partsConfig.baseCabinets"

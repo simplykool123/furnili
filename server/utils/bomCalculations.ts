@@ -1116,44 +1116,109 @@ function generateDresserPanels(input: any) {
   return panels;
 }
 
-// Kitchen Cabinet Panels - Very Comprehensive
-function generateKitchenCabinetPanels(input: any) {
+// 🍳 SIMPLE KITCHEN CABINET CALCULATOR - Panel Generation
+function generateKitchenCabinetPanels(input: CalculationInput): Panel[] {
   const panels: Panel[] = [];
-  const { height, width, depth } = input.dimensions;
+  const { height, width, depth, boardType, boardThickness, partsConfig } = input;
+  const material = `${boardThickness} ${boardType.toUpperCase()}`;
+  
+  // 🎯 Simple kitchen dimensions
+  const baseCabinetHeight = 850; // Standard base height
+  const wallCabinetHeight = 700; // Standard wall height  
+  const tallCabinetHeight = height > 2200 ? 2200 : height; // Full height or max 2200
+  const cabinetDepth = 450; // Standard depth
+  const wallCabinetDepth = 300; // Wall cabinet depth
+  
   const { 
-    cabinetType, 
-    baseCabinets, 
-    wallCabinets, 
-    tallCabinets,
-    island,
-    drawers,
-    shelves,
-    cornerUnit,
-    appliances
-  } = input.partsConfig;
+    baseCabinets = 0, 
+    wallCabinets = 0, 
+    tallCabinets = 0,
+    island = false,
+    drawers = 0,
+    pulloutShelves = 0,
+    cornerUnit = false,
+    lazySusan = false,
+    kitchenLayout = "L-shaped"
+  } = partsConfig;
 
-  // Base Cabinets
+  // 📦 BASE CABINETS - Standard 600mm wide units
   if (baseCabinets > 0) {
-    const baseWidth = Math.floor(width / baseCabinets);
-    panels.push(
-      { name: 'Base Cabinet Tops', type: 'panel', size: `${baseWidth}x${depth}`, quantity: baseCabinets, edge_band: '2mm', rate: 0 },
-      { name: 'Base Cabinet Bottoms', type: 'panel', size: `${baseWidth}x${depth}`, quantity: baseCabinets, edge_band: '2mm', rate: 0 },
-      { name: 'Base Cabinet Sides', type: 'panel', size: `${850}x${depth}`, quantity: baseCabinets * 2, edge_band: '2mm', rate: 0 },
-      { name: 'Base Cabinet Backs', type: 'panel', size: `${850}x${baseWidth}`, quantity: baseCabinets, edge_band: '0.8mm', rate: 0 },
-      { name: 'Base Cabinet Doors', type: 'panel', size: `${baseWidth - 3}x${750}`, quantity: baseCabinets * 2, edge_band: '2mm', rate: 0 }
-    );
-
-    // Base cabinet shelves
-    if (shelves > 0) {
-      panels.push({
-        name: 'Base Cabinet Shelves',
-        type: 'panel',
-        size: `${baseWidth - 36}x${depth - 18}`,
-        quantity: baseCabinets * shelves,
-        edge_band: '0.8mm',
-        rate: 0
-      });
-    }
+    const baseWidth = 600; // Standard width
+    
+    // Base cabinet carcase panels
+    panels.push({
+      panel: 'Base Cabinet - Top Panel',
+      qty: baseCabinets,
+      size: `${baseWidth}mm x ${cabinetDepth}mm`,
+      length: baseWidth,
+      width: cabinetDepth,
+      material,
+      edge_banding: '2mm',
+      area_sqft: mmSqToSqft(baseWidth, cabinetDepth) * baseCabinets,
+      edgeBandingLength: mmToFeet(baseWidth) * baseCabinets,
+    });
+    
+    panels.push({
+      panel: 'Base Cabinet - Bottom Panel',
+      qty: baseCabinets,
+      size: `${baseWidth}mm x ${cabinetDepth}mm`,
+      length: baseWidth,
+      width: cabinetDepth,
+      material,
+      edge_banding: '2mm',
+      area_sqft: mmSqToSqft(baseWidth, cabinetDepth) * baseCabinets,
+      edgeBandingLength: mmToFeet(baseWidth) * baseCabinets,
+    });
+    
+    panels.push({
+      panel: 'Base Cabinet - Side Panel',
+      qty: baseCabinets * 2,
+      size: `${baseCabinetHeight}mm x ${cabinetDepth}mm`,
+      length: baseCabinetHeight,
+      width: cabinetDepth,
+      material,
+      edge_banding: '2mm',
+      area_sqft: mmSqToSqft(baseCabinetHeight, cabinetDepth) * baseCabinets * 2,
+      edgeBandingLength: mmToFeet(baseCabinetHeight) * baseCabinets * 2,
+    });
+    
+    panels.push({
+      panel: 'Base Cabinet - Back Panel',
+      qty: baseCabinets,
+      size: `${baseCabinetHeight}mm x ${baseWidth}mm`,
+      length: baseCabinetHeight,
+      width: baseWidth,
+      material: `6mm ${boardType.toUpperCase()}`,
+      edge_banding: 'None',
+      area_sqft: mmSqToSqft(baseCabinetHeight, baseWidth) * baseCabinets,
+      edgeBandingLength: 0,
+    });
+    
+    // Base cabinet doors
+    panels.push({
+      panel: 'Base Cabinet - Door Panel',
+      qty: baseCabinets * 2,
+      size: `${baseWidth/2 - 2}mm x ${750}mm`,
+      length: baseWidth/2 - 2,
+      width: 750,
+      material,
+      edge_banding: '2mm',
+      area_sqft: mmSqToSqft(baseWidth/2 - 2, 750) * baseCabinets * 2,
+      edgeBandingLength: mmToFeet((baseWidth/2 - 2) * 2 + 750 * 2) * baseCabinets * 2,
+    });
+    
+    // Base cabinet shelf
+    panels.push({
+      panel: 'Base Cabinet - Shelf',
+      qty: baseCabinets,
+      size: `${baseWidth - 36}mm x ${cabinetDepth - 18}mm`,
+      length: baseWidth - 36,
+      width: cabinetDepth - 18,
+      material,
+      edge_banding: '0.8mm',
+      area_sqft: mmSqToSqft(baseWidth - 36, cabinetDepth - 18) * baseCabinets,
+      edgeBandingLength: mmToFeet(baseWidth - 36) * baseCabinets,
+    });
   }
 
   // Wall Cabinets
@@ -1211,15 +1276,58 @@ function generateKitchenCabinetPanels(input: any) {
     );
   }
 
-  // Drawer boxes for kitchen
+  // 📦 KITCHEN DRAWERS - Standard drawer boxes
   if (drawers > 0) {
-    const drawerWidth = Math.floor(width / drawers);
-    panels.push(
-      { name: 'Kitchen Drawer Fronts', type: 'panel', size: `${drawerWidth - 3}x${200}`, quantity: drawers, edge_band: '2mm', rate: 0 },
-      { name: 'Kitchen Drawer Sides', type: 'panel', size: `${184}x${depth - 50}`, quantity: drawers * 2, edge_band: '0.8mm', rate: 0 },
-      { name: 'Kitchen Drawer Backs', type: 'panel', size: `${184}x${drawerWidth - 36}`, quantity: drawers, edge_band: '0.8mm', rate: 0 },
-      { name: 'Kitchen Drawer Bottoms', type: 'panel', size: `${drawerWidth - 36}x${depth - 50}`, quantity: drawers, edge_band: '0.8mm', rate: 0 }
-    );
+    const drawerWidth = 450; // Standard drawer width
+    const drawerHeight = 150; // Standard drawer height
+    
+    panels.push({
+      panel: 'Kitchen Drawer - Front Panel',
+      qty: drawers,
+      size: `${drawerWidth}mm x ${drawerHeight}mm`,
+      length: drawerWidth,
+      width: drawerHeight,
+      material,
+      edge_banding: '2mm',
+      area_sqft: mmSqToSqft(drawerWidth, drawerHeight) * drawers,
+      edgeBandingLength: mmToFeet((drawerWidth + drawerHeight) * 2) * drawers,
+    });
+    
+    panels.push({
+      panel: 'Kitchen Drawer - Side Panel',
+      qty: drawers * 2,
+      size: `${drawerHeight}mm x ${350}mm`,
+      length: drawerHeight,
+      width: 350,
+      material,
+      edge_banding: '0.8mm',
+      area_sqft: mmSqToSqft(drawerHeight, 350) * drawers * 2,
+      edgeBandingLength: mmToFeet(drawerHeight) * drawers * 2,
+    });
+    
+    panels.push({
+      panel: 'Kitchen Drawer - Back Panel',
+      qty: drawers,
+      size: `${drawerHeight}mm x ${drawerWidth - 36}mm`,
+      length: drawerHeight,
+      width: drawerWidth - 36,
+      material,
+      edge_banding: '0.8mm',
+      area_sqft: mmSqToSqft(drawerHeight, drawerWidth - 36) * drawers,
+      edgeBandingLength: mmToFeet(drawerHeight) * drawers,
+    });
+    
+    panels.push({
+      panel: 'Kitchen Drawer - Bottom Panel',
+      qty: drawers,
+      size: `${drawerWidth - 36}mm x ${330}mm`,
+      length: drawerWidth - 36,
+      width: 330,
+      material: `6mm ${boardType.toUpperCase()}`, // Thinner drawer bottom
+      edge_banding: 'None',
+      area_sqft: mmSqToSqft(drawerWidth - 36, 330) * drawers,
+      edgeBandingLength: 0,
+    });
   }
 
   return panels;
@@ -1477,16 +1585,18 @@ function generateDresserHardware(input: any) {
   return hardware;
 }
 
-// Generate hardware for kitchen cabinets - Very Comprehensive  
-function generateKitchenCabinetHardware(input: any) {
+// 🔧 SIMPLE KITCHEN HARDWARE CALCULATOR  
+function generateKitchenCabinetHardware(input: CalculationInput): Hardware[] {
   const hardware: Hardware[] = [];
   const { 
-    baseCabinets, 
-    wallCabinets, 
-    tallCabinets, 
-    island, 
-    drawers,
-    cornerUnit
+    baseCabinets = 0, 
+    wallCabinets = 0, 
+    tallCabinets = 0, 
+    island = false, 
+    drawers = 0,
+    cornerUnit = false,
+    pulloutShelves = 0,
+    lazySusan = false
   } = input.partsConfig;
 
   // Base cabinet hinges (2 per door)
