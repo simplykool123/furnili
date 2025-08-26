@@ -41,6 +41,7 @@ import {
 } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { suggestDefaults, mapToSmartDefaultType, type WardrobeType } from "@/utils/smartDefaults";
 
 // BOM Calculation Form Schema
 const bomCalculationSchema = z.object({
@@ -321,6 +322,51 @@ export default function BOMCalculator() {
       });
     }
   }, [selectedFurnitureType, selectedFurniture, form]);
+
+  // 🎯 SMART DEFAULTS - Auto-update form based on dimensions and wardrobe type
+  useEffect(() => {
+    // Only apply smart defaults for wardrobe furniture type
+    if (selectedFurnitureType !== 'wardrobe') return;
+    
+    const formValues = form.getValues();
+    const { height, width, depth, unitOfMeasure = 'mm', partsConfig } = formValues;
+    
+    // Skip if critical values are missing or zero
+    if (!height || !width || !depth || height <= 0 || width <= 0 || depth <= 0) return;
+    
+    try {
+      const wardrobeType = mapToSmartDefaultType(partsConfig.wardrobeType);
+      
+      const smartSuggestions = suggestDefaults({
+        unit: unitOfMeasure as "mm" | "ft",
+        width,
+        height, 
+        depth,
+        type: wardrobeType
+      });
+
+      // Auto-update form values with smart suggestions
+      form.setValue('partsConfig.shutterCount', smartSuggestions.shutters, { shouldDirty: false });
+      form.setValue('partsConfig.shelfCount', smartSuggestions.shelves, { shouldDirty: false });
+      form.setValue('partsConfig.drawerCount', smartSuggestions.drawers, { shouldDirty: false });
+
+      // Show helpful notes to user if available  
+      if (smartSuggestions.notes.length > 0) {
+        console.log('Smart defaults applied:', smartSuggestions.notes.join(' '));
+      }
+      
+    } catch (error) {
+      console.warn('Smart defaults calculation failed:', error);
+    }
+  }, [
+    form.watch('height'),
+    form.watch('width'), 
+    form.watch('depth'),
+    form.watch('unitOfMeasure'),
+    form.watch('partsConfig.wardrobeType'),
+    selectedFurnitureType,
+    form
+  ]);
 
   // Fetch projects for project linking
   const { data: projects = [], isError: projectsError } = useQuery<any[]>({
