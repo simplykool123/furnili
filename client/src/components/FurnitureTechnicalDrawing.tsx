@@ -361,6 +361,196 @@ const FurnitureTechnicalDrawing: React.FC<FurnitureTechnicalDrawingProps> = ({
     return elements;
   };
 
+  const renderWardrobe = () => {
+    const elements: JSX.Element[] = [];
+    const shelves = configuration.shelves || 0;
+    const drawers = configuration.drawers || 0;
+    const shutters = configuration.shutters || 3;
+
+    // Main wardrobe outline
+    elements.push(
+      <rect
+        key="wardrobe-outline"
+        x={startX}
+        y={startY}
+        width={drawWidth}
+        height={drawHeight}
+        fill="none"
+        stroke="#333"
+        strokeWidth="2"
+      />
+    );
+
+    // Internal space
+    const internalWidth = drawWidth - 4;
+    const internalHeight = drawHeight - 4;
+    const internalStartX = startX + 2;
+    const internalStartY = startY + 2;
+
+    // 🎯 REALISTIC WARDROBE LAYOUT: 3 sections
+    const sectionWidth = internalWidth / 3;
+    
+    // LEFT SECTION: Hanging space
+    const hangingHeight = internalHeight * 0.75;
+    elements.push(
+      <rect
+        key="hanging-area"
+        x={internalStartX}
+        y={internalStartY}
+        width={sectionWidth}
+        height={hangingHeight}
+        fill="none"
+        stroke="#9CA3AF"
+        strokeWidth="1"
+        strokeDasharray="5,3"
+      />
+    );
+    
+    // Hanging rod
+    elements.push(
+      <line
+        key="hanging-rod"
+        x1={internalStartX + 5}
+        y1={internalStartY + 20}
+        x2={internalStartX + sectionWidth - 5}
+        y2={internalStartY + 20}
+        stroke="#333"
+        strokeWidth="3"
+      />
+    );
+    
+    // Hanging clothes representation
+    for (let i = 0; i < 4; i++) {
+      const x = internalStartX + 15 + (i * 20);
+      elements.push(
+        <line
+          key={`hanger-${i}`}
+          x1={x}
+          y1={internalStartY + 20}
+          x2={x}
+          y2={internalStartY + 80}
+          stroke="#9CA3AF"
+          strokeWidth="2"
+        />
+      );
+    }
+    
+    elements.push(
+      <text
+        key="hanging-label"
+        x={internalStartX + sectionWidth / 2}
+        y={internalStartY + hangingHeight / 2}
+        textAnchor="middle"
+        fontSize="12"
+        fill="#666"
+        transform={`rotate(-90, ${internalStartX + sectionWidth / 2}, ${internalStartY + hangingHeight / 2})`}
+      >
+        HANGING SPACE
+      </text>
+    );
+
+    // MIDDLE SECTION: Shelves
+    const shelfStartX = internalStartX + sectionWidth;
+    const displayShelves = Math.min(shelves, 8);
+    const shelfSpacing = internalHeight / (displayShelves + 1);
+    
+    for (let i = 1; i <= displayShelves; i++) {
+      const y = internalStartY + (i * shelfSpacing);
+      elements.push(
+        <line
+          key={`shelf-${i}`}
+          x1={shelfStartX}
+          y1={y}
+          x2={shelfStartX + sectionWidth}
+          y2={y}
+          stroke="#666"
+          strokeWidth="1"
+        />
+      );
+    }
+    
+    elements.push(
+      <text
+        key="shelf-area-label"
+        x={shelfStartX + sectionWidth / 2}
+        y={internalStartY + internalHeight / 2}
+        textAnchor="middle"
+        fontSize="12"
+        fill="#666"
+        transform={`rotate(-90, ${shelfStartX + sectionWidth / 2}, ${internalStartY + internalHeight / 2})`}
+      >
+        SHELVES ({shelves})
+      </text>
+    );
+
+    // RIGHT SECTION: Drawers
+    const drawerStartX = internalStartX + (sectionWidth * 2);
+    const displayDrawers = Math.min(drawers, 8);
+    const drawerHeight = internalHeight / displayDrawers;
+    
+    for (let i = 0; i < displayDrawers; i++) {
+      const y = internalStartY + (i * drawerHeight);
+      
+      elements.push(
+        <rect
+          key={`drawer-${i}`}
+          x={drawerStartX + 5}
+          y={y + 2}
+          width={sectionWidth - 10}
+          height={drawerHeight - 4}
+          fill="none"
+          stroke="#888"
+          strokeWidth="1"
+          strokeDasharray="2,2"
+        />
+      );
+      
+      elements.push(
+        <circle
+          key={`drawer-handle-${i}`}
+          cx={drawerStartX + sectionWidth - 15}
+          cy={y + drawerHeight / 2}
+          r="2"
+          fill="#333"
+        />
+      );
+    }
+    
+    elements.push(
+      <text
+        key="drawer-area-label"
+        x={drawerStartX + sectionWidth / 2}
+        y={internalStartY + internalHeight / 2}
+        textAnchor="middle"
+        fontSize="12"
+        fill="#666"
+        transform={`rotate(-90, ${drawerStartX + sectionWidth / 2}, ${internalStartY + internalHeight / 2})`}
+      >
+        DRAWERS ({drawers})
+      </text>
+    );
+
+    // Shutter/Door divisions
+    const shutterWidth = drawWidth / shutters;
+    for (let i = 1; i < shutters; i++) {
+      const x = startX + (i * shutterWidth);
+      elements.push(
+        <line
+          key={`shutter-div-${i}`}
+          x1={x}
+          y1={startY}
+          x2={x}
+          y2={startY + drawHeight}
+          stroke="#333"
+          strokeWidth="1"
+          strokeDasharray="8,4"
+        />
+      );
+    }
+
+    return elements;
+  };
+
   const renderFurniture = () => {
     switch (furnitureType.toLowerCase()) {
       case 'wardrobe':
@@ -370,7 +560,7 @@ const FurnitureTechnicalDrawing: React.FC<FurnitureTechnicalDrawingProps> = ({
       case 'bed':
         return renderBed();
       default:
-        return renderWardrobe(); // Default fallback
+        return renderCabinet(); // Default fallback to cabinet
     }
   };
 
