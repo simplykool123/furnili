@@ -4794,7 +4794,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Calculate using the clean typed function
         const laminateSummary = calculateLaminateBOM(laminatePanels, wardrobeTypeClean, rates);
         
-        // Add Inner Laminate item if needed
+        // Add Inner Laminate item if needed - AREA-BASED LIKE PLY
         if (laminateSummary.innerAreaSqft > 0) {
           bomItemsData.push({
             id: Math.random(),
@@ -4805,8 +4805,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             length: 0,
             width: 0,
             thickness: 1,
-            quantity: Math.ceil(laminateSummary.innerAreaSqft),
-            unit: 'pieces',
+            quantity: Math.round(laminateSummary.innerAreaSqft * 10) / 10, // Show area as quantity (rounded to 1 decimal)
+            unit: 'sqft',
             edgeBandingType: 'None',
             edgeBandingLength: 0,
             unitRate: 65,
@@ -4815,7 +4815,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
         }
         
-        // Add Outer Laminate item if needed
+        // Add Outer Laminate item if needed - AREA-BASED LIKE PLY  
         if (laminateSummary.outerAreaSqft > 0) {
           bomItemsData.push({
             id: Math.random(),
@@ -4826,8 +4826,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             length: 0,
             width: 0,
             thickness: 1,
-            quantity: Math.ceil(laminateSummary.outerAreaSqft),
-            unit: 'pieces',
+            quantity: Math.round(laminateSummary.outerAreaSqft * 10) / 10, // Show area as quantity (rounded to 1 decimal)
+            unit: 'sqft',
             edgeBandingType: 'None',
             edgeBandingLength: 0,
             unitRate: 85,
