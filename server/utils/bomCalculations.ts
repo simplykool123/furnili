@@ -1943,11 +1943,12 @@ export const calculateWardrobeBOM = (data: any) => {
     const area = calculateAreaSqft(part.length, part.width);
     const totalPartArea = area * part.qty;
     
-    // ✅ OPTIMIZED Material type based on thickness (ONLY 18mm & 6mm)
+    // ✅ DYNAMIC Material type based on thickness AND boardType selection
+    const boardTypeDisplay = input.boardType.replace(/_/g, ' ').toUpperCase();
     let materialType = '';
-    if (thickness === 18) materialType = '18mm PLY';
-    else if (thickness === 6) materialType = '6mm PLY';
-    else materialType = `${thickness}mm PLY`;
+    if (thickness === 18) materialType = `18mm ${boardTypeDisplay}`;
+    else if (thickness === 6) materialType = `6mm ${boardTypeDisplay}`;
+    else materialType = `${thickness}mm ${boardTypeDisplay}`;
     
     totalBoardArea += totalPartArea;
     

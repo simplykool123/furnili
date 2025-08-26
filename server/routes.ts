@@ -4977,8 +4977,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             id: Math.random(),
             itemType: 'material' as const,
             itemCategory: 'Board',
-            partName: `${thickness} Plywood Sheet`,
-            materialType: `${thickness} PLY`,
+            partName: `${thickness} ${bomData.boardType.replace(/_/g, ' ').toUpperCase()} Sheet`,
+            materialType: `${thickness} ${bomData.boardType.replace(/_/g, ' ').toUpperCase()}`,
             length: 2440, // 8 feet
             width: 1220,  // 4 feet
             thickness: thicknessMm,
