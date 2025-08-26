@@ -904,6 +904,18 @@ export const bomItems = pgTable("bom_items", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// 🎯 BOM Settings: Map BOM materials to existing products for real pricing
+export const bomSettings = pgTable("bom_settings", {
+  id: serial("id").primaryKey(),
+  bomMaterialType: text("bom_material_type").notNull().unique(), // '18mm_plywood', 'soft_close_hinge', etc.
+  bomMaterialCategory: text("bom_material_category").notNull(), // 'board', 'hardware', 'edge_banding', 'laminate'  
+  bomMaterialName: text("bom_material_name").notNull(), // '18mm Plywood', 'Soft Close Hinge', etc.
+  linkedProductId: integer("linked_product_id").references(() => products.id), // Maps to actual product
+  useRealPricing: boolean("use_real_pricing").notNull().default(false), // Enable/disable real pricing
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 export const bomHardwareRates = pgTable("bom_hardware_rates", {
   id: serial("id").primaryKey(),
   itemName: text("item_name").notNull().unique(), // Minifix, Dowel, Lock, Straightener, etc
@@ -950,6 +962,7 @@ export const insertPurchaseOrderItemSchema = createInsertSchema(purchaseOrderIte
 export const insertAuditLogSchema = createInsertSchema(auditLogs).omit({ id: true, createdAt: true });
 export const insertBomCalculation = createInsertSchema(bomCalculations).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertBomItem = createInsertSchema(bomItems).omit({ id: true, createdAt: true });
+export const insertBomSettingsSchema = createInsertSchema(bomSettings).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertBomHardwareRate = createInsertSchema(bomHardwareRates).omit({ id: true, lastUpdated: true });
 export const insertBomBoardRate = createInsertSchema(bomBoardRates).omit({ id: true, lastUpdated: true });
 
@@ -988,6 +1001,8 @@ export type BomHardwareRate = typeof bomHardwareRates.$inferSelect;
 export type InsertBomHardwareRate = z.infer<typeof insertBomHardwareRate>;
 export type BomBoardRate = typeof bomBoardRates.$inferSelect;
 export type InsertBomBoardRate = z.infer<typeof insertBomBoardRate>;
+export type BomSettings = typeof bomSettings.$inferSelect;
+export type InsertBomSettings = z.infer<typeof insertBomSettingsSchema>;
 
 // Extended BOM types for API responses
 export type BomCalculationWithDetails = BomCalculation & {

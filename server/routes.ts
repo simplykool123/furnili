@@ -5136,6 +5136,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // 🎯 BOM Settings Routes - Material to Product Mapping
+  app.get("/api/bom/settings", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const settings = await storage.getAllBomSettings();
+      res.json(settings);
+    } catch (error) {
+      console.error('Error fetching BOM settings:', error);
+      res.status(500).json({ error: 'Failed to fetch BOM settings' });
+    }
+  });
+
+  app.post("/api/bom/settings", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const settings = await storage.createBomSettings(req.body);
+      res.json(settings);
+    } catch (error) {
+      console.error('Error creating BOM settings:', error);
+      res.status(500).json({ error: 'Failed to create BOM settings' });
+    }
+  });
+
+  app.put("/api/bom/settings/:id", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const settings = await storage.updateBomSettings(id, req.body);
+      if (settings) {
+        res.json(settings);
+      } else {
+        res.status(404).json({ error: 'BOM settings not found' });
+      }
+    } catch (error) {
+      console.error('Error updating BOM settings:', error);
+      res.status(500).json({ error: 'Failed to update BOM settings' });
+    }
+  });
+
+  app.delete("/api/bom/settings/:id", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const success = await storage.deleteBomSettings(id);
+      if (success) {
+        res.json({ success: true });
+      } else {
+        res.status(404).json({ error: 'BOM settings not found' });
+      }
+    } catch (error) {
+      console.error('Error deleting BOM settings:', error);
+      res.status(500).json({ error: 'Failed to delete BOM settings' });
+    }
+  });
+
+  // Get enhanced pricing with real product prices 
+  app.get("/api/bom/pricing", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const { materialType } = req.query;
+      const realPrice = await storage.getBomMaterialPrice(materialType as string);
+      res.json({ realPrice });
+    } catch (error) {
+      console.error('Error fetching BOM pricing:', error);
+      res.status(500).json({ error: 'Failed to fetch BOM pricing' });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

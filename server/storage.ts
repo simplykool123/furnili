@@ -25,7 +25,8 @@ import {
   purchaseOrderItems,
   auditLogs,
   bomCalculations,
-  bomItems
+  bomItems,
+  bomSettings
 } from "@shared/schema";
 import { eq, and, gte, lte, desc, asc, sql, like, or, inArray } from "drizzle-orm";
 import * as bcrypt from "bcryptjs";
@@ -81,6 +82,8 @@ import type {
   InsertBomCalculation,
   BomItem,
   InsertBomItem,
+  BomSettings,
+  InsertBomSettings,
 } from "@shared/schema";
 
 export interface IStorage {
@@ -260,6 +263,14 @@ export interface IStorage {
   saveBomItem(item: InsertBomItem): Promise<BomItem>;
   getBomCalculation(id: number): Promise<BomCalculation | undefined>;
   getBomItems(bomId: number): Promise<BomItem[]>;
+  
+  // BOM Settings operations
+  getAllBomSettings(): Promise<BomSettings[]>;
+  getBomSettings(bomMaterialType: string): Promise<BomSettings | undefined>;
+  createBomSettings(settings: InsertBomSettings): Promise<BomSettings>;
+  updateBomSettings(id: number, updates: Partial<InsertBomSettings>): Promise<BomSettings | undefined>;
+  deleteBomSettings(id: number): Promise<boolean>;
+  getBomMaterialPrice(bomMaterialType: string): Promise<number | null>;
   
   // Auto PO Generation
   generateAutoPurchaseOrders(userId: number): Promise<PurchaseOrder[]>;
@@ -2267,6 +2278,53 @@ class DatabaseStorage implements IStorage {
 
   async getBomItems(bomId: number): Promise<BomItem[]> {
     return db.select().from(bomItems).where(eq(bomItems.bomId, bomId));
+  }
+
+  // 🎯 BOM Settings operations
+  async getAllBomSettings(): Promise<BomSettings[]> {
+    return await db.select().from(bomSettings).orderBy(desc(bomSettings.bomMaterialCategory), asc(bomSettings.bomMaterialName));
+  }
+
+  async getBomSettings(bomMaterialType: string): Promise<BomSettings | undefined> {
+    const result = await db.select().from(bomSettings)
+      .where(eq(bomSettings.bomMaterialType, bomMaterialType))
+      .limit(1);
+    return result[0];
+  }
+
+  async createBomSettings(settings: InsertBomSettings): Promise<BomSettings> {
+    const result = await db.insert(bomSettings).values(settings).returning();
+    return result[0];
+  }
+
+  async updateBomSettings(id: number, updates: Partial<InsertBomSettings>): Promise<BomSettings | undefined> {
+    const result = await db.update(bomSettings)
+      .set(updates)
+      .where(eq(bomSettings.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteBomSettings(id: number): Promise<boolean> {
+    const result = await db.delete(bomSettings).where(eq(bomSettings.id, id));
+    return result.rowCount > 0;
+  }
+
+  // 🎯 Smart Price Resolution: Check settings → product price → DEFAULT_RATES fallback
+  async getBomMaterialPrice(bomMaterialType: string): Promise<number | null> {
+    // Get BOM setting for this material type
+    const setting = await this.getBomSettings(bomMaterialType);
+    
+    if (setting && setting.useRealPricing && setting.linkedProductId) {
+      // Get real product price
+      const product = await this.getProduct(setting.linkedProductId);
+      if (product) {
+        return product.pricePerUnit;
+      }
+    }
+    
+    // Return null to indicate fallback to DEFAULT_RATES
+    return null;
   }
 }
 

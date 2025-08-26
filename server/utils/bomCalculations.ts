@@ -65,6 +65,22 @@ interface BOMResult {
   manufacturing_notes?: string[];
 }
 
+// 🎯 ENHANCED PRICE RESOLUTION - Check BOM settings → real products → fallback to defaults
+async function getBOMPrice(materialType: string, fallbackRate: number): Promise<number> {
+  try {
+    const realPrice = await storage.getBomMaterialPrice(materialType);
+    if (realPrice !== null) {
+      console.log(`🎯 Using real price for ${materialType}: ₹${realPrice} (from product mapping)`);
+      return realPrice;
+    }
+  } catch (error) {
+    console.log(`⚠️  Failed to get real price for ${materialType}, using DEFAULT_RATES`);
+  }
+  
+  console.log(`📋 Using default rate for ${materialType}: ₹${fallbackRate}`);
+  return fallbackRate;
+}
+
 // Industry-standard rates for modular furniture (can be overridden by database values)
 const DEFAULT_RATES = {
   board: {
@@ -206,6 +222,7 @@ import {
   mapPanelNameToKind, 
   mapWardrobeType
 } from './laminate-calculator';
+import { storage } from '../storage';
 
 // 🎯 AUTO-SPLIT OVERSIZED PANELS - Convert large panels into manageable pieces
 const splitOversizedPanels = (panels: Panel[], sheetSize = { length: 2440, width: 1220 }): Panel[] => {
@@ -878,7 +895,7 @@ const generateWardrobePanels = (input: CalculationInput, exposedSides: boolean =
     });
 
     // 🎯 PRE-LAM BOARD LOGIC: Skip laminate if pre-lam board selected
-    const isPreLamBoard = input.boardType === 'pre_lam_particle_board';
+    const isPreLamBoard = boardType === 'pre_lam_particle_board';
     
     if (!isPreLamBoard) {
       // Add inner laminate for backpanel inside surface (only for non-pre-lam boards)
@@ -1691,10 +1708,36 @@ export const calculateBOM = async (input: CalculationInput, boardRates?: any, ha
   let panels: Panel[] = [];
   let hardware: Hardware[] = [];
 
-  // Use custom rates if provided, otherwise use defaults
-  const boardRate = boardRates?.[input.boardType] || DEFAULT_RATES.board[input.boardType as keyof typeof DEFAULT_RATES.board] || 80;
-  const edgeRates = hardwareRates?.edge_banding || DEFAULT_RATES.edge_banding;
-  const hwRates = hardwareRates?.hardware || DEFAULT_RATES.hardware;
+  // 🎯 ENHANCED PRICE RESOLUTION: Check BOM settings first, fallback to custom rates, then defaults
+  const defaultBoardRate = DEFAULT_RATES.board[input.boardType as keyof typeof DEFAULT_RATES.board] || 80;
+  const boardRate = boardRates?.[input.boardType] || await getBOMPrice(input.boardType, defaultBoardRate);
+  
+  // Enhanced edge banding price resolution
+  const enhancedEdgeRates = {
+    '2mm': await getBOMPrice('2mm', DEFAULT_RATES.edge_banding['2mm'] || 8),
+    '0.8mm': await getBOMPrice('0.8mm', DEFAULT_RATES.edge_banding['0.8mm'] || 4),
+    '1mm': await getBOMPrice('1mm', DEFAULT_RATES.edge_banding['1mm'] || 5),
+    '3mm': await getBOMPrice('3mm', DEFAULT_RATES.edge_banding['3mm'] || 12),
+  };
+  
+  // Enhanced hardware price resolution  
+  const enhancedHwRates = {
+    soft_close_hinge: await getBOMPrice('soft_close_hinge', DEFAULT_RATES.hardware.soft_close_hinge || 90),
+    normal_hinge: await getBOMPrice('normal_hinge', DEFAULT_RATES.hardware.normal_hinge || 30),
+    drawer_slide_soft_close: await getBOMPrice('drawer_slide_soft_close', DEFAULT_RATES.hardware.drawer_slide_soft_close || 180),
+    ss_handle: await getBOMPrice('ss_handle', DEFAULT_RATES.hardware.ss_handle || 180),
+    aluminium_handle: await getBOMPrice('aluminium_handle', DEFAULT_RATES.hardware.aluminium_handle || 120),
+    minifix: await getBOMPrice('minifix', DEFAULT_RATES.hardware.minifix || 15),
+    dowel: await getBOMPrice('dowel', DEFAULT_RATES.hardware.dowel || 3),
+    // Legacy fallbacks
+    hinge: await getBOMPrice('normal_hinge', DEFAULT_RATES.hardware.hinge || 60),
+    handle: await getBOMPrice('aluminium_handle', DEFAULT_RATES.hardware.handle || 120),
+    drawer_slide: await getBOMPrice('drawer_slide_normal', DEFAULT_RATES.hardware.drawer_slide || 150),
+    lock: await getBOMPrice('door_lock', DEFAULT_RATES.hardware.lock || 80),
+  };
+  
+  const edgeRates = hardwareRates?.edge_banding || enhancedEdgeRates;
+  const hwRates = hardwareRates?.hardware || enhancedHwRates;
 
   // Generate panels and hardware based on unit type
   switch (input.unitType) {
@@ -2027,7 +2070,7 @@ export const calculateWardrobeBOM = (data: any) => {
       adhesiveWastePct: 0.10 // 10% waste
     };
     
-    // 🎯 EXTRAORDINARY DETAILED CALCULATOR - Pass finish & board type
+    // 🎯 ENHANCED PRICE RESOLUTION FOR LAMINATE MATERIALS
     const laminateRatesEnhanced = {
       outerRatePerSqft: DEFAULT_RATES.laminate.outer_laminate || 210,
       innerRatePerSqft: DEFAULT_RATES.laminate.inner_laminate || 150,
