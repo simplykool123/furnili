@@ -22,6 +22,7 @@ import { setupQuotesRoutes } from "./quotesRoutes";
 // ObjectStorageService removed - using local storage only
 import { db } from "./db";
 import { calculateBOM, generateBOMNumber, convertDimensions, DEFAULT_RATES, calculateWardrobeBOM, calculateSheetOptimization } from "./utils/bomCalculations";
+import { optimizeSheetCutting, OptimizedPanel, SheetDimensions } from "./utils/advanced-nesting";
 
 import { eq, and, gt } from "drizzle-orm";
 import { projectFiles, users, suppliers, products, purchaseOrders, purchaseOrderItems, stockMovements, bomCalculations, bomItems } from "@shared/schema";
@@ -95,6 +96,60 @@ const getBoardRate = async (boardType: string, thickness: string): Promise<numbe
   
   return 80; // final fallback
 };
+
+// ✅ ADVANCED SHEET OPTIMIZATION WRAPPER
+function calculateAdvancedSheetOptimization(boardPanels: any[]) {
+  // Convert BOM panels to advanced optimizer format
+  const optimizedPanels: OptimizedPanel[] = boardPanels.map((panel, index) => ({
+    id: `panel_${index}`,
+    width: panel.length || 600,  // mm
+    height: panel.width || 300,  // mm  
+    thickness: panel.thickness,
+    quantity: panel.qty || 1,
+    allowRotation: true
+  }));
+
+  // Standard plywood sheet dimensions (8x4 feet = 2440x1220mm)
+  const sheetDimensions: SheetDimensions = {
+    width: 2440,  // 8 feet
+    height: 1220, // 4 feet  
+    thickness: 18 // most common thickness
+  };
+
+  // Run advanced optimization
+  const result = optimizeSheetCutting(optimizedPanels, sheetDimensions, {
+    cutWidth: 3,        // 3mm saw kerf
+    margin: 5,          // 5mm safety margin
+    allowRotation: true
+  });
+
+  console.log('=== ADVANCED SHEET OPTIMIZATION RESULTS ===');
+  console.log(`Total sheets needed: ${result.sheets.length}`);
+  console.log(`Total utilization: ${(result.totalUtilization * 100).toFixed(1)}%`);
+  console.log(`Total waste area: ${result.totalWaste.toFixed(0)} mm²`);
+  console.log(`Optimization time: ${result.optimizationTime}ms`);
+  
+  result.sheets.forEach((sheet, index) => {
+    console.log(`Sheet ${index + 1}: ${sheet.placedPanels.length} panels, ${(sheet.utilization * 100).toFixed(1)}% utilized`);
+  });
+
+  // Convert back to legacy format for compatibility
+  return {
+    sheets: result.sheets.map((sheet, index) => ({
+      id: index + 1,
+      utilization: sheet.utilization,
+      waste: sheet.wasteArea,
+      panels: sheet.placedPanels.length,
+      placements: sheet.placedPanels
+    })),
+    totalSheets: result.sheets.length,
+    totalUtilization: result.totalUtilization,
+    totalWaste: result.totalWaste,
+    unplacedPanels: result.unplacedPanels.length,
+    algorithmUsed: 'Advanced Forward-Looking Greedy',
+    optimizationTime: result.optimizationTime
+  };
+}
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth routes
@@ -4869,8 +4924,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         );
       }
 
-      // Calculate sheet optimization
-      const sheetOptimization = calculateSheetOptimization(boardPanels);
+      // ✅ USE ADVANCED SHEET OPTIMIZATION WITH FORWARD-LOOKING ALGORITHM
+      const sheetOptimization = calculateAdvancedSheetOptimization(boardPanels);
 
       // Return calculation results with database ID and optimization data
       res.json({
