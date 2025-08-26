@@ -304,6 +304,25 @@ export default function BOMSettings() {
     return null;
   };
 
+  // Convert sheet price to per sqft price for board materials
+  const getConvertedPrice = (product: any, materialType: string) => {
+    if (!product) return null;
+    
+    // Check if this is a board material that's sold per sheet
+    const isBoardMaterial = materialType.includes('plywood') || 
+                           materialType.includes('mdf') || 
+                           materialType.includes('particle_board') ||
+                           materialType.includes('board');
+    
+    if (isBoardMaterial && product.unit && product.unit.toLowerCase().includes('sheet')) {
+      // Convert per sheet price to per sqft (standard sheet = 32 sqft)
+      const standardSheetSize = 32; // sqft
+      return Math.round(product.pricePerUnit / standardSheetSize);
+    }
+    
+    return product.pricePerUnit;
+  };
+
   // Get the price to display (custom default or system default)
   const getDefaultPrice = (materialType: string, category: string) => {
     const setting = getSetting(materialType);
@@ -511,7 +530,14 @@ export default function BOMSettings() {
                       </TableCell>
                       <TableCell>
                         {mappedProduct && setting?.useRealPricing ? (
-                          <span className="font-medium text-green-600">₹{mappedProduct.pricePerUnit}</span>
+                          <div className="space-y-1">
+                            <span className="font-medium text-green-600">₹{getConvertedPrice(mappedProduct, material.type)}</span>
+                            {getConvertedPrice(mappedProduct, material.type) !== mappedProduct.pricePerUnit && (
+                              <div className="text-xs text-muted-foreground">
+                                (₹{mappedProduct.pricePerUnit} per {mappedProduct.unit} ÷ 32 sqft)
+                              </div>
+                            )}
+                          </div>
                         ) : mappedProduct ? (
                           <span className="text-muted-foreground">Linked but not enabled</span>
                         ) : (
@@ -623,6 +649,13 @@ function MaterialLinkDialog({ material, currentSetting, products, onSave }: {
           <div className="p-3 bg-muted rounded-md">
             <p className="text-sm"><strong>Selected:</strong> {selectedProduct.name}</p>
             <p className="text-sm"><strong>Price:</strong> ₹{selectedProduct.pricePerUnit} per {selectedProduct.unit}</p>
+            {(() => {
+              const convertedPrice = getConvertedPrice(selectedProduct, material.type);
+              const isConverted = convertedPrice !== selectedProduct.pricePerUnit;
+              return isConverted ? (
+                <p className="text-sm"><strong>BOM Price:</strong> ₹{convertedPrice} per sqft <span className="text-muted-foreground">(auto-converted from sheet price)</span></p>
+              ) : null;
+            })()}
             <p className="text-sm"><strong>Stock:</strong> {selectedProduct.currentStock} units</p>
             <p className="text-sm"><strong>Category:</strong> {selectedProduct.category}</p>
             
