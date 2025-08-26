@@ -734,7 +734,7 @@ const generateWardrobePanels = (input: CalculationInput, exposedSides: boolean =
   const doorClearance = partsConfig.doorClearance || 12; // User configurable door clearance
   const frontClearance = 10; // 10mm front clearance for doors/overhang
   const slideColorance = partsConfig.slideColorance || 12.5; // User configurable slide clearance
-  const boxThickness = partsConfig.boxThickness || 12; // User configurable drawer box thickness
+  const boxThickness = partsConfig.boxThickness || 18; // ✅ OPTIMIZED to 18mm (was 12mm)
   const bottomThickness = partsConfig.bottomThickness || 6; // User configurable drawer bottom thickness
   const backClearance = 15; // 15mm back clearance for drawers
 
@@ -1809,13 +1809,15 @@ export const calculateWardrobeBOM = (data: any) => {
   console.log('Raw input:', { height: rawHeight, width: rawWidth, depth: rawDepth, unitOfMeasure });
   console.log('Converted dimensions (mm):', { height, width, depth, finish });
   
-  // WARDROBE-SPECIFIC THICKNESS MAPPING
+  // ✅ OPTIMIZED WARDROBE THICKNESS MAPPING (ONLY 18mm & 6mm)
   const getThickness = (part: string): number => {
     if (part.toLowerCase().includes('shutter') || part.toLowerCase().includes('door')) return 18;
     if (part.toLowerCase().includes('side') || part.toLowerCase().includes('top') || part.toLowerCase().includes('bottom')) return 18;
     if (part.toLowerCase().includes('shelf')) return 18;
     if (part.toLowerCase().includes('back')) return 6;
-    if (part.toLowerCase().includes('drawer')) return 12;
+    // ✅ OPTIMIZED DRAWER THICKNESSES (eliminate 12mm):
+    if (part.toLowerCase().includes('drawer bottom')) return 6; // Drawer base = 6mm
+    if (part.toLowerCase().includes('drawer')) return 18; // All other drawer parts = 18mm
     return 18; // default
   };
 
@@ -1847,11 +1849,11 @@ export const calculateWardrobeBOM = (data: any) => {
     // Shelves - 18mm PLY (inner laminate)
     { name: 'Shelf', length: width - 36, width: depth - 20, qty: shelfCount },
     
-    // Drawers - 12mm PLY
+    // ✅ OPTIMIZED DRAWERS (18mm for structure, 6mm for bottom)
     ...(drawerCount > 0 ? [
-      { name: 'Drawer Front', length: (width / 2) - 5, width: 150, qty: drawerCount }, // outer laminate
-      { name: 'Drawer Side', length: depth - 50, width: 150, qty: drawerCount * 2 },
-      { name: 'Drawer Back', length: (width / 2) - 40, width: 120, qty: drawerCount },
+      { name: 'Drawer Front', length: (width / 2) - 5, width: 150, qty: drawerCount }, // 18mm - outer laminate
+      { name: 'Drawer Side', length: depth - 50, width: 150, qty: drawerCount * 2 }, // 18mm
+      { name: 'Drawer Back', length: (width / 2) - 40, width: 120, qty: drawerCount }, // 18mm
       { name: 'Drawer Bottom', length: (width / 2) - 20, width: depth - 30, qty: drawerCount },
     ] : []),
     
@@ -1884,10 +1886,9 @@ export const calculateWardrobeBOM = (data: any) => {
     const area = calculateAreaSqft(part.length, part.width);
     const totalPartArea = area * part.qty;
     
-    // Material type based on thickness
+    // ✅ OPTIMIZED Material type based on thickness (ONLY 18mm & 6mm)
     let materialType = '';
     if (thickness === 18) materialType = '18mm PLY';
-    else if (thickness === 12) materialType = '12mm PLY';
     else if (thickness === 6) materialType = '6mm PLY';
     else materialType = `${thickness}mm PLY`;
     

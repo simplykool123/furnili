@@ -4735,12 +4735,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const materialType = panel.materialType; // This already has correct thickness (18mm PLY, 6mm PLY, etc.)
         const panelThickness = panel.thickness || 18;
         
-        // ✅ CRITICAL FIX: Use thickness-specific rate
+        // ✅ OPTIMIZED: Use thickness-specific rate (ONLY 18mm & 6mm)
         let panelBoardRate = boardRate; // default
         if (panelThickness === 18) {
           panelBoardRate = DEFAULT_RATES.board["18mm_plywood"] || 147;
-        } else if (panelThickness === 12) {
-          panelBoardRate = DEFAULT_RATES.board["12mm_plywood"] || 120;
         } else if (panelThickness === 6) {
           panelBoardRate = DEFAULT_RATES.board["6mm_plywood"] || 95;
         }
@@ -4955,11 +4953,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const sheetAreaSqft = 32; // Standard 8x4 plywood sheet
           sheetCount = Math.ceil(area / sheetAreaSqft);
           
-          // Set correct rate per thickness
+          // ✅ OPTIMIZED: Set correct rate per thickness (ONLY 18mm & 6mm)
           if (thicknessMm === 18) {
             rate = DEFAULT_RATES.board["18mm_plywood"] || 147;
-          } else if (thicknessMm === 12) {
-            rate = DEFAULT_RATES.board["12mm_plywood"] || 120;
           } else if (thicknessMm === 6) {
             rate = DEFAULT_RATES.board["6mm_plywood"] || 95;
           }
