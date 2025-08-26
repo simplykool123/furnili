@@ -278,18 +278,6 @@ export default function BOMCalculator() {
   const queryClient = useQueryClient();
   const [selectedFurnitureType, setSelectedFurnitureType] = useState<string>("wardrobe");
   const [bomResult, setBomResult] = useState<BomResult | null>(null);
-  
-  // 🎯 SMART BOARD TYPE & FINISH INTERCONNECTED LOGIC
-  const selectedBoardType = form.watch('boardType');
-  const isPreLamBoard = selectedBoardType === 'pre_lam_particle_board';
-  
-  // Auto-handle Pre-Lam board selection - disable finish field
-  useEffect(() => {
-    if (isPreLamBoard) {
-      // Pre-Lam board already has laminate applied, set default and disable
-      form.setValue('finish', 'laminate', { shouldDirty: false });
-    }
-  }, [isPreLamBoard, form]);
   const [customParts, setCustomParts] = useState<{name: string, quantity: number}[]>([]);
   const [bomViewMode, setBomViewMode] = useState<'consolidated' | 'details'>('consolidated');
   const [variableCosts, setVariableCosts] = useState({
@@ -323,6 +311,18 @@ export default function BOMCalculator() {
       },
     },
   });
+  
+  // 🎯 SMART BOARD TYPE & FINISH INTERCONNECTED LOGIC (After form creation)
+  const selectedBoardType = form.watch('boardType');
+  const isPreLamBoard = selectedBoardType === 'pre_lam_particle_board';
+  
+  // Auto-handle Pre-Lam board selection - disable finish field
+  useEffect(() => {
+    if (isPreLamBoard) {
+      // Pre-Lam board already has laminate applied, set default and disable
+      form.setValue('finish', 'laminate', { shouldDirty: false });
+    }
+  }, [isPreLamBoard, form]);
 
   // Update form when furniture type changes
   useEffect(() => {
