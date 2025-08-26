@@ -590,6 +590,25 @@ function MaterialLinkDialog({ material, currentSetting, products, onSave }: {
   );
   const [useRealPricing, setUseRealPricing] = useState<boolean>(currentSetting?.useRealPricing || false);
 
+  // Convert sheet price to per sqft price for board materials
+  const getConvertedPrice = (product: any, materialType: string) => {
+    if (!product) return null;
+    
+    // Check if this is a board material that's sold per sheet
+    const isBoardMaterial = materialType.includes('plywood') || 
+                           materialType.includes('mdf') || 
+                           materialType.includes('particle_board') ||
+                           materialType.includes('board');
+    
+    if (isBoardMaterial && product.unit && product.unit.toLowerCase().includes('sheet')) {
+      // Convert per sheet price to per sqft (standard sheet = 32 sqft)
+      const standardSheetSize = 32; // sqft
+      return Math.round(product.pricePerUnit / standardSheetSize);
+    }
+    
+    return product.pricePerUnit;
+  };
+
   const relevantProducts = products.filter((product: any) => 
     product.name.toLowerCase().includes(material.name.toLowerCase()) ||
     product.category?.toLowerCase().includes(material.category.toLowerCase()) ||
