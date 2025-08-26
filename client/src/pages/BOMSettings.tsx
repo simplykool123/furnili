@@ -73,9 +73,9 @@ export default function BOMSettings() {
   const saveMutation = useMutation({
     mutationFn: (data: any) => {
       if (data.id) {
-        return apiRequest(`/api/bom/settings/${data.id}`, { method: 'PUT', body: data });
+        return apiRequest(`/api/bom/settings/${data.id}`, { method: 'PUT', body: JSON.stringify(data) });
       } else {
-        return apiRequest('/api/bom/settings', { method: 'POST', body: data });
+        return apiRequest('/api/bom/settings', { method: 'POST', body: JSON.stringify(data) });
       }
     },
     onSuccess: () => {
