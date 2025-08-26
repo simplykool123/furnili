@@ -1188,50 +1188,20 @@ export default function BOMCalculator() {
                     </div>
                   </div>
 
-                  {/* Configuration Section - Compact Layout */}
-                  <div className="bg-gradient-to-br from-green-50/50 to-emerald-50/30 dark:from-green-950/20 dark:to-emerald-950/10 rounded-xl p-4 border border-green-100/50 dark:border-green-800/30">${selectedFurnitureType === 'wardrobe' && (
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                      {/* Wardrobe configuration fields in compact layout */}
+                  {/* Configuration Section */}
+                  {selectedFurnitureType === 'wardrobe' && (
+                    <div className="bg-gradient-to-br from-green-50/50 to-emerald-50/30 dark:from-green-950/20 dark:to-emerald-950/10 rounded-xl p-4 border border-green-100/50 dark:border-green-800/30">
+                      <div className="flex items-center gap-2 mb-3">
+                        <span className="w-5 h-5 text-green-600">⚙️</span>
+                        <h3 className="text-lg font-bold text-gray-900 dark:text-white">Configuration</h3>
+                      </div>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        {/* Wardrobe configuration fields will be rendered here */}
+                      </div>
                     </div>
                   )}
-                      <FormField
-                        control={form.control}
-                        name="height"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
-                              <div className="w-1 h-4 bg-red-500 rounded"></div>
-                              Height
-                            </FormLabel>
-                            <FormControl>
-                              <Input
-                                type="number"
-                                placeholder="2400"
-                                className="h-10 text-sm border-2 border-gray-200 focus:border-blue-500 transition-colors"
-                                {...field}
-                                onChange={(e) => field.onChange(parseFloat(e.target.value))}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
 
-                      <FormField
-                        control={form.control}
-                        name="width"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
-                              <div className="w-4 h-1 bg-blue-500 rounded"></div>
-                              Width
-                            </FormLabel>
-                            <FormControl>
-                              <Input
-                                type="number"
-                                placeholder="1200"
-                                className="h-10 text-sm border-2 border-gray-200 focus:border-blue-500 transition-colors"
-                                {...field}
+                  {/* Continue with rest of form content... */}
                                 onChange={(e) => field.onChange(parseFloat(e.target.value))}
                               />
                             </FormControl>
