@@ -2028,9 +2028,9 @@ export default function BOMCalculator() {
                             </TableRow>
                           </TableHeader>
                           <TableBody>
-                            {getOrderedConsolidatedMaterials(bomResult.items).map(([materialName, group]) => (
-                            <TableRow key={materialName} className="hover:bg-muted/20 h-7 border-b border-gray-100">
-                              <TableCell className="py-1 px-2 text-sm font-medium">{materialName}</TableCell>
+                            {getOrderedConsolidatedMaterials(bomResult.items).map((group) => (
+                            <TableRow key={group.name} className="hover:bg-muted/20 h-7 border-b border-gray-100">
+                              <TableCell className="py-1 px-2 text-sm font-medium">{group.name}</TableCell>
                               <TableCell className="py-1 px-2 text-sm">
                                 {group.isBoard ? (
                                   // For boards, show sheet count instead of pieces
