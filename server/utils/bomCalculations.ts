@@ -1949,7 +1949,7 @@ export const calculateWardrobeBOM = (data: any) => {
     const totalPartArea = area * part.qty;
     
     // ✅ DYNAMIC Material type based on thickness AND boardType selection
-    const boardTypeDisplay = (input.boardType || 'ply').replace(/_/g, ' ').toUpperCase();
+    const boardTypeDisplay = (data.boardType || 'ply').replace(/_/g, ' ').toUpperCase();
     let materialType = '';
     if (thickness === 18) materialType = `18mm ${boardTypeDisplay}`;
     else if (thickness === 6) materialType = `6mm ${boardTypeDisplay}`;
