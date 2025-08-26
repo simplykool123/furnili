@@ -1798,7 +1798,7 @@ export const convertDimensions = (height: number, width: number, depth: number, 
 // ✅ WARDROBE-SPECIFIC BOM CALCULATION WITH EXACT USER FORMULAS
 export const calculateWardrobeBOM = (data: any) => {
   // CRITICAL FIX: Convert dimensions from feet to mm if needed
-  const { height: rawHeight, width: rawWidth, depth: rawDepth, unitOfMeasure = 'ft', partsConfig, finish } = data;
+  const { height: rawHeight, width: rawWidth, depth: rawDepth, unitOfMeasure = 'ft', partsConfig, finish, exposedSides = false } = data;
   const { height, width, depth } = convertDimensions(rawHeight, rawWidth, rawDepth, unitOfMeasure);
   
   // Extract wardrobe-specific configuration
