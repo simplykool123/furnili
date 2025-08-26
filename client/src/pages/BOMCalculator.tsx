@@ -466,16 +466,20 @@ export default function BOMCalculator() {
       totalArea: number, 
       avgRate: number, 
       totalCost: number,
-      unit: string
+      unit: string,
+      isBoard?: boolean,
+      thickness?: string
     } } = {};
 
     items.forEach(item => {
       let groupKey = '';
+      let isBoard = false;
+      let thickness = '';
       
       // Group boards by thickness and type
       if (item.itemCategory === 'Board') {
+        isBoard = true;
         // Extract thickness from part name or material type
-        let thickness = '';
         if (item.partName?.includes('18mm') || item.materialType?.includes('18mm')) {
           thickness = '18mm';
         } else if (item.partName?.includes('12mm') || item.materialType?.includes('12mm')) {
@@ -520,7 +524,9 @@ export default function BOMCalculator() {
           totalArea: 0,
           avgRate: 0,
           totalCost: 0,
-          unit: item.unit
+          unit: item.unit,
+          isBoard,
+          thickness
         };
       }
 
@@ -1827,7 +1833,17 @@ export default function BOMCalculator() {
                             <TableRow key={materialName} className="hover:bg-muted/20 h-7 border-b border-gray-100">
                               <TableCell className="py-1 px-2 text-sm font-medium">{materialName}</TableCell>
                               <TableCell className="py-1 px-2 text-sm">
-                                {group.totalQty > 0 ? (
+                                {group.isBoard ? (
+                                  // For boards, show sheet count instead of pieces
+                                  (() => {
+                                    const sheetLength = parseFloat('8' || '8');
+                                    const sheetWidth = parseFloat('4' || '4'); 
+                                    const wastage = parseFloat('10' || '10') / 100;
+                                    const sheetArea = sheetLength * sheetWidth;
+                                    const sheetsNeeded = Math.ceil((group.totalArea * (1 + wastage)) / sheetArea);
+                                    return `${sheetsNeeded} sheets (${group.totalArea.toFixed(0)} sqft)`;
+                                  })()
+                                ) : group.totalQty > 0 ? (
                                   group.unit === 'meters' || group.unit === 'sqft' ? 
                                     `${group.totalQty.toFixed(2)} ${group.unit}` :
                                     `${Math.round(group.totalQty)} ${group.unit}`
