@@ -88,6 +88,7 @@ export const navigation = [
       { name: 'Users', href: '/users', icon: Users, roles: ['admin'] },
       { name: 'Sales Products', href: '/sales-products', icon: Package, roles: ['admin', 'manager'] }, // Removed staff access
       { name: 'Categories', href: '/categories', icon: Tag, roles: ['admin'] },
+      { name: 'BOM Setting', href: '/bom-settings', icon: Calculator, roles: ['admin', 'manager'] },
     ]
   },
 ];
