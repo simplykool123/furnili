@@ -1929,37 +1929,46 @@ export const calculateWardrobeBOM = (data: any) => {
     } as any);
   });
 
-  // ✅ WARDROBE LAMINATE CALCULATION - PRECISE FORMULA IMPLEMENTATION
+  // ✅ WARDROBE LAMINATE CALCULATION - USING CLEAN TYPESCRIPT ARCHITECTURE
+  
   let outerLaminateArea = 0;
   let innerLaminateArea = 0;
+  let laminateSummary: any = null;
   
   if (finish === 'laminate') {
-    panels.forEach(panel => {
-      const panelName = panel.panel.toLowerCase();
-      
-      // Outer laminate (both faces): Shutters, Doors, Drawer Fronts
-      if (panelName.includes('shutter') || panelName.includes('door') || panelName.includes('drawer front')) {
-        outerLaminateArea += panel.total_area * 2; // Both faces
-      }
-      // Inner laminate (single face): Side, Top, Bottom, Shelf, Partition
-      else if (panelName.includes('side panel') || panelName.includes('top panel') || 
-               panelName.includes('bottom panel') || panelName.includes('shelf') ||
-               panelName.includes('partition')) {
-        
-        // Exposed carcass end: That exterior face → outer instead of none
-        // So Side panel faces become: inner + outer on an exposed end
-        if (panelName.includes('side panel') && exposedSides) {
-          innerLaminateArea += panel.total_area; // Inner face
-          outerLaminateArea += panel.total_area; // Outer face (exposed to room)
-        } else {
-          innerLaminateArea += panel.total_area; // Single inner face
-        }
-      }
-      // Back: none (no laminate)
-    });
+    // Import the calculator dynamically to avoid circular imports
+    const { 
+      calculateLaminateBOM, 
+      mapPanelNameToKind, 
+      mapWardrobeType
+    } = require('./laminate-calculator');
     
-    // Total laminated area = outerArea + innerArea
-    totalLaminateArea = outerLaminateArea + innerLaminateArea;
+    // Convert our panels to the clean typed format
+    const laminatePanels = panels.map((panel: any, index: number) => ({
+      id: `panel-${index}`,
+      kind: mapPanelNameToKind(panel.panel),
+      w_mm: panel.length,
+      h_mm: panel.width,
+      qty: panel.qty,
+      isExposedEnd: panel.panel.toLowerCase().includes('side panel') && exposedSides
+    }));
+    
+    const wardrobeTypeClean = mapWardrobeType(wardrobeType || 'openable');
+    
+    const rates = {
+      outerRatePerSqft: 85,
+      innerRatePerSqft: 65,
+      adhesiveCoverageSqftPerBottle: 32,
+      adhesiveBottlePrice: 85,
+      adhesiveWastePct: 0.10 // 10% waste
+    };
+    
+    // Calculate using the clean typed function
+    laminateSummary = calculateLaminateBOM(laminatePanels, wardrobeTypeClean, rates);
+    
+    outerLaminateArea = laminateSummary.outerAreaSqft;
+    innerLaminateArea = laminateSummary.innerAreaSqft;
+    totalLaminateArea = laminateSummary.laminatedAreaSqft;
   }
 
   // 🔸 WARDROBE HARDWARE CALCULATIONS BASED ON TYPE
