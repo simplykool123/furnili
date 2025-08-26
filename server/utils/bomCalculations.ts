@@ -23,13 +23,14 @@ interface CalculationInput {
 interface Panel {
   panel: string;
   qty: number;
-  size: string; // "2100mm x 450mm"
+  size?: string; // "2100mm x 450mm"
   length: number; // mm
   width: number; // mm
-  material: string;
-  edge_banding: string; // "2mm" or "0.8mm"
+  material?: string; // legacy property
+  materialType?: string; // current property used in wardrobe BOM
+  edge_banding?: string; // "2mm" or "0.8mm"
   area_sqft: number;
-  edgeBandingLength: number; // in feet
+  edgeBandingLength?: number; // in feet
 }
 
 interface Hardware {
@@ -209,7 +210,7 @@ const calculateSheetOptimization = (panels: Panel[], sheetSize = { length: 2440,
   const panelsByThickness: { [thickness: string]: Panel[] } = {};
   
   panels.forEach(panel => {
-    const thickness = panel.material.match(/^(\d+(?:\.\d+)?mm)/)?.[1] || '18mm';
+    const thickness = (panel.materialType || panel.material || '18mm PLY').match(/^(\d+(?:\.\d+)?mm)/)?.[1] || '18mm';
     if (!panelsByThickness[thickness]) {
       panelsByThickness[thickness] = [];
     }
