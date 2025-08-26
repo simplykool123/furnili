@@ -4668,23 +4668,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Format items for display (no database save for now)
       const bomItemsData = [
-        ...bomResult.panels.map(panel => ({
-          id: Math.random(), // temporary ID
-          itemType: 'material' as const,
-          itemCategory: 'Board', // Match what frontend expects
-          partName: panel.panel,
-          materialType: `${bomData.boardThickness} ${bomData.boardType.toUpperCase()}`, // e.g. "18mm PLY"
-          length: panel.length,
-          width: panel.width,
-          thickness: parseInt(bomData.boardThickness.replace('mm', '')),
-          quantity: panel.qty,
-          unit: 'pieces',
-          edgeBandingType: panel.edge_banding,
-          edgeBandingLength: panel.edgeBandingLength,
-          unitRate: boardRate,
-          totalCost: panel.area_sqft * boardRate,
-          area_sqft: panel.area_sqft, // Add the area_sqft field
-        })),
+        ...bomResult.panels.map(panel => {
+          // Check if this is a laminate panel
+          const isInnerLaminate = panel.panel.toLowerCase().includes('inner laminate');
+          const isOuterLaminate = panel.panel.toLowerCase().includes('outer laminate');
+          
+          let materialType = `${bomData.boardThickness} ${bomData.boardType.toUpperCase()}`; // Default
+          let itemCategory = 'Board';
+          let unitRate = boardRate;
+          
+          if (isInnerLaminate) {
+            materialType = 'Inner Surface Laminate';
+            itemCategory = 'Laminate';
+            unitRate = 65; // ₹65/sqft for inner laminate
+          } else if (isOuterLaminate) {
+            materialType = 'Outer Surface Laminate';
+            itemCategory = 'Laminate';
+            unitRate = 85; // ₹85/sqft for outer laminate
+          }
+          
+          return {
+            id: Math.random(), // temporary ID
+            itemType: 'material' as const,
+            itemCategory,
+            partName: panel.panel,
+            materialType,
+            length: panel.length,
+            width: panel.width,
+            thickness: isInnerLaminate || isOuterLaminate ? 1 : parseInt(bomData.boardThickness.replace('mm', '')), // Laminate is 1mm thick
+            quantity: panel.qty,
+            unit: 'pieces',
+            edgeBandingType: panel.edge_banding,
+            edgeBandingLength: panel.edgeBandingLength,
+            unitRate,
+            totalCost: panel.area_sqft * unitRate,
+            area_sqft: panel.area_sqft,
+          };
+        }),
         // Add laminate items if finish is laminate - FIXED LOGIC
         ...(bomData.finish === 'laminate' ? [
           // Group all panels into inner and outer laminate

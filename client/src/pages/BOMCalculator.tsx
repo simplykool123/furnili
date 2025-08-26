@@ -2043,7 +2043,7 @@ export default function BOMCalculator() {
                                 <TableCell className="py-1 px-2 text-sm font-medium">{item.partName}</TableCell>
                                 <TableCell className="py-1 px-2 text-sm">
                                   {item.length && item.width ? 
-                                    `${item.length} × ${item.width}` : 
+                                    `${Math.round(item.length)} × ${Math.round(item.width)}` : 
                                     '-'
                                   }
                                 </TableCell>
