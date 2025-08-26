@@ -734,25 +734,54 @@ export default function BOMCalculator() {
 
   return (
     <ResponsiveLayout title="BOM Calculator">
-      {/* Hero Section */}
-      <div className="bg-[hsl(28,100%,25%)] text-white py-8 px-4 mb-6 rounded-lg">
-        <div className="text-center">
-          <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">
-            HOW MUCH MATERIALS WOULD YOU NEED?
+      {/* 🎨 Enhanced Hero Section with Modern Gradient Design */}
+      <div className="relative bg-gradient-to-br from-[hsl(28,100%,25%)] via-[hsl(28,90%,30%)] to-[hsl(28,80%,35%)] text-white py-12 px-6 mb-8 rounded-2xl shadow-2xl overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-black/10 to-black/30"></div>
+        <div className="absolute -top-4 -right-4 w-24 h-24 bg-white/10 rounded-full blur-2xl"></div>
+        <div className="absolute -bottom-4 -left-4 w-32 h-32 bg-white/5 rounded-full blur-3xl"></div>
+        <div className="relative text-center">
+          <div className="inline-flex items-center gap-3 bg-white/20 backdrop-blur-sm px-6 py-2 rounded-full mb-6">
+            <Calculator className="w-6 h-6" />
+            <span className="text-sm font-semibold tracking-wide">BOM CALCULATOR</span>
+          </div>
+          <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-4 leading-tight">
+            How Much Material
+            <br />
+            <span className="bg-gradient-to-r from-yellow-200 to-yellow-100 bg-clip-text text-transparent">
+              Would You Need?
+            </span>
           </h1>
-          <p className="text-white/90">Calculate furniture material requirements</p>
+          <p className="text-white/90 text-lg max-w-2xl mx-auto leading-relaxed">
+            Get accurate material calculations for your furniture projects with our advanced BOM calculator
+          </p>
+          <div className="flex items-center justify-center gap-6 mt-8 text-sm text-white/80">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+              <span>Real-time pricing</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
+              <span>Smart optimization</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-purple-400 rounded-full animate-pulse"></div>
+              <span>Export ready</span>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Furniture Type Selector */}
-      <div className="bg-card shadow-sm border rounded-lg mb-6">
-        <div className="px-4 py-6">
-          <div className="flex items-center gap-2 mb-4">
-            <div className="bg-[hsl(28,100%,25%)] text-white px-3 py-1 rounded-full text-sm font-medium">
-              Select Furniture Type
-            </div>
+      {/* 🎯 Enhanced Furniture Type Selector with Better Visual Hierarchy */}
+      <div className="bg-gradient-to-br from-card to-muted/20 shadow-lg border-2 border-border/50 rounded-xl mb-8 overflow-hidden">
+        <div className="bg-gradient-to-r from-[hsl(28,100%,25%)] to-[hsl(28,90%,30%)] px-6 py-4">
+          <div className="flex items-center gap-3">
+            <Package className="h-6 w-6 text-white" />
+            <h2 className="text-xl font-bold text-white tracking-wide">Select Furniture Type</h2>
           </div>
-          <div className="flex flex-wrap gap-2 justify-center">
+          <p className="text-white/80 text-sm mt-1">Choose the type of furniture you want to calculate</p>
+        </div>
+        <div className="p-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
             {furnitureTypes.map((furniture) => {
               const IconComponent = furniture.icon;
               const isSelected = selectedFurnitureType === furniture.id;
@@ -761,19 +790,35 @@ export default function BOMCalculator() {
                 <button
                   key={furniture.id}
                   onClick={() => setSelectedFurnitureType(furniture.id)}
-                  className={`p-2 rounded-lg border-2 transition-all duration-200 text-center min-w-[80px] ${
+                  className={`group p-4 rounded-xl border-2 transition-all duration-300 transform hover:scale-105 text-center min-h-[120px] flex flex-col justify-center items-center relative ${
                     isSelected 
-                      ? 'border-[hsl(28,100%,25%)] bg-[hsl(28,100%,25%)] text-white shadow-lg' 
-                      : 'border-border bg-card hover:border-[hsl(28,100%,25%)]/30 hover:bg-accent text-foreground'
+                      ? 'border-[hsl(28,100%,25%)] bg-gradient-to-br from-[hsl(28,100%,25%)] to-[hsl(28,90%,30%)] text-white shadow-xl scale-105' 
+                      : 'border-border bg-white hover:border-[hsl(28,100%,25%)]/50 hover:bg-gradient-to-br hover:from-[hsl(28,100%,25%)]/5 hover:to-[hsl(28,100%,25%)]/10 text-foreground shadow-sm hover:shadow-md'
                   }`}
                 >
-                  <IconComponent className={`w-5 h-5 mx-auto mb-1 ${isSelected ? 'text-white' : 'text-[hsl(28,100%,25%)]'}`} />
-                  <div className={`text-xs font-medium ${isSelected ? 'text-white' : 'text-foreground'}`}>
+                  {isSelected && (
+                    <div className="absolute -top-2 -right-2 bg-green-500 text-white rounded-full p-1">
+                      <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                  )}
+                  <IconComponent className={`w-8 h-8 mx-auto mb-3 transition-all duration-300 ${
+                    isSelected ? 'text-white' : 'text-[hsl(28,100%,25%)] group-hover:text-[hsl(28,100%,25%)]'
+                  }`} />
+                  <div className={`text-sm font-semibold leading-tight ${
+                    isSelected ? 'text-white' : 'text-foreground group-hover:text-[hsl(28,100%,25%)]'
+                  }`}>
                     {furniture.name}
+                  </div>
+                  <div className={`text-xs mt-1 opacity-75 ${
+                    isSelected ? 'text-white/80' : 'text-muted-foreground'
+                  }`}>
+                    {furniture.description}
                   </div>
                 </button>
               );
-            })}
+            })})
           </div>
         </div>
       </div>
@@ -906,14 +951,22 @@ export default function BOMCalculator() {
 
       {/* Calculator Section */}
       <div className="space-y-4 p-4">
-        {/* Calculator Form */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-3">
-              {selectedFurniture && <selectedFurniture.icon className="w-6 h-6 text-furnili-brown" />}
+        {/* 📊 Enhanced Calculator Form with Premium Design */}
+        <Card className="shadow-xl border-2 border-gray-100/50 bg-gradient-to-br from-white to-gray-50/30">
+          <CardHeader className="bg-gradient-to-r from-gray-50 to-blue-50/30 border-b border-gray-100">
+            <CardTitle className="flex items-center gap-4">
+              {selectedFurniture && (
+                <div className="p-3 bg-gradient-to-br from-[hsl(28,100%,25%)] to-[hsl(28,90%,30%)] text-white rounded-xl shadow-lg">
+                  <selectedFurniture.icon className="w-8 h-8" />
+                </div>
+              )}
               <div>
-                <div>{selectedFurniture?.name} Calculator</div>
-                <div className="text-sm text-muted-foreground font-normal">{selectedFurniture?.description}</div>
+                <div className="text-2xl font-bold text-gray-900 dark:text-white">
+                  {selectedFurniture?.name} Calculator
+                </div>
+                <div className="text-base text-gray-600 dark:text-gray-400 font-medium mt-1">
+                  {selectedFurniture?.description}
+                </div>
               </div>
             </CardTitle>
           </CardHeader>
@@ -975,18 +1028,21 @@ export default function BOMCalculator() {
                       />
                     </div>
 
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="grid grid-cols-3 gap-4">
                       <FormField
                         control={form.control}
                         name="height"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Height</FormLabel>
+                            <FormLabel className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                              <div className="w-1 h-4 bg-red-500 rounded"></div>
+                              Height
+                            </FormLabel>
                             <FormControl>
                               <Input
                                 type="number"
                                 placeholder="2400"
-                                className="h-8 text-sm"
+                                className="h-10 text-sm border-2 border-gray-200 focus:border-blue-500 transition-colors"
                                 {...field}
                                 onChange={(e) => field.onChange(parseFloat(e.target.value))}
                               />
@@ -1001,12 +1057,15 @@ export default function BOMCalculator() {
                         name="width"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Width</FormLabel>
+                            <FormLabel className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                              <div className="w-4 h-1 bg-blue-500 rounded"></div>
+                              Width
+                            </FormLabel>
                             <FormControl>
                               <Input
                                 type="number"
                                 placeholder="1200"
-                                className="h-8 text-sm"
+                                className="h-10 text-sm border-2 border-gray-200 focus:border-blue-500 transition-colors"
                                 {...field}
                                 onChange={(e) => field.onChange(parseFloat(e.target.value))}
                               />
@@ -1021,12 +1080,15 @@ export default function BOMCalculator() {
                         name="depth"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Depth</FormLabel>
+                            <FormLabel className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                              <div className="w-1 h-1 w-4 bg-green-500 rounded"></div>
+                              Depth
+                            </FormLabel>
                             <FormControl>
                               <Input
                                 type="number"
                                 placeholder="600"
-                                className="h-8 text-sm"
+                                className="h-10 text-sm border-2 border-gray-200 focus:border-blue-500 transition-colors"
                                 {...field}
                                 onChange={(e) => field.onChange(parseFloat(e.target.value))}
                               />
@@ -1870,16 +1932,36 @@ export default function BOMCalculator() {
                     )}
                   />
 
-                  {/* Submit Button */}
-                  <Button
-                    type="submit"
-                    data-testid="button-calculate-bom"
-                    disabled={calculateBOMMutation.isPending}
-                    className="w-full bg-[hsl(28,100%,25%)] hover:bg-[hsl(28,100%,20%)] text-white text-lg py-6"
-                  >
-                    {calculateBOMMutation.isPending ? "Calculating..." : "Calculate BOM"}
-                    <Calculator className="w-5 h-5 ml-2" />
-                  </Button>
+                  {/* 💪 Enhanced Submit Button with Premium Styling */}
+                  <div className="pt-6 border-t border-gray-100">
+                    <Button
+                      type="submit"
+                      data-testid="button-calculate-bom"
+                      disabled={calculateBOMMutation.isPending}
+                      className="group relative w-full h-16 bg-gradient-to-r from-[hsl(28,100%,25%)] to-[hsl(28,90%,30%)] hover:from-[hsl(28,100%,20%)] hover:to-[hsl(28,90%,25%)] text-white font-bold text-xl shadow-xl hover:shadow-2xl transform hover:scale-[1.02] transition-all duration-300 ease-out overflow-hidden rounded-xl"
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-out"></div>
+                      <div className="relative flex items-center justify-center gap-3">
+                        {calculateBOMMutation.isPending ? (
+                          <>
+                            <div className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full animate-spin"></div>
+                            <span className="tracking-wide">Calculating BOM...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Calculator className="w-6 h-6 transform group-hover:rotate-12 transition-transform duration-300" />
+                            <span className="tracking-wide">Calculate BOM</span>
+                            <div className="ml-2 p-1 bg-white/20 rounded-full group-hover:bg-white/30 transition-colors duration-300">
+                              <ChevronRight className="w-4 h-4" />
+                            </div>
+                          </>
+                        )}
+                      </div>
+                      {!calculateBOMMutation.isPending && (
+                        <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-white/30 to-transparent transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></div>
+                      )}
+                    </Button>
+                  </div>
                 </form>
               </Form>
             </CardContent>
