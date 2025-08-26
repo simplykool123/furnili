@@ -240,12 +240,12 @@ function MaterialConfigDialog({ material, setting, products, onSave }: {
   const handleSave = () => {
     onSave(
       material.type,
-      selectedProductId ? parseInt(selectedProductId) : null,
+      selectedProductId && selectedProductId !== 'none' ? parseInt(selectedProductId) : null,
       useRealPricing
     );
   };
 
-  const selectedProduct = products.find(p => p.id.toString() === selectedProductId);
+  const selectedProduct = products.find(p => p.id.toString() === selectedProductId && selectedProductId !== 'none');
 
   return (
     <DialogContent className="sm:max-w-md">
@@ -264,7 +264,7 @@ function MaterialConfigDialog({ material, setting, products, onSave }: {
               <SelectValue placeholder="Select a product..." />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">No product linked</SelectItem>
+              <SelectItem value="none">No product linked</SelectItem>
               {products.map((product) => (
                 <SelectItem key={product.id} value={product.id.toString()}>
                   {product.name} - ₹{product.pricePerUnit} ({product.currentStock} in stock)
@@ -287,7 +287,7 @@ function MaterialConfigDialog({ material, setting, products, onSave }: {
             id="use-real-pricing"
             checked={useRealPricing}
             onCheckedChange={setUseRealPricing}
-            disabled={!selectedProductId}
+            disabled={!selectedProductId || selectedProductId === 'none'}
             data-testid="switch-real-pricing"
           />
           <Label htmlFor="use-real-pricing">Enable Real Pricing</Label>
