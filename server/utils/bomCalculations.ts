@@ -194,7 +194,10 @@ const STANDARD_DIMENSIONS = {
   }
 };
 
-// Advanced sheet optimization with nesting calculation
+// Import advanced nesting algorithm
+import { nestPanels, type Panel as NestingPanel, type NestingOptions } from "./nesting";
+
+// Advanced sheet optimization with sophisticated nesting calculation
 const calculateSheetOptimization = (panels: Panel[], sheetSize = { length: 2440, width: 1220 }): { 
   sheets_required: number, 
   efficiency: number, 
@@ -215,28 +218,67 @@ const calculateSheetOptimization = (panels: Panel[], sheetSize = { length: 2440,
       panelsByThickness[thickness] = [];
     }
     
-    // Expand panels by quantity
-    for (let i = 0; i < panel.qty; i++) {
-      panelsByThickness[thickness].push({
-        ...panel,
-        panel: `${panel.panel} (${i + 1})`,
-        qty: 1
-      });
-    }
-    
+    // Add panel (no quantity expansion here - nestPanels handles it)
+    panelsByThickness[thickness].push(panel);
     totalPanelArea += (panel.length * panel.width * panel.qty);
   });
 
-  // Calculate sheets needed for each thickness
+  // Calculate sheets needed for each thickness using advanced nesting
   Object.entries(panelsByThickness).forEach(([thickness, thicknessPanels]) => {
-    const { sheets, layout } = calculateOptimalNesting(thicknessPanels, sheetSize);
-    sheetsNeeded[thickness] = sheets;
-    nestingLayout.push({
-      thickness,
-      sheets,
-      layout,
-      panels: thicknessPanels.length
-    });
+    // Convert to nesting format
+    const nestingPanels: NestingPanel[] = thicknessPanels.map((panel, index) => ({
+      id: panel.panel || `Panel-${index}`,
+      w: panel.length, // width in mm
+      h: panel.width,  // height in mm
+      qty: panel.qty,
+      allowRotate: true, // allow rotation for better optimization
+      grain: "none" // no grain restrictions for now
+    }));
+
+    const nestingOptions: NestingOptions = {
+      sheetW: sheetSize.length,
+      sheetH: sheetSize.width,
+      kerf: 3, // 3mm saw blade kerf
+      marginX: 10, // 10mm margin
+      marginY: 10, // 10mm margin
+      sort: "area-desc" // sort by area descending for better packing
+    };
+
+    try {
+      const nestingResult = nestPanels(nestingPanels, nestingOptions);
+      const sheetCount = nestingResult.sheets.length;
+      sheetsNeeded[thickness] = sheetCount;
+      
+      // Calculate average efficiency
+      const avgEfficiency = nestingResult.sheets.reduce((sum, sheet) => 
+        sum + (sheet.utilization || 0), 0) / sheetCount;
+
+      nestingLayout.push({
+        thickness,
+        sheets: sheetCount,
+        layout: nestingResult.sheets.map((sheet, idx) => ({
+          sheetNumber: idx + 1,
+          efficiency: Math.round((sheet.utilization || 0) * 100),
+          placements: sheet.placements,
+          freeRects: sheet.freeRects
+        })),
+        panels: nestingPanels.reduce((sum, p) => sum + p.qty, 0),
+        avgEfficiency: Math.round(avgEfficiency * 100)
+      });
+    } catch (error) {
+      console.error(`Nesting error for thickness ${thickness}:`, error);
+      // Fallback to simple calculation
+      const simpleSheetCount = Math.ceil(thicknessPanels.reduce((sum, panel) => 
+        sum + (panel.length * panel.width * panel.qty), 0) / sheetArea);
+      sheetsNeeded[thickness] = simpleSheetCount;
+      nestingLayout.push({
+        thickness,
+        sheets: simpleSheetCount,
+        layout: [],
+        panels: thicknessPanels.reduce((sum, panel) => sum + panel.qty, 0),
+        error: error.message
+      });
+    }
   });
 
   const totalSheets = Object.values(sheetsNeeded).reduce((sum, count) => sum + count, 0);
@@ -253,74 +295,7 @@ const calculateSheetOptimization = (panels: Panel[], sheetSize = { length: 2440,
 // Export the function
 export { calculateSheetOptimization };
 
-// Advanced nesting algorithm for optimal sheet usage
-const calculateOptimalNesting = (panels: Panel[], sheetSize = { length: 2440, width: 1220 }) => {
-  // Sort panels by area (largest first) for better nesting
-  const sortedPanels = [...panels].sort((a, b) => (b.length * b.width) - (a.length * a.width));
-  
-  const sheets: any[] = [];
-  let currentSheet = { length: sheetSize.length, width: sheetSize.width, panels: [], utilization: 0 };
-  
-  sortedPanels.forEach(panel => {
-    const panelArea = panel.length * panel.width;
-    
-    // Check if panel fits in current sheet
-    const canFit = canPanelFitInSheet(panel, currentSheet, sheetSize);
-    
-    if (canFit) {
-      // Add panel to current sheet
-      currentSheet.panels.push({
-        name: panel.panel,
-        size: `${panel.length} × ${panel.width}`,
-        area: panelArea
-      });
-      currentSheet.utilization += panelArea;
-    } else {
-      // Start new sheet if current has panels
-      if (currentSheet.panels.length > 0) {
-        sheets.push({
-          ...currentSheet,
-          efficiency: (currentSheet.utilization / (sheetSize.length * sheetSize.width)) * 100
-        });
-      }
-      
-      // Create new sheet with this panel
-      currentSheet = {
-        length: sheetSize.length,
-        width: sheetSize.width,
-        panels: [{
-          name: panel.panel,
-          size: `${panel.length} × ${panel.width}`,
-          area: panelArea
-        }],
-        utilization: panelArea
-      };
-    }
-  });
-  
-  // Add last sheet if it has panels
-  if (currentSheet.panels.length > 0) {
-    sheets.push({
-      ...currentSheet,
-      efficiency: (currentSheet.utilization / (sheetSize.length * sheetSize.width)) * 100
-    });
-  }
-  
-  return {
-    sheets: sheets.length || 1, // At least 1 sheet
-    layout: sheets
-  };
-};
-
-// Check if panel can fit in remaining sheet space
-const canPanelFitInSheet = (panel: Panel, sheet: any, sheetSize: any): boolean => {
-  const panelLength = Math.max(panel.length, panel.width);
-  const panelWidth = Math.min(panel.length, panel.width);
-  
-  // Simple rectangular nesting - check if panel fits in sheet dimensions
-  return (panelLength <= sheetSize.length && panelWidth <= sheetSize.width) ||
-         (panelWidth <= sheetSize.length && panelLength <= sheetSize.width);
-};
+// Old nesting functions removed - using advanced MaxRects algorithm from nesting.ts
 
 // Convert mm² to sqft
 const mmSqToSqft = (length: number, width: number): number => {
