@@ -4666,171 +4666,165 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Generate simple calculation number (no database for now)
       const calculationNumber = `BOM-${Date.now()}`;
 
-      // Format items for display (no database save for now)
-      const bomItemsData = [
-        ...bomResult.panels.map(panel => {
-          // Check if this is a laminate panel
-          const isInnerLaminate = panel.panel.toLowerCase().includes('inner laminate');
-          const isOuterLaminate = panel.panel.toLowerCase().includes('outer laminate');
+      // COMPLETELY NEW BOM LOGIC - CLEAN AND SIMPLE
+      const bomItemsData = [];
+      
+      // 1. BOARD ITEMS - Only actual board panels (no laminate items)
+      const boardPanels = bomResult.panels.filter(panel => 
+        !panel.panel.toLowerCase().includes('laminate')
+      );
+      
+      boardPanels.forEach(panel => {
+        bomItemsData.push({
+          id: Math.random(),
+          itemType: 'material' as const,
+          itemCategory: 'Board',
+          partName: panel.panel,
+          materialType: `${bomData.boardThickness} ${bomData.boardType.toUpperCase()}`,
+          length: Math.round(panel.length),
+          width: Math.round(panel.width),
+          thickness: parseInt(bomData.boardThickness.replace('mm', '')),
+          quantity: panel.qty,
+          unit: 'pieces',
+          edgeBandingType: panel.edge_banding,
+          edgeBandingLength: panel.edgeBandingLength,
+          unitRate: boardRate,
+          totalCost: panel.area_sqft * boardRate,
+          area_sqft: panel.area_sqft,
+        });
+      });
+      
+      // 2. LAMINATE ITEMS - Only if finish is laminate
+      if (bomData.finish === 'laminate') {
+        // Calculate total area for inner laminate (all panels except shutters/doors get single side)
+        const innerPanels = boardPanels.filter(panel => 
+          !panel.panel.toLowerCase().includes('shutter') && 
+          !panel.panel.toLowerCase().includes('door') &&
+          !panel.panel.toLowerCase().includes('front')
+        );
+        
+        // Calculate total area for outer laminate (shutters/doors get both sides)
+        const outerPanels = boardPanels.filter(panel => 
+          panel.panel.toLowerCase().includes('shutter') || 
+          panel.panel.toLowerCase().includes('door') ||
+          panel.panel.toLowerCase().includes('front')
+        );
+        
+        if (innerPanels.length > 0) {
+          const totalInnerArea = innerPanels.reduce((sum, panel) => sum + panel.area_sqft, 0);
+          const totalInnerQty = innerPanels.reduce((sum, panel) => sum + panel.qty, 0);
           
-          let materialType = `${bomData.boardThickness} ${bomData.boardType.toUpperCase()}`; // Default
-          let itemCategory = 'Board';
-          let unitRate = boardRate;
-          
-          if (isInnerLaminate) {
-            materialType = 'Inner Surface Laminate';
-            itemCategory = 'Laminate';
-            unitRate = 65; // ₹65/sqft for inner laminate
-          } else if (isOuterLaminate) {
-            materialType = 'Outer Surface Laminate';
-            itemCategory = 'Laminate';
-            unitRate = 85; // ₹85/sqft for outer laminate
-          }
-          
-          return {
-            id: Math.random(), // temporary ID
+          bomItemsData.push({
+            id: Math.random(),
             itemType: 'material' as const,
-            itemCategory,
-            partName: panel.panel,
-            materialType,
-            length: panel.length,
-            width: panel.width,
-            thickness: isInnerLaminate || isOuterLaminate ? 1 : parseInt(bomData.boardThickness.replace('mm', '')), // Laminate is 1mm thick
-            quantity: panel.qty,
+            itemCategory: 'Laminate',
+            partName: 'Inner Surface Laminate',
+            materialType: 'Inner Surface Laminate',
+            length: 0,
+            width: 0,
+            thickness: 1,
+            quantity: totalInnerQty,
             unit: 'pieces',
-            edgeBandingType: panel.edge_banding,
-            edgeBandingLength: panel.edgeBandingLength,
-            unitRate,
-            totalCost: panel.area_sqft * unitRate,
-            area_sqft: panel.area_sqft,
-          };
-        }),
-        // Add laminate items if finish is laminate - FIXED LOGIC
-        ...(bomData.finish === 'laminate' ? [
-          // Group all panels into inner and outer laminate
-          ...(() => {
-            const innerPanels = bomResult.panels.filter(panel => 
-              !panel.panel.toLowerCase().includes('shutter') && 
-              !panel.panel.toLowerCase().includes('door') &&
-              !panel.panel.toLowerCase().includes('front')
-            );
-            const outerPanels = bomResult.panels.filter(panel => 
-              panel.panel.toLowerCase().includes('shutter') || 
-              panel.panel.toLowerCase().includes('door') ||
-              panel.panel.toLowerCase().includes('front')
-            );
-            
-            const results = [];
-            
-            // Inner laminate (single side)
-            if (innerPanels.length > 0) {
-              const totalInnerArea = innerPanels.reduce((sum, panel) => sum + panel.area_sqft, 0);
-              const totalInnerQty = innerPanels.reduce((sum, panel) => sum + panel.qty, 0);
-              
-              results.push({
-                id: Math.random(),
-                itemType: 'material' as const,
-                itemCategory: 'Laminate',
-                partName: 'Inner Surface Laminate',
-                materialType: 'Inner Surface Laminate',
-                quantity: totalInnerQty, // Number of pieces to laminate
-                unit: 'pieces',
-                edgeBandingLength: 0,
-                unitRate: 65, // ₹65/sqft for inner
-                totalCost: totalInnerArea * 65,
-                area_sqft: totalInnerArea, // Total area to laminate
-              });
-            }
-            
-            // Outer laminate (both sides)
-            if (outerPanels.length > 0) {
-              const totalOuterArea = outerPanels.reduce((sum, panel) => sum + panel.area_sqft, 0);
-              const totalOuterQty = outerPanels.reduce((sum, panel) => sum + panel.qty, 0);
-              
-              results.push({
-                id: Math.random(),
-                itemType: 'material' as const,
-                itemCategory: 'Laminate',
-                partName: 'Outer Surface Laminate', 
-                materialType: 'Outer Surface Laminate',
-                quantity: totalOuterQty * 2, // Both sides
-                unit: 'pieces',
-                edgeBandingLength: 0,
-                unitRate: 85, // ₹85/sqft for outer
-                totalCost: totalOuterArea * 2 * 85, // Both sides
-                area_sqft: totalOuterArea * 2, // Both sides total area
-              });
-            }
-            
-            return results;
-          })()
-        ] : []),
+            edgeBandingType: 'None',
+            edgeBandingLength: 0,
+            unitRate: 65,
+            totalCost: totalInnerArea * 65,
+            area_sqft: totalInnerArea,
+          });
+        }
         
-        // Add glue calculations
-        ...(() => {
-          const glueItems = [];
+        if (outerPanels.length > 0) {
+          const totalOuterArea = outerPanels.reduce((sum, panel) => sum + panel.area_sqft, 0);
+          const totalOuterQty = outerPanels.reduce((sum, panel) => sum + panel.qty, 0);
           
-          // Fevicol 750ml per laminate piece
-          if (bomData.finish === 'laminate') {
-            const totalLaminatePieces = bomResult.panels.reduce((sum, panel) => {
-              const isOuter = panel.panel.toLowerCase().includes('shutter') || 
-                             panel.panel.toLowerCase().includes('door') ||
-                             panel.panel.toLowerCase().includes('front');
-              return sum + panel.qty * (isOuter ? 2 : 1); // Both sides for outer
-            }, 0);
-            
-            const feicolBottlesNeeded = Math.ceil(totalLaminatePieces / 1.33); // 750ml per laminate piece
-            
-            glueItems.push({
-              id: Math.random(),
-              itemType: 'material' as const,
-              itemCategory: 'Adhesive',
-              partName: 'Fevicol (750ml)',
-              materialType: 'Laminate Adhesive',
-              quantity: feicolBottlesNeeded,
-              unit: 'bottles',
-              edgeBandingLength: 0,
-              unitRate: 85, // ₹85 per 750ml bottle
-              totalCost: feicolBottlesNeeded * 85,
-              area_sqft: 0,
-            });
-          }
-          
-          // Edge banding glue - ₹3 per meter  
-          const totalEdgeBandingLength = bomResult.totalEdgeBanding2mm + bomResult.totalEdgeBanding0_8mm;
-          if (totalEdgeBandingLength > 0) {
-            const roundedLength = Math.round(totalEdgeBandingLength * 0.3048 * 100) / 100; // Convert feet to meters and round to 2 decimal places
-            glueItems.push({
-              id: Math.random(),
-              itemType: 'material' as const,
-              itemCategory: 'Adhesive',
-              partName: 'Edge Banding Glue',
-              materialType: 'PVC Edge Adhesive',
-              quantity: roundedLength,
-              unit: 'meters',
-              edgeBandingLength: 0,
-              unitRate: 3, // ₹3 per meter
-              totalCost: roundedLength * 3,
-              area_sqft: 0,
-            });
-          }
-          
-          return glueItems;
-        })(),
+          bomItemsData.push({
+            id: Math.random(),
+            itemType: 'material' as const,
+            itemCategory: 'Laminate',
+            partName: 'Outer Surface Laminate',
+            materialType: 'Outer Surface Laminate',
+            length: 0,
+            width: 0,
+            thickness: 1,
+            quantity: totalOuterQty * 2, // Both sides
+            unit: 'pieces',
+            edgeBandingType: 'None',
+            edgeBandingLength: 0,
+            unitRate: 85,
+            totalCost: totalOuterArea * 2 * 85,
+            area_sqft: totalOuterArea * 2,
+          });
+        }
         
-        ...bomResult.hardware.map(hardware => ({
-          id: Math.random(), // temporary ID
+        // Add laminate adhesive
+        const totalLaminatePieces = (innerPanels.reduce((sum, panel) => sum + panel.qty, 0)) +
+                                   (outerPanels.reduce((sum, panel) => sum + panel.qty * 2, 0));
+        
+        if (totalLaminatePieces > 0) {
+          const bottlesNeeded = Math.ceil(totalLaminatePieces / 1.33);
+          bomItemsData.push({
+            id: Math.random(),
+            itemType: 'material' as const,
+            itemCategory: 'Adhesive',
+            partName: 'Laminate Adhesive',
+            materialType: 'Laminate Adhesive',
+            length: 0,
+            width: 0,
+            thickness: 0,
+            quantity: bottlesNeeded,
+            unit: 'bottles',
+            edgeBandingType: 'None',
+            edgeBandingLength: 0,
+            unitRate: 85,
+            totalCost: bottlesNeeded * 85,
+            area_sqft: 0,
+          });
+        }
+      }
+      
+      // 3. EDGE BANDING GLUE - ₹3 per meter  
+      const totalEdgeBandingLength = bomResult.totalEdgeBanding2mm + bomResult.totalEdgeBanding0_8mm;
+      if (totalEdgeBandingLength > 0) {
+        const roundedLength = Math.round(totalEdgeBandingLength * 0.3048 * 100) / 100; // Convert feet to meters
+        bomItemsData.push({
+          id: Math.random(),
+          itemType: 'material' as const,
+          itemCategory: 'Adhesive',
+          partName: 'Edge Banding Glue',
+          materialType: 'PVC Edge Adhesive',
+          length: 0,
+          width: 0,
+          thickness: 0,
+          quantity: roundedLength,
+          unit: 'meters',
+          edgeBandingType: 'None',
+          edgeBandingLength: 0,
+          unitRate: 3,
+          totalCost: roundedLength * 3,
+          area_sqft: 0,
+        });
+      }
+      
+      // 4. HARDWARE ITEMS
+      bomResult.hardware.forEach(hardware => {
+        bomItemsData.push({
+          id: Math.random(),
           itemType: 'hardware' as const,
-          itemCategory: 'Hardware', // Match what frontend expects
+          itemCategory: 'Hardware',
           partName: hardware.item,
+          materialType: hardware.item,
+          length: 0,
+          width: 0,
+          thickness: 0,
           quantity: hardware.qty,
           unit: 'pieces',
+          edgeBandingType: 'None',
           edgeBandingLength: 0,
           unitRate: hardware.unit_rate,
           totalCost: hardware.total_cost,
-          area_sqft: 0, // Hardware items don't have area
-        }))
-      ];
+          area_sqft: 0,
+        });
+      });
 
       // Save BOM calculation to database
       const [savedBom] = await db.insert(bomCalculations).values({

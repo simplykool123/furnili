@@ -459,141 +459,151 @@ export default function BOMCalculator() {
     setCustomParts([...customParts, { name: "", quantity: 1 }]);
   };
 
-  // Group BOM items by material type for consolidated view
+  // COMPLETELY NEW CONSOLIDATION LOGIC - CLEAN AND SIMPLE
   const getConsolidatedMaterials = (items: BomItem[]) => {
-    const grouped: { [key: string]: { 
-      items: BomItem[], 
-      totalQty: number, 
-      totalArea: number, 
-      avgRate: number, 
-      totalCost: number,
-      unit: string,
-      isBoard?: boolean,
-      thickness?: string,
-      order?: number
-    } } = {};
-
-    items.forEach(item => {
-      let groupKey = '';
-      let isBoard = false;
-      let thickness = '';
-      let order = 999; // Default high order for unknown items
+    const result = [];
+    
+    // 1. Group 18mm PLY boards
+    const boards18mm = items.filter(item => 
+      item.itemCategory === 'Board' && item.materialType?.includes('18mm')
+    );
+    if (boards18mm.length > 0) {
+      const totalQty = boards18mm.reduce((sum, item) => sum + item.quantity, 0);
+      const totalArea = boards18mm.reduce((sum, item) => sum + (item.area_sqft || 0), 0);
+      const totalCost = boards18mm.reduce((sum, item) => sum + item.totalCost, 0);
       
-      // Group boards by thickness and type
-      if (item.itemCategory === 'Board') {
-        isBoard = true;
-        // Extract thickness from part name or material type
-        if (item.partName?.includes('18mm') || item.materialType?.includes('18mm')) {
-          thickness = '18mm';
-          order = 1;
-        } else if (item.partName?.includes('12mm') || item.materialType?.includes('12mm')) {
-          thickness = '12mm';
-          order = 2;
-        } else if (item.partName?.includes('8mm') || item.materialType?.includes('8mm')) {
-          thickness = '8mm';
-          order = 3;
-        } else if (item.partName?.includes('6mm') || item.materialType?.includes('6mm')) {
-          thickness = '6mm';
-          order = 3; // Group with 8mm
-        } else {
-          // Fallback: try to extract from materialType
-          thickness = item.materialType?.match(/(\d+mm)/)?.[1] || '18mm';
-          order = 1;
-        }
-        
-        const boardType = item.materialType?.includes('PLY') ? 'PLY' : 
-                         item.materialType?.includes('MDF') ? 'MDF' : 'Board';
-        groupKey = `${thickness} ${boardType}`;
-        
-      }
-      // Group laminates with specific ordering
-      else if (item.itemCategory === 'Laminate' || item.materialType?.includes('Laminate')) {
-        if (item.materialType === 'Inner Surface Laminate') {
-          groupKey = 'Inner Surface Laminate';
-          order = 4;
-        } else if (item.materialType === 'Outer Surface Laminate') {
-          groupKey = 'Outer Surface Laminate';  
-          order = 5;
-        } else {
-          groupKey = item.materialType || 'Laminate';
-          order = 6;
-        }
-      }
-      // Group hardware by type
-      else if (item.itemCategory === 'Hardware') {
-        groupKey = item.materialType || item.partName;
-        order = 10;
-      }
-      // Group edge banding
-      else if (item.itemCategory === 'Edge Banding') {
-        groupKey = `Edge Band (${item.materialType || 'PVC'})`;
-        order = 7;
-      }
-      // Group adhesives
-      else if (item.itemCategory === 'Adhesive') {
-        groupKey = item.partName;
-        order = 8;
-      }
-      // Everything else grouped by material type or part name
-      else {
-        groupKey = item.materialType || item.partName;
-        order = 9;
-      }
-
-      if (!grouped[groupKey]) {
-        grouped[groupKey] = {
-          items: [],
-          totalQty: 0,
-          totalArea: 0,
-          avgRate: 0,
-          totalCost: 0,
-          unit: item.unit,
-          isBoard,
-          thickness,
-          order
-        };
-      }
-
-      grouped[groupKey].items.push(item);
+      result.push({
+        name: '18mm PLY',
+        items: boards18mm,
+        totalQty: Math.round(totalQty),
+        totalArea: Math.round(totalArea * 100) / 100,
+        avgRate: Math.round(totalCost / totalArea),
+        totalCost: Math.round(totalCost),
+        unit: 'pieces',
+        order: 1
+      });
+    }
+    
+    // 2. Group 12mm boards
+    const boards12mm = items.filter(item => 
+      item.itemCategory === 'Board' && item.materialType?.includes('12mm')
+    );
+    if (boards12mm.length > 0) {
+      const totalQty = boards12mm.reduce((sum, item) => sum + item.quantity, 0);
+      const totalArea = boards12mm.reduce((sum, item) => sum + (item.area_sqft || 0), 0);
+      const totalCost = boards12mm.reduce((sum, item) => sum + item.totalCost, 0);
       
-      // Round quantities properly for different units
-      let roundedQty = item.quantity;
-      if (item.unit === 'meters' || item.unit === 'sqft') {
-        roundedQty = Math.round(item.quantity * 100) / 100; // 2 decimal places
-      } else {
-        roundedQty = Math.round(item.quantity); // Whole numbers for pieces/bottles
-      }
+      result.push({
+        name: '12mm PLY',
+        items: boards12mm,
+        totalQty: Math.round(totalQty),
+        totalArea: Math.round(totalArea * 100) / 100,
+        avgRate: Math.round(totalCost / totalArea),
+        totalCost: Math.round(totalCost),
+        unit: 'pieces',
+        order: 2
+      });
+    }
+    
+    // 3. Group 8mm boards  
+    const boards8mm = items.filter(item => 
+      item.itemCategory === 'Board' && item.materialType?.includes('8mm')
+    );
+    if (boards8mm.length > 0) {
+      const totalQty = boards8mm.reduce((sum, item) => sum + item.quantity, 0);
+      const totalArea = boards8mm.reduce((sum, item) => sum + (item.area_sqft || 0), 0);
+      const totalCost = boards8mm.reduce((sum, item) => sum + item.totalCost, 0);
       
-      grouped[groupKey].totalQty += roundedQty;
-      grouped[groupKey].totalArea += Math.round((item.area_sqft || 0) * 100) / 100;
-      grouped[groupKey].totalCost += Math.round((item.totalCost || 0) * 100) / 100;
+      result.push({
+        name: '8mm PLY',
+        items: boards8mm,
+        totalQty: Math.round(totalQty),
+        totalArea: Math.round(totalArea * 100) / 100,
+        avgRate: Math.round(totalCost / totalArea),
+        totalCost: Math.round(totalCost),
+        unit: 'pieces',
+        order: 3
+      });
+    }
+    
+    // 4. Inner Surface Laminate
+    const innerLaminate = items.filter(item => 
+      item.materialType === 'Inner Surface Laminate'
+    );
+    if (innerLaminate.length > 0) {
+      const totalQty = innerLaminate.reduce((sum, item) => sum + item.quantity, 0);
+      const totalArea = innerLaminate.reduce((sum, item) => sum + (item.area_sqft || 0), 0);
+      const totalCost = innerLaminate.reduce((sum, item) => sum + item.totalCost, 0);
+      
+      result.push({
+        name: 'Inner Surface Laminate',
+        items: innerLaminate,
+        totalQty: Math.round(totalQty),
+        totalArea: Math.round(totalArea * 100) / 100,
+        avgRate: 65,
+        totalCost: Math.round(totalCost),
+        unit: 'pieces',
+        order: 4
+      });
+    }
+    
+    // 5. Outer Surface Laminate
+    const outerLaminate = items.filter(item => 
+      item.materialType === 'Outer Surface Laminate'
+    );
+    if (outerLaminate.length > 0) {
+      const totalQty = outerLaminate.reduce((sum, item) => sum + item.quantity, 0);
+      const totalArea = outerLaminate.reduce((sum, item) => sum + (item.area_sqft || 0), 0);
+      const totalCost = outerLaminate.reduce((sum, item) => sum + item.totalCost, 0);
+      
+      result.push({
+        name: 'Outer Surface Laminate',
+        items: outerLaminate,
+        totalQty: Math.round(totalQty),
+        totalArea: Math.round(totalArea * 100) / 100,
+        avgRate: 85,
+        totalCost: Math.round(totalCost),
+        unit: 'pieces',
+        order: 5
+      });
+    }
+    
+    // 6. Group adhesives
+    const adhesives = items.filter(item => item.itemCategory === 'Adhesive');
+    adhesives.forEach(item => {
+      result.push({
+        name: item.partName,
+        items: [item],
+        totalQty: Math.round(item.quantity * 100) / 100,
+        totalArea: 0,
+        avgRate: item.unitRate,
+        totalCost: Math.round(item.totalCost),
+        unit: item.unit,
+        order: 6
+      });
     });
-
-    // Calculate average rates
-    Object.keys(grouped).forEach(key => {
-      const group = grouped[key];
-      if (group.totalArea > 0) {
-        group.avgRate = group.totalCost / group.totalArea;
-      } else {
-        group.avgRate = group.totalCost / group.totalQty;
-      }
+    
+    // 7. Group hardware
+    const hardware = items.filter(item => item.itemCategory === 'Hardware');
+    hardware.forEach(item => {
+      result.push({
+        name: item.partName,
+        items: [item],
+        totalQty: Math.round(item.quantity),
+        totalArea: 0,
+        avgRate: item.unitRate,
+        totalCost: Math.round(item.totalCost),
+        unit: item.unit,
+        order: 7
+      });
     });
-
-    return grouped;
+    
+    return result.sort((a, b) => a.order - b.order);
   };
 
-  // Get ordered materials for consolidated view (18mm → 12mm → 8mm → inner → outer laminate)
+  // Get ordered materials for consolidated view
   const getOrderedConsolidatedMaterials = (items: BomItem[]) => {
-    const consolidated = getConsolidatedMaterials(items);
-    
-    // Sort by order, then by name
-    return Object.entries(consolidated)
-      .sort(([, a], [, b]) => {
-        if (a.order !== b.order) {
-          return (a.order || 999) - (b.order || 999);
-        }
-        return 0; // Keep original order for same order value
-      });
+    return getConsolidatedMaterials(items);
   };
 
   const updateCustomPart = (index: number, field: 'name' | 'quantity', value: string | number) => {
