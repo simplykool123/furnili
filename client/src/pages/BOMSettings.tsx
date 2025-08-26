@@ -210,11 +210,9 @@ export default function BOMSettings() {
   const [editingPrice, setEditingPrice] = useState<string | null>(null);
   const [editPriceValue, setEditPriceValue] = useState<string>('');
 
-  // Fetch BOM settings
-  const { data: settings = [], isLoading: settingsLoading } = useQuery({
-    queryKey: ['/api/bom/settings'],
-    queryFn: () => apiRequest('/api/bom/settings'),
-  });
+  // No database calls - work with local state
+  const [localSettings, setLocalSettings] = useState<any[]>([]);
+  const settingsLoading = false;
 
   // Fetch products 
   const { data: products = [] } = useQuery({
@@ -222,16 +220,22 @@ export default function BOMSettings() {
     queryFn: () => apiRequest('/api/products'),
   });
 
-  // Link material to product
+  // Link material to product - local state only
   const linkMutation = useMutation({
     mutationFn: (data: any) => {
-      return apiRequest('/api/bom/settings', { 
-        method: 'POST', 
-        body: JSON.stringify(data) 
+      // Simulate API call
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          const newSetting = { id: Date.now(), ...data };
+          setLocalSettings(prev => {
+            const filtered = prev.filter(s => s.bomMaterialType !== data.bomMaterialType);
+            return [...filtered, newSetting];
+          });
+          resolve(newSetting);
+        }, 100);
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/bom/settings'] });
       toast({ title: 'Material linked successfully!' });
       setIsDialogOpen(false);
     },
@@ -240,16 +244,35 @@ export default function BOMSettings() {
     }
   });
 
-  // Update custom default price
+  // Update custom default price - local state only
   const updatePriceMutation = useMutation({
     mutationFn: (data: { materialType: string; price: number }) => {
-      return apiRequest(`/api/bom/default-price/${data.materialType}`, {
-        method: 'PUT',
-        body: JSON.stringify({ price: data.price })
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          setLocalSettings(prev => {
+            const existing = prev.find(s => s.bomMaterialType === data.materialType);
+            if (existing) {
+              return prev.map(s => 
+                s.bomMaterialType === data.materialType 
+                  ? { ...s, customDefaultPrice: data.price }
+                  : s
+              );
+            } else {
+              return [...prev, {
+                id: Date.now(),
+                bomMaterialType: data.materialType,
+                bomMaterialCategory: 'custom',
+                bomMaterialName: data.materialType,
+                customDefaultPrice: data.price,
+                useRealPricing: false
+              }];
+            }
+          });
+          resolve({ success: true });
+        }, 100);
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/bom/settings'] });
       toast({ title: 'Default price updated successfully!' });
       setEditingPrice(null);
     },
@@ -269,7 +292,7 @@ export default function BOMSettings() {
 
   // Get setting for a material
   const getSetting = (materialType: string) => {
-    return settings.find((s: any) => s.bomMaterialType === materialType);
+    return localSettings.find((s: any) => s.bomMaterialType === materialType);
   };
 
   // Get mapped product for a material
