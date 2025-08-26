@@ -2099,12 +2099,63 @@ export const calculateWardrobeBOM = (data: any) => {
   console.log('Edge banding 0.8mm:', totalEdgeBanding0_8mm.toFixed(2), 'meters');
   console.log('Hardware items:', hardware.length);
 
+  // ✅ CRITICAL FIX: Add cost consolidation logic that was missing
+  
+  // Calculate material costs from panels
+  let material_cost = 0;
+  let boardAreaByThickness: { [thickness: string]: number } = {};
+  
+  // Default board rate (will be overridden by getBoardRate in routes.ts)
+  const defaultBoardRate = DEFAULT_RATES.board["18mm_plywood"] || 147;
+  
+  panels.forEach(panel => {
+    // Panel board cost: area × rate per sqft
+    const panelBoardCost = panel.area_sqft * defaultBoardRate;
+    material_cost += panelBoardCost;
+    
+    // Group by thickness for sheet optimization
+    const thickness = `${panel.thickness}mm`;
+    if (!boardAreaByThickness[thickness]) {
+      boardAreaByThickness[thickness] = 0;
+    }
+    boardAreaByThickness[thickness] += panel.area_sqft;
+    
+    // Edge banding cost: length × rate per meter
+    if (panel.edgeBandingLength && panel.edgeBandingLength > 0) {
+      let edgeBandingRate = 0;
+      if (panel.edgeBanding2mm > 0) {
+        edgeBandingRate = DEFAULT_RATES.edge_banding["2mm"] || 8;
+        material_cost += panel.edgeBanding2mm * edgeBandingRate;
+      }
+      if (panel.edgeBanding0_8mm > 0) {
+        edgeBandingRate = DEFAULT_RATES.edge_banding["0.8mm"] || 4;  
+        material_cost += panel.edgeBanding0_8mm * edgeBandingRate;
+      }
+    }
+  });
+  
+  // Calculate hardware costs
+  const hardware_cost = hardware.reduce((sum, item) => sum + item.total_cost, 0);
+  
+  // Calculate total cost
+  const total_cost = material_cost + hardware_cost;
+  
+  console.log('=== COST BREAKDOWN ===');
+  console.log('Material cost: ₹' + material_cost.toFixed(2));
+  console.log('Hardware cost: ₹' + hardware_cost.toFixed(2));
+  console.log('Total cost: ₹' + total_cost.toFixed(2));
+
   return {
     panels,
     totalBoardArea,
     totalLaminateArea,
     totalEdgeBanding2mm,
     totalEdgeBanding0_8mm,
-    hardware
+    hardware,
+    // ✅ CRITICAL: Add the missing cost properties
+    material_cost,
+    hardware_cost,
+    total_cost,
+    boardAreaByThickness
   };
 };
