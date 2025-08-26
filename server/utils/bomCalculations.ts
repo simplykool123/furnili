@@ -87,13 +87,18 @@ const DEFAULT_RATES = {
     "mango_wood": 280,
   },
   laminate: {
-    // Laminate rates per sqft
+    // 🎯 COMPREHENSIVE FINISH RATES - INTERCONNECTED LOGIC
     "outer_laminate": 210,
     "inner_laminate": 150,
-    "acrylic_finish": 380,
-    "pu_finish": 450,
-    "glass_finish": 520,
-    "membrane_foil": 95,
+    "acrylic_finish": 380, // Premium acrylic finish
+    "veneer_finish": 320,   // Natural wood veneer
+    "paint_finish": 180,    // Paint finish
+    "pu_finish": 450,       // PU finish
+    "glass_finish": 520,    // Glass finish
+    "membrane_foil": 95,    // Membrane finish
+    // Adhesive rates
+    "adhesive_coverage_sqft_per_bottle": 32,
+    "adhesive_bottle_price": 85,
   },
   edge_banding: {
     "2mm": 8, // per meter - updated to Indian standards
@@ -1944,7 +1949,7 @@ export const calculateWardrobeBOM = (data: any) => {
     const totalPartArea = area * part.qty;
     
     // ✅ DYNAMIC Material type based on thickness AND boardType selection
-    const boardTypeDisplay = input.boardType.replace(/_/g, ' ').toUpperCase();
+    const boardTypeDisplay = (input.boardType || 'ply').replace(/_/g, ' ').toUpperCase();
     let materialType = '';
     if (thickness === 18) materialType = `18mm ${boardTypeDisplay}`;
     else if (thickness === 6) materialType = `6mm ${boardTypeDisplay}`;
@@ -2015,8 +2020,26 @@ export const calculateWardrobeBOM = (data: any) => {
       adhesiveWastePct: 0.10 // 10% waste
     };
     
-    // Calculate using the clean typed function
-    laminateSummary = calculateLaminateBOM(laminatePanels, wardrobeTypeClean, rates);
+    // 🎯 EXTRAORDINARY DETAILED CALCULATOR - Pass finish & board type
+    const laminateRatesEnhanced = {
+      outerRatePerSqft: DEFAULT_RATES.laminate.outer_laminate || 210,
+      innerRatePerSqft: DEFAULT_RATES.laminate.inner_laminate || 150,
+      acrylicRatePerSqft: DEFAULT_RATES.laminate.acrylic_finish || 380,
+      veneerRatePerSqft: DEFAULT_RATES.laminate.veneer_finish || 320,
+      paintRatePerSqft: DEFAULT_RATES.laminate.paint_finish || 180,
+      membraneRatePerSqft: DEFAULT_RATES.laminate.membrane_foil || 95,
+      adhesiveCoverageSqftPerBottle: DEFAULT_RATES.laminate.adhesive_coverage_sqft_per_bottle || 32,
+      adhesiveBottlePrice: DEFAULT_RATES.laminate.adhesive_bottle_price || 85,
+    };
+    
+    // Calculate using enhanced interconnected logic
+    laminateSummary = calculateLaminateBOM(
+      laminatePanels, 
+      wardrobeTypeClean, 
+      laminateRatesEnhanced,
+      finish as any || "laminate", // Pass selected finish type from function parameter
+      data.boardType as any || "ply"    // Pass selected board type from data parameter
+    );
     
     outerLaminateArea = laminateSummary.outerAreaSqft;
     innerLaminateArea = laminateSummary.innerAreaSqft;

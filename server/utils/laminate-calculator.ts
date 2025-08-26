@@ -20,9 +20,18 @@ export type Panel = {
   isExposedEnd?: boolean;
 };
 
+export type FinishType = "laminate" | "acrylic" | "veneer" | "paint" | "membrane" | "natural";
+export type BoardType = "pre_lam_particle_board" | "mdf" | "ply" | "solid_wood" | "hdf";
+
 export type LaminateRates = {
-  outerRatePerSqft: number; // e.g., 85
-  innerRatePerSqft: number; // e.g., 65
+  outerRatePerSqft: number; // e.g., 85 for laminate
+  innerRatePerSqft: number; // e.g., 65 for laminate
+  // 🎯 PREMIUM FINISH RATES
+  acrylicRatePerSqft: number; // e.g., 380 for acrylic
+  veneerRatePerSqft: number; // e.g., 320 for veneer  
+  paintRatePerSqft: number; // e.g., 180 for paint
+  membraneRatePerSqft: number; // e.g., 95 for membrane
+  
   adhesiveCoverageSqftPerBottle: number; // e.g., 32
   adhesiveBottlePrice: number; // e.g., 85
   adhesiveWastePct?: number; // e.g., 0.10 (10%)
@@ -35,11 +44,18 @@ export type LaminateSummary = {
   innerAreaSqft: number;
   laminatedAreaSqft: number;
   adhesiveBottles: number;
+  // 🎯 ENHANCED COSTS WITH MIXED FINISHES
   costs: {
-    outerCost: number;
-    innerCost: number;
+    outerCost: number; // Cost for outer finish (could be acrylic/veneer/paint/laminate)
+    innerCost: number; // Always laminate cost for inner surfaces
     adhesiveCost: number;
     total: number;
+  };
+  // 🎯 FINISH BREAKDOWN
+  finishBreakdown: {
+    outerFinish: FinishType; // What finish is applied to outer surfaces
+    innerFinish: FinishType; // Always "laminate" for inner surfaces
+    isPreLamBoard: boolean; // Whether this is pre-lam board (no additional finish needed)
   };
   // Optional: per-panel breakdown for UI
   perPanel: Array<{
@@ -93,18 +109,79 @@ function facesForPanel(p: Panel, wardrobeType: WardrobeType): [LaminateFace, Lam
   }
 }
 
+// 🎯 EXTRAORDINARY DETAILED CALCULATOR WITH INTERCONNECTED LOGIC
 export function calculateLaminateBOM(
   panels: Panel[],
   wardrobeType: WardrobeType,
-  rates: LaminateRates
+  rates: LaminateRates,
+  finishType: FinishType = "laminate",
+  boardType: BoardType = "ply"
 ): LaminateSummary {
+  // 🎯 RULE 1: PRE-LAM PARTICLE BOARD LOGIC
+  const isPreLamBoard = boardType === "pre_lam_particle_board";
+  
+  if (isPreLamBoard) {
+    // Pre-Lam board already has laminate applied - no additional finish needed
+    console.log('🔧 Pre-Lam Particle Board detected: No additional laminate calculation needed');
+    return {
+      outerAreaSqft: 0,
+      innerAreaSqft: 0, 
+      laminatedAreaSqft: 0,
+      adhesiveBottles: 0,
+      costs: { outerCost: 0, innerCost: 0, adhesiveCost: 0, total: 0 },
+      finishBreakdown: {
+        outerFinish: "laminate", // Pre-applied
+        innerFinish: "laminate", // Pre-applied
+        isPreLamBoard: true
+      },
+      perPanel: []
+    };
+  }
+  
+  // 🎯 RULE 2: MIXED FINISH LOGIC (Acrylic/Veneer/Paint outer + Laminate inner)
   const {
-    outerRatePerSqft,
-    innerRatePerSqft,
+    outerRatePerSqft, // For laminate outer
+    innerRatePerSqft, // Always laminate for inner
+    acrylicRatePerSqft,
+    veneerRatePerSqft, 
+    paintRatePerSqft,
+    membraneRatePerSqft,
     adhesiveCoverageSqftPerBottle,
     adhesiveBottlePrice,
     adhesiveWastePct = 0.10, // Default 10% waste
   } = rates;
+  
+  // 🎯 DETERMINE OUTER SURFACE RATE BASED ON FINISH
+  let actualOuterRate = outerRatePerSqft; // Default to laminate
+  let outerFinishName: FinishType = "laminate";
+  
+  switch (finishType) {
+    case "acrylic":
+      actualOuterRate = acrylicRatePerSqft;
+      outerFinishName = "acrylic";
+      console.log('🎆 Premium Acrylic finish: Outer surfaces get Acrylic, Inner surfaces get Laminate');
+      break;
+    case "veneer":
+      actualOuterRate = veneerRatePerSqft;
+      outerFinishName = "veneer";
+      console.log('🌳 Natural Veneer finish: Outer surfaces get Veneer, Inner surfaces get Laminate');
+      break;
+    case "paint":
+      actualOuterRate = paintRatePerSqft;
+      outerFinishName = "paint";
+      console.log('🎨 Paint finish: Outer surfaces get Paint, Inner surfaces get Laminate');
+      break;
+    case "membrane":
+      actualOuterRate = membraneRatePerSqft;
+      outerFinishName = "membrane";
+      console.log('🌊 Membrane finish: Outer surfaces get Membrane, Inner surfaces get Laminate');
+      break;
+    case "laminate":
+    default:
+      // Standard laminate on both surfaces
+      console.log('🖼️ Standard Laminate finish: Both surfaces get Laminate');
+      break;
+  }
 
   let outerArea = 0, innerArea = 0;
 
@@ -141,21 +218,27 @@ export function calculateLaminateBOM(
     (laminatedArea * (1 + adhesiveWastePct)) / Math.max(1, adhesiveCoverageSqftPerBottle)
   );
 
-  const outerCost = outerArea * outerRatePerSqft;
-  const innerCost = innerArea * innerRatePerSqft;
+  // 🎯 CALCULATE COSTS WITH MIXED FINISHES
+  const outerCost = outerArea * actualOuterRate; // Premium finish for outer surfaces
+  const innerCost = innerArea * innerRatePerSqft; // Always laminate for inner surfaces
   const adhesiveCost = bottles * adhesiveBottlePrice;
   const total = outerCost + innerCost + adhesiveCost;
 
   return {
     outerAreaSqft: round2(outerArea),
-    innerAreaSqft: round2(innerArea),
+    innerAreaSqft: round2(innerArea), 
     laminatedAreaSqft: round2(laminatedArea),
     adhesiveBottles: bottles,
     costs: {
-      outerCost: round0(outerCost),
-      innerCost: round0(innerCost),
+      outerCost: round0(outerCost), // Cost for premium outer finish
+      innerCost: round0(innerCost), // Cost for inner laminate
       adhesiveCost: round0(adhesiveCost),
       total: round0(total),
+    },
+    finishBreakdown: {
+      outerFinish: outerFinishName,
+      innerFinish: "laminate", // Always laminate for inner surfaces
+      isPreLamBoard: false
     },
     perPanel,
   };

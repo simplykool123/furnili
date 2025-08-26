@@ -278,6 +278,18 @@ export default function BOMCalculator() {
   const queryClient = useQueryClient();
   const [selectedFurnitureType, setSelectedFurnitureType] = useState<string>("wardrobe");
   const [bomResult, setBomResult] = useState<BomResult | null>(null);
+  
+  // 🎯 SMART BOARD TYPE & FINISH INTERCONNECTED LOGIC
+  const selectedBoardType = form.watch('boardType');
+  const isPreLamBoard = selectedBoardType === 'pre_lam_particle_board';
+  
+  // Auto-handle Pre-Lam board selection - disable finish field
+  useEffect(() => {
+    if (isPreLamBoard) {
+      // Pre-Lam board already has laminate applied, set default and disable
+      form.setValue('finish', 'laminate', { shouldDirty: false });
+    }
+  }, [isPreLamBoard, form]);
   const [customParts, setCustomParts] = useState<{name: string, quantity: number}[]>([]);
   const [bomViewMode, setBomViewMode] = useState<'consolidated' | 'details'>('consolidated');
   const [variableCosts, setVariableCosts] = useState({
@@ -1085,11 +1097,30 @@ export default function BOMCalculator() {
                         name="finish"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-xs">Finish</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormLabel className={`text-xs flex items-center gap-2 ${
+                              isPreLamBoard ? 'text-muted-foreground' : ''
+                            }`}>
+                              Finish
+                              {isPreLamBoard && (
+                                <span className="text-xs bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded text-[10px]">
+                                  Pre-Applied
+                                </span>
+                              )}
+                            </FormLabel>
+                            <Select 
+                              onValueChange={field.onChange} 
+                              defaultValue={field.value}
+                              disabled={isPreLamBoard}
+                            >
                               <FormControl>
-                                <SelectTrigger className="h-8 text-xs">
-                                  <SelectValue placeholder="Select finish" />
+                                <SelectTrigger className={`h-8 text-xs ${
+                                  isPreLamBoard ? 'opacity-50 cursor-not-allowed bg-muted' : ''
+                                }`}>
+                                  <SelectValue placeholder={
+                                    isPreLamBoard 
+                                      ? "Laminate (Pre-Applied)" 
+                                      : "Select finish"
+                                  } />
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
@@ -1100,6 +1131,11 @@ export default function BOMCalculator() {
                                 ))}
                               </SelectContent>
                             </Select>
+                            {isPreLamBoard && (
+                              <p className="text-[10px] text-muted-foreground mt-1">
+                                Pre-Lam boards already have laminate finish applied during manufacturing
+                              </p>
+                            )}
                             <FormMessage />
                           </FormItem>
                         )}
