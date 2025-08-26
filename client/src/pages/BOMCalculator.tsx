@@ -715,6 +715,87 @@ export default function BOMCalculator() {
         </div>
       </div>
 
+      {/* Step 2: Wardrobe Type Selection (if wardrobe selected) */}
+      {selectedFurnitureType === 'wardrobe' && (
+        <div className="bg-card shadow-sm border rounded-lg mb-6">
+          <div className="px-4 py-6">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="bg-[hsl(28,100%,25%)] text-white px-3 py-1 rounded-full text-sm font-medium">
+                Step 2: Choose Wardrobe Type
+              </div>
+            </div>
+            <Form {...form}>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <FormField
+                  control={form.control}
+                  name="partsConfig.wardrobeType"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-sm font-medium">Wardrobe Type</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value || 'openable'}>
+                        <FormControl>
+                          <SelectTrigger className="h-10">
+                            <SelectValue />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="openable">Openable Door</SelectItem>
+                          <SelectItem value="sliding">Sliding Door</SelectItem>
+                          <SelectItem value="walk-in">Walk-in</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="partsConfig.hasLoft"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col justify-end">
+                      <div className="flex items-center space-x-3 border rounded-lg p-3">
+                        <FormControl>
+                          <input
+                            type="checkbox"
+                            checked={field.value}
+                            onChange={field.onChange}
+                            className="h-4 w-4"
+                          />
+                        </FormControl>
+                        <FormLabel className="text-sm font-medium cursor-pointer">Add Loft Storage?</FormLabel>
+                      </div>
+                    </FormItem>
+                  )}
+                />
+                
+                {form.watch('partsConfig.hasLoft') && (
+                  <FormField
+                    control={form.control}
+                    name="partsConfig.loftHeight"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm font-medium">Loft Height (mm)</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            min="300"
+                            max="1000"
+                            placeholder="600"
+                            className="h-10"
+                            {...field}
+                            onChange={(e) => field.onChange(parseInt(e.target.value) || 600)}
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                )}
+              </div>
+            </Form>
+          </div>
+        </div>
+      )}
+
       {/* Calculator Section */}
       <div className="space-y-4 p-4">
         {/* Calculator Form */}
@@ -731,7 +812,7 @@ export default function BOMCalculator() {
           <CardContent>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
-                  {/* Dimensions */}
+                  {/* Step 3: Dimensions */}
                   <div className="space-y-2">
                     <h3 className="text-sm font-medium flex items-center gap-2">
                       <Calculator className="w-4 h-4" />
@@ -1039,31 +1120,10 @@ export default function BOMCalculator() {
                         </>
                       )}
 
-                      {/* Wardrobe-specific configurations */}
+                      {/* Wardrobe-specific part configurations */}
                       {selectedFurnitureType === 'wardrobe' && (
                         <div className="col-span-2">
-                          <div className="grid grid-cols-5 gap-2">
-                            <FormField
-                              control={form.control}
-                              name="partsConfig.wardrobeType"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel className="text-xs">Wardrobe Type</FormLabel>
-                                  <Select onValueChange={field.onChange} defaultValue={field.value || 'openable'}>
-                                    <FormControl>
-                                      <SelectTrigger className="h-8 text-xs">
-                                        <SelectValue />
-                                      </SelectTrigger>
-                                    </FormControl>
-                                    <SelectContent>
-                                      <SelectItem value="openable">Openable</SelectItem>
-                                      <SelectItem value="sliding">Sliding</SelectItem>
-                                      <SelectItem value="walk-in">Walk-in</SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                </FormItem>
-                              )}
-                            />
+                          <div className="grid grid-cols-4 gap-2">
                             <FormField
                               control={form.control}
                               name="partsConfig.shutterCount"
@@ -1124,44 +1184,6 @@ export default function BOMCalculator() {
                             />
                             <FormField
                               control={form.control}
-                              name="partsConfig.hangingRods"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel className="text-xs">Rod (25mm)</FormLabel>
-                                  <FormControl>
-                                    <Input
-                                      type="number"
-                                      min="0"
-                                      max="5"
-                                      className="h-8 text-xs"
-                                      {...field}
-                                      onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
-                                    />
-                                  </FormControl>
-                                </FormItem>
-                              )}
-                            />
-                          </div>
-                          <div className="mt-3 grid grid-cols-2 gap-3">
-                            <FormField
-                              control={form.control}
-                              name="partsConfig.hasLoft"
-                              render={({ field }) => (
-                                <FormItem className="flex flex-row items-center space-x-2 space-y-0 rounded-md border p-2">
-                                  <FormControl>
-                                    <input
-                                      type="checkbox"
-                                      checked={field.value}
-                                      onChange={field.onChange}
-                                      className="h-3 w-3"
-                                    />
-                                  </FormControl>
-                                  <FormLabel className="text-xs">Add Loft?</FormLabel>
-                                </FormItem>
-                              )}
-                            />
-                            <FormField
-                              control={form.control}
                               name="partsConfig.mirror"
                               render={({ field }) => (
                                 <FormItem className="flex flex-row items-center space-x-2 space-y-0 rounded-md border p-2">
@@ -1173,35 +1195,11 @@ export default function BOMCalculator() {
                                       className="h-3 w-3"
                                     />
                                   </FormControl>
-                                  <FormLabel className="text-xs">Mirror Panel</FormLabel>
+                                  <FormLabel className="text-xs">Mirror</FormLabel>
                                 </FormItem>
                               )}
                             />
                           </div>
-                          {form.watch('partsConfig.hasLoft') && (
-                            <div className="mt-3">
-                              <FormField
-                                control={form.control}
-                                name="partsConfig.loftHeight"
-                                render={({ field }) => (
-                                  <FormItem>
-                                    <FormLabel className="text-xs">Loft Height (mm)</FormLabel>
-                                    <FormControl>
-                                      <Input
-                                        type="number"
-                                        min="300"
-                                        max="1000"
-                                        placeholder="600"
-                                        className="h-8 text-xs max-w-[200px]"
-                                        {...field}
-                                        onChange={(e) => field.onChange(parseInt(e.target.value) || 600)}
-                                      />
-                                    </FormControl>
-                                  </FormItem>
-                                )}
-                              />
-                            </div>
-                          )}
                         </div>
                       )}
 
