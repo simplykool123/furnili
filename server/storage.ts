@@ -2320,6 +2320,21 @@ class DatabaseStorage implements IStorage {
       if (setting.useRealPricing && setting.linkedProductId) {
         const product = await this.getProduct(setting.linkedProductId);
         if (product) {
+          // 🎯 AUTO-CONVERT SHEET PRICES TO PER SQFT FOR BOARD/LAMINATE MATERIALS
+          const isBoardOrLaminate = bomMaterialType.toLowerCase().includes('plywood') || 
+                                   bomMaterialType.toLowerCase().includes('mdf') || 
+                                   bomMaterialType.toLowerCase().includes('particle') ||
+                                   bomMaterialType.toLowerCase().includes('board') ||
+                                   bomMaterialType.toLowerCase().includes('laminate');
+          
+          if (isBoardOrLaminate && product.unit && product.unit.toLowerCase().includes('sheet')) {
+            // Convert per sheet price to per sqft (standard sheet = 32 sqft)
+            const standardSheetSize = 32;
+            const convertedPrice = Math.round(product.pricePerUnit / standardSheetSize);
+            console.log(`🔄 Converting sheet price for ${bomMaterialType}: ₹${product.pricePerUnit}/sheet → ₹${convertedPrice}/sqft`);
+            return convertedPrice;
+          }
+          
           return product.pricePerUnit;
         }
       }
