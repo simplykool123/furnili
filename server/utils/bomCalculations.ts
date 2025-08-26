@@ -1712,6 +1712,14 @@ export const convertDimensions = (height: number, width: number, depth: number, 
 export const calculateWardrobeBOM = (data: any) => {
   const { height, width, depth, partsConfig, finish } = data;
   
+  // Extract wardrobe-specific configuration
+  const wardrobeType = partsConfig.wardrobeType || 'openable'; // openable, sliding, walk-in
+  const hasLoft = partsConfig.hasLoft || false;
+  const loftHeight = partsConfig.loftHeight || 600; // default 600mm
+  const shutterCount = partsConfig.shutterCount || partsConfig.shutters || 2;
+  const shelfCount = partsConfig.shelfCount || partsConfig.shelves || 3;
+  const drawerCount = partsConfig.drawerCount || partsConfig.drawers || 0;
+  
   console.log('=== WARDROBE BOM CALCULATION START (USER FORMULAS) ===');
   console.log('Input data:', { height, width, depth, finish });
   
@@ -1736,7 +1744,7 @@ export const calculateWardrobeBOM = (data: any) => {
   let totalEdgeBanding2mm = 0;
   let totalEdgeBanding0_8mm = 0;
 
-  // WARDROBE PARTS CONFIGURATION
+  // 🔸 MAIN WARDROBE PARTS CONFIGURATION
   const wardrobeParts = [
     // Main carcass - 18mm PLY
     { name: 'Side Panel (L)', length: depth, width: height, qty: 1 },
@@ -1745,18 +1753,34 @@ export const calculateWardrobeBOM = (data: any) => {
     { name: 'Bottom Panel', length: width, width: depth, qty: 1 },
     { name: 'Back Panel', length: width, width: height, qty: 1 }, // 6mm
     
-    // Shutters - 18mm PLY (outer laminate)
-    { name: 'Shutter Panel', length: (width / (partsConfig.shutterCount || 2)) - 5, width: height - 10, qty: partsConfig.shutterCount || 2 },
+    // Shutters - 18mm PLY (outer laminate) - ONLY for openable/sliding, NOT walk-in
+    ...(wardrobeType !== 'walk-in' ? [
+      { name: 'Shutter Panel', length: (width / shutterCount) - 5, width: height - 10, qty: shutterCount }
+    ] : []),
     
     // Shelves - 18mm PLY (inner laminate)
-    { name: 'Shelf', length: width - 36, width: depth - 20, qty: partsConfig.shelfCount || 3 },
+    { name: 'Shelf', length: width - 36, width: depth - 20, qty: shelfCount },
     
     // Drawers - 12mm PLY
-    ...(partsConfig.drawerCount > 0 ? [
-      { name: 'Drawer Front', length: (width / 2) - 5, width: 150, qty: partsConfig.drawerCount }, // outer laminate
-      { name: 'Drawer Side', length: depth - 50, width: 150, qty: partsConfig.drawerCount * 2 },
-      { name: 'Drawer Back', length: (width / 2) - 40, width: 120, qty: partsConfig.drawerCount },
-      { name: 'Drawer Bottom', length: (width / 2) - 20, width: depth - 30, qty: partsConfig.drawerCount },
+    ...(drawerCount > 0 ? [
+      { name: 'Drawer Front', length: (width / 2) - 5, width: 150, qty: drawerCount }, // outer laminate
+      { name: 'Drawer Side', length: depth - 50, width: 150, qty: drawerCount * 2 },
+      { name: 'Drawer Back', length: (width / 2) - 40, width: 120, qty: drawerCount },
+      { name: 'Drawer Bottom', length: (width / 2) - 20, width: depth - 30, qty: drawerCount },
+    ] : []),
+    
+    // 🔸 LOFT PARTS (if hasLoft = true)
+    ...(hasLoft ? [
+      { name: 'Loft Side Panel (L)', length: depth, width: loftHeight, qty: 1 },
+      { name: 'Loft Side Panel (R)', length: depth, width: loftHeight, qty: 1 },
+      { name: 'Loft Top Panel', length: width, width: depth, qty: 1 },
+      { name: 'Loft Bottom Panel', length: width, width: depth, qty: 1 },
+      { name: 'Loft Back Panel', length: width, width: loftHeight, qty: 1 }, // 6mm
+      { name: 'Loft Shelf', length: width - 36, width: depth - 20, qty: 1 },
+      // Loft shutters (only for openable/sliding)
+      ...(wardrobeType !== 'walk-in' ? [
+        { name: 'Loft Shutter Panel', length: (width / shutterCount) - 5, width: loftHeight - 10, qty: shutterCount }
+      ] : [])
     ] : []),
     
     // Custom parts
@@ -1815,7 +1839,7 @@ export const calculateWardrobeBOM = (data: any) => {
       materialType: materialType,
       edgeBanding2mm: edgeBanding2mm,
       edgeBanding0_8mm: edgeBanding0_8mm
-    });
+    } as any);
   });
 
   // ✅ WARDROBE LAMINATE CALCULATION (AREA-BASED)
@@ -1840,32 +1864,106 @@ export const calculateWardrobeBOM = (data: any) => {
     });
   }
 
-  // ✅ WARDROBE HARDWARE CALCULATIONS
+  // 🔸 WARDROBE HARDWARE CALCULATIONS BASED ON TYPE
   const hardware: any[] = [];
   
-  const shutterCount = partsConfig.shutterCount || 2;
-  const drawerCount = partsConfig.drawerCount || 0;
+  console.log(`=== HARDWARE CALCULATION for ${wardrobeType.toUpperCase()} wardrobe ===`);
   
-  // Hinges based on shutter height (EXACT WARDROBE LOGIC)
-  const shutterHeight = height;
-  let hingesPerShutter = 2; // ≤ 1200mm → 2 hinges
-  if (shutterHeight > 1800) hingesPerShutter = 4; // > 1800mm → 4 hinges
-  else if (shutterHeight > 1200) hingesPerShutter = 3; // 1200-1800mm → 3 hinges
+  if (wardrobeType === 'openable') {
+    // OPENABLE WARDROBE → Hinges + handles + straighteners
+    
+    // 1. Hinges based on shutter height
+    const shutterHeight = height;
+    let hingesPerShutter = 2; // ≤ 1200mm → 2 hinges
+    if (shutterHeight > 1800) hingesPerShutter = 4; // > 1800mm → 4 hinges
+    else if (shutterHeight > 1200) hingesPerShutter = 3; // 1200-1800mm → 3 hinges
+    
+    let totalHinges = shutterCount * hingesPerShutter;
+    if (hasLoft) {
+      // Add hinges for loft shutters
+      const loftHingesPerShutter = loftHeight > 600 ? 3 : 2;
+      totalHinges += shutterCount * loftHingesPerShutter;
+    }
+    
+    hardware.push({
+      item: 'Soft Close Hinges',
+      qty: totalHinges,
+      unit_rate: 45,
+      total_cost: totalHinges * 45
+    });
+    
+    // 2. Handles: 1 per shutter + loft shutter + drawer
+    const totalHandles = shutterCount + (hasLoft ? shutterCount : 0) + drawerCount;
+    hardware.push({
+      item: 'Handle',
+      qty: totalHandles,
+      unit_rate: 120,
+      total_cost: totalHandles * 120
+    });
+    
+    // 3. Straightener: 1 per shutter if height > 2100mm
+    if (shutterHeight > 2100) {
+      hardware.push({
+        item: 'Shutter Straightener',
+        qty: shutterCount + (hasLoft ? shutterCount : 0),
+        unit_rate: 80,
+        total_cost: (shutterCount + (hasLoft ? shutterCount : 0)) * 80
+      });
+    }
+    
+  } else if (wardrobeType === 'sliding') {
+    // SLIDING WARDROBE → Tracks + rollers + no hinges
+    
+    // 1. Sliding track set (top + bottom)
+    hardware.push({
+      item: 'Sliding Track Set (Top + Bottom)',
+      qty: 1,
+      unit_rate: 350,
+      total_cost: 350
+    });
+    
+    if (hasLoft) {
+      hardware.push({
+        item: 'Loft Sliding Track Set',
+        qty: 1,
+        unit_rate: 350,
+        total_cost: 350
+      });
+    }
+    
+    // 2. Rollers: 2 per shutter (top rollers)
+    const totalRollers = shutterCount * 2 + (hasLoft ? shutterCount * 2 : 0);
+    hardware.push({
+      item: 'Sliding Door Rollers',
+      qty: totalRollers,
+      unit_rate: 25,
+      total_cost: totalRollers * 25
+    });
+    
+    // 3. Handles: 1 per shutter + drawer (recessed/flush handles for sliding)
+    const totalHandles = shutterCount + (hasLoft ? shutterCount : 0) + drawerCount;
+    hardware.push({
+      item: 'Flush Handle (Sliding)',
+      qty: totalHandles,
+      unit_rate: 80,
+      total_cost: totalHandles * 80
+    });
+    
+  } else if (wardrobeType === 'walk-in') {
+    // WALK-IN WARDROBE → No shutter hardware, only shelves + partitions
+    
+    // No shutters, so no handles for shutters - only for drawers
+    if (drawerCount > 0) {
+      hardware.push({
+        item: 'Handle (Drawer)',
+        qty: drawerCount,
+        unit_rate: 120,
+        total_cost: drawerCount * 120
+      });
+    }
+  }
   
-  hardware.push({
-    item: 'Soft Close Hinges',
-    qty: shutterCount * hingesPerShutter,
-    unit_rate: 45,
-    total_cost: shutterCount * hingesPerShutter * 45
-  });
-  
-  // Handles: 1 per shutter or drawer front
-  hardware.push({
-    item: 'Handle',
-    qty: shutterCount + drawerCount,
-    unit_rate: 120,
-    total_cost: (shutterCount + drawerCount) * 120
-  });
+  // COMMON HARDWARE FOR ALL TYPES:
   
   // Drawer Slides: 1 set per drawer (pair of channels)
   if (drawerCount > 0) {
@@ -1877,41 +1975,37 @@ export const calculateWardrobeBOM = (data: any) => {
     });
   }
   
-  // Minifix: 2-3 per carcass joint → ~30 per wardrobe
+  // Minifix connectors: base wardrobe + loft
+  const minifixQty = hasLoft ? 45 : 30; // more joints with loft
   hardware.push({
     item: 'Minifix Connector',
-    qty: 30,
+    qty: minifixQty,
     unit_rate: 8,
-    total_cost: 30 * 8
+    total_cost: minifixQty * 8
   });
   
-  // Dowels: ~5 per joint → ~50 per wardrobe
+  // Dowels: base wardrobe + loft
+  const dowelQty = hasLoft ? 75 : 50; // more joints with loft
   hardware.push({
     item: 'Wooden Dowel',
-    qty: 50,
+    qty: dowelQty,
     unit_rate: 2,
-    total_cost: 50 * 2
+    total_cost: dowelQty * 2
   });
   
-  // Hanging Rod: 1 per wardrobe (width = inner width)
+  // Hanging Rod: 1 per wardrobe + 1 for loft if applicable
+  const hangingRods = 1 + (hasLoft ? 1 : 0);
   hardware.push({
-    item: 'Hanging Rod',
-    qty: 1,
+    item: 'Hanging Rod (25mm)',
+    qty: hangingRods,
     unit_rate: 150,
-    total_cost: 150
+    total_cost: hangingRods * 150
   });
-  
-  // Straightener: 1 per shutter if height > 2100mm
-  if (shutterHeight > 2100) {
-    hardware.push({
-      item: 'Shutter Straightener',
-      qty: shutterCount,
-      unit_rate: 80,
-      total_cost: shutterCount * 80
-    });
-  }
 
   console.log('=== WARDROBE CALCULATION RESULTS ===');
+  console.log('Wardrobe Type:', wardrobeType);
+  console.log('Has Loft:', hasLoft, hasLoft ? `(Height: ${loftHeight}mm)` : '');
+  console.log('Shutters:', shutterCount, 'Shelves:', shelfCount, 'Drawers:', drawerCount);
   console.log('Total panels:', panels.length);
   console.log('Total board area:', totalBoardArea.toFixed(2), 'sqft');
   console.log('Total laminate area:', totalLaminateArea.toFixed(2), 'sqft');

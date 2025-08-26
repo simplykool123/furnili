@@ -53,9 +53,9 @@ const bomCalculationSchema = z.object({
   projectId: z.number().optional(),
   partsConfig: z.object({
     // General furniture
-    shelves: z.number().default(0),
-    drawers: z.number().default(0),
-    shutters: z.number().default(0),
+    shelves: z.number().default(0), // legacy field
+    drawers: z.number().default(0), // legacy field
+    shutters: z.number().default(0), // legacy field
     doors: z.number().default(0),
     backPanels: z.number().default(0),
     exposedSides: z.boolean().default(false),
@@ -74,7 +74,12 @@ const bomCalculationSchema = z.object({
     footboard: z.boolean().optional(),
     
     // Wardrobe specific
-    doorType: z.string().optional(),
+    wardrobeType: z.string().default("openable"), // openable, sliding, walk-in
+    hasLoft: z.boolean().default(false),
+    loftHeight: z.number().optional(), // height of loft section
+    shutterCount: z.number().default(2), // renamed from shutters for clarity
+    shelfCount: z.number().default(3), // renamed from shelves for clarity
+    drawerCount: z.number().default(0), // renamed from drawers for clarity
     hangingRods: z.number().optional(),
     mirror: z.boolean().optional(),
     
@@ -142,7 +147,21 @@ const furnitureTypes = [
     name: "Wardrobes", 
     icon: Home, 
     description: "Built-in wardrobes and closets",
-    defaultConfig: { shutters: 2, shelves: 3, drawers: 2, doors: 0, backPanels: 1, exposedSides: false, backThickness: 6, slideColorance: 12.5, boxThickness: 12, bottomThickness: 6, doorClearance: 12 }
+    defaultConfig: { 
+      wardrobeType: "openable", 
+      hasLoft: false, 
+      shutterCount: 2, 
+      shelfCount: 3, 
+      drawerCount: 0, 
+      doors: 0, 
+      backPanels: 1, 
+      exposedSides: false, 
+      backThickness: 6, 
+      slideColorance: 12.5, 
+      boxThickness: 12, 
+      bottomThickness: 6, 
+      doorClearance: 12 
+    }
   },
   { 
     id: "bed", 
@@ -1026,10 +1045,10 @@ export default function BOMCalculator() {
                           <div className="grid grid-cols-5 gap-2">
                             <FormField
                               control={form.control}
-                              name="partsConfig.doorType"
+                              name="partsConfig.wardrobeType"
                               render={({ field }) => (
                                 <FormItem>
-                                  <FormLabel className="text-xs">Door Type</FormLabel>
+                                  <FormLabel className="text-xs">Wardrobe Type</FormLabel>
                                   <Select onValueChange={field.onChange} defaultValue={field.value || 'openable'}>
                                     <FormControl>
                                       <SelectTrigger className="h-8 text-xs">
@@ -1039,7 +1058,7 @@ export default function BOMCalculator() {
                                     <SelectContent>
                                       <SelectItem value="openable">Openable</SelectItem>
                                       <SelectItem value="sliding">Sliding</SelectItem>
-                                      <SelectItem value="folding">Bi-fold</SelectItem>
+                                      <SelectItem value="walk-in">Walk-in</SelectItem>
                                     </SelectContent>
                                   </Select>
                                 </FormItem>
@@ -1047,7 +1066,7 @@ export default function BOMCalculator() {
                             />
                             <FormField
                               control={form.control}
-                              name="partsConfig.shutters"
+                              name="partsConfig.shutterCount"
                               render={({ field }) => (
                                 <FormItem>
                                   <FormLabel className="text-xs">Shutters</FormLabel>
@@ -1059,6 +1078,7 @@ export default function BOMCalculator() {
                                       className="h-8 text-xs"
                                       {...field}
                                       onChange={(e) => field.onChange(parseInt(e.target.value) || 2)}
+                                      disabled={form.watch('partsConfig.wardrobeType') === 'walk-in'}
                                     />
                                   </FormControl>
                                 </FormItem>
@@ -1066,7 +1086,7 @@ export default function BOMCalculator() {
                             />
                             <FormField
                               control={form.control}
-                              name="partsConfig.shelves"
+                              name="partsConfig.shelfCount"
                               render={({ field }) => (
                                 <FormItem>
                                   <FormLabel className="text-xs">Shelves</FormLabel>
@@ -1085,7 +1105,7 @@ export default function BOMCalculator() {
                             />
                             <FormField
                               control={form.control}
-                              name="partsConfig.drawers"
+                              name="partsConfig.drawerCount"
                               render={({ field }) => (
                                 <FormItem>
                                   <FormLabel className="text-xs">Drawers</FormLabel>
@@ -1122,7 +1142,24 @@ export default function BOMCalculator() {
                               )}
                             />
                           </div>
-                          <div className="mt-3">
+                          <div className="mt-3 grid grid-cols-2 gap-3">
+                            <FormField
+                              control={form.control}
+                              name="partsConfig.hasLoft"
+                              render={({ field }) => (
+                                <FormItem className="flex flex-row items-center space-x-2 space-y-0 rounded-md border p-2">
+                                  <FormControl>
+                                    <input
+                                      type="checkbox"
+                                      checked={field.value}
+                                      onChange={field.onChange}
+                                      className="h-3 w-3"
+                                    />
+                                  </FormControl>
+                                  <FormLabel className="text-xs">Add Loft?</FormLabel>
+                                </FormItem>
+                              )}
+                            />
                             <FormField
                               control={form.control}
                               name="partsConfig.mirror"
@@ -1141,6 +1178,30 @@ export default function BOMCalculator() {
                               )}
                             />
                           </div>
+                          {form.watch('partsConfig.hasLoft') && (
+                            <div className="mt-3">
+                              <FormField
+                                control={form.control}
+                                name="partsConfig.loftHeight"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel className="text-xs">Loft Height (mm)</FormLabel>
+                                    <FormControl>
+                                      <Input
+                                        type="number"
+                                        min="300"
+                                        max="1000"
+                                        placeholder="600"
+                                        className="h-8 text-xs max-w-[200px]"
+                                        {...field}
+                                        onChange={(e) => field.onChange(parseInt(e.target.value) || 600)}
+                                      />
+                                    </FormControl>
+                                  </FormItem>
+                                )}
+                              />
+                            </div>
+                          )}
                         </div>
                       )}
 
