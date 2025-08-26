@@ -4593,7 +4593,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Upload product image
+  // Upload product image - LOCAL STORAGE
   app.post("/api/products/upload-image", authenticateToken, requireRole(['admin', 'manager']), productImageUpload.single('image'), async (req: AuthRequest, res) => {
     try {
       if (!req.file) {
@@ -4605,12 +4605,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Product ID is required" });
       }
 
-      const objectStorageService = new ObjectStorageService();
-      const imageUrl = await objectStorageService.uploadProductImage(
-        req.file.buffer,
-        `${productId}.png`, // Use productId.png as filename
-        req.file.mimetype
-      );
+      // Get file extension from mimetype
+      const getExtension = (mimetype: string) => {
+        switch (mimetype) {
+          case 'image/jpeg': return 'jpg';
+          case 'image/jpg': return 'jpg';
+          case 'image/png': return 'png';
+          case 'image/gif': return 'gif';
+          case 'image/webp': return 'webp';
+          default: return 'png';
+        }
+      };
+
+      const extension = getExtension(req.file.mimetype);
+      const filename = `${productId}-${Date.now()}.${extension}`;
+      const uploadPath = `uploads/products/${filename}`;
+
+      // Save file locally using fs
+      const fs = await import('fs');
+      const path = await import('path');
+      
+      // Ensure directory exists
+      const uploadDir = path.dirname(uploadPath);
+      if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+      }
+
+      // Write file to disk
+      fs.writeFileSync(uploadPath, req.file.buffer);
+
+      // Return local URL
+      const imageUrl = `/uploads/products/${filename}`;
+
+      console.log('Image saved locally:', uploadPath, '-> URL:', imageUrl);
 
       res.json({ imageUrl });
     } catch (error) {
