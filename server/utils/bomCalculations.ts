@@ -236,20 +236,25 @@ const splitOversizedPanels = (panels: Panel[], sheetSize = { length: 2440, width
     const fitsNormally = (panelL <= sheetSize.length && panelW <= sheetSize.width);
     const fitsRotated = (panelW <= sheetSize.length && panelL <= sheetSize.width);
     
+    // 🎯 FIXED: Panel must fit in standard sheet dimensions
     if (fitsNormally || fitsRotated) {
-      // Panel fits, add as-is
+      // Panel fits within standard 8×4 sheet, add as-is
       splitPanels.push(panel);
     } else {
       // Panel is oversized, split it
       console.log(`🔧 Splitting oversized panel: ${panel.panel} (${panelL}×${panelW}mm)`);
       
-      // Calculate how many pieces needed in each dimension
-      const piecesLength = Math.ceil(panelL / sheetSize.length);
-      const piecesWidth = Math.ceil(panelW / sheetSize.width);
+      // 🎯 FIXED: Use the maximum available sheet dimension for both length and width
+      const maxSheetDimension = Math.max(sheetSize.length, sheetSize.width); // 2440mm
+      const minSheetDimension = Math.min(sheetSize.length, sheetSize.width); // 1220mm
       
-      // Calculate dimensions for split pieces
-      const pieceLength = Math.floor(panelL / piecesLength);
-      const pieceWidth = Math.floor(panelW / piecesWidth);
+      // Calculate how many pieces needed in each dimension
+      const piecesLength = Math.ceil(panelL / maxSheetDimension);
+      const piecesWidth = Math.ceil(panelW / maxSheetDimension);
+      
+      // Calculate dimensions for split pieces (with 10mm kerf allowance)
+      const pieceLength = Math.floor((panelL - (piecesLength - 1) * 10) / piecesLength);
+      const pieceWidth = Math.floor((panelW - (piecesWidth - 1) * 10) / piecesWidth);
       
       // Create split panels
       for (let i = 0; i < piecesLength; i++) {
@@ -265,7 +270,7 @@ const splitOversizedPanels = (panels: Panel[], sheetSize = { length: 2440, width
         }
       }
       
-      console.log(`✅ Split into ${piecesLength}×${piecesWidth} = ${piecesLength * piecesWidth} pieces`);
+      console.log(`✅ Split into ${piecesLength}×${piecesWidth} = ${piecesLength * piecesWidth} pieces (${pieceLength}×${pieceWidth}mm each)`);
     }
   });
   
