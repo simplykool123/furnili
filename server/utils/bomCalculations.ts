@@ -196,6 +196,11 @@ const STANDARD_DIMENSIONS = {
 
 // Import advanced nesting algorithm
 import { nestPanels, type Panel as NestingPanel, type NestingOptions } from "./nesting";
+import { 
+  calculateLaminateBOM, 
+  mapPanelNameToKind, 
+  mapWardrobeType
+} from './laminate-calculator';
 
 // Advanced sheet optimization with sophisticated nesting calculation
 const calculateSheetOptimization = (panels: Panel[], sheetSize = { length: 2440, width: 1220 }): { 
@@ -1936,12 +1941,6 @@ export const calculateWardrobeBOM = (data: any) => {
   let laminateSummary: any = null;
   
   if (finish === 'laminate') {
-    // Import the calculator dynamically to avoid circular imports
-    const { 
-      calculateLaminateBOM, 
-      mapPanelNameToKind, 
-      mapWardrobeType
-    } = require('./laminate-calculator');
     
     // Convert our panels to the clean typed format
     const laminatePanels = panels.map((panel: any, index: number) => ({
