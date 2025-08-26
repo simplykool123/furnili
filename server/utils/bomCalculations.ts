@@ -249,6 +249,9 @@ const calculateSheetOptimization = (panels: Panel[], sheetSize = { length: 2440,
   };
 };
 
+// Export the function
+export { calculateSheetOptimization };
+
 // Advanced nesting algorithm for optimal sheet usage
 const calculateOptimalNesting = (panels: Panel[], sheetSize = { length: 2440, width: 1220 }) => {
   // Sort panels by area (largest first) for better nesting

@@ -21,7 +21,7 @@ import { canOrderMaterials, getMaterialRequestEligibleProjects, getStageDisplayN
 import { setupQuotesRoutes } from "./quotesRoutes";
 // ObjectStorageService removed - using local storage only
 import { db } from "./db";
-import { calculateBOM, generateBOMNumber, convertDimensions, DEFAULT_RATES, calculateWardrobeBOM } from "./utils/bomCalculations";
+import { calculateBOM, generateBOMNumber, convertDimensions, DEFAULT_RATES, calculateWardrobeBOM, calculateSheetOptimization } from "./utils/bomCalculations";
 
 import { eq, and, gt } from "drizzle-orm";
 import { projectFiles, users, suppliers, products, purchaseOrders, purchaseOrderItems, stockMovements, bomCalculations, bomItems } from "@shared/schema";
