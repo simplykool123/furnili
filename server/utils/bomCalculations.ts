@@ -1792,7 +1792,9 @@ export const convertDimensions = (height: number, width: number, depth: number, 
 
 // ✅ WARDROBE-SPECIFIC BOM CALCULATION WITH EXACT USER FORMULAS
 export const calculateWardrobeBOM = (data: any) => {
-  const { height, width, depth, partsConfig, finish } = data;
+  // CRITICAL FIX: Convert dimensions from feet to mm if needed
+  const { height: rawHeight, width: rawWidth, depth: rawDepth, unitOfMeasure = 'ft', partsConfig, finish } = data;
+  const { height, width, depth } = convertDimensions(rawHeight, rawWidth, rawDepth, unitOfMeasure);
   
   // Extract wardrobe-specific configuration
   const wardrobeType = partsConfig.wardrobeType || 'openable'; // openable, sliding, walk-in
@@ -1804,7 +1806,8 @@ export const calculateWardrobeBOM = (data: any) => {
   const drawerCount = partsConfig.drawerCount || partsConfig.drawers || 0;
   
   console.log('=== WARDROBE BOM CALCULATION START (USER FORMULAS) ===');
-  console.log('Input data:', { height, width, depth, finish });
+  console.log('Raw input:', { height: rawHeight, width: rawWidth, depth: rawDepth, unitOfMeasure });
+  console.log('Converted dimensions (mm):', { height, width, depth, finish });
   
   // WARDROBE-SPECIFIC THICKNESS MAPPING
   const getThickness = (part: string): number => {
