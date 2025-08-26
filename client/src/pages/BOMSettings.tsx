@@ -304,18 +304,19 @@ export default function BOMSettings() {
     return null;
   };
 
-  // Convert sheet price to per sqft price for board materials
+  // Convert sheet price to per sqft price for board and laminate materials
   const getConvertedPrice = (product: any, materialType: string) => {
     if (!product) return null;
     
-    // Check if this is a board material that's sold per sheet
-    const isBoardMaterial = materialType.includes('plywood') || 
-                           materialType.includes('mdf') || 
-                           materialType.includes('particle_board') ||
-                           materialType.includes('board');
+    // Check if this is a board or laminate material 
+    const isBoardOrLaminate = materialType.toLowerCase().includes('plywood') || 
+                             materialType.toLowerCase().includes('mdf') || 
+                             materialType.toLowerCase().includes('particle') ||
+                             materialType.toLowerCase().includes('board') ||
+                             materialType.toLowerCase().includes('laminate');
     
-    if (isBoardMaterial && product.unit && product.unit.toLowerCase().includes('sheet')) {
-      // Convert per sheet price to per sqft (standard sheet = 32 sqft)
+    if (isBoardOrLaminate) {
+      // Always convert to per sqft for board/laminate materials (standard sheet = 32 sqft)
       const standardSheetSize = 32; // sqft
       return Math.round(product.pricePerUnit / standardSheetSize);
     }
@@ -590,18 +591,19 @@ function MaterialLinkDialog({ material, currentSetting, products, onSave }: {
   );
   const [useRealPricing, setUseRealPricing] = useState<boolean>(currentSetting?.useRealPricing || false);
 
-  // Convert sheet price to per sqft price for board materials
+  // Convert sheet price to per sqft price for board and laminate materials
   const getConvertedPrice = (product: any, materialType: string) => {
     if (!product) return null;
     
-    // Check if this is a board material that's sold per sheet
-    const isBoardMaterial = materialType.includes('plywood') || 
-                           materialType.includes('mdf') || 
-                           materialType.includes('particle_board') ||
-                           materialType.includes('board');
+    // Check if this is a board or laminate material 
+    const isBoardOrLaminate = materialType.toLowerCase().includes('plywood') || 
+                             materialType.toLowerCase().includes('mdf') || 
+                             materialType.toLowerCase().includes('particle') ||
+                             materialType.toLowerCase().includes('board') ||
+                             materialType.toLowerCase().includes('laminate');
     
-    if (isBoardMaterial && product.unit && product.unit.toLowerCase().includes('sheet')) {
-      // Convert per sheet price to per sqft (standard sheet = 32 sqft)
+    if (isBoardOrLaminate) {
+      // Always convert to per sqft for board/laminate materials (standard sheet = 32 sqft)
       const standardSheetSize = 32; // sqft
       return Math.round(product.pricePerUnit / standardSheetSize);
     }
