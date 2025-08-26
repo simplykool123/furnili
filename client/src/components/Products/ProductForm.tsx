@@ -108,6 +108,14 @@ export default function ProductForm({ product, onClose, isMobile = false }: Prod
         const imageFormData = new FormData();
         imageFormData.append('image', selectedImage);
         
+        // For editing existing products, include the productId
+        if (product?.id) {
+          imageFormData.append('productId', product.id.toString());
+        } else {
+          // For new products, use a temporary ID that will be replaced
+          imageFormData.append('productId', 'temp-' + Date.now());
+        }
+        
         const token = localStorage.getItem('authToken');
         if (!token) {
           throw new Error('No authentication token found');
@@ -122,7 +130,8 @@ export default function ProductForm({ product, onClose, isMobile = false }: Prod
         });
         
         if (!imageResponse.ok) {
-          throw new Error('Failed to upload image');
+          const errorData = await imageResponse.json().catch(() => ({}));
+          throw new Error(errorData.error || 'Failed to upload image');
         }
         
         const imageResult = await imageResponse.json();
