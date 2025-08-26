@@ -116,9 +116,7 @@ export class ObjectStorageService {
 
     // Use the first public search path for product images
     const basePath = publicSearchPaths[0];
-    const imageId = randomUUID();
-    const extension = getExtensionFromMimeType(mimeType);
-    const objectName = `products/${imageId}.${extension}`;
+    const objectName = `products/${fileName}`; // Use provided filename directly
     const fullPath = `${basePath}/${objectName}`;
 
     const { bucketName, objectName: objName } = parseObjectPath(fullPath);

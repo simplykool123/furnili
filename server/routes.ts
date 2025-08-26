@@ -4600,10 +4600,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "No image file provided" });
       }
 
+      const { productId } = req.body;
+      if (!productId) {
+        return res.status(400).json({ error: "Product ID is required" });
+      }
+
       const objectStorageService = new ObjectStorageService();
       const imageUrl = await objectStorageService.uploadProductImage(
         req.file.buffer,
-        req.file.originalname,
+        `${productId}.png`, // Use productId.png as filename
         req.file.mimetype
       );
 
