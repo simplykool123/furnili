@@ -248,22 +248,38 @@ export function calculateLaminateBOM(
 export function mapPanelNameToKind(panelName: string): PanelKind {
   const name = panelName.toLowerCase();
   
-  if (name.includes('side panel')) return "SIDE";
-  if (name.includes('top panel')) return "TOP";  
-  if (name.includes('bottom panel')) return "BOTTOM";
-  if (name.includes('shelf')) return "SHELF";
-  if (name.includes('partition')) return "PARTITION";
-  if (name.includes('back panel')) return "BACK";
-  if (name.includes('shutter')) return "SHUTTER";
-  if (name.includes('door')) return "DOOR";
-  if (name.includes('drawer front')) return "DRAWER_FRONT";
+  console.log(`🔍 LAMINATE MAPPING: "${panelName}" → ${name}`);
   
-  // Loft components
+  // Order matters - more specific checks first
+  
+  // Loft components (check before general components to avoid mismatching)
   if (name.includes('loft') && name.includes('side')) return "LOFT_SIDE";
   if (name.includes('loft') && name.includes('top')) return "LOFT_TOP";
   if (name.includes('loft') && name.includes('bottom')) return "LOFT_BOTTOM";
   if (name.includes('loft') && name.includes('back')) return "LOFT_BACK";
   if (name.includes('loft') && name.includes('shelf')) return "LOFT_SHELF";
+  // 🎯 FIX: Loft shutters should be treated as SHUTTER for outer laminate
+  if (name.includes('loft') && name.includes('shutter')) return "SHUTTER";
+  
+  // Visible front elements (get outer laminate) - check after loft
+  if (name.includes('shutter')) return "SHUTTER";
+  if (name.includes('door')) return "DOOR";
+  if (name.includes('drawer front')) return "DRAWER_FRONT";
+  
+  // Drawer components
+  if (name.includes('drawer side')) return "SIDE"; // Treat as interior sides
+  if (name.includes('drawer back')) return "BACK"; // Treat as back panel
+  if (name.includes('drawer bottom')) return "BOTTOM"; // Treat as bottom
+  
+  // Structural elements
+  if (name.includes('side panel') || name.includes('side')) return "SIDE";
+  if (name.includes('top panel') || name.includes('top')) return "TOP";  
+  if (name.includes('bottom panel') || name.includes('bottom')) return "BOTTOM";
+  if (name.includes('back panel') || name.includes('back')) return "BACK";
+  if (name.includes('partition')) return "PARTITION";
+  if (name.includes('shelf')) return "SHELF";
+  
+  console.log(`⚠️  UNMAPPED PANEL: "${panelName}" - defaulting to PARTITION`);
   
   // Default fallback
   return "PARTITION";

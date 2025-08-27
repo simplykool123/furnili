@@ -2177,7 +2177,9 @@ export const calculateWardrobeBOM = (data: any) => {
       w_mm: panel.length,
       h_mm: panel.width,
       qty: panel.qty,
-      isExposedEnd: panel.panel.toLowerCase().includes('side panel') && exposedSides
+      // 🎯 FIX: Set isExposedEnd correctly for side panels
+      isExposedEnd: (panel.panel.toLowerCase().includes('side panel') || 
+                     panel.panel.toLowerCase().includes('loft side panel')) && exposedSides
     }));
     
     const wardrobeTypeClean = mapWardrobeType(wardrobeType || 'openable');
