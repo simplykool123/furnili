@@ -232,20 +232,21 @@ const splitOversizedPanels = (panels: Panel[], sheetSize = { length: 2440, width
     const panelL = panel.length;
     const panelW = panel.width;
     
-    // 🎯 SIMPLE OVERSIZE CHECK: If any dimension > 4ft (1220mm), it's oversized
-    const maxDimension = 1220; // 4ft in mm
-    const isOversized = panelL > maxDimension || panelW > maxDimension;
+    // 🎯 SIMPLE OVERSIZE CHECK: Panel is oversized if it can't fit in sheet in any orientation
+    const fitsNormally = panelL <= sheetSize.length && panelW <= sheetSize.width;
+    const fitsRotated = panelL <= sheetSize.width && panelW <= sheetSize.length;
+    const isOversized = !fitsNormally && !fitsRotated;
     
     if (!isOversized) {
       // Panel fits in sheet - no splitting needed
       splitPanels.push(panel);
     } else {
       // Panel is oversized - split it properly
-      console.log(`🔧 OVERSIZED: ${panel.panel} (${panelL}×${panelW}mm) exceeds 4ft (${maxDimension}mm)`);
+      console.log(`🔧 OVERSIZED: ${panel.panel} (${panelL}×${panelW}mm) exceeds sheet (${sheetSize.length}×${sheetSize.width}mm)`);
       
-      // Calculate number of pieces needed (divide by 4ft)
-      const piecesLength = Math.ceil(panelL / maxDimension);
-      const piecesWidth = Math.ceil(panelW / maxDimension);
+      // Calculate number of pieces needed
+      const piecesLength = Math.ceil(panelL / sheetSize.length);
+      const piecesWidth = Math.ceil(panelW / sheetSize.width);
       
       console.log(`→ Splitting into ${piecesLength} × ${piecesWidth} = ${piecesLength * piecesWidth} pieces`);
       
@@ -253,11 +254,11 @@ const splitOversizedPanels = (panels: Panel[], sheetSize = { length: 2440, width
       for (let i = 0; i < piecesLength; i++) {
         for (let j = 0; j < piecesWidth; j++) {
           // Calculate actual dimensions for this piece
-          const remainingLength = panelL - (i * maxDimension);
-          const remainingWidth = panelW - (j * maxDimension);
+          const remainingLength = panelL - (i * sheetSize.length);
+          const remainingWidth = panelW - (j * sheetSize.width);
           
-          const pieceLength = Math.min(maxDimension, remainingLength);
-          const pieceWidth = Math.min(maxDimension, remainingWidth);
+          const pieceLength = Math.min(sheetSize.length, remainingLength);
+          const pieceWidth = Math.min(sheetSize.width, remainingWidth);
           
           const splitPanel: Panel = {
             ...panel,
@@ -288,8 +289,8 @@ const calculateSheetOptimization = (panels: Panel[], sheetSize = { length: 2440,
   const sheetsNeeded: { [thickness: string]: number } = {};
   const nestingLayout: any[] = [];
   
-  // 🎯 STEP 1: Auto-split oversized panels before optimization
-  const processedPanels = splitOversizedPanels(panels, sheetSize);
+  // 🎯 STEP 1: Use panels as-is, nesting algorithm now handles tiling
+  const processedPanels = panels;
   console.log(`📦 Panel processing: ${panels.length} original → ${processedPanels.length} after splitting`);
   
   // Group processed panels by thickness for separate sheet calculations
@@ -365,7 +366,8 @@ const calculateSheetOptimization = (panels: Panel[], sheetSize = { length: 2440,
   });
 
   const totalSheets = Object.values(sheetsNeeded).reduce((sum, count) => sum + count, 0);
-  const efficiency = totalSheets > 0 ? (totalPanelArea / (totalSheets * sheetArea)) * 100 : 0;
+  const totalSheetArea = totalSheets * sheetArea;
+  const efficiency = Math.min(100, totalSheetArea > 0 ? (totalPanelArea / totalSheetArea) * 100 : 0);
   
   return {
     sheets_required: totalSheets,

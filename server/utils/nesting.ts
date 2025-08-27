@@ -33,10 +33,60 @@ export type SheetResult = {
   waste?: number;
 };
 
+// 🎯 TILING FUNCTION: Split oversized panels into tileable pieces
+function tileOversizedPanels(panels: Panel[], sheetW: number, sheetH: number): Panel[] {
+  const tiledPanels: Panel[] = [];
+  
+  panels.forEach(panel => {
+    // Check if panel needs tiling (exceeds sheet dimensions)
+    const needsTilingW = panel.w > sheetW;
+    const needsTilingH = panel.h > sheetH;
+    
+    if (!needsTilingW && !needsTilingH) {
+      // Panel fits, add as-is
+      tiledPanels.push(panel);
+    } else {
+      // Panel needs tiling - split into smaller pieces
+      console.log(`🔧 TILING: ${panel.id} (${panel.w}×${panel.h}) → split for better nesting`);
+      
+      // Calculate optimal tile dimensions
+      const tilesW = Math.ceil(panel.w / sheetW);
+      const tilesH = Math.ceil(panel.h / sheetH);
+      
+      console.log(`→ Tiling into ${tilesW}×${tilesH} pieces for nesting optimization`);
+      
+      // Create tiled pieces
+      for (let i = 0; i < tilesW; i++) {
+        for (let j = 0; j < tilesH; j++) {
+          const remainingW = panel.w - (i * sheetW);
+          const remainingH = panel.h - (j * sheetH);
+          
+          const tileW = Math.min(sheetW, remainingW);
+          const tileH = Math.min(sheetH, remainingH);
+          
+          tiledPanels.push({
+            id: `${panel.id}-tile${i + 1}x${j + 1}`,
+            w: tileW,
+            h: tileH,
+            qty: panel.qty, // Keep original qty - will be expanded later
+            allowRotate: panel.allowRotate,
+            grain: panel.grain
+          });
+        }
+      }
+    }
+  });
+  
+  return tiledPanels;
+}
+
 export function nestPanels(panelsIn: Panel[], opt: NestingOptions) {
+  // 🎯 STEP 1: Apply tiling to oversized panels first
+  const tiledPanels = tileOversizedPanels(panelsIn, opt.sheetW - 2 * opt.marginX, opt.sheetH - 2 * opt.marginY);
+  
   // explode quantities and sort
   const panels: (Panel & { _area: number })[] = [];
-  for (const p of panelsIn) {
+  for (const p of tiledPanels) {
     for (let i = 0; i < p.qty; i++) panels.push({ ...p, _area: p.w * p.h });
   }
   panels.sort((a,b) => {
@@ -209,8 +259,8 @@ export function nestPanels(panelsIn: Panel[], opt: NestingOptions) {
 
   const results = sheets.map(s => ({
     ...s,
-    utilization: s.usedArea / sheetNetArea,
-    waste: 1 - (s.usedArea / sheetNetArea),
+    utilization: Math.min(1.0, s.usedArea / sheetNetArea), // Cap at 100%
+    waste: Math.max(0, 1 - (s.usedArea / sheetNetArea)),    // Prevent negative waste
   }));
 
   return { sheets: results, sheetNetArea };
