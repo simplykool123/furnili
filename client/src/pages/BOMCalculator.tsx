@@ -1324,6 +1324,26 @@ export default function BOMCalculator() {
                               </FormItem>
                             )}
                           />
+                          <FormField
+                            control={form.control}
+                            name="partsConfig.drawers"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="text-xs">Drawers</FormLabel>
+                                <FormControl>
+                                  <Input
+                                    type="number"
+                                    min="0"
+                                    max="8"
+                                    className="h-8 text-xs"
+                                    placeholder="2"
+                                    {...field}
+                                    onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                                  />
+                                </FormControl>
+                              </FormItem>
+                            )}
+                          />
                           <div className="col-span-2 grid grid-cols-2 gap-3">
                             <FormField
                               control={form.control}
