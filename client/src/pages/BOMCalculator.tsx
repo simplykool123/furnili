@@ -930,6 +930,130 @@ export default function BOMCalculator() {
         </div>
       )}
 
+      {/* Step 2: Choose Bed Type (if bed selected) */}
+      {selectedFurnitureType === 'bed' && (
+        <div className="bg-card shadow-sm border rounded-lg mb-6">
+          <div className="px-4 py-6">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="bg-[hsl(28,100%,25%)] text-white px-3 py-1 rounded-full text-sm font-medium">
+                Step 2: Choose Bed Type
+              </div>
+            </div>
+            <Form {...form}>
+              <div className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="partsConfig.bedType"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-sm font-medium">Bed Size</FormLabel>
+                      <div className="grid grid-cols-3 gap-3">
+                        {[
+                          { value: 'single', label: 'Single', icon: Bed, desc: '90×190cm', size: { width: 900, depth: 1900 } },
+                          { value: 'queen', label: 'Queen', icon: Bed, desc: '150×200cm', size: { width: 1500, depth: 2000 } },
+                          { value: 'king', label: 'King', icon: Bed, desc: '180×200cm', size: { width: 1800, depth: 2000 } },
+                          { value: 'king_xl', label: 'King XL', icon: Bed, desc: '200×220cm', size: { width: 2000, depth: 2200 } },
+                          { value: 'bunk', label: 'Bunk', icon: Layers, desc: '90×190cm', size: { width: 900, depth: 1900 } }
+                        ].map((bedType) => {
+                          const IconComponent = bedType.icon;
+                          const isSelected = field.value === bedType.value;
+                          
+                          return (
+                            <button
+                              key={bedType.value}
+                              type="button"
+                              onClick={() => {
+                                field.onChange(bedType.value);
+                                // Auto-update dimensions based on bed size
+                                form.setValue('width', bedType.size.width);
+                                form.setValue('depth', bedType.size.depth);
+                                form.setValue('height', 900); // Standard bed height
+                              }}
+                              className={`p-4 rounded-lg border-2 transition-all duration-200 text-center ${
+                                isSelected 
+                                  ? 'border-[hsl(28,100%,25%)] bg-[hsl(28,100%,25%)] text-white shadow-lg' 
+                                  : 'border-border bg-card hover:border-[hsl(28,100%,25%)]/30 hover:bg-accent'
+                              }`}
+                            >
+                              <IconComponent className={`w-8 h-8 mx-auto mb-2 ${isSelected ? 'text-white' : 'text-[hsl(28,100%,25%)]'}`} />
+                              <div className={`text-sm font-medium ${isSelected ? 'text-white' : 'text-foreground'}`}>
+                                {bedType.label}
+                              </div>
+                              <div className={`text-xs ${isSelected ? 'text-white/80' : 'text-muted-foreground'}`}>
+                                {bedType.desc}
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </Form>
+          </div>
+        </div>
+      )}
+
+      {/* Step 2: Choose Kitchen Layout (if kitchen selected) */}
+      {selectedFurnitureType === 'kitchen_cabinet' && (
+        <div className="bg-card shadow-sm border rounded-lg mb-6">
+          <div className="px-4 py-6">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="bg-[hsl(28,100%,25%)] text-white px-3 py-1 rounded-full text-sm font-medium">
+                Step 2: Choose Kitchen Layout
+              </div>
+            </div>
+            <Form {...form}>
+              <div className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="partsConfig.kitchenLayout"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-sm font-medium">Kitchen Layout</FormLabel>
+                      <div className="grid grid-cols-3 gap-3">
+                        {[
+                          { value: 'L-shaped', label: 'L-shaped', icon: CornerDownRight, desc: 'Corner layout' },
+                          { value: 'U-shaped', label: 'U-shaped', icon: Move3D, desc: 'Three walls' },
+                          { value: 'Parallel', label: 'Parallel', icon: Menu, desc: 'Two parallel walls' },
+                          { value: 'Single-line', label: 'Single-line', icon: Minus, desc: 'One wall' },
+                          { value: 'G-shaped', label: 'G-shaped', icon: CornerUpLeft, desc: 'Peninsula style' }
+                        ].map((layout) => {
+                          const IconComponent = layout.icon;
+                          const isSelected = field.value === layout.value;
+                          
+                          return (
+                            <button
+                              key={layout.value}
+                              type="button"
+                              onClick={() => field.onChange(layout.value)}
+                              className={`p-4 rounded-lg border-2 transition-all duration-200 text-center ${
+                                isSelected 
+                                  ? 'border-[hsl(28,100%,25%)] bg-[hsl(28,100%,25%)] text-white shadow-lg' 
+                                  : 'border-border bg-card hover:border-[hsl(28,100%,25%)]/30 hover:bg-accent'
+                              }`}
+                            >
+                              <IconComponent className={`w-8 h-8 mx-auto mb-2 ${isSelected ? 'text-white' : 'text-[hsl(28,100%,25%)]'}`} />
+                              <div className={`text-sm font-medium ${isSelected ? 'text-white' : 'text-foreground'}`}>
+                                {layout.label}
+                              </div>
+                              <div className={`text-xs ${isSelected ? 'text-white/80' : 'text-muted-foreground'}`}>
+                                {layout.desc}
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </Form>
+          </div>
+        </div>
+      )}
+
       {/* Calculator Section */}
       <div className="space-y-4 p-4">
         {/* Calculator Form */}
@@ -1177,56 +1301,6 @@ export default function BOMCalculator() {
                       {/* Bed-specific configurations */}
                       {selectedFurnitureType === 'bed' && (
                         <>
-                          <div className="col-span-2">
-                            <FormField
-                              control={form.control}
-                              name="partsConfig.bedType"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel className="text-sm font-medium">Bed Size</FormLabel>
-                                  <div className="grid grid-cols-3 gap-2">
-                                    {[
-                                      { value: 'single', label: 'Single', icon: Bed, desc: '90×190cm', size: { width: 900, depth: 1900 } },
-                                      { value: 'queen', label: 'Queen', icon: Bed, desc: '150×200cm', size: { width: 1500, depth: 2000 } },
-                                      { value: 'king', label: 'King', icon: Bed, desc: '180×200cm', size: { width: 1800, depth: 2000 } },
-                                      { value: 'king_xl', label: 'King XL', icon: Bed, desc: '200×220cm', size: { width: 2000, depth: 2200 } },
-                                      { value: 'bunk', label: 'Bunk', icon: Layers, desc: '90×190cm', size: { width: 900, depth: 1900 } }
-                                    ].map((bedType) => {
-                                      const IconComponent = bedType.icon;
-                                      const isSelected = field.value === bedType.value;
-                                      
-                                      return (
-                                        <button
-                                          key={bedType.value}
-                                          type="button"
-                                          onClick={() => {
-                                            field.onChange(bedType.value);
-                                            // Auto-update dimensions based on bed size
-                                            form.setValue('width', bedType.size.width);
-                                            form.setValue('depth', bedType.size.depth);
-                                            form.setValue('height', 900); // Standard bed height
-                                          }}
-                                          className={`p-3 rounded-lg border-2 transition-all duration-200 text-center ${
-                                            isSelected 
-                                              ? 'border-[hsl(28,100%,25%)] bg-[hsl(28,100%,25%)] text-white shadow-lg' 
-                                              : 'border-border bg-card hover:border-[hsl(28,100%,25%)]/30 hover:bg-accent'
-                                          }`}
-                                        >
-                                          <IconComponent className={`w-6 h-6 mx-auto mb-1 ${isSelected ? 'text-white' : 'text-[hsl(28,100%,25%)]'}`} />
-                                          <div className={`text-xs font-medium ${isSelected ? 'text-white' : 'text-foreground'}`}>
-                                            {bedType.label}
-                                          </div>
-                                          <div className={`text-xs ${isSelected ? 'text-white/80' : 'text-muted-foreground'}`}>
-                                            {bedType.desc}
-                                          </div>
-                                        </button>
-                                      );
-                                    })}
-                                  </div>
-                                </FormItem>
-                              )}
-                            />
-                          </div>
                           <FormField
                             control={form.control}
                             name="partsConfig.storage"
@@ -1375,50 +1449,6 @@ export default function BOMCalculator() {
                       {/* Kitchen Cabinet configurations */}
                       {selectedFurnitureType === 'kitchen_cabinet' && (
                         <>
-                          <div className="col-span-2">
-                            <FormField
-                              control={form.control}
-                              name="partsConfig.kitchenLayout"
-                              render={({ field }) => (
-                                <FormItem>
-                                  <FormLabel className="text-sm font-medium">Kitchen Layout</FormLabel>
-                                  <div className="grid grid-cols-3 gap-2">
-                                    {[
-                                      { value: 'L-shaped', label: 'L-shaped', icon: CornerDownRight, desc: 'Corner layout' },
-                                      { value: 'U-shaped', label: 'U-shaped', icon: Move3D, desc: 'Three walls' },
-                                      { value: 'Parallel', label: 'Parallel', icon: Menu, desc: 'Two parallel walls' },
-                                      { value: 'Single-line', label: 'Single-line', icon: Minus, desc: 'One wall' },
-                                      { value: 'G-shaped', label: 'G-shaped', icon: CornerUpLeft, desc: 'Peninsula style' }
-                                    ].map((layout) => {
-                                      const IconComponent = layout.icon;
-                                      const isSelected = field.value === layout.value;
-                                      
-                                      return (
-                                        <button
-                                          key={layout.value}
-                                          type="button"
-                                          onClick={() => field.onChange(layout.value)}
-                                          className={`p-3 rounded-lg border-2 transition-all duration-200 text-center ${
-                                            isSelected 
-                                              ? 'border-[hsl(28,100%,25%)] bg-[hsl(28,100%,25%)] text-white shadow-lg' 
-                                              : 'border-border bg-card hover:border-[hsl(28,100%,25%)]/30 hover:bg-accent'
-                                          }`}
-                                        >
-                                          <IconComponent className={`w-6 h-6 mx-auto mb-1 ${isSelected ? 'text-white' : 'text-[hsl(28,100%,25%)]'}`} />
-                                          <div className={`text-xs font-medium ${isSelected ? 'text-white' : 'text-foreground'}`}>
-                                            {layout.label}
-                                          </div>
-                                          <div className={`text-xs ${isSelected ? 'text-white/80' : 'text-muted-foreground'}`}>
-                                            {layout.desc}
-                                          </div>
-                                        </button>
-                                      );
-                                    })}
-                                  </div>
-                                </FormItem>
-                              )}
-                            />
-                          </div>
                           <FormField
                             control={form.control}
                             name="partsConfig.baseCabinets"
