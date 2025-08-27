@@ -232,20 +232,20 @@ const splitOversizedPanels = (panels: Panel[], sheetSize = { length: 2440, width
     const panelL = panel.length;
     const panelW = panel.width;
     
-    // 🎯 SIMPLE FIX: Check if panel exceeds 4×8 sheet (2440×1220mm)
-    const exceedsLength = panelL > sheetSize.length; // > 2440mm
-    const exceedsWidth = panelW > sheetSize.width;   // > 1220mm
+    // 🎯 SIMPLE OVERSIZE CHECK: If any dimension > 4ft (1220mm), it's oversized
+    const maxDimension = 1220; // 4ft in mm
+    const isOversized = panelL > maxDimension || panelW > maxDimension;
     
-    if (!exceedsLength && !exceedsWidth) {
+    if (!isOversized) {
       // Panel fits in sheet - no splitting needed
       splitPanels.push(panel);
     } else {
       // Panel is oversized - split it properly
-      console.log(`🔧 OVERSIZED: ${panel.panel} (${panelL}×${panelW}mm) exceeds 4×8 sheet (${sheetSize.length}×${sheetSize.width}mm)`);
+      console.log(`🔧 OVERSIZED: ${panel.panel} (${panelL}×${panelW}mm) exceeds 4ft (${maxDimension}mm)`);
       
-      // Calculate number of pieces needed
-      const piecesLength = Math.ceil(panelL / sheetSize.length);
-      const piecesWidth = Math.ceil(panelW / sheetSize.width);
+      // Calculate number of pieces needed (divide by 4ft)
+      const piecesLength = Math.ceil(panelL / maxDimension);
+      const piecesWidth = Math.ceil(panelW / maxDimension);
       
       console.log(`→ Splitting into ${piecesLength} × ${piecesWidth} = ${piecesLength * piecesWidth} pieces`);
       
@@ -253,11 +253,11 @@ const splitOversizedPanels = (panels: Panel[], sheetSize = { length: 2440, width
       for (let i = 0; i < piecesLength; i++) {
         for (let j = 0; j < piecesWidth; j++) {
           // Calculate actual dimensions for this piece
-          const remainingLength = panelL - (i * sheetSize.length);
-          const remainingWidth = panelW - (j * sheetSize.width);
+          const remainingLength = panelL - (i * maxDimension);
+          const remainingWidth = panelW - (j * maxDimension);
           
-          const pieceLength = Math.min(sheetSize.length, remainingLength);
-          const pieceWidth = Math.min(sheetSize.width, remainingWidth);
+          const pieceLength = Math.min(maxDimension, remainingLength);
+          const pieceWidth = Math.min(maxDimension, remainingWidth);
           
           const splitPanel: Panel = {
             ...panel,

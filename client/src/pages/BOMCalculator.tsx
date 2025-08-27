@@ -2532,15 +2532,12 @@ export default function BOMCalculator() {
                                 // Calculate if panel fits in standard sheet
                                 const panelLength = item.length || 0;
                                 const panelWidth = item.width || 0;
-                                const sheetLength = 2440; // 8 feet in mm
-                                const sheetWidth = 1220;  // 4 feet in mm
-                                
-                                const fitsInSheet = (panelLength <= sheetLength && panelWidth <= sheetWidth) ||
-                                                  (panelWidth <= sheetLength && panelLength <= sheetWidth);
+                                // 🎯 SIMPLE OVERSIZE CHECK: If any dimension > 4ft (1220mm), it's oversized
+                                const maxDimension = 1220; // 4 feet in mm
+                                const fitsInSheet = panelLength <= maxDimension && panelWidth <= maxDimension;
                                 
                                 const panelsPerSheet = fitsInSheet ? 
-                                  Math.floor((sheetLength / panelLength) * (sheetWidth / panelWidth)) || 
-                                  Math.floor((sheetLength / panelWidth) * (sheetWidth / panelLength)) || 1 : 0;
+                                  Math.floor((maxDimension / panelLength) * (maxDimension / panelWidth)) || 1 : 0;
                                 
                                 return (
                                   <TableRow key={item.id} className="hover:bg-muted/20 h-7 border-b border-gray-100">
