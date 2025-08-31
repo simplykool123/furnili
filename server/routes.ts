@@ -2588,7 +2588,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (req.file.mimetype === 'image/jpeg') extension = '.jpg';
         else if (req.file.mimetype === 'image/png') extension = '.png';
         else if (req.file.originalname) {
-          const ext = path.extname(req.file.originalname);
+          const ext = path.default.extname(req.file.originalname);
           if (ext) extension = ext;
         }
         
@@ -2598,7 +2598,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const newPath = `uploads/receipts/${newFileName}`;
         
         // Move file from temp location to new name
-        fs.renameSync(req.file.path, newPath);
+        fs.default.renameSync(req.file.path, newPath);
         // console.log(`Receipt image renamed from ${req.file.path} to ${newPath}`);
         
         // Update expense with new image path
@@ -2655,7 +2655,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (req.file.mimetype === 'image/jpeg') extension = '.jpg';
         else if (req.file.mimetype === 'image/png') extension = '.png';
         else if (req.file.originalname) {
-          const ext = path.extname(req.file.originalname);
+          const ext = path.default.extname(req.file.originalname);
           if (ext) extension = ext;
         }
         
@@ -2665,7 +2665,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const newPath = `uploads/receipts/${newFileName}`;
         
         // Move file from temp location to new name
-        fs.renameSync(req.file.path, newPath);
+        fs.default.renameSync(req.file.path, newPath);
         // console.log(`Receipt image renamed from ${req.file.path} to ${newPath}`);
         
         // Update funds with new image path
@@ -2742,7 +2742,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (req.file.mimetype === 'image/jpeg') extension = '.jpg';
         else if (req.file.mimetype === 'image/png') extension = '.png';
         else if (req.file.originalname) {
-          const ext = path.extname(req.file.originalname);
+          const ext = path.default.extname(req.file.originalname);
           if (ext) extension = ext;
         }
         
@@ -2752,7 +2752,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const newPath = `uploads/receipts/${newFileName}`;
         
         // Move file from temp location to new name
-        fs.renameSync(req.file.path, newPath);
+        fs.default.renameSync(req.file.path, newPath);
         // console.log(`Receipt image renamed from ${req.file.path} to ${newPath}`);
         
         // Update expense with new image path
