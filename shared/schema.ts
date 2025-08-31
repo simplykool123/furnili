@@ -416,6 +416,8 @@ export const pettyCashExpenses = pgTable("petty_cash_expenses", {
   orderNo: text("order_no"), // Legacy field - keeping for backward compatibility
   paidBy: integer("paid_by").references(() => users.id), // Staff member who paid
   receiptImageUrl: text("receipt_image_url"), // Google Pay screenshot
+  billImageUrl: text("bill_image_url"), // Bills/invoices image
+  materialImageUrl: text("material_image_url"), // Material/product photos
   extractedData: jsonb("extracted_data"), // OCR extracted data
   expenseDate: timestamp("expense_date").notNull(),
   addedBy: integer("added_by").references(() => users.id).notNull(),

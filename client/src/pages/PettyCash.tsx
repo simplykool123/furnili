@@ -91,6 +91,8 @@ export default function PettyCash() {
     projectId: "", // Project ID for expense tracking
     orderNo: "", // Legacy field for backward compatibility
     receiptImage: null as File | null,
+    billImage: null as File | null,
+    materialImage: null as File | null,
     category: "", // Keep for filtering
   });
 
@@ -117,6 +119,8 @@ export default function PettyCash() {
       projectId: "",
       orderNo: "",
       receiptImage: null,
+      billImage: null,
+      materialImage: null,
       category: "",
     });
   };
@@ -1160,6 +1164,35 @@ export default function PettyCash() {
     }
   };
 
+  const handleSpecificImageUpload = (event: React.ChangeEvent<HTMLInputElement>, imageType: 'bill' | 'material') => {
+    const file = event.target.files?.[0];
+    if (file) {
+      if (imageType === 'bill') {
+        setFormData(prev => ({ ...prev, billImage: file }));
+      } else {
+        setFormData(prev => ({ ...prev, materialImage: file }));
+      }
+    }
+  };
+
+  const handleFileDrop = (e: React.DragEvent, imageType: 'bill' | 'material') => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const files = Array.from(e.dataTransfer.files);
+    const imageFile = files.find(file => file.type.startsWith('image/'));
+    
+    if (imageFile) {
+      if (imageType === 'bill') {
+        setFormData(prev => ({ ...prev, billImage: imageFile }));
+      } else {
+        setFormData(prev => ({ ...prev, materialImage: imageFile }));
+      }
+    } else {
+      toast({ title: "Invalid file", description: "Please upload an image file", variant: "destructive" });
+    }
+  };
+
   const processFile = (file: File) => {
     console.log('Processing file:', {
       name: file.name,
@@ -1250,6 +1283,14 @@ export default function PettyCash() {
       formDataToSend.append('receipt', formData.receiptImage);
     } else {
       // console.log("No receipt file to append");
+    }
+
+    if (formData.billImage) {
+      formDataToSend.append('bill', formData.billImage);
+    }
+
+    if (formData.materialImage) {
+      formDataToSend.append('material', formData.materialImage);
     }
     
     // Log all FormData entries for debugging
@@ -2122,6 +2163,88 @@ export default function PettyCash() {
               </div>
             </div>
 
+            {/* Bill Image Upload */}
+            <div>
+              <Label htmlFor="bill">Bill/Invoice Image (Optional)</Label>
+              <div 
+                className="border-2 border-dashed rounded-lg p-4 text-center transition-colors border-gray-300 hover:border-gray-400"
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={(e) => handleFileDrop(e, 'bill')}
+              >
+                {formData.billImage ? (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-center gap-2">
+                      <Upload className="h-4 w-4 text-green-600" />
+                      <span className="text-sm font-medium text-green-600">
+                        {formData.billImage.name}
+                      </span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-center gap-2">
+                      <Upload className="h-6 w-6 text-gray-400" />
+                    </div>
+                    <div className="text-sm text-gray-600">
+                      <strong>Drag & drop</strong> or{" "}
+                      <label htmlFor="bill" className="text-amber-600 cursor-pointer hover:underline">
+                        choose file
+                      </label>
+                    </div>
+                  </div>
+                )}
+                <input
+                  id="bill"
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => handleSpecificImageUpload(e, 'bill')}
+                  className="hidden"
+                />
+              </div>
+            </div>
+
+            {/* Material Image Upload */}
+            <div>
+              <Label htmlFor="material">Material/Product Photo (Optional)</Label>
+              <div 
+                className="border-2 border-dashed rounded-lg p-4 text-center transition-colors border-gray-300 hover:border-gray-400"
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={(e) => handleFileDrop(e, 'material')}
+              >
+                {formData.materialImage ? (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-center gap-2">
+                      <Upload className="h-4 w-4 text-green-600" />
+                      <span className="text-sm font-medium text-green-600">
+                        {formData.materialImage.name}
+                      </span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-center gap-2">
+                      <Upload className="h-6 w-6 text-gray-400" />
+                    </div>
+                    <div className="text-sm text-gray-600">
+                      <strong>Drag & drop</strong> or{" "}
+                      <label htmlFor="material" className="text-amber-600 cursor-pointer hover:underline">
+                        choose file
+                      </label>
+                    </div>
+                  </div>
+                )}
+                <input
+                  id="material"
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => handleSpecificImageUpload(e, 'material')}
+                  className="hidden"
+                />
+              </div>
+            </div>
+
             <div className="flex justify-end gap-2 pt-4">
               <Button type="button" variant="outline" onClick={() => {
                 resetFormData();
@@ -2156,6 +2279,12 @@ export default function PettyCash() {
             formPayload.append('category', formData.category);
             if (formData.receiptImage) {
               formPayload.append('receipt', formData.receiptImage);
+            }
+            if (formData.billImage) {
+              formPayload.append('bill', formData.billImage);
+            }
+            if (formData.materialImage) {
+              formPayload.append('material', formData.materialImage);
             }
             editExpenseMutation.mutate({ id: editingExpense!.id, expenseData: formPayload });
           }} className="space-y-4">
@@ -2326,6 +2455,88 @@ export default function PettyCash() {
                 <p className="text-xs text-gray-600">
                   📱 Leave blank to keep existing receipt
                 </p>
+              </div>
+            </div>
+
+            {/* Bill Image Upload */}
+            <div>
+              <Label htmlFor="edit-bill">Bill/Invoice Image (Optional)</Label>
+              <div 
+                className="border-2 border-dashed rounded-lg p-4 text-center transition-colors border-gray-300 hover:border-gray-400"
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={(e) => handleFileDrop(e, 'bill')}
+              >
+                {formData.billImage ? (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-center gap-2">
+                      <Upload className="h-4 w-4 text-green-600" />
+                      <span className="text-sm font-medium text-green-600">
+                        {formData.billImage.name}
+                      </span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-center gap-2">
+                      <Upload className="h-6 w-6 text-gray-400" />
+                    </div>
+                    <div className="text-sm text-gray-600">
+                      <strong>Drag & drop</strong> or{" "}
+                      <label htmlFor="edit-bill" className="text-amber-600 cursor-pointer hover:underline">
+                        choose file
+                      </label>
+                    </div>
+                  </div>
+                )}
+                <input
+                  id="edit-bill"
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => handleSpecificImageUpload(e, 'bill')}
+                  className="hidden"
+                />
+              </div>
+            </div>
+
+            {/* Material Image Upload */}
+            <div>
+              <Label htmlFor="edit-material">Material/Product Photo (Optional)</Label>
+              <div 
+                className="border-2 border-dashed rounded-lg p-4 text-center transition-colors border-gray-300 hover:border-gray-400"
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={(e) => handleFileDrop(e, 'material')}
+              >
+                {formData.materialImage ? (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-center gap-2">
+                      <Upload className="h-4 w-4 text-green-600" />
+                      <span className="text-sm font-medium text-green-600">
+                        {formData.materialImage.name}
+                      </span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-center gap-2">
+                      <Upload className="h-6 w-6 text-gray-400" />
+                    </div>
+                    <div className="text-sm text-gray-600">
+                      <strong>Drag & drop</strong> or{" "}
+                      <label htmlFor="edit-material" className="text-amber-600 cursor-pointer hover:underline">
+                        choose file
+                      </label>
+                    </div>
+                  </div>
+                )}
+                <input
+                  id="edit-material"
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => handleSpecificImageUpload(e, 'material')}
+                  className="hidden"
+                />
               </div>
             </div>
 
