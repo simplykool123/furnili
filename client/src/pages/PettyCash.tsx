@@ -70,6 +70,8 @@ export default function PettyCash() {
   const [editingExpense, setEditingExpense] = useState<PettyCashExpense | null>(null);
   const [showImageDialog, setShowImageDialog] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string>("");
+  const [selectedImages, setSelectedImages] = useState<string[]>([]);
+  const [currentImageIndex, setCurrentImageIndex] = useState<number>(0);
   const [showStaffBalances, setShowStaffBalances] = useState(false);
   const [showExpenseDetailsDialog, setShowExpenseDetailsDialog] = useState(false);
   const [selectedExpenseDetails, setSelectedExpenseDetails] = useState<PettyCashExpense | null>(null);
@@ -1361,10 +1363,14 @@ export default function PettyCash() {
     const netTotal = totalIncome - totalExpenses;
 
     const csvContent = [
-      'Date,Type,Amount,Paid To/Source,Paid By,Purpose,Category,Project ID,Description',
-      ...filteredExpenses.map((expense: PettyCashExpense) => 
-        `${format(new Date(expense.expenseDate), 'dd MMM yyyy')},"${expense.status === 'income' ? 'Credit' : 'Debit'}","${expense.status === 'income' ? '+' : '-'}₹${expense.amount.toLocaleString()}","${expense.vendor}","${expense.user?.name || expense.user?.username || 'N/A'}","${expense.description || ''}","${expense.category}","${expense.projectId || '-'}","${expense.description || ''}"`
-      ),
+      'Date,Type,Amount,Paid To/Source,Paid By,Purpose,Category,Project ID,Description,Receipt Image,Bill Image,Material Image',
+      ...filteredExpenses.map((expense: PettyCashExpense) => {
+        const receiptImage = (expense as any).receiptImageUrl ? `"${window.location.origin}/${(expense as any).receiptImageUrl}"` : '""';
+        const billImage = (expense as any).billImageUrl ? `"${window.location.origin}/${(expense as any).billImageUrl}"` : '""';
+        const materialImage = (expense as any).materialImageUrl ? `"${window.location.origin}/${(expense as any).materialImageUrl}"` : '""';
+        
+        return `${format(new Date(expense.expenseDate), 'dd MMM yyyy')},"${expense.status === 'income' ? 'Credit' : 'Debit'}","${expense.status === 'income' ? '+' : '-'}₹${expense.amount.toLocaleString()}","${expense.vendor}","${expense.user?.name || expense.user?.username || 'N/A'}","${expense.description || ''}","${expense.category}","${expense.projectId || '-'}","${expense.description || ''}",${receiptImage},${billImage},${materialImage}`;
+      }),
       '',
       'TOTALS:',
       `Total Income,+₹${totalIncome.toLocaleString()}`,
@@ -2787,21 +2793,84 @@ export default function PettyCash() {
                 <div className="text-sm">{selectedExpenseDetails.description || '-'}</div>
               </div>
 
-              {selectedExpenseDetails.receiptImageUrl && (
+              {/* Images Section - Show all 3 image types if available */}
+              {(selectedExpenseDetails.receiptImageUrl || selectedExpenseDetails.billImageUrl || selectedExpenseDetails.materialImageUrl) && (
                 <div>
-                  <div className="text-sm font-medium text-gray-600 mb-2">Receipt</div>
-                  <div className="flex justify-center">
-                    <img 
-                      src={selectedExpenseDetails.receiptImageUrl}
-                      alt="Receipt" 
-                      className="max-w-full max-h-[200px] object-contain rounded-lg border cursor-pointer"
-                      onClick={() => {
-                        setSelectedImage(selectedExpenseDetails.receiptImageUrl || "");
-                        setShowImageDialog(true);
-                        setShowExpenseDetailsDialog(false);
-                      }}
-                      title="Click to view full size"
-                    />
+                  <div className="text-sm font-medium text-gray-600 mb-2">Attachments</div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    {/* Receipt Image */}
+                    {selectedExpenseDetails.receiptImageUrl && (
+                      <div>
+                        <div className="text-xs text-gray-500 mb-1">Receipt/Proof</div>
+                        <img 
+                          src={selectedExpenseDetails.receiptImageUrl}
+                          alt="Receipt" 
+                          className="w-full h-[120px] object-cover rounded-lg border cursor-pointer hover:opacity-80 transition-opacity"
+                          onClick={() => {
+                            const images = [
+                              selectedExpenseDetails.receiptImageUrl,
+                              selectedExpenseDetails.billImageUrl,
+                              selectedExpenseDetails.materialImageUrl
+                            ].filter(Boolean);
+                            setSelectedImages(images);
+                            setCurrentImageIndex(0);
+                            setShowImageDialog(true);
+                            setShowExpenseDetailsDialog(false);
+                          }}
+                          title="Click to view full size"
+                        />
+                      </div>
+                    )}
+                    
+                    {/* Bill Image */}
+                    {selectedExpenseDetails.billImageUrl && (
+                      <div>
+                        <div className="text-xs text-gray-500 mb-1">Bill/Invoice</div>
+                        <img 
+                          src={selectedExpenseDetails.billImageUrl}
+                          alt="Bill" 
+                          className="w-full h-[120px] object-cover rounded-lg border cursor-pointer hover:opacity-80 transition-opacity"
+                          onClick={() => {
+                            const images = [
+                              selectedExpenseDetails.receiptImageUrl,
+                              selectedExpenseDetails.billImageUrl,
+                              selectedExpenseDetails.materialImageUrl
+                            ].filter(Boolean);
+                            const billIndex = images.indexOf(selectedExpenseDetails.billImageUrl);
+                            setSelectedImages(images);
+                            setCurrentImageIndex(billIndex);
+                            setShowImageDialog(true);
+                            setShowExpenseDetailsDialog(false);
+                          }}
+                          title="Click to view full size"
+                        />
+                      </div>
+                    )}
+                    
+                    {/* Material Image */}
+                    {selectedExpenseDetails.materialImageUrl && (
+                      <div>
+                        <div className="text-xs text-gray-500 mb-1">Material/Product</div>
+                        <img 
+                          src={selectedExpenseDetails.materialImageUrl}
+                          alt="Material" 
+                          className="w-full h-[120px] object-cover rounded-lg border cursor-pointer hover:opacity-80 transition-opacity"
+                          onClick={() => {
+                            const images = [
+                              selectedExpenseDetails.receiptImageUrl,
+                              selectedExpenseDetails.billImageUrl,
+                              selectedExpenseDetails.materialImageUrl
+                            ].filter(Boolean);
+                            const materialIndex = images.indexOf(selectedExpenseDetails.materialImageUrl);
+                            setSelectedImages(images);
+                            setCurrentImageIndex(materialIndex);
+                            setShowImageDialog(true);
+                            setShowExpenseDetailsDialog(false);
+                          }}
+                          title="Click to view full size"
+                        />
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -2810,19 +2879,65 @@ export default function PettyCash() {
         </DialogContent>
       </Dialog>
 
-      {/* Image Preview Dialog */}
+      {/* Enhanced Image Preview Dialog with Navigation */}
       <Dialog open={showImageDialog} onOpenChange={setShowImageDialog}>
-        <DialogContent className="sm:max-w-[600px]">
+        <DialogContent className="sm:max-w-[700px]">
           <DialogHeader>
-            <DialogTitle>Receipt Image</DialogTitle>
+            <DialogTitle className="flex items-center justify-between">
+              <span>
+                {selectedImages.length > 1 
+                  ? `Image ${currentImageIndex + 1} of ${selectedImages.length}`
+                  : 'Image Preview'
+                }
+              </span>
+              {selectedImages.length > 1 && (
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentImageIndex((prev) => 
+                      prev > 0 ? prev - 1 : selectedImages.length - 1
+                    )}
+                    disabled={selectedImages.length <= 1}
+                  >
+                    ← Previous
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentImageIndex((prev) => 
+                      prev < selectedImages.length - 1 ? prev + 1 : 0
+                    )}
+                    disabled={selectedImages.length <= 1}
+                  >
+                    Next →
+                  </Button>
+                </div>
+              )}
+            </DialogTitle>
           </DialogHeader>
-          {selectedImage && (
+          {selectedImages.length > 0 && selectedImages[currentImageIndex] && (
             <div className="flex justify-center">
               <img 
-                src={selectedImage} 
-                alt="Receipt" 
+                src={selectedImages[currentImageIndex]} 
+                alt={`Image ${currentImageIndex + 1}`}
                 className="max-w-full max-h-[500px] object-contain rounded-lg"
               />
+            </div>
+          )}
+          {selectedImages.length > 1 && (
+            <div className="flex justify-center mt-2">
+              <div className="flex gap-1">
+                {selectedImages.map((_, index) => (
+                  <button
+                    key={index}
+                    className={`w-2 h-2 rounded-full transition-colors ${
+                      index === currentImageIndex ? 'bg-amber-600' : 'bg-gray-300'
+                    }`}
+                    onClick={() => setCurrentImageIndex(index)}
+                  />
+                ))}
+              </div>
             </div>
           )}
         </DialogContent>
