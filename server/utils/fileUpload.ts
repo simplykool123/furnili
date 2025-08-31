@@ -191,3 +191,27 @@ export const receiptImageUpload = multer({
   },
 });
 
+// Multiple image upload for petty cash (receipt, bill, material)
+export const pettyCashMultipleImageUpload = multer({
+  dest: "uploads/receipts/",
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB limit per file
+  },
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = /jpeg|jpg|png/;
+    const extname = file.originalname ? allowedTypes.test(path.extname(file.originalname).toLowerCase()) : true;
+    const allowedMimeTypes = [
+      'image/jpeg',
+      'image/jpg', 
+      'image/png',
+      'image/webp'  // Add webp support for pasted images
+    ];
+    const mimetype = allowedMimeTypes.includes(file.mimetype);
+
+    if (mimetype && (extname || !file.originalname)) {
+      return cb(null, true);
+    } else {
+      cb(new Error("Only image files are allowed for petty cash images"));
+    }
+  },
+});

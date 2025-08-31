@@ -91,6 +91,8 @@ export default function PettyCash() {
     projectId: "", // Project ID for expense tracking
     orderNo: "", // Legacy field for backward compatibility
     receiptImage: null as File | null,
+    billImage: null as File | null,
+    materialImage: null as File | null,
     category: "", // Keep for filtering
   });
 
@@ -117,6 +119,8 @@ export default function PettyCash() {
       projectId: "",
       orderNo: "",
       receiptImage: null,
+      billImage: null,
+      materialImage: null,
       category: "",
     });
   };
@@ -199,6 +203,8 @@ export default function PettyCash() {
       projectId: expense.projectId?.toString() || '', // Use projectId from expense
       orderNo: expense.orderNo || '',
       receiptImage: null,
+      billImage: null,
+      materialImage: null,
       category: expense.category
     });
     setShowEditDialog(true);
@@ -1189,6 +1195,24 @@ export default function PettyCash() {
     }
   };
 
+  const handleImagePaste = (e: React.ClipboardEvent, imageType: 'bill' | 'material') => {
+    e.preventDefault();
+    const items = Array.from(e.clipboardData.items);
+    const imageItem = items.find(item => item.type.startsWith('image/'));
+    
+    if (imageItem) {
+      const file = imageItem.getAsFile();
+      if (file) {
+        if (imageType === 'bill') {
+          setFormData(prev => ({ ...prev, billImage: file }));
+        } else {
+          setFormData(prev => ({ ...prev, materialImage: file }));
+        }
+        toast({ title: "Image pasted", description: `${imageType === 'bill' ? 'Bill' : 'Material'} image added successfully` });
+      }
+    }
+  };
+
   const processFile = (file: File) => {
     console.log('Processing file:', {
       name: file.name,
@@ -1271,14 +1295,15 @@ export default function PettyCash() {
     formDataToSend.append('orderNo', formData.orderNo);
     
     if (formData.receiptImage) {
-      // console.log("Appending receipt file:", {
-      //   name: formData.receiptImage.name,
-      //   type: formData.receiptImage.type,
-      //   size: formData.receiptImage.size
-      // });
       formDataToSend.append('receipt', formData.receiptImage);
-    } else {
-      // console.log("No receipt file to append");
+    }
+
+    if (formData.billImage) {
+      formDataToSend.append('bill', formData.billImage);
+    }
+
+    if (formData.materialImage) {
+      formDataToSend.append('material', formData.materialImage);
     }
 
     

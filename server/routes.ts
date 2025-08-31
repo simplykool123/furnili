@@ -5,7 +5,7 @@ import { z } from "zod";
 // OpenAI import removed - AI generation functionality simplified
 import { storage } from "./storage";
 import { authenticateToken, requireRole, generateToken, comparePassword, type AuthRequest } from "./middleware/auth";
-import { productImageUpload, boqFileUpload, receiptImageUpload, csvFileUpload, projectFileUpload } from "./utils/fileUpload";
+import { productImageUpload, boqFileUpload, receiptImageUpload, pettyCashMultipleImageUpload, csvFileUpload, projectFileUpload } from "./utils/fileUpload";
 import { 
   exportProductsCSV, 
   exportRequestsCSV, 
@@ -2546,7 +2546,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/petty-cash", authenticateToken, receiptImageUpload.single("receipt"), async (req: AuthRequest, res) => {
+  app.post("/api/petty-cash", authenticateToken, pettyCashMultipleImageUpload.fields([
+    { name: 'receipt', maxCount: 1 },
+    { name: 'bill', maxCount: 1 },
+    { name: 'material', maxCount: 1 }
+  ]), async (req: AuthRequest, res) => {
     try {
       // console.log("=== PETTY CASH EXPENSE SUBMISSION ===");
       // console.log("File uploaded:", req.file ? {
@@ -2558,7 +2562,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // } : "No file");
       // console.log("Request body:", req.body);
       
-      // First create the expense without image to get the ID
+      // First create the expense without images to get the ID
       const expenseData = {
         category: req.body.category || null,
         amount: parseFloat(req.body.amount),
@@ -2570,6 +2574,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         expenseDate: new Date(req.body.expenseDate),
         addedBy: req.user!.id,
         receiptImageUrl: null,
+        billImageUrl: null,
+        materialImageUrl: null,
         status: req.body.status || "expense", // Default to expense status, allow income
       };
       
@@ -2578,35 +2584,79 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const expense = await storage.createPettyCashExpense(expenseData);
       // console.log("Expense created successfully:", expense.id);
       
-      // If there's an uploaded file, rename it with the expense ID (ORIGINAL LOGIC RESTORED)
-      if (req.file) {
+      // Handle multiple uploaded files (receipt, bill, material)
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
+      const updateData: any = {};
+      
+      if (files) {
         const fs = await import('fs');
         const path = await import('path');
         
-        // Get file extension from mimetype or original name
-        let extension = '.png'; // default
-        if (req.file.mimetype === 'image/jpeg') extension = '.jpg';
-        else if (req.file.mimetype === 'image/png') extension = '.png';
-        else if (req.file.originalname) {
-          const ext = path.default.extname(req.file.originalname);
-          if (ext) extension = ext;
+        // Process receipt image (use original naming: 001.jpg, etc.)
+        if (files.receipt && files.receipt[0]) {
+          const receiptFile = files.receipt[0];
+          let extension = '.png';
+          if (receiptFile.mimetype === 'image/jpeg') extension = '.jpg';
+          else if (receiptFile.mimetype === 'image/png') extension = '.png';
+          else if (receiptFile.originalname) {
+            const ext = path.default.extname(receiptFile.originalname);
+            if (ext) extension = ext;
+          }
+          
+          const paddedId = expense.id.toString().padStart(3, '0');
+          const receiptFileName = `${paddedId}${extension}`;
+          const receiptPath = `uploads/receipts/${receiptFileName}`;
+          
+          fs.default.renameSync(receiptFile.path, receiptPath);
+          updateData.receiptImageUrl = receiptPath;
         }
         
-        // Create new filename with zero-padded ID: 001.png, 012.jpg, etc.
-        const paddedId = expense.id.toString().padStart(3, '0');
-        const newFileName = `${paddedId}${extension}`;
-        const newPath = `uploads/receipts/${newFileName}`;
+        // Process bill image (new format: 001_bill.jpg, etc.)
+        if (files.bill && files.bill[0]) {
+          const billFile = files.bill[0];
+          let extension = '.png';
+          if (billFile.mimetype === 'image/jpeg') extension = '.jpg';
+          else if (billFile.mimetype === 'image/png') extension = '.png';
+          else if (billFile.originalname) {
+            const ext = path.default.extname(billFile.originalname);
+            if (ext) extension = ext;
+          }
+          
+          const paddedId = expense.id.toString().padStart(3, '0');
+          const billFileName = `${paddedId}_bill${extension}`;
+          const billPath = `uploads/receipts/${billFileName}`;
+          
+          fs.default.renameSync(billFile.path, billPath);
+          updateData.billImageUrl = billPath;
+        }
         
-        // Move file from temp location to new name
-        fs.default.renameSync(req.file.path, newPath);
-        // console.log(`Receipt image renamed from ${req.file.path} to ${newPath}`);
+        // Process material image (new format: 001_material.jpg, etc.)
+        if (files.material && files.material[0]) {
+          const materialFile = files.material[0];
+          let extension = '.png';
+          if (materialFile.mimetype === 'image/jpeg') extension = '.jpg';
+          else if (materialFile.mimetype === 'image/png') extension = '.png';
+          else if (materialFile.originalname) {
+            const ext = path.default.extname(materialFile.originalname);
+            if (ext) extension = ext;
+          }
+          
+          const paddedId = expense.id.toString().padStart(3, '0');
+          const materialFileName = `${paddedId}_material${extension}`;
+          const materialPath = `uploads/receipts/${materialFileName}`;
+          
+          fs.default.renameSync(materialFile.path, materialPath);
+          updateData.materialImageUrl = materialPath;
+        }
         
-        // Update expense with new image path
-        await storage.updatePettyCashExpense(expense.id, {
-          receiptImageUrl: newPath
-        });
-        
-        // Return updated expense
+        // Update expense with new image paths if any files were uploaded
+        if (Object.keys(updateData).length > 0) {
+          await storage.updatePettyCashExpense(expense.id, updateData);
+        }
+      }
+      
+      // Return the updated expense
+      if (Object.keys(updateData).length > 0) {
         const updatedExpenses = await storage.getPettyCashExpenses();
         const updatedExpense = updatedExpenses.find(e => e.id === expense.id);
         res.json(updatedExpense || expense);
@@ -2689,7 +2739,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/petty-cash/:id", authenticateToken, receiptImageUpload.single("receipt"), async (req: AuthRequest, res) => {
+  app.put("/api/petty-cash/:id", authenticateToken, pettyCashMultipleImageUpload.fields([
+    { name: 'receipt', maxCount: 1 },
+    { name: 'bill', maxCount: 1 },
+    { name: 'material', maxCount: 1 }
+  ]), async (req: AuthRequest, res) => {
     try {
       const id = parseInt(req.params.id);
       
@@ -2732,41 +2786,82 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Expense not found" });
       }
       
-      // If there's an uploaded file, rename it with the expense ID (ORIGINAL LOGIC RESTORED)
-      if (req.file) {
+      // Handle multiple uploaded files for edit (receipt, bill, material)
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
+      const fileUpdateData: any = {};
+      
+      if (files) {
         const fs = await import('fs');
         const path = await import('path');
         
-        // Get file extension from mimetype or original name
-        let extension = '.png'; // default
-        if (req.file.mimetype === 'image/jpeg') extension = '.jpg';
-        else if (req.file.mimetype === 'image/png') extension = '.png';
-        else if (req.file.originalname) {
-          const ext = path.default.extname(req.file.originalname);
-          if (ext) extension = ext;
+        // Process receipt image (use original naming: 001.jpg, etc.)
+        if (files.receipt && files.receipt[0]) {
+          const receiptFile = files.receipt[0];
+          let extension = '.png';
+          if (receiptFile.mimetype === 'image/jpeg') extension = '.jpg';
+          else if (receiptFile.mimetype === 'image/png') extension = '.png';
+          else if (receiptFile.originalname) {
+            const ext = path.default.extname(receiptFile.originalname);
+            if (ext) extension = ext;
+          }
+          
+          const paddedId = id.toString().padStart(3, '0');
+          const receiptFileName = `${paddedId}${extension}`;
+          const receiptPath = `uploads/receipts/${receiptFileName}`;
+          
+          fs.default.renameSync(receiptFile.path, receiptPath);
+          fileUpdateData.receiptImageUrl = receiptPath;
         }
         
-        // Create new filename with zero-padded ID: 001.png, 012.jpg, etc.
-        const paddedId = id.toString().padStart(3, '0');
-        const newFileName = `${paddedId}${extension}`;
-        const newPath = `uploads/receipts/${newFileName}`;
+        // Process bill image (new format: 001_bill.jpg, etc.)
+        if (files.bill && files.bill[0]) {
+          const billFile = files.bill[0];
+          let extension = '.png';
+          if (billFile.mimetype === 'image/jpeg') extension = '.jpg';
+          else if (billFile.mimetype === 'image/png') extension = '.png';
+          else if (billFile.originalname) {
+            const ext = path.default.extname(billFile.originalname);
+            if (ext) extension = ext;
+          }
+          
+          const paddedId = id.toString().padStart(3, '0');
+          const billFileName = `${paddedId}_bill${extension}`;
+          const billPath = `uploads/receipts/${billFileName}`;
+          
+          fs.default.renameSync(billFile.path, billPath);
+          fileUpdateData.billImageUrl = billPath;
+        }
         
-        // Move file from temp location to new name
-        fs.default.renameSync(req.file.path, newPath);
-        // console.log(`Receipt image renamed from ${req.file.path} to ${newPath}`);
+        // Process material image (new format: 001_material.jpg, etc.)
+        if (files.material && files.material[0]) {
+          const materialFile = files.material[0];
+          let extension = '.png';
+          if (materialFile.mimetype === 'image/jpeg') extension = '.jpg';
+          else if (materialFile.mimetype === 'image/png') extension = '.png';
+          else if (materialFile.originalname) {
+            const ext = path.default.extname(materialFile.originalname);
+            if (ext) extension = ext;
+          }
+          
+          const paddedId = id.toString().padStart(3, '0');
+          const materialFileName = `${paddedId}_material${extension}`;
+          const materialPath = `uploads/receipts/${materialFileName}`;
+          
+          fs.default.renameSync(materialFile.path, materialPath);
+          fileUpdateData.materialImageUrl = materialPath;
+        }
         
-        // Update expense with new image path
-        await storage.updatePettyCashExpense(id, {
-          receiptImageUrl: newPath
-        });
-        
-        // Return updated expense
-        const updatedExpenses = await storage.getPettyCashExpenses();
-        const updatedExpense = updatedExpenses.find(e => e.id === id);
-        res.json(updatedExpense || expense);
-      } else {
-        res.json(expense);
+        // Merge file updates with other expense data updates
+        Object.assign(updateData, fileUpdateData);
       }
+      
+      // Update expense with new data
+      await storage.updatePettyCashExpense(id, updateData);
+      
+      // Return the updated expense
+      const updatedExpenses = await storage.getPettyCashExpenses();
+      const updatedExpense = updatedExpenses.find(e => e.id === id);
+      res.json(updatedExpense || expense);
     } catch (error) {
       console.error("Failed to update expense:", error);
       res.status(500).json({ message: "Failed to update expense", error: String(error) });
