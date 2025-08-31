@@ -2580,8 +2580,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // If there's an uploaded file, rename it with the expense ID
       if (req.file) {
-        const fs = require('fs');
-        const path = require('path');
+        const fs = await import('fs');
+        const path = await import('path');
         
         // Get file extension from mimetype or original name
         let extension = '.png'; // default
@@ -2647,8 +2647,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // If there's an uploaded file, rename it with the funds ID
       if (req.file) {
-        const fs = require('fs');
-        const path = require('path');
+        const fs = await import('fs');
+        const path = await import('path');
         
         // Get file extension from mimetype or original name
         let extension = '.png'; // default
@@ -2734,8 +2734,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // If there's an uploaded file, rename it with the expense ID
       if (req.file) {
-        const fs = require('fs');
-        const path = require('path');
+        const fs = await import('fs');
+        const path = await import('path');
         
         // Get file extension from mimetype or original name
         let extension = '.png'; // default
