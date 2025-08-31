@@ -3579,6 +3579,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // OCR Enhancement API endpoints
+  app.post("/api/ocr/vision-analyze", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const { image, prompt } = req.body;
+      
+      if (!process.env.OPENAI_API_KEY) {
+        throw new Error('OpenAI API key not configured');
+      }
+      
+      const OpenAI = await import('openai');
+      const openai = new OpenAI.default({
+        apiKey: process.env.OPENAI_API_KEY
+      });
+      
+      // the newest OpenAI model is "gpt-5" which was released August 7, 2025. do not change this unless explicitly requested by the user
+      const response = await openai.chat.completions.create({
+        model: "gpt-4-vision-preview", // Using vision preview model as requested
+        messages: [
+          {
+            role: "user",
+            content: [
+              {
+                type: "text",
+                text: prompt
+              },
+              {
+                type: "image_url",
+                image_url: {
+                  url: `data:image/jpeg;base64,${image}`
+                }
+              }
+            ]
+          }
+        ],
+        max_tokens: 1000,
+        response_format: { type: "json_object" }
+      });
+      
+      const result = response.choices[0].message.content;
+      let parsedData = null;
+      
+      try {
+        parsedData = JSON.parse(result || '{}');
+      } catch (parseError) {
+        console.error('Failed to parse Vision API JSON response:', result);
+        throw new Error('Invalid JSON response from Vision API');
+      }
+      
+      res.json({
+        success: true,
+        data: parsedData,
+        extractedText: result, // Keep raw result for fallback
+        method: 'GPT-4 Vision'
+      });
+      
+    } catch (error) {
+      console.error('Vision OCR Analysis error:', error);
+      res.status(500).json({ 
+        success: false,
+        error: 'Failed to analyze image with Vision API',
+        details: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+
   app.post("/api/ocr/analyze", authenticateToken, async (req: AuthRequest, res) => {
     try {
       const { text, documentType, customPatterns } = req.body;

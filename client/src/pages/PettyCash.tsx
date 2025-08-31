@@ -550,20 +550,129 @@ export default function PettyCash() {
     return '';
   };
 
-  // Enhanced OCR processing with multi-platform support
-  // OCR Integration Point - Replace this function with your chosen OCR solution
+  // Helper function to convert file to base64
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => {
+        const result = reader.result as string;
+        // Remove data:image/jpeg;base64, prefix
+        const base64 = result.split(',')[1];
+        resolve(base64);
+      };
+      reader.onerror = reject;
+    });
+  };
+
+  // GPT-4 Vision OCR for UPI payment screenshots
+  const analyzeReceiptWithVision = async (base64Image: string) => {
+    const response = await fetch('/api/ocr/vision-analyze', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+      },
+      body: JSON.stringify({
+        image: base64Image,
+        prompt: `Analyze this UPI payment screenshot and extract the following information in JSON format:
+        {
+          "amount": number (just the number, no currency symbol),
+          "vendor": "string (who was paid to)",
+          "paidBy": "string (who made the payment)",
+          "description": "string (purpose/description of payment)",
+          "date": "YYYY-MM-DD format",
+          "platform": "string (GPay, PhonePe, CRED, etc.)"
+        }
+        
+        Focus on:
+        - Correctly reading ₹ (rupee) symbols and amounts
+        - Extracting vendor/recipient names accurately
+        - Finding payment descriptions or purposes
+        - Identifying the payment platform (Google Pay, PhonePe, CRED, etc.)
+        - Converting dates to YYYY-MM-DD format`
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error('Vision API failed');
+    }
+
+    return await response.json();
+  };
+
+  // Enhanced OCR processing with GPT-4 Vision + Tesseract fallback
+  // Primary: GPT-4 Vision for UPI payment screenshots (better accuracy with ₹ symbols)
+  // Fallback: Tesseract.js for basic OCR if Vision API fails
   const processImageWithOCR = async (file: File) => {
     setIsProcessingOCR(true);
     try {
-      // Enhanced OCR settings for better accuracy across platforms
-      const result = await Tesseract.recognize(file, 'eng', {
-        logger: m => {} // console.log(m)
-      });
+      let text = '';
+      let ocrMethod = '';
       
-      const text = result.data.text;
-      // console.log('OCR Result:', text);
+      // Try GPT-4 Vision first for better UPI data extraction
+      let visionData = null;
+      try {
+        const base64Image = await fileToBase64(file);
+        const visionResult = await analyzeReceiptWithVision(base64Image);
+        
+        if (visionResult.success && visionResult.data) {
+          visionData = visionResult.data;
+          text = visionResult.extractedText || '';
+          ocrMethod = 'GPT-4 Vision';
+          // console.log('GPT-4 Vision OCR Result:', visionData);
+        } else {
+          throw new Error('Vision API returned no data');
+        }
+      } catch (visionError) {
+        console.log('GPT-4 Vision failed, falling back to Tesseract:', visionError);
+        // Fallback to Tesseract.js
+        const result = await Tesseract.recognize(file, 'eng', {
+          logger: m => {} // console.log(m)
+        });
+        text = result.data.text;
+        ocrMethod = 'Tesseract.js (fallback)';
+        // console.log('Tesseract OCR Result:', text);
+      }
       
       const updatedData = { ...formData };
+      
+      // If we have structured Vision API data, use it directly
+      if (visionData) {
+        if (visionData.amount && !isNaN(visionData.amount)) {
+          updatedData.amount = visionData.amount;
+        }
+        if (visionData.vendor) {
+          updatedData.paidTo = visionData.vendor;
+        }
+        if (visionData.description) {
+          updatedData.purpose = visionData.description;
+        }
+        if (visionData.date) {
+          updatedData.date = visionData.date;
+        }
+        // Try to match paidBy user
+        if (visionData.paidBy) {
+          const matchingUser = users.find((user: any) => {
+            const userName = (user.name || user.username || '').toLowerCase();
+            return userName.includes(visionData.paidBy.toLowerCase()) || 
+                   visionData.paidBy.toLowerCase().includes(userName);
+          });
+          if (matchingUser) {
+            updatedData.paidBy = matchingUser.id.toString();
+          }
+        }
+        
+        setFormData(prev => ({ ...updatedData, receiptImage: prev.receiptImage }));
+        toast({ 
+          title: "Payment details extracted successfully", 
+          description: `Used ${ocrMethod} to extract UPI payment data` 
+        });
+        setIsProcessingOCR(false);
+        return;
+      }
+      
+      // Fallback to traditional text parsing for Tesseract OCR
       const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0);
       
       // Detect platform type for specialized parsing
