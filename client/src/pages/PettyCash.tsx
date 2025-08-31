@@ -2115,147 +2115,160 @@ export default function PettyCash() {
               </div>
             </div>
 
-            {/* Enhanced Proof Attachment with Drag & Drop and Paste */}
-            <div>
-              <Label htmlFor="receipt">Proof Attachment (GPay, CRED, Invoice, etc.)</Label>
-              <div 
-                className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
-                  isProcessingOCR ? 'border-blue-300 bg-blue-50' : 'border-gray-300 hover:border-gray-400'
-                }`}
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
-                onDrop={handleDrop}
-                onPaste={handlePaste}
-                tabIndex={0}
-              >
-                {formData.receiptImage ? (
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-center gap-2">
-                      <Upload className="h-5 w-5 text-green-600" />
-                      <span className="text-sm font-medium text-green-600">
-                        {formData.receiptImage.name}
-                      </span>
+            {/* 3 Image Upload Fields in ONE HORIZONTAL ROW */}
+            <div className="grid grid-cols-3 gap-3">
+              {/* Receipt/Proof Attachment */}
+              <div>
+                <Label htmlFor="receipt" className="text-xs">Proof Attachment (GPay, CRED, Invoice, etc.)</Label>
+                <div 
+                  className={`border-2 border-dashed rounded-lg p-3 text-center transition-colors ${
+                    isProcessingOCR ? 'border-blue-300 bg-blue-50' : 'border-gray-300 hover:border-gray-400'
+                  }`}
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                  onPaste={handlePaste}
+                  tabIndex={0}
+                >
+                  {formData.receiptImage ? (
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-center gap-1">
+                        <Upload className="h-3 w-3 text-green-600" />
+                        <span className="text-xs font-medium text-green-600 truncate">
+                          {formData.receiptImage.name}
+                        </span>
+                      </div>
+                      {isProcessingOCR && (
+                        <Badge variant="secondary" className="animate-pulse text-xs">
+                          Processing OCR...
+                        </Badge>
+                      )}
                     </div>
-                    {isProcessingOCR && (
-                      <Badge variant="secondary" className="animate-pulse">
-                        Processing OCR...
-                      </Badge>
-                    )}
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-center gap-2">
-                      <Upload className="h-8 w-8 text-gray-400" />
-                      <Camera className="h-8 w-8 text-gray-400" />
+                  ) : (
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-center gap-1">
+                        <Upload className="h-4 w-4 text-gray-400" />
+                        <Camera className="h-4 w-4 text-gray-400" />
+                      </div>
+                      <div className="text-xs text-gray-600">
+                        <strong>Drag & drop</strong> or{" "}
+                        <label htmlFor="receipt" className="text-amber-600 cursor-pointer hover:underline">
+                          choose
+                        </label>
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        <kbd className="px-1 bg-gray-100 rounded text-xs">Ctrl+V</kbd> to paste
+                      </div>
                     </div>
-                    <div className="text-sm text-gray-600">
-                      <strong>Drag & drop</strong> an image here, or{" "}
-                      <label htmlFor="receipt" className="text-amber-600 cursor-pointer hover:underline">
-                        choose file
-                      </label>
-                    </div>
-                    <div className="text-xs text-gray-500">
-                      Or press <kbd className="px-1 bg-gray-100 rounded">Ctrl+V</kbd> to paste screenshot
-                    </div>
-                  </div>
-                )}
-                <input
-                  id="receipt"
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageUpload}
-                  className="hidden"
-                />
-              </div>
-              <div className="flex items-center gap-2 mt-2">
-                <div className="h-4 w-4 rounded-full bg-green-100 flex items-center justify-center">
-                  <Camera className="h-2.5 w-2.5 text-green-600" />
+                  )}
+                  <input
+                    id="receipt"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className="hidden"
+                  />
                 </div>
-                <p className="text-xs text-gray-600">
-                  Upload UPI payment screenshot for automatic data extraction (GPay, PhonePe, CRED)
-                </p>
+                <div className="flex items-center gap-1 mt-1">
+                  <div className="h-2 w-2 rounded-full bg-green-100 flex items-center justify-center">
+                    <Camera className="h-1.5 w-1.5 text-green-600" />
+                  </div>
+                  <p className="text-xs text-gray-600">
+                    UPI screenshot for OCR
+                  </p>
+                </div>
               </div>
-            </div>
 
-            {/* Bill Image Upload */}
-            <div>
-              <Label htmlFor="bill">Bill/Invoice Image (Optional)</Label>
-              <div 
-                className="border-2 border-dashed rounded-lg p-4 text-center transition-colors border-gray-300 hover:border-gray-400"
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
-                onDrop={(e) => handleFileDrop(e, 'bill')}
-              >
-                {formData.billImage ? (
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-center gap-2">
-                      <Upload className="h-4 w-4 text-green-600" />
-                      <span className="text-sm font-medium text-green-600">
-                        {formData.billImage.name}
-                      </span>
+              {/* Bill/Invoice Image */}
+              <div>
+                <Label htmlFor="bill" className="text-xs">Bill/Invoice Image (Optional)</Label>
+                <div 
+                  className="border-2 border-dashed rounded-lg p-3 text-center transition-colors border-gray-300 hover:border-gray-400"
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={(e) => handleFileDrop(e, 'bill')}
+                  onPaste={(e) => handleImagePaste(e, 'bill')}
+                  tabIndex={0}
+                >
+                  {formData.billImage ? (
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-center gap-1">
+                        <Upload className="h-3 w-3 text-green-600" />
+                        <span className="text-xs font-medium text-green-600 truncate">
+                          {formData.billImage.name}
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-center gap-2">
-                      <Upload className="h-6 w-6 text-gray-400" />
+                  ) : (
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-center gap-1">
+                        <Upload className="h-4 w-4 text-gray-400" />
+                      </div>
+                      <div className="text-xs text-gray-600">
+                        <strong>Drag & drop</strong> or{" "}
+                        <label htmlFor="bill" className="text-amber-600 cursor-pointer hover:underline">
+                          choose
+                        </label>
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        <kbd className="px-1 bg-gray-100 rounded text-xs">Ctrl+V</kbd> to paste
+                      </div>
                     </div>
-                    <div className="text-sm text-gray-600">
-                      <strong>Drag & drop</strong> or{" "}
-                      <label htmlFor="bill" className="text-amber-600 cursor-pointer hover:underline">
-                        choose file
-                      </label>
-                    </div>
-                  </div>
-                )}
-                <input
-                  id="bill"
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => handleSpecificImageUpload(e, 'bill')}
-                  className="hidden"
-                />
+                  )}
+                  <input
+                    id="bill"
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleSpecificImageUpload(e, 'bill')}
+                    className="hidden"
+                  />
+                </div>
               </div>
-            </div>
 
-            {/* Material Image Upload */}
-            <div>
-              <Label htmlFor="material">Material/Product Photo (Optional)</Label>
-              <div 
-                className="border-2 border-dashed rounded-lg p-4 text-center transition-colors border-gray-300 hover:border-gray-400"
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
-                onDrop={(e) => handleFileDrop(e, 'material')}
-              >
-                {formData.materialImage ? (
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-center gap-2">
-                      <Upload className="h-4 w-4 text-green-600" />
-                      <span className="text-sm font-medium text-green-600">
-                        {formData.materialImage.name}
-                      </span>
+              {/* Material/Product Photo */}
+              <div>
+                <Label htmlFor="material" className="text-xs">Material/Product Photo (Optional)</Label>
+                <div 
+                  className="border-2 border-dashed rounded-lg p-3 text-center transition-colors border-gray-300 hover:border-gray-400"
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={(e) => handleFileDrop(e, 'material')}
+                  onPaste={(e) => handleImagePaste(e, 'material')}
+                  tabIndex={0}
+                >
+                  {formData.materialImage ? (
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-center gap-1">
+                        <Upload className="h-3 w-3 text-green-600" />
+                        <span className="text-xs font-medium text-green-600 truncate">
+                          {formData.materialImage.name}
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-center gap-2">
-                      <Upload className="h-6 w-6 text-gray-400" />
+                  ) : (
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-center gap-1">
+                        <Upload className="h-4 w-4 text-gray-400" />
+                      </div>
+                      <div className="text-xs text-gray-600">
+                        <strong>Drag & drop</strong> or{" "}
+                        <label htmlFor="material" className="text-amber-600 cursor-pointer hover:underline">
+                          choose
+                        </label>
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        <kbd className="px-1 bg-gray-100 rounded text-xs">Ctrl+V</kbd> to paste
+                      </div>
                     </div>
-                    <div className="text-sm text-gray-600">
-                      <strong>Drag & drop</strong> or{" "}
-                      <label htmlFor="material" className="text-amber-600 cursor-pointer hover:underline">
-                        choose file
-                      </label>
-                    </div>
-                  </div>
-                )}
-                <input
-                  id="material"
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => handleSpecificImageUpload(e, 'material')}
-                  className="hidden"
-                />
+                  )}
+                  <input
+                    id="material"
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleSpecificImageUpload(e, 'material')}
+                    className="hidden"
+                  />
+                </div>
               </div>
             </div>
 
@@ -2410,147 +2423,160 @@ export default function PettyCash() {
               </div>
             </div>
 
-            {/* Enhanced Proof Attachment with Drag & Drop and Paste for Edit Dialog */}
-            <div>
-              <Label htmlFor="edit-receipt">Update Receipt Attachment</Label>
-              <div 
-                className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
-                  isProcessingOCR ? 'border-blue-300 bg-blue-50' : 'border-gray-300 hover:border-gray-400'
-                }`}
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
-                onDrop={handleDrop}
-                onPaste={handlePaste}
-                tabIndex={0}
-              >
-                {formData.receiptImage ? (
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-center gap-2">
-                      <Upload className="h-5 w-5 text-green-600" />
-                      <span className="text-sm font-medium text-green-600">
-                        {formData.receiptImage.name}
-                      </span>
+            {/* 3 Image Upload Fields in ONE HORIZONTAL ROW for Edit Dialog */}
+            <div className="grid grid-cols-3 gap-3">
+              {/* Receipt/Proof Attachment */}
+              <div>
+                <Label htmlFor="edit-receipt" className="text-xs">Update Receipt Attachment</Label>
+                <div 
+                  className={`border-2 border-dashed rounded-lg p-3 text-center transition-colors ${
+                    isProcessingOCR ? 'border-blue-300 bg-blue-50' : 'border-gray-300 hover:border-gray-400'
+                  }`}
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                  onPaste={handlePaste}
+                  tabIndex={0}
+                >
+                  {formData.receiptImage ? (
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-center gap-1">
+                        <Upload className="h-3 w-3 text-green-600" />
+                        <span className="text-xs font-medium text-green-600 truncate">
+                          {formData.receiptImage.name}
+                        </span>
+                      </div>
+                      {isProcessingOCR && (
+                        <Badge variant="secondary" className="animate-pulse text-xs">
+                          Processing OCR...
+                        </Badge>
+                      )}
                     </div>
-                    {isProcessingOCR && (
-                      <Badge variant="secondary" className="animate-pulse">
-                        Processing OCR...
-                      </Badge>
-                    )}
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-center gap-2">
-                      <Upload className="h-8 w-8 text-gray-400" />
-                      <Camera className="h-8 w-8 text-gray-400" />
+                  ) : (
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-center gap-1">
+                        <Upload className="h-4 w-4 text-gray-400" />
+                        <Camera className="h-4 w-4 text-gray-400" />
+                      </div>
+                      <div className="text-xs text-gray-600">
+                        <strong>Drag & drop</strong> or{" "}
+                        <label htmlFor="edit-receipt" className="text-amber-600 cursor-pointer hover:underline">
+                          choose
+                        </label>
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        <kbd className="px-1 bg-gray-100 rounded text-xs">Ctrl+V</kbd> to paste
+                      </div>
                     </div>
-                    <div className="text-sm text-gray-600">
-                      <strong>Drag & drop</strong> an image here, or{" "}
-                      <label htmlFor="edit-receipt" className="text-amber-600 cursor-pointer hover:underline">
-                        choose file
-                      </label>
-                    </div>
-                    <div className="text-xs text-gray-500">
-                      Or press <kbd className="px-1 bg-gray-100 rounded">Ctrl+V</kbd> to paste screenshot
-                    </div>
-                  </div>
-                )}
-                <input
-                  id="edit-receipt"
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageUpload}
-                  className="hidden"
-                />
-              </div>
-              <div className="flex items-center gap-2 mt-2">
-                <div className="h-4 w-4 rounded-full bg-green-100 flex items-center justify-center">
-                  <Camera className="h-2.5 w-2.5 text-green-600" />
+                  )}
+                  <input
+                    id="edit-receipt"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className="hidden"
+                  />
                 </div>
-                <p className="text-xs text-gray-600">
-                  📱 Leave blank to keep existing receipt
-                </p>
+                <div className="flex items-center gap-1 mt-1">
+                  <div className="h-2 w-2 rounded-full bg-green-100 flex items-center justify-center">
+                    <Camera className="h-1.5 w-1.5 text-green-600" />
+                  </div>
+                  <p className="text-xs text-gray-600">
+                    Leave blank to keep existing
+                  </p>
+                </div>
               </div>
-            </div>
 
-            {/* Bill Image Upload */}
-            <div>
-              <Label htmlFor="edit-bill">Bill/Invoice Image (Optional)</Label>
-              <div 
-                className="border-2 border-dashed rounded-lg p-4 text-center transition-colors border-gray-300 hover:border-gray-400"
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
-                onDrop={(e) => handleFileDrop(e, 'bill')}
-              >
-                {formData.billImage ? (
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-center gap-2">
-                      <Upload className="h-4 w-4 text-green-600" />
-                      <span className="text-sm font-medium text-green-600">
-                        {formData.billImage.name}
-                      </span>
+              {/* Bill/Invoice Image */}
+              <div>
+                <Label htmlFor="edit-bill" className="text-xs">Bill/Invoice Image (Optional)</Label>
+                <div 
+                  className="border-2 border-dashed rounded-lg p-3 text-center transition-colors border-gray-300 hover:border-gray-400"
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={(e) => handleFileDrop(e, 'bill')}
+                  onPaste={(e) => handleImagePaste(e, 'bill')}
+                  tabIndex={0}
+                >
+                  {formData.billImage ? (
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-center gap-1">
+                        <Upload className="h-3 w-3 text-green-600" />
+                        <span className="text-xs font-medium text-green-600 truncate">
+                          {formData.billImage.name}
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-center gap-2">
-                      <Upload className="h-6 w-6 text-gray-400" />
+                  ) : (
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-center gap-1">
+                        <Upload className="h-4 w-4 text-gray-400" />
+                      </div>
+                      <div className="text-xs text-gray-600">
+                        <strong>Drag & drop</strong> or{" "}
+                        <label htmlFor="edit-bill" className="text-amber-600 cursor-pointer hover:underline">
+                          choose
+                        </label>
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        <kbd className="px-1 bg-gray-100 rounded text-xs">Ctrl+V</kbd> to paste
+                      </div>
                     </div>
-                    <div className="text-sm text-gray-600">
-                      <strong>Drag & drop</strong> or{" "}
-                      <label htmlFor="edit-bill" className="text-amber-600 cursor-pointer hover:underline">
-                        choose file
-                      </label>
-                    </div>
-                  </div>
-                )}
-                <input
-                  id="edit-bill"
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => handleSpecificImageUpload(e, 'bill')}
-                  className="hidden"
-                />
+                  )}
+                  <input
+                    id="edit-bill"
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleSpecificImageUpload(e, 'bill')}
+                    className="hidden"
+                  />
+                </div>
               </div>
-            </div>
 
-            {/* Material Image Upload */}
-            <div>
-              <Label htmlFor="edit-material">Material/Product Photo (Optional)</Label>
-              <div 
-                className="border-2 border-dashed rounded-lg p-4 text-center transition-colors border-gray-300 hover:border-gray-400"
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
-                onDrop={(e) => handleFileDrop(e, 'material')}
-              >
-                {formData.materialImage ? (
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-center gap-2">
-                      <Upload className="h-4 w-4 text-green-600" />
-                      <span className="text-sm font-medium text-green-600">
-                        {formData.materialImage.name}
-                      </span>
+              {/* Material/Product Photo */}
+              <div>
+                <Label htmlFor="edit-material" className="text-xs">Material/Product Photo (Optional)</Label>
+                <div 
+                  className="border-2 border-dashed rounded-lg p-3 text-center transition-colors border-gray-300 hover:border-gray-400"
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={(e) => handleFileDrop(e, 'material')}
+                  onPaste={(e) => handleImagePaste(e, 'material')}
+                  tabIndex={0}
+                >
+                  {formData.materialImage ? (
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-center gap-1">
+                        <Upload className="h-3 w-3 text-green-600" />
+                        <span className="text-xs font-medium text-green-600 truncate">
+                          {formData.materialImage.name}
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-center gap-2">
-                      <Upload className="h-6 w-6 text-gray-400" />
+                  ) : (
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-center gap-1">
+                        <Upload className="h-4 w-4 text-gray-400" />
+                      </div>
+                      <div className="text-xs text-gray-600">
+                        <strong>Drag & drop</strong> or{" "}
+                        <label htmlFor="edit-material" className="text-amber-600 cursor-pointer hover:underline">
+                          choose
+                        </label>
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        <kbd className="px-1 bg-gray-100 rounded text-xs">Ctrl+V</kbd> to paste
+                      </div>
                     </div>
-                    <div className="text-sm text-gray-600">
-                      <strong>Drag & drop</strong> or{" "}
-                      <label htmlFor="edit-material" className="text-amber-600 cursor-pointer hover:underline">
-                        choose file
-                      </label>
-                    </div>
-                  </div>
-                )}
-                <input
-                  id="edit-material"
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => handleSpecificImageUpload(e, 'material')}
-                  className="hidden"
-                />
+                  )}
+                  <input
+                    id="edit-material"
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleSpecificImageUpload(e, 'material')}
+                    className="hidden"
+                  />
+                </div>
               </div>
             </div>
 
