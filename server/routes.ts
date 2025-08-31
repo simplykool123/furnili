@@ -669,6 +669,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const productData = {
         ...validatedData,
         pricePerUnit: validatedData.price,
+        productType: validatedData.productType || 'raw_material', // Ensure productType is always set
       };
       delete (productData as any).price;
       
@@ -709,6 +710,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         updates.pricePerUnit = validatedUpdates.price;
         delete updates.price;
       }
+      
+      // Ensure updatedAt is set
+      updates.updatedAt = new Date();
       
       const product = await storage.updateProduct(id, updates);
       
@@ -782,6 +786,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             currentStock: parseInt(record.currentStock || record.stock || "0", 10),
             minStock: parseInt(record.minStock || "10", 10),
             unit: record.unit?.trim() || "pieces",
+            productType: (record.productType?.trim() || 'raw_material') as 'raw_material' | 'finishing_good' | 'assembly' | 'seasonal',
           };
 
           // Validate required fields

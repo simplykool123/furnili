@@ -159,9 +159,21 @@ export default function ProductForm({ product, onClose, isMobile = false }: Prod
       onClose();
       
     } catch (error) {
+      console.error('Product save error:', error);
+      
+      let errorMessage = "Failed to save product";
+      
+      if (error instanceof Error) {
+        errorMessage = error.message;
+        // Check if it's a validation error from the server
+        if (errorMessage.includes('Validation failed')) {
+          errorMessage = "Please check all required fields are filled correctly";
+        }
+      }
+      
       toast({
         title: "Save failed",
-        description: error instanceof Error ? error.message : "Failed to save product",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
