@@ -91,8 +91,6 @@ export default function PettyCash() {
     projectId: "", // Project ID for expense tracking
     orderNo: "", // Legacy field for backward compatibility
     receiptImage: null as File | null,
-    billImage: null as File | null,
-    materialImage: null as File | null,
     category: "", // Keep for filtering
   });
 
@@ -119,8 +117,6 @@ export default function PettyCash() {
       projectId: "",
       orderNo: "",
       receiptImage: null,
-      billImage: null,
-      materialImage: null,
       category: "",
     });
   };
@@ -1285,13 +1281,6 @@ export default function PettyCash() {
       // console.log("No receipt file to append");
     }
 
-    if (formData.billImage) {
-      formDataToSend.append('bill', formData.billImage);
-    }
-
-    if (formData.materialImage) {
-      formDataToSend.append('material', formData.materialImage);
-    }
     
     // Log all FormData entries for debugging
     // console.log("FormData entries:");
