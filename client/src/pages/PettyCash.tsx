@@ -1906,6 +1906,9 @@ export default function PettyCash() {
                           className="w-6 h-6 object-cover rounded cursor-pointer border mx-auto"
                           onClick={(e) => {
                             e.stopPropagation(); // Prevent row click
+                            // Reset multi-image state and use single image mode
+                            setSelectedImages([]);
+                            setCurrentImageIndex(0);
                             setSelectedImage(expense.receiptImageUrl || "");
                             setShowImageDialog(true);
                           }}
@@ -2916,11 +2919,11 @@ export default function PettyCash() {
               )}
             </DialogTitle>
           </DialogHeader>
-          {selectedImages.length > 0 && selectedImages[currentImageIndex] && (
+          {(selectedImages.length > 0 ? selectedImages[currentImageIndex] : selectedImage) && (
             <div className="flex justify-center">
               <img 
-                src={selectedImages[currentImageIndex]} 
-                alt={`Image ${currentImageIndex + 1}`}
+                src={selectedImages.length > 0 ? selectedImages[currentImageIndex] : selectedImage}
+                alt={selectedImages.length > 0 ? `Image ${currentImageIndex + 1}` : "Image"}
                 className="max-w-full max-h-[500px] object-contain rounded-lg"
               />
             </div>
