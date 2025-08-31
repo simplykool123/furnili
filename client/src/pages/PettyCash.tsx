@@ -32,8 +32,6 @@ interface PettyCashExpense {
   description?: string; // This was note in frontend but API returns description
   category: string;
   receiptImageUrl?: string;
-  productImageUrl?: string; // Product/item image
-  billImageUrl?: string; // Bill/invoice image
   status: string; // "expense" or "income"
   addedBy: number;
   createdAt: string;
@@ -93,8 +91,6 @@ export default function PettyCash() {
     projectId: "", // Project ID for expense tracking
     orderNo: "", // Legacy field for backward compatibility
     receiptImage: null as File | null,
-    productImage: null as File | null, // Product/item image
-    billImage: null as File | null, // Bill/invoice image
     category: "", // Keep for filtering
   });
 
@@ -121,8 +117,6 @@ export default function PettyCash() {
       projectId: "",
       orderNo: "",
       receiptImage: null,
-      productImage: null,
-      billImage: null,
       category: "",
     });
   };
@@ -205,8 +199,6 @@ export default function PettyCash() {
       projectId: expense.projectId?.toString() || '', // Use projectId from expense
       orderNo: expense.orderNo || '',
       receiptImage: null,
-      productImage: null,
-      billImage: null,
       category: expense.category
     });
     setShowEditDialog(true);
@@ -1168,66 +1160,6 @@ export default function PettyCash() {
     }
   };
 
-  // Product image upload handler
-  const handleProductImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      setFormData(prev => ({ ...prev, productImage: file }));
-      toast({ title: "Product image added", description: "Product image uploaded successfully" });
-    }
-  };
-
-  // Bill image upload handler  
-  const handleBillImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      setFormData(prev => ({ ...prev, billImage: file }));
-      toast({ title: "Bill image added", description: "Bill image uploaded successfully" });
-    }
-  };
-
-  // Product image paste handler
-  const handleProductImagePaste = (e: React.ClipboardEvent) => {
-    const items = Array.from(e.clipboardData.items);
-    const imageItem = items.find(item => item.type.startsWith('image/'));
-    
-    if (imageItem) {
-      const file = imageItem.getAsFile();
-      if (file) {
-        const timestamp = Date.now();
-        const extension = file.type.includes('png') ? '.png' : '.jpg';
-        const renamedFile = new File([file], `pasted-product-${timestamp}${extension}`, {
-          type: file.type,
-          lastModified: Date.now(),
-        });
-        
-        setFormData(prev => ({ ...prev, productImage: renamedFile }));
-        toast({ title: "Product image pasted", description: "Product image added successfully" });
-      }
-    }
-  };
-
-  // Bill image paste handler
-  const handleBillImagePaste = (e: React.ClipboardEvent) => {
-    const items = Array.from(e.clipboardData.items);
-    const imageItem = items.find(item => item.type.startsWith('image/'));
-    
-    if (imageItem) {
-      const file = imageItem.getAsFile();
-      if (file) {
-        const timestamp = Date.now();
-        const extension = file.type.includes('png') ? '.png' : '.jpg';
-        const renamedFile = new File([file], `pasted-bill-${timestamp}${extension}`, {
-          type: file.type,
-          lastModified: Date.now(),
-        });
-        
-        setFormData(prev => ({ ...prev, billImage: renamedFile }));
-        toast({ title: "Bill image pasted", description: "Bill image added successfully" });
-      }
-    }
-  };
-
   const processFile = (file: File) => {
     console.log('Processing file:', {
       name: file.name,
@@ -1310,15 +1242,14 @@ export default function PettyCash() {
     formDataToSend.append('orderNo', formData.orderNo);
     
     if (formData.receiptImage) {
+      // console.log("Appending receipt file:", {
+      //   name: formData.receiptImage.name,
+      //   type: formData.receiptImage.type,
+      //   size: formData.receiptImage.size
+      // });
       formDataToSend.append('receipt', formData.receiptImage);
-    }
-    
-    if (formData.productImage) {
-      formDataToSend.append('productImage', formData.productImage);
-    }
-    
-    if (formData.billImage) {
-      formDataToSend.append('billImage', formData.billImage);
+    } else {
+      // console.log("No receipt file to append");
     }
     
     // Log all FormData entries for debugging
@@ -2191,84 +2122,6 @@ export default function PettyCash() {
               </div>
             </div>
 
-            {/* Product Image Upload */}
-            <div className="space-y-2">
-              <Label className="text-xs">Product Image (Optional)</Label>
-              <div 
-                className="border-2 border-dashed rounded-lg p-4 text-center transition-colors border-gray-300 hover:border-gray-400"
-                onPaste={handleProductImagePaste}
-                tabIndex={0}
-              >
-                {formData.productImage ? (
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-center gap-2">
-                      <Upload className="h-4 w-4 text-green-600" />
-                      <span className="text-xs font-medium text-green-600">
-                        {formData.productImage.name}
-                      </span>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="space-y-1">
-                    <div className="flex items-center justify-center gap-2">
-                      <Camera className="h-6 w-6 text-gray-400" />
-                    </div>
-                    <div className="text-xs text-gray-600">
-                      <label htmlFor="productImage" className="text-amber-600 cursor-pointer hover:underline">
-                        Upload product image
-                      </label> or paste with <kbd className="px-1 bg-gray-100 rounded text-xs">Ctrl+V</kbd>
-                    </div>
-                  </div>
-                )}
-                <input
-                  id="productImage"
-                  type="file"
-                  accept="image/*"
-                  onChange={handleProductImageUpload}
-                  className="hidden"
-                />
-              </div>
-            </div>
-
-            {/* Bill Image Upload */}
-            <div className="space-y-2">
-              <Label className="text-xs">Bill/Invoice Image (Optional)</Label>
-              <div 
-                className="border-2 border-dashed rounded-lg p-4 text-center transition-colors border-gray-300 hover:border-gray-400"
-                onPaste={handleBillImagePaste}
-                tabIndex={0}
-              >
-                {formData.billImage ? (
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-center gap-2">
-                      <Upload className="h-4 w-4 text-green-600" />
-                      <span className="text-xs font-medium text-green-600">
-                        {formData.billImage.name}
-                      </span>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="space-y-1">
-                    <div className="flex items-center justify-center gap-2">
-                      <Camera className="h-6 w-6 text-gray-400" />
-                    </div>
-                    <div className="text-xs text-gray-600">
-                      <label htmlFor="billImage" className="text-amber-600 cursor-pointer hover:underline">
-                        Upload bill/invoice image
-                      </label> or paste with <kbd className="px-1 bg-gray-100 rounded text-xs">Ctrl+V</kbd>
-                    </div>
-                  </div>
-                )}
-                <input
-                  id="billImage"
-                  type="file"
-                  accept="image/*"
-                  onChange={handleBillImageUpload}
-                  className="hidden"
-                />
-              </div>
-            </div>
-
             <div className="flex justify-end gap-2 pt-4">
               <Button type="button" variant="outline" onClick={() => {
                 resetFormData();
@@ -2303,12 +2156,6 @@ export default function PettyCash() {
             formPayload.append('category', formData.category);
             if (formData.receiptImage) {
               formPayload.append('receipt', formData.receiptImage);
-            }
-            if (formData.productImage) {
-              formPayload.append('productImage', formData.productImage);
-            }
-            if (formData.billImage) {
-              formPayload.append('billImage', formData.billImage);
             }
             editExpenseMutation.mutate({ id: editingExpense!.id, expenseData: formPayload });
           }} className="space-y-4">
