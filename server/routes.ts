@@ -2552,6 +2552,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     { name: 'material', maxCount: 1 }
   ]), async (req: AuthRequest, res) => {
     try {
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
+      console.log("=== PETTY CASH EXPENSE CREATION ===");
+      console.log("Files received:", files ? Object.keys(files).map(key => `${key}: ${files[key]?.length || 0} files`) : "No files");
+      console.log("Request body:", req.body);
       // console.log("=== PETTY CASH EXPENSE SUBMISSION ===");
       // console.log("File uploaded:", req.file ? {
       //   originalname: req.file.originalname,
@@ -2584,8 +2588,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const expense = await storage.createPettyCashExpense(expenseData);
       // console.log("Expense created successfully:", expense.id);
       
-      // Handle multiple uploaded files (receipt, bill, material)
-      const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
+      // Handle multiple uploaded files (receipt, bill, material) - already declared above
       const updateData: any = {};
       
       if (files) {
@@ -2607,8 +2610,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const receiptFileName = `${paddedId}${extension}`;
           const receiptPath = `uploads/receipts/${receiptFileName}`;
           
-          fs.default.renameSync(receiptFile.path, receiptPath);
-          updateData.receiptImageUrl = receiptPath;
+          try {
+            console.log(`Moving receipt: ${receiptFile.path} -> ${receiptPath}`);
+            fs.default.renameSync(receiptFile.path, receiptPath);
+            updateData.receiptImageUrl = receiptPath;
+            console.log(`Receipt image saved successfully: ${receiptPath}`);
+          } catch (error) {
+            console.error(`Failed to move receipt file: ${error}`);
+            throw error;
+          }
         }
         
         // Process bill image (new format: 001_bill.jpg, etc.)
@@ -2626,8 +2636,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const billFileName = `${paddedId}_bill${extension}`;
           const billPath = `uploads/receipts/${billFileName}`;
           
-          fs.default.renameSync(billFile.path, billPath);
-          updateData.billImageUrl = billPath;
+          try {
+            console.log(`Moving bill: ${billFile.path} -> ${billPath}`);
+            fs.default.renameSync(billFile.path, billPath);
+            updateData.billImageUrl = billPath;
+            console.log(`Bill image saved successfully: ${billPath}`);
+          } catch (error) {
+            console.error(`Failed to move bill file: ${error}`);
+            throw error;
+          }
         }
         
         // Process material image (new format: 001_material.jpg, etc.)
@@ -2645,8 +2662,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const materialFileName = `${paddedId}_material${extension}`;
           const materialPath = `uploads/receipts/${materialFileName}`;
           
-          fs.default.renameSync(materialFile.path, materialPath);
-          updateData.materialImageUrl = materialPath;
+          try {
+            console.log(`Moving material: ${materialFile.path} -> ${materialPath}`);
+            fs.default.renameSync(materialFile.path, materialPath);
+            updateData.materialImageUrl = materialPath;
+            console.log(`Material image saved successfully: ${materialPath}`);
+          } catch (error) {
+            console.error(`Failed to move material file: ${error}`);
+            throw error;
+          }
         }
         
         // Update expense with new image paths if any files were uploaded
@@ -2746,6 +2770,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   ]), async (req: AuthRequest, res) => {
     try {
       const id = parseInt(req.params.id);
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
+      console.log(`=== PETTY CASH EXPENSE EDIT (ID: ${id}) ===`);
+      console.log("Files received:", files ? Object.keys(files).map(key => `${key}: ${files[key]?.length || 0} files`) : "No files");
+      console.log("Request body:", req.body);
       
       // Properly construct update data with correct field names and type conversions
       const updateData: any = {};
@@ -2809,8 +2837,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const receiptFileName = `${paddedId}${extension}`;
           const receiptPath = `uploads/receipts/${receiptFileName}`;
           
-          fs.default.renameSync(receiptFile.path, receiptPath);
-          fileUpdateData.receiptImageUrl = receiptPath;
+          try {
+            console.log(`[EDIT] Moving receipt: ${receiptFile.path} -> ${receiptPath}`);
+            fs.default.renameSync(receiptFile.path, receiptPath);
+            fileUpdateData.receiptImageUrl = receiptPath;
+            console.log(`[EDIT] Receipt image saved successfully: ${receiptPath}`);
+          } catch (error) {
+            console.error(`[EDIT] Failed to move receipt file: ${error}`);
+            throw error;
+          }
         }
         
         // Process bill image (new format: 001_bill.jpg, etc.)
@@ -2828,8 +2863,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const billFileName = `${paddedId}_bill${extension}`;
           const billPath = `uploads/receipts/${billFileName}`;
           
-          fs.default.renameSync(billFile.path, billPath);
-          fileUpdateData.billImageUrl = billPath;
+          try {
+            console.log(`[EDIT] Moving bill: ${billFile.path} -> ${billPath}`);
+            fs.default.renameSync(billFile.path, billPath);
+            fileUpdateData.billImageUrl = billPath;
+            console.log(`[EDIT] Bill image saved successfully: ${billPath}`);
+          } catch (error) {
+            console.error(`[EDIT] Failed to move bill file: ${error}`);
+            throw error;
+          }
         }
         
         // Process material image (new format: 001_material.jpg, etc.)
@@ -2847,8 +2889,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const materialFileName = `${paddedId}_material${extension}`;
           const materialPath = `uploads/receipts/${materialFileName}`;
           
-          fs.default.renameSync(materialFile.path, materialPath);
-          fileUpdateData.materialImageUrl = materialPath;
+          try {
+            console.log(`[EDIT] Moving material: ${materialFile.path} -> ${materialPath}`);
+            fs.default.renameSync(materialFile.path, materialPath);
+            fileUpdateData.materialImageUrl = materialPath;
+            console.log(`[EDIT] Material image saved successfully: ${materialPath}`);
+          } catch (error) {
+            console.error(`[EDIT] Failed to move material file: ${error}`);
+            throw error;
+          }
         }
         
         // Merge file updates with other expense data updates
