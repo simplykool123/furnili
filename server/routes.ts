@@ -2815,16 +2815,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Handle multiple uploaded files for edit (receipt, bill, material)
-      const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
+      const uploadedFiles = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
       const fileUpdateData: any = {};
       
-      if (files) {
+      if (uploadedFiles) {
         const fs = await import('fs');
         const path = await import('path');
         
         // Process receipt image (use original naming: 001.jpg, etc.)
-        if (files.receipt && files.receipt[0]) {
-          const receiptFile = files.receipt[0];
+        if (uploadedFiles.receipt && uploadedFiles.receipt[0]) {
+          const receiptFile = uploadedFiles.receipt[0];
           let extension = '.png';
           if (receiptFile.mimetype === 'image/jpeg') extension = '.jpg';
           else if (receiptFile.mimetype === 'image/png') extension = '.png';
@@ -2849,8 +2849,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
         
         // Process bill image (new format: 001_bill.jpg, etc.)
-        if (files.bill && files.bill[0]) {
-          const billFile = files.bill[0];
+        if (uploadedFiles.bill && uploadedFiles.bill[0]) {
+          const billFile = uploadedFiles.bill[0];
           let extension = '.png';
           if (billFile.mimetype === 'image/jpeg') extension = '.jpg';
           else if (billFile.mimetype === 'image/png') extension = '.png';
@@ -2875,8 +2875,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
         
         // Process material image (new format: 001_material.jpg, etc.)
-        if (files.material && files.material[0]) {
-          const materialFile = files.material[0];
+        if (uploadedFiles.material && uploadedFiles.material[0]) {
+          const materialFile = uploadedFiles.material[0];
           let extension = '.png';
           if (materialFile.mimetype === 'image/jpeg') extension = '.jpg';
           else if (materialFile.mimetype === 'image/png') extension = '.png';
