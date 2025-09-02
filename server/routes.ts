@@ -2593,83 +2593,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (files) {
         const fs = await import('fs');
-        const path = await import('path');
+        const timestamp = Date.now();
         
-        // Process receipt image (use original naming: 001.jpg, etc.)
+        // Simple receipt image handling
         if (files.receipt && files.receipt[0]) {
           const receiptFile = files.receipt[0];
-          let extension = '.png';
-          if (receiptFile.mimetype === 'image/jpeg') extension = '.jpg';
-          else if (receiptFile.mimetype === 'image/png') extension = '.png';
-          else if (receiptFile.originalname) {
-            const ext = path.default.extname(receiptFile.originalname);
-            if (ext) extension = ext;
-          }
-          
-          const paddedId = expense.id.toString().padStart(3, '0');
-          const receiptFileName = `${paddedId}${extension}`;
+          const receiptFileName = `receipt_${timestamp}.jpg`;
           const receiptPath = `uploads/receipts/${receiptFileName}`;
           
           try {
-            console.log(`Moving receipt: ${receiptFile.path} -> ${receiptPath}`);
             fs.default.renameSync(receiptFile.path, receiptPath);
             updateData.receiptImageUrl = receiptPath;
-            console.log(`Receipt image saved successfully: ${receiptPath}`);
+            console.log(`Receipt saved: ${receiptPath}`);
           } catch (error) {
-            console.error(`Failed to move receipt file: ${error}`);
-            throw error;
+            console.error(`Receipt save failed: ${error}`);
           }
         }
         
-        // Process bill image (new format: 001_bill.jpg, etc.)
+        // Simple bill image handling
         if (files.bill && files.bill[0]) {
           const billFile = files.bill[0];
-          let extension = '.png';
-          if (billFile.mimetype === 'image/jpeg') extension = '.jpg';
-          else if (billFile.mimetype === 'image/png') extension = '.png';
-          else if (billFile.originalname) {
-            const ext = path.default.extname(billFile.originalname);
-            if (ext) extension = ext;
-          }
-          
-          const paddedId = expense.id.toString().padStart(3, '0');
-          const billFileName = `${paddedId}_bill${extension}`;
+          const billFileName = `bill_${timestamp}.jpg`;
           const billPath = `uploads/receipts/${billFileName}`;
           
           try {
-            console.log(`Moving bill: ${billFile.path} -> ${billPath}`);
             fs.default.renameSync(billFile.path, billPath);
             updateData.billImageUrl = billPath;
-            console.log(`Bill image saved successfully: ${billPath}`);
+            console.log(`Bill saved: ${billPath}`);
           } catch (error) {
-            console.error(`Failed to move bill file: ${error}`);
-            throw error;
+            console.error(`Bill save failed: ${error}`);
           }
         }
         
-        // Process material image (new format: 001_material.jpg, etc.)
+        // Simple material image handling
         if (files.material && files.material[0]) {
           const materialFile = files.material[0];
-          let extension = '.png';
-          if (materialFile.mimetype === 'image/jpeg') extension = '.jpg';
-          else if (materialFile.mimetype === 'image/png') extension = '.png';
-          else if (materialFile.originalname) {
-            const ext = path.default.extname(materialFile.originalname);
-            if (ext) extension = ext;
-          }
-          
-          const paddedId = expense.id.toString().padStart(3, '0');
-          const materialFileName = `${paddedId}_material${extension}`;
+          const materialFileName = `material_${timestamp}.jpg`;
           const materialPath = `uploads/receipts/${materialFileName}`;
           
           try {
-            console.log(`Moving material: ${materialFile.path} -> ${materialPath}`);
             fs.default.renameSync(materialFile.path, materialPath);
             updateData.materialImageUrl = materialPath;
-            console.log(`Material image saved successfully: ${materialPath}`);
+            console.log(`Material saved: ${materialPath}`);
           } catch (error) {
-            console.error(`Failed to move material file: ${error}`);
-            throw error;
+            console.error(`Material save failed: ${error}`);
           }
         }
         
@@ -2820,83 +2787,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (uploadedFiles) {
         const fs = await import('fs');
-        const path = await import('path');
+        const timestamp = Date.now();
         
-        // Process receipt image (use original naming: 001.jpg, etc.)
+        // Simple receipt image handling for edits
         if (uploadedFiles.receipt && uploadedFiles.receipt[0]) {
           const receiptFile = uploadedFiles.receipt[0];
-          let extension = '.png';
-          if (receiptFile.mimetype === 'image/jpeg') extension = '.jpg';
-          else if (receiptFile.mimetype === 'image/png') extension = '.png';
-          else if (receiptFile.originalname) {
-            const ext = path.default.extname(receiptFile.originalname);
-            if (ext) extension = ext;
-          }
-          
-          const paddedId = id.toString().padStart(3, '0');
-          const receiptFileName = `${paddedId}${extension}`;
+          const receiptFileName = `receipt_${timestamp}_edit.jpg`;
           const receiptPath = `uploads/receipts/${receiptFileName}`;
           
           try {
-            console.log(`[EDIT] Moving receipt: ${receiptFile.path} -> ${receiptPath}`);
             fs.default.renameSync(receiptFile.path, receiptPath);
             fileUpdateData.receiptImageUrl = receiptPath;
-            console.log(`[EDIT] Receipt image saved successfully: ${receiptPath}`);
+            console.log(`Receipt updated: ${receiptPath}`);
           } catch (error) {
-            console.error(`[EDIT] Failed to move receipt file: ${error}`);
-            throw error;
+            console.error(`Receipt update failed: ${error}`);
           }
         }
         
-        // Process bill image (new format: 001_bill.jpg, etc.)
+        // Simple bill image handling for edits
         if (uploadedFiles.bill && uploadedFiles.bill[0]) {
           const billFile = uploadedFiles.bill[0];
-          let extension = '.png';
-          if (billFile.mimetype === 'image/jpeg') extension = '.jpg';
-          else if (billFile.mimetype === 'image/png') extension = '.png';
-          else if (billFile.originalname) {
-            const ext = path.default.extname(billFile.originalname);
-            if (ext) extension = ext;
-          }
-          
-          const paddedId = id.toString().padStart(3, '0');
-          const billFileName = `${paddedId}_bill${extension}`;
+          const billFileName = `bill_${timestamp}_edit.jpg`;
           const billPath = `uploads/receipts/${billFileName}`;
           
           try {
-            console.log(`[EDIT] Moving bill: ${billFile.path} -> ${billPath}`);
             fs.default.renameSync(billFile.path, billPath);
             fileUpdateData.billImageUrl = billPath;
-            console.log(`[EDIT] Bill image saved successfully: ${billPath}`);
+            console.log(`Bill updated: ${billPath}`);
           } catch (error) {
-            console.error(`[EDIT] Failed to move bill file: ${error}`);
-            throw error;
+            console.error(`Bill update failed: ${error}`);
           }
         }
         
-        // Process material image (new format: 001_material.jpg, etc.)
+        // Simple material image handling for edits
         if (uploadedFiles.material && uploadedFiles.material[0]) {
           const materialFile = uploadedFiles.material[0];
-          let extension = '.png';
-          if (materialFile.mimetype === 'image/jpeg') extension = '.jpg';
-          else if (materialFile.mimetype === 'image/png') extension = '.png';
-          else if (materialFile.originalname) {
-            const ext = path.default.extname(materialFile.originalname);
-            if (ext) extension = ext;
-          }
-          
-          const paddedId = id.toString().padStart(3, '0');
-          const materialFileName = `${paddedId}_material${extension}`;
+          const materialFileName = `material_${timestamp}_edit.jpg`;
           const materialPath = `uploads/receipts/${materialFileName}`;
           
           try {
-            console.log(`[EDIT] Moving material: ${materialFile.path} -> ${materialPath}`);
             fs.default.renameSync(materialFile.path, materialPath);
             fileUpdateData.materialImageUrl = materialPath;
-            console.log(`[EDIT] Material image saved successfully: ${materialPath}`);
+            console.log(`Material updated: ${materialPath}`);
           } catch (error) {
-            console.error(`[EDIT] Failed to move material file: ${error}`);
-            throw error;
+            console.error(`Material update failed: ${error}`);
           }
         }
         
