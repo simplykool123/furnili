@@ -143,4 +143,3 @@ jobs:
         with:
           name: furnili-management-release-aab
           path: android/app/build/outputs/bundle/release/app-release.aab
-          if-no-files-found: warn
