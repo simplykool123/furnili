@@ -141,7 +141,8 @@ export default function ProductForm({ product, onClose, isMobile = false }: Prod
       // Create product data with image URL and ensure productType is valid
       const productData = {
         ...data,
-        imageUrl: imageUrl,
+        // Convert null imageUrl to undefined so it gets omitted from the request
+        ...(imageUrl ? { imageUrl } : {}),
         // Ensure productType defaults to 'raw_material' if not set
         productType: data.productType || 'raw_material'
       };
