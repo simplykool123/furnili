@@ -86,3 +86,4 @@ jobs:
         with:
           name: furnili-management-android-release
           path: android/app/build/outputs/apk/release/app-release.apk
+
