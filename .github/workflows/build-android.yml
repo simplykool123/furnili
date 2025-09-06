@@ -61,4 +61,70 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: furnili-management-debug-apk
-          pat
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+
+      - name: Decode Keystore (for signed release)
+        if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
+        run: |
+          if [ -n "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" ]; then
+            echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > android/release.keystore
+          fi
+
+      - name: Build Release APK
+        if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
+        working-directory: android
+        env:
+          RELEASE_STORE_FILE: release.keystore
+          RELEASE_STORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          RELEASE_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          RELEASE_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: ./gradlew assembleRelease
+
+      - name: Upload Signed Release APK
+        if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
+        run: |
+          if [ -f android/app/build/outputs/apk/release/app-release.apk ] && [ -n "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" ]; then
+            echo "Uploading signed release APK..."
+          else
+            echo "Signed APK not available, skipping."
+            exit 0
+          fi
+        shell: bash
+      - uses: actions/upload-artifact@v4
+        if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
+        with:
+          name: furnili-management-release-signed-apk
+          path: android/app/build/outputs/apk/release/app-release.apk
+
+      - name: Upload Unsigned Release APK
+        if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
+        run: |
+          if [ -f android/app/build/outputs/apk/release/app-release-unsigned.apk ] && [ -z "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" ]; then
+            echo "Uploading unsigned release APK..."
+          else
+            echo "Unsigned APK not available, skipping."
+            exit 0
+          fi
+        shell: bash
+      - uses: actions/upload-artifact@v4
+        if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
+        with:
+          name: furnili-management-release-unsigned-apk
+          path: android/app/build/outputs/apk/release/app-release-unsigned.apk
+
+      - name: Build Release Bundle (AAB)
+        if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
+        working-directory: android
+        env:
+          RELEASE_STORE_FILE: release.keystore
+          RELEASE_STORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          RELEASE_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          RELEASE_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: ./gradlew bundleRelease
+
+      - name: Upload Release Bundle (AAB)
+        if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
+        uses: actions/upload-artifact@v4
+        with:
+          name: furnili-management-release-aab
+          path: android/app/build/outputs/bundle/release/app-release.aab
