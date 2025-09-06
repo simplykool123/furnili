@@ -138,11 +138,15 @@ export default function ProductForm({ product, onClose, isMobile = false }: Prod
         imageUrl = imageResult.imageUrl;
       }
       
-      // Create product data with image URL
+      // Create product data with image URL and ensure productType is valid
       const productData = {
         ...data,
-        imageUrl: imageUrl
+        imageUrl: imageUrl,
+        // Ensure productType defaults to 'raw_material' if not set
+        productType: data.productType || 'raw_material'
       };
+      
+      console.log('Final product data being sent:', productData);
       
       // Use regular JSON request for product data
       const url = product ? `/api/products/${product.id}` : '/api/products';
@@ -170,6 +174,9 @@ export default function ProductForm({ product, onClose, isMobile = false }: Prod
           errorMessage = "Please check all required fields are filled correctly";
         }
       }
+      
+      // Also log the full error for debugging
+      console.error('Full error details:', error);
       
       toast({
         title: "Save failed",
