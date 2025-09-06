@@ -1,0 +1,60 @@
+name: Build iOS App
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Build web application
+      run: npm run build
+
+    - name: Sync Capacitor
+      run: npx cap sync ios
+
+    - name: Install CocoaPods
+      run: |
+        cd ios/App
+        pod install
+
+    - name: Build iOS App
+      run: |
+        cd ios/App
+        xcodebuild -workspace App.xcworkspace \
+                   -scheme App \
+                   -configuration Debug \
+                   -destination 'generic/platform=iOS Simulator' \
+                   -archivePath App.xcarchive \
+                   archive
+
+    - name: Export IPA
+      run: |
+        cd ios/App
+        xcodebuild -exportArchive \
+                   -archivePath App.xcarchive \
+                   -exportPath . \
+                   -exportOptionsPlist ../../ExportOptions.plist
+
+    - name: Upload iOS App
+      uses: actions/upload-artifact@v4
+      with:
+        name: furnili-management-ios.ipa
+        path: ios/App/App.ipa
