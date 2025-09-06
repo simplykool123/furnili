@@ -3,6 +3,7 @@ apply plugin: 'com.android.application'
 android {
     namespace "com.furnili.management"
     compileSdk rootProject.ext.compileSdkVersion
+    
     defaultConfig {
         applicationId "com.furnili.management"
         minSdkVersion rootProject.ext.minSdkVersion
@@ -16,7 +17,13 @@ android {
             ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
-
+    
+    // ADD THIS SECTION - Java compatibility settings
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+    
     // Configure signing for release builds
     signingConfigs {
         release {
@@ -28,7 +35,7 @@ android {
             }
         }
     }
-
+    
     buildTypes {
         release {
             minifyEnabled false
