@@ -9,9 +9,9 @@ echo "🏗️  Building Furnili Management System for Mobile..."
 echo "📦 Building web application..."
 npm run build
 
-# Check if client/dist exists
-if [ ! -d "client/dist" ]; then
-  echo "❌ Build failed - client/dist directory not found"
+# Check if dist/public exists
+if [ ! -d "dist/public" ]; then
+  echo "❌ Build failed - dist/public directory not found"
   exit 1
 fi
 
