@@ -1,5 +1,4 @@
 name: Build Android APK
-
 on:
   push:
     branches: [ main, master ]
@@ -20,12 +19,12 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    env:
-      HAS_KEYSTORE: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
-
+    
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -34,26 +33,18 @@ jobs:
           cache: 'npm'
 
       - name: Setup Java 17
-        id: setup-java
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
-          cache: 'gradle'
-
-      - name: Install unzip
-        run: sudo apt-get update && sudo apt-get install -y unzip
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
-        env:
-          JAVA_HOME: ${{ steps.setup-java.outputs.path }}
-          PATH: ${{ steps.setup-java.outputs.path }}/bin:${{ env.PATH }}
-
-      - name: Force Java 17 for Gradle
-        run: |
-          mkdir -p ~/.gradle
-          echo "org.gradle.java.home=${{ steps.setup-java.outputs.path }}" >> ~/.gradle/gradle.properties
+        with:
+          packages: |
+            platform-tools
+            platforms;android-34
+            build-tools;34.0.0
 
       - name: Install dependencies
         run: npm ci
@@ -61,66 +52,90 @@ jobs:
       - name: Build web application
         run: npm run build
 
+      - name: Install Capacitor CLI (if not in package.json)
+        run: npm install -g @capacitor/cli
+
       - name: Sync Capacitor
         run: npx cap sync android
 
       - name: Grant execute permission for gradlew
         run: chmod +x android/gradlew
 
+      - name: Clean Gradle cache
+        working-directory: android
+        run: ./gradlew clean
+
       - name: Build Debug APK
         working-directory: android
-        run: ./gradlew assembleDebug
+        run: ./gradlew assembleDebug --stacktrace --info
 
       - name: Upload Debug APK
         uses: actions/upload-artifact@v4
         with:
           name: furnili-management-debug-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
 
-      - name: Decode Keystore (for signed release)
-        if: env.HAS_KEYSTORE != ''
-        env:
-          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+      # Release build steps (only on main/master or tags)
+      - name: Check for keystore
+        id: check_keystore
         run: |
-          echo "${ANDROID_KEYSTORE_BASE64}" | base64 -d > android/release.keystore
+          if [ -n "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" ]; then
+            echo "has_keystore=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_keystore=false" >> $GITHUB_OUTPUT
+          fi
 
-      - name: Build Release APK
-        if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
+      - name: Decode Keystore
+        if: steps.check_keystore.outputs.has_keystore == 'true'
+        run: |
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > android/app/release.keystore
+
+      - name: Build Release APK (Signed)
+        if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/v')) && steps.check_keystore.outputs.has_keystore == 'true'
         working-directory: android
         env:
           RELEASE_STORE_FILE: release.keystore
           RELEASE_STORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           RELEASE_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           RELEASE_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-        run: ./gradlew assembleRelease
+        run: ./gradlew assembleRelease --stacktrace --info
+
+      - name: Build Release APK (Unsigned)
+        if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/v')) && steps.check_keystore.outputs.has_keystore == 'false'
+        working-directory: android
+        run: ./gradlew assembleRelease --stacktrace --info
 
       - name: Upload Signed Release APK
-        if: env.HAS_KEYSTORE != ''
+        if: steps.check_keystore.outputs.has_keystore == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: furnili-management-release-signed-apk
           path: android/app/build/outputs/apk/release/app-release.apk
+          if-no-files-found: warn
 
       - name: Upload Unsigned Release APK
-        if: env.HAS_KEYSTORE == ''
+        if: steps.check_keystore.outputs.has_keystore == 'false'
         uses: actions/upload-artifact@v4
         with:
           name: furnili-management-release-unsigned-apk
           path: android/app/build/outputs/apk/release/app-release-unsigned.apk
+          if-no-files-found: warn
 
       - name: Build Release Bundle (AAB)
-        if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
+        if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/v')) && steps.check_keystore.outputs.has_keystore == 'true'
         working-directory: android
         env:
           RELEASE_STORE_FILE: release.keystore
           RELEASE_STORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           RELEASE_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           RELEASE_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-        run: ./gradlew bundleRelease
+        run: ./gradlew bundleRelease --stacktrace --info
 
       - name: Upload Release Bundle (AAB)
-        if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
+        if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/v')) && steps.check_keystore.outputs.has_keystore == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: furnili-management-release-aab
           path: android/app/build/outputs/bundle/release/app-release.aab
+          if-no-files-found: warn
