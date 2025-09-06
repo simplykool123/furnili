@@ -127,7 +127,7 @@ jobs:
           RELEASE_STORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           RELEASE_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           RELEASE_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-        run: ./gradlew bundleRelease --stacktrace --info
+        run: ./gradlew bundleRelease --stacktrace --info --no-daemon
 
       - name: Upload Release Bundle AAB
         if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/v')) && steps.check_keystore.outputs.has_keystore == 'true'
