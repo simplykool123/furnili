@@ -2763,13 +2763,27 @@ export default function ProjectDetail() {
                                                 let originalName: string;
 
                                                 if (typeof attachment === 'string') {
-                                                  // Legacy string format
-                                                  filePath = attachment;
-                                                  fileName = attachment.split("/").pop() || attachment;
-                                                  mimeType = '';
-                                                  originalName = fileName;
+                                                  // Check if it's a JSON string that needs parsing
+                                                  try {
+                                                    const parsed = JSON.parse(attachment);
+                                                    if (parsed.filePath && parsed.mimeType) {
+                                                      // Parsed JSON object from Telegram bot
+                                                      filePath = parsed.filePath || '';
+                                                      fileName = parsed.fileName || '';
+                                                      mimeType = parsed.mimeType || '';
+                                                      originalName = parsed.originalName || parsed.fileName || '';
+                                                    } else {
+                                                      throw new Error('Not a valid attachment JSON');
+                                                    }
+                                                  } catch {
+                                                    // Legacy string format (file path)
+                                                    filePath = attachment;
+                                                    fileName = attachment.split("/").pop() || attachment;
+                                                    mimeType = '';
+                                                    originalName = fileName;
+                                                  }
                                                 } else {
-                                                  // New object format from Telegram bot
+                                                  // Direct object format from Telegram bot
                                                   filePath = attachment.filePath || '';
                                                   fileName = attachment.fileName || '';
                                                   mimeType = attachment.mimeType || '';

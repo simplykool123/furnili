@@ -320,7 +320,7 @@ Send the command and start uploading!`;
             // Update the existing note with the new attachment
             await client.query(
               'UPDATE project_logs SET attachments = $1 WHERE id = $2',
-              [updatedAttachments, existingNote.id]
+              [JSON.stringify(updatedAttachments), existingNote.id]
             );
 
             const attachmentCount = updatedAttachments.length;
@@ -338,7 +338,7 @@ Send the command and start uploading!`;
                 title,
                 description,
                 7, // Use existing user ID
-                [attachment], // Photo attachment
+                JSON.stringify([attachment]), // Photo attachment as JSON string
                 false // Not important by default
               ]
             );
