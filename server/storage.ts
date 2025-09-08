@@ -1217,13 +1217,15 @@ class DatabaseStorage implements IStorage {
     return result.map(log => ({
       id: log.id,
       projectId: log.projectId,
-      type: log.logType,
+      logType: log.logType,  // Keep as logType for frontend
+      type: log.logType,     // Also provide as type for compatibility
       title: log.title,
       description: log.description,
       priority: log.isImportant ? 'high' : 'medium',
       createdBy: log.createdBy,
       attachments: log.attachments,
       createdAt: log.createdAt,
+      author: log.createdByUser?.name || log.createdByUser?.username || 'System User',
       createdByUser: log.createdByUser
     }));
   }
@@ -1247,13 +1249,15 @@ class DatabaseStorage implements IStorage {
     return {
       id: createdLog.id,
       projectId: createdLog.projectId,
-      type: createdLog.logType,
+      logType: createdLog.logType,  // Keep as logType for frontend
+      type: createdLog.logType,     // Also provide as type for compatibility
       title: createdLog.title,
       description: createdLog.description,
       priority: createdLog.isImportant ? 'high' : 'medium',
       createdBy: createdLog.createdBy,
       attachments: createdLog.attachments,
       createdAt: createdLog.createdAt,
+      author: user ? (user.name || user.username) : 'System User',
       createdByUser: user ? { name: user.name, username: user.username } : null
     };
   }
