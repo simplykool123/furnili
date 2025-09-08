@@ -422,16 +422,10 @@ Once added, please try /start again.`);
       return;
     }
 
-    const sessionExpired = await this.isSessionExpired(userId);
-    if (sessionExpired) {
-      userModes.delete(userId);
-      userProjects.delete(userId);
-      userStates.delete(userId);
-      await this.bot.sendMessage(chatId, `⏰ Your session has expired after ${SESSION_TIMEOUT_MINUTES} minutes of inactivity.\n\nPlease send /start to authenticate again.`);
-      return;
-    }
 
-    await this.updateLastInteraction(userId);
+
+
+
 
     try {
       // Store user's current mode in memory
@@ -465,16 +459,10 @@ Once added, please try /start again.`);
       return;
     }
 
-    const sessionExpired = await this.isSessionExpired(userId);
-    if (sessionExpired) {
-      userModes.delete(userId);
-      userProjects.delete(userId);
-      userStates.delete(userId);
-      await this.bot.sendMessage(chatId, `⏰ Your session has expired after ${SESSION_TIMEOUT_MINUTES} minutes of inactivity.\n\nPlease send /start to authenticate again.`);
-      return;
-    }
 
-    await this.updateLastInteraction(userId);
+
+
+
 
     try {
       const projectId = userProjects.get(userId) || 1;
