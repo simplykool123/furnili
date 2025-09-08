@@ -944,6 +944,21 @@ export const bomBoardRates = pgTable("bom_board_rates", {
   notes: text("notes"),
 });
 
+// Telegram User Sessions - tracks active project selections per user
+export const telegramUserSessions = pgTable("telegram_user_sessions", {
+  id: serial("id").primaryKey(),
+  telegramUserId: text("telegram_user_id").notNull(), // Telegram user ID (as string)
+  telegramUsername: text("telegram_username"), // Telegram username (optional)
+  telegramFirstName: text("telegram_first_name"), // User's first name
+  activeProjectId: integer("active_project_id").references(() => projects.id), // Currently selected project
+  activeClientId: integer("active_client_id").references(() => clients.id), // Currently selected client
+  lastInteraction: timestamp("last_interaction").defaultNow(),
+  sessionState: text("session_state").default("idle"), // idle, selecting_client, selecting_project, selecting_category, uploading
+  currentStep: text("current_step"), // Additional context for multi-step flows
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Insert schemas for PO system and brand management
 export const insertSupplierSchema = createInsertSchema(suppliers).omit({ id: true, createdAt: true, updatedAt: true });
 
@@ -968,6 +983,7 @@ export const insertBomItem = createInsertSchema(bomItems).omit({ id: true, creat
 export const insertBomSettingsSchema = createInsertSchema(bomSettings).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertBomHardwareRate = createInsertSchema(bomHardwareRates).omit({ id: true, lastUpdated: true });
 export const insertBomBoardRate = createInsertSchema(bomBoardRates).omit({ id: true, lastUpdated: true });
+export const insertTelegramUserSessionSchema = createInsertSchema(telegramUserSessions).omit({ id: true, createdAt: true, updatedAt: true });
 
 // PO System and Brand Management Types
 export type Supplier = typeof suppliers.$inferSelect;
@@ -1006,6 +1022,8 @@ export type BomBoardRate = typeof bomBoardRates.$inferSelect;
 export type InsertBomBoardRate = z.infer<typeof insertBomBoardRate>;
 export type BomSettings = typeof bomSettings.$inferSelect;
 export type InsertBomSettings = z.infer<typeof insertBomSettingsSchema>;
+export type TelegramUserSession = typeof telegramUserSessions.$inferSelect;
+export type InsertTelegramUserSession = z.infer<typeof insertTelegramUserSessionSchema>;
 
 // Extended BOM types for API responses
 export type BomCalculationWithDetails = BomCalculation & {
