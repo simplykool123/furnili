@@ -59,6 +59,7 @@ export default function Projects() {
   const [stageFilter, setStageFilter] = useState("all");
   const [clientFilter, setClientFilter] = useState("all");
   const [activeTab, setActiveTab] = useState("client");
+  const [activeProjectTab, setActiveProjectTab] = useState("all");
   const [selectedState, setSelectedState] = useState("Maharashtra");
   const [availableCities, setAvailableCities] = useState<string[]>(getCitiesByState("Maharashtra"));
   
@@ -239,7 +240,7 @@ export default function Projects() {
     setProjectToDelete(project);
   };
 
-  // Filter projects based on search and filters
+  // Filter projects based on search, filters, and active tab
   const filteredProjects = projects.filter((project: Project) => {
     const matchesSearch = project.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          project.code?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -248,7 +249,12 @@ export default function Projects() {
     const matchesStage = stageFilter === "all" || project.stage === stageFilter;
     const matchesClient = clientFilter === "all" || project.clientId.toString() === clientFilter;
     
-    return matchesSearch && matchesStage && matchesClient;
+    // Filter based on active tab
+    const matchesTab = activeProjectTab === "all" || 
+                      (activeProjectTab === "completed" && 
+                       ['completed', 'handover', 'lost'].includes(project.stage));
+    
+    return matchesSearch && matchesStage && matchesClient && matchesTab;
   });
 
   const getStageColor = (stage: string) => {
@@ -341,6 +347,26 @@ export default function Projects() {
       {/* Main Content */}
       <div className="p-6">
         <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+          {/* Project Tabs */}
+          <div className="border-b border-gray-200">
+            <Tabs value={activeProjectTab} onValueChange={setActiveProjectTab}>
+              <TabsList className="w-full justify-start rounded-none bg-transparent border-0 h-auto p-0">
+                <TabsTrigger 
+                  value="all" 
+                  className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-amber-900 rounded-none px-6 py-3"
+                >
+                  All Projects
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="completed" 
+                  className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-amber-900 rounded-none px-6 py-3"
+                >
+                  Completed
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </div>
+
           {/* Filters Section */}
           <div className="p-4 border-b border-gray-200">
             <div className="flex flex-wrap gap-4 items-center">
