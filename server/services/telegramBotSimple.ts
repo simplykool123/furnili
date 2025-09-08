@@ -367,7 +367,8 @@ Once added, please try /start again.`);
 
     try {
       const projectId = userProjects.get(userId) || 1;
-      console.log(`📝 User ${userId} saving text note to project ${projectId} Notes tab`);
+      const systemUser = await this.getSystemUserInfo(userId);
+      console.log(`📝 User ${userId} (${systemUser?.name}) saving text note to project ${projectId} Notes tab`);
 
       // Generate a title from the first few words of the note
       const title = noteText.length > 50 
@@ -384,7 +385,7 @@ Once added, please try /start again.`);
             'note', // logType for notes
             title, // Generated title
             noteText, // Full note content in description
-            7, // Use existing user ID
+            systemUser?.id || 7, // Use actual system user ID
             [], // Empty attachments array
             false // Not important by default
           ]
@@ -447,6 +448,9 @@ Once added, please try /start again.`);
         if (currentMode === 'notes') {
           console.log(`📝 User ${userId} saving photo to project ${projectId} Notes tab`);
           
+          // Get system user info for proper attribution
+          const systemUser = await this.getSystemUserInfo(userId);
+          
           // Create attachment object for the photo
           const attachment = {
             fileName: savedFile.fileName,
@@ -454,7 +458,7 @@ Once added, please try /start again.`);
             filePath: savedFile.filePath,
             fileSize: savedFile.fileSize,
             mimeType: 'image/jpeg',
-            uploadedBy: 7,
+            uploadedBy: systemUser?.id || 7,
             uploadedAt: new Date().toISOString()
           };
 
@@ -465,7 +469,7 @@ Once added, please try /start again.`);
           const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
           const recentNote = await client.query(
             'SELECT id, attachments, title, description FROM project_logs WHERE project_id = $1 AND created_by = $2 AND log_type = $3 AND created_at > $4 ORDER BY created_at DESC LIMIT 1',
-            [projectId, 7, 'note', fiveMinutesAgo]
+            [projectId, systemUser?.id || 7, 'note', fiveMinutesAgo]
           );
 
           if (recentNote.rows.length > 0) {
@@ -510,7 +514,7 @@ Once added, please try /start again.`);
                 'note', // logType for notes
                 title,
                 description,
-                7, // Use existing user ID
+                systemUser?.id || 7, // Use actual system user ID
                 JSON.stringify([attachment]), // Photo attachment as JSON string
                 false // Not important by default
               ]
@@ -521,6 +525,7 @@ Once added, please try /start again.`);
         } else {
           // Save to Files tab (project_files) for other modes
           const category = this.mapCategory(currentMode);
+          const systemUser = await this.getSystemUserInfo(userId);
           
           await client.query(
             'INSERT INTO project_files (project_id, client_id, file_name, original_name, file_path, file_size, mime_type, category, description, comment, uploaded_by, is_public) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)',
@@ -535,7 +540,7 @@ Once added, please try /start again.`);
               category, // Use correct category based on user mode
               'Uploaded via Telegram',
               caption,
-              7, // Use existing user ID (Aman from logs)
+              systemUser?.id || 7, // Use actual system user ID
               false
             ]
           );
