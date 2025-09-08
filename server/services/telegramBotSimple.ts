@@ -84,7 +84,8 @@ Quick Start:
           SELECT p.id, p.code, p.name, p.stage, c.name as client_name
           FROM projects p
           LEFT JOIN clients c ON p.client_id = c.id
-          WHERE p.is_active = true
+          WHERE p.is_active = true 
+            AND p.stage NOT IN ('completed', 'handover', 'lost')
           ORDER BY p.created_at
         `);
         const projectList = result.rows;
@@ -94,7 +95,7 @@ Quick Start:
         return;
       }
 
-        let message = "📋 Active Projects:\n\n";
+        let message = "📋 Active Projects (ongoing):\n\n";
         projectList.forEach((project, index) => {
           message += `${index + 1}. ${project.code} - ${project.name}\n`;
           message += `   Client: ${project.client_name || 'Unknown'}\n`;
