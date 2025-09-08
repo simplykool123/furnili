@@ -213,33 +213,33 @@ Send the command and start uploading!`;
 
     try {
       const projectId = userProjects.get(userId) || 1;
-      console.log(`📝 User ${userId} saving text note to project ${projectId}`);
+      console.log(`📝 User ${userId} saving text note to project ${projectId} Notes tab`);
 
-      // Save text note to database
+      // Generate a title from the first few words of the note
+      const title = noteText.length > 50 
+        ? noteText.substring(0, 50).trim() + "..." 
+        : noteText.trim();
+
+      // Save text note to project_logs table (Notes tab)
       const client = await botPool.connect();
       try {
         await client.query(
-          'INSERT INTO project_files (project_id, client_id, file_name, original_name, file_path, file_size, mime_type, category, description, comment, uploaded_by, is_public) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)',
+          'INSERT INTO project_logs (project_id, log_type, title, description, created_by, attachments, is_important) VALUES ($1, $2, $3, $4, $5, $6, $7)',
           [
             projectId,
-            1, // default client
-            `telegram_note_${Date.now()}.txt`,
-            `telegram_note_${Date.now()}.txt`,
-            '', // No file path for text notes
-            noteText.length, // Text length as file size
-            'text/plain',
-            'notes', // notes category
-            'Text note via Telegram',
-            noteText, // The actual note content
+            'note', // logType for notes
+            title, // Generated title
+            noteText, // Full note content in description
             7, // Use existing user ID
-            false
+            [], // Empty attachments array
+            false // Not important by default
           ]
         );
       } finally {
         client.release();
       }
 
-      await this.bot.sendMessage(chatId, `✅ Note saved successfully!\n"${noteText.substring(0, 50)}${noteText.length > 50 ? '...' : ''}"`);
+      await this.bot.sendMessage(chatId, `✅ Note saved to Notes tab!\n"${title}"`);
     } catch (error) {
       console.error('Error handling text note:', error);
       await this.bot.sendMessage(chatId, "Error saving note. Please try again.");
