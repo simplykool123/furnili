@@ -2753,45 +2753,67 @@ export default function ProjectDetail() {
                                           <div className="grid grid-cols-1 gap-2">
                                             {log.attachments.map(
                                               (
-                                                attachment: string,
+                                                attachment: any,
                                                 index: number,
                                               ) => {
-                                                // Check if it's an image by trying to find file with common extensions
+                                                // Handle both old string format and new object format
+                                                let filePath: string;
+                                                let fileName: string;
+                                                let mimeType: string;
+                                                let originalName: string;
+
+                                                if (typeof attachment === 'string') {
+                                                  // Legacy string format
+                                                  filePath = attachment;
+                                                  fileName = attachment.split("/").pop() || attachment;
+                                                  mimeType = '';
+                                                  originalName = fileName;
+                                                } else {
+                                                  // New object format from Telegram bot
+                                                  filePath = attachment.filePath || '';
+                                                  fileName = attachment.fileName || '';
+                                                  mimeType = attachment.mimeType || '';
+                                                  originalName = attachment.originalName || attachment.fileName || '';
+                                                }
+
+                                                // Check if it's an image
                                                 const isImage = 
-                                                  /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(attachment) ||
-                                                  // Check if file exists with image extensions in uploads/products/
-                                                  (() => {
-                                                    const imgExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg'];
-                                                    return imgExtensions.some(ext => 
-                                                      attachment.includes('.') ? false : true // Assume it's an image if no extension
-                                                    );
-                                                  })();
-                                                const fileName =
-                                                  attachment.split("/").pop() ||
-                                                  attachment;
+                                                  mimeType.includes('image') ||
+                                                  /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(filePath) ||
+                                                  /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(fileName);
 
                                                 if (isImage) {
                                                   return (
                                                     <div
                                                       key={index}
-                                                      className="mb-2"
+                                                      className="mb-2 cursor-pointer group"
+                                                      onClick={() => {
+                                                        // Open image in new tab on click
+                                                        const imageUrl = filePath.startsWith("/") 
+                                                          ? filePath 
+                                                          : `/${filePath}`;
+                                                        window.open(imageUrl, '_blank');
+                                                      }}
                                                     >
-                                                      <img
-                                                        src={
-                                                          attachment.startsWith("/")
-                                                            ? attachment
-                                                            : attachment.includes(".")
-                                                              ? `/uploads/products/${attachment}`
-                                                              : `/uploads/products/${attachment}.png`
-                                                        }
-                                                        alt={`Attachment ${index + 1}`}
-                                                        className="max-w-full max-h-64 rounded-lg border border-gray-200 shadow-sm"
-                                                        onError={(e) => {
-                                                          // Fallback if image fails to load
-                                                          e.currentTarget.style.display =
-                                                            "none";
-                                                        }}
-                                                      />
+                                                      <div className="relative">
+                                                        <img
+                                                          src={filePath.startsWith("/") ? filePath : `/${filePath}`}
+                                                          alt={originalName}
+                                                          className="max-w-full max-h-64 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow"
+                                                          onError={(e) => {
+                                                            // Fallback if image fails to load
+                                                            e.currentTarget.style.display = "none";
+                                                          }}
+                                                        />
+                                                        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all rounded-lg flex items-center justify-center">
+                                                          <div className="opacity-0 group-hover:opacity-100 text-white bg-black bg-opacity-50 px-2 py-1 rounded text-xs transition-opacity">
+                                                            Click to view full size
+                                                          </div>
+                                                        </div>
+                                                      </div>
+                                                      <p className="text-xs text-gray-500 mt-1 truncate" title={originalName}>
+                                                        {originalName}
+                                                      </p>
                                                     </div>
                                                   );
                                                 } else {
@@ -2814,19 +2836,13 @@ export default function ProjectDetail() {
                                                         />
                                                       </svg>
                                                       <a
-                                                        href={
-                                                          attachment.startsWith("/")
-                                                            ? attachment
-                                                            : attachment.includes(".")
-                                                              ? `/uploads/products/${attachment}`
-                                                              : `/uploads/products/${attachment}.png`
-                                                        }
+                                                        href={filePath.startsWith("/") ? filePath : `/${filePath}`}
                                                         target="_blank"
                                                         rel="noopener noreferrer"
                                                         className="text-sm text-blue-600 hover:text-blue-800 underline flex-1 truncate"
-                                                        title={fileName}
+                                                        title={originalName}
                                                       >
-                                                        {fileName}
+                                                        {originalName}
                                                       </a>
                                                     </div>
                                                   );
