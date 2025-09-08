@@ -940,7 +940,7 @@ export default function BOMCalculator() {
             <CardTitle className="flex items-center gap-3">
               {selectedFurniture && <selectedFurniture.icon className="w-6 h-6 text-furnili-brown" />}
               <div>
-                <div className="text-sm">Wardrobe Calculator</div>
+                <div className="text-sm">{selectedFurniture?.name} Calculator</div>
                 <div className="text-sm text-muted-foreground font-normal">{selectedFurniture?.description}</div>
               </div>
             </CardTitle>
@@ -948,13 +948,14 @@ export default function BOMCalculator() {
           <CardContent>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
-                  {/* Wardrobe Type Selection */}
-                  <div className="space-y-2">
-                    <h3 className="text-sm font-medium flex items-center gap-2">
-                      <Home className="w-4 h-4" />
-                      Wardrobe Type
-                    </h3>
-                    <FormField
+                  {/* Wardrobe Type Selection - Only for wardrobes */}
+                  {selectedFurnitureType === 'wardrobe' && (
+                    <div className="space-y-2">
+                      <h3 className="text-sm font-medium flex items-center gap-2">
+                        <Home className="w-4 h-4" />
+                        Wardrobe Type
+                      </h3>
+                      <FormField
                       control={form.control}
                       name="partsConfig.wardrobeType"
                       render={({ field }) => (
@@ -990,7 +991,8 @@ export default function BOMCalculator() {
                         </FormItem>
                       )}
                     />
-                  </div>
+                    </div>
+                  )}
 
                   {/* Dimensions */}
                   <div className="space-y-2">
@@ -1225,88 +1227,105 @@ export default function BOMCalculator() {
                       
                       {/* Bed-specific configurations */}
                       {selectedFurnitureType === 'bed' && (
-                        <>
-                          <FormField
-                            control={form.control}
-                            name="partsConfig.storage"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel className="text-xs">Storage Type</FormLabel>
-                                <Select onValueChange={field.onChange} defaultValue={field.value || 'none'}>
-                                  <FormControl>
-                                    <SelectTrigger className="h-8 text-xs">
-                                      <SelectValue />
-                                    </SelectTrigger>
-                                  </FormControl>
-                                  <SelectContent>
-                                    <SelectItem value="none">No Storage</SelectItem>
-                                    <SelectItem value="box_storage">Box Storage</SelectItem>
-                                    <SelectItem value="hydraulic_storage">Hydraulic Gas Lift</SelectItem>
-                                    <SelectItem value="side_drawers">Side Drawers (2)</SelectItem>
-                                    <SelectItem value="underbed_drawers">Under-bed Drawers (4)</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </FormItem>
-                            )}
-                          />
-                          <FormField
-                            control={form.control}
-                            name="partsConfig.drawers"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel className="text-xs">Drawers</FormLabel>
-                                <FormControl>
-                                  <Input
-                                    type="number"
-                                    min="0"
-                                    max="8"
-                                    className="h-8 text-xs"
-                                    placeholder="2"
-                                    {...field}
-                                    value={field.value || ''}
-                                onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
-                                  />
-                                </FormControl>
-                              </FormItem>
-                            )}
-                          />
-                          <div className="col-span-2 grid grid-cols-2 gap-3">
-                            <FormField
-                              control={form.control}
-                              name="partsConfig.headboard"
-                              render={({ field }) => (
-                                <FormItem className="flex flex-row items-center space-x-2 space-y-0 rounded-md border p-2">
-                                  <FormControl>
-                                    <input
-                                      type="checkbox"
-                                      checked={field.value}
-                                      onChange={field.onChange}
-                                      className="h-3 w-3"
-                                    />
-                                  </FormControl>
-                                  <FormLabel className="text-xs">Headboard</FormLabel>
-                                </FormItem>
-                              )}
-                            />
-                            <FormField
-                              control={form.control}
-                              name="partsConfig.footboard"
-                              render={({ field }) => (
-                                <FormItem className="flex flex-row items-center space-x-2 space-y-0 rounded-md border p-2">
-                                  <FormControl>
-                                    <input
-                                      type="checkbox"
-                                      checked={field.value}
-                                      onChange={field.onChange}
-                                      className="h-3 w-3"
-                                    />
-                                  </FormControl>
-                                  <FormLabel className="text-xs">Footboard</FormLabel>
-                                </FormItem>
-                              )}
-                            />
+                        <div className="space-y-4">
+                          <div className="space-y-2">
+                            <h3 className="text-sm font-medium flex items-center gap-2">
+                              <Bed className="w-4 h-4" />
+                              Bed Configuration
+                            </h3>
+                            <div className="grid grid-cols-2 gap-2">
+                              <FormField
+                                control={form.control}
+                                name="partsConfig.storage"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel className="text-xs">Storage Type</FormLabel>
+                                    <Select onValueChange={field.onChange} defaultValue={field.value || 'none'}>
+                                      <FormControl>
+                                        <SelectTrigger className="h-8 text-xs" tabIndex={8}>
+                                          <SelectValue />
+                                        </SelectTrigger>
+                                      </FormControl>
+                                      <SelectContent>
+                                        <SelectItem value="none">No Storage</SelectItem>
+                                        <SelectItem value="box_storage">Box Storage</SelectItem>
+                                        <SelectItem value="hydraulic_storage">Hydraulic Gas Lift</SelectItem>
+                                        <SelectItem value="side_drawers">Side Drawers (2)</SelectItem>
+                                        <SelectItem value="underbed_drawers">Under-bed Drawers (4)</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                  </FormItem>
+                                )}
+                              />
+                              <FormField
+                                control={form.control}
+                                name="partsConfig.drawers"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel className="text-xs">Drawers</FormLabel>
+                                    <FormControl>
+                                      <Input
+                                        type="number"
+                                        min="0"
+                                        max="8"
+                                        className="h-8 text-xs"
+                                        placeholder="2"
+                                        tabIndex={9}
+                                        {...field}
+                                        value={field.value || ''}
+                                        onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                                      />
+                                    </FormControl>
+                                  </FormItem>
+                                )}
+                              />
+                            </div>
+                            <div className="grid grid-cols-2 gap-2">
+                              <FormField
+                                control={form.control}
+                                name="partsConfig.headboard"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel className="text-xs">Headboard</FormLabel>
+                                    <FormControl>
+                                      <div className="flex items-center space-x-2 border rounded-md p-2">
+                                        <input
+                                          type="checkbox"
+                                          checked={field.value}
+                                          onChange={field.onChange}
+                                          className="h-4 w-4"
+                                          tabIndex={10}
+                                        />
+                                        <span className="text-xs text-muted-foreground">Add headboard</span>
+                                      </div>
+                                    </FormControl>
+                                  </FormItem>
+                                )}
+                              />
+                              <FormField
+                                control={form.control}
+                                name="partsConfig.footboard"
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel className="text-xs">Footboard</FormLabel>
+                                    <FormControl>
+                                      <div className="flex items-center space-x-2 border rounded-md p-2">
+                                        <input
+                                          type="checkbox"
+                                          checked={field.value}
+                                          onChange={field.onChange}
+                                          className="h-4 w-4"
+                                          tabIndex={11}
+                                        />
+                                        <span className="text-xs text-muted-foreground">Add footboard</span>
+                                      </div>
+                                    </FormControl>
+                                  </FormItem>
+                                )}
+                              />
+                            </div>
                           </div>
-                        </>
+                        </div>
                       )}
 
                       {/* Wardrobe-specific part configurations */}
