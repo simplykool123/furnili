@@ -1,11 +1,21 @@
 import TelegramBot from 'node-telegram-bot-api';
-import { db } from '../db.js';
+import { Pool } from 'pg';
 import { telegramUserSessions, projects, clients, projectFiles } from '@shared/schema';
 import { eq } from 'drizzle-orm';
 import axios from 'axios';
 import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
+
+// Force use exact same connection as main app
+const SUPABASE_DATABASE_URL = "postgresql://postgres.qopynbelowyghyciuofo:Furnili@123@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres";
+const botPool = new Pool({ 
+  connectionString: SUPABASE_DATABASE_URL,
+  ssl: { rejectUnauthorized: false },
+  connectionTimeoutMillis: 15000,
+  idleTimeoutMillis: 30000,
+  max: 10
+});
 
 export class FurniliTelegramBot {
   private bot: TelegramBot;
@@ -104,9 +114,8 @@ Quick Start:
     const projectNumber = parseInt(match[1]);
 
     try {
-      // Use the same pool connection as main app
-      const { pool } = await import('../db.js');
-      const client = await pool.connect();
+      // Use dedicated bot pool with exact same connection
+      const client = await botPool.connect();
       
       try {
         const projectListResult = await client.query(`
@@ -167,9 +176,8 @@ Send the command and start uploading!`;
 
     // Get current session state
     try {
-      // Use the same pool connection as main app
-      const { pool } = await import('../db.js');
-      const client = await pool.connect();
+      // Use dedicated bot pool with exact same connection
+      const client = await botPool.connect();
       
       try {
         const sessionResult = await client.query(
@@ -197,9 +205,8 @@ Send the command and start uploading!`;
     if (!userId) return;
 
     try {
-      // Use the same pool connection as main app
-      const { pool } = await import('../db.js');
-      const client = await pool.connect();
+      // Use dedicated bot pool with exact same connection
+      const client = await botPool.connect();
       
       try {
         const sessionResult = await client.query(
@@ -369,9 +376,8 @@ Send the command and start uploading!`;
     try {
       console.log(`🔍 Creating/updating session for user ${userId}`);
       
-      // Use the same pool connection as main app
-      const { pool } = await import('../db.js');
-      const client = await pool.connect();
+      // Use dedicated bot pool with exact same connection
+      const client = await botPool.connect();
       
       try {
       
