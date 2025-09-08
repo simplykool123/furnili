@@ -57,13 +57,7 @@ I'll help you organize your project files efficiently.
 
 📋 Commands:
 • /projects - View all active projects
-• /select [number] - Select a project
 
-📁 Categories:
-• /recce - Upload site photos with measurements
-• /design - Upload design files
-• /drawings - Upload technical drawings  
-• /notes - Add text notes
 
 Quick Start:
 1. Type /projects
@@ -101,7 +95,7 @@ Quick Start:
           message += `   Client: ${project.client_name || 'Unknown'}\n`;
           message += `   Stage: ${project.stage}\n\n`;
         });
-        message += "Reply with /select [number] to choose a project\nExample: /select 1";
+        message += "Reply with the Number to choose the project";
 
         await this.bot.sendMessage(chatId, message);
       } finally {
