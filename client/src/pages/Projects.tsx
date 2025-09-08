@@ -250,7 +250,8 @@ export default function Projects() {
     const matchesClient = clientFilter === "all" || project.clientId.toString() === clientFilter;
     
     // Filter based on active tab
-    const matchesTab = activeProjectTab === "all" || 
+    const matchesTab = (activeProjectTab === "all" && 
+                       !['completed', 'handover', 'lost'].includes(project.stage)) || 
                       (activeProjectTab === "completed" && 
                        ['completed', 'handover', 'lost'].includes(project.stage));
     
@@ -355,7 +356,7 @@ export default function Projects() {
                   value="all" 
                   className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-amber-900 rounded-none px-6 py-3"
                 >
-                  All Projects
+                  Ongoing Projects
                 </TabsTrigger>
                 <TabsTrigger 
                   value="completed" 
