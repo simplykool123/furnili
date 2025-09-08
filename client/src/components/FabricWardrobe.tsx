@@ -82,7 +82,7 @@ const FabricWardrobe: React.FC<FabricWardrobeProps> = ({
       stroke: '#666',
       strokeWidth: 1
     });
-    wardrobeGroup.addWithUpdate(backPanel);
+    wardrobeGroup.add(backPanel);
 
     // Right side panel (3D perspective)
     const rightSide = new Rect({
@@ -94,7 +94,7 @@ const FabricWardrobe: React.FC<FabricWardrobeProps> = ({
       stroke: '#666',
       strokeWidth: 1
     });
-    wardrobeGroup.addWithUpdate(rightSide);
+    wardrobeGroup.add(rightSide);
 
     // Main front panel
     const frontPanel = new Rect({
@@ -106,7 +106,7 @@ const FabricWardrobe: React.FC<FabricWardrobeProps> = ({
       stroke: '#8B4513',
       strokeWidth: 2
     });
-    wardrobeGroup.addWithUpdate(frontPanel);
+    wardrobeGroup.add(frontPanel);
 
     // 🗂️ INTERIOR LAYOUT
 
@@ -130,7 +130,7 @@ const FabricWardrobe: React.FC<FabricWardrobeProps> = ({
         stroke: '#8B4513',
         strokeWidth: 1
       });
-      wardrobeGroup.addWithUpdate(drawer);
+      wardrobeGroup.add(drawer);
 
       // Drawer handle
       const handle = new Rect({
@@ -142,7 +142,7 @@ const FabricWardrobe: React.FC<FabricWardrobeProps> = ({
         rx: 2,
         ry: 2
       });
-      wardrobeGroup.addWithUpdate(handle);
+      wardrobeGroup.add(handle);
 
       // Drawer label
       const drawerLabel = new Text(`D${i + 1}`, {
@@ -152,7 +152,7 @@ const FabricWardrobe: React.FC<FabricWardrobeProps> = ({
         fill: '#666',
         fontFamily: 'Arial'
       });
-      wardrobeGroup.addWithUpdate(drawerLabel);
+      wardrobeGroup.add(drawerLabel);
     }
 
     // Add shelves above drawers
@@ -164,7 +164,7 @@ const FabricWardrobe: React.FC<FabricWardrobeProps> = ({
           stroke: '#8B4513',
           strokeWidth: 2
         });
-        wardrobeGroup.addWithUpdate(shelf);
+        wardrobeGroup.add(shelf);
 
         // Add shelf label for middle shelves
         if (i > 0 && i < shelves) {
@@ -175,7 +175,7 @@ const FabricWardrobe: React.FC<FabricWardrobeProps> = ({
             fill: '#888',
             fontFamily: 'Arial'
           });
-          wardrobeGroup.addWithUpdate(shelfLabel);
+          wardrobeGroup.add(shelfLabel);
         }
       }
     }
@@ -187,7 +187,7 @@ const FabricWardrobe: React.FC<FabricWardrobeProps> = ({
         stroke: '#C0C0C0',
         strokeWidth: 3
       });
-      wardrobeGroup.addWithUpdate(hangingRod);
+      wardrobeGroup.add(hangingRod);
 
       // Rod supports
       const leftSupport = new Rect({
@@ -204,8 +204,8 @@ const FabricWardrobe: React.FC<FabricWardrobeProps> = ({
         height: 4,
         fill: '#999'
       });
-      wardrobeGroup.addWithUpdate(leftSupport);
-      wardrobeGroup.addWithUpdate(rightSupport);
+      wardrobeGroup.add(leftSupport);
+      wardrobeGroup.add(rightSupport);
 
       // Hanging rod label
       const rodLabel = new Text('Hanging Rod', {
@@ -215,7 +215,7 @@ const FabricWardrobe: React.FC<FabricWardrobeProps> = ({
         fill: '#666',
         fontFamily: 'Arial'
       });
-      wardrobeGroup.addWithUpdate(rodLabel);
+      wardrobeGroup.add(rodLabel);
     }
 
     // 🚪 SHUTTERS/DOORS
@@ -234,7 +234,7 @@ const FabricWardrobe: React.FC<FabricWardrobeProps> = ({
         strokeWidth: 1.5,
         strokeDashArray: wardrobeType === 'sliding' ? [5, 5] : undefined
       });
-      wardrobeGroup.addWithUpdate(shutter);
+      wardrobeGroup.add(shutter);
 
       // Shutter handle
       const handleX = wardrobeType === 'sliding' 
@@ -250,7 +250,7 @@ const FabricWardrobe: React.FC<FabricWardrobeProps> = ({
         rx: 3,
         ry: 3
       });
-      wardrobeGroup.addWithUpdate(shutterHandle);
+      wardrobeGroup.add(shutterHandle);
 
       // Mirror effect on first shutter if mirror option
       if (mirror && i === 0) {
@@ -263,7 +263,7 @@ const FabricWardrobe: React.FC<FabricWardrobeProps> = ({
           stroke: '#4169E1',
           strokeWidth: 1
         });
-        wardrobeGroup.addWithUpdate(mirrorEffect);
+        wardrobeGroup.add(mirrorEffect);
         
         const mirrorLabel = new Text('MIRROR', {
           left: shutterX + shutterWidth/2 - 18,
@@ -272,7 +272,7 @@ const FabricWardrobe: React.FC<FabricWardrobeProps> = ({
           fill: '#4169E1',
           fontFamily: 'Arial'
         });
-        wardrobeGroup.addWithUpdate(mirrorLabel);
+        wardrobeGroup.add(mirrorLabel);
       }
     }
 
@@ -283,7 +283,7 @@ const FabricWardrobe: React.FC<FabricWardrobeProps> = ({
       stroke: '#000',
       strokeWidth: 1
     });
-    wardrobeGroup.addWithUpdate(widthLine);
+    wardrobeGroup.add(widthLine);
     
     const widthText = new Text(`${width}mm`, {
       left: scaledW/2 - 20,
@@ -293,14 +293,14 @@ const FabricWardrobe: React.FC<FabricWardrobeProps> = ({
       fontFamily: 'Arial',
       fontWeight: 'bold'
     });
-    wardrobeGroup.addWithUpdate(widthText);
+    wardrobeGroup.add(widthText);
 
     // Height dimension (right)
     const heightLine = new Line([scaledW + 15, scaledD, scaledW + 15, scaledD + scaledH], {
       stroke: '#000',
       strokeWidth: 1
     });
-    wardrobeGroup.addWithUpdate(heightLine);
+    wardrobeGroup.add(heightLine);
     
     const heightText = new Text(`${height}mm`, {
       left: scaledW + 20,
@@ -313,14 +313,14 @@ const FabricWardrobe: React.FC<FabricWardrobeProps> = ({
       originX: 'center',
       originY: 'center'
     });
-    wardrobeGroup.addWithUpdate(heightText);
+    wardrobeGroup.add(heightText);
 
     // Depth dimension (perspective)
     const depthLine = new Line([scaledW, scaledH + scaledD + 20, scaledW + scaledD, scaledH + 20], {
       stroke: '#000',
       strokeWidth: 1
     });
-    wardrobeGroup.addWithUpdate(depthLine);
+    wardrobeGroup.add(depthLine);
     
     const depthText = new Text(`${depth}mm`, {
       left: scaledW + scaledD/2 - 15,
@@ -329,7 +329,7 @@ const FabricWardrobe: React.FC<FabricWardrobeProps> = ({
       fill: '#000',
       fontFamily: 'Arial'
     });
-    wardrobeGroup.addWithUpdate(depthText);
+    wardrobeGroup.add(depthText);
 
     // Add specifications text
     const specs = new Text(
@@ -343,7 +343,7 @@ const FabricWardrobe: React.FC<FabricWardrobeProps> = ({
         lineHeight: 1.3
       }
     );
-    wardrobeGroup.addWithUpdate(specs);
+    wardrobeGroup.add(specs);
 
     // Add to canvas
     canvas.add(wardrobeGroup);

@@ -45,7 +45,8 @@ import {
   CornerUpLeft,
   Menu,
   Minus,
-  Layers
+  Layers,
+  ArrowLeftRight
 } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -807,132 +808,6 @@ export default function BOMCalculator() {
         </div>
       </div>
 
-      {/* Step 2: Wardrobe Type Selection (if wardrobe selected) */}
-      {selectedFurnitureType === 'wardrobe' && (
-        <div className="bg-card shadow-sm border rounded-lg mb-6">
-          <div className="px-4 py-6">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="bg-[hsl(28,100%,25%)] text-white px-3 py-1 rounded-full text-sm font-medium">
-                Step 2: Choose Wardrobe Type
-              </div>
-            </div>
-            <Form {...form}>
-              <div className="space-y-4">
-                {/* Wardrobe Type Visual Selection */}
-                <FormField
-                  control={form.control}
-                  name="partsConfig.wardrobeType"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-sm font-medium">Wardrobe Type</FormLabel>
-                      <div className="grid grid-cols-3 gap-3">
-                        {[
-                          { value: 'openable', label: 'Openable Door', icon: DoorOpen, desc: 'Hinged doors' },
-                          { value: 'sliding', label: 'Sliding Door', icon: Move3D, desc: 'Sliding panels' },
-                          { value: 'walk-in', label: 'Walk-in', icon: Home, desc: 'Open wardrobe' }
-                        ].map((type) => {
-                          const IconComponent = type.icon;
-                          const isSelected = field.value === type.value;
-                          
-                          return (
-                            <button
-                              key={type.value}
-                              type="button"
-                              onClick={() => field.onChange(type.value)}
-                              className={`p-4 rounded-lg border-2 transition-all duration-200 text-center ${
-                                isSelected 
-                                  ? 'border-[hsl(28,100%,25%)] bg-[hsl(28,100%,25%)] text-white shadow-lg' 
-                                  : 'border-border bg-card hover:border-[hsl(28,100%,25%)]/30 hover:bg-accent'
-                              }`}
-                            >
-                              <IconComponent className={`w-8 h-8 mx-auto mb-2 ${isSelected ? 'text-white' : 'text-[hsl(28,100%,25%)]'}`} />
-                              <div className={`text-sm font-medium ${isSelected ? 'text-white' : 'text-foreground'}`}>
-                                {type.label}
-                              </div>
-                              <div className={`text-xs ${isSelected ? 'text-white/80' : 'text-muted-foreground'}`}>
-                                {type.desc}
-                              </div>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </FormItem>
-                  )}
-                />
-                
-                {/* Loft Option */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="partsConfig.hasLoft"
-                    render={({ field }) => (
-                      <FormItem>
-                        <div className="flex items-center space-x-3 border rounded-lg p-3">
-                          <FormControl>
-                            <input
-                              type="checkbox"
-                              checked={field.value}
-                              onChange={field.onChange}
-                              className="h-4 w-4"
-                            />
-                          </FormControl>
-                          <FormLabel className="text-sm font-medium cursor-pointer">Add Loft Storage?</FormLabel>
-                        </div>
-                      </FormItem>
-                    )}
-                  />
-                  
-                  {form.watch('partsConfig.hasLoft') && (
-                    <>
-                      <FormField
-                        control={form.control}
-                        name="partsConfig.loftHeight"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-sm font-medium">Loft Height (mm)</FormLabel>
-                            <FormControl>
-                              <Input
-                                type="number"
-                                min="300"
-                                max="1000"
-                                placeholder="600"
-                                className="h-10"
-                                {...field}
-                                onChange={(e) => field.onChange(parseInt(e.target.value) || 600)}
-                              />
-                            </FormControl>
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="partsConfig.loftWidth"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel className="text-sm font-medium">Loft Width (mm)</FormLabel>
-                            <FormControl>
-                              <Input
-                                type="number"
-                                min="600"
-                                max="3000"
-                                placeholder="1200"
-                                className="h-10"
-                                {...field}
-                                onChange={(e) => field.onChange(parseInt(e.target.value) || 1200)}
-                              />
-                            </FormControl>
-                          </FormItem>
-                        )}
-                      />
-                    </>
-                  )}
-                </div>
-              </div>
-            </Form>
-          </div>
-        </div>
-      )}
-
       {/* Step 2: Choose Bed Type (if bed selected) */}
       {selectedFurnitureType === 'bed' && (
         <div className="bg-card shadow-sm border rounded-lg mb-6">
@@ -1073,7 +948,51 @@ export default function BOMCalculator() {
           <CardContent>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
-                  {/* Step 3: Dimensions */}
+                  {/* Wardrobe Type Selection */}
+                  <div className="space-y-2">
+                    <h3 className="text-sm font-medium flex items-center gap-2">
+                      <Home className="w-4 h-4" />
+                      Wardrobe Type
+                    </h3>
+                    <FormField
+                      control={form.control}
+                      name="partsConfig.wardrobeType"
+                      render={({ field }) => (
+                        <FormItem>
+                          <div className="grid grid-cols-3 gap-2">
+                            {[
+                              { value: 'openable', label: 'Openable Door', desc: 'Hinged doors', icon: DoorOpen },
+                              { value: 'sliding', label: 'Sliding Door', desc: 'Sliding panels', icon: ArrowLeftRight },
+                              { value: 'walkin', label: 'Walk-in', desc: 'Open wardrobe', icon: Home }
+                            ].map((layout) => {
+                              const IconComponent = layout.icon;
+                              const isSelected = field.value === layout.value;
+                              
+                              return (
+                                <button
+                                  key={layout.value}
+                                  type="button"
+                                  onClick={() => field.onChange(layout.value)}
+                                  className={`p-2 rounded-lg border transition-all text-center ${
+                                    isSelected 
+                                      ? 'border-furnili-brown bg-orange-50 dark:bg-orange-950/20 text-furnili-brown' 
+                                      : 'border-gray-200 dark:border-gray-700 hover:border-furnili-brown/50'
+                                  }`}
+                                >
+                                  <IconComponent className={`w-5 h-5 mx-auto mb-1 ${isSelected ? 'text-furnili-brown' : 'text-gray-600'}`} />
+                                  <div className="text-xs font-medium">{layout.label}</div>
+                                  <div className="text-xs text-gray-500">{layout.desc}</div>
+                                </button>
+                              );
+                            })}
+                          </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  {/* Dimensions */}
                   <div className="space-y-2">
                     <h3 className="text-sm font-medium flex items-center gap-2">
                       <Calculator className="w-4 h-4" />
