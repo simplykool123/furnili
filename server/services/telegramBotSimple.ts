@@ -274,45 +274,77 @@ Send the command and start uploading!`;
     if (!userId || !msg.photo) return;
 
     try {
-      // Skip session check - save photo directly to default project (ID 1)
       const projectId = userProjects.get(userId) || 1;
       const photo = msg.photo[msg.photo.length - 1];
       const caption = msg.caption || '';
+      const currentMode = userModes.get(userId) || 'recce';
 
       console.log(`📸 User ${userId} uploading photo to project ${projectId}`);
 
       // Download and save photo locally
       const savedFile = await this.downloadFile(photo.file_id, 'photo', '.jpg');
       
-      // Get user's current mode to determine category
-      const currentMode = userModes.get(userId) || 'recce';
-      const category = this.mapCategory(currentMode);
-
-      // Save to database using direct query (LOCAL STORAGE as per user requirements)
       const client = await botPool.connect();
       try {
-        await client.query(
-          'INSERT INTO project_files (project_id, client_id, file_name, original_name, file_path, file_size, mime_type, category, description, comment, uploaded_by, is_public) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)',
-          [
-            projectId,
-            1, // default client
-            savedFile.fileName,
-            `telegram_photo_${Date.now()}.jpg`,
-            savedFile.filePath,
-            savedFile.fileSize,
-            'image/jpeg',
-            category, // Use correct category based on user mode
-            'Uploaded via Telegram',
-            caption,
-            7, // Use existing user ID (Aman from logs)
-            false
-          ]
-        );
+        // If user is in notes mode, save photo to Notes tab (project_logs)
+        if (currentMode === 'notes') {
+          console.log(`📝 User ${userId} saving photo to project ${projectId} Notes tab`);
+          
+          // Create attachment object for the photo
+          const attachment = {
+            fileName: savedFile.fileName,
+            originalName: `telegram_photo_${Date.now()}.jpg`,
+            filePath: savedFile.filePath,
+            fileSize: savedFile.fileSize,
+            mimeType: 'image/jpeg',
+            uploadedBy: 7,
+            uploadedAt: new Date().toISOString()
+          };
+
+          const title = caption || `Photo attachment - ${new Date().toLocaleDateString()}`;
+          const description = caption || 'Photo uploaded via Telegram';
+
+          await client.query(
+            'INSERT INTO project_logs (project_id, log_type, title, description, created_by, attachments, is_important) VALUES ($1, $2, $3, $4, $5, $6, $7)',
+            [
+              projectId,
+              'note', // logType for notes
+              title,
+              description,
+              7, // Use existing user ID
+              [attachment], // Photo attachment
+              false // Not important by default
+            ]
+          );
+
+          await this.bot.sendMessage(chatId, `✅ Photo saved to Notes tab!${caption ? `\nCaption: ${caption}` : ''}`);
+        } else {
+          // Save to Files tab (project_files) for other modes
+          const category = this.mapCategory(currentMode);
+          
+          await client.query(
+            'INSERT INTO project_files (project_id, client_id, file_name, original_name, file_path, file_size, mime_type, category, description, comment, uploaded_by, is_public) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)',
+            [
+              projectId,
+              1, // default client
+              savedFile.fileName,
+              `telegram_photo_${Date.now()}.jpg`,
+              savedFile.filePath,
+              savedFile.fileSize,
+              'image/jpeg',
+              category, // Use correct category based on user mode
+              'Uploaded via Telegram',
+              caption,
+              7, // Use existing user ID (Aman from logs)
+              false
+            ]
+          );
+
+          await this.bot.sendMessage(chatId, `✅ Photo saved to Files tab!${caption ? `\nComment: ${caption}` : ''}`);
+        }
       } finally {
         client.release();
       }
-
-      await this.bot.sendMessage(chatId, `✅ Photo saved successfully!${caption ? `\nComment: ${caption}` : ''}`);
     } catch (error) {
       console.error('Error handling photo:', error);
       await this.bot.sendMessage(chatId, "Error saving photo. Please try again.");
