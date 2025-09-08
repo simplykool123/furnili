@@ -319,7 +319,7 @@ Send the command and start uploading!`;
 
             // Update the existing note with the new attachment
             await client.query(
-              'UPDATE project_logs SET attachments = $1, updated_at = NOW() WHERE id = $2',
+              'UPDATE project_logs SET attachments = $1 WHERE id = $2',
               [updatedAttachments, existingNote.id]
             );
 
