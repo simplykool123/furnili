@@ -223,40 +223,41 @@ Send the command and start uploading!`;
     if (!userId || !msg.photo) return;
 
     try {
-      const session = await db
-        .select()
-        .from(telegramUserSessions)
-        .where(eq(telegramUserSessions.telegramUserId, userId))
-        .limit(1);
-
-      if (session.length === 0 || !session[0].activeProjectId || session[0].sessionState !== 'uploading') {
-        await this.bot.sendMessage(chatId, "⚠️ Please select project and category first.");
-        return;
-      }
-
-      const userSession = session[0];
+      // Skip session check - save photo directly to default project (ID 1)
+      const defaultProjectId = 1;
       const photo = msg.photo[msg.photo.length - 1];
       const caption = msg.caption || '';
 
-      // Download and save photo
+      console.log(`📸 User ${userId} uploading photo to project ${defaultProjectId}`);
+
+      // Download and save photo locally
       const savedFile = await this.downloadFile(photo.file_id, 'photo', '.jpg');
       
-      await db.insert(projectFiles).values({
-        projectId: userSession.activeProjectId!,
-        clientId: userSession.activeClientId,
-        fileName: savedFile.fileName,
-        originalName: `telegram_photo_${Date.now()}.jpg`,
-        filePath: savedFile.filePath,
-        fileSize: savedFile.fileSize,
-        mimeType: 'image/jpeg',
-        category: this.mapCategory(userSession.currentStep || 'general'),
-        description: 'Uploaded via Telegram',
-        comment: caption,
-        uploadedBy: 1,
-        isPublic: false,
-      });
+      // Save to database using direct query (LOCAL STORAGE as per user requirements)
+      const client = await botPool.connect();
+      try {
+        await client.query(
+          'INSERT INTO project_files (project_id, client_id, file_name, original_name, file_path, file_size, mime_type, category, description, comment, uploaded_by, is_public) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)',
+          [
+            defaultProjectId,
+            1, // default client
+            savedFile.fileName,
+            `telegram_photo_${Date.now()}.jpg`,
+            savedFile.filePath,
+            savedFile.fileSize,
+            'image/jpeg',
+            'photos', // recce category maps to photos
+            'Uploaded via Telegram',
+            caption,
+            1, // user ID
+            false
+          ]
+        );
+      } finally {
+        client.release();
+      }
 
-      await this.bot.sendMessage(chatId, `✅ Photo saved to ${this.getCategoryName(userSession.currentStep || 'general')}!${caption ? `\nComment: ${caption}` : ''}`);
+      await this.bot.sendMessage(chatId, `✅ Photo saved successfully!${caption ? `\nComment: ${caption}` : ''}`);
     } catch (error) {
       console.error('Error handling photo:', error);
       await this.bot.sendMessage(chatId, "Error saving photo. Please try again.");
