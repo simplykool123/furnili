@@ -25,6 +25,7 @@ const userSchema = z.object({
   email: z.string().email("Invalid email address"),
   password: z.string().min(6, "Password must be at least 6 characters"),
   name: z.string().min(1, "Name is required"),
+  phone: z.string().min(10, "Phone number must be at least 10 digits").regex(/^[0-9]{10,15}$/, "Invalid phone number format"),
   role: z.enum(["admin", "manager", "staff", "store_incharge"]),
 });
 
@@ -33,6 +34,7 @@ const editUserSchema = z.object({
   email: z.string().email("Invalid email address"),
   password: z.string().optional(), // Password is optional for editing
   name: z.string().min(1, "Name is required"),
+  phone: z.string().min(10, "Phone number must be at least 10 digits").regex(/^[0-9]{10,15}$/, "Invalid phone number format"),
   role: z.enum(["admin", "manager", "staff", "store_incharge"]),
   resetPassword: z.boolean().optional(),
 });
@@ -219,6 +221,7 @@ export default function Users() {
     editSetValue('username', user.username);
     editSetValue('email', user.email);
     editSetValue('name', user.name);
+    editSetValue('phone', user.phone || '');
     editSetValue('role', user.role);
     editSetValue('password', '');
     editSetValue('resetPassword', false);
@@ -325,6 +328,7 @@ export default function Users() {
                   <TableRow>
                     <TableHead>User</TableHead>
                     <TableHead>Email</TableHead>
+                    <TableHead>Phone</TableHead>
                     <TableHead>Role</TableHead>
                     <TableHead>Created</TableHead>
                     <TableHead>Status</TableHead>
@@ -357,6 +361,7 @@ export default function Users() {
                         </div>
                       </TableCell>
                       <TableCell>{user.email}</TableCell>
+                      <TableCell>{user.phone || 'Not provided'}</TableCell>
                       <TableCell>{getRoleBadge(user.role)}</TableCell>
                       <TableCell>
                         {new Date(user.createdAt).toLocaleDateString()}
@@ -492,6 +497,20 @@ export default function Users() {
               </div>
 
               <div className="space-y-1">
+                <Label htmlFor="phone" className="text-xs font-medium">Phone Number *</Label>
+                <Input
+                  id="phone"
+                  type="tel"
+                  {...register("phone")}
+                  className={`h-8 text-sm ${errors.phone ? "border-red-500" : ""}`}
+                  placeholder="9876543210"
+                />
+                {errors.phone && (
+                  <p className="text-xs text-red-600">{errors.phone.message}</p>
+                )}
+              </div>
+
+              <div className="space-y-1">
                 <Label htmlFor="password" className="text-xs font-medium">Password *</Label>
                 <Input
                   id="password"
@@ -569,6 +588,20 @@ export default function Users() {
                 />
                 {editErrors.email && (
                   <p className="text-xs text-red-600">{editErrors.email.message}</p>
+                )}
+              </div>
+
+              <div className="space-y-1">
+                <Label htmlFor="edit-phone" className="text-xs font-medium">Phone Number</Label>
+                <Input
+                  id="edit-phone"
+                  type="tel"
+                  {...editRegister("phone")}
+                  placeholder="Enter phone number"
+                  className="h-8 text-sm"
+                />
+                {editErrors.phone && (
+                  <p className="text-xs text-red-600">{editErrors.phone.message}</p>
                 )}
               </div>
 
