@@ -1,0 +1,381 @@
+import React, { useEffect, useRef, useState } from 'react';
+import { Canvas, Rect, Line, Group, Text } from 'fabric';
+
+interface FabricWardrobeProps {
+  width: number;
+  height: number;
+  depth: number;
+  shelves: number;
+  drawers: number;
+  shutters: number;
+  wardrobeType: string;
+  mirror?: boolean;
+  className?: string;
+}
+
+const FabricWardrobe: React.FC<FabricWardrobeProps> = ({
+  width,
+  height,
+  depth,
+  shelves,
+  drawers,
+  shutters,
+  wardrobeType,
+  mirror = false,
+  className = ""
+}) => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const fabricCanvasRef = useRef<Canvas | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    if (!canvasRef.current) return;
+
+    // Initialize Fabric.js canvas
+    const canvas = new Canvas(canvasRef.current, {
+      width: 600,
+      height: 400,
+      backgroundColor: '#f8f9fa'
+    });
+
+    fabricCanvasRef.current = canvas;
+
+    // Create wardrobe visualization
+    createWardrobeVisualization(canvas);
+    setIsLoading(false);
+
+    return () => {
+      canvas.dispose();
+    };
+  }, [width, height, depth, shelves, drawers, shutters, wardrobeType, mirror]);
+
+  const createWardrobeVisualization = (canvas: Canvas) => {
+    canvas.clear();
+    canvas.backgroundColor = '#f8f9fa';
+
+    // Scale for display (fit wardrobe in 500x350 canvas)
+    const scale = Math.min(450 / width, 300 / height);
+    const scaledW = width * scale;
+    const scaledH = height * scale;
+    const scaledD = depth * scale * 0.6; // Perspective depth
+
+    // Starting position (centered)
+    const startX = (600 - scaledW - scaledD) / 2;
+    const startY = (400 - scaledH) / 2;
+
+    // Create wardrobe group
+    const wardrobeGroup = new Group([], {
+      left: startX,
+      top: startY,
+      selectable: false
+    });
+
+    // 🏗️ MAIN STRUCTURE
+    
+    // Back panel (3D perspective)
+    const backPanel = new Rect({
+      left: scaledD,
+      top: 0,
+      width: scaledW,
+      height: scaledH,
+      fill: '#e8e8e8',
+      stroke: '#666',
+      strokeWidth: 1
+    });
+    wardrobeGroup.addWithUpdate(backPanel);
+
+    // Right side panel (3D perspective)
+    const rightSide = new Rect({
+      left: scaledW + scaledD,
+      top: 0,
+      width: scaledD,
+      height: scaledH,
+      fill: '#ddd',
+      stroke: '#666',
+      strokeWidth: 1
+    });
+    wardrobeGroup.addWithUpdate(rightSide);
+
+    // Main front panel
+    const frontPanel = new Rect({
+      left: 0,
+      top: scaledD,
+      width: scaledW,
+      height: scaledH,
+      fill: '#f5f5dc',
+      stroke: '#8B4513',
+      strokeWidth: 2
+    });
+    wardrobeGroup.addWithUpdate(frontPanel);
+
+    // 🗂️ INTERIOR LAYOUT
+
+    // Calculate layout sections
+    const drawerHeight = Math.min(200 * scale, scaledH / (drawers + shelves + 2));
+    const drawerSectionHeight = drawers * drawerHeight;
+    const shelfSectionHeight = scaledH - drawerSectionHeight;
+    const shelfSpacing = shelves > 0 ? shelfSectionHeight / shelves : 0;
+
+    // Add drawers at bottom
+    for (let i = 0; i < drawers; i++) {
+      const drawerY = scaledD + scaledH - (i + 1) * drawerHeight;
+      
+      // Drawer box
+      const drawer = new Rect({
+        left: 10,
+        top: drawerY,
+        width: scaledW - 20,
+        height: drawerHeight - 5,
+        fill: '#DEB887',
+        stroke: '#8B4513',
+        strokeWidth: 1
+      });
+      wardrobeGroup.addWithUpdate(drawer);
+
+      // Drawer handle
+      const handle = new Rect({
+        left: scaledW - 25,
+        top: drawerY + drawerHeight/2 - 3,
+        width: 12,
+        height: 6,
+        fill: '#4A4A4A',
+        rx: 2,
+        ry: 2
+      });
+      wardrobeGroup.addWithUpdate(handle);
+
+      // Drawer label
+      const drawerLabel = new Text(`D${i + 1}`, {
+        left: 20,
+        top: drawerY + drawerHeight/2 - 5,
+        fontSize: 10,
+        fill: '#666',
+        fontFamily: 'Arial'
+      });
+      wardrobeGroup.addWithUpdate(drawerLabel);
+    }
+
+    // Add shelves above drawers
+    for (let i = 0; i <= shelves; i++) {
+      const shelfY = scaledD + i * shelfSpacing;
+      
+      if (shelfY < scaledD + shelfSectionHeight) {
+        const shelf = new Line([5, shelfY, scaledW - 5, shelfY], {
+          stroke: '#8B4513',
+          strokeWidth: 2
+        });
+        wardrobeGroup.addWithUpdate(shelf);
+
+        // Add shelf label for middle shelves
+        if (i > 0 && i < shelves) {
+          const shelfLabel = new Text(`S${i}`, {
+            left: 15,
+            top: shelfY + 10,
+            fontSize: 9,
+            fill: '#888',
+            fontFamily: 'Arial'
+          });
+          wardrobeGroup.addWithUpdate(shelfLabel);
+        }
+      }
+    }
+
+    // Add hanging rod (if not too many shelves)
+    if (shelves <= 2 && shelfSectionHeight > 100) {
+      const rodY = scaledD + shelfSpacing * 0.7;
+      const hangingRod = new Line([15, rodY, scaledW - 15, rodY], {
+        stroke: '#C0C0C0',
+        strokeWidth: 3
+      });
+      wardrobeGroup.addWithUpdate(hangingRod);
+
+      // Rod supports
+      const leftSupport = new Rect({
+        left: 13,
+        top: rodY - 2,
+        width: 4,
+        height: 4,
+        fill: '#999'
+      });
+      const rightSupport = new Rect({
+        left: scaledW - 17,
+        top: rodY - 2,
+        width: 4,
+        height: 4,
+        fill: '#999'
+      });
+      wardrobeGroup.addWithUpdate(leftSupport);
+      wardrobeGroup.addWithUpdate(rightSupport);
+
+      // Hanging rod label
+      const rodLabel = new Text('Hanging Rod', {
+        left: scaledW/2 - 25,
+        top: rodY - 15,
+        fontSize: 8,
+        fill: '#666',
+        fontFamily: 'Arial'
+      });
+      wardrobeGroup.addWithUpdate(rodLabel);
+    }
+
+    // 🚪 SHUTTERS/DOORS
+    const shutterWidth = scaledW / shutters;
+    for (let i = 0; i < shutters; i++) {
+      const shutterX = i * shutterWidth;
+      
+      // Shutter outline
+      const shutter = new Rect({
+        left: shutterX + 2,
+        top: scaledD + 2,
+        width: shutterWidth - 4,
+        height: scaledH - 4,
+        fill: 'transparent',
+        stroke: '#8B4513',
+        strokeWidth: 1.5,
+        strokeDashArray: wardrobeType === 'sliding' ? [5, 5] : undefined
+      });
+      wardrobeGroup.addWithUpdate(shutter);
+
+      // Shutter handle
+      const handleX = wardrobeType === 'sliding' 
+        ? shutterX + shutterWidth/2 - 4
+        : shutterX + (i % 2 === 0 ? shutterWidth - 15 : 8);
+        
+      const shutterHandle = new Rect({
+        left: handleX,
+        top: scaledD + scaledH/2 - 8,
+        width: 8,
+        height: 16,
+        fill: '#4A4A4A',
+        rx: 3,
+        ry: 3
+      });
+      wardrobeGroup.addWithUpdate(shutterHandle);
+
+      // Mirror effect on first shutter if mirror option
+      if (mirror && i === 0) {
+        const mirrorEffect = new Rect({
+          left: shutterX + 8,
+          top: scaledD + 8,
+          width: shutterWidth - 16,
+          height: scaledH - 16,
+          fill: 'rgba(173, 216, 230, 0.3)',
+          stroke: '#4169E1',
+          strokeWidth: 1
+        });
+        wardrobeGroup.addWithUpdate(mirrorEffect);
+        
+        const mirrorLabel = new Text('MIRROR', {
+          left: shutterX + shutterWidth/2 - 18,
+          top: scaledD + scaledH/2 - 5,
+          fontSize: 9,
+          fill: '#4169E1',
+          fontFamily: 'Arial'
+        });
+        wardrobeGroup.addWithUpdate(mirrorLabel);
+      }
+    }
+
+    // 📏 DIMENSIONS
+    
+    // Width dimension (top)
+    const widthLine = new Line([0, scaledD - 15, scaledW, scaledD - 15], {
+      stroke: '#000',
+      strokeWidth: 1
+    });
+    wardrobeGroup.addWithUpdate(widthLine);
+    
+    const widthText = new Text(`${width}mm`, {
+      left: scaledW/2 - 20,
+      top: scaledD - 25,
+      fontSize: 11,
+      fill: '#000',
+      fontFamily: 'Arial',
+      fontWeight: 'bold'
+    });
+    wardrobeGroup.addWithUpdate(widthText);
+
+    // Height dimension (right)
+    const heightLine = new Line([scaledW + 15, scaledD, scaledW + 15, scaledD + scaledH], {
+      stroke: '#000',
+      strokeWidth: 1
+    });
+    wardrobeGroup.addWithUpdate(heightLine);
+    
+    const heightText = new Text(`${height}mm`, {
+      left: scaledW + 20,
+      top: scaledD + scaledH/2 - 5,
+      fontSize: 11,
+      fill: '#000',
+      fontFamily: 'Arial',
+      fontWeight: 'bold',
+      angle: 90,
+      originX: 'center',
+      originY: 'center'
+    });
+    wardrobeGroup.addWithUpdate(heightText);
+
+    // Depth dimension (perspective)
+    const depthLine = new Line([scaledW, scaledH + scaledD + 20, scaledW + scaledD, scaledH + 20], {
+      stroke: '#000',
+      strokeWidth: 1
+    });
+    wardrobeGroup.addWithUpdate(depthLine);
+    
+    const depthText = new Text(`${depth}mm`, {
+      left: scaledW + scaledD/2 - 15,
+      top: scaledH + scaledD + 25,
+      fontSize: 10,
+      fill: '#000',
+      fontFamily: 'Arial'
+    });
+    wardrobeGroup.addWithUpdate(depthText);
+
+    // Add specifications text
+    const specs = new Text(
+      `Specifications:\nShelves: ${shelves} | Drawers: ${drawers}\nShutters: ${shutters} | Type: ${wardrobeType.toUpperCase()}${mirror ? ' + MIRROR' : ''}`,
+      {
+        left: 20,
+        top: scaledH + scaledD + 50,
+        fontSize: 10,
+        fill: '#666',
+        fontFamily: 'Arial',
+        lineHeight: 1.3
+      }
+    );
+    wardrobeGroup.addWithUpdate(specs);
+
+    // Add to canvas
+    canvas.add(wardrobeGroup);
+    canvas.renderAll();
+  };
+
+  return (
+    <div className={`bg-white border rounded-lg p-4 ${className}`}>
+      <div className="text-center mb-2">
+        <h3 className="text-sm font-semibold text-gray-800">Interactive Wardrobe Visualization</h3>
+        <p className="text-xs text-gray-600">
+          {width}mm × {height}mm × {depth}mm • {wardrobeType.charAt(0).toUpperCase() + wardrobeType.slice(1)}
+        </p>
+      </div>
+      
+      {isLoading && (
+        <div className="flex items-center justify-center h-96">
+          <div className="text-gray-500">Loading visualization...</div>
+        </div>
+      )}
+      
+      <canvas
+        ref={canvasRef}
+        className={`border border-gray-200 rounded ${isLoading ? 'hidden' : 'block'}`}
+        style={{ maxWidth: '100%', height: 'auto' }}
+      />
+      
+      <div className="mt-2 text-xs text-gray-500 text-center">
+        Professional technical drawing with accurate proportions and interior layout
+      </div>
+    </div>
+  );
+};
+
+export default FabricWardrobe;

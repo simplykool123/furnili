@@ -21,6 +21,7 @@ import ResponsiveLayout from "@/components/Layout/ResponsiveLayout";
 import FurnitureTechnicalDrawing from "@/components/FurnitureTechnicalDrawing";
 import FurnitureSVGRenderer from "@/components/FurnitureSVGRenderer";
 import { bomDataToFurnitureSpec } from "@/types/furnitureSpec";
+import FabricWardrobe from "@/components/FabricWardrobe";
 import { 
   Calculator, 
   Download, 
@@ -2095,26 +2096,40 @@ export default function BOMCalculator() {
                     </div>
                   </div>
 
-                  {/* Technical Drawing */}
+                  {/* Enhanced Technical Drawing */}
                   <div className="mb-4">
-                    <FurnitureTechnicalDrawing
-                      bomResult={bomResult}
-                      furnitureType={form.getValues('unitType')}
-                      dimensions={{
-                        width: form.getValues('width'),
-                        height: form.getValues('height'),
-                        depth: form.getValues('depth'),
-                        unitOfMeasure: form.getValues('unitOfMeasure') || 'mm'
-                      }}
-                      configuration={{
-                        shelves: form.getValues('partsConfig.shelfCount') || form.getValues('partsConfig.shelves') || 0,
-                        drawers: form.getValues('partsConfig.drawerCount') || form.getValues('partsConfig.drawers') || 0,
-                        shutters: form.getValues('partsConfig.shutterCount') || form.getValues('partsConfig.shutters') || 0,
-                        doors: form.getValues('partsConfig.doors') || 0,
-                        wardrobeType: form.getValues('partsConfig.wardrobeType') || 'openable',
-                        ...form.getValues('partsConfig')
-                      }}
-                    />
+                    {form.getValues('unitType') === 'wardrobe' ? (
+                      <FabricWardrobe
+                        width={form.getValues('width') || 1200}
+                        height={form.getValues('height') || 1800}
+                        depth={form.getValues('depth') || 600}
+                        shelves={form.getValues('partsConfig.shelfCount') || form.getValues('partsConfig.shelves') || 4}
+                        drawers={form.getValues('partsConfig.drawerCount') || form.getValues('partsConfig.drawers') || 2}
+                        shutters={form.getValues('partsConfig.shutterCount') || form.getValues('partsConfig.shutters') || 2}
+                        wardrobeType={form.getValues('partsConfig.wardrobeType') || 'openable'}
+                        mirror={form.getValues('partsConfig.mirror') || false}
+                        className="mx-auto max-w-4xl"
+                      />
+                    ) : (
+                      <FurnitureTechnicalDrawing
+                        bomResult={bomResult}
+                        furnitureType={form.getValues('unitType')}
+                        dimensions={{
+                          width: form.getValues('width'),
+                          height: form.getValues('height'),
+                          depth: form.getValues('depth'),
+                          unitOfMeasure: form.getValues('unitOfMeasure') || 'mm'
+                        }}
+                        configuration={{
+                          shelves: form.getValues('partsConfig.shelfCount') || form.getValues('partsConfig.shelves') || 0,
+                          drawers: form.getValues('partsConfig.drawerCount') || form.getValues('partsConfig.drawers') || 0,
+                          shutters: form.getValues('partsConfig.shutterCount') || form.getValues('partsConfig.shutters') || 0,
+                          doors: form.getValues('partsConfig.doors') || 0,
+                          wardrobeType: form.getValues('partsConfig.wardrobeType') || 'openable',
+                          ...form.getValues('partsConfig')
+                        }}
+                      />
+                    )}
                   </div>
 
                   {/* Consolidated Material Purchase List */}
@@ -2136,6 +2151,22 @@ export default function BOMCalculator() {
                             const wastage = parseFloat('10' || '10') / 100;
                             const sheetArea = sheetLength * sheetWidth;
                             
+                            // Use backend's optimized sheet calculation
+                            if (bomResult.sheetOptimization?.sheets) {
+                              return bomResult.sheetOptimization.sheets.map((sheet, index) => (
+                                <div key={sheet.thickness || index} className="mb-3 last:mb-0">
+                                  <div className="text-2xl font-bold text-blue-600 mb-1">
+                                    {sheet.count} sheets ({sheet.thickness})
+                                  </div>
+                                  <div className="text-xs text-gray-500 space-y-1">
+                                    <div>Efficiency: {Math.round(sheet.efficiency * 100)}%</div>
+                                    <div>Panels: {sheet.panelCount}</div>
+                                  </div>
+                                </div>
+                              ));
+                            }
+                            
+                            // Fallback to area-based calculation
                             return Object.entries(bomResult.boardAreaByThickness || {}).map(([thickness, area]) => (
                               <div key={thickness} className="mb-3 last:mb-0">
                                 <div className="text-2xl font-bold text-blue-600 mb-1">
@@ -2143,7 +2174,7 @@ export default function BOMCalculator() {
                                 </div>
                                 <div className="text-xs text-gray-500 space-y-1">
                                   <div>Net Area: {area.toFixed(1)} sq.ft</div>
-                                  <div>With {'10' || '10'}% wastage: {(area * (1 + wastage)).toFixed(1)} sq.ft</div>
+                                  <div>With 10% wastage: {(area * (1 + wastage)).toFixed(1)} sq.ft</div>
                                 </div>
                               </div>
                             ));
@@ -2199,18 +2230,16 @@ export default function BOMCalculator() {
                         <h4 className="font-medium text-sm mb-2 text-green-800 dark:text-green-200">Quick Purchase Summary</h4>
                         <div className="text-sm text-green-700 dark:text-green-300">
                           {(() => {
-                            const sheetLength = parseFloat('8' || '8');
-                            const sheetWidth = parseFloat('4' || '4'); 
-                            const wastage = parseFloat('10' || '10') / 100;
-                            const sheetArea = sheetLength * sheetWidth;
-                            
-                            // Use backend's optimized sheet count, not simple area calculation
-                            if (bomResult.sheetOptimization) {
+                            // Use backend's optimized sheet count
+                            if (bomResult.sheetOptimization?.sheets) {
                               return bomResult.sheetOptimization.sheets.map((sheet) => (
                                 <div key={sheet.thickness}>• {sheet.count} sheets of {form.watch('boardType')} board ({sheet.thickness})</div>
                               ));
                             }
-                            // Fallback to thickness breakdown if no optimization data
+                            
+                            // Fallback calculation if no optimization data
+                            const sheetArea = 32; // 8' x 4' = 32 sq.ft
+                            const wastage = 0.10; // 10%
                             return Object.entries(bomResult.boardAreaByThickness || {}).map(([thickness, area]) => (
                               <div key={thickness}>• {Math.ceil((area * (1 + wastage)) / sheetArea)} sheets of {form.watch('boardType')} board ({thickness})</div>
                             ));
