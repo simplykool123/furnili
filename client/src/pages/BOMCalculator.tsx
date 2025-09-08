@@ -2065,29 +2065,30 @@ export default function BOMCalculator() {
                         <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border shadow-sm">
                           <h4 className="font-medium text-sm mb-2 text-gray-700 dark:text-gray-300">Board Sheets Required</h4>
                           {(() => {
-                            const sheetLength = parseFloat('8' || '8');
-                            const sheetWidth = parseFloat('4' || '4'); 
-                            const wastage = parseFloat('10' || '10') / 100;
-                            const sheetArea = sheetLength * sheetWidth;
-                            
                             // Use backend's optimized sheet calculation
                             if (bomResult.sheetOptimization?.sheets) {
                               return bomResult.sheetOptimization.sheets.map((sheet, index) => (
-                                <div key={sheet.thickness || index} className="mb-3 last:mb-0">
+                                <div key={`sheet-${index}`} className="mb-3 last:mb-0">
                                   <div className="text-2xl font-bold text-blue-600 mb-1">
-                                    {sheet.count} sheets ({sheet.thickness})
+                                    Sheet {index + 1}
                                   </div>
                                   <div className="text-xs text-gray-500 space-y-1">
-                                    <div>Efficiency: {Math.round(sheet.efficiency * 100)}%</div>
-                                    <div>Panels: {sheet.panelCount}</div>
+                                    <div>Efficiency: {Math.round((sheet.utilization || 0) * 100)}%</div>
+                                    <div>Panels: {sheet.panels || 0}</div>
+                                    <div>Waste: {(sheet.waste / 1000000).toFixed(2)} sq.ft</div>
                                   </div>
                                 </div>
                               ));
                             }
                             
                             // Fallback to area-based calculation
+                            const sheetLength = parseFloat('8' || '8');
+                            const sheetWidth = parseFloat('4' || '4'); 
+                            const wastage = parseFloat('10' || '10') / 100;
+                            const sheetArea = sheetLength * sheetWidth;
+                            
                             return Object.entries(bomResult.boardAreaByThickness || {}).map(([thickness, area]) => (
-                              <div key={thickness} className="mb-3 last:mb-0">
+                              <div key={`thickness-${thickness}`} className="mb-3 last:mb-0">
                                 <div className="text-2xl font-bold text-blue-600 mb-1">
                                   {Math.ceil((area * (1 + wastage)) / sheetArea)} sheets ({thickness})
                                 </div>
@@ -2150,17 +2151,17 @@ export default function BOMCalculator() {
                         <div className="text-sm text-green-700 dark:text-green-300">
                           {(() => {
                             // Use backend's optimized sheet count
-                            if (bomResult.sheetOptimization?.sheets) {
-                              return bomResult.sheetOptimization.sheets.map((sheet) => (
-                                <div key={sheet.thickness}>• {sheet.count} sheets of {form.watch('boardType')} board ({sheet.thickness})</div>
-                              ));
+                            if (bomResult.sheetOptimization?.totalSheets) {
+                              return (
+                                <div key="optimized-sheets">• {bomResult.sheetOptimization.totalSheets} sheets of {form.watch('boardType')} board (optimized cutting)</div>
+                              );
                             }
                             
                             // Fallback calculation if no optimization data
                             const sheetArea = 32; // 8' x 4' = 32 sq.ft
                             const wastage = 0.10; // 10%
                             return Object.entries(bomResult.boardAreaByThickness || {}).map(([thickness, area]) => (
-                              <div key={thickness}>• {Math.ceil((area * (1 + wastage)) / sheetArea)} sheets of {form.watch('boardType')} board ({thickness})</div>
+                              <div key={`purchase-${thickness}`}>• {Math.ceil((area * (1 + wastage)) / sheetArea)} sheets of {form.watch('boardType')} board ({thickness})</div>
                             ));
                           })()}
                           {bomResult.totalEdgeBanding2mm > 0 && (
