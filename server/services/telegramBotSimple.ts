@@ -136,12 +136,10 @@ Quick Start:
 
         const selectedProject = projectList[projectNumber - 1];
 
-        await client.query(
-          'UPDATE telegram_user_sessions SET active_project_id = $2, active_client_id = $3, session_state = $4, last_interaction = NOW() WHERE telegram_user_id = $1',
-          [userId, selectedProject.id, selectedProject.client_id, 'project_selected']
-        );
+        // Skip session update - just log the selection
+        console.log(`✅ User ${userId} selected project: ${selectedProject.code} (ID: ${selectedProject.id})`);
 
-      const message = `✅ Project Selected: ${selectedProject.code} - ${selectedProject.name}
+        const message = `✅ Project Selected: ${selectedProject.code} - ${selectedProject.name}
 Client: ${selectedProject.client_name || 'Unknown'}
 
 📁 Choose upload category:
@@ -182,17 +180,11 @@ Send the command and start uploading!`;
       const client = await botPool.connect();
       
       try {
-        const sessionResult = await client.query(
-          'SELECT session_state FROM telegram_user_sessions WHERE telegram_user_id = $1',
-          [userId]
-        );
-
-        // If user is in idle state and sent a number, treat as project selection
-        if (sessionResult.rows.length > 0 && 
-            (sessionResult.rows[0].session_state === 'idle' || !sessionResult.rows[0].session_state)) {
-          // Simulate /select command
-          await this.handleSelectProject(msg, [text, projectNumber.toString()]);
-        }
+        // Skip session check - just handle number as project selection
+        console.log(`📱 User ${userId} typed number: ${projectNumber}`);
+        
+        // Simulate /select command for any number input
+        await this.handleSelectProject(msg, [text, projectNumber.toString()]);
       } finally {
         client.release();
       }
