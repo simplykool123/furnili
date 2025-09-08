@@ -354,7 +354,7 @@ Send the command and start uploading!`;
   private mapCategory(category: string): string {
     const mapping: { [key: string]: string } = {
       'recce': 'photos',
-      'design': 'design',
+      'design': 'design', 
       'drawings': 'drawings',
       'notes': 'notes'
     };

@@ -1421,9 +1421,10 @@ export default function ProjectDetail() {
     if (selectedFileType === "all") return projectFiles;
 
     const categoryMap: Record<string, string> = {
-      recce: "recce",
-      design: "design",
-      drawing: "drawing",
+      recce: "photos",
+      design: "design", 
+      drawing: "drawings",
+      telegram: "telegram",
     };
 
     const targetCategory = categoryMap[selectedFileType.toLowerCase()];
@@ -1974,6 +1975,15 @@ export default function ProjectDetail() {
                     className={`h-8 text-xs ${selectedFileType === "drawing" ? "bg-amber-900 text-white" : "bg-white text-gray-700 border-gray-300"}`}
                   >
                     Drawing
+                  </Button>
+                  <Button
+                    variant={
+                      selectedFileType === "all" ? "default" : "outline"
+                    }
+                    onClick={() => setSelectedFileType("all")}
+                    className={`h-8 text-xs ${selectedFileType === "all" ? "bg-amber-900 text-white" : "bg-white text-gray-700 border-gray-300"}`}
+                  >
+                    All
                   </Button>
                 </div>
                 <div className="flex space-x-2">
