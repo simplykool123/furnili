@@ -950,6 +950,8 @@ export const telegramUserSessions = pgTable("telegram_user_sessions", {
   telegramUserId: text("telegram_user_id").notNull(), // Telegram user ID (as string)
   telegramUsername: text("telegram_username"), // Telegram username (optional)
   telegramFirstName: text("telegram_first_name"), // User's first name
+  phoneNumber: text("phone_number"), // Phone number for authentication
+  systemUserId: integer("system_user_id").references(() => users.id), // Link to actual system user
   activeProjectId: integer("active_project_id").references(() => projects.id), // Currently selected project
   activeClientId: integer("active_client_id").references(() => clients.id), // Currently selected client
   lastInteraction: timestamp("last_interaction").defaultNow(),

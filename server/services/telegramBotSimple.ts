@@ -20,6 +20,7 @@ const botPool = new Pool({
 // In-memory user tracking (simple solution)
 const userModes = new Map<string, string>();
 const userProjects = new Map<string, number>();
+const userStates = new Map<string, string>(); // Track user authentication state
 
 export class FurniliTelegramBot {
   private bot: TelegramBot;
@@ -40,7 +41,7 @@ export class FurniliTelegramBot {
     this.bot.onText(/\/notes/, (msg) => this.handleCategorySelection(msg, 'notes'));
     this.bot.on('photo', (msg) => this.handlePhoto(msg));
     this.bot.on('document', (msg) => this.handleDocument(msg));
-    // Handle simple number inputs for project selection
+    // Handle simple number inputs for project selection and phone authentication  
     this.bot.on('message', (msg) => this.handleMessage(msg));
   }
 
@@ -49,26 +50,124 @@ export class FurniliTelegramBot {
     const userId = msg.from?.id.toString();
     if (!userId) return;
 
-    await this.createOrUpdateSession(userId, msg.from?.username, msg.from?.first_name);
-
-    const welcomeMessage = `🏠 Welcome to Furnili Assistant!
+    // Check if user is already authenticated
+    const isAuthenticated = await this.checkUserAuthentication(userId);
+    
+    if (isAuthenticated) {
+      await this.createOrUpdateSession(userId, msg.from?.username, msg.from?.first_name);
+      
+      const welcomeMessage = `🏠 Welcome back to Furnili Assistant!
 
 I'll help you organize your project files efficiently.
 
 📋 Commands:
 • /projects - View all active projects
 
-
 Quick Start:
 1. Type /projects
 2. Select with /select [number]
 3. Choose category and upload!`;
 
-    await this.bot.sendMessage(chatId, welcomeMessage);
+      await this.bot.sendMessage(chatId, welcomeMessage);
+    } else {
+      // Request phone number for authentication
+      userStates.set(userId, 'awaiting_phone');
+      await this.bot.sendMessage(chatId, `🔐 Welcome to Furnili Assistant!
+
+For security, I need to verify your phone number.
+
+Please share your registered phone number (10 digits):
+Example: 9876543210`);
+    }
+  }
+
+  private async checkUserAuthentication(telegramUserId: string): Promise<boolean> {
+    try {
+      const client = await botPool.connect();
+      try {
+        // Check if telegram user is linked to a system user via phone
+        const result = await client.query(`
+          SELECT tus.*, u.id as system_user_id, u.name, u.phone 
+          FROM telegram_user_sessions tus
+          LEFT JOIN users u ON tus.phone_number = u.phone
+          WHERE tus.telegram_user_id = $1 AND tus.phone_number IS NOT NULL AND u.phone IS NOT NULL
+        `, [telegramUserId]);
+
+        return result.rows.length > 0;
+      } finally {
+        client.release();
+      }
+    } catch (error) {
+      console.error('Error checking user authentication:', error);
+      return false;
+    }
+  }
+
+  private async authenticateUserByPhone(telegramUserId: string, phoneNumber: string): Promise<boolean> {
+    try {
+      const client = await botPool.connect();
+      try {
+        // Check if phone exists in users table
+        const userResult = await client.query(`
+          SELECT id, name, phone FROM users WHERE phone = $1 AND is_active = true
+        `, [phoneNumber]);
+
+        if (userResult.rows.length === 0) {
+          return false; // Phone not found
+        }
+
+        const user = userResult.rows[0];
+
+        // Update telegram session with phone number and link to system user
+        await client.query(`
+          UPDATE telegram_user_sessions 
+          SET phone_number = $1, system_user_id = $2, updated_at = NOW()
+          WHERE telegram_user_id = $3
+        `, [phoneNumber, user.id, telegramUserId]);
+
+        console.log(`✅ User ${telegramUserId} authenticated with phone ${phoneNumber}, linked to system user ${user.id} (${user.name})`);
+        return true;
+      } finally {
+        client.release();
+      }
+    } catch (error) {
+      console.error('Error authenticating user by phone:', error);
+      return false;
+    }
+  }
+
+  private async getSystemUserInfo(telegramUserId: string): Promise<{id: number, name: string} | null> {
+    try {
+      const client = await botPool.connect();
+      try {
+        const result = await client.query(`
+          SELECT u.id, u.name 
+          FROM telegram_user_sessions tus
+          JOIN users u ON tus.system_user_id = u.id
+          WHERE tus.telegram_user_id = $1
+        `, [telegramUserId]);
+
+        return result.rows.length > 0 ? result.rows[0] : null;
+      } finally {
+        client.release();
+      }
+    } catch (error) {
+      console.error('Error getting system user info:', error);
+      return null;
+    }
   }
 
   private async handleProjects(msg: TelegramBot.Message) {
     const chatId = msg.chat.id;
+    const userId = msg.from?.id.toString();
+    if (!userId) return;
+
+    // Check authentication before proceeding
+    const isAuthenticated = await this.checkUserAuthentication(userId);
+    if (!isAuthenticated) {
+      await this.bot.sendMessage(chatId, "🔐 Please authenticate first with /start command.");
+      return;
+    }
 
     try {
       // Use direct database connection like other methods
@@ -174,6 +273,20 @@ Send the command and start uploading!`;
     const userId = msg.from?.id.toString();
     if (!userId) return;
 
+    // Check if user is awaiting phone authentication
+    const currentState = userStates.get(userId);
+    if (currentState === 'awaiting_phone') {
+      await this.handlePhoneAuthentication(msg, text);
+      return;
+    }
+
+    // Check authentication before proceeding with normal operations
+    const isAuthenticated = await this.checkUserAuthentication(userId);
+    if (!isAuthenticated) {
+      await this.bot.sendMessage(chatId, "🔐 Please authenticate first with /start command.");
+      return;
+    }
+
     // Check if it's a simple number for project selection
     const projectNumber = parseInt(text);
     if (!isNaN(projectNumber)) {
@@ -200,6 +313,50 @@ Send the command and start uploading!`;
     const currentMode = userModes.get(userId);
     if (currentMode === 'notes') {
       await this.handleTextNote(msg, text);
+    }
+  }
+
+  private async handlePhoneAuthentication(msg: TelegramBot.Message, phoneText: string) {
+    const chatId = msg.chat.id;
+    const userId = msg.from?.id.toString();
+    if (!userId) return;
+
+    // Clean phone number (remove spaces, dashes, etc.)
+    const cleanPhone = phoneText.replace(/\D/g, '');
+    
+    // Validate phone number format (10-15 digits)
+    if (cleanPhone.length < 10 || cleanPhone.length > 15) {
+      await this.bot.sendMessage(chatId, `❌ Invalid phone number format. Please enter 10-15 digits only:
+Example: 9876543210`);
+      return;
+    }
+
+    console.log(`🔐 Authenticating user ${userId} with phone ${cleanPhone}`);
+
+    // Try to authenticate user by phone
+    const isAuthenticated = await this.authenticateUserByPhone(userId, cleanPhone);
+    
+    if (isAuthenticated) {
+      const userInfo = await this.getSystemUserInfo(userId);
+      userStates.delete(userId); // Clear authentication state
+      
+      await this.bot.sendMessage(chatId, `✅ Welcome ${userInfo?.name || 'User'}!
+
+🏠 You are now authenticated and can access Furnili Assistant.
+
+📋 Commands:
+• /projects - View all active projects
+
+Quick Start:
+1. Type /projects
+2. Select with /select [number]
+3. Choose category and upload!`);
+    } else {
+      await this.bot.sendMessage(chatId, `❌ Phone number ${cleanPhone} not found in our system.
+
+Please contact the admin (9823633833) to add your phone number to the system.
+
+Once added, please try /start again.`);
     }
   }
 
