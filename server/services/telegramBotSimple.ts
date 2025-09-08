@@ -336,6 +336,7 @@ Send the command and start uploading!`;
       const caption = msg.caption || '';
 
       console.log(`📄 User ${userId} uploading document to project ${projectId}`);
+      console.log(`🔍 Debug: userProjects map has ${userProjects.size} entries, user ${userId} maps to ${userProjects.get(userId)}`);
 
       // Download and save document locally (LOCAL STORAGE per user requirements)  
       const ext = path.extname(document.file_name || '.file');
