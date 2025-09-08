@@ -145,7 +145,6 @@ Quick Start:
         
         // Skip session update - just log the selection  
         console.log(`✅ User ${userId} selected project: ${selectedProject.code} (ID: ${selectedProject.id})`);
-        console.log(`📝 Debug: Stored project ${selectedProject.id} for user ${userId}`);
 
         const message = `✅ Project Selected: ${selectedProject.code} - ${selectedProject.name}
 Client: ${selectedProject.client_name || 'Unknown'}
@@ -215,7 +214,6 @@ Send the command and start uploading!`;
     try {
       const projectId = userProjects.get(userId) || 1;
       console.log(`📝 User ${userId} saving text note to project ${projectId}`);
-      console.log(`🔍 Debug: userProjects map has ${userProjects.size} entries, user ${userId} maps to ${userProjects.get(userId)}`);
 
       // Save text note to database
       const client = await botPool.connect();
@@ -285,7 +283,6 @@ Send the command and start uploading!`;
       const caption = msg.caption || '';
 
       console.log(`📸 User ${userId} uploading photo to project ${projectId}`);
-      console.log(`🔍 Debug: userProjects map has ${userProjects.size} entries, user ${userId} maps to ${userProjects.get(userId)}`);
 
       // Download and save photo locally
       const savedFile = await this.downloadFile(photo.file_id, 'photo', '.jpg');
@@ -336,7 +333,6 @@ Send the command and start uploading!`;
       const caption = msg.caption || '';
 
       console.log(`📄 User ${userId} uploading document to project ${projectId}`);
-      console.log(`🔍 Debug: userProjects map has ${userProjects.size} entries, user ${userId} maps to ${userProjects.get(userId)}`);
 
       // Download and save document locally (LOCAL STORAGE per user requirements)  
       const ext = path.extname(document.file_name || '.file');
