@@ -33,7 +33,6 @@ export class FurniliTelegramBot {
   private setupHandlers() {
     this.bot.onText(/\/start/, (msg) => this.handleStart(msg));
     this.bot.onText(/\/projects/, (msg) => this.handleProjects(msg));
-    this.bot.onText(/\/completed/, (msg) => this.handleCompletedProjects(msg));
     this.bot.onText(/\/select (.+)/, (msg, match) => this.handleSelectProject(msg, match));
     this.bot.onText(/\/recce/, (msg) => this.handleCategorySelection(msg, 'recce'));
     this.bot.onText(/\/design/, (msg) => this.handleCategorySelection(msg, 'design'));
@@ -92,7 +91,7 @@ Quick Start:
         const projectList = result.rows;
 
       if (projectList.length === 0) {
-        await this.bot.sendMessage(chatId, "📋 No active projects found.\n\nUse /completed to view finished projects.");
+        await this.bot.sendMessage(chatId, "📋 No active projects found.");
         return;
       }
 
@@ -102,7 +101,7 @@ Quick Start:
           message += `   Client: ${project.client_name || 'Unknown'}\n`;
           message += `   Stage: ${project.stage}\n\n`;
         });
-        message += "Reply with /select [number] to choose a project\nExample: /select 1\n\n📁 Use /completed to view finished projects";
+        message += "Reply with /select [number] to choose a project\nExample: /select 1";
 
         await this.bot.sendMessage(chatId, message);
       } finally {
@@ -114,46 +113,6 @@ Quick Start:
     }
   }
 
-  private async handleCompletedProjects(msg: TelegramBot.Message) {
-    const chatId = msg.chat.id;
-
-    try {
-      // Use direct database connection to fetch completed projects
-      const client = await botPool.connect();
-      try {
-        const result = await client.query(`
-          SELECT p.id, p.code, p.name, p.stage, c.name as client_name
-          FROM projects p
-          LEFT JOIN clients c ON p.client_id = c.id
-          WHERE p.stage IN ('completed', 'handover', 'lost')
-          ORDER BY p.updated_at DESC
-        `);
-        const completedList = result.rows;
-
-        if (completedList.length === 0) {
-          await this.bot.sendMessage(chatId, "📁 No completed projects found.");
-          return;
-        }
-
-        let message = "📁 Completed/Finished Projects:\n\n";
-        completedList.forEach((project, index) => {
-          const status = project.stage === 'completed' ? '✅' : 
-                        project.stage === 'handover' ? '🏠' : '❌';
-          message += `${status} ${project.code} - ${project.name}\n`;
-          message += `   Client: ${project.client_name || 'Unknown'}\n`;
-          message += `   Status: ${project.stage}\n\n`;
-        });
-        message += "ℹ️ These projects are archived and not available for new uploads.";
-
-        await this.bot.sendMessage(chatId, message);
-      } finally {
-        client.release();
-      }
-    } catch (error) {
-      console.error('Error fetching completed projects:', error);
-      await this.bot.sendMessage(chatId, "Error fetching completed projects. Please try again.");
-    }
-  }
 
   private async handleSelectProject(msg: TelegramBot.Message, match: RegExpExecArray | null) {
     const chatId = msg.chat.id;
