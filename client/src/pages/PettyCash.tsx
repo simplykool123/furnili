@@ -77,6 +77,11 @@ export default function PettyCash() {
   const [selectedExpenseDetails, setSelectedExpenseDetails] = useState<PettyCashExpense | null>(null);
   const [expenseToDelete, setExpenseToDelete] = useState<PettyCashExpense | null>(null);
   
+  // Month and Year selection states
+  const currentDate = new Date();
+  const [selectedMonth, setSelectedMonth] = useState<number>(currentDate.getMonth() + 1);
+  const [selectedYear, setSelectedYear] = useState<number>(currentDate.getFullYear());
+  
   // Mobile optimization hook
   const isMobile = useIsMobile();
   
