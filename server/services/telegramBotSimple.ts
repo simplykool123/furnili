@@ -311,10 +311,26 @@ Send the command and start uploading!`;
             [projectId, 7, 'note', fiveMinutesAgo]
           );
 
-          if (recentNote.rows.length > 0 && recentNote.rows[0].attachments) {
+          if (recentNote.rows.length > 0) {
             // Append to existing note
             const existingNote = recentNote.rows[0];
-            const existingAttachments = existingNote.attachments || [];
+            let existingAttachments = [];
+            
+            // Parse existing attachments if they exist
+            if (existingNote.attachments && existingNote.attachments.length > 0) {
+              try {
+                // If it's a JSON string, parse it
+                if (typeof existingNote.attachments === 'string') {
+                  existingAttachments = JSON.parse(existingNote.attachments);
+                } else if (Array.isArray(existingNote.attachments)) {
+                  existingAttachments = existingNote.attachments;
+                }
+              } catch (e) {
+                console.log('Error parsing existing attachments, creating new array');
+                existingAttachments = [];
+              }
+            }
+            
             const updatedAttachments = [...existingAttachments, attachment];
 
             // Update the existing note with the new attachment
