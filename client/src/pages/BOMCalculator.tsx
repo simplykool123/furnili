@@ -1064,7 +1064,7 @@ export default function BOMCalculator() {
             <CardTitle className="flex items-center gap-3">
               {selectedFurniture && <selectedFurniture.icon className="w-6 h-6 text-furnili-brown" />}
               <div>
-                <div>{selectedFurniture?.name} Calculator</div>
+                <div className="text-sm">Wardrobe Calculator</div>
                 <div className="text-sm text-muted-foreground font-normal">{selectedFurniture?.description}</div>
               </div>
             </CardTitle>
@@ -1454,16 +1454,19 @@ export default function BOMCalculator() {
                               control={form.control}
                               name="partsConfig.mirror"
                               render={({ field }) => (
-                                <FormItem className="flex flex-row items-center space-x-2 space-y-0 rounded-md border p-2">
-                                  <FormControl>
-                                    <input
-                                      type="checkbox"
-                                      checked={field.value}
-                                      onChange={field.onChange}
-                                      className="h-3 w-3"
-                                    />
-                                  </FormControl>
+                                <FormItem>
                                   <FormLabel className="text-xs">Mirror</FormLabel>
+                                  <FormControl>
+                                    <div className="flex items-center space-x-2 border rounded-md p-2">
+                                      <input
+                                        type="checkbox"
+                                        checked={field.value}
+                                        onChange={field.onChange}
+                                        className="h-4 w-4"
+                                      />
+                                      <span className="text-xs text-muted-foreground">Add mirror</span>
+                                    </div>
+                                  </FormControl>
                                 </FormItem>
                               )}
                             />
