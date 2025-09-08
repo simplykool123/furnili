@@ -26,6 +26,8 @@ export class FurniliTelegramBot {
     this.bot.onText(/\/notes/, (msg) => this.handleCategorySelection(msg, 'notes'));
     this.bot.on('photo', (msg) => this.handlePhoto(msg));
     this.bot.on('document', (msg) => this.handleDocument(msg));
+    // Handle simple number inputs for project selection
+    this.bot.on('message', (msg) => this.handleMessage(msg));
   }
 
   private async handleStart(msg: TelegramBot.Message) {
@@ -102,38 +104,32 @@ Quick Start:
     const projectNumber = parseInt(match[1]);
 
     try {
-      const projectList = await db
-        .select({
-          id: projects.id,
-          code: projects.code,
-          name: projects.name,
-          clientId: projects.clientId,
-          clientName: clients.name,
-        })
-        .from(projects)
-        .leftJoin(clients, eq(projects.clientId, clients.id))
-        .where(eq(projects.isActive, true))
-        .orderBy(projects.createdAt);
+      // Use raw SQL for project selection
+      const client = await db.$client.connect();
+      try {
+        const projectListResult = await client.query(`
+          SELECT p.id, p.code, p.name, p.client_id, c.name as client_name
+          FROM projects p
+          LEFT JOIN clients c ON p.client_id = c.id
+          WHERE p.is_active = true
+          ORDER BY p.created_at
+        `);
+        const projectList = projectListResult.rows;
 
-      if (projectNumber < 1 || projectNumber > projectList.length) {
-        await this.bot.sendMessage(chatId, `Invalid project number. Select between 1 and ${projectList.length}.`);
-        return;
-      }
+        if (projectNumber < 1 || projectNumber > projectList.length) {
+          await this.bot.sendMessage(chatId, `Invalid project number. Select between 1 and ${projectList.length}.`);
+          return;
+        }
 
-      const selectedProject = projectList[projectNumber - 1];
+        const selectedProject = projectList[projectNumber - 1];
 
-      await db
-        .update(telegramUserSessions)
-        .set({
-          activeProjectId: selectedProject.id,
-          activeClientId: selectedProject.clientId,
-          sessionState: 'project_selected',
-          lastInteraction: new Date(),
-        })
-        .where(eq(telegramUserSessions.telegramUserId, userId));
+        await client.query(
+          'UPDATE telegram_user_sessions SET active_project_id = $2, active_client_id = $3, session_state = $4, last_interaction = NOW(), updated_at = NOW() WHERE telegram_user_id = $1',
+          [userId, selectedProject.id, selectedProject.client_id, 'project_selected']
+        );
 
-      const message = `✅ Project Selected: ${selectedProject.code} - ${selectedProject.name}
-Client: ${selectedProject.clientName || 'Unknown'}
+        const message = `✅ Project Selected: ${selectedProject.code} - ${selectedProject.name}
+Client: ${selectedProject.client_name || 'Unknown'}
 
 📁 Choose upload category:
 • /recce - Site photos with measurements
@@ -143,10 +139,50 @@ Client: ${selectedProject.clientName || 'Unknown'}
 
 Send the command and start uploading!`;
 
-      await this.bot.sendMessage(chatId, message);
+        await this.bot.sendMessage(chatId, message);
+      } finally {
+        client.release();
+      }
     } catch (error) {
       console.error('Error selecting project:', error);
       await this.bot.sendMessage(chatId, "Error selecting project. Please try again.");
+    }
+  }
+
+  // Handle simple text messages for project selection 
+  private async handleMessage(msg: TelegramBot.Message) {
+    // Skip if it's a command or already handled by other handlers
+    const text = msg.text?.trim();
+    if (!text || text.startsWith('/') || msg.photo || msg.document) return;
+
+    const chatId = msg.chat.id;
+    const userId = msg.from?.id.toString();
+    if (!userId) return;
+
+    // Check if it's a simple number for project selection
+    const projectNumber = parseInt(text);
+    if (isNaN(projectNumber)) return;
+
+    // Get current session state
+    try {
+      const client = await db.$client.connect();
+      try {
+        const sessionResult = await client.query(
+          'SELECT session_state FROM telegram_user_sessions WHERE telegram_user_id = $1',
+          [userId]
+        );
+
+        // If user is in idle state and sent a number, treat as project selection
+        if (sessionResult.rows.length > 0 && 
+            (sessionResult.rows[0].session_state === 'idle' || !sessionResult.rows[0].session_state)) {
+          // Simulate /select command
+          await this.handleSelectProject(msg, [text, projectNumber.toString()]);
+        }
+      } finally {
+        client.release();
+      }
+    } catch (error) {
+      console.error('Error handling message:', error);
     }
   }
 
@@ -156,25 +192,26 @@ Send the command and start uploading!`;
     if (!userId) return;
 
     try {
-      const session = await db
-        .select()
-        .from(telegramUserSessions)
-        .where(eq(telegramUserSessions.telegramUserId, userId))
-        .limit(1);
+      // Use raw SQL for category selection
+      const client = await db.$client.connect();
+      try {
+        const sessionResult = await client.query(
+          'SELECT * FROM telegram_user_sessions WHERE telegram_user_id = $1 LIMIT 1',
+          [userId]
+        );
 
-      if (session.length === 0 || !session[0].activeProjectId) {
-        await this.bot.sendMessage(chatId, "⚠️ Please select a project first using /projects then /select [number]");
-        return;
+        if (sessionResult.rows.length === 0 || !sessionResult.rows[0].active_project_id) {
+          await this.bot.sendMessage(chatId, "⚠️ Please select a project first using /projects then /select [number]");
+          return;
+        }
+
+        await client.query(
+          'UPDATE telegram_user_sessions SET session_state = $2, current_step = $3, last_interaction = NOW(), updated_at = NOW() WHERE telegram_user_id = $1',
+          [userId, 'uploading', category]
+        );
+      } finally {
+        client.release();
       }
-
-      await db
-        .update(telegramUserSessions)
-        .set({
-          sessionState: 'uploading',
-          currentStep: category,
-          lastInteraction: new Date(),
-        })
-        .where(eq(telegramUserSessions.telegramUserId, userId));
 
       const messages: { [key: string]: string } = {
         recce: "📷 Recce Mode Active\n\nSend site photos with measurements.",
@@ -323,28 +360,30 @@ Send the command and start uploading!`;
 
   private async createOrUpdateSession(userId: string, username?: string, firstName?: string) {
     try {
-      const existing = await db
-        .select()
-        .from(telegramUserSessions)
-        .where(eq(telegramUserSessions.telegramUserId, userId))
-        .limit(1);
+      // Use raw SQL to avoid Drizzle schema issues
+      const client = await db.$client.connect();
+      try {
+        // Check if session exists
+        const existingResult = await client.query(
+          'SELECT * FROM telegram_user_sessions WHERE telegram_user_id = $1 LIMIT 1',
+          [userId]
+        );
 
-      if (existing.length > 0) {
-        await db
-          .update(telegramUserSessions)
-          .set({
-            telegramUsername: username,
-            telegramFirstName: firstName,
-            lastInteraction: new Date(),
-          })
-          .where(eq(telegramUserSessions.telegramUserId, userId));
-      } else {
-        await db.insert(telegramUserSessions).values({
-          telegramUserId: userId,
-          telegramUsername: username,
-          telegramFirstName: firstName,
-          sessionState: 'idle',
-        });
+        if (existingResult.rows.length > 0) {
+          // Update existing session
+          await client.query(
+            'UPDATE telegram_user_sessions SET telegram_username = $2, telegram_first_name = $3, last_interaction = NOW(), updated_at = NOW() WHERE telegram_user_id = $1',
+            [userId, username, firstName]
+          );
+        } else {
+          // Create new session
+          await client.query(
+            'INSERT INTO telegram_user_sessions (telegram_user_id, telegram_username, telegram_first_name, session_state, last_interaction, created_at, updated_at) VALUES ($1, $2, $3, $4, NOW(), NOW(), NOW())',
+            [userId, username, firstName, 'idle']
+          );
+        }
+      } finally {
+        client.release();
       }
     } catch (error) {
       console.error('Error managing session:', error);
