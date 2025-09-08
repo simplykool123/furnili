@@ -1,5 +1,5 @@
 import TelegramBot from 'node-telegram-bot-api';
-import { db, pool } from '../db.js';
+import { db } from '../db.js';
 import { telegramUserSessions, projects, clients, projectFiles } from '@shared/schema';
 import { eq } from 'drizzle-orm';
 import axios from 'axios';
@@ -104,32 +104,38 @@ Quick Start:
     const projectNumber = parseInt(match[1]);
 
     try {
-      // Use the same database pool as the main application
-      const client = await pool.connect();
-      try {
-        const projectListResult = await client.query(`
-          SELECT p.id, p.code, p.name, p.client_id, c.name as client_name
-          FROM projects p
-          LEFT JOIN clients c ON p.client_id = c.id
-          WHERE p.is_active = true
-          ORDER BY p.created_at
-        `);
-        const projectList = projectListResult.rows;
+      // Use Drizzle ORM like the main app
+      const projectList = await db
+        .select({
+          id: projects.id,
+          code: projects.code,
+          name: projects.name,
+          clientId: projects.clientId,
+          clientName: clients.name,
+        })
+        .from(projects)
+        .leftJoin(clients, eq(projects.clientId, clients.id))
+        .where(eq(projects.isActive, true))
+        .orderBy(projects.createdAt);
 
-        if (projectNumber < 1 || projectNumber > projectList.length) {
-          await this.bot.sendMessage(chatId, `Invalid project number. Select between 1 and ${projectList.length}.`);
-          return;
-        }
+      if (projectNumber < 1 || projectNumber > projectList.length) {
+        await this.bot.sendMessage(chatId, `Invalid project number. Select between 1 and ${projectList.length}.`);
+        return;
+      }
 
-        const selectedProject = projectList[projectNumber - 1];
+      const selectedProject = projectList[projectNumber - 1];
 
-        await client.query(
-          'UPDATE telegram_user_sessions SET active_project_id = $2, active_client_id = $3, session_state = $4, last_interaction = NOW(), updated_at = NOW() WHERE telegram_user_id = $1',
-          [userId, selectedProject.id, selectedProject.client_id, 'project_selected']
-        );
+      await db.update(telegramUserSessions)
+        .set({
+          activeProjectId: selectedProject.id,
+          activeClientId: selectedProject.clientId,
+          sessionState: 'project_selected',
+          lastInteraction: new Date(),
+        })
+        .where(eq(telegramUserSessions.telegramUserId, userId));
 
-        const message = `✅ Project Selected: ${selectedProject.code} - ${selectedProject.name}
-Client: ${selectedProject.client_name || 'Unknown'}
+      const message = `✅ Project Selected: ${selectedProject.code} - ${selectedProject.name}
+Client: ${selectedProject.clientName || 'Unknown'}
 
 📁 Choose upload category:
 • /recce - Site photos with measurements
@@ -139,10 +145,7 @@ Client: ${selectedProject.client_name || 'Unknown'}
 
 Send the command and start uploading!`;
 
-        await this.bot.sendMessage(chatId, message);
-      } finally {
-        client.release();
-      }
+      await this.bot.sendMessage(chatId, message);
     } catch (error) {
       console.error('Error selecting project:', error);
       await this.bot.sendMessage(chatId, "Error selecting project. Please try again.");
@@ -165,21 +168,17 @@ Send the command and start uploading!`;
 
     // Get current session state
     try {
-      const client = await pool.connect();
-      try {
-        const sessionResult = await client.query(
-          'SELECT session_state FROM telegram_user_sessions WHERE telegram_user_id = $1',
-          [userId]
-        );
+      // Use Drizzle ORM like the main app
+      const sessionResult = await db.select()
+        .from(telegramUserSessions)
+        .where(eq(telegramUserSessions.telegramUserId, userId))
+        .limit(1);
 
-        // If user is in idle state and sent a number, treat as project selection
-        if (sessionResult.rows.length > 0 && 
-            (sessionResult.rows[0].session_state === 'idle' || !sessionResult.rows[0].session_state)) {
-          // Simulate /select command
-          await this.handleSelectProject(msg, [text, projectNumber.toString()]);
-        }
-      } finally {
-        client.release();
+      // If user is in idle state and sent a number, treat as project selection
+      if (sessionResult.length > 0 && 
+          (sessionResult[0].sessionState === 'idle' || !sessionResult[0].sessionState)) {
+        // Simulate /select command
+        await this.handleSelectProject(msg, [text, projectNumber.toString()]);
       }
     } catch (error) {
       console.error('Error handling message:', error);
@@ -192,26 +191,24 @@ Send the command and start uploading!`;
     if (!userId) return;
 
     try {
-      // Use the same database pool as the main application
-      const client = await pool.connect();
-      try {
-        const sessionResult = await client.query(
-          'SELECT * FROM telegram_user_sessions WHERE telegram_user_id = $1 LIMIT 1',
-          [userId]
-        );
+      // Use Drizzle ORM like the main app
+      const sessionResult = await db.select()
+        .from(telegramUserSessions)
+        .where(eq(telegramUserSessions.telegramUserId, userId))
+        .limit(1);
 
-        if (sessionResult.rows.length === 0 || !sessionResult.rows[0].active_project_id) {
-          await this.bot.sendMessage(chatId, "⚠️ Please select a project first using /projects then /select [number]");
-          return;
-        }
-
-        await client.query(
-          'UPDATE telegram_user_sessions SET session_state = $2, current_step = $3, last_interaction = NOW(), updated_at = NOW() WHERE telegram_user_id = $1',
-          [userId, 'uploading', category]
-        );
-      } finally {
-        client.release();
+      if (sessionResult.length === 0 || !sessionResult[0].activeProjectId) {
+        await this.bot.sendMessage(chatId, "⚠️ Please select a project first using /projects then /select [number]");
+        return;
       }
+
+      await db.update(telegramUserSessions)
+        .set({
+          sessionState: 'uploading',
+          currentStep: category,
+          lastInteraction: new Date(),
+        })
+        .where(eq(telegramUserSessions.telegramUserId, userId));
 
       const messages: { [key: string]: string } = {
         recce: "📷 Recce Mode Active\n\nSend site photos with measurements.",
@@ -360,38 +357,33 @@ Send the command and start uploading!`;
 
   private async createOrUpdateSession(userId: string, username?: string, firstName?: string) {
     try {
-      // Use the same database pool as the main application
-      const client = await pool.connect();
-      try {
-        console.log(`🔍 Creating/updating session for user ${userId}`);
-        
-        // Check if session exists
-        const existingResult = await client.query(
-          'SELECT * FROM telegram_user_sessions WHERE telegram_user_id = $1 LIMIT 1',
-          [userId]
-        );
+      console.log(`🔍 Creating/updating session for user ${userId}`);
+      
+      // Use Drizzle ORM like the main app
+      const existing = await db.select().from(telegramUserSessions)
+        .where(eq(telegramUserSessions.telegramUserId, userId)).limit(1);
 
-        if (existingResult.rows.length > 0) {
-          console.log(`✅ Updating existing session for user ${userId}`);
-          // Update existing session
-          await client.query(
-            'UPDATE telegram_user_sessions SET telegram_username = $2, telegram_first_name = $3, last_interaction = NOW(), updated_at = NOW() WHERE telegram_user_id = $1',
-            [userId, username, firstName]
-          );
-        } else {
-          console.log(`➕ Creating new session for user ${userId}`);
-          // Create new session
-          await client.query(
-            'INSERT INTO telegram_user_sessions (telegram_user_id, telegram_username, telegram_first_name, session_state, last_interaction, created_at, updated_at) VALUES ($1, $2, $3, $4, NOW(), NOW(), NOW())',
-            [userId, username, firstName, 'idle']
-          );
-        }
-      } finally {
-        client.release();
+      if (existing.length > 0) {
+        console.log(`✅ Updating existing session for user ${userId}`);
+        await db.update(telegramUserSessions)
+          .set({
+            telegramUsername: username,
+            telegramFirstName: firstName,
+            lastInteraction: new Date(),
+            updatedAt: new Date(),
+          })
+          .where(eq(telegramUserSessions.telegramUserId, userId));
+      } else {
+        console.log(`➕ Creating new session for user ${userId}`);
+        await db.insert(telegramUserSessions).values({
+          telegramUserId: userId,
+          telegramUsername: username,
+          telegramFirstName: firstName,
+          sessionState: 'idle',
+        });
       }
     } catch (error) {
       console.error('Error managing session:', error);
-      console.error('Database error details:', error);
     }
   }
 
