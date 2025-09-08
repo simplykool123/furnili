@@ -19,6 +19,8 @@ import MobileTable from "@/components/Mobile/MobileTable";
 import { useToast } from "@/hooks/use-toast";
 import ResponsiveLayout from "@/components/Layout/ResponsiveLayout";
 import FurnitureTechnicalDrawing from "@/components/FurnitureTechnicalDrawing";
+import FurnitureSVGRenderer from "@/components/FurnitureSVGRenderer";
+import { bomDataToFurnitureSpec } from "@/types/furnitureSpec";
 import { 
   Calculator, 
   Download, 
@@ -2077,26 +2079,56 @@ export default function BOMCalculator() {
                     </div>
                   </div>
 
-                  {/* Technical Drawing */}
-                  <div className="mb-6">
-                    <FurnitureTechnicalDrawing
-                      bomResult={bomResult}
-                      furnitureType={form.getValues('unitType')}
-                      dimensions={{
-                        width: form.getValues('width'),
-                        height: form.getValues('height'),
-                        depth: form.getValues('depth'),
-                        unitOfMeasure: form.getValues('unitOfMeasure') || 'mm'
-                      }}
-                      configuration={{
-                        shelves: form.getValues('partsConfig.shelfCount') || form.getValues('partsConfig.shelves') || 0,
-                        drawers: form.getValues('partsConfig.drawerCount') || form.getValues('partsConfig.drawers') || 0,
-                        shutters: form.getValues('partsConfig.shutterCount') || form.getValues('partsConfig.shutters') || 0,
-                        doors: form.getValues('partsConfig.doors') || 0,
-                        wardrobeType: form.getValues('partsConfig.wardrobeType') || 'openable',
-                        ...form.getValues('partsConfig')
-                      }}
-                    />
+                  {/* Technical Drawing - Enhanced */}
+                  <div className="mb-4">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                      {/* Enhanced SVG Drawing */}
+                      <Card className="p-2">
+                        <CardHeader className="pb-1">
+                          <CardTitle className="text-sm">Enhanced Technical Drawing</CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-1">
+                          <FurnitureSVGRenderer 
+                            spec={bomDataToFurnitureSpec({
+                              unitType: form.getValues('unitType'),
+                              width: form.getValues('width'),
+                              height: form.getValues('height'),
+                              depth: form.getValues('depth'),
+                              partsConfig: form.getValues('partsConfig')
+                            })}
+                            showDimensions={true}
+                            className="h-auto"
+                          />
+                        </CardContent>
+                      </Card>
+                      
+                      {/* Original Technical Drawing */}
+                      <Card className="p-2">
+                        <CardHeader className="pb-1">
+                          <CardTitle className="text-sm">Detailed Drawing</CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-1">
+                          <FurnitureTechnicalDrawing
+                            bomResult={bomResult}
+                            furnitureType={form.getValues('unitType')}
+                            dimensions={{
+                              width: form.getValues('width'),
+                              height: form.getValues('height'),
+                              depth: form.getValues('depth'),
+                              unitOfMeasure: form.getValues('unitOfMeasure') || 'mm'
+                            }}
+                            configuration={{
+                              shelves: form.getValues('partsConfig.shelfCount') || form.getValues('partsConfig.shelves') || 0,
+                              drawers: form.getValues('partsConfig.drawerCount') || form.getValues('partsConfig.drawers') || 0,
+                              shutters: form.getValues('partsConfig.shutterCount') || form.getValues('partsConfig.shutters') || 0,
+                              doors: form.getValues('partsConfig.doors') || 0,
+                              wardrobeType: form.getValues('partsConfig.wardrobeType') || 'openable',
+                              ...form.getValues('partsConfig')
+                            }}
+                          />
+                        </CardContent>
+                      </Card>
+                    </div>
                   </div>
 
                   {/* Consolidated Material Purchase List */}

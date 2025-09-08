@@ -528,9 +528,13 @@ Once added, please try /start again.`);
             const updatedAttachments = [...existingAttachments, attachment];
 
             // Update the existing note with the new attachment
+            // Convert objects to JSON strings for PostgreSQL text array
+            const attachmentStrings = updatedAttachments.map(att => 
+              typeof att === 'object' ? JSON.stringify(att) : att
+            );
             await client.query(
               'UPDATE project_logs SET attachments = $1 WHERE id = $2',
-              [JSON.stringify(updatedAttachments), existingNote.id]
+              [attachmentStrings, existingNote.id]
             );
 
             const attachmentCount = updatedAttachments.length;
@@ -548,7 +552,7 @@ Once added, please try /start again.`);
                 title,
                 description,
                 systemUser?.id || 7, // Use actual system user ID
-                JSON.stringify([attachment]), // Photo attachment as JSON string
+                [JSON.stringify(attachment)], // Photo attachment as PostgreSQL array
                 false // Not important by default
               ]
             );
