@@ -249,7 +249,7 @@ Send the command and start uploading!`;
             'photos', // recce category maps to photos
             'Uploaded via Telegram',
             caption,
-            1, // user ID
+            7, // Use existing user ID (Aman from logs)
             false
           ]
         );
