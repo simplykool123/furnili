@@ -1,6 +1,7 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { FurniliTelegramBot } from "./services/telegramBotSimple.js";
 
 const app = express();
 app.use(express.json({ limit: '50mb' }));
@@ -134,5 +135,17 @@ app.use((req, res, next) => {
     reusePort: true,
   }, () => {
     log(`serving on port ${port}`);
+    
+    // Initialize Telegram Bot
+    if (process.env.TELEGRAM_BOT_TOKEN) {
+      try {
+        new FurniliTelegramBot(process.env.TELEGRAM_BOT_TOKEN);
+        log("🤖 Telegram bot initialized successfully");
+      } catch (error) {
+        console.error("❌ Failed to initialize Telegram bot:", error);
+      }
+    } else {
+      console.log("⚠️ TELEGRAM_BOT_TOKEN not found, skipping bot initialization");
+    }
   });
 })();

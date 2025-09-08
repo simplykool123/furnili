@@ -1,11 +1,21 @@
 import TelegramBot from 'node-telegram-bot-api';
-import { db } from '../db/index.js';
+import { db } from '../db.js';
 import { telegramUserSessions, projects, clients, projectFiles, users } from '@shared/schema';
 import { eq, and } from 'drizzle-orm';
 import axios from 'axios';
 import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
+
+interface ProjectWithClient {
+  id: number;
+  code: string;
+  name: string;
+  stage: string;
+  clientId: number;
+  clientName: string | null;
+  clientMobile: string | null;
+}
 
 export class FurniliTelegramBot {
   private bot: TelegramBot;
@@ -100,14 +110,14 @@ All your uploads will be automatically organized in the Furnili dashboard by pro
         return;
       }
 
-      let projectMessage = "📋 *Active Projects:*\n\n";
-      projectList.forEach((project, index) => {
-        projectMessage += `${index + 1}. *${project.code}* - ${project.name}\n`;
-        projectMessage += `   Client: ${project.clientName || 'Unknown'}\n`;
-        projectMessage += `   Stage: ${project.stage}\n\n`;
+      let projectMessage = "📋 *Active Projects:*\\n\\n";
+      projectList.forEach((project: ProjectWithClient, index: number) => {
+        projectMessage += `${index + 1}. *${project.code}* - ${project.name}\\n`;
+        projectMessage += `   Client: ${project.clientName || 'Unknown'}\\n`;
+        projectMessage += `   Stage: ${project.stage}\\n\\n`;
       });
 
-      projectMessage += "💡 Reply with `/select [number]` to choose a project\n";
+      projectMessage += "💡 Reply with `/select [number]` to choose a project\\n";
       projectMessage += "Example: `/select 1`";
 
       await this.bot.sendMessage(chatId, projectMessage, { parse_mode: 'Markdown' });
@@ -160,16 +170,7 @@ All your uploads will be automatically organized in the Furnili dashboard by pro
         })
         .where(eq(telegramUserSessions.telegramUserId, userId));
 
-      const successMessage = `✅ Project Selected: *${selectedProject.code}* - ${selectedProject.name}
-Client: ${selectedProject.clientName || 'Unknown'}
-
-📁 *Now choose what to upload:*
-• /recce - Site recce photos with measurements
-• /design - Design files and concepts  
-• /drawings - Technical drawings and plans
-• /notes - Text notes with attachments
-
-Just send the command and start uploading files!`;
+      const successMessage = `✅ Project Selected: *${selectedProject.code}* - ${selectedProject.name}\\nClient: ${selectedProject.clientName || 'Unknown'}\\n\\n📁 *Now choose what to upload:*\\n• /recce - Site recce photos with measurements\\n• /design - Design files and concepts\\n• /drawings - Technical drawings and plans\\n• /notes - Text notes with attachments\\n\\nJust send the command and start uploading files!`;
 
       await this.bot.sendMessage(chatId, successMessage, { parse_mode: 'Markdown' });
 
@@ -209,11 +210,11 @@ Just send the command and start uploading files!`;
         })
         .where(eq(telegramUserSessions.telegramUserId, userId));
 
-      const categoryMessages = {
-        recce: "📷 *Recce Mode Active*\n\nSend photos of the site with measurements and descriptions. Each photo will be saved under the Recce category.",
-        design: "🎨 *Design Mode Active*\n\nSend design files, concepts, and inspiration images. All files will be organized under Design category.", 
-        drawings: "📐 *Drawings Mode Active*\n\nSend technical drawings, plans, and architectural files. Files will be saved under Drawings category.",
-        notes: "📝 *Notes Mode Active*\n\nSend text notes with any attachments. Everything will be saved under Notes category."
+      const categoryMessages: { [key: string]: string } = {
+        recce: "📷 *Recce Mode Active*\\n\\nSend photos of the site with measurements and descriptions. Each photo will be saved under the Recce category.",
+        design: "🎨 *Design Mode Active*\\n\\nSend design files, concepts, and inspiration images. All files will be organized under Design category.", 
+        drawings: "📐 *Drawings Mode Active*\\n\\nSend technical drawings, plans, and architectural files. Files will be saved under Drawings category.",
+        notes: "📝 *Notes Mode Active*\\n\\nSend text notes with any attachments. Everything will be saved under Notes category."
       };
 
       await this.bot.sendMessage(chatId, categoryMessages[category], { parse_mode: 'Markdown' });
