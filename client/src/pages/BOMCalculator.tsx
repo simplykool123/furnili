@@ -2092,56 +2092,26 @@ export default function BOMCalculator() {
                     </div>
                   </div>
 
-                  {/* Technical Drawing - Enhanced */}
+                  {/* Technical Drawing */}
                   <div className="mb-4">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-                      {/* Enhanced SVG Drawing */}
-                      <Card className="p-2">
-                        <CardHeader className="pb-1">
-                          <CardTitle className="text-sm">Enhanced Technical Drawing</CardTitle>
-                        </CardHeader>
-                        <CardContent className="p-1">
-                          <FurnitureSVGRenderer 
-                            spec={bomDataToFurnitureSpec({
-                              unitType: form.getValues('unitType'),
-                              width: form.getValues('width'),
-                              height: form.getValues('height'),
-                              depth: form.getValues('depth'),
-                              partsConfig: form.getValues('partsConfig')
-                            })}
-                            showDimensions={true}
-                            className="h-auto"
-                          />
-                        </CardContent>
-                      </Card>
-                      
-                      {/* Original Technical Drawing */}
-                      <Card className="p-2">
-                        <CardHeader className="pb-1">
-                          <CardTitle className="text-sm">Detailed Drawing</CardTitle>
-                        </CardHeader>
-                        <CardContent className="p-1">
-                          <FurnitureTechnicalDrawing
-                            bomResult={bomResult}
-                            furnitureType={form.getValues('unitType')}
-                            dimensions={{
-                              width: form.getValues('width'),
-                              height: form.getValues('height'),
-                              depth: form.getValues('depth'),
-                              unitOfMeasure: form.getValues('unitOfMeasure') || 'mm'
-                            }}
-                            configuration={{
-                              shelves: form.getValues('partsConfig.shelfCount') || form.getValues('partsConfig.shelves') || 0,
-                              drawers: form.getValues('partsConfig.drawerCount') || form.getValues('partsConfig.drawers') || 0,
-                              shutters: form.getValues('partsConfig.shutterCount') || form.getValues('partsConfig.shutters') || 0,
-                              doors: form.getValues('partsConfig.doors') || 0,
-                              wardrobeType: form.getValues('partsConfig.wardrobeType') || 'openable',
-                              ...form.getValues('partsConfig')
-                            }}
-                          />
-                        </CardContent>
-                      </Card>
-                    </div>
+                    <FurnitureTechnicalDrawing
+                      bomResult={bomResult}
+                      furnitureType={form.getValues('unitType')}
+                      dimensions={{
+                        width: form.getValues('width'),
+                        height: form.getValues('height'),
+                        depth: form.getValues('depth'),
+                        unitOfMeasure: form.getValues('unitOfMeasure') || 'mm'
+                      }}
+                      configuration={{
+                        shelves: form.getValues('partsConfig.shelfCount') || form.getValues('partsConfig.shelves') || 0,
+                        drawers: form.getValues('partsConfig.drawerCount') || form.getValues('partsConfig.drawers') || 0,
+                        shutters: form.getValues('partsConfig.shutterCount') || form.getValues('partsConfig.shutters') || 0,
+                        doors: form.getValues('partsConfig.doors') || 0,
+                        wardrobeType: form.getValues('partsConfig.wardrobeType') || 'openable',
+                        ...form.getValues('partsConfig')
+                      }}
+                    />
                   </div>
 
                   {/* Consolidated Material Purchase List */}
@@ -2231,6 +2201,13 @@ export default function BOMCalculator() {
                             const wastage = parseFloat('10' || '10') / 100;
                             const sheetArea = sheetLength * sheetWidth;
                             
+                            // Use backend's optimized sheet count, not simple area calculation
+                            if (bomResult.sheetOptimization) {
+                              return bomResult.sheetOptimization.sheets.map((sheet) => (
+                                <div key={sheet.thickness}>• {sheet.count} sheets of {form.watch('boardType')} board ({sheet.thickness})</div>
+                              ));
+                            }
+                            // Fallback to thickness breakdown if no optimization data
                             return Object.entries(bomResult.boardAreaByThickness || {}).map(([thickness, area]) => (
                               <div key={thickness}>• {Math.ceil((area * (1 + wastage)) / sheetArea)} sheets of {form.watch('boardType')} board ({thickness})</div>
                             ));
