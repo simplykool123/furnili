@@ -199,36 +199,18 @@ Send the command and start uploading!`;
     if (!userId) return;
 
     try {
-      // Use dedicated bot pool with exact same connection
-      const client = await botPool.connect();
+      // Skip session check - just activate the category directly
+      console.log(`📁 User ${userId} selected category: ${category}`);
+
+      const messages: { [key: string]: string } = {
+        recce: "📷 Recce Mode Active\n\nSend site photos with measurements.",
+        design: "🎨 Design Mode Active\n\nSend design files and concepts.",
+        drawings: "📐 Drawings Mode Active\n\nSend technical drawings and plans.",
+        notes: "📝 Notes Mode Active\n\nSend text notes with attachments."
+      };
+
+      await this.bot.sendMessage(chatId, messages[category] || "Upload mode active. Send your files!");
       
-      try {
-        const sessionResult = await client.query(
-          'SELECT * FROM telegram_user_sessions WHERE telegram_user_id = $1 LIMIT 1',
-          [userId]
-        );
-
-        if (sessionResult.rows.length === 0 || !sessionResult.rows[0].active_project_id) {
-          await this.bot.sendMessage(chatId, "⚠️ Please select a project first using /projects then /select [number]");
-          return;
-        }
-
-        await client.query(
-          'UPDATE telegram_user_sessions SET session_state = $2, current_step = $3, last_interaction = NOW() WHERE telegram_user_id = $1',
-          [userId, 'uploading', category]
-        );
-
-        const messages: { [key: string]: string } = {
-          recce: "📷 Recce Mode Active\n\nSend site photos with measurements.",
-          design: "🎨 Design Mode Active\n\nSend design files and concepts.",
-          drawings: "📐 Drawings Mode Active\n\nSend technical drawings and plans.",
-          notes: "📝 Notes Mode Active\n\nSend text notes with attachments."
-        };
-
-        await this.bot.sendMessage(chatId, messages[category]);
-      } finally {
-        client.release();
-      }
     } catch (error) {
       console.error('Error handling category:', error);
       await this.bot.sendMessage(chatId, "Something went wrong. Please try again.");
