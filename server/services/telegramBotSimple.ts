@@ -1,5 +1,5 @@
 import TelegramBot from 'node-telegram-bot-api';
-import { db } from '../db.js';
+import { db, pool } from '../db.js';
 import { telegramUserSessions, projects, clients, projectFiles } from '@shared/schema';
 import { eq } from 'drizzle-orm';
 import axios from 'axios';
@@ -104,8 +104,8 @@ Quick Start:
     const projectNumber = parseInt(match[1]);
 
     try {
-      // Use raw SQL for project selection
-      const client = await db.$client.connect();
+      // Use the same database pool as the main application
+      const client = await pool.connect();
       try {
         const projectListResult = await client.query(`
           SELECT p.id, p.code, p.name, p.client_id, c.name as client_name
@@ -165,7 +165,7 @@ Send the command and start uploading!`;
 
     // Get current session state
     try {
-      const client = await db.$client.connect();
+      const client = await pool.connect();
       try {
         const sessionResult = await client.query(
           'SELECT session_state FROM telegram_user_sessions WHERE telegram_user_id = $1',
@@ -192,8 +192,8 @@ Send the command and start uploading!`;
     if (!userId) return;
 
     try {
-      // Use raw SQL for category selection
-      const client = await db.$client.connect();
+      // Use the same database pool as the main application
+      const client = await pool.connect();
       try {
         const sessionResult = await client.query(
           'SELECT * FROM telegram_user_sessions WHERE telegram_user_id = $1 LIMIT 1',
@@ -360,9 +360,11 @@ Send the command and start uploading!`;
 
   private async createOrUpdateSession(userId: string, username?: string, firstName?: string) {
     try {
-      // Use raw SQL to avoid Drizzle schema issues
-      const client = await db.$client.connect();
+      // Use the same database pool as the main application
+      const client = await pool.connect();
       try {
+        console.log(`🔍 Creating/updating session for user ${userId}`);
+        
         // Check if session exists
         const existingResult = await client.query(
           'SELECT * FROM telegram_user_sessions WHERE telegram_user_id = $1 LIMIT 1',
@@ -370,12 +372,14 @@ Send the command and start uploading!`;
         );
 
         if (existingResult.rows.length > 0) {
+          console.log(`✅ Updating existing session for user ${userId}`);
           // Update existing session
           await client.query(
             'UPDATE telegram_user_sessions SET telegram_username = $2, telegram_first_name = $3, last_interaction = NOW(), updated_at = NOW() WHERE telegram_user_id = $1',
             [userId, username, firstName]
           );
         } else {
+          console.log(`➕ Creating new session for user ${userId}`);
           // Create new session
           await client.query(
             'INSERT INTO telegram_user_sessions (telegram_user_id, telegram_username, telegram_first_name, session_state, last_interaction, created_at, updated_at) VALUES ($1, $2, $3, $4, NOW(), NOW(), NOW())',
@@ -387,6 +391,7 @@ Send the command and start uploading!`;
       }
     } catch (error) {
       console.error('Error managing session:', error);
+      console.error('Database error details:', error);
     }
   }
 
