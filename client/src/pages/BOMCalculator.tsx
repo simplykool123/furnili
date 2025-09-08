@@ -1059,6 +1059,7 @@ export default function BOMCalculator() {
                                 type="number"
                                 placeholder="2400"
                                 className="h-8 text-sm"
+                                tabIndex={2}
                                 value={field.value || ''}
                                 onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
                               />
@@ -1079,6 +1080,7 @@ export default function BOMCalculator() {
                                 type="number"
                                 placeholder="1200"
                                 className="h-8 text-sm"
+                                tabIndex={3}
                                 value={field.value || ''}
                                 onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
                               />
@@ -1099,6 +1101,7 @@ export default function BOMCalculator() {
                                 type="number"
                                 placeholder="600"
                                 className="h-8 text-sm"
+                                tabIndex={4}
                                 value={field.value || ''}
                                 onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
                               />
@@ -1122,7 +1125,7 @@ export default function BOMCalculator() {
                             <FormLabel className="text-xs">Board Type</FormLabel>
                             <Select onValueChange={field.onChange} defaultValue={field.value}>
                               <FormControl>
-                                <SelectTrigger className="h-8 text-xs">
+                                <SelectTrigger className="h-8 text-xs" tabIndex={5}>
                                   <SelectValue placeholder="Select board" />
                                 </SelectTrigger>
                               </FormControl>
@@ -1147,7 +1150,7 @@ export default function BOMCalculator() {
                             <FormLabel className="text-xs">Thickness</FormLabel>
                             <Select onValueChange={field.onChange} defaultValue={field.value}>
                               <FormControl>
-                                <SelectTrigger className="h-8 text-xs">
+                                <SelectTrigger className="h-8 text-xs" tabIndex={6}>
                                   <SelectValue />
                                 </SelectTrigger>
                               </FormControl>
@@ -1187,7 +1190,7 @@ export default function BOMCalculator() {
                               <FormControl>
                                 <SelectTrigger className={`h-8 text-xs ${
                                   isPreLamBoard ? 'opacity-50 cursor-not-allowed bg-muted' : ''
-                                }`}>
+                                }`} tabIndex={7}>
                                   <SelectValue placeholder={
                                     isPreLamBoard 
                                       ? "Laminate (Pre-Applied)" 
@@ -1366,6 +1369,26 @@ export default function BOMCalculator() {
                                       value={field.value || ''}
                                 onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
                                     />
+                                  </FormControl>
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={form.control}
+                              name="partsConfig.loft"
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel className="text-xs">Loft</FormLabel>
+                                  <FormControl>
+                                    <div className="flex items-center space-x-2 border rounded-md p-2">
+                                      <input
+                                        type="checkbox"
+                                        checked={field.value}
+                                        onChange={field.onChange}
+                                        className="h-4 w-4"
+                                      />
+                                      <span className="text-xs text-muted-foreground">Add loft</span>
+                                    </div>
                                   </FormControl>
                                 </FormItem>
                               )}
@@ -2063,44 +2086,14 @@ export default function BOMCalculator() {
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         {/* Board Sheets by Thickness */}
                         <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border shadow-sm">
-                          <h4 className="font-medium text-sm mb-2 text-gray-700 dark:text-gray-300">Board Sheets Required</h4>
-                          {(() => {
-                            // Use backend's optimized sheet calculation
-                            if (bomResult.sheetOptimization?.sheets) {
-                              return bomResult.sheetOptimization.sheets.map((sheet, index) => (
-                                <div key={`sheet-${index}`} className="mb-3 last:mb-0">
-                                  <div className="text-2xl font-bold text-blue-600 mb-1">
-                                    Sheet {index + 1}
-                                  </div>
-                                  <div className="text-xs text-gray-500 space-y-1">
-                                    <div>Efficiency: {Math.round((sheet.utilization || 0) * 100)}%</div>
-                                    <div>Panels: {sheet.panels || 0}</div>
-                                    <div>Waste: {(sheet.waste / 1000000).toFixed(2)} sq.ft</div>
-                                  </div>
-                                </div>
-                              ));
-                            }
-                            
-                            // Fallback to area-based calculation
-                            const sheetLength = parseFloat('8' || '8');
-                            const sheetWidth = parseFloat('4' || '4'); 
-                            const wastage = parseFloat('10' || '10') / 100;
-                            const sheetArea = sheetLength * sheetWidth;
-                            
-                            return Object.entries(bomResult.boardAreaByThickness || {}).map(([thickness, area]) => (
-                              <div key={`thickness-${thickness}`} className="mb-3 last:mb-0">
-                                <div className="text-2xl font-bold text-blue-600 mb-1">
-                                  {Math.ceil((area * (1 + wastage)) / sheetArea)} sheets ({thickness})
-                                </div>
-                                <div className="text-xs text-gray-500 space-y-1">
-                                  <div>Net Area: {area.toFixed(1)} sq.ft</div>
-                                  <div>With 10% wastage: {(area * (1 + wastage)).toFixed(1)} sq.ft</div>
-                                </div>
-                              </div>
-                            ));
-                          })()}
-                          <div className="text-xs text-gray-400 pt-2 border-t">
-                            Sheet: {'8' || '8'}'×{'4' || '4'}' ({(parseFloat('8' || '8') * parseFloat('4' || '4')).toFixed(0)} sq.ft)
+                          <h4 className="font-medium text-sm mb-2 text-gray-700 dark:text-gray-300">Total Sheets Required</h4>
+                          <div className="text-3xl font-bold text-blue-600 mb-1">
+                            {bomResult.sheetOptimization?.totalSheets || Math.ceil(bomResult.totalBoardArea / 32)} sheets
+                          </div>
+                          <div className="text-xs text-gray-500 space-y-1">
+                            <div>Efficiency: {Math.round((bomResult.sheetOptimization?.totalUtilization || 0.85) * 100)}%</div>
+                            <div>Total Area: {bomResult.totalBoardArea.toFixed(1)} sq.ft</div>
+                            <div>Standard 8'×4' sheets</div>
                           </div>
                         </div>
                         
@@ -2157,12 +2150,14 @@ export default function BOMCalculator() {
                               );
                             }
                             
-                            // Fallback calculation if no optimization data
+                            // Fallback calculation if no optimization data - no thickness breakdown
                             const sheetArea = 32; // 8' x 4' = 32 sq.ft
                             const wastage = 0.10; // 10%
-                            return Object.entries(bomResult.boardAreaByThickness || {}).map(([thickness, area]) => (
-                              <div key={`purchase-${thickness}`}>• {Math.ceil((area * (1 + wastage)) / sheetArea)} sheets of {form.watch('boardType')} board ({thickness})</div>
-                            ));
+                            const totalArea = Object.values(bomResult.boardAreaByThickness || {}).reduce((sum, area) => sum + area, 0);
+                            const totalSheets = Math.ceil((totalArea * (1 + wastage)) / sheetArea);
+                            return (
+                              <div key="purchase-total">• {totalSheets} sheets of {form.watch('boardType')} board (estimated)</div>
+                            );
                           })()}
                           {bomResult.totalEdgeBanding2mm > 0 && (
                             <div>• {Math.ceil((bomResult.totalEdgeBanding2mm * 0.3048 * 1.05) / 50)} rolls of 2mm edge banding</div>

@@ -431,11 +431,13 @@ export class AdvancedCuttingOptimizer {
 
   private updateSheetStats(sheet: OptimizedSheet): OptimizedSheet {
     const totalSheetArea = sheet.width * sheet.height;
+    // Use actual placed dimensions (width × height) rather than original dimensions
     sheet.usedArea = sheet.placedPanels.reduce((sum, panel) => 
-      sum + (panel.originalWidth * panel.originalHeight), 0
+      sum + (panel.width * panel.height), 0
     );
-    sheet.wasteArea = totalSheetArea - sheet.usedArea;
-    sheet.utilization = sheet.usedArea / totalSheetArea;
+    // Ensure waste area is never negative and utilization never exceeds 100%
+    sheet.wasteArea = Math.max(totalSheetArea - sheet.usedArea, 0);
+    sheet.utilization = Math.min(sheet.usedArea / totalSheetArea, 1.0); // Cap at 100%
     
     return sheet;
   }
@@ -447,7 +449,7 @@ export class AdvancedCuttingOptimizer {
   private calculateTotalUtilization(sheets: OptimizedSheet[]): number {
     const totalArea = sheets.reduce((sum, sheet) => sum + (sheet.width * sheet.height), 0);
     const totalUsed = sheets.reduce((sum, sheet) => sum + sheet.usedArea, 0);
-    return totalArea > 0 ? totalUsed / totalArea : 0;
+    return totalArea > 0 ? Math.min(totalUsed / totalArea, 1.0) : 0; // Cap at 100%
   }
 }
 
