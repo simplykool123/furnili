@@ -1262,9 +1262,10 @@ export default function ProjectDetail() {
 
     // Handle assignment - either to a user or to "other" person
     if (data.assignedTo === "other") {
-      taskData.assignedToOther = data.assignedToOther;
+      taskData.assignedToOther = data.assignedToOther || null;
     } else if (data.assignedTo && data.assignedTo !== "" && data.assignedTo !== "unassigned") {
-      taskData.assignedTo = parseInt(data.assignedTo) || null;
+      const parsed = parseInt(data.assignedTo);
+      taskData.assignedTo = isNaN(parsed) ? null : parsed;
     }
 
     if (editingTask) {
@@ -3731,16 +3732,16 @@ export default function ProjectDetail() {
           <Form {...noteForm}>
             <form
               onSubmit={noteForm.handleSubmit(handleNoteCreate)}
-              className="space-y-4"
+              className="space-y-3"
             >
               <FormField
                 control={noteForm.control}
                 name="title"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Title</FormLabel>
+                    <FormLabel className="text-xs">Title</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter note title..." {...field} />
+                      <Input placeholder="Enter note title..." className="h-8" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -3751,9 +3752,9 @@ export default function ProjectDetail() {
                 name="content"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Note *</FormLabel>
+                    <FormLabel className="text-xs">Note *</FormLabel>
                     <FormControl>
-                      <Textarea placeholder="Enter your note..." {...field} />
+                      <Textarea placeholder="Enter your note..." className="min-h-[60px]" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -3764,10 +3765,10 @@ export default function ProjectDetail() {
                 name="type"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Note Type</FormLabel>
+                    <FormLabel className="text-xs">Note Type</FormLabel>
                     <Select value={field.value} onValueChange={field.onChange}>
                       <FormControl>
-                        <SelectTrigger>
+                        <SelectTrigger className="h-8">
                           <SelectValue placeholder="Select note type" />
                         </SelectTrigger>
                       </FormControl>
@@ -3804,7 +3805,7 @@ export default function ProjectDetail() {
         open={isCommunicationDialogOpen}
         onOpenChange={setIsCommunicationDialogOpen}
       >
-        <DialogContent>
+        <DialogContent className="max-w-[90vw] sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>Log Client Communication</DialogTitle>
             <DialogDescription>
@@ -3812,16 +3813,16 @@ export default function ProjectDetail() {
             </DialogDescription>
           </DialogHeader>
           <Form {...communicationForm}>
-            <form className="space-y-4">
+            <form className="space-y-3">
               <FormField
                 control={communicationForm.control}
                 name="type"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Communication Type</FormLabel>
+                    <FormLabel className="text-xs">Communication Type</FormLabel>
                     <Select value={field.value} onValueChange={field.onChange}>
                       <FormControl>
-                        <SelectTrigger>
+                        <SelectTrigger className="h-8">
                           <SelectValue placeholder="Select communication type" />
                         </SelectTrigger>
                       </FormControl>
@@ -3841,10 +3842,11 @@ export default function ProjectDetail() {
                 name="content"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Communication Details</FormLabel>
+                    <FormLabel className="text-xs">Communication Details</FormLabel>
                     <FormControl>
                       <Textarea
                         placeholder="Enter communication details..."
+                        className="min-h-[60px]"
                         {...field}
                       />
                     </FormControl>
@@ -3852,15 +3854,15 @@ export default function ProjectDetail() {
                   </FormItem>
                 )}
               />
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <FormField
                   control={communicationForm.control}
                   name="contactPerson"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Contact Person</FormLabel>
+                      <FormLabel className="text-xs">Contact Person</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter contact person" {...field} />
+                        <Input placeholder="Enter contact person" className="h-8" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -3897,7 +3899,7 @@ export default function ProjectDetail() {
 
       {/* Upload Files Dialog - Matching Mockup Design */}
       <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="max-w-[90vw] sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="text-lg font-semibold">
               Upload Files
@@ -3908,7 +3910,7 @@ export default function ProjectDetail() {
           </DialogHeader>
           <Form {...uploadForm}>
             <form
-              className="space-y-4"
+              className="space-y-3"
               onSubmit={uploadForm.handleSubmit(handleFileUpload)}
             >
               <FormField
@@ -3916,12 +3918,12 @@ export default function ProjectDetail() {
                 name="type"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-sm font-medium text-gray-700">
+                    <FormLabel className="text-xs font-medium text-gray-700">
                       Type <span className="text-red-500">*</span>
                     </FormLabel>
                     <Select value={field.value} onValueChange={field.onChange}>
                       <FormControl>
-                        <SelectTrigger className="w-full bg-gray-50 border-gray-200">
+                        <SelectTrigger className="w-full bg-gray-50 border-gray-200 h-8">
                           <SelectValue placeholder="Select file type" />
                         </SelectTrigger>
                       </FormControl>
@@ -3946,13 +3948,13 @@ export default function ProjectDetail() {
                 name="title"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-sm font-medium text-gray-700">
+                    <FormLabel className="text-xs font-medium text-gray-700">
                       Title <span className="text-red-500">*</span>
                     </FormLabel>
                     <FormControl>
                       <Input
                         placeholder="Enter file title"
-                        className="w-full bg-gray-50 border-gray-200"
+                        className="w-full bg-gray-50 border-gray-200 h-8"
                         {...field}
                       />
                     </FormControl>
