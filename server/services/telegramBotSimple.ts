@@ -379,7 +379,7 @@ Send the command and start uploading!`;
     
     const uniqueName = crypto.randomBytes(8).toString('hex');
     const fileName = `telegram_${type}_${uniqueName}${extension}`;
-    const filePath = `uploads/telegram/${fileName}`;
+    const filePath = `uploads/projects/${fileName}`;
 
     // Ensure directory exists
     const uploadDir = path.dirname(filePath);
