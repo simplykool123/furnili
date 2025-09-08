@@ -570,6 +570,25 @@ export default function Dashboard() {
             </CardContent>
           </Card>
 
+          {/* Check In/Out Button for Managers */}
+          {currentUser?.role === 'manager' && (
+            <Card className="hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-green-50 to-green-100 border-green-200 cursor-pointer" onClick={handleCheckInOut}>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-bold text-green-900">
+                  {hasCheckedInToday ? 'Check Out' : 'Check In'}
+                </CardTitle>
+                <div className="p-2 bg-green-500 rounded-full">
+                  {hasCheckedInToday ? <LogOut className="h-5 w-5 text-white" /> : <LogIn className="h-5 w-5 text-white" />}
+                </div>
+              </CardHeader>
+              <CardContent className="pb-3 pt-1">
+                <div className="text-sm font-medium text-green-700">
+                  {hasCheckedInToday ? 'End your work day' : 'Start your work day'}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           <Card className="hover:shadow-lg hover:scale-[1.02] transition-all duration-300 border-l-4 border-l-orange-500 bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200 cursor-pointer group" onClick={() => setLocation('/attendance')}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-bold text-orange-900 group-hover:text-orange-700">Today's Attendance</CardTitle>
