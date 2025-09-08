@@ -22,13 +22,15 @@ const userModes = new Map<string, string>();
 const userProjects = new Map<string, number>();
 const userStates = new Map<string, string>(); // Track user authentication state
 
+// No session timeouts - permanent authentication after first verification
+
 export class FurniliTelegramBot {
   private bot: TelegramBot;
   
   constructor(token: string) {
     this.bot = new TelegramBot(token, { polling: true });
     this.setupHandlers();
-    console.log('🤖 Furnili Telegram Bot initialized and polling');
+    console.log('🤖 Furnili Telegram Bot initialized - permanent authentication');
   }
 
   private setupHandlers() {
@@ -169,6 +171,8 @@ Example: 9876543210`);
       return;
     }
 
+
+
     try {
       // Use direct database connection like other methods
       const client = await botPool.connect();
@@ -287,6 +291,8 @@ Send the command and start uploading!`;
       return;
     }
 
+
+
     // Check if it's a simple number for project selection
     const projectNumber = parseInt(text);
     if (!isNaN(projectNumber)) {
@@ -337,6 +343,9 @@ Example: 9876543210`);
     const isAuthenticated = await this.authenticateUserByPhone(userId, cleanPhone);
     
     if (isAuthenticated) {
+      // Create session record after successful authentication
+      await this.createOrUpdateSession(userId, msg.from?.username, msg.from?.first_name);
+      
       const userInfo = await this.getSystemUserInfo(userId);
       userStates.delete(userId); // Clear authentication state
       
@@ -406,6 +415,24 @@ Once added, please try /start again.`);
     const userId = msg.from?.id.toString();
     if (!userId) return;
 
+    // Check authentication and session
+    const isAuthenticated = await this.checkUserAuthentication(userId);
+    if (!isAuthenticated) {
+      await this.bot.sendMessage(chatId, "🔐 Please authenticate first with /start command.");
+      return;
+    }
+
+    const sessionExpired = await this.isSessionExpired(userId);
+    if (sessionExpired) {
+      userModes.delete(userId);
+      userProjects.delete(userId);
+      userStates.delete(userId);
+      await this.bot.sendMessage(chatId, `⏰ Your session has expired after ${SESSION_TIMEOUT_MINUTES} minutes of inactivity.\n\nPlease send /start to authenticate again.`);
+      return;
+    }
+
+    await this.updateLastInteraction(userId);
+
     try {
       // Store user's current mode in memory
       userModes.set(userId, category);
@@ -430,6 +457,24 @@ Once added, please try /start again.`);
     const chatId = msg.chat.id;
     const userId = msg.from?.id.toString();
     if (!userId || !msg.photo) return;
+
+    // Check authentication and session
+    const isAuthenticated = await this.checkUserAuthentication(userId);
+    if (!isAuthenticated) {
+      await this.bot.sendMessage(chatId, "🔐 Please authenticate first with /start command.");
+      return;
+    }
+
+    const sessionExpired = await this.isSessionExpired(userId);
+    if (sessionExpired) {
+      userModes.delete(userId);
+      userProjects.delete(userId);
+      userStates.delete(userId);
+      await this.bot.sendMessage(chatId, `⏰ Your session has expired after ${SESSION_TIMEOUT_MINUTES} minutes of inactivity.\n\nPlease send /start to authenticate again.`);
+      return;
+    }
+
+    await this.updateLastInteraction(userId);
 
     try {
       const projectId = userProjects.get(userId) || 1;
@@ -653,30 +698,25 @@ Once added, please try /start again.`);
       const client = await botPool.connect();
       
       try {
-      
-      // First test the table exists
-      const tableCheck = await client.query("SELECT 1 FROM telegram_user_sessions LIMIT 1");
-      console.log(`✅ Table exists, found ${tableCheck.rowCount} rows`);
-      
-      // Check if session exists
-      const existing = await client.query(
-        'SELECT * FROM telegram_user_sessions WHERE telegram_user_id = $1 LIMIT 1',
-        [userId]
-      );
+        // Check if session exists
+        const existing = await client.query(
+          'SELECT * FROM telegram_user_sessions WHERE telegram_user_id = $1 LIMIT 1',
+          [userId]
+        );
 
-      if (existing.rows.length > 0) {
-        console.log(`✅ Updating existing session for user ${userId}`);
-        await client.query(
-          'UPDATE telegram_user_sessions SET telegram_username = $2, telegram_first_name = $3, last_interaction = NOW(), updated_at = NOW() WHERE telegram_user_id = $1',
-          [userId, username, firstName]
-        );
-      } else {
-        console.log(`➕ Creating new session for user ${userId}`);
-        await client.query(
-          'INSERT INTO telegram_user_sessions (telegram_user_id, telegram_username, telegram_first_name, session_state) VALUES ($1, $2, $3, $4)',
-          [userId, username, firstName, 'idle']
-        );
-      }
+        if (existing.rows.length > 0) {
+          console.log(`✅ Updating existing session for user ${userId}`);
+          await client.query(
+            'UPDATE telegram_user_sessions SET telegram_username = $2, telegram_first_name = $3, last_interaction = NOW(), updated_at = NOW() WHERE telegram_user_id = $1',
+            [userId, username, firstName]
+          );
+        } else {
+          console.log(`➕ Creating new session for user ${userId}`);
+          await client.query(
+            'INSERT INTO telegram_user_sessions (telegram_user_id, telegram_username, telegram_first_name, session_state, last_interaction) VALUES ($1, $2, $3, $4, NOW())',
+            [userId, username, firstName, 'authenticated']
+          );
+        }
       } finally {
         client.release();
       }
@@ -704,6 +744,7 @@ Once added, please try /start again.`);
     };
     return names[category] || 'General';
   }
+
 
   public stop() {
     this.bot.stopPolling();
