@@ -434,7 +434,7 @@ function ProjectFinancials({ projectId }: { projectId: string }) {
           open={!!selectedExpense}
           onOpenChange={() => setSelectedExpense(null)}
         >
-          <DialogContent className="sm:max-w-[500px]">
+          <DialogContent className="max-w-[90vw] sm:max-w-[500px]">
             <DialogHeader>
               <DialogTitle>Expense Details</DialogTitle>
             </DialogHeader>
@@ -3553,7 +3553,7 @@ export default function ProjectDetail() {
           taskForm.reset();
         }
       }}>
-        <DialogContent>
+        <DialogContent className="max-w-[90vw] sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>{editingTask ? 'Edit Task' : 'Add New Task'}</DialogTitle>
             <DialogDescription>
@@ -3561,15 +3561,15 @@ export default function ProjectDetail() {
             </DialogDescription>
           </DialogHeader>
           <Form {...taskForm}>
-            <form onSubmit={taskForm.handleSubmit(handleTaskSubmit)} className="space-y-4">
+            <form onSubmit={taskForm.handleSubmit(handleTaskSubmit)} className="space-y-3">
               <FormField
                 control={taskForm.control}
                 name="title"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Task Title</FormLabel>
+                    <FormLabel className="text-xs">Task Title</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter task title" {...field} />
+                      <Input placeholder="Enter task title" className="h-8" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -3580,10 +3580,11 @@ export default function ProjectDetail() {
                 name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Description</FormLabel>
+                    <FormLabel className="text-xs">Description</FormLabel>
                     <FormControl>
                       <Textarea
                         placeholder="Enter task description"
+                        className="min-h-[60px]"
                         {...field}
                       />
                     </FormControl>
@@ -3591,16 +3592,16 @@ export default function ProjectDetail() {
                   </FormItem>
                 )}
               />
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <FormField
                   control={taskForm.control}
                   name="assignedTo"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Assigned To</FormLabel>
+                      <FormLabel className="text-xs">Assigned To</FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
-                          <SelectTrigger>
+                          <SelectTrigger className="h-8">
                             <SelectValue placeholder="Select user" />
                           </SelectTrigger>
                         </FormControl>
@@ -3624,9 +3625,9 @@ export default function ProjectDetail() {
                     name="assignedToOther"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Other Person Name</FormLabel>
+                        <FormLabel className="text-xs">Other Person Name</FormLabel>
                         <FormControl>
-                          <Input placeholder="Enter person name" {...field} />
+                          <Input placeholder="Enter person name" className="h-8" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -3638,28 +3639,28 @@ export default function ProjectDetail() {
                   name="dueDate"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Due Date</FormLabel>
+                      <FormLabel className="text-xs">Due Date</FormLabel>
                       <FormControl>
-                        <Input type="date" {...field} />
+                        <Input type="date" className="h-8" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <FormField
                   control={taskForm.control}
                   name="priority"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Priority</FormLabel>
+                      <FormLabel className="text-xs">Priority</FormLabel>
                       <Select
                         value={field.value}
                         onValueChange={field.onChange}
                       >
                         <FormControl>
-                          <SelectTrigger>
+                          <SelectTrigger className="h-8">
                             <SelectValue placeholder="Select priority" />
                           </SelectTrigger>
                         </FormControl>
@@ -3678,13 +3679,13 @@ export default function ProjectDetail() {
                   name="status"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Status</FormLabel>
+                      <FormLabel className="text-xs">Status</FormLabel>
                       <Select
                         value={field.value}
                         onValueChange={field.onChange}
                       >
                         <FormControl>
-                          <SelectTrigger>
+                          <SelectTrigger className="h-8">
                             <SelectValue placeholder="Select status" />
                           </SelectTrigger>
                         </FormControl>
@@ -3720,7 +3721,7 @@ export default function ProjectDetail() {
 
       {/* Note Dialog */}
       <Dialog open={isNoteDialogOpen} onOpenChange={setIsNoteDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-[90vw] sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>Add Project Note</DialogTitle>
             <DialogDescription>
