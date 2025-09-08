@@ -2750,7 +2750,7 @@ export default function ProjectDetail() {
                                           </div>
 
                                           {/* Display attachment previews */}
-                                          <div className="grid grid-cols-1 gap-2">
+                                          <div className={`grid gap-2 ${log.attachments.length > 1 ? 'grid-cols-2 sm:grid-cols-3' : 'grid-cols-1'}`}>
                                             {log.attachments.map(
                                               (
                                                 attachment: any,

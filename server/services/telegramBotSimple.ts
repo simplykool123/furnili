@@ -304,20 +304,47 @@ Send the command and start uploading!`;
           const title = caption || `Photo attachment - ${new Date().toLocaleDateString()}`;
           const description = caption || 'Photo uploaded via Telegram';
 
-          await client.query(
-            'INSERT INTO project_logs (project_id, log_type, title, description, created_by, attachments, is_important) VALUES ($1, $2, $3, $4, $5, $6, $7)',
-            [
-              projectId,
-              'note', // logType for notes
-              title,
-              description,
-              7, // Use existing user ID
-              [attachment], // Photo attachment
-              false // Not important by default
-            ]
+          // Check if there's an existing note from the same user within the last 5 minutes
+          const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+          const recentNote = await client.query(
+            'SELECT id, attachments, title, description FROM project_logs WHERE project_id = $1 AND created_by = $2 AND log_type = $3 AND created_at > $4 ORDER BY created_at DESC LIMIT 1',
+            [projectId, 7, 'note', fiveMinutesAgo]
           );
 
-          await this.bot.sendMessage(chatId, `✅ Photo saved to Notes tab!${caption ? `\nCaption: ${caption}` : ''}`);
+          if (recentNote.rows.length > 0 && recentNote.rows[0].attachments) {
+            // Append to existing note
+            const existingNote = recentNote.rows[0];
+            const existingAttachments = existingNote.attachments || [];
+            const updatedAttachments = [...existingAttachments, attachment];
+
+            // Update the existing note with the new attachment
+            await client.query(
+              'UPDATE project_logs SET attachments = $1, updated_at = NOW() WHERE id = $2',
+              [updatedAttachments, existingNote.id]
+            );
+
+            const attachmentCount = updatedAttachments.length;
+            await this.bot.sendMessage(
+              chatId, 
+              `✅ Photo added to existing note! (${attachmentCount} images total)${caption ? `\nCaption: ${caption}` : ''}`
+            );
+          } else {
+            // Create new note
+            await client.query(
+              'INSERT INTO project_logs (project_id, log_type, title, description, created_by, attachments, is_important) VALUES ($1, $2, $3, $4, $5, $6, $7)',
+              [
+                projectId,
+                'note', // logType for notes
+                title,
+                description,
+                7, // Use existing user ID
+                [attachment], // Photo attachment
+                false // Not important by default
+              ]
+            );
+
+            await this.bot.sendMessage(chatId, `✅ Photo saved to Notes tab!${caption ? `\nCaption: ${caption}` : ''}`);
+          }
         } else {
           // Save to Files tab (project_files) for other modes
           const category = this.mapCategory(currentMode);
