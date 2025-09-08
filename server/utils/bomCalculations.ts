@@ -953,13 +953,37 @@ const generateWardrobePanels = (input: CalculationInput, exposedSides: boolean =
     });
   }
 
-  // Drawer components - corrected calculations
+  // 🗂️ DRAWER COMPONENTS - SIDE-BY-SIDE LAYOUT FOR WIDE WARDROBES
   if (partsConfig.drawers > 0) {
     const drawerHeight = 150; // Standard drawer height
     
-    // Calculate proper drawer dimensions
-    const bayWidth = internalWidth; // Assuming single bay for now
-    const drawerOuterWidth = bayWidth - (2 * slideColorance);
+    // ✅ SIDE-BY-SIDE DRAWER LOGIC
+    const isWideWardrobe = width > 600; // More than 2ft gets side-by-side drawers
+    let drawersPerRow, drawerRows;
+    
+    if (isWideWardrobe && partsConfig.drawers >= 2) {
+      if (partsConfig.drawers === 2) {
+        drawersPerRow = 2;
+        drawerRows = 1;
+      } else if (partsConfig.drawers === 4) {
+        drawersPerRow = 2;
+        drawerRows = 2; // 2x2 arrangement
+      } else {
+        // For other counts, try to balance
+        drawersPerRow = Math.min(Math.ceil(partsConfig.drawers / 2), 2);
+        drawerRows = Math.ceil(partsConfig.drawers / drawersPerRow);
+      }
+    } else {
+      // Single column for narrow wardrobes or single drawer
+      drawersPerRow = 1;
+      drawerRows = partsConfig.drawers;
+    }
+    
+    console.log(`🗂️ Drawer Layout: ${partsConfig.drawers} total → ${drawerRows} rows × ${drawersPerRow} per row (Wide wardrobe: ${isWideWardrobe})`);
+    
+    // Calculate individual drawer dimensions
+    const bayWidth = internalWidth;
+    const drawerOuterWidth = (bayWidth - (drawersPerRow + 1) * slideColorance) / drawersPerRow;
     const drawerOuterDepth = internalDepth - backClearance;
     
     // Drawer bottom (inset inside the box)
@@ -969,7 +993,7 @@ const generateWardrobePanels = (input: CalculationInput, exposedSides: boolean =
     panels.push({
       panel: "Drawer Bottom",
       qty: partsConfig.drawers,
-      size: `${drawerBottomWidth}mm x ${drawerBottomDepth}mm`,
+      size: `${Math.round(drawerBottomWidth)}mm x ${Math.round(drawerBottomDepth)}mm`,
       length: drawerBottomWidth,
       width: drawerBottomDepth,
       material: `${bottomThickness}mm ${boardType.toUpperCase()}`, // 6mm bottom thickness
@@ -982,7 +1006,7 @@ const generateWardrobePanels = (input: CalculationInput, exposedSides: boolean =
     panels.push({
       panel: "Drawer Front",
       qty: partsConfig.drawers,
-      size: `${drawerOuterWidth}mm x ${drawerHeight}mm`,
+      size: `${Math.round(drawerOuterWidth)}mm x ${drawerHeight}mm`,
       length: drawerOuterWidth,
       width: drawerHeight,
       material: `${boxThickness}mm ${boardType.toUpperCase()}`,
@@ -995,7 +1019,7 @@ const generateWardrobePanels = (input: CalculationInput, exposedSides: boolean =
     panels.push({
       panel: "Drawer Back",
       qty: partsConfig.drawers,
-      size: `${drawerOuterWidth}mm x ${drawerHeight}mm`,
+      size: `${Math.round(drawerOuterWidth)}mm x ${drawerHeight}mm`,
       length: drawerOuterWidth,
       width: drawerHeight,
       material: `${boxThickness}mm ${boardType.toUpperCase()}`,
@@ -1008,7 +1032,7 @@ const generateWardrobePanels = (input: CalculationInput, exposedSides: boolean =
     panels.push({
       panel: "Drawer Side",
       qty: partsConfig.drawers * 2,
-      size: `${drawerOuterDepth}mm x ${drawerHeight}mm`,
+      size: `${Math.round(drawerOuterDepth)}mm x ${drawerHeight}mm`,
       length: drawerOuterDepth,
       width: drawerHeight,
       material: `${boxThickness}mm ${boardType.toUpperCase()}`,

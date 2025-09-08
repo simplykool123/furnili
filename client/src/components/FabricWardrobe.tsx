@@ -110,79 +110,140 @@ const FabricWardrobe: React.FC<FabricWardrobeProps> = ({
 
     // 🗂️ INTERIOR LAYOUT
 
-    // Calculate layout sections
-    const drawerHeight = Math.min(200 * scale, scaledH / (drawers + shelves + 2));
-    const drawerSectionHeight = drawers * drawerHeight;
-    const shelfSectionHeight = scaledH - drawerSectionHeight;
-    const shelfSpacing = shelves > 0 ? shelfSectionHeight / shelves : 0;
-
-    // Add drawers at bottom
-    for (let i = 0; i < drawers; i++) {
-      const drawerY = scaledD + scaledH - (i + 1) * drawerHeight;
-      
-      // Drawer box
-      const drawer = new Rect({
-        left: 10,
-        top: drawerY,
-        width: scaledW - 20,
-        height: drawerHeight - 5,
-        fill: '#DEB887',
-        stroke: '#8B4513',
-        strokeWidth: 1
-      });
-      wardrobeGroup.add(drawer);
-
-      // Drawer handle
-      const handle = new Rect({
-        left: scaledW - 25,
-        top: drawerY + drawerHeight/2 - 3,
-        width: 12,
-        height: 6,
-        fill: '#4A4A4A',
-        rx: 2,
-        ry: 2
-      });
-      wardrobeGroup.add(handle);
-
-      // Drawer label
-      const drawerLabel = new Text(`D${i + 1}`, {
-        left: 20,
-        top: drawerY + drawerHeight/2 - 5,
-        fontSize: 10,
-        fill: '#666',
-        fontFamily: 'Arial'
-      });
-      wardrobeGroup.add(drawerLabel);
+    // 🗂️ CALCULATE SIDE-BY-SIDE DRAWER LAYOUT
+    const isWideWardrobe = width > 600; // More than 2ft gets side-by-side drawers
+    let drawersPerRow, drawerRows;
+    
+    if (isWideWardrobe && drawers >= 2) {
+      if (drawers === 2) {
+        drawersPerRow = 2;
+        drawerRows = 1;
+      } else if (drawers === 4) {
+        drawersPerRow = 2;
+        drawerRows = 2; // 2x2 arrangement
+      } else {
+        // For other counts, try to balance
+        drawersPerRow = Math.min(Math.ceil(drawers / 2), 2);
+        drawerRows = Math.ceil(drawers / drawersPerRow);
+      }
+    } else {
+      // Single column for narrow wardrobes or single drawer
+      drawersPerRow = 1;
+      drawerRows = drawers;
     }
 
-    // Add shelves above drawers
-    for (let i = 0; i <= shelves; i++) {
-      const shelfY = scaledD + i * shelfSpacing;
-      
-      if (shelfY < scaledD + shelfSectionHeight) {
+    // Calculate layout sections with center positioning for drawers
+    const drawerHeight = Math.min(180 * scale, scaledH / (drawerRows + shelves + 2));
+    const totalDrawerSectionHeight = drawerRows * drawerHeight;
+    
+    // Position drawers in center vertically
+    const centerY = scaledD + scaledH / 2;
+    const drawerStartY = centerY - totalDrawerSectionHeight / 2;
+    
+    // Calculate shelf sections (above and below drawers)
+    const upperShelfHeight = drawerStartY - scaledD;
+    const lowerShelfHeight = scaledD + scaledH - (drawerStartY + totalDrawerSectionHeight);
+    
+    const upperShelves = Math.floor(shelves / 2);
+    const lowerShelves = shelves - upperShelves;
+    
+    // Add drawers with side-by-side layout
+    for (let row = 0; row < drawerRows; row++) {
+      for (let col = 0; col < drawersPerRow; col++) {
+        const drawerIndex = row * drawersPerRow + col;
+        if (drawerIndex >= drawers) break;
+        
+        const drawerY = drawerStartY + row * drawerHeight;
+        const drawerWidth = (scaledW - 20) / drawersPerRow;
+        const drawerX = 10 + col * drawerWidth;
+        
+        // Drawer box
+        const drawer = new Rect({
+          left: drawerX,
+          top: drawerY,
+          width: drawerWidth - 5,
+          height: drawerHeight - 5,
+          fill: '#DEB887',
+          stroke: '#8B4513',
+          strokeWidth: 1
+        });
+        wardrobeGroup.add(drawer);
+
+        // Drawer handle
+        const handle = new Rect({
+          left: drawerX + drawerWidth - 20,
+          top: drawerY + drawerHeight/2 - 3,
+          width: 12,
+          height: 6,
+          fill: '#4A4A4A',
+          rx: 2,
+          ry: 2
+        });
+        wardrobeGroup.add(handle);
+
+        // Drawer label
+        const drawerLabel = new Text(`D${drawerIndex + 1}`, {
+          left: drawerX + 5,
+          top: drawerY + drawerHeight/2 - 5,
+          fontSize: 9,
+          fill: '#666',
+          fontFamily: 'Arial'
+        });
+        wardrobeGroup.add(drawerLabel);
+      }
+    }
+
+    // Add upper shelves (above drawers)
+    if (upperShelves > 0) {
+      const upperShelfSpacing = upperShelfHeight / (upperShelves + 1);
+      for (let i = 0; i < upperShelves; i++) {
+        const shelfY = scaledD + (i + 1) * upperShelfSpacing;
+        
         const shelf = new Line([5, shelfY, scaledW - 5, shelfY], {
           stroke: '#8B4513',
           strokeWidth: 2
         });
         wardrobeGroup.add(shelf);
 
-        // Add shelf label for middle shelves
-        if (i > 0 && i < shelves) {
-          const shelfLabel = new Text(`S${i}`, {
-            left: 15,
-            top: shelfY + 10,
-            fontSize: 9,
-            fill: '#888',
-            fontFamily: 'Arial'
-          });
-          wardrobeGroup.add(shelfLabel);
-        }
+        const shelfLabel = new Text(`S${i + 1}`, {
+          left: 15,
+          top: shelfY + 5,
+          fontSize: 8,
+          fill: '#888',
+          fontFamily: 'Arial'
+        });
+        wardrobeGroup.add(shelfLabel);
+      }
+    }
+    
+    // Add lower shelves (below drawers)
+    if (lowerShelves > 0) {
+      const lowerShelfSpacing = lowerShelfHeight / (lowerShelves + 1);
+      const lowerShelfStartY = drawerStartY + totalDrawerSectionHeight;
+      
+      for (let i = 0; i < lowerShelves; i++) {
+        const shelfY = lowerShelfStartY + (i + 1) * lowerShelfSpacing;
+        
+        const shelf = new Line([5, shelfY, scaledW - 5, shelfY], {
+          stroke: '#8B4513',
+          strokeWidth: 2
+        });
+        wardrobeGroup.add(shelf);
+
+        const shelfLabel = new Text(`S${upperShelves + i + 1}`, {
+          left: 15,
+          top: shelfY + 5,
+          fontSize: 8,
+          fill: '#888',
+          fontFamily: 'Arial'
+        });
+        wardrobeGroup.add(shelfLabel);
       }
     }
 
-    // Add hanging rod (if not too many shelves)
-    if (shelves <= 2 && shelfSectionHeight > 100) {
-      const rodY = scaledD + shelfSpacing * 0.7;
+    // Add hanging rod in upper section (if space available)
+    if (upperShelves <= 1 && upperShelfHeight > 80) {
+      const rodY = scaledD + upperShelfHeight * 0.6;
       const hangingRod = new Line([15, rodY, scaledW - 15, rodY], {
         stroke: '#C0C0C0',
         strokeWidth: 3
@@ -331,9 +392,13 @@ const FabricWardrobe: React.FC<FabricWardrobeProps> = ({
     });
     wardrobeGroup.add(depthText);
 
-    // Add specifications text
+    // Add specifications text with drawer layout info
+    const drawerLayoutInfo = isWideWardrobe && drawers >= 2 
+      ? ` (${drawerRows}×${drawersPerRow} layout)` 
+      : '';
+    
     const specs = new Text(
-      `Specifications:\nShelves: ${shelves} | Drawers: ${drawers}\nShutters: ${shutters} | Type: ${wardrobeType.toUpperCase()}${mirror ? ' + MIRROR' : ''}`,
+      `Specifications:\nShelves: ${shelves} | Drawers: ${drawers}${drawerLayoutInfo}\nShutters: ${shutters} | Type: ${wardrobeType.toUpperCase()}${mirror ? ' + MIRROR' : ''}`,
       {
         left: 20,
         top: scaledH + scaledD + 50,
