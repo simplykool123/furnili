@@ -73,33 +73,35 @@ Quick Start:
     const chatId = msg.chat.id;
 
     try {
-      const projectList = await db
-        .select({
-          id: projects.id,
-          code: projects.code,
-          name: projects.name,
-          stage: projects.stage,
-          clientName: clients.name,
-        })
-        .from(projects)
-        .leftJoin(clients, eq(projects.clientId, clients.id))
-        .where(eq(projects.isActive, true))
-        .orderBy(projects.createdAt);
+      // Use direct database connection like other methods
+      const client = await botPool.connect();
+      try {
+        const result = await client.query(`
+          SELECT p.id, p.code, p.name, p.stage, c.name as client_name
+          FROM projects p
+          LEFT JOIN clients c ON p.client_id = c.id
+          WHERE p.is_active = true
+          ORDER BY p.created_at
+        `);
+        const projectList = result.rows;
 
       if (projectList.length === 0) {
         await this.bot.sendMessage(chatId, "No active projects found.");
         return;
       }
 
-      let message = "📋 Active Projects:\n\n";
-      projectList.forEach((project, index) => {
-        message += `${index + 1}. ${project.code} - ${project.name}\n`;
-        message += `   Client: ${project.clientName || 'Unknown'}\n`;
-        message += `   Stage: ${project.stage}\n\n`;
-      });
-      message += "Reply with /select [number] to choose a project\nExample: /select 1";
+        let message = "📋 Active Projects:\n\n";
+        projectList.forEach((project, index) => {
+          message += `${index + 1}. ${project.code} - ${project.name}\n`;
+          message += `   Client: ${project.client_name || 'Unknown'}\n`;
+          message += `   Stage: ${project.stage}\n\n`;
+        });
+        message += "Reply with /select [number] to choose a project\nExample: /select 1";
 
-      await this.bot.sendMessage(chatId, message);
+        await this.bot.sendMessage(chatId, message);
+      } finally {
+        client.release();
+      }
     } catch (error) {
       console.error('Error fetching projects:', error);
       await this.bot.sendMessage(chatId, "Error fetching projects. Please try again.");
