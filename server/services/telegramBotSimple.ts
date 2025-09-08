@@ -17,6 +17,9 @@ const botPool = new Pool({
   max: 10
 });
 
+// In-memory user mode tracking (simple solution)
+const userModes = new Map<string, string>();
+
 export class FurniliTelegramBot {
   private bot: TelegramBot;
   
@@ -160,7 +163,7 @@ Send the command and start uploading!`;
     }
   }
 
-  // Handle simple text messages for project selection 
+  // Handle simple text messages for project selection and notes
   private async handleMessage(msg: TelegramBot.Message) {
     // Skip if it's a command or already handled by other handlers
     const text = msg.text?.trim();
@@ -172,24 +175,70 @@ Send the command and start uploading!`;
 
     // Check if it's a simple number for project selection
     const projectNumber = parseInt(text);
-    if (isNaN(projectNumber)) return;
-
-    // Get current session state
-    try {
-      // Use dedicated bot pool with exact same connection
-      const client = await botPool.connect();
-      
+    if (!isNaN(projectNumber)) {
       try {
-        // Skip session check - just handle number as project selection
-        console.log(`📱 User ${userId} typed number: ${projectNumber}`);
+        // Use dedicated bot pool with exact same connection
+        const client = await botPool.connect();
         
-        // Simulate /select command for any number input
-        await this.handleSelectProject(msg, [text, projectNumber.toString()]);
+        try {
+          // Skip session check - just handle number as project selection
+          console.log(`📱 User ${userId} typed number: ${projectNumber}`);
+          
+          // Simulate /select command for any number input
+          await this.handleSelectProject(msg, [text, projectNumber.toString()]);
+        } finally {
+          client.release();
+        }
+      } catch (error) {
+        console.error('Error handling message:', error);
+      }
+      return;
+    }
+
+    // Handle text notes if user is in notes mode
+    const currentMode = userModes.get(userId);
+    if (currentMode === 'notes') {
+      await this.handleTextNote(msg, text);
+    }
+  }
+
+  private async handleTextNote(msg: TelegramBot.Message, noteText: string) {
+    const chatId = msg.chat.id;
+    const userId = msg.from?.id.toString();
+    if (!userId) return;
+
+    try {
+      const defaultProjectId = 1;
+      console.log(`📝 User ${userId} saving text note to project ${defaultProjectId}`);
+
+      // Save text note to database
+      const client = await botPool.connect();
+      try {
+        await client.query(
+          'INSERT INTO project_files (project_id, client_id, file_name, original_name, file_path, file_size, mime_type, category, description, comment, uploaded_by, is_public) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)',
+          [
+            defaultProjectId,
+            1, // default client
+            `telegram_note_${Date.now()}.txt`,
+            `telegram_note_${Date.now()}.txt`,
+            '', // No file path for text notes
+            noteText.length, // Text length as file size
+            'text/plain',
+            'notes', // notes category
+            'Text note via Telegram',
+            noteText, // The actual note content
+            7, // Use existing user ID
+            false
+          ]
+        );
       } finally {
         client.release();
       }
+
+      await this.bot.sendMessage(chatId, `✅ Note saved successfully!\n"${noteText.substring(0, 50)}${noteText.length > 50 ? '...' : ''}"`);
     } catch (error) {
-      console.error('Error handling message:', error);
+      console.error('Error handling text note:', error);
+      await this.bot.sendMessage(chatId, "Error saving note. Please try again.");
     }
   }
 
@@ -199,14 +248,15 @@ Send the command and start uploading!`;
     if (!userId) return;
 
     try {
-      // Skip session check - just activate the category directly
+      // Store user's current mode in memory
+      userModes.set(userId, category);
       console.log(`📁 User ${userId} selected category: ${category}`);
 
       const messages: { [key: string]: string } = {
         recce: "📷 Recce Mode Active\n\nSend site photos with measurements.",
         design: "🎨 Design Mode Active\n\nSend design files and concepts.",
         drawings: "📐 Drawings Mode Active\n\nSend technical drawings and plans.",
-        notes: "📝 Notes Mode Active\n\nSend text notes with attachments."
+        notes: "📝 Notes Mode Active\n\nSend text notes or attachments."
       };
 
       await this.bot.sendMessage(chatId, messages[category] || "Upload mode active. Send your files!");
@@ -233,6 +283,10 @@ Send the command and start uploading!`;
       // Download and save photo locally
       const savedFile = await this.downloadFile(photo.file_id, 'photo', '.jpg');
       
+      // Get user's current mode to determine category
+      const currentMode = userModes.get(userId) || 'recce';
+      const category = this.mapCategory(currentMode);
+
       // Save to database using direct query (LOCAL STORAGE as per user requirements)
       const client = await botPool.connect();
       try {
@@ -246,7 +300,7 @@ Send the command and start uploading!`;
             savedFile.filePath,
             savedFile.fileSize,
             'image/jpeg',
-            'photos', // recce category maps to photos
+            category, // Use correct category based on user mode
             'Uploaded via Telegram',
             caption,
             7, // Use existing user ID (Aman from logs)
