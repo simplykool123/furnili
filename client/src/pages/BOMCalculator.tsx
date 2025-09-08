@@ -1139,8 +1139,8 @@ export default function BOMCalculator() {
                                 type="number"
                                 placeholder="2400"
                                 className="h-8 text-sm"
-                                {...field}
-                                onChange={(e) => field.onChange(parseFloat(e.target.value))}
+                                value={field.value || ''}
+                                onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
                               />
                             </FormControl>
                             <FormMessage />
@@ -1159,8 +1159,8 @@ export default function BOMCalculator() {
                                 type="number"
                                 placeholder="1200"
                                 className="h-8 text-sm"
-                                {...field}
-                                onChange={(e) => field.onChange(parseFloat(e.target.value))}
+                                value={field.value || ''}
+                                onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
                               />
                             </FormControl>
                             <FormMessage />
@@ -1179,8 +1179,8 @@ export default function BOMCalculator() {
                                 type="number"
                                 placeholder="600"
                                 className="h-8 text-sm"
-                                {...field}
-                                onChange={(e) => field.onChange(parseFloat(e.target.value))}
+                                value={field.value || ''}
+                                onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
                               />
                             </FormControl>
                             <FormMessage />
@@ -1340,7 +1340,8 @@ export default function BOMCalculator() {
                                     className="h-8 text-xs"
                                     placeholder="2"
                                     {...field}
-                                    onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                                    value={field.value || ''}
+                                onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
                                   />
                                 </FormControl>
                               </FormItem>
@@ -1422,7 +1423,8 @@ export default function BOMCalculator() {
                                       max="15"
                                       className="h-8 text-xs"
                                       {...field}
-                                      onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                                      value={field.value || ''}
+                                onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
                                     />
                                   </FormControl>
                                 </FormItem>
@@ -1441,7 +1443,8 @@ export default function BOMCalculator() {
                                       max="8"
                                       className="h-8 text-xs"
                                       {...field}
-                                      onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                                      value={field.value || ''}
+                                onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
                                     />
                                   </FormControl>
                                 </FormItem>
@@ -1484,7 +1487,8 @@ export default function BOMCalculator() {
                                     max="20"
                                     className="h-8 text-xs"
                                     {...field}
-                                    onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                                    value={field.value || ''}
+                                onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
                                   />
                                 </FormControl>
                               </FormItem>
@@ -1503,7 +1507,8 @@ export default function BOMCalculator() {
                                     max="15"
                                     className="h-8 text-xs"
                                     {...field}
-                                    onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                                    value={field.value || ''}
+                                onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
                                   />
                                 </FormControl>
                               </FormItem>
@@ -1522,7 +1527,8 @@ export default function BOMCalculator() {
                                     max="20"
                                     className="h-8 text-xs"
                                     {...field}
-                                    onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                                    value={field.value || ''}
+                                onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
                                   />
                                 </FormControl>
                               </FormItem>
@@ -1541,7 +1547,8 @@ export default function BOMCalculator() {
                                     max="10"
                                     className="h-8 text-xs"
                                     {...field}
-                                    onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                                    value={field.value || ''}
+                                onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
                                   />
                                 </FormControl>
                               </FormItem>
@@ -1642,7 +1649,8 @@ export default function BOMCalculator() {
                                     max="5"
                                     className="h-8 text-xs"
                                     {...field}
-                                    onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                                    value={field.value || ''}
+                                onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
                                   />
                                 </FormControl>
                               </FormItem>
@@ -1661,7 +1669,8 @@ export default function BOMCalculator() {
                                     max="6"
                                     className="h-8 text-xs"
                                     {...field}
-                                    onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                                    value={field.value || ''}
+                                onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
                                   />
                                 </FormControl>
                               </FormItem>
@@ -1737,7 +1746,8 @@ export default function BOMCalculator() {
                                     max="15"
                                     className="h-8 text-xs"
                                     {...field}
-                                    onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                                    value={field.value || ''}
+                                onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
                                   />
                                 </FormControl>
                               </FormItem>
@@ -1756,7 +1766,8 @@ export default function BOMCalculator() {
                                     max="8"
                                     className="h-8 text-xs"
                                     {...field}
-                                    onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                                    value={field.value || ''}
+                                onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
                                   />
                                 </FormControl>
                               </FormItem>
@@ -1776,7 +1787,8 @@ export default function BOMCalculator() {
                                       max="4"
                                       className="h-8 text-xs"
                                       {...field}
-                                      onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                                      value={field.value || ''}
+                                onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
                                     />
                                   </FormControl>
                                 </FormItem>
@@ -1796,7 +1808,8 @@ export default function BOMCalculator() {
                                     max="2"
                                     className="h-8 text-xs"
                                     {...field}
-                                    onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                                    value={field.value || ''}
+                                onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
                                   />
                                 </FormControl>
                               </FormItem>
