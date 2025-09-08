@@ -2449,12 +2449,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Petty Cash routes
   app.get("/api/petty-cash", authenticateToken, async (req: AuthRequest, res) => {
     try {
-      const { category, status, addedBy, userId, projectId } = req.query;
+      const { category, status, addedBy, userId, projectId, month, year } = req.query;
       const filters = {
         category: category as string,
         status: status as string,
         addedBy: addedBy ? parseInt(addedBy as string) : undefined,
         projectId: projectId ? parseInt(projectId as string) : undefined,
+        month: month ? parseInt(month as string) : undefined,
+        year: year ? parseInt(year as string) : undefined,
       };
       
       // For staff and store_incharge users, automatically filter to show only their own expenses
