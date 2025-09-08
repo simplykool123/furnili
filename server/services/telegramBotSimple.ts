@@ -17,8 +17,9 @@ const botPool = new Pool({
   max: 10
 });
 
-// In-memory user mode tracking (simple solution)
+// In-memory user tracking (simple solution)
 const userModes = new Map<string, string>();
+const userProjects = new Map<string, number>();
 
 export class FurniliTelegramBot {
   private bot: TelegramBot;
@@ -139,6 +140,9 @@ Quick Start:
 
         const selectedProject = projectList[projectNumber - 1];
 
+        // Store selected project for this user
+        userProjects.set(userId, selectedProject.id);
+        
         // Skip session update - just log the selection
         console.log(`✅ User ${userId} selected project: ${selectedProject.code} (ID: ${selectedProject.id})`);
 
@@ -208,8 +212,8 @@ Send the command and start uploading!`;
     if (!userId) return;
 
     try {
-      const defaultProjectId = 1;
-      console.log(`📝 User ${userId} saving text note to project ${defaultProjectId}`);
+      const projectId = userProjects.get(userId) || 1;
+      console.log(`📝 User ${userId} saving text note to project ${projectId}`);
 
       // Save text note to database
       const client = await botPool.connect();
@@ -217,7 +221,7 @@ Send the command and start uploading!`;
         await client.query(
           'INSERT INTO project_files (project_id, client_id, file_name, original_name, file_path, file_size, mime_type, category, description, comment, uploaded_by, is_public) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)',
           [
-            defaultProjectId,
+            projectId,
             1, // default client
             `telegram_note_${Date.now()}.txt`,
             `telegram_note_${Date.now()}.txt`,
@@ -274,11 +278,11 @@ Send the command and start uploading!`;
 
     try {
       // Skip session check - save photo directly to default project (ID 1)
-      const defaultProjectId = 1;
+      const projectId = userProjects.get(userId) || 1;
       const photo = msg.photo[msg.photo.length - 1];
       const caption = msg.caption || '';
 
-      console.log(`📸 User ${userId} uploading photo to project ${defaultProjectId}`);
+      console.log(`📸 User ${userId} uploading photo to project ${projectId}`);
 
       // Download and save photo locally
       const savedFile = await this.downloadFile(photo.file_id, 'photo', '.jpg');
@@ -293,7 +297,7 @@ Send the command and start uploading!`;
         await client.query(
           'INSERT INTO project_files (project_id, client_id, file_name, original_name, file_path, file_size, mime_type, category, description, comment, uploaded_by, is_public) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)',
           [
-            defaultProjectId,
+            projectId,
             1, // default client
             savedFile.fileName,
             `telegram_photo_${Date.now()}.jpg`,
@@ -324,39 +328,43 @@ Send the command and start uploading!`;
     if (!userId || !msg.document) return;
 
     try {
-      const session = await db
-        .select()
-        .from(telegramUserSessions)
-        .where(eq(telegramUserSessions.telegramUserId, userId))
-        .limit(1);
-
-      if (session.length === 0 || !session[0].activeProjectId || session[0].sessionState !== 'uploading') {
-        await this.bot.sendMessage(chatId, "⚠️ Please select project and category first.");
-        return;
-      }
-
-      const userSession = session[0];
+      const projectId = userProjects.get(userId) || 1;
       const document = msg.document;
       const caption = msg.caption || '';
 
-      // Download and save document
+      console.log(`📄 User ${userId} uploading document to project ${projectId}`);
+
+      // Download and save document locally (LOCAL STORAGE per user requirements)  
       const ext = path.extname(document.file_name || '.file');
       const savedFile = await this.downloadFile(document.file_id, 'document', ext);
-      
-      await db.insert(projectFiles).values({
-        projectId: userSession.activeProjectId!,
-        clientId: userSession.activeClientId,
-        fileName: savedFile.fileName,
-        originalName: document.file_name || 'telegram_file',
-        filePath: savedFile.filePath,
-        fileSize: document.file_size || 0,
-        mimeType: document.mime_type || 'application/octet-stream',
-        category: this.mapCategory(userSession.currentStep || 'general'),
-        description: 'Uploaded via Telegram',
-        comment: caption,
-        uploadedBy: 1,
-        isPublic: false,
-      });
+
+      // Get user's current mode to determine category
+      const currentMode = userModes.get(userId) || 'notes';
+      const category = this.mapCategory(currentMode);
+
+      // Save document metadata to database using direct query
+      const client = await botPool.connect();
+      try {
+        await client.query(
+          'INSERT INTO project_files (project_id, client_id, file_name, original_name, file_path, file_size, mime_type, category, description, comment, uploaded_by, is_public) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)',
+          [
+            projectId,
+            1, // default client
+            savedFile.fileName,
+            document.file_name || 'telegram_file',
+            savedFile.filePath,
+            document.file_size || 0,
+            document.mime_type || 'application/octet-stream',
+            category, // Use correct category based on user mode
+            'Uploaded via Telegram',
+            caption,
+            7, // Use existing user ID
+            false
+          ]
+        );
+      } finally {
+        client.release();
+      }
 
       await this.bot.sendMessage(chatId, `✅ File "${document.file_name}" saved!${caption ? `\nComment: ${caption}` : ''}`);
     } catch (error) {
