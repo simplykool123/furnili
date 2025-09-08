@@ -3466,10 +3466,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Delete from database
-      const success = await storage.deleteProjectFile(fileId);
-      if (!success) {
-        return res.status(404).json({ message: "Failed to delete file from database" });
-      }
+      await storage.deleteProjectFile(fileId);
       
       res.json({ message: "File deleted successfully" });
     } catch (error) {
