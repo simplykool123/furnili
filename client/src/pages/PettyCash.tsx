@@ -223,9 +223,20 @@ export default function PettyCash() {
 
   // Fetch expenses and stats - filter by user for staff role
   const { data: expenses = [] } = useQuery({
-    queryKey: user?.role === 'staff' ? ["/api/petty-cash", { userId: user.id }] : ["/api/petty-cash"],
+    queryKey: user?.role === 'staff' 
+      ? ["/api/petty-cash", { userId: user.id, month: selectedMonth, year: selectedYear }] 
+      : ["/api/petty-cash", { month: selectedMonth, year: selectedYear }],
     queryFn: () => {
-      const url = user?.role === 'staff' ? `/api/petty-cash?userId=${user.id}` : "/api/petty-cash";
+      const params = new URLSearchParams({ 
+        month: selectedMonth.toString(), 
+        year: selectedYear.toString() 
+      });
+      
+      if (user?.role === 'staff') {
+        params.append('userId', user.id.toString());
+      }
+      
+      const url = `/api/petty-cash?${params.toString()}`;
       return authenticatedApiRequest("GET", url);
     },
   });
