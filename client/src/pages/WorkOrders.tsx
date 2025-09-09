@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { CalendarIcon, Package, Plus, Search, Filter } from "lucide-react";
 import { format } from "date-fns";
-import Layout from "@/components/Layout/Layout";
+import ResponsiveLayout from "@/components/Layout/ResponsiveLayout";
 import type { WorkOrderWithDetails } from "@shared/schema";
 
 export default function WorkOrders() {
@@ -56,34 +56,22 @@ export default function WorkOrders() {
 
   if (isLoading) {
     return (
-      <Layout>
-        <div className="p-6 space-y-6">
-          <div className="flex items-center justify-center h-64">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-          </div>
+      <ResponsiveLayout title="Work Orders" subtitle="Loading...">
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
         </div>
-      </Layout>
+      </ResponsiveLayout>
     );
   }
 
   return (
-    <Layout>
-      <div className="p-6 space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold">Work Orders</h1>
-            <p className="text-muted-foreground">
-              Manage production work orders and manufacturing workflows
-            </p>
-          </div>
-          <Button data-testid="button-create-work-order">
-            <Plus className="mr-2 h-4 w-4" />
-            Create Work Order
-          </Button>
-        </div>
-
-        {/* Filters */}
+    <ResponsiveLayout
+      title="Work Orders"
+      subtitle="Manage production work orders and manufacturing workflows"
+      showAddButton={true}
+      onAddClick={() => {/* TODO: Implement add work order */}}
+    >
+      {/* Filters */}
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">Filters</CardTitle>
@@ -267,7 +255,6 @@ export default function WorkOrders() {
             </div>
           </CardContent>
         </Card>
-      </div>
-    </Layout>
+    </ResponsiveLayout>
   );
 }

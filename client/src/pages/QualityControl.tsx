@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CheckCircle, XCircle, AlertTriangle, Camera, Plus, Search } from "lucide-react";
 import { format } from "date-fns";
-import Layout from "@/components/Layout/Layout";
+import ResponsiveLayout from "@/components/Layout/ResponsiveLayout";
 import type { QualityCheckWithDetails } from "@shared/schema";
 
 interface QualityStats {
@@ -66,34 +66,22 @@ export default function QualityControl() {
 
   if (isLoading) {
     return (
-      <Layout>
-        <div className="p-6 space-y-6">
-          <div className="flex items-center justify-center h-64">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-          </div>
+      <ResponsiveLayout title="Quality Control" subtitle="Loading...">
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
         </div>
-      </Layout>
+      </ResponsiveLayout>
     );
   }
 
   return (
-    <Layout>
-      <div className="p-6 space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold">Quality Control</h1>
-            <p className="text-muted-foreground">
-              Inspection workflows and quality assurance management
-            </p>
-          </div>
-          <Button data-testid="button-create-quality-check">
-            <Plus className="mr-2 h-4 w-4" />
-            New Quality Check
-          </Button>
-        </div>
-
-        {/* Stats Cards */}
+    <ResponsiveLayout
+      title="Quality Control"
+      subtitle="Inspection workflows and quality assurance management"
+      showAddButton={true}
+      onAddClick={() => {/* TODO: Implement add quality check */}}
+    >
+      {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -379,7 +367,6 @@ export default function QualityControl() {
             </Card>
           </TabsContent>
         </Tabs>
-      </div>
-    </Layout>
+    </ResponsiveLayout>
   );
 }

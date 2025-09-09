@@ -18,7 +18,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
-import Layout from "@/components/Layout/Layout";
+import ResponsiveLayout from "@/components/Layout/ResponsiveLayout";
 import { apiRequest } from "@/lib/queryClient";
 import type { WorkOrder, ProductionSchedule, QualityCheck } from "@shared/schema";
 
