@@ -35,6 +35,9 @@ import {
   ShoppingCart,
   Clock,
   Calculator,
+  Cog,
+  ClipboardCheck,
+  Factory,
 
 } from "lucide-react";
 
@@ -59,6 +62,18 @@ export const navigation = [
   { name: 'Petty Cash', href: '/petty-cash', icon: CircleDollarSign, roles: ['admin', 'manager', 'staff', 'store_incharge'] }, // Store keeper can access user-specific petty cash
   { name: 'Project Management', href: '/projects', icon: ProjectManagementIcon, roles: ['admin', 'manager', 'staff', 'store_incharge'] }, // Store keeper can access project management
   { name: 'Task Management', href: '/tasks', icon: CheckSquare, roles: ['admin', 'manager', 'staff', 'store_incharge'] },
+
+  { 
+    name: 'Production', 
+    icon: Factory, 
+    roles: ['admin', 'manager', 'staff'],
+    isCollapsible: true,
+    subItems: [
+      { name: 'Production Planning', href: '/production-planning', icon: LayoutDashboard, roles: ['admin', 'manager', 'staff'] },
+      { name: 'Work Orders', href: '/work-orders', icon: Cog, roles: ['admin', 'manager', 'staff'] },
+      { name: 'Quality Control', href: '/quality-control', icon: ClipboardCheck, roles: ['admin', 'manager', 'staff'] },
+    ]
+  },
 
   { name: 'BOM Calculator', href: '/bom-calculator', icon: Calculator, roles: ['admin', 'manager', 'staff', 'store_incharge'] },
   { name: 'WhatsApp Export', href: '/whatsapp', icon: MessageCircle, roles: ['admin', 'manager', 'staff'] }, // Store keeper doesn't need WhatsApp export

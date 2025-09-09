@@ -35,6 +35,9 @@ import ProjectDetail from "@/pages/ProjectDetail";
 import TaskManagement from "@/pages/TaskManagement";
 import BOMCalculator from "@/pages/BOMCalculator";
 import BOMSettings from "@/pages/BOMSettings";
+import ProductionPlanning from "@/pages/ProductionPlanning";
+import WorkOrders from "@/pages/WorkOrders";
+import QualityControl from "@/pages/QualityControl";
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -276,6 +279,24 @@ function Router() {
       <Route path="/bom-settings">
         <ProtectedRoute>
           <BOMSettings />
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/production-planning">
+        <ProtectedRoute>
+          <ProductionPlanning />
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/work-orders">
+        <ProtectedRoute>
+          <WorkOrders />
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/quality-control">
+        <ProtectedRoute>
+          <QualityControl />
         </ProtectedRoute>
       </Route>
       
