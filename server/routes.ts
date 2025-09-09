@@ -295,6 +295,141 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Production Dashboard API
+  app.get("/api/production/dashboard", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      // Mock production dashboard data - replace with actual storage calls when available
+      const dashboardData = {
+        stats: {
+          totalWorkOrders: 0,
+          activeWorkOrders: 0,
+          completedToday: 0,
+          pendingQuality: 0,
+          capacityUtilization: 85
+        },
+        recentWorkOrders: [],
+        todaySchedule: [],
+        pendingQualityChecks: []
+      };
+      
+      res.json(dashboardData);
+    } catch (error) {
+      console.error("Production dashboard error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Work Orders API
+  app.get("/api/work-orders", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const { search, status, priority } = req.query;
+      
+      // Mock work orders data - replace with actual storage calls when available
+      const workOrders = [];
+      
+      res.json(workOrders);
+    } catch (error) {
+      console.error("Work orders error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.post("/api/work-orders", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      // Validate input with work order schema
+      // const workOrderData = insertWorkOrderSchema.parse(req.body);
+      
+      // Mock response - replace with actual storage calls when available
+      res.status(201).json({ 
+        message: "Work order created successfully",
+        id: Date.now() 
+      });
+    } catch (error) {
+      console.error("Create work order error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Quality Checks API
+  app.get("/api/quality-checks", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const { search, status, type } = req.query;
+      
+      // Mock quality checks data - replace with actual storage calls when available
+      const qualityChecks = [];
+      
+      res.json(qualityChecks);
+    } catch (error) {
+      console.error("Quality checks error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get("/api/quality-checks/stats", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      // Mock quality stats - replace with actual storage calls when available
+      const stats = {
+        totalChecks: 0,
+        passedChecks: 0,
+        failedChecks: 0,
+        pendingChecks: 0,
+        passRate: 0
+      };
+      
+      res.json(stats);
+    } catch (error) {
+      console.error("Quality stats error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.post("/api/quality-checks", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      // Validate input with quality check schema
+      // const qualityCheckData = insertQualityCheckSchema.parse(req.body);
+      
+      // Mock response - replace with actual storage calls when available
+      res.status(201).json({ 
+        message: "Quality check created successfully",
+        id: Date.now() 
+      });
+    } catch (error) {
+      console.error("Create quality check error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Production Schedule API
+  app.get("/api/production-schedule", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const { date, workstation } = req.query;
+      
+      // Mock production schedule data - replace with actual storage calls when available
+      const schedules = [];
+      
+      res.json(schedules);
+    } catch (error) {
+      console.error("Production schedule error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.post("/api/production-schedule", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      // Validate input with production schedule schema
+      // const scheduleData = insertProductionScheduleSchema.parse(req.body);
+      
+      // Mock response - replace with actual storage calls when available
+      res.status(201).json({ 
+        message: "Production schedule created successfully",
+        id: Date.now() 
+      });
+    } catch (error) {
+      console.error("Create production schedule error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   app.post("/api/auth/register", authenticateToken, requireRole(["admin"]), async (req, res) => {
     try {
       const userData = insertUserSchema.parse(req.body);
