@@ -1183,7 +1183,7 @@ class DatabaseStorage implements IStorage {
 
   // Client operations
   async getAllClients(): Promise<Client[]> {
-    return db.select().from(clients).where(and(eq(clients.isActive, true), eq(clients.type, "client"))).orderBy(asc(clients.name));
+    return db.select().from(clients).where(eq(clients.isActive, true)).orderBy(asc(clients.name));
   }
 
   async getClient(id: number): Promise<Client | undefined> {
