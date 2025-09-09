@@ -40,6 +40,80 @@ export const categories = pgTable("categories", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// CRM Lead Sources
+export const leadSources = pgTable("lead_sources", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull().unique(),
+  type: text("type").notNull().default("online"), // online, referral, direct, social, exhibition
+  description: text("description"),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// CRM Pipeline Stages
+export const pipelineStages = pgTable("pipeline_stages", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull().unique(),
+  order: integer("order").notNull().default(0),
+  probability: integer("probability").default(0), // 0-100 percentage
+  color: text("color").default("#6b7280"), // Hex color for UI
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// CRM Leads Management
+export const leads = pgTable("leads", {
+  id: serial("id").primaryKey(),
+  leadNumber: text("lead_number").notNull().unique(), // Auto-generated: L-001, L-002
+  firstName: text("first_name").notNull(),
+  lastName: text("last_name"),
+  company: text("company"),
+  email: text("email"),
+  phone: text("phone").notNull(),
+  mobile: text("mobile"),
+  address: text("address"),
+  city: text("city").notNull(),
+  state: text("state"),
+  pinCode: text("pin_code"),
+  sourceId: integer("source_id").references(() => leadSources.id),
+  sourceName: text("source_name"), // For quick reference
+  status: text("status").notNull().default("new"), // new, contacted, qualified, proposal, negotiation, won, lost
+  stageId: integer("stage_id").references(() => pipelineStages.id),
+  score: integer("score").default(0), // Lead scoring 0-100
+  budget: real("budget").default(0),
+  requirement: text("requirement"), // What they're looking for
+  notes: text("notes"),
+  assignedTo: integer("assigned_to").references(() => users.id),
+  convertedToClientId: integer("converted_to_client_id").references(() => clients.id),
+  convertedAt: timestamp("converted_at"),
+  lastContactDate: timestamp("last_contact_date"),
+  nextFollowUpDate: timestamp("next_follow_up_date"),
+  isActive: boolean("is_active").notNull().default(true),
+  createdBy: integer("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Customer Interaction History
+export const interactions = pgTable("interactions", {
+  id: serial("id").primaryKey(),
+  entityType: text("entity_type").notNull(), // lead, client, project
+  entityId: integer("entity_id").notNull(),
+  type: text("type").notNull(), // call, email, meeting, whatsapp, visit, demo
+  direction: text("direction").notNull().default("outbound"), // inbound, outbound
+  subject: text("subject").notNull(),
+  content: text("content"),
+  outcome: text("outcome"), // interested, not_interested, follow_up_needed, converted
+  scheduledDate: timestamp("scheduled_date"),
+  completedDate: timestamp("completed_date"),
+  duration: integer("duration"), // in minutes
+  userId: integer("user_id").references(() => users.id).notNull(),
+  attachments: text("attachments").array().default([]),
+  isImportant: boolean("is_important").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 export const clients = pgTable("clients", {
   id: serial("id").primaryKey(),
   name: text("name").notNull().unique(),
@@ -53,9 +127,29 @@ export const clients = pgTable("clients", {
   state: text("state"), // New field
   pinCode: text("pin_code"), // New field
   gstNumber: text("gst_number"),
+  // CRM Integration Fields
+  convertedFromLeadId: integer("converted_from_lead_id").references(() => leads.id),
+  clientRating: integer("client_rating").default(5), // 1-5 satisfaction rating
+  totalProjects: integer("total_projects").default(0),
+  totalRevenue: real("total_revenue").default(0),
+  lastProjectDate: timestamp("last_project_date"),
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Customer Satisfaction Surveys
+export const satisfactionSurveys = pgTable("satisfaction_surveys", {
+  id: serial("id").primaryKey(),
+  clientId: integer("client_id").references(() => clients.id).notNull(),
+  projectId: integer("project_id").references(() => projects.id),
+  surveyType: text("survey_type").notNull().default("project_completion"), // project_completion, service_quality, overall
+  rating: integer("rating").notNull(), // 1-5 stars
+  feedback: text("feedback"),
+  improvements: text("improvements"), // What could be improved
+  recommend: boolean("recommend").default(true), // Would recommend to others
+  createdBy: integer("created_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
 // Project Management Tables - Updated for User Requirements
@@ -1257,6 +1351,67 @@ export type BomCalculationWithDetails = BomCalculation & {
   items: BomItem[];
   calculatedByUser: { name: string };
   project?: { name: string; code: string };
+};
+
+// CRM Insert Schemas
+export const insertLeadSourceSchema = createInsertSchema(leadSources).omit({ 
+  id: true, 
+  createdAt: true 
+});
+
+export const insertPipelineStageSchema = createInsertSchema(pipelineStages).omit({ 
+  id: true, 
+  createdAt: true 
+});
+
+export const insertLeadSchema = createInsertSchema(leads).omit({ 
+  id: true, 
+  leadNumber: true, // Auto-generated
+  createdAt: true, 
+  updatedAt: true 
+});
+
+export const insertInteractionSchema = createInsertSchema(interactions).omit({ 
+  id: true, 
+  createdAt: true, 
+  updatedAt: true 
+});
+
+export const insertSatisfactionSurveySchema = createInsertSchema(satisfactionSurveys).omit({ 
+  id: true, 
+  createdAt: true 
+});
+
+// CRM Types
+export type LeadSource = typeof leadSources.$inferSelect;
+export type InsertLeadSource = z.infer<typeof insertLeadSourceSchema>;
+export type PipelineStage = typeof pipelineStages.$inferSelect;
+export type InsertPipelineStage = z.infer<typeof insertPipelineStageSchema>;
+export type Lead = typeof leads.$inferSelect;
+export type InsertLead = z.infer<typeof insertLeadSchema>;
+export type Interaction = typeof interactions.$inferSelect;
+export type InsertInteraction = z.infer<typeof insertInteractionSchema>;
+export type SatisfactionSurvey = typeof satisfactionSurveys.$inferSelect;
+export type InsertSatisfactionSurvey = z.infer<typeof insertSatisfactionSurveySchema>;
+
+// Extended CRM types for API responses
+export type LeadWithDetails = Lead & {
+  source?: LeadSource;
+  stage?: PipelineStage;
+  assignedUser?: { id: number; name: string };
+  createdByUser?: { name: string };
+  recentInteractions?: Interaction[];
+  convertedClient?: { id: number; name: string };
+};
+
+export type InteractionWithDetails = Interaction & {
+  user: { name: string; email: string };
+  entityDetails?: {
+    name: string;
+    type: string;
+    phone?: string;
+    email?: string;
+  };
 };
 
 
