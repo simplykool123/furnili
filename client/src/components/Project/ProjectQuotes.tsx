@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
-import { Plus, Eye, Edit, Trash2, Download, Share } from "lucide-react";
+import { Plus, Eye, Edit, Trash2, Download, Share, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -400,6 +400,30 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
     onError: (error: any) => {
       toast({
         title: "Error deleting quote",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Approve quote mutation - creates work order
+  const approveQuoteMutation = useMutation({
+    mutationFn: (id: number) =>
+      apiRequest(`/api/quotes/${id}/approve`, {
+        method: "POST",
+      }),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/projects", projectId, "quotes"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/work-orders"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/production/dashboard"] });
+      toast({ 
+        title: "Quote approved successfully", 
+        description: `Work order ${data.workOrder.orderNumber} has been created for production.`
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error approving quote",
         description: error.message,
         variant: "destructive",
       });
@@ -1335,6 +1359,18 @@ export default function ProjectQuotes({ projectId }: ProjectQuotesProps) {
                   >
                     <Share className="h-3 w-3" />
                   </Button>
+                  {quote.status !== 'approved' && (
+                    <Button
+                      variant="default"
+                      size="sm"
+                      className="h-6 w-6 p-0 bg-green-600 hover:bg-green-700"
+                      onClick={() => approveQuoteMutation.mutate(quote.id)}
+                      disabled={approveQuoteMutation.isPending}
+                      title="Approve quote and create work order"
+                    >
+                      <CheckCircle className="h-3 w-3" />
+                    </Button>
+                  )}
                   <Button
                     variant="destructive"
                     size="sm"
