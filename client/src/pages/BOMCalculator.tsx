@@ -1587,11 +1587,15 @@ export default function BOMCalculator() {
                                   <FormControl>
                                     <Input
                                       type="number"
-                                      min="1"
+                                      min={form.watch('partsConfig.wardrobeType') === 'walk-in' ? "0" : "1"}
                                       max="6"
                                       className="h-8 text-xs"
                                       {...field}
-                                      onChange={(e) => field.onChange(parseInt(e.target.value) || 2)}
+                                      onChange={(e) => {
+                                        const isWalkIn = form.watch('partsConfig.wardrobeType') === 'walk-in';
+                                        const defaultValue = isWalkIn ? 0 : 2;
+                                        field.onChange(parseInt(e.target.value) || defaultValue);
+                                      }}
                                       disabled={form.watch('partsConfig.wardrobeType') === 'walk-in'}
                                     />
                                   </FormControl>
@@ -1679,6 +1683,69 @@ export default function BOMCalculator() {
                               )}
                             />
                           </div>
+                          
+                          {/* Loft Cupboard Sizing - Shows when loft is enabled */}
+                          {form.watch('partsConfig.hasLoft') && (
+                            <div className="col-span-2 space-y-2 mt-4">
+                              <h4 className="text-sm font-medium text-furnili-brown">Loft Cupboard Dimensions</h4>
+                              <div className="grid grid-cols-2 gap-2">
+                                <FormField
+                                  control={form.control}
+                                  name="partsConfig.loftHeight"
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel className="text-xs">Loft Height (mm)</FormLabel>
+                                      <FormControl>
+                                        <Input
+                                          type="number"
+                                          min="300"
+                                          max="1000"
+                                          placeholder="400"
+                                          className="h-8 text-xs"
+                                          {...field}
+                                          value={field.value || ''}
+                                          onChange={(e) => field.onChange(parseInt(e.target.value) || 400)}
+                                        />
+                                      </FormControl>
+                                      <p className="text-[10px] text-muted-foreground">Recommended: 300-600mm</p>
+                                    </FormItem>
+                                  )}
+                                />
+                                <FormField
+                                  control={form.control}
+                                  name="partsConfig.loftWidth"
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel className="text-xs">Loft Width (mm)</FormLabel>
+                                      <FormControl>
+                                        <Input
+                                          type="number"
+                                          min="300"
+                                          max="2400"
+                                          placeholder="1200"
+                                          className="h-8 text-xs"
+                                          {...field}
+                                          value={field.value || ''}
+                                          onChange={(e) => field.onChange(parseInt(e.target.value) || form.watch('width') || 1200)}
+                                        />
+                                      </FormControl>
+                                      <p className="text-[10px] text-muted-foreground">Defaults to wardrobe width</p>
+                                    </FormItem>
+                                  )}
+                                />
+                              </div>
+                              <div className="bg-blue-50 dark:bg-blue-950/20 p-3 rounded-lg">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <Package className="w-4 h-4 text-blue-600" />
+                                  <span className="text-xs font-medium text-blue-900 dark:text-blue-100">Loft Storage</span>
+                                </div>
+                                <p className="text-xs text-blue-700 dark:text-blue-200">
+                                  The loft cupboard will be calculated with separate panels and materials. 
+                                  Ideal for storing seasonal items or rarely used belongings.
+                                </p>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       )}
 

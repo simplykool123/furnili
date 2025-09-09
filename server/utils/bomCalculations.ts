@@ -2053,7 +2053,7 @@ export const calculateWardrobeBOM = (data: any) => {
   const hasLoft = partsConfig.hasLoft || false;
   const loftHeight = partsConfig.loftHeight || 600; // default 600mm
   const loftWidth = partsConfig.loftWidth || width; // default to main wardrobe width
-  const shutterCount = partsConfig.shutterCount || partsConfig.shutters || 2;
+  const shutterCount = wardrobeType === 'walk-in' ? 0 : (partsConfig.shutterCount || partsConfig.shutters || 2);
   const shelfCount = partsConfig.shelfCount || partsConfig.shelves || 3;
   const drawerCount = partsConfig.drawerCount || partsConfig.drawers || 0;
   
