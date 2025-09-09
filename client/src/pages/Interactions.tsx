@@ -102,7 +102,7 @@ export default function Interactions() {
 
   // Create interaction mutation
   const createInteractionMutation = useMutation({
-    mutationFn: (data: InteractionFormData) => apiRequest("/api/crm/interactions", "POST", data),
+    mutationFn: (data: InteractionFormData) => apiRequest("/api/crm/interactions", { method: "POST", body: JSON.stringify(data) }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/crm/interactions"] });
       setIsNewInteractionOpen(false);
@@ -371,7 +371,6 @@ export default function Interactions() {
             </Form>
           </DialogContent>
         </Dialog>
-      </div>
 
       {/* Interaction Statistics */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">

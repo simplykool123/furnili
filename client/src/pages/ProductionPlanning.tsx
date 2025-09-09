@@ -146,7 +146,7 @@ export default function ProductionPlanning() {
 
   if (isLoading) {
     return (
-      <Layout>
+      <ResponsiveLayout title="Production Planning" subtitle="Loading...">
         <div className="p-6 space-y-6">
           {/* Header Skeleton */}
           <div className="flex items-center justify-between">
@@ -173,7 +173,7 @@ export default function ProductionPlanning() {
             <TableSkeleton rows={6} cols={4} />
           </div>
         </div>
-      </Layout>
+      </ResponsiveLayout>
     );
   }
 
@@ -187,16 +187,13 @@ export default function ProductionPlanning() {
 
   return (
     <ErrorBoundary>
-      <Layout>
-        <div className="p-6 space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold">Production Planning</h1>
-            <p className="text-muted-foreground">
-              Manufacturing workflow and capacity management
-            </p>
-          </div>
+      <ResponsiveLayout
+        title="Production Planning"
+        subtitle="Manufacturing workflow and capacity management"
+        showAddButton={true}
+        onAddClick={() => setIsCreateWorkOrderDialogOpen(true)}
+      >
+        <div className="space-y-6">
           <div className="flex gap-2">
             <Dialog open={isCreateWorkOrderDialogOpen} onOpenChange={setIsCreateWorkOrderDialogOpen}>
               <DialogTrigger asChild>
@@ -231,7 +228,7 @@ export default function ProductionPlanning() {
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
-                                {projects.map((project: any) => (
+                                {(projects as any[])?.map((project: any) => (
                                   <SelectItem key={project.id} value={project.id.toString()}>
                                     {project.name} ({project.code})
                                   </SelectItem>
@@ -256,7 +253,7 @@ export default function ProductionPlanning() {
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
-                                {quotes.map((quote: any) => (
+                                {(quotes as any[])?.map((quote: any) => (
                                   <SelectItem key={quote.quote.id} value={quote.quote.id.toString()}>
                                     {quote.quote.quoteNumber} - {quote.quote.title}
                                   </SelectItem>
@@ -583,18 +580,18 @@ export default function ProductionPlanning() {
                           <Badge className={getPriorityColor(order.priority)}>
                             {order.priority}
                           </Badge>
-                          {order.project && (
+                          {order.projectId && (
                             <Button
                               variant="ghost"
                               size="sm"
                               className="h-6 px-2 text-xs"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                setLocation(`/projects/${order.project.id}`);
+                                setLocation(`/projects/${order.projectId}`);
                               }}
                             >
                               <ExternalLink className="h-3 w-3 mr-1" />
-                              {order.project.code}
+                              Project {order.projectId}
                             </Button>
                           )}
                         </div>
@@ -605,8 +602,8 @@ export default function ProductionPlanning() {
                           {order.estimatedStartDate && (
                             <span>Start: {format(new Date(order.estimatedStartDate), 'MMM dd')}</span>
                           )}
-                          {order.client && (
-                            <span>Client: {order.client.name}</span>
+                          {order.clientId && (
+                            <span>Client ID: {order.clientId}</span>
                           )}
                         </div>
                       </div>
@@ -902,8 +899,7 @@ export default function ProductionPlanning() {
             </Card>
           </TabsContent>
         </Tabs>
-        </div>
-      </Layout>
+      </ResponsiveLayout>
     </ErrorBoundary>
   );
 }
