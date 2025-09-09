@@ -9,6 +9,10 @@ interface FabricWardrobeProps {
   drawers: number;
   shutters: number;
   wardrobeType: string;
+  hasLoft?: boolean;
+  loftHeight?: number;
+  loftWidth?: number;
+  loftDepth?: number;
   mirror?: boolean;
   className?: string;
 }
@@ -21,6 +25,10 @@ const FabricWardrobe: React.FC<FabricWardrobeProps> = ({
   drawers,
   shutters,
   wardrobeType,
+  hasLoft = false,
+  loftHeight = 400,
+  loftWidth,
+  loftDepth,
   mirror = false,
   className = ""
 }) => {
@@ -47,7 +55,7 @@ const FabricWardrobe: React.FC<FabricWardrobeProps> = ({
     return () => {
       canvas.dispose();
     };
-  }, [width, height, depth, shelves, drawers, shutters, wardrobeType, mirror]);
+  }, [width, height, depth, shelves, drawers, shutters, wardrobeType, hasLoft, loftHeight, loftWidth, loftDepth, mirror]);
 
   const createWardrobeVisualization = (canvas: Canvas) => {
     canvas.clear();
