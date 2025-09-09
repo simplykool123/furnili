@@ -1161,6 +1161,193 @@ export default function BOMCalculator() {
                       />
                     </div>
                   )}
+                </div>
+              </div>
+            </Form>
+          </div>
+        </div>
+      )}
+
+      {/* Main Calculator Form */}
+      <div className="bg-card shadow-sm border rounded-lg mb-6">
+        <div className="px-4 py-6">
+          <div className="text-center mb-6">
+            <Calculator className="w-8 h-8 mx-auto text-[hsl(28,100%,25%)] mb-2" />
+            <h2 className="text-xl font-bold text-foreground">Furniture Calculator</h2>
+          </div>
+          
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)}>
+              <div className="space-y-6">
+                {/* Common Dimensions */}
+                <div className="space-y-4">
+                  <h3 className="text-sm font-medium flex items-center gap-2">
+                    <Calculator className="w-4 h-4" />
+                    Dimensions
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="unitOfMeasure"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs">Unit</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger className="h-8">
+                                <SelectValue placeholder="mm" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="mm">mm</SelectItem>
+                              <SelectItem value="cm">cm</SelectItem>
+                              <SelectItem value="inches">inches</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="height"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs">Height</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              placeholder="1800"
+                              className="h-8 text-xs"
+                              value={field.value || ''}
+                              onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="width"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs">Width</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              placeholder="1200"
+                              className="h-8 text-xs"
+                              value={field.value || ''}
+                              onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="depth"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs">Depth</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              placeholder="600"
+                              className="h-8 text-xs"
+                              value={field.value || ''}
+                              onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+
+                {/* Board Specifications */}
+                <div className="space-y-4">
+                  <h3 className="text-sm font-medium">Board Specifications</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="boardType"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs">Board Type</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger className="h-8">
+                                <SelectValue placeholder="Select board type" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="plywood">Plywood</SelectItem>
+                              <SelectItem value="mdf">MDF</SelectItem>
+                              <SelectItem value="particleboard">Particle Board</SelectItem>
+                              <SelectItem value="solid_wood">Solid Wood</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="boardThickness"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs">Board Thickness</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger className="h-8">
+                                <SelectValue placeholder="18mm" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="12mm">12mm</SelectItem>
+                              <SelectItem value="15mm">15mm</SelectItem>
+                              <SelectItem value="18mm">18mm</SelectItem>
+                              <SelectItem value="25mm">25mm</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="finish"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs">Finish</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger className="h-8">
+                                <SelectValue placeholder="Select finish" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="laminate">Laminate</SelectItem>
+                              <SelectItem value="veneer">Veneer</SelectItem>
+                              <SelectItem value="paint">Paint</SelectItem>
+                              <SelectItem value="polish">Polish</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+
+                {/* Furniture-specific configurations */}
+                <div className="space-y-4">
+                  <h3 className="text-sm font-medium">Configuration</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
                   {/* Storage Unit Type Selection */}
                   {selectedFurnitureType === 'storage_unit' && (
