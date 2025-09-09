@@ -852,7 +852,6 @@ export default function BOMCalculator() {
             <div className="text-center mb-6">
               <Bed className="w-8 h-8 mx-auto text-[hsl(28,100%,25%)] mb-2" />
               <h2 className="text-xl font-bold text-foreground">Beds Calculator</h2>
-              <p className="text-sm text-muted-foreground">Bed frames and storage beds</p>
             </div>
             
             {/* Bed Types Selection */}
@@ -926,7 +925,6 @@ export default function BOMCalculator() {
             <div className="text-center mb-6">
               <Package className="w-8 h-8 mx-auto text-[hsl(28,100%,25%)] mb-2" />
               <h2 className="text-xl font-bold text-foreground">Kitchen Calculator</h2>
-              <p className="text-sm text-muted-foreground">Modular kitchen cabinets and accessories</p>
             </div>
             
             {/* Kitchen Layout Selection */}
