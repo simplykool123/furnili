@@ -905,6 +905,124 @@ export default function BOMCalculator() {
                     </FormItem>
                   )}
                 />
+
+                {/* Dimensions */}
+                <div className="space-y-2">
+                  <h3 className="text-sm font-medium flex items-center gap-2">
+                    <Calculator className="w-4 h-4" />
+                    Dimensions
+                  </h3>
+                  <div className="grid grid-cols-2 gap-2">
+                    <FormField
+                      control={form.control}
+                      name="unitOfMeasure"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs">Unit</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger className="h-8">
+                                <SelectValue />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="mm">Millimeters (mm)</SelectItem>
+                              <SelectItem value="ft">Feet (ft)</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="projectId"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs">Link to Project (Optional)</FormLabel>
+                          <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value?.toString()}>
+                            <FormControl>
+                              <SelectTrigger className="h-8">
+                                <SelectValue placeholder="Select project" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {projects.map((project: any) => (
+                                <SelectItem key={project.id} value={project.id.toString()}>
+                                  {project.name} ({project.code})
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2">
+                    <FormField
+                      control={form.control}
+                      name="height"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs">Height</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              placeholder="2400"
+                              className="h-8 text-xs"
+                              value={field.value || ''}
+                              onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="width"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs">Width</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              placeholder="1200"
+                              className="h-8 text-xs"
+                              value={field.value || ''}
+                              onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="depth"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs">Depth</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              placeholder="600"
+                              className="h-8 text-xs"
+                              value={field.value || ''}
+                              onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
               </div>
             </Form>
           </div>
