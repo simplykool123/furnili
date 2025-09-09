@@ -854,25 +854,28 @@ export default function BOMCalculator() {
               <h2 className="text-xl font-bold text-foreground">Beds Calculator</h2>
             </div>
             
+            {/* Bed Types Selection */}
+            <div className="mb-6">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="bg-[hsl(28,100%,25%)] text-white px-3 py-1 rounded-full text-sm font-medium">
+                  Bed Type
+                </div>
+              </div>
+            </div>
             <Form {...form}>
               <div className="space-y-4">
-                {/* Bed Type Selection */}
-                <h3 className="flex items-center text-sm font-medium text-foreground mb-3">
-                  <Bed className="w-4 h-4" />
-                  Bed Type
-                </h3>
                 <FormField
                   control={form.control}
                   name="partsConfig.bedType"
                   render={({ field }) => (
                     <FormItem>
-                      <div className="grid grid-cols-5 gap-2">
+                      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
                         {[
-                          { value: 'single', label: 'Single', desc: '90×190cm', icon: Bed, size: { width: 900, depth: 1900 } },
-                          { value: 'queen', label: 'Queen', desc: '150×200cm', icon: Bed, size: { width: 1500, depth: 2000 } },
-                          { value: 'king', label: 'King', desc: '180×200cm', icon: Bed, size: { width: 1800, depth: 2000 } },
-                          { value: 'king_xl', label: 'King XL', desc: '200×220cm', icon: Bed, size: { width: 2000, depth: 2200 } },
-                          { value: 'bunk', label: 'Bunk', desc: '90×190cm', icon: Layers, size: { width: 900, depth: 1900 } }
+                          { value: 'single', label: 'Single', icon: Bed, desc: '90×190cm', size: { width: 900, depth: 1900 } },
+                          { value: 'queen', label: 'Queen', icon: Bed, desc: '150×200cm', size: { width: 1500, depth: 2000 } },
+                          { value: 'king', label: 'King', icon: Bed, desc: '180×200cm', size: { width: 1800, depth: 2000 } },
+                          { value: 'king_xl', label: 'King XL', icon: Bed, desc: '200×220cm', size: { width: 2000, depth: 2200 } },
+                          { value: 'bunk', label: 'Bunk', icon: Layers, desc: '90×190cm', size: { width: 900, depth: 1900 } }
                         ].map((bedType) => {
                           const IconComponent = bedType.icon;
                           const isSelected = field.value === bedType.value;
@@ -888,15 +891,18 @@ export default function BOMCalculator() {
                                 form.setValue('depth', bedType.size.depth);
                                 form.setValue('height', 900); // Standard bed height
                               }}
-                              className={`p-2 rounded-lg border transition-all duration-200 text-center ${
+                              className={`p-3 rounded-lg border-2 transition-all duration-200 text-center ${
                                 isSelected 
-                                  ? 'border-[hsl(28,100%,25%)] bg-[hsl(28,100%,25%)] text-white shadow-md' 
-                                  : 'border-border bg-card hover:border-[hsl(28,100%,25%)]/30 hover:bg-accent text-foreground'
+                                  ? 'border-[hsl(28,100%,25%)] bg-[hsl(28,100%,25%)] text-white shadow-lg' 
+                                  : 'border-border bg-card hover:border-[hsl(28,100%,25%)]/30 hover:bg-accent'
                               }`}
                             >
-                              <IconComponent className={`w-4 h-4 mx-auto mb-1 ${isSelected ? 'text-white' : 'text-[hsl(28,100%,25%)]'}`} />
-                              <div className={`text-xs font-medium ${isSelected ? 'text-white' : 'text-foreground'}`}>
+                              <IconComponent className={`w-5 h-5 mx-auto mb-1 ${isSelected ? 'text-white' : 'text-[hsl(28,100%,25%)]'}`} />
+                              <div className={`text-xs font-medium mb-0.5 ${isSelected ? 'text-white' : 'text-foreground'}`}>
                                 {bedType.label}
+                              </div>
+                              <div className={`text-[10px] ${isSelected ? 'text-white/90' : 'text-muted-foreground'}`}>
+                                {bedType.desc}
                               </div>
                             </button>
                           );
@@ -905,124 +911,6 @@ export default function BOMCalculator() {
                     </FormItem>
                   )}
                 />
-
-                {/* Dimensions */}
-                <div className="space-y-2">
-                  <h3 className="text-sm font-medium flex items-center gap-2">
-                    <Calculator className="w-4 h-4" />
-                    Dimensions
-                  </h3>
-                  <div className="grid grid-cols-2 gap-2">
-                    <FormField
-                      control={form.control}
-                      name="unitOfMeasure"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-xs">Unit</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                              <SelectTrigger className="h-8">
-                                <SelectValue />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="mm">Millimeters (mm)</SelectItem>
-                              <SelectItem value="ft">Feet (ft)</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="projectId"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-xs">Link to Project (Optional)</FormLabel>
-                          <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value?.toString()}>
-                            <FormControl>
-                              <SelectTrigger className="h-8">
-                                <SelectValue placeholder="Select project" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {projects.map((project: any) => (
-                                <SelectItem key={project.id} value={project.id.toString()}>
-                                  {project.name} ({project.code})
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-2">
-                    <FormField
-                      control={form.control}
-                      name="height"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-xs">Height</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="number"
-                              placeholder="2400"
-                              className="h-8 text-xs"
-                              value={field.value || ''}
-                              onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="width"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-xs">Width</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="number"
-                              placeholder="1200"
-                              className="h-8 text-xs"
-                              value={field.value || ''}
-                              onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="depth"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-xs">Depth</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="number"
-                              placeholder="600"
-                              className="h-8 text-xs"
-                              value={field.value || ''}
-                              onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                </div>
               </div>
             </Form>
           </div>
@@ -1096,20 +984,264 @@ export default function BOMCalculator() {
         </div>
       )}
 
-      {/* Main Calculator Form */}
-      <Card>
-        <CardContent className="p-6">
-          <Form {...form}>
-            {/* Board Finish Selection */}
-            <div className="space-y-2">
-        <FormField
-          control={form.control}
-          name="finish"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="text-xs">Board Finish</FormLabel>
-              <Select value={field.value} onValueChange={field.onChange} disabled={isPreLamBoard}>
-                <FormControl>
+      {/* Calculator Section */}
+      <div className="space-y-4 p-4">
+        {/* Calculator Form */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-3">
+              {selectedFurniture && <selectedFurniture.icon className="w-6 h-6 text-furnili-brown" />}
+              <div>
+                <div className="text-sm">{selectedFurniture?.name} Calculator</div>
+                <div className="text-sm text-muted-foreground font-normal">{selectedFurniture?.description}</div>
+              </div>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
+                  {/* Wardrobe Type Selection - Only for wardrobes */}
+                  {selectedFurnitureType === 'wardrobe' && (
+                    <div className="space-y-2">
+                      <h3 className="text-sm font-medium flex items-center gap-2">
+                        <Home className="w-4 h-4" />
+                        Wardrobe Type
+                      </h3>
+                      <FormField
+                      control={form.control}
+                      name="partsConfig.wardrobeType"
+                      render={({ field }) => (
+                        <FormItem>
+                          <div className="grid grid-cols-3 gap-2">
+                            {[
+                              { value: 'openable', label: 'Openable Door', desc: 'Hinged doors', icon: DoorOpen },
+                              { value: 'sliding', label: 'Sliding Door', desc: 'Sliding panels', icon: ArrowLeftRight },
+                              { value: 'walkin', label: 'Walk-in', desc: 'Open wardrobe', icon: Home }
+                            ].map((layout) => {
+                              const IconComponent = layout.icon;
+                              const isSelected = field.value === layout.value;
+                              
+                              return (
+                                <button
+                                  key={layout.value}
+                                  type="button"
+                                  onClick={() => field.onChange(layout.value)}
+                                  className={`p-2 rounded-lg border transition-all text-center ${
+                                    isSelected 
+                                      ? 'border-furnili-brown bg-orange-50 dark:bg-orange-950/20 text-furnili-brown' 
+                                      : 'border-gray-200 dark:border-gray-700 hover:border-furnili-brown/50'
+                                  }`}
+                                >
+                                  <IconComponent className={`w-5 h-5 mx-auto mb-1 ${isSelected ? 'text-furnili-brown' : 'text-gray-600'}`} />
+                                  <div className="text-xs font-medium">{layout.label}</div>
+                                  <div className="text-xs text-gray-500">{layout.desc}</div>
+                                </button>
+                              );
+                            })}
+                          </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    </div>
+                  )}
+
+                  {/* Dimensions */}
+                  <div className="space-y-2">
+                    <h3 className="text-sm font-medium flex items-center gap-2">
+                      <Calculator className="w-4 h-4" />
+                      Dimensions
+                    </h3>
+                    <div className="grid grid-cols-2 gap-2">
+                      <FormField
+                        control={form.control}
+                        name="unitOfMeasure"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Unit</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="mm">Millimeters (mm)</SelectItem>
+                                <SelectItem value="ft">Feet (ft)</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="projectId"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Link to Project (Optional)</FormLabel>
+                            <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value?.toString()}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select project" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {projects.map((project: any) => (
+                                  <SelectItem key={project.id} value={project.id.toString()}>
+                                    {project.name} ({project.code})
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-2">
+                      <FormField
+                        control={form.control}
+                        name="height"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Height</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                placeholder="2400"
+                                className="h-8 text-sm"
+                                tabIndex={2}
+                                value={field.value || ''}
+                                onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="width"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Width</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                placeholder="1200"
+                                className="h-8 text-sm"
+                                tabIndex={3}
+                                value={field.value || ''}
+                                onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="depth"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Depth</FormLabel>
+                            <FormControl>
+                              <Input
+                                type="number"
+                                placeholder="600"
+                                className="h-8 text-sm"
+                                tabIndex={4}
+                                value={field.value || ''}
+                                onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Materials */}
+                  <div className="space-y-2">
+                    <h3 className="text-sm font-medium">Materials</h3>
+                    <div className="grid grid-cols-3 gap-2">
+                      <FormField
+                        control={form.control}
+                        name="boardType"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-xs">Board Type</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl>
+                                <SelectTrigger className="h-8 text-xs" tabIndex={5}>
+                                  <SelectValue placeholder="Select board" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {boardTypes.map((type) => (
+                                  <SelectItem key={type.value} value={type.value}>
+                                    {type.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="boardThickness"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-xs">Thickness</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl>
+                                <SelectTrigger className="h-8 text-xs" tabIndex={6}>
+                                  <SelectValue />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {thicknessOptions.map((thickness) => (
+                                  <SelectItem key={thickness.value} value={thickness.value}>
+                                    {thickness.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="finish"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className={`text-xs ${
+                              isPreLamBoard ? 'text-muted-foreground' : ''
+                            }`}>
+                              Finish
+                              {isPreLamBoard && (
+                                <span className="ml-2 text-xs bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded text-[10px]">
+                                  Pre-Applied
+                                </span>
+                              )}
+                            </FormLabel>
+                            <Select 
+                              onValueChange={field.onChange} 
+                              defaultValue={field.value}
+                              disabled={isPreLamBoard}
+                            >
+                              <FormControl>
                                 <SelectTrigger className={`h-8 text-xs ${
                                   isPreLamBoard ? 'opacity-50 cursor-not-allowed bg-muted' : ''
                                 }`} tabIndex={7}>
@@ -1138,13 +1270,14 @@ export default function BOMCalculator() {
                         )}
                       />
                     </div>
+                  </div>
 
                   {/* Configuration */}
                   <div className="space-y-2">
                     <h3 className="text-sm font-medium">Configuration</h3>
                     <div className="grid grid-cols-2 gap-2">
                       
-                      {/* Bed Type Selection */}
+                  {/* Bed Type Selection */}
                   {selectedFurnitureType === 'bed' && (
                     <div className="space-y-2">
                       <h3 className="text-sm font-medium flex items-center gap-2">
@@ -2210,6 +2343,7 @@ export default function BOMCalculator() {
                     {calculateBOMMutation.isPending ? "Calculating..." : "Calculate BOM"}
                     <Calculator className="w-5 h-5 ml-2" />
                   </Button>
+                </form>
               </Form>
             </CardContent>
           </Card>
@@ -2974,6 +3108,7 @@ export default function BOMCalculator() {
               </Card>
             )}
           </div>
+        </div>
       </ResponsiveLayout>
   );
 }
