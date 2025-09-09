@@ -32,15 +32,56 @@ export default function WhatsAppLink() {
 
   const generateQR = async () => {
     try {
+      setConnectionStatus("Generating QR code...");
+      setQrCode(""); // Clear existing QR
+      
       const response = await fetch('/api/whatsapp/generate-qr', { method: 'POST' });
       if (response.ok) {
         const data = await response.json();
-        setQrCode(data.qrCode);
-        setConnectionStatus("Waiting for scan...");
+        if (data.qrCode) {
+          setQrCode(data.qrCode);
+          setConnectionStatus("Waiting for scan...");
+        } else {
+          setConnectionStatus("QR code generating...");
+          // Poll for QR code if not immediately available
+          pollForQRCode();
+        }
       }
     } catch (error) {
       console.error('Failed to generate QR code:', error);
+      setConnectionStatus("Error generating QR code");
     }
+  };
+
+  const pollForQRCode = async () => {
+    let attempts = 0;
+    const maxAttempts = 20;
+    
+    const poll = async () => {
+      try {
+        const response = await fetch('/api/whatsapp/status');
+        if (response.ok) {
+          const data = await response.json();
+          if (data.qrCode) {
+            setQrCode(data.qrCode);
+            setConnectionStatus("Waiting for scan...");
+            return;
+          }
+        }
+        
+        attempts++;
+        if (attempts < maxAttempts) {
+          setTimeout(poll, 1000); // Poll every second
+        } else {
+          setConnectionStatus("QR code generation timed out");
+        }
+      } catch (error) {
+        console.error('Polling error:', error);
+        setConnectionStatus("Error checking QR status");
+      }
+    };
+    
+    poll();
   };
 
   const disconnectBot = async () => {
@@ -101,12 +142,20 @@ export default function WhatsAppLink() {
                 
                 {qrCode ? (
                   <div className="flex flex-col items-center space-y-4">
-                    <div className="bg-white p-4 rounded-lg border">
-                      <pre className="text-xs font-mono whitespace-pre-wrap">{qrCode}</pre>
+                    <div className="bg-white p-6 rounded-lg border-2 border-gray-300 max-w-md">
+                      <pre className="text-[8px] leading-[8px] font-mono whitespace-pre-wrap overflow-hidden text-black"
+                           style={{ fontFamily: 'monospace', lineHeight: '0.5em' }}>
+                        {qrCode}
+                      </pre>
                     </div>
-                    <p className="text-xs text-muted-foreground">
-                      Open WhatsApp → Linked Devices → Link a Device → Scan this QR code
-                    </p>
+                    <div className="text-center space-y-2">
+                      <p className="text-sm font-medium text-gray-900">
+                        📱 Scan with WhatsApp
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Open WhatsApp → Menu → Linked Devices → Link a Device
+                      </p>
+                    </div>
                     <Button onClick={generateQR} variant="outline" size="sm">
                       <QrCode className="w-4 h-4 mr-2" />
                       Generate New QR Code

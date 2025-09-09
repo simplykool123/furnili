@@ -5380,20 +5380,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
-  app.post('/api/whatsapp/generate-qr', (req, res) => {
-    // Force regenerate QR code for WhatsApp connection
-    if (global.whatsappClient) {
-      global.whatsappClient.destroy().then(() => {
-        // Restart the WhatsApp client to generate new QR
-        global.initializeWhatsAppBot && global.initializeWhatsAppBot();
-        res.json({ success: true, message: 'QR code regeneration started' });
-      }).catch(() => {
-        res.json({ success: true, message: 'QR code regeneration started' });
-      });
-    } else {
-      // Start WhatsApp bot if not running
-      global.initializeWhatsAppBot && global.initializeWhatsAppBot();
-      res.json({ success: true, message: 'WhatsApp bot initialization started' });
+  app.post('/api/whatsapp/generate-qr', async (req, res) => {
+    try {
+      // Clear any existing QR data
+      global.qrCodeData = null;
+      
+      // Properly cleanup existing client if exists
+      if (global.whatsappClient) {
+        try {
+          await global.whatsappClient.destroy();
+          global.whatsappClient = null;
+          // Wait a bit for cleanup
+          await new Promise(resolve => setTimeout(resolve, 2000));
+        } catch (error) {
+          console.log('Cleanup error (non-critical):', error.message);
+        }
+      }
+      
+      // Initialize new bot
+      if (global.initializeWhatsAppBot) {
+        await global.initializeWhatsAppBot();
+        
+        // Wait for QR code generation (up to 10 seconds)
+        let attempts = 0;
+        while (!global.qrCodeData && attempts < 20) {
+          await new Promise(resolve => setTimeout(resolve, 500));
+          attempts++;
+        }
+        
+        if (global.qrCodeData) {
+          res.json({ 
+            success: true, 
+            message: 'QR code generated successfully',
+            qrCode: global.qrCodeData 
+          });
+        } else {
+          res.json({ 
+            success: true, 
+            message: 'QR code generation started, please wait...' 
+          });
+        }
+      } else {
+        res.status(500).json({ success: false, error: 'WhatsApp bot not available' });
+      }
+    } catch (error) {
+      console.error('Error generating QR:', error);
+      res.status(500).json({ success: false, error: 'Failed to generate QR code' });
     }
   });
 
