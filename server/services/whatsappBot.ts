@@ -28,10 +28,6 @@ const userStates = new Map<string, string>(); // Track user authentication state
 
 export class FurniliWhatsAppBot {
   private client: Client;
-  private currentQRCode: string | null = null;
-  private connectionStatus: 'disconnected' | 'connecting' | 'connected' | 'authenticated' = 'disconnected';
-  private lastConnected: Date | null = null;
-  private phoneNumber: string | null = null;
   
   constructor() {
     this.client = new Client({
@@ -63,43 +59,26 @@ export class FurniliWhatsAppBot {
       console.log('\n🔗 WhatsApp QR Code:');
       qrcode.generate(qr, { small: true });
       console.log('\n📱 Scan this QR code with your WhatsApp to connect the bot\n');
-      
-      // Store QR code for API access
-      this.currentQRCode = qr;
-      this.connectionStatus = 'connecting';
     });
 
     // Ready event
     this.client.on('ready', () => {
       console.log('✅ WhatsApp Bot is ready and connected!');
-      this.connectionStatus = 'connected';
-      this.lastConnected = new Date();
-      this.currentQRCode = null; // Clear QR code on successful connection
-      
-      // Get phone number if available
-      this.client.info.wid?.user && (this.phoneNumber = this.client.info.wid.user);
     });
 
     // Authentication success
     this.client.on('authenticated', () => {
       console.log('🔐 WhatsApp Bot authenticated successfully');
-      this.connectionStatus = 'authenticated';
-      this.lastConnected = new Date();
-      this.currentQRCode = null; // Clear QR code on successful authentication
     });
 
     // Authentication failure
     this.client.on('auth_failure', (msg) => {
       console.error('❌ WhatsApp authentication failed:', msg);
-      this.connectionStatus = 'disconnected';
-      this.currentQRCode = null;
     });
 
     // Disconnected
     this.client.on('disconnected', (reason) => {
       console.log('📴 WhatsApp Bot disconnected:', reason);
-      this.connectionStatus = 'disconnected';
-      this.currentQRCode = null;
     });
 
     // Handle incoming messages
@@ -120,46 +99,6 @@ export class FurniliWhatsAppBot {
 
   async initialize() {
     await this.client.initialize();
-  }
-
-  // Public methods for API access
-  getStatus() {
-    return {
-      connected: this.connectionStatus === 'connected' || this.connectionStatus === 'authenticated',
-      qrCode: this.currentQRCode,
-      phoneNumber: this.phoneNumber,
-      lastConnected: this.lastConnected?.toISOString(),
-      status: this.connectionStatus
-    };
-  }
-
-  async generateQRCode() {
-    if (this.connectionStatus === 'connected' || this.connectionStatus === 'authenticated') {
-      return { success: false, message: 'Already connected' };
-    }
-    
-    // Reset client to generate new QR
-    try {
-      await this.client.logout();
-      await this.client.initialize();
-      return { success: true, message: 'QR code generation initiated' };
-    } catch (error) {
-      console.error('Error generating QR code:', error);
-      return { success: false, message: 'Failed to generate QR code' };
-    }
-  }
-
-  async disconnect() {
-    try {
-      await this.client.logout();
-      this.connectionStatus = 'disconnected';
-      this.currentQRCode = null;
-      this.phoneNumber = null;
-      return { success: true, message: 'Disconnected successfully' };
-    } catch (error) {
-      console.error('Error disconnecting:', error);
-      return { success: false, message: 'Failed to disconnect' };
-    }
   }
 
   private async handleMessage(msg: Message) {
