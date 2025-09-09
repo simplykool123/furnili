@@ -1134,7 +1134,6 @@ export default function BOMCalculator() {
                         )}
                       />
                     </div>
-                  </div>
 
                   {/* Configuration */}
                   <div className="space-y-2">
