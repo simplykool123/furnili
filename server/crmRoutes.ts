@@ -6,7 +6,8 @@ import {
   pipelineStages, 
   clients, 
   interactions, 
-  users 
+  users,
+  projects
 } from "@shared/schema";
 import { eq, and, or, desc, asc, like } from "drizzle-orm";
 
@@ -206,7 +207,9 @@ export function registerCRMRoutes(app: Express) {
     }
   });
 
-  // ============ INTERACTIONS API ============
+  // ============ UNIFIED INTERACTIONS API ============
+  
+  // Get interactions by entity (original method)
   app.get("/api/crm/interactions/:entityType/:entityId", authenticateToken, async (req, res) => {
     try {
       const { entityType, entityId } = req.params;
@@ -234,12 +237,111 @@ export function registerCRMRoutes(app: Express) {
     }
   });
 
+  // NEW: Get ALL interactions for a client (across lead→project transition)
+  app.get("/api/crm/interactions/client/:clientId", authenticateToken, async (req, res) => {
+    try {
+      const { clientId } = req.params;
+      
+      const interactionData = await db
+        .select({
+          interaction: interactions,
+          user: {
+            id: users.id,
+            name: users.name,
+          },
+          client: {
+            id: clients.id,
+            name: clients.name,
+            type: clients.type
+          },
+          project: {
+            id: projects.id,
+            name: projects.name,
+            code: projects.code
+          }
+        })
+        .from(interactions)
+        .leftJoin(users, eq(interactions.userId, users.id))
+        .leftJoin(clients, eq(interactions.clientId, clients.id))
+        .leftJoin(projects, eq(interactions.projectId, projects.id))
+        .where(eq(interactions.clientId, parseInt(clientId)))
+        .orderBy(desc(interactions.createdAt));
+
+      res.json(interactionData);
+    } catch (error) {
+      console.error("Error fetching client interactions:", error);
+      res.status(500).json({ error: "Failed to fetch client interactions" });
+    }
+  });
+
+  // NEW: Get interactions for a specific project
+  app.get("/api/crm/interactions/project/:projectId", authenticateToken, async (req, res) => {
+    try {
+      const { projectId } = req.params;
+      
+      const interactionData = await db
+        .select({
+          interaction: interactions,
+          user: {
+            id: users.id,
+            name: users.name,
+          },
+          client: {
+            id: clients.id,
+            name: clients.name,
+            type: clients.type
+          },
+          project: {
+            id: projects.id,
+            name: projects.name,
+            code: projects.code
+          }
+        })
+        .from(interactions)
+        .leftJoin(users, eq(interactions.userId, users.id))
+        .leftJoin(clients, eq(interactions.clientId, clients.id))
+        .leftJoin(projects, eq(interactions.projectId, projects.id))
+        .where(eq(interactions.projectId, parseInt(projectId)))
+        .orderBy(desc(interactions.createdAt));
+
+      res.json(interactionData);
+    } catch (error) {
+      console.error("Error fetching project interactions:", error);
+      res.status(500).json({ error: "Failed to fetch project interactions" });
+    }
+  });
+
   app.post("/api/crm/interactions", authenticateToken, async (req, res) => {
     try {
-      const { entityType, entityId, type, direction, subject, content, outcome, duration } = req.body;
+      const { entityType, entityId, clientId, projectId, type, direction, subject, content, outcome, duration } = req.body;
       
       if (!entityType || !entityId || !type || !subject) {
         return res.status(400).json({ error: "EntityType, entityId, type, and subject are required" });
+      }
+
+      // Smart client/project ID detection
+      let resolvedClientId = clientId ? parseInt(clientId) : null;
+      let resolvedProjectId = projectId ? parseInt(projectId) : null;
+
+      // If entityType is "lead" or "client", use entityId as clientId
+      if (entityType === "lead" || entityType === "client") {
+        resolvedClientId = parseInt(entityId);
+      }
+      
+      // If entityType is "project", use entityId as projectId and fetch clientId
+      if (entityType === "project") {
+        resolvedProjectId = parseInt(entityId);
+        
+        // Get the client ID from the project
+        const project = await db
+          .select({ clientId: projects.clientId })
+          .from(projects)
+          .where(eq(projects.id, resolvedProjectId))
+          .limit(1);
+          
+        if (project[0]) {
+          resolvedClientId = project[0].clientId;
+        }
       }
 
       const newInteraction = await db
@@ -247,6 +349,8 @@ export function registerCRMRoutes(app: Express) {
         .values({
           entityType,
           entityId: parseInt(entityId),
+          clientId: resolvedClientId, // Track client for unified notes
+          projectId: resolvedProjectId, // Track project for project-specific notes
           type,
           direction: direction || "outbound",
           subject,
@@ -262,6 +366,51 @@ export function registerCRMRoutes(app: Express) {
     } catch (error) {
       console.error("Error creating interaction:", error);
       res.status(400).json({ error: "Failed to create interaction" });
+    }
+  });
+
+  // NEW: Create note specifically for project (unified with client tracking)
+  app.post("/api/projects/:projectId/notes", authenticateToken, async (req, res) => {
+    try {
+      const { projectId } = req.params;
+      const { subject, content, isImportant } = req.body;
+      
+      if (!subject) {
+        return res.status(400).json({ error: "Subject is required" });
+      }
+
+      // Get the client ID from the project for unified tracking
+      const project = await db
+        .select({ clientId: projects.clientId })
+        .from(projects)
+        .where(eq(projects.id, parseInt(projectId)))
+        .limit(1);
+        
+      if (!project[0]) {
+        return res.status(404).json({ error: "Project not found" });
+      }
+
+      const newNote = await db
+        .insert(interactions)
+        .values({
+          entityType: "project",
+          entityId: parseInt(projectId),
+          clientId: project[0].clientId, // Maintain client continuity
+          projectId: parseInt(projectId),
+          type: "note",
+          direction: "outbound",
+          subject,
+          content,
+          userId: (req as AuthRequest).user!.id,
+          isImportant: isImportant || false,
+          completedDate: new Date()
+        })
+        .returning();
+      
+      res.status(201).json(newNote[0]);
+    } catch (error) {
+      console.error("Error creating project note:", error);
+      res.status(400).json({ error: "Failed to create project note" });
     }
   });
 }
