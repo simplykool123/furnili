@@ -844,7 +844,7 @@ export default function BOMCalculator() {
         </div>
       </div>
 
-      <>
+      <div>
       {/* Beds Calculator */}
       {selectedFurnitureType === 'bed' && (
         <div className="bg-card shadow-sm border rounded-lg mb-6">
@@ -985,7 +985,7 @@ export default function BOMCalculator() {
           </div>
         </div>
       )}
-      </>
+      </div>
 
       {/* Calculator Section */}
       <div className="space-y-4 p-4">
