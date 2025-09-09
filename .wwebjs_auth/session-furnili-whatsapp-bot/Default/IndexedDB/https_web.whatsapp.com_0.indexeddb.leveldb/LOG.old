@@ -1,17 +1,17 @@
-2025/09/09-07:01:21.111 7899 Reusing MANIFEST /home/runner/workspace/.wwebjs_auth/session-furnili-whatsapp-bot/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
-2025/09/09-07:01:21.112 7899 Recovering log #2235
-2025/09/09-07:01:21.128 7899 Reusing old log /home/runner/workspace/.wwebjs_auth/session-furnili-whatsapp-bot/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/002235.log 
-2025/09/09-07:01:23.137 789f Level-0 table #2242: started
-2025/09/09-07:01:23.170 789f Level-0 table #2242: 292037 bytes OK
-2025/09/09-07:01:23.179 789f Delete type=0 #2235
-2025/09/09-07:01:23.180 7899 Manual compaction at level-0 from ' \xea\x02\x00\x00\x00' @ 72057594037927935 : 1 .. ' \xeb\x02\x00\x00\x00' @ 0 : 0; will stop at (end)
-2025/09/09-07:01:28.099 7899 Compacting 1@1 + 3@2 files
-2025/09/09-07:01:28.444 7899 Generated table #2243@1: 65116 keys, 2229915 bytes
-2025/09/09-07:01:29.014 7899 Generated table #2244@1: 34467 keys, 2202865 bytes
-2025/09/09-07:01:29.295 7899 Generated table #2245@1: 37685 keys, 1836581 bytes
-2025/09/09-07:01:29.295 7899 Compacted 1@1 + 3@2 files => 6269361 bytes
-2025/09/09-07:01:29.314 7899 compacted to: files[ 0 0 3 0 0 0 0 ]
-2025/09/09-07:01:29.315 7899 Delete type=2 #2237
-2025/09/09-07:01:29.315 7899 Delete type=2 #2238
-2025/09/09-07:01:29.315 7899 Delete type=2 #2239
-2025/09/09-07:01:29.315 7899 Delete type=2 #2242
+2025/09/09-07:04:55.917 7caa Reusing MANIFEST /home/runner/workspace/.wwebjs_auth/session-furnili-whatsapp-bot/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
+2025/09/09-07:04:55.919 7caa Recovering log #2247
+2025/09/09-07:04:55.939 7caa Reusing old log /home/runner/workspace/.wwebjs_auth/session-furnili-whatsapp-bot/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/002247.log 
+2025/09/09-07:04:57.547 7cad Level-0 table #2254: started
+2025/09/09-07:04:57.654 7cad Level-0 table #2254: 260802 bytes OK
+2025/09/09-07:04:57.671 7cad Delete type=0 #2247
+2025/09/09-07:04:57.672 7cab Manual compaction at level-0 from ' \xec\x02\x00\x00\x00' @ 72057594037927935 : 1 .. ' \xed\x02\x00\x00\x00' @ 0 : 0; will stop at (end)
+2025/09/09-07:05:00.153 7cab Compacting 1@1 + 3@2 files
+2025/09/09-07:05:00.310 7cab Generated table #2255@1: 66834 keys, 2229934 bytes
+2025/09/09-07:05:00.381 7cab Generated table #2256@1: 35451 keys, 2203068 bytes
+2025/09/09-07:05:00.453 7cab Generated table #2257@1: 37787 keys, 1890968 bytes
+2025/09/09-07:05:00.453 7cab Compacted 1@1 + 3@2 files => 6323970 bytes
+2025/09/09-07:05:00.475 7cab compacted to: files[ 0 0 3 0 0 0 0 ]
+2025/09/09-07:05:00.477 7cab Delete type=2 #2249
+2025/09/09-07:05:00.478 7cab Delete type=2 #2250
+2025/09/09-07:05:00.478 7cab Delete type=2 #2251
+2025/09/09-07:05:00.478 7cab Delete type=2 #2254

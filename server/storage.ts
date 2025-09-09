@@ -768,18 +768,42 @@ class DatabaseStorage implements IStorage {
   }
 
   async getAllProjects(): Promise<any[]> {
-    const result = await db.select()
+    const result = await db.select({
+      // Explicitly select only the columns we need from projects
+      id: projects.id,
+      code: projects.code,
+      name: projects.name,
+      description: projects.description,
+      clientId: projects.clientId,
+      stage: projects.stage,
+      budget: projects.budget,
+      differentSiteLocation: projects.differentSiteLocation,
+      siteAddressLine1: projects.siteAddressLine1,
+      siteAddressLine2: projects.siteAddressLine2,
+      siteState: projects.siteState,
+      siteCity: projects.siteCity,
+      siteLocation: projects.siteLocation,
+      sitePincode: projects.sitePincode,
+      completionPercentage: projects.completionPercentage,
+      notes: projects.notes,
+      files: projects.files,
+      isActive: projects.isActive,
+      createdAt: projects.createdAt,
+      updatedAt: projects.updatedAt,
+      // Explicitly select only the columns we need from clients
+      client_name: clients.name,
+      client_mobile: clients.mobile,
+      client_email: clients.email,
+      client_address: clients.address1,
+      client_city: clients.city
+    })
       .from(projects)
       .leftJoin(clients, eq(projects.clientId, clients.id))
       .orderBy(desc(projects.createdAt));
     
     return result.map(row => ({
-      ...row.projects,
-      client_name: row.clients?.name || null,
-      client_mobile: row.clients?.mobile || null,
-      client_email: row.clients?.email || null,
-      client_address: row.clients?.address1 || null,
-      city: row.projects.siteCity || row.clients?.city || null
+      ...row,
+      city: row.siteCity || row.client_city || null
     }));
   }
 
@@ -1139,7 +1163,28 @@ class DatabaseStorage implements IStorage {
 
   // Client operations
   async getAllClients(): Promise<Client[]> {
-    return db.select().from(clients).where(eq(clients.isActive, true)).orderBy(asc(clients.name));
+    return db.select({
+      id: clients.id,
+      name: clients.name,
+      email: clients.email,
+      mobile: clients.mobile,
+      city: clients.city,
+      contactPerson: clients.contactPerson,
+      phone: clients.phone,
+      address1: clients.address1,
+      address2: clients.address2,
+      state: clients.state,
+      pinCode: clients.pinCode,
+      gstNumber: clients.gstNumber,
+      convertedFromLeadId: clients.convertedFromLeadId,
+      clientRating: clients.clientRating,
+      totalProjects: clients.totalProjects,
+      totalRevenue: clients.totalRevenue,
+      lastProjectDate: clients.lastProjectDate,
+      isActive: clients.isActive,
+      createdAt: clients.createdAt,
+      updatedAt: clients.updatedAt
+    }).from(clients).where(eq(clients.isActive, true)).orderBy(asc(clients.name));
   }
 
   async getClient(id: number): Promise<Client | undefined> {
