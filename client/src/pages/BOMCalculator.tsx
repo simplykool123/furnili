@@ -1110,7 +1110,15 @@ export default function BOMCalculator() {
 
       {/* TV Unit Type Selection */}
       {selectedFurnitureType === 'tv_unit' && (
-                    <div className="space-y-2">
+        <div className="bg-card shadow-sm border rounded-lg mb-6">
+          <div className="px-4 py-6">
+            <div className="text-center mb-6">
+              <PanelTop className="w-8 h-8 mx-auto text-[hsl(28,100%,25%)] mb-2" />
+              <h2 className="text-xl font-bold text-foreground">TV Unit Calculator</h2>
+            </div>
+            <Form {...form}>
+              <div className="space-y-4">
+                <div className="space-y-2">
                       <h3 className="text-sm font-medium flex items-center gap-2">
                         <PanelTop className="w-4 h-4" />
                         TV Unit Type
