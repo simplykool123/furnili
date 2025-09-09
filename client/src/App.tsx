@@ -41,6 +41,7 @@ import ProductionPlanning from "@/pages/ProductionPlanning";
 import WorkOrders from "@/pages/WorkOrders";
 import QualityControl from "@/pages/QualityControl";
 import WhatsAppConsole from "@/pages/WhatsAppConsole";
+import Leads from "@/pages/Leads";
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -306,6 +307,12 @@ function Router() {
       <Route path="/whatsapp-console">
         <ProtectedRoute>
           <WhatsAppConsole />
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/leads">
+        <ProtectedRoute>
+          <Leads />
         </ProtectedRoute>
       </Route>
       
