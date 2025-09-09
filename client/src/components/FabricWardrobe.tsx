@@ -345,6 +345,145 @@ const FabricWardrobe: React.FC<FabricWardrobeProps> = ({
       }
     }
 
+    // 🏠 LOFT CUPBOARD VISUALIZATION
+    if (hasLoft) {
+      // Default loft dimensions if not provided
+      const actualLoftWidth = loftWidth || width;
+      const actualLoftDepth = loftDepth || depth;
+      
+      // Scale loft dimensions
+      const scaledLoftW = actualLoftWidth * scale;
+      const scaledLoftH = loftHeight * scale;
+      const scaledLoftD = actualLoftDepth * scale * 0.6;
+      
+      // Position loft above main wardrobe
+      const loftX = actualLoftWidth < width ? (scaledW - scaledLoftW) / 2 : 0; // Center if smaller
+      const loftY = -scaledLoftH - 30; // Above main wardrobe with gap
+      
+      // Loft back panel
+      const loftBackPanel = new Rect({
+        left: loftX + scaledLoftD,
+        top: loftY,
+        width: scaledLoftW,
+        height: scaledLoftH,
+        fill: '#f0f0f0',
+        stroke: '#888',
+        strokeWidth: 1
+      });
+      wardrobeGroup.add(loftBackPanel);
+      
+      // Loft right side panel
+      const loftRightSide = new Rect({
+        left: loftX + scaledLoftW + scaledLoftD,
+        top: loftY,
+        width: scaledLoftD,
+        height: scaledLoftH,
+        fill: '#e0e0e0',
+        stroke: '#888',
+        strokeWidth: 1
+      });
+      wardrobeGroup.add(loftRightSide);
+      
+      // Loft front panel
+      const loftFrontPanel = new Rect({
+        left: loftX,
+        top: loftY + scaledLoftD,
+        width: scaledLoftW,
+        height: scaledLoftH,
+        fill: '#f8f8f0',
+        stroke: '#A0522D',
+        strokeWidth: 1.5
+      });
+      wardrobeGroup.add(loftFrontPanel);
+      
+      // Loft interior shelves (1-2 shelves typically)
+      const loftShelves = Math.min(2, Math.floor(loftHeight / 200)); // 1 shelf per 200mm
+      if (loftShelves > 0) {
+        const loftShelfSpacing = scaledLoftH / (loftShelves + 1);
+        for (let i = 0; i < loftShelves; i++) {
+          const loftShelfY = loftY + scaledLoftD + (i + 1) * loftShelfSpacing;
+          
+          const loftShelf = new Line([loftX + 3, loftShelfY, loftX + scaledLoftW - 3, loftShelfY], {
+            stroke: '#A0522D',
+            strokeWidth: 1.5
+          });
+          wardrobeGroup.add(loftShelf);
+        }
+      }
+      
+      // Loft access (sliding or hinged door indication)
+      const loftDoor = new Rect({
+        left: loftX + 2,
+        top: loftY + scaledLoftD + 2,
+        width: scaledLoftW - 4,
+        height: scaledLoftH - 4,
+        fill: 'transparent',
+        stroke: '#A0522D',
+        strokeWidth: 1,
+        strokeDashArray: [3, 3]
+      });
+      wardrobeGroup.add(loftDoor);
+      
+      // Loft label
+      const loftLabel = new Text('LOFT CUPBOARD', {
+        left: loftX + scaledLoftW/2 - 30,
+        top: loftY + scaledLoftH/2 + scaledLoftD/2 - 5,
+        fontSize: 8,
+        fill: '#A0522D',
+        fontFamily: 'Arial',
+        fontWeight: 'bold'
+      });
+      wardrobeGroup.add(loftLabel);
+      
+      // Loft dimensions
+      if (actualLoftWidth !== width) {
+        // Show loft width if different from main wardrobe
+        const loftWidthLine = new Line([loftX, loftY - 10, loftX + scaledLoftW, loftY - 10], {
+          stroke: '#A0522D',
+          strokeWidth: 1
+        });
+        wardrobeGroup.add(loftWidthLine);
+        
+        const loftWidthText = new Text(`${actualLoftWidth}mm`, {
+          left: loftX + scaledLoftW/2 - 20,
+          top: loftY - 20,
+          fontSize: 9,
+          fill: '#A0522D',
+          fontFamily: 'Arial',
+          fontWeight: 'bold'
+        });
+        wardrobeGroup.add(loftWidthText);
+      }
+      
+      // Loft height dimension
+      const loftHeightLine = new Line([loftX - 15, loftY + scaledLoftD, loftX - 15, loftY + scaledLoftD + scaledLoftH], {
+        stroke: '#A0522D',
+        strokeWidth: 1
+      });
+      wardrobeGroup.add(loftHeightLine);
+      
+      const loftHeightText = new Text(`${loftHeight}mm`, {
+        left: loftX - 35,
+        top: loftY + scaledLoftD + scaledLoftH/2 - 5,
+        fontSize: 9,
+        fill: '#A0522D',
+        fontFamily: 'Arial',
+        fontWeight: 'bold',
+        angle: 90,
+        originX: 'center',
+        originY: 'center'
+      });
+      wardrobeGroup.add(loftHeightText);
+      
+      // Connection line from main wardrobe to loft
+      const connectionLine = new Line([scaledW/2, -5, loftX + scaledLoftW/2, loftY + scaledLoftH + scaledLoftD + 5], {
+        stroke: '#ccc',
+        strokeWidth: 1,
+        strokeDashArray: [2, 2]
+      });
+      wardrobeGroup.add(connectionLine);
+    }
+
     // 📏 DIMENSIONS
     
     // Width dimension (top)
@@ -405,8 +544,9 @@ const FabricWardrobe: React.FC<FabricWardrobeProps> = ({
       ? ` (${drawerRows}×${drawersPerRow} layout)` 
       : '';
     
+    const loftInfo = hasLoft ? `\nLoft: ${loftHeight}mm H × ${loftWidth || width}mm W` : '';
     const specs = new Text(
-      `Specifications:\nShelves: ${shelves} | Drawers: ${drawers}${drawerLayoutInfo}\nShutters: ${shutters} | Type: ${wardrobeType.toUpperCase()}${mirror ? ' + MIRROR' : ''}`,
+      `Specifications:\nShelves: ${shelves} | Drawers: ${drawers}${drawerLayoutInfo}\nShutters: ${shutters} | Type: ${wardrobeType.toUpperCase()}${mirror ? ' + MIRROR' : ''}${loftInfo}`,
       {
         left: 20,
         top: scaledH + scaledD + 50,

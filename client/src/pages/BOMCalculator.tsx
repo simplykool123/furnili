@@ -2381,6 +2381,10 @@ export default function BOMCalculator() {
                         drawers={form.getValues('partsConfig.drawerCount') || form.getValues('partsConfig.drawers') || 2}
                         shutters={form.getValues('partsConfig.shutterCount') || form.getValues('partsConfig.shutters') || 2}
                         wardrobeType={form.getValues('partsConfig.wardrobeType') || 'openable'}
+                        hasLoft={form.getValues('partsConfig.hasLoft') || false}
+                        loftHeight={form.getValues('partsConfig.loftHeight') || 400}
+                        loftWidth={form.getValues('partsConfig.loftWidth') || form.getValues('width') || 1200}
+                        loftDepth={form.getValues('depth') || 600}
                         mirror={form.getValues('partsConfig.mirror') || false}
                         className="mx-auto max-w-4xl"
                       />
