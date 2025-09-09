@@ -281,7 +281,7 @@ export function registerCRMRoutes(app: Express) {
           address1: leadData.address,
           state: leadData.state,
           pinCode: leadData.pinCode,
-          convertedFromLeadId: leadId,
+          // Using simplified approach - no lead conversion tracking needed
         })
         .returning();
 
