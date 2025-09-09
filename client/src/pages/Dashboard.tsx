@@ -663,7 +663,7 @@ export default function Dashboard() {
                 .sort((a, b) => {
                   // Sort by priority: high > medium > low
                   const priorityOrder = { 'high': 3, 'medium': 2, 'low': 1 };
-                  const priorityDiff = (priorityOrder[b.priority] || 1) - (priorityOrder[a.priority] || 1);
+                  const priorityDiff = (priorityOrder[b.priority as keyof typeof priorityOrder] || 1) - (priorityOrder[a.priority as keyof typeof priorityOrder] || 1);
                   if (priorityDiff !== 0) return priorityDiff;
                   
                   // Then by due date if available
@@ -834,7 +834,7 @@ export default function Dashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-0">
-              {recentActivity && recentActivity.length > 0 ? (
+              {recentActivity && Array.isArray(recentActivity) && recentActivity.length > 0 ? (
                 <div className="space-y-0">
                   {recentActivity.slice(0, 4).map((activity: any, index: number) => (
                     <div key={index} className="flex items-center gap-3 py-2 px-1 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0">

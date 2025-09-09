@@ -83,7 +83,7 @@ export const queryClient = new QueryClient({
       queryFn: getQueryFn({ on401: "throw" }),
       refetchInterval: false,
       refetchOnWindowFocus: false,
-      staleTime: 30000, // 30 seconds for better performance
+      staleTime: 15000, // 15 seconds for fresh data
       gcTime: 300000, // 5 minutes cache
       retry: 1,
       networkMode: 'online',
@@ -102,7 +102,7 @@ export const performanceUtils = {
     try {
       const result = await fn();
       const duration = performance.now() - start;
-      if (duration > 1000) {
+      if (duration > 500) { // Warn on anything over 500ms
         console.warn(`Slow API call: ${operation} took ${duration.toFixed(2)}ms`);
       }
       return result;
@@ -116,6 +116,22 @@ export const performanceUtils = {
   batchInvalidate: (patterns: string[]) => {
     patterns.forEach(pattern => {
       queryClient.invalidateQueries({ queryKey: [pattern] });
+    });
+  },
+
+  // Preload critical data
+  preloadData: () => {
+    queryClient.prefetchQuery({
+      queryKey: ['/api/dashboard/stats'],
+      staleTime: 10000, // 10 seconds
+    });
+    queryClient.prefetchQuery({
+      queryKey: ['/api/projects'],
+      staleTime: 30000, // 30 seconds
+    });
+    queryClient.prefetchQuery({
+      queryKey: ['/api/quotes'],
+      staleTime: 20000, // 20 seconds
     });
   }
 };
