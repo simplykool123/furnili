@@ -1183,7 +1183,17 @@ class DatabaseStorage implements IStorage {
 
   // Client operations
   async getAllClients(): Promise<Client[]> {
-    return db.select().from(clients).where(eq(clients.isActive, true)).orderBy(asc(clients.name));
+    console.log("🔍 STORAGE DEBUG: About to execute getAllClients query...");
+    console.log("🔍 STORAGE DEBUG: Query will be: SELECT * FROM clients WHERE is_active = true ORDER BY name ASC");
+    try {
+      const result = await db.select().from(clients).where(eq(clients.isActive, true)).orderBy(asc(clients.name));
+      console.log("✅ STORAGE DEBUG: Query executed successfully, got", result.length, "rows");
+      return result;
+    } catch (error) {
+      console.error("❌ STORAGE DEBUG: Query failed with error:", error);
+      console.error("❌ STORAGE DEBUG: Error details:", JSON.stringify(error, null, 2));
+      throw error;
+    }
   }
 
   async getClient(id: number): Promise<Client | undefined> {

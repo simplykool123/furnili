@@ -911,9 +911,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Client routes
   app.get("/api/clients", authenticateToken, async (req, res) => {
     try {
+      console.log("🔍 DEBUG: Starting getAllClients...");
       const clients = await storage.getAllClients();
+      console.log("✅ DEBUG: Successfully got", clients.length, "clients");
       res.json(clients);
     } catch (error) {
+      console.error("❌ ERROR in getAllClients:", error);
+      console.error("❌ ERROR message:", error.message);
+      console.error("❌ ERROR code:", error.code);
+      console.error("❌ Full error:", JSON.stringify(error, null, 2));
       res.status(500).json({ message: "Failed to fetch clients", error });
     }
   });
