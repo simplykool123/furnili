@@ -1096,8 +1096,16 @@ export default function BOMCalculator() {
         </div>
       )}
 
-                            >
-                              <FormControl>
+      {/* Board Finish Selection */}
+      <div className="space-y-2">
+        <FormField
+          control={form.control}
+          name="finish"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="text-xs">Board Finish</FormLabel>
+              <Select value={field.value} onValueChange={field.onChange} disabled={isPreLamBoard}>
+                <FormControl>
                                 <SelectTrigger className={`h-8 text-xs ${
                                   isPreLamBoard ? 'opacity-50 cursor-not-allowed bg-muted' : ''
                                 }`} tabIndex={7}>
@@ -1133,7 +1141,7 @@ export default function BOMCalculator() {
                     <h3 className="text-sm font-medium">Configuration</h3>
                     <div className="grid grid-cols-2 gap-2">
                       
-                  {/* Bed Type Selection */}
+                      {/* Bed Type Selection */}
                   {selectedFurnitureType === 'bed' && (
                     <div className="space-y-2">
                       <h3 className="text-sm font-medium flex items-center gap-2">
