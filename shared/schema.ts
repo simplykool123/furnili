@@ -69,7 +69,10 @@ export const interactions = pgTable("interactions", {
   id: serial("id").primaryKey(),
   entityType: text("entity_type").notNull(), // lead, client, project
   entityId: integer("entity_id").notNull(),
-  type: text("type").notNull(), // call, email, meeting, whatsapp, visit, demo
+  // NEW: Track client ID for unified notes across lead→project transition
+  clientId: integer("client_id").references(() => clients.id),
+  projectId: integer("project_id").references(() => projects.id), // Direct reference for project notes
+  type: text("type").notNull(), // call, email, meeting, whatsapp, visit, demo, note
   direction: text("direction").notNull().default("outbound"), // inbound, outbound
   subject: text("subject").notNull(),
   content: text("content"),
