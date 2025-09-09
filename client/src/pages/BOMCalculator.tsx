@@ -863,6 +863,7 @@ export default function BOMCalculator() {
                   Bed Type
                 </div>
               </div>
+            </div>
             <Form {...form}>
               <div className="space-y-4">
                 <FormField
