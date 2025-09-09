@@ -5107,16 +5107,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // ✅ CREATE CONSOLIDATED SHEET PURCHASE REQUIREMENTS (for consolidated view)
       const consolidatedItems = [];
       
-      // Add sheet requirements based on optimization results
-      if (bomResult.boardAreaByThickness) {
+      // ✅ USE ADVANCED SHEET OPTIMIZATION RESULTS for accurate sheet counts
+      if (sheetOptimization.sheetsByThickness && bomResult.boardAreaByThickness) {
         Object.entries(bomResult.boardAreaByThickness).forEach(([thickness, area]) => {
           const thicknessMm = parseInt(thickness.replace('mm', ''));
           let rate = 147;
           let sheetCount = 1;
           
-          // Calculate sheets needed (8x4 sheet = ~32 sqft)
-          const sheetAreaSqft = 32; // Standard 8x4 plywood sheet
-          sheetCount = Math.ceil(area / sheetAreaSqft);
+          // ✅ CRITICAL FIX: Get actual optimized sheet count from nesting algorithm
+          const optimizedSheetCount = sheetOptimization.sheetsByThickness[thickness] || 
+                                     Math.ceil(area / 32); // fallback to simple calculation
+          
+          sheetCount = optimizedSheetCount;
           
           // ✅ OPTIMIZED: Set correct rate per thickness (ONLY 18mm & 6mm)
           if (thicknessMm === 18) {
@@ -5125,6 +5127,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             rate = DEFAULT_RATES.board["6mm_plywood"] || 95;
           }
 
+          const sheetAreaSqft = 32; // Standard 8x4 plywood sheet
+          
           consolidatedItems.push({
             id: Math.random(),
             itemType: 'material' as const,
@@ -5134,7 +5138,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             length: 2440, // 8 feet
             width: 1220,  // 4 feet
             thickness: thicknessMm,
-            quantity: sheetCount, // ✅ ACTUAL SHEETS TO PURCHASE
+            quantity: sheetCount, // ✅ ACTUAL OPTIMIZED SHEETS TO PURCHASE
             unit: 'sheets', // ✅ SHEETS, not pieces
             edgeBandingType: 'None',
             edgeBandingLength: 0,
