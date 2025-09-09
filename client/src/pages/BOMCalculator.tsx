@@ -1096,8 +1096,12 @@ export default function BOMCalculator() {
         </div>
       )}
 
-      {/* Board Finish Selection */}
-      <div className="space-y-2">
+      {/* Main Calculator Form */}
+      <Card>
+        <CardContent className="p-6">
+          <Form {...form}>
+            {/* Board Finish Selection */}
+            <div className="space-y-2">
         <FormField
           control={form.control}
           name="finish"
@@ -2206,7 +2210,6 @@ export default function BOMCalculator() {
                     {calculateBOMMutation.isPending ? "Calculating..." : "Calculate BOM"}
                     <Calculator className="w-5 h-5 ml-2" />
                   </Button>
-                </form>
               </Form>
             </CardContent>
           </Card>
@@ -2971,7 +2974,6 @@ export default function BOMCalculator() {
               </Card>
             )}
           </div>
-        </div>
       </ResponsiveLayout>
   );
 }
