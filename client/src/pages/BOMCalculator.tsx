@@ -844,15 +844,24 @@ export default function BOMCalculator() {
         </div>
       </div>
 
-      {/* Step 2: Choose Bed Type (if bed selected) */}
+      {/* Beds Calculator */}
       {selectedFurnitureType === 'bed' && (
         <div className="bg-card shadow-sm border rounded-lg mb-6">
           <div className="px-4 py-6">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="bg-[hsl(28,100%,25%)] text-white px-3 py-1 rounded-full text-sm font-medium">
-                Step 2: Choose Bed Type
-              </div>
+            {/* Calculator Heading */}
+            <div className="text-center mb-6">
+              <Bed className="w-8 h-8 mx-auto text-[hsl(28,100%,25%)] mb-2" />
+              <h2 className="text-xl font-bold text-foreground">Beds Calculator</h2>
+              <p className="text-sm text-muted-foreground">Bed frames and storage beds</p>
             </div>
+            
+            {/* Bed Types Selection */}
+            <div className="mb-6">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="bg-[hsl(28,100%,25%)] text-white px-3 py-1 rounded-full text-sm font-medium">
+                  Bed Type
+                </div>
+              </div>
             <Form {...form}>
               <div className="space-y-4">
                 <FormField
@@ -860,8 +869,7 @@ export default function BOMCalculator() {
                   name="partsConfig.bedType"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-sm font-medium">Bed Size</FormLabel>
-                      <div className="grid grid-cols-3 gap-3">
+                      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
                         {[
                           { value: 'single', label: 'Single', icon: Bed, desc: '90×190cm', size: { width: 900, depth: 1900 } },
                           { value: 'queen', label: 'Queen', icon: Bed, desc: '150×200cm', size: { width: 1500, depth: 2000 } },
@@ -883,17 +891,17 @@ export default function BOMCalculator() {
                                 form.setValue('depth', bedType.size.depth);
                                 form.setValue('height', 900); // Standard bed height
                               }}
-                              className={`p-4 rounded-lg border-2 transition-all duration-200 text-center ${
+                              className={`p-3 rounded-lg border-2 transition-all duration-200 text-center ${
                                 isSelected 
                                   ? 'border-[hsl(28,100%,25%)] bg-[hsl(28,100%,25%)] text-white shadow-lg' 
                                   : 'border-border bg-card hover:border-[hsl(28,100%,25%)]/30 hover:bg-accent'
                               }`}
                             >
-                              <IconComponent className={`w-8 h-8 mx-auto mb-2 ${isSelected ? 'text-white' : 'text-[hsl(28,100%,25%)]'}`} />
-                              <div className={`text-sm font-medium ${isSelected ? 'text-white' : 'text-foreground'}`}>
+                              <IconComponent className={`w-5 h-5 mx-auto mb-1 ${isSelected ? 'text-white' : 'text-[hsl(28,100%,25%)]'}`} />
+                              <div className={`text-xs font-medium mb-0.5 ${isSelected ? 'text-white' : 'text-foreground'}`}>
                                 {bedType.label}
                               </div>
-                              <div className={`text-xs ${isSelected ? 'text-white/80' : 'text-muted-foreground'}`}>
+                              <div className={`text-[10px] ${isSelected ? 'text-white/90' : 'text-muted-foreground'}`}>
                                 {bedType.desc}
                               </div>
                             </button>
@@ -909,13 +917,23 @@ export default function BOMCalculator() {
         </div>
       )}
 
-      {/* Step 2: Choose Kitchen Layout (if kitchen selected) */}
+      {/* Kitchen Calculator */}
       {selectedFurnitureType === 'kitchen_cabinet' && (
         <div className="bg-card shadow-sm border rounded-lg mb-6">
           <div className="px-4 py-6">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="bg-[hsl(28,100%,25%)] text-white px-3 py-1 rounded-full text-sm font-medium">
-                Step 2: Choose Kitchen Layout
+            {/* Calculator Heading */}
+            <div className="text-center mb-6">
+              <Package className="w-8 h-8 mx-auto text-[hsl(28,100%,25%)] mb-2" />
+              <h2 className="text-xl font-bold text-foreground">Kitchen Calculator</h2>
+              <p className="text-sm text-muted-foreground">Modular kitchen cabinets and accessories</p>
+            </div>
+            
+            {/* Kitchen Layout Selection */}
+            <div className="mb-6">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="bg-[hsl(28,100%,25%)] text-white px-3 py-1 rounded-full text-sm font-medium">
+                  Kitchen Layout
+                </div>
               </div>
             </div>
             <Form {...form}>
@@ -925,8 +943,7 @@ export default function BOMCalculator() {
                   name="partsConfig.kitchenLayout"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-sm font-medium">Kitchen Layout</FormLabel>
-                      <div className="grid grid-cols-3 gap-3">
+                      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
                         {[
                           { value: 'L-shaped', label: 'L-shaped', icon: CornerDownRight, desc: 'Corner layout' },
                           { value: 'U-shaped', label: 'U-shaped', icon: Move3D, desc: 'Three walls' },
@@ -942,17 +959,17 @@ export default function BOMCalculator() {
                               key={layout.value}
                               type="button"
                               onClick={() => field.onChange(layout.value)}
-                              className={`p-4 rounded-lg border-2 transition-all duration-200 text-center ${
+                              className={`p-3 rounded-lg border-2 transition-all duration-200 text-center ${
                                 isSelected 
                                   ? 'border-[hsl(28,100%,25%)] bg-[hsl(28,100%,25%)] text-white shadow-lg' 
                                   : 'border-border bg-card hover:border-[hsl(28,100%,25%)]/30 hover:bg-accent'
                               }`}
                             >
-                              <IconComponent className={`w-8 h-8 mx-auto mb-2 ${isSelected ? 'text-white' : 'text-[hsl(28,100%,25%)]'}`} />
-                              <div className={`text-sm font-medium ${isSelected ? 'text-white' : 'text-foreground'}`}>
+                              <IconComponent className={`w-5 h-5 mx-auto mb-1 ${isSelected ? 'text-white' : 'text-[hsl(28,100%,25%)]'}`} />
+                              <div className={`text-xs font-medium mb-0.5 ${isSelected ? 'text-white' : 'text-foreground'}`}>
                                 {layout.label}
                               </div>
-                              <div className={`text-xs ${isSelected ? 'text-white/80' : 'text-muted-foreground'}`}>
+                              <div className={`text-[10px] ${isSelected ? 'text-white/90' : 'text-muted-foreground'}`}>
                                 {layout.desc}
                               </div>
                             </button>
@@ -3093,6 +3110,7 @@ export default function BOMCalculator() {
             )}
           </div>
         </div>
+      </div>
     </ResponsiveLayout>
   );
 }
