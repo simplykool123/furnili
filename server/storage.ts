@@ -1183,14 +1183,32 @@ class DatabaseStorage implements IStorage {
 
   // Client operations
   async getAllClients(): Promise<Client[]> {
-    console.log("🔍 STORAGE DEBUG: About to execute getAllClients query...");
-    console.log("🔍 STORAGE DEBUG: Query will be: SELECT * FROM clients WHERE is_active = true ORDER BY name ASC");
+    console.log("🔍 STORAGE DEBUG: About to execute getAllClients query with explicit columns...");
     try {
-      const result = await db.select().from(clients).where(eq(clients.isActive, true)).orderBy(asc(clients.name));
+      // Use explicit column selection to avoid schema issues
+      const result = await db.select({
+        id: clients.id,
+        name: clients.name,
+        email: clients.email,
+        mobile: clients.mobile,
+        city: clients.city,
+        contactPerson: clients.contactPerson,
+        phone: clients.phone,
+        address1: clients.address1,
+        address2: clients.address2,
+        state: clients.state,
+        pinCode: clients.pinCode,
+        gstNumber: clients.gstNumber,
+        isActive: clients.isActive,
+        createdAt: clients.createdAt,
+        updatedAt: clients.updatedAt,
+        // Skip the type field for now to see if that's the issue
+      }).from(clients).where(eq(clients.isActive, true)).orderBy(asc(clients.name));
+      
       console.log("✅ STORAGE DEBUG: Query executed successfully, got", result.length, "rows");
-      return result;
+      return result as Client[];
     } catch (error) {
-      console.error("❌ STORAGE DEBUG: Query failed with error:", error);
+      console.error("❌ STORAGE DEBUG: Explicit column query failed with error:", error);
       console.error("❌ STORAGE DEBUG: Error details:", JSON.stringify(error, null, 2));
       throw error;
     }
