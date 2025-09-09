@@ -23,6 +23,7 @@ import { setupQuotesRoutes } from "./quotesRoutes";
 import { db } from "./db";
 import { calculateBOM, generateBOMNumber, convertDimensions, DEFAULT_RATES, calculateWardrobeBOM, calculateSheetOptimization } from "./utils/bomCalculations";
 import { optimizeSheetCutting, OptimizedPanel, SheetDimensions } from "./utils/advanced-nesting";
+import QRCode from 'qrcode';
 
 import { eq, and, gt } from "drizzle-orm";
 import { projectFiles, users, suppliers, products, purchaseOrders, purchaseOrderItems, stockMovements, bomCalculations, bomItems } from "@shared/schema";
@@ -152,6 +153,60 @@ function calculateAdvancedSheetOptimization(boardPanels: any[]) {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // WhatsApp Bot routes  
+  app.get("/api/whatsapp/status", authenticateToken, async (req, res) => {
+    try {
+      // For now, return a basic status - we'll connect to actual bot instance next
+      const status = {
+        connected: false,
+        qrCode: null,
+        phoneNumber: null,
+        lastConnected: null,
+        status: 'disconnected'
+      };
+      res.json(status);
+    } catch (error) {
+      console.error('Error getting WhatsApp status:', error);
+      res.status(500).json({ message: 'Failed to get WhatsApp status' });
+    }
+  });
+
+  app.post("/api/whatsapp/generate-qr", authenticateToken, async (req, res) => {
+    try {
+      // Generate a sample QR code for now
+      const qrText = `whatsapp-${Date.now()}`;
+      const qrCode = await QRCode.toDataURL(qrText);
+      
+      res.json({
+        success: true,
+        qrCode: qrCode.split(',')[1], // Return base64 part only
+        message: 'QR code generated successfully'
+      });
+    } catch (error) {
+      console.error('Error generating QR code:', error);
+      res.status(500).json({ 
+        success: false,
+        message: 'Failed to generate QR code' 
+      });
+    }
+  });
+
+  app.post("/api/whatsapp/disconnect", authenticateToken, async (req, res) => {
+    try {
+      // For now, just return success - we'll connect to actual bot instance next
+      res.json({
+        success: true,
+        message: 'WhatsApp disconnected successfully'
+      });
+    } catch (error) {
+      console.error('Error disconnecting WhatsApp:', error);
+      res.status(500).json({ 
+        success: false,
+        message: 'Failed to disconnect WhatsApp' 
+      });
+    }
+  });
+
   // Auth routes
   app.post("/api/auth/login", async (req, res) => {
     try {
