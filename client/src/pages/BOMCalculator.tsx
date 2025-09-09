@@ -3111,7 +3111,6 @@ export default function BOMCalculator() {
             )}
           </div>
         </div>
-      </div>
-    </ResponsiveLayout>
+      </ResponsiveLayout>
   );
 }

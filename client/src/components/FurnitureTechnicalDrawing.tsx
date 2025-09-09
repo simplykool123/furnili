@@ -69,13 +69,33 @@ const FurnitureTechnicalDrawing: React.FC<FurnitureTechnicalDrawingProps> = ({
     return `${Math.round(value)}`;
   };
 
-  // 🏗️ REALISTIC WARDROBE - Based on furniture industry standards
+  // 🚪 INTELLIGENT WARDROBE RENDERING - AI-powered wardrobe design based on type and specifications
   const renderWardrobe = () => {
     const elements: JSX.Element[] = [];
-    const shelves = configuration.shelves || 3;
-    const drawers = configuration.drawers || 0;
-    const shutters = configuration.shutters || 2;
+    const wardrobeType = configuration.wardrobeType || 'openable';
+    const shelves = configuration.shelves || configuration.shelfCount || 3;
+    const drawers = configuration.drawers || configuration.drawerCount || 0;
+    const shutters = configuration.shutters || configuration.shutterCount || 2;
+    const hangingRods = configuration.hangingRods || 2;
+    const hasMirror = configuration.mirror === true;
+    const hasLoft = configuration.hasLoft === true;
 
+    // 🎯 INTELLIGENT WARDROBE TYPE RENDERING - Based on wardrobe type
+    switch (wardrobeType.toLowerCase()) {
+      case 'sliding':
+        return renderSlidingWardrobe(elements, { shelves, drawers, shutters, hangingRods, hasMirror, hasLoft });
+      case 'walk-in':
+      case 'walkin':
+        return renderWalkInWardrobe(elements, { shelves, drawers, shutters, hangingRods, hasMirror, hasLoft });
+      default:
+        return renderOpenableWardrobe(elements, { shelves, drawers, shutters, hangingRods, hasMirror, hasLoft });
+    }
+  };
+
+  // 🚪 OPENABLE WARDROBE - Traditional hinged door wardrobe
+  const renderOpenableWardrobe = (elements: JSX.Element[], config: any) => {
+    const { shelves, drawers, shutters, hangingRods, hasMirror, hasLoft } = config;
+    
     // Main wardrobe outline
     elements.push(
       <rect
@@ -84,20 +104,22 @@ const FurnitureTechnicalDrawing: React.FC<FurnitureTechnicalDrawingProps> = ({
         y={startY}
         width={drawWidth}
         height={drawHeight}
-        fill="none"
-        stroke="#2D2D2D"
+        fill="#F5F5DC"
+        stroke="#8B4513"
         strokeWidth="3"
+        rx="4"
       />
     );
 
-    const internalWidth = drawWidth - 6;
-    const internalHeight = drawHeight - 6;
-    const internalStartX = startX + 3;
-    const internalStartY = startY + 3;
+    const internalWidth = drawWidth - 8;
+    const internalHeight = drawHeight - 8;
+    const internalStartX = startX + 4;
+    const internalStartY = startY + 4;
 
-    // 🎯 REALISTIC LAYOUT: 70% Hanging + 30% Storage (Industry Standard)
-    const hangingWidth = internalWidth * 0.7; // 70% for hanging (main feature)
-    const storageWidth = internalWidth * 0.3;  // 30% for shelves/drawers
+    // 🎯 INTELLIGENT LAYOUT - Adapt to wardrobe dimensions
+    const layoutRatio = widthMM > 1800 ? 0.6 : 0.7; // Larger wardrobes get more storage space
+    const hangingWidth = internalWidth * layoutRatio;
+    const storageWidth = internalWidth * (1 - layoutRatio);
 
     // ✨ HANGING SPACE SECTION (LEFT SIDE - Main Feature)
     elements.push(
@@ -298,7 +320,364 @@ const FurnitureTechnicalDrawing: React.FC<FurnitureTechnicalDrawingProps> = ({
       }
     }
 
+    // 🏷️ WARDROBE TYPE INDICATOR
+    elements.push(
+      <text
+        key="wardrobe-type-label"
+        x={startX + drawWidth/2}
+        y={startY - 15}
+        textAnchor="middle"
+        fontSize="12"
+        fill="#8B4513"
+        fontWeight="bold"
+      >
+        {getWardrobeTypeName()} • {formatDimension(widthMM)}×{formatDimension(heightMM)}×{formatDimension(depthMM)}
+      </text>
+    );
+
     return elements;
+  };
+
+  // 🔄 SLIDING WARDROBE - Modern sliding door design
+  const renderSlidingWardrobe = (elements: JSX.Element[], config: any) => {
+    const { shelves, drawers, hangingRods, hasMirror } = config;
+    
+    elements.push(
+      <rect
+        key="sliding-frame"
+        x={startX}
+        y={startY}
+        width={drawWidth}
+        height={drawHeight}
+        fill="#F8F8FF"
+        stroke="#696969"
+        strokeWidth="3"
+        rx="6"
+      />
+    );
+
+    const internalStartX = startX + 6;
+    const internalStartY = startY + 6;
+    const internalWidth = drawWidth - 12;
+    const internalHeight = drawHeight - 12;
+
+    // Sliding tracks (top and bottom)
+    elements.push(
+      <line
+        key="top-track"
+        x1={internalStartX}
+        y1={internalStartY}
+        x2={internalStartX + internalWidth}
+        y2={internalStartY}
+        stroke="#A9A9A9"
+        strokeWidth="4"
+      />
+    );
+    
+    elements.push(
+      <line
+        key="bottom-track"
+        x1={internalStartX}
+        y1={internalStartY + internalHeight}
+        x2={internalStartX + internalWidth}
+        y2={internalStartY + internalHeight}
+        stroke="#A9A9A9"
+        strokeWidth="4"
+      />
+    );
+
+    // Sliding doors (50% each)
+    const doorWidth = internalWidth / 2;
+    
+    for (let i = 0; i < 2; i++) {
+      const doorX = internalStartX + (i * doorWidth);
+      
+      elements.push(
+        <rect
+          key={`sliding-door-${i}`}
+          x={doorX + 2}
+          y={internalStartY + 4}
+          width={doorWidth - 4}
+          height={internalHeight - 8}
+          fill={hasMirror && i === 0 ? "#E6F3FF" : "#FFFFFF"}
+          stroke="#C0C0C0"
+          strokeWidth="2"
+          rx="4"
+        />
+      );
+      
+      // Mirror effect on first door if mirror option is selected
+      if (hasMirror && i === 0) {
+        elements.push(
+          <text
+            key="mirror-label"
+            x={doorX + doorWidth/2}
+            y={internalStartY + internalHeight/2}
+            textAnchor="middle"
+            fontSize="10"
+            fill="#4682B4"
+            fontStyle="italic"
+          >
+            MIRROR
+          </text>
+        );
+      }
+      
+      // Door handle
+      elements.push(
+        <rect
+          key={`sliding-handle-${i}`}
+          x={doorX + doorWidth - 20}
+          y={internalStartY + internalHeight/2 - 8}
+          width="12"
+          height="16"
+          fill="#8B4513"
+          rx="6"
+        />
+      );
+    }
+
+    // Internal layout indication
+    renderWardrobeInterior(elements, internalStartX, internalStartY, internalWidth, internalHeight, { shelves, drawers, hangingRods });
+
+    return elements;
+  };
+
+  // 🚶 WALK-IN WARDROBE - Spacious walk-in closet design  
+  const renderWalkInWardrobe = (elements: JSX.Element[], config: any) => {
+    const { shelves, drawers, hangingRods } = config;
+    
+    // Walk-in frame (represents room boundaries)
+    elements.push(
+      <rect
+        key="walkin-frame"
+        x={startX}
+        y={startY}
+        width={drawWidth}
+        height={drawHeight}
+        fill="none"
+        stroke="#2F4F4F"
+        strokeWidth="4"
+        strokeDasharray="10,5"
+        rx="8"
+      />
+    );
+
+    // L-shaped layout for walk-in
+    const leftWallWidth = drawWidth * 0.25;
+    const rightWallWidth = drawWidth * 0.25;
+    const backWallWidth = drawWidth * 0.5;
+    
+    // Left wall storage
+    elements.push(
+      <rect
+        key="left-wall-storage"
+        x={startX + 8}
+        y={startY + 8}
+        width={leftWallWidth}
+        height={drawHeight - 16}
+        fill="#F0F8FF"
+        stroke="#4682B4"
+        strokeWidth="2"
+        rx="4"
+      />
+    );
+
+    // Right wall storage
+    elements.push(
+      <rect
+        key="right-wall-storage"
+        x={startX + drawWidth - rightWallWidth - 8}
+        y={startY + 8}
+        width={rightWallWidth}
+        height={drawHeight - 16}
+        fill="#F0F8FF"
+        stroke="#4682B4"
+        strokeWidth="2"
+        rx="4"
+      />
+    );
+
+    // Back wall storage
+    elements.push(
+      <rect
+        key="back-wall-storage"
+        x={startX + leftWallWidth + 8}
+        y={startY + 8}
+        width={backWallWidth}
+        height={drawHeight * 0.3}
+        fill="#F0F8FF"
+        stroke="#4682B4"
+        strokeWidth="2"
+        rx="4"
+      />
+    );
+
+    // Hanging rods on all three walls
+    const rodPositions = [
+      { x: startX + 8 + leftWallWidth/2, y: startY + 20, width: leftWallWidth - 16 },
+      { x: startX + drawWidth - rightWallWidth - 8 + rightWallWidth/2, y: startY + 20, width: rightWallWidth - 16 },
+      { x: startX + leftWallWidth + 8 + backWallWidth/2, y: startY + 20, width: backWallWidth - 16 }
+    ];
+
+    rodPositions.forEach((rod, i) => {
+      elements.push(
+        <line
+          key={`walkin-rod-${i}`}
+          x1={rod.x - rod.width/2}
+          y1={rod.y}
+          x2={rod.x + rod.width/2}
+          y2={rod.y}
+          stroke="#8B4513"
+          strokeWidth="3"
+        />
+      );
+    });
+
+    // Walking space in center
+    const walkingAreaX = startX + leftWallWidth + 20;
+    const walkingAreaY = startY + drawHeight * 0.4;
+    const walkingAreaWidth = drawWidth - leftWallWidth - rightWallWidth - 40;
+    const walkingAreaHeight = drawHeight * 0.5;
+    
+    elements.push(
+      <rect
+        key="walking-space"
+        x={walkingAreaX}
+        y={walkingAreaY}
+        width={walkingAreaWidth}
+        height={walkingAreaHeight}
+        fill="none"
+        stroke="#DDA0DD"
+        strokeWidth="2"
+        strokeDasharray="5,5"
+        rx="8"
+      />
+    );
+    
+    elements.push(
+      <text
+        key="walking-label"
+        x={walkingAreaX + walkingAreaWidth/2}
+        y={walkingAreaY + walkingAreaHeight/2}
+        textAnchor="middle"
+        fontSize="12"
+        fill="#8B008B"
+        fontWeight="bold"
+      >
+        WALKING SPACE
+      </text>
+    );
+
+    // Shelving indicators
+    if (shelves > 0) {
+      const shelfSpacing = (drawHeight * 0.6) / Math.min(shelves, 6);
+      for (let i = 0; i < Math.min(shelves, 6); i++) {
+        const shelfY = startY + 40 + (i * shelfSpacing);
+        
+        // Left wall shelves
+        elements.push(
+          <line
+            key={`left-shelf-${i}`}
+            x1={startX + 12}
+            y1={shelfY}
+            x2={startX + leftWallWidth + 4}
+            y2={shelfY}
+            stroke="#CD853F"
+            strokeWidth="2"
+          />
+        );
+        
+        // Right wall shelves
+        elements.push(
+          <line
+            key={`right-shelf-${i}`}
+            x1={startX + drawWidth - rightWallWidth - 4}
+            y1={shelfY}
+            x2={startX + drawWidth - 12}
+            y2={shelfY}
+            stroke="#CD853F"
+            strokeWidth="2"
+          />
+        );
+      }
+    }
+
+    return elements;
+  };
+
+  // 🏠 WARDROBE INTERIOR - Shared interior rendering logic
+  const renderWardrobeInterior = (elements: JSX.Element[], startX: number, startY: number, width: number, height: number, config: any) => {
+    const { shelves, drawers, hangingRods } = config;
+    
+    // Hanging rod
+    if (hangingRods > 0) {
+      elements.push(
+        <line
+          key="hanging-rod"
+          x1={startX + 10}
+          y1={startY + 20}
+          x2={startX + width - 10}
+          y2={startY + 20}
+          stroke="#8B4513"
+          strokeWidth="3"
+        />
+      );
+    }
+
+    // Shelves
+    if (shelves > 0) {
+      const shelfSpacing = (height - 60) / (shelves + 1);
+      for (let i = 0; i < shelves; i++) {
+        const shelfY = startY + 40 + ((i + 1) * shelfSpacing);
+        elements.push(
+          <line
+            key={`interior-shelf-${i}`}
+            x1={startX + width * 0.6 + 5}
+            y1={shelfY}
+            x2={startX + width - 5}
+            y2={shelfY}
+            stroke="#CD853F"
+            strokeWidth="2"
+          />
+        );
+      }
+    }
+
+    // Drawers (bottom section)
+    if (drawers > 0) {
+      const drawerHeight = (height * 0.3) / Math.min(drawers, 3);
+      const drawerStartY = startY + height - (height * 0.3);
+      
+      for (let i = 0; i < Math.min(drawers, 3); i++) {
+        const drawerY = drawerStartY + (i * drawerHeight);
+        elements.push(
+          <rect
+            key={`interior-drawer-${i}`}
+            x={startX + width * 0.6 + 5}
+            y={drawerY + 2}
+            width={width * 0.35}
+            height={drawerHeight - 4}
+            fill="#FFFFFF"
+            stroke="#A9A9A9"
+            strokeWidth="1"
+            rx="2"
+          />
+        );
+      }
+    }
+  };
+
+  // 📝 WARDROBE TYPE NAMES
+  const getWardrobeTypeName = (): string => {
+    const type = configuration.wardrobeType || 'openable';
+    const names: Record<string, string> = {
+      'openable': 'Hinged Door Wardrobe',
+      'sliding': 'Sliding Door Wardrobe',
+      'walk-in': 'Walk-in Wardrobe',
+      'walkin': 'Walk-in Wardrobe'
+    };
+    return names[type.toLowerCase()] || 'Custom Wardrobe';
   };
 
   // 🛏️ INTELLIGENT BED RENDERING - AI-powered bed design based on type and dimensions
@@ -695,141 +1074,625 @@ const FurnitureTechnicalDrawing: React.FC<FurnitureTechnicalDrawingProps> = ({
     return elements;
   };
 
-  // 🗄️ REALISTIC CABINET - Kitchen/storage cabinet design
+  // 🏠 INTELLIGENT KITCHEN RENDERING - AI-powered kitchen layout design
   const renderCabinet = () => {
     const elements: JSX.Element[] = [];
-    const shelves = configuration.shelves || 2;
-    const drawers = configuration.drawers || 0;
-    const doors = configuration.doors || configuration.shutters || 2;
+    const kitchenLayout = configuration.kitchenLayout || 'straight';
+    const baseCabinets = configuration.baseCabinets || 3;
+    const wallCabinets = configuration.wallCabinets || 2;
+    const tallCabinets = configuration.tallCabinets || 1;
+    const hasIsland = configuration.island === true;
+    const hasCornerUnit = configuration.cornerUnit === true;
 
-    // Main cabinet frame
+    // 🎯 INTELLIGENT LAYOUT RENDERING - Based on kitchen layout type
+    switch (kitchenLayout.toLowerCase()) {
+      case 'l_shaped':
+        return renderLShapedKitchen(elements, { baseCabinets, wallCabinets, tallCabinets, hasCornerUnit });
+      case 'u_shaped':
+        return renderUShapedKitchen(elements, { baseCabinets, wallCabinets, tallCabinets, hasCornerUnit });
+      case 'galley':
+        return renderGalleyKitchen(elements, { baseCabinets, wallCabinets, tallCabinets });
+      case 'island':
+        return renderIslandKitchen(elements, { baseCabinets, wallCabinets, tallCabinets, hasIsland });
+      default:
+        return renderStraightKitchen(elements, { baseCabinets, wallCabinets, tallCabinets });
+    }
+  };
+
+  // 📏 STRAIGHT KITCHEN LAYOUT - Single wall design
+  const renderStraightKitchen = (elements: JSX.Element[], config: any) => {
+    const { baseCabinets, wallCabinets, tallCabinets } = config;
+    
+    // Countertop (main surface)
+    const countertopHeight = 20;
+    const countertopY = startY + drawHeight * 0.6;
+    
     elements.push(
       <rect
-        key="cabinet-frame"
+        key="countertop"
         x={startX}
-        y={startY}
+        y={countertopY}
         width={drawWidth}
-        height={drawHeight}
-        fill="none"
-        stroke="#2D2D2D"
+        height={countertopHeight}
+        fill="#E5E5E5"
+        stroke="#BBBBB"
         strokeWidth="2"
+        rx="4"
       />
     );
 
-    const internalWidth = drawWidth - 6;
-    const internalHeight = drawHeight - 6;
-    const internalStartX = startX + 3;
-    const internalStartY = startY + 3;
+    // Base cabinets (below countertop)
+    const baseCabinetHeight = drawHeight * 0.35;
+    const baseCabinetY = countertopY + countertopHeight;
+    const baseCabinetWidth = drawWidth / baseCabinets;
+    
+    for (let i = 0; i < baseCabinets; i++) {
+      const cabinetX = startX + (i * baseCabinetWidth);
+      
+      elements.push(
+        <rect
+          key={`base-cabinet-${i}`}
+          x={cabinetX}
+          y={baseCabinetY}
+          width={baseCabinetWidth - 2}
+          height={baseCabinetHeight}
+          fill="#8B4513"
+          stroke="#654321"
+          strokeWidth="1.5"
+          rx="2"
+        />
+      );
+      
+      // Cabinet door with handle
+      elements.push(
+        <rect
+          key={`base-door-${i}`}
+          x={cabinetX + 4}
+          y={baseCabinetY + 4}
+          width={baseCabinetWidth - 10}
+          height={baseCabinetHeight - 8}
+          fill="#A0522D"
+          stroke="#654321"
+          strokeWidth="1"
+          rx="3"
+        />
+      );
+      
+      // Handle
+      elements.push(
+        <rect
+          key={`base-handle-${i}`}
+          x={cabinetX + baseCabinetWidth - 12}
+          y={baseCabinetY + baseCabinetHeight/2 - 6}
+          width="2"
+          height="12"
+          fill="#2C2C2C"
+          rx="1"
+        />
+      );
+    }
 
-    // Background
+    // Wall cabinets (above countertop)
+    const wallCabinetHeight = drawHeight * 0.25;
+    const wallCabinetY = startY + 10;
+    const wallCabinetWidth = drawWidth / wallCabinets;
+    
+    for (let i = 0; i < wallCabinets; i++) {
+      const cabinetX = startX + (i * wallCabinetWidth);
+      
+      elements.push(
+        <rect
+          key={`wall-cabinet-${i}`}
+          x={cabinetX}
+          y={wallCabinetY}
+          width={wallCabinetWidth - 2}
+          height={wallCabinetHeight}
+          fill="#8B4513"
+          stroke="#654321"
+          strokeWidth="1.5"
+          rx="2"
+        />
+      );
+      
+      // Glass door effect for upper cabinets
+      elements.push(
+        <rect
+          key={`wall-door-${i}`}
+          x={cabinetX + 4}
+          y={wallCabinetY + 4}
+          width={wallCabinetWidth - 10}
+          height={wallCabinetHeight - 8}
+          fill="#F0F8FF"
+          stroke="#B0C4DE"
+          strokeWidth="1"
+          strokeOpacity="0.7"
+          fillOpacity="0.3"
+          rx="3"
+        />
+      );
+      
+      // Handle
+      elements.push(
+        <circle
+          key={`wall-handle-${i}`}
+          cx={cabinetX + wallCabinetWidth - 10}
+          cy={wallCabinetY + wallCabinetHeight - 15}
+          r="3"
+          fill="#2C2C2C"
+        />
+      );
+    }
+
+    // Appliances indicators
+    renderKitchenAppliances(elements, 'straight');
+
+    return elements;
+  };
+
+  // 🔄 L-SHAPED KITCHEN LAYOUT  
+  const renderLShapedKitchen = (elements: JSX.Element[], config: any) => {
+    const { baseCabinets, wallCabinets, hasCornerUnit } = config;
+    
+    // Horizontal section (60% of width)
+    const horizontalWidth = drawWidth * 0.6;
+    const verticalHeight = drawHeight * 0.6;
+    
+    // Horizontal countertop
+    const countertopHeight = 15;
+    const hCountertopY = startY + verticalHeight - countertopHeight;
+    
     elements.push(
       <rect
-        key="cabinet-interior"
-        x={internalStartX}
-        y={internalStartY}
-        width={internalWidth}
-        height={internalHeight}
-        fill="#F8F9FA"
-        stroke="none"
+        key="h-countertop"
+        x={startX}
+        y={hCountertopY}
+        width={horizontalWidth}
+        height={countertopHeight}
+        fill="#E5E5E5"
+        stroke="#BBBBBB"
+        strokeWidth="2"
+        rx="4"
       />
     );
 
-    // Drawer section (bottom 40% if drawers exist)
-    let shelfAreaHeight = internalHeight;
-    if (drawers > 0) {
-      const drawerAreaHeight = internalHeight * 0.4;
-      shelfAreaHeight = internalHeight * 0.6;
-      const actualDrawers = Math.min(drawers, 3);
-      const drawerHeight = drawerAreaHeight / actualDrawers;
+    // Vertical countertop  
+    const vCountertopX = startX + horizontalWidth - countertopHeight;
+    
+    elements.push(
+      <rect
+        key="v-countertop"
+        x={vCountertopX}
+        y={startY + 10}
+        width={countertopHeight}
+        height={verticalHeight - countertopHeight}
+        fill="#E5E5E5"
+        stroke="#BBBBBB"
+        strokeWidth="2"
+        rx="4"
+      />
+    );
 
-      for (let i = 0; i < actualDrawers; i++) {
-        const drawerY = internalStartY + shelfAreaHeight + (i * drawerHeight);
-        elements.push(
-          <rect
-            key={`cabinet-drawer-${i}`}
-            x={internalStartX + 8}
-            y={drawerY + 3}
-            width={internalWidth - 16}
-            height={drawerHeight - 6}
-            fill="#FFFFFF"
-            stroke="#6C757D"
-            strokeWidth="1"
-            rx="3"
-          />
-        );
-        
-        // Drawer handle
-        elements.push(
-          <circle
-            key={`cabinet-handle-${i}`}
-            cx={internalStartX + internalWidth - 20}
-            cy={drawerY + drawerHeight / 2}
-            r="3"
-            fill="#495057"
-          />
-        );
-      }
-    }
-
-    // Shelf section (upper area)
-    if (shelves > 0) {
-      const actualShelves = Math.min(shelves, 4);
-      const shelfSpacing = shelfAreaHeight / (actualShelves + 1);
+    // Base cabinets along horizontal
+    const hCabinetCount = Math.floor(baseCabinets * 0.7);
+    const hCabinetWidth = horizontalWidth / hCabinetCount;
+    const baseCabinetHeight = (drawHeight - verticalHeight) * 0.8;
+    
+    for (let i = 0; i < hCabinetCount; i++) {
+      const cabinetX = startX + (i * hCabinetWidth);
+      const cabinetY = hCountertopY + countertopHeight;
       
-      for (let i = 0; i < actualShelves; i++) {
-        const shelfY = internalStartY + ((i + 1) * shelfSpacing);
-        elements.push(
-          <line
-            key={`cabinet-shelf-${i}`}
-            x1={internalStartX + 5}
-            y1={shelfY}
-            x2={internalStartX + internalWidth - 5}
-            y2={shelfY}
-            stroke="#495057"
-            strokeWidth="1.5"
-          />
-        );
-
-        // Add some items on shelves
-        for (let j = 0; j < 3; j++) {
-          elements.push(
-            <rect
-              key={`cabinet-item-${i}-${j}`}
-              x={internalStartX + 15 + (j * 25)}
-              y={shelfY - 8}
-              width="20"
-              height="6"
-              fill="#DEE2E6"
-              stroke="#ADB5BD"
-              strokeWidth="0.5"
-              rx="1"
-            />
-          );
-        }
-      }
+      elements.push(
+        <rect
+          key={`h-base-${i}`}
+          x={cabinetX}
+          y={cabinetY}
+          width={hCabinetWidth - 2}
+          height={baseCabinetHeight}
+          fill="#8B4513"
+          stroke="#654321"
+          strokeWidth="1.5"
+          rx="2"
+        />
+      );
     }
 
-    // Door divisions
-    if (doors > 1) {
-      const doorWidth = drawWidth / doors;
-      for (let i = 1; i < doors; i++) {
-        const doorX = startX + (i * doorWidth);
-        elements.push(
-          <line
-            key={`cabinet-door-${i}`}
-            x1={doorX}
-            y1={startY}
-            x2={doorX}
-            y2={startY + drawHeight}
-            stroke="#495057"
-            strokeWidth="1.5"
-            strokeDasharray="8,4"
-          />
-        );
-      }
+    // Base cabinets along vertical
+    const vCabinetCount = Math.ceil(baseCabinets * 0.3);
+    const vCabinetHeight = (verticalHeight - countertopHeight) / vCabinetCount;
+    
+    for (let i = 0; i < vCabinetCount; i++) {
+      const cabinetY = startY + 10 + (i * vCabinetHeight);
+      const cabinetX = vCountertopX + countertopHeight;
+      
+      elements.push(
+        <rect
+          key={`v-base-${i}`}
+          x={cabinetX}
+          y={cabinetY}
+          width={drawWidth - (vCountertopX + countertopHeight - startX)}
+          height={vCabinetHeight - 2}
+          fill="#8B4513"
+          stroke="#654321"
+          strokeWidth="1.5"
+          rx="2"
+        />
+      );
+    }
+
+    // Corner unit (if specified)
+    if (hasCornerUnit) {
+      elements.push(
+        <circle
+          key="corner-unit"
+          cx={vCountertopX + countertopHeight/2}
+          cy={hCountertopY + countertopHeight/2}
+          r="12"
+          fill="#654321"
+          stroke="#4A3018"
+          strokeWidth="2"
+        />
+      );
+      
+      elements.push(
+        <text
+          key="corner-label"
+          x={vCountertopX + countertopHeight/2}
+          y={hCountertopY - 15}
+          textAnchor="middle"
+          fontSize="8"
+          fill="#333"
+          fontWeight="bold"
+        >
+          Lazy Susan
+        </text>
+      );
+    }
+
+    // Wall cabinets
+    const wallCabinetHeight = 40;
+    for (let i = 0; i < Math.min(wallCabinets, 3); i++) {
+      const cabinetWidth = horizontalWidth / 3;
+      elements.push(
+        <rect
+          key={`l-wall-${i}`}
+          x={startX + (i * cabinetWidth)}
+          y={startY + 5}
+          width={cabinetWidth - 2}
+          height={wallCabinetHeight}
+          fill="#A0522D"
+          stroke="#654321"
+          strokeWidth="1.5"
+          rx="2"
+        />
+      );
     }
 
     return elements;
+  };
+
+  // 🅿️ U-SHAPED KITCHEN LAYOUT
+  const renderUShapedKitchen = (elements: JSX.Element[], config: any) => {
+    const { baseCabinets, wallCabinets } = config;
+    
+    const sideWidth = drawWidth * 0.25;
+    const centerWidth = drawWidth * 0.5;
+    const countertopHeight = 15;
+    const midY = startY + drawHeight * 0.5;
+    
+    // Bottom horizontal section
+    elements.push(
+      <rect
+        key="bottom-counter"
+        x={startX}
+        y={midY}
+        width={drawWidth}
+        height={countertopHeight}
+        fill="#E5E5E5"
+        stroke="#BBBBBB"
+        strokeWidth="2"
+        rx="4"
+      />
+    );
+    
+    // Left vertical section
+    elements.push(
+      <rect
+        key="left-counter"
+        x={startX}
+        y={startY + 20}
+        width={countertopHeight}
+        height={midY - startY - 20}
+        fill="#E5E5E5"
+        stroke="#BBBBBB"
+        strokeWidth="2"
+        rx="4"
+      />
+    );
+    
+    // Right vertical section
+    elements.push(
+      <rect
+        key="right-counter"
+        x={startX + drawWidth - countertopHeight}
+        y={startY + 20}
+        width={countertopHeight}
+        height={midY - startY - 20}
+        fill="#E5E5E5"
+        stroke="#BBBBBB"
+        strokeWidth="2"
+        rx="4"
+      />
+    );
+
+    // Base cabinets for all three sections
+    const cabinetHeight = (drawHeight - midY) * 0.7;
+    const numCabinets = Math.min(baseCabinets, 8);
+    
+    // Bottom cabinets
+    for (let i = 0; i < Math.floor(numCabinets * 0.6); i++) {
+      const cabinetWidth = drawWidth / Math.floor(numCabinets * 0.6);
+      elements.push(
+        <rect
+          key={`u-bottom-${i}`}
+          x={startX + (i * cabinetWidth)}
+          y={midY + countertopHeight}
+          width={cabinetWidth - 2}
+          height={cabinetHeight}
+          fill="#8B4513"
+          stroke="#654321"
+          strokeWidth="1.5"
+          rx="2"
+        />
+      );
+    }
+    
+    // Wall cabinets (top)
+    for (let i = 0; i < Math.min(wallCabinets, 4); i++) {
+      const cabinetWidth = centerWidth / Math.min(wallCabinets, 4);
+      elements.push(
+        <rect
+          key={`u-wall-${i}`}
+          x={startX + sideWidth + (i * cabinetWidth)}
+          y={startY + 5}
+          width={cabinetWidth - 2}
+          height={35}
+          fill="#A0522D"
+          stroke="#654321"
+          strokeWidth="1.5"
+          rx="2"
+        />
+      );
+    }
+
+    return elements;
+  };
+
+  // 🚢 GALLEY KITCHEN LAYOUT
+  const renderGalleyKitchen = (elements: JSX.Element[], config: any) => {
+    const { baseCabinets, wallCabinets } = config;
+    
+    const walkwayWidth = drawHeight * 0.3;
+    const counterHeight = 15;
+    const topCounterY = startY + 20;
+    const bottomCounterY = startY + drawHeight - 60;
+    
+    // Top countertop
+    elements.push(
+      <rect
+        key="top-counter"
+        x={startX}
+        y={topCounterY}
+        width={drawWidth}
+        height={counterHeight}
+        fill="#E5E5E5"
+        stroke="#BBBBBB"
+        strokeWidth="2"
+        rx="4"
+      />
+    );
+    
+    // Bottom countertop
+    elements.push(
+      <rect
+        key="bottom-counter"
+        x={startX}
+        y={bottomCounterY}
+        width={drawWidth}
+        height={counterHeight}
+        fill="#E5E5E5"
+        stroke="#BBBBBB"
+        strokeWidth="2"
+        rx="4"
+      />
+    );
+
+    // Top base cabinets
+    const topCabinets = Math.ceil(baseCabinets / 2);
+    for (let i = 0; i < topCabinets; i++) {
+      const cabinetWidth = drawWidth / topCabinets;
+      elements.push(
+        <rect
+          key={`galley-top-${i}`}
+          x={startX + (i * cabinetWidth)}
+          y={topCounterY + counterHeight}
+          width={cabinetWidth - 2}
+          height={40}
+          fill="#8B4513"
+          stroke="#654321"
+          strokeWidth="1.5"
+          rx="2"
+        />
+      );
+    }
+    
+    // Bottom base cabinets
+    const bottomCabinets = Math.floor(baseCabinets / 2);
+    for (let i = 0; i < bottomCabinets; i++) {
+      const cabinetWidth = drawWidth / bottomCabinets;
+      elements.push(
+        <rect
+          key={`galley-bottom-${i}`}
+          x={startX + (i * cabinetWidth)}
+          y={startY + drawHeight - 40}
+          width={cabinetWidth - 2}
+          height={35}
+          fill="#8B4513"
+          stroke="#654321"
+          strokeWidth="1.5"
+          rx="2"
+        />
+      );
+    }
+
+    // Walkway indication
+    elements.push(
+      <rect
+        key="walkway"
+        x={startX + 20}
+        y={topCounterY + counterHeight + 45}
+        width={drawWidth - 40}
+        height={walkwayWidth}
+        fill="none"
+        stroke="#CCC"
+        strokeWidth="1"
+        strokeDasharray="5,5"
+        rx="8"
+      />
+    );
+    
+    elements.push(
+      <text
+        key="walkway-label"
+        x={startX + drawWidth/2}
+        y={topCounterY + counterHeight + 65}
+        textAnchor="middle"
+        fontSize="10"
+        fill="#666"
+        fontStyle="italic"
+      >
+        Walkway
+      </text>
+    );
+
+    return elements;
+  };
+
+  // 🏝️ ISLAND KITCHEN LAYOUT  
+  const renderIslandKitchen = (elements: JSX.Element[], config: any) => {
+    const { baseCabinets, hasIsland } = config;
+    
+    // Main perimeter counters (L-shaped base)
+    elements.push(
+      ...renderStraightKitchen([], { baseCabinets: Math.floor(baseCabinets * 0.6), wallCabinets: 2, tallCabinets: 1 })
+    );
+    
+    // Island in center (if specified)
+    if (hasIsland) {
+      const islandWidth = drawWidth * 0.4;
+      const islandHeight = drawHeight * 0.2;
+      const islandX = startX + (drawWidth - islandWidth) / 2;
+      const islandY = startY + (drawHeight - islandHeight) / 2;
+      
+      // Island countertop
+      elements.push(
+        <rect
+          key="island-counter"
+          x={islandX}
+          y={islandY}
+          width={islandWidth}
+          height={15}
+          fill="#D3D3D3"
+          stroke="#A9A9A9"
+          strokeWidth="2"
+          rx="8"
+        />
+      );
+      
+      // Island base
+      elements.push(
+        <rect
+          key="island-base"
+          x={islandX}
+          y={islandY + 15}
+          width={islandWidth}
+          height={islandHeight - 15}
+          fill="#8B4513"
+          stroke="#654321"
+          strokeWidth="2"
+          rx="4"
+        />
+      );
+      
+      // Island seating area (overhang)
+      elements.push(
+        <rect
+          key="island-overhang"
+          x={islandX - 10}
+          y={islandY}
+          width={islandWidth + 20}
+          height={8}
+          fill="#E5E5E5"
+          stroke="#BBBBBB"
+          strokeWidth="1"
+          rx="4"
+          opacity="0.7"
+        />
+      );
+      
+      elements.push(
+        <text
+          key="island-label"
+          x={islandX + islandWidth/2}
+          y={islandY - 10}
+          textAnchor="middle"
+          fontSize="10"
+          fill="#333"
+          fontWeight="bold"
+        >
+          Kitchen Island
+        </text>
+      );
+    }
+
+    return elements;
+  };
+
+  // 🏠 KITCHEN APPLIANCES - Smart appliance placement
+  const renderKitchenAppliances = (elements: JSX.Element[], layout: string) => {
+    const appliances = ['Sink', 'Stove', 'Fridge'];
+    const spacing = drawWidth / appliances.length;
+    
+    appliances.forEach((appliance, i) => {
+      const applianceX = startX + (i * spacing) + spacing/2;
+      const applianceY = startY + drawHeight * 0.7;
+      
+      // Appliance icon
+      elements.push(
+        <circle
+          key={`appliance-${i}`}
+          cx={applianceX}
+          cy={applianceY}
+          r="8"
+          fill={appliance === 'Stove' ? '#FF6B6B' : appliance === 'Fridge' ? '#4ECDC4' : '#45B7D1'}
+          stroke="#333"
+          strokeWidth="1"
+        />
+      );
+      
+      // Appliance label
+      elements.push(
+        <text
+          key={`appliance-label-${i}`}
+          x={applianceX}
+          y={applianceY + 20}
+          textAnchor="middle"
+          fontSize="8"
+          fill="#333"
+        >
+          {appliance}
+        </text>
+      );
+    });
   };
 
   // 📦 REALISTIC STORAGE UNIT - Modular storage design
