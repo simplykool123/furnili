@@ -1187,15 +1187,17 @@ export default function BOMCalculator() {
                         name="finish"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className={`text-xs flex items-center gap-2 ${
+                            <FormLabel className={`text-xs ${
                               isPreLamBoard ? 'text-muted-foreground' : ''
                             }`}>
-                              Finish
-                              {isPreLamBoard && (
-                                <span className="text-xs bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded text-[10px]">
-                                  Pre-Applied
-                                </span>
-                              )}
+                              <div className="flex items-center gap-2">
+                                Finish
+                                {isPreLamBoard && (
+                                  <span className="text-xs bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded text-[10px]">
+                                    Pre-Applied
+                                  </span>
+                                )}
+                              </div>
                             </FormLabel>
                             <Select 
                               onValueChange={field.onChange} 
