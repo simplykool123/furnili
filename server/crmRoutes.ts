@@ -1,11 +1,11 @@
 import type { Express } from "express";
 import { db } from "./db";
 import { 
-  leads, leadSources, pipelineStages, interactions, satisfactionSurveys,
+  leadSources, pipelineStages, interactions, satisfactionSurveys,
   clients, users,
-  insertLeadSchema, insertInteractionSchema, insertSatisfactionSurveySchema,
+  insertInteractionSchema, insertSatisfactionSurveySchema,
   insertLeadSourceSchema, insertPipelineStageSchema,
-  type Lead, type LeadWithDetails, type Interaction, type InteractionWithDetails
+  type Interaction, type InteractionWithDetails
 } from "@shared/schema";
 import { eq, desc, and, like, or, sql, count } from "drizzle-orm";
 import { authenticateToken, type AuthRequest } from "./middleware/auth";

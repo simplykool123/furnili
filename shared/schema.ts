@@ -62,38 +62,7 @@ export const pipelineStages = pgTable("pipeline_stages", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-// CRM Leads Management
-export const leads = pgTable("leads", {
-  id: serial("id").primaryKey(),
-  leadNumber: text("lead_number").notNull().unique(), // Auto-generated: L-001, L-002
-  firstName: text("first_name").notNull(),
-  lastName: text("last_name"),
-  company: text("company"),
-  email: text("email"),
-  phone: text("phone").notNull(),
-  mobile: text("mobile"),
-  address: text("address"),
-  city: text("city").notNull(),
-  state: text("state"),
-  pinCode: text("pin_code"),
-  sourceId: integer("source_id").references(() => leadSources.id),
-  sourceName: text("source_name"), // For quick reference
-  status: text("status").notNull().default("new"), // new, contacted, qualified, proposal, negotiation, won, lost
-  stageId: integer("stage_id").references(() => pipelineStages.id),
-  score: integer("score").default(0), // Lead scoring 0-100
-  budget: real("budget").default(0),
-  requirement: text("requirement"), // What they're looking for
-  notes: text("notes"),
-  assignedTo: integer("assigned_to").references(() => users.id),
-  convertedToClientId: integer("converted_to_client_id").references(() => clients.id),
-  convertedAt: timestamp("converted_at"),
-  lastContactDate: timestamp("last_contact_date"),
-  nextFollowUpDate: timestamp("next_follow_up_date"),
-  isActive: boolean("is_active").notNull().default(true),
-  createdBy: integer("created_by").references(() => users.id),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-});
+// CRM will use the clients table with type field - removing separate leads table for now
 
 // Customer Interaction History
 export const interactions = pgTable("interactions", {
@@ -1361,12 +1330,7 @@ export const insertPipelineStageSchema = createInsertSchema(pipelineStages).omit
   createdAt: true 
 });
 
-export const insertLeadSchema = createInsertSchema(leads).omit({ 
-  id: true, 
-  leadNumber: true, // Auto-generated
-  createdAt: true, 
-  updatedAt: true 
-});
+// Lead functionality will use clients table with type field
 
 export const insertInteractionSchema = createInsertSchema(interactions).omit({ 
   id: true, 
@@ -1384,22 +1348,14 @@ export type LeadSource = typeof leadSources.$inferSelect;
 export type InsertLeadSource = z.infer<typeof insertLeadSourceSchema>;
 export type PipelineStage = typeof pipelineStages.$inferSelect;
 export type InsertPipelineStage = z.infer<typeof insertPipelineStageSchema>;
-export type Lead = typeof leads.$inferSelect;
-export type InsertLead = z.infer<typeof insertLeadSchema>;
+// Lead types removed - using clients table instead
 export type Interaction = typeof interactions.$inferSelect;
 export type InsertInteraction = z.infer<typeof insertInteractionSchema>;
 export type SatisfactionSurvey = typeof satisfactionSurveys.$inferSelect;
 export type InsertSatisfactionSurvey = z.infer<typeof insertSatisfactionSurveySchema>;
 
-// Extended CRM types for API responses
-export type LeadWithDetails = Lead & {
-  source?: LeadSource;
-  stage?: PipelineStage;
-  assignedUser?: { id: number; name: string };
-  createdByUser?: { name: string };
-  recentInteractions?: Interaction[];
-  convertedClient?: { id: number; name: string };
-};
+// Extended CRM types for API responses  
+// Lead functionality moved to clients table - types simplified
 
 export type InteractionWithDetails = Interaction & {
   user: { name: string; email: string };
