@@ -1,3 +1,6 @@
-2025/09/09-04:57:04.483 1fee Reusing MANIFEST /home/runner/workspace/.wwebjs_auth/session-furnili-whatsapp-bot/Default/Local Storage/leveldb/MANIFEST-000001
-2025/09/09-04:57:04.510 1fee Recovering log #4
-2025/09/09-04:57:04.521 1fee Reusing old log /home/runner/workspace/.wwebjs_auth/session-furnili-whatsapp-bot/Default/Local Storage/leveldb/000004.log 
+2025/09/09-05:05:33.510 2660 Reusing MANIFEST /home/runner/workspace/.wwebjs_auth/session-furnili-whatsapp-bot/Default/Local Storage/leveldb/MANIFEST-000001
+2025/09/09-05:05:33.536 2660 Recovering log #4
+2025/09/09-05:05:33.549 2660 Reusing old log /home/runner/workspace/.wwebjs_auth/session-furnili-whatsapp-bot/Default/Local Storage/leveldb/000004.log 
+2025/09/09-05:06:33.551 2662 Level-0 table #6: started
+2025/09/09-05:06:34.137 2662 Level-0 table #6: 24941 bytes OK
+2025/09/09-05:06:34.151 2662 Delete type=0 #4
