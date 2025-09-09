@@ -53,9 +53,14 @@ export class FurniliWhatsAppBot {
     console.log('📱 Furnili WhatsApp Bot initializing...');
   }
 
+  getClient() {
+    return this.client;
+  }
+
   private setupHandlers() {
     // QR Code for authentication
     this.client.on('qr', (qr) => {
+      global.qrCodeData = qr;
       console.log('\n🔗 WhatsApp QR Code:');
       qrcode.generate(qr, { small: true });
       console.log('\n📱 Scan this QR code with your WhatsApp to connect the bot\n');
@@ -107,13 +112,29 @@ export class FurniliWhatsAppBot {
 
     const contact = await msg.getContact();
     const userId = contact.id.user;
-    const text = msg.body.trim();
+    const text = msg.body.trim().toLowerCase();
 
     console.log(`📱 WhatsApp message from ${contact.name || userId}: ${text}`);
+
+    // Only respond to messages that explicitly mention "bot" or start with "#"
+    // This prevents the bot from responding to normal conversations
+    const isBotMention = text.includes('bot') || text.includes('furnili') || text.includes('assistant');
+    const isCommand = text.startsWith('#');
+    
+    if (!isBotMention && !isCommand) {
+      // Silently ignore normal messages
+      return;
+    }
 
     // Handle commands with # prefix (WhatsApp style)
     if (text.startsWith('#')) {
       await this.handleCommand(msg, text.slice(1)); // Remove # prefix
+      return;
+    }
+
+    // If bot is mentioned but no command, show help
+    if (isBotMention) {
+      await this.handleStart(msg);
       return;
     }
 

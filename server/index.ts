@@ -152,6 +152,21 @@ app.use((req, res, next) => {
     // Initialize WhatsApp Bot
     try {
       const whatsappBot = new FurniliWhatsAppBot();
+      
+      // Store global references for API access
+      global.whatsappClient = whatsappBot.getClient();
+      global.qrCodeData = null;
+      global.initializeWhatsAppBot = async () => {
+        try {
+          const newBot = new FurniliWhatsAppBot();
+          await newBot.initialize();
+          global.whatsappClient = newBot.getClient();
+          log("📱 WhatsApp bot reinitialized successfully");
+        } catch (error) {
+          console.error("❌ Failed to reinitialize WhatsApp bot:", error);
+        }
+      };
+      
       await whatsappBot.initialize();
       log("📱 WhatsApp bot initialized successfully");
     } catch (error) {

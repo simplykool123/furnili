@@ -5369,6 +5369,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   const httpServer = createServer(app);
+  // WhatsApp Bot Management APIs
+  app.get('/api/whatsapp/status', (req, res) => {
+    // Check if WhatsApp bot is connected
+    const isConnected = global.whatsappClient && global.whatsappClient.info && global.whatsappClient.info.wid;
+    res.json({ 
+      connected: !!isConnected, 
+      status: isConnected ? 'Connected' : 'Disconnected',
+      qrCode: global.qrCodeData || null
+    });
+  });
+
+  app.post('/api/whatsapp/generate-qr', (req, res) => {
+    // Force regenerate QR code for WhatsApp connection
+    if (global.whatsappClient) {
+      global.whatsappClient.destroy().then(() => {
+        // Restart the WhatsApp client to generate new QR
+        global.initializeWhatsAppBot && global.initializeWhatsAppBot();
+        res.json({ success: true, message: 'QR code regeneration started' });
+      }).catch(() => {
+        res.json({ success: true, message: 'QR code regeneration started' });
+      });
+    } else {
+      // Start WhatsApp bot if not running
+      global.initializeWhatsAppBot && global.initializeWhatsAppBot();
+      res.json({ success: true, message: 'WhatsApp bot initialization started' });
+    }
+  });
+
+  app.post('/api/whatsapp/disconnect', (req, res) => {
+    // Disconnect WhatsApp bot
+    if (global.whatsappClient) {
+      global.whatsappClient.destroy().then(() => {
+        global.whatsappClient = null;
+        global.qrCodeData = null;
+        res.json({ success: true, message: 'WhatsApp bot disconnected' });
+      }).catch((error) => {
+        console.error('Error disconnecting WhatsApp:', error);
+        res.status(500).json({ success: false, error: 'Failed to disconnect' });
+      });
+    } else {
+      res.json({ success: true, message: 'WhatsApp bot was not connected' });
+    }
+  });
+
   return httpServer;
 }
 
