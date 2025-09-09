@@ -2,7 +2,9 @@
 import { Switch, Route } from "wouter";
 import { Toaster } from "@/components/ui/toaster";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { queryClient } from "@/lib/queryClient";
+import { queryClient, performanceUtils } from "@/lib/queryClient";
+import { ErrorBoundary } from "@/components/Performance/ErrorBoundary";
+import { DataPreloader } from "@/components/Performance/DataPreloader";
 import { ReactNode } from "react";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { authService } from "@/lib/auth";

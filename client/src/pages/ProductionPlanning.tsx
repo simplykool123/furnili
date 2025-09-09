@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { LoadingSpinner, TableSkeleton, CardSkeleton } from "@/components/Performance/LoadingSpinner";
+import { ErrorBoundary } from "@/components/Performance/ErrorBoundary";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -146,8 +148,29 @@ export default function ProductionPlanning() {
     return (
       <Layout>
         <div className="p-6 space-y-6">
-          <div className="flex items-center justify-center h-64">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          {/* Header Skeleton */}
+          <div className="flex items-center justify-between">
+            <div className="space-y-2">
+              <div className="h-8 bg-gray-200 rounded animate-pulse w-64" />
+              <div className="h-4 bg-gray-200 rounded animate-pulse w-80" />
+            </div>
+            <div className="flex gap-2">
+              <div className="h-10 bg-gray-200 rounded animate-pulse w-32" />
+              <div className="h-10 bg-gray-200 rounded animate-pulse w-40" />
+            </div>
+          </div>
+
+          {/* Stats Cards Skeleton */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <CardSkeleton key={i} />
+            ))}
+          </div>
+
+          {/* Content Skeleton */}
+          <div className="space-y-4">
+            <div className="h-12 bg-gray-200 rounded animate-pulse" />
+            <TableSkeleton rows={6} cols={4} />
           </div>
         </div>
       </Layout>
@@ -163,8 +186,9 @@ export default function ProductionPlanning() {
   };
 
   return (
-    <Layout>
-      <div className="p-6 space-y-6">
+    <ErrorBoundary>
+      <Layout>
+        <div className="p-6 space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
@@ -878,7 +902,8 @@ export default function ProductionPlanning() {
             </Card>
           </TabsContent>
         </Tabs>
-      </div>
-    </Layout>
+        </div>
+      </Layout>
+    </ErrorBoundary>
   );
 }
