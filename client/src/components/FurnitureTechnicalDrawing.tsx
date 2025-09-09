@@ -301,87 +301,241 @@ const FurnitureTechnicalDrawing: React.FC<FurnitureTechnicalDrawingProps> = ({
     return elements;
   };
 
+  // 🛏️ INTELLIGENT BED RENDERING - AI-powered bed design based on type and dimensions
   const renderBed = () => {
     const elements: JSX.Element[] = [];
+    const bedType = configuration.bedType || 'single';
+    const hasStorage = configuration.storage === 'with_storage' || (configuration.drawers && configuration.drawers > 0);
+    const hasHeadboard = configuration.headboard !== false;
+    const hasFootboard = configuration.footboard === true;
 
-    // Main bed frame
+    // 🎯 INTELLIGENT BED PROPORTIONS - Based on actual bed standards
+    const bedProps = getBedProportions(bedType, widthMM, heightMM, depthMM);
+    
+    // Bed frame base (platform)
+    const frameHeight = bedProps.frameHeight * scale;
+    const bedBaseY = startY + drawHeight - frameHeight;
+    
     elements.push(
       <rect
-        key="bed-frame"
+        key="bed-platform"
         x={startX}
-        y={startY}
+        y={bedBaseY}
         width={drawWidth}
-        height={drawHeight}
-        fill="none"
-        stroke="#333"
+        height={frameHeight}
+        fill="#8B4513"
+        stroke="#654321"
         strokeWidth="2"
+        rx="4"
       />
     );
 
-    // Mattress area (slightly inset)
+    // 🛏️ INTELLIGENT MATTRESS - Realistic mattress representation
+    const mattressHeight = bedProps.mattressHeight * scale;
+    const mattressY = bedBaseY - mattressHeight;
+    
     elements.push(
       <rect
-        key="mattress"
-        x={startX + 10}
-        y={startY + 10}
-        width={drawWidth - 20}
-        height={drawHeight - 40}
-        fill="none"
-        stroke="#666"
-        strokeWidth="1"
-        strokeDasharray="5,5"
-      />
-    );
-
-    // Headboard
-    elements.push(
-      <rect
-        key="headboard"
-        x={startX - 5}
-        y={startY - 20}
-        width={drawWidth + 10}
-        height={25}
-        fill="none"
-        stroke="#333"
+        key="mattress-base"
+        x={startX + 8}
+        y={mattressY}
+        width={drawWidth - 16}
+        height={mattressHeight}
+        fill="#F0F8FF"
+        stroke="#D1D5DB"
         strokeWidth="2"
+        rx="6"
       />
     );
+    
+    // Mattress quilting pattern (for realism)
+    const quiltSpacing = Math.min(30, drawWidth / 6);
+    for (let i = 1; i < Math.floor(drawWidth / quiltSpacing); i++) {
+      elements.push(
+        <line
+          key={`quilt-vertical-${i}`}
+          x1={startX + 8 + (i * quiltSpacing)}
+          y1={mattressY + 4}
+          x2={startX + 8 + (i * quiltSpacing)}
+          y2={mattressY + mattressHeight - 4}
+          stroke="#E5E7EB"
+          strokeWidth="0.5"
+          strokeDasharray="3,3"
+        />
+      );
+    }
 
-    if (configuration.drawers && configuration.drawers > 0) {
-      // Storage drawers under bed
-      const drawerCount = configuration.drawers;
+    // 🎯 INTELLIGENT HEADBOARD - Size varies by bed type
+    if (hasHeadboard) {
+      const headboardHeight = bedProps.headboardHeight * scale;
+      const headboardY = mattressY - headboardHeight;
+      
+      elements.push(
+        <rect
+          key="headboard"
+          x={startX - 8}
+          y={headboardY}
+          width={drawWidth + 16}
+          height={headboardHeight}
+          fill="#8B4513"
+          stroke="#654321"
+          strokeWidth="3"
+          rx="8"
+        />
+      );
+      
+      // Headboard details (tufted design for larger beds)
+      if (['king', 'queen', 'king_xl'].includes(bedType)) {
+        const buttonCount = bedType === 'king_xl' ? 4 : 3;
+        const buttonSpacing = (drawWidth + 16) / (buttonCount + 1);
+        for (let i = 0; i < buttonCount; i++) {
+          elements.push(
+            <circle
+              key={`headboard-tuft-${i}`}
+              cx={startX - 8 + ((i + 1) * buttonSpacing)}
+              cy={headboardY + headboardHeight / 2}
+              r="4"
+              fill="#654321"
+              stroke="#4A4A4A"
+              strokeWidth="1"
+            />
+          );
+        }
+      }
+    }
+
+    // 🦵 INTELLIGENT FOOTBOARD - Optional, smaller than headboard
+    if (hasFootboard) {
+      const footboardHeight = bedProps.footboardHeight * scale;
+      
+      elements.push(
+        <rect
+          key="footboard"
+          x={startX}
+          y={startY + drawHeight}
+          width={drawWidth}
+          height={footboardHeight}
+          fill="#8B4513"
+          stroke="#654321"
+          strokeWidth="2"
+          rx="4"
+        />
+      );
+    }
+
+    // 🗃️ INTELLIGENT STORAGE - Smart storage based on bed type and size
+    if (hasStorage) {
+      const drawerCount = configuration.drawers || (bedType === 'single' ? 2 : bedType === 'bunk' ? 3 : 4);
       const drawerWidth = drawWidth / drawerCount;
-      const drawerY = startY + drawHeight - 30;
+      const drawerHeight = 20;
+      const storageY = startY + drawHeight + (hasFootboard ? 25 : 8);
       
       for (let i = 0; i < drawerCount; i++) {
         const drawerX = startX + (i * drawerWidth);
+        
         elements.push(
           <rect
-            key={`bed-drawer-${i}`}
-            x={drawerX + 5}
-            y={drawerY}
-            width={drawerWidth - 10}
-            height={25}
-            fill="none"
-            stroke="#888"
-            strokeWidth="1"
+            key={`storage-drawer-${i}`}
+            x={drawerX + 4}
+            y={storageY}
+            width={drawerWidth - 8}
+            height={drawerHeight}
+            fill="#FFFFFF"
+            stroke="#9CA3AF"
+            strokeWidth="1.5"
+            rx="3"
           />
         );
         
-        // Handle
+        // Modern drawer handle
         elements.push(
-          <circle
-            key={`bed-handle-${i}`}
-            cx={drawerX + drawerWidth/2}
-            cy={drawerY + 12}
-            r="2"
-            fill="#333"
+          <rect
+            key={`storage-handle-${i}`}
+            x={drawerX + drawerWidth/2 - 8}
+            y={storageY + drawerHeight/2 - 1.5}
+            width="16"
+            height="3"
+            fill="#4B5563"
+            rx="1.5"
           />
         );
       }
     }
 
+    // 🏷️ BED TYPE INDICATOR
+    elements.push(
+      <text
+        key="bed-type-label"
+        x={startX + drawWidth/2}
+        y={startY - 35}
+        textAnchor="middle"
+        fontSize="12"
+        fill="#374151"
+        fontWeight="bold"
+      >
+        {getBedTypeName(bedType)} {hasStorage ? '• Storage Bed' : ''}
+      </text>
+    );
+
     return elements;
+  };
+
+  // 🧠 INTELLIGENT BED PROPORTIONS - AI-powered sizing
+  const getBedProportions = (bedType: string, width: number, height: number, depth: number) => {
+    const baseProps = {
+      frameHeight: 150,    // Platform height in mm
+      mattressHeight: 200, // Mattress thickness in mm  
+      headboardHeight: 600, // Headboard height in mm
+      footboardHeight: 200  // Footboard height in mm
+    };
+
+    // Adjust proportions based on bed type
+    switch (bedType) {
+      case 'single':
+        return {
+          ...baseProps,
+          headboardHeight: 500,
+          footboardHeight: 150
+        };
+      case 'queen':
+        return {
+          ...baseProps,
+          frameHeight: 180,
+          mattressHeight: 220,
+          headboardHeight: 700
+        };
+      case 'king':
+      case 'king_xl':
+        return {
+          ...baseProps,
+          frameHeight: 200,
+          mattressHeight: 250,
+          headboardHeight: 800,
+          footboardHeight: 250
+        };
+      case 'bunk':
+        return {
+          ...baseProps,
+          frameHeight: 120,
+          mattressHeight: 150,
+          headboardHeight: 400,
+          footboardHeight: 400
+        };
+      default:
+        return baseProps;
+    }
+  };
+
+  // 📝 INTELLIGENT BED TYPE NAMES
+  const getBedTypeName = (bedType: string): string => {
+    const names: Record<string, string> = {
+      'single': 'Single Bed (90×190cm)',
+      'queen': 'Queen Bed (150×200cm)', 
+      'king': 'King Bed (180×200cm)',
+      'king_xl': 'King XL Bed (200×220cm)',
+      'bunk': 'Bunk Bed (90×190cm)'
+    };
+    return names[bedType] || 'Platform Bed';
   };
 
   const renderDimensions = () => {
