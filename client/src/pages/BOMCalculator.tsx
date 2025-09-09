@@ -2351,9 +2351,30 @@ export default function BOMCalculator() {
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         {/* Board Sheets by Thickness */}
                         <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border shadow-sm">
-                          <h4 className="font-medium text-sm mb-2 text-gray-700 dark:text-gray-300">Total Sheets Required</h4>
-                          <div className="text-3xl font-bold text-blue-600 mb-1">
-                            {bomResult.sheetOptimization?.totalSheets || Math.ceil(bomResult.totalBoardArea / 32)} sheets
+                          <h4 className="font-medium text-sm mb-2 text-gray-700 dark:text-gray-300">Sheets Required by Thickness</h4>
+                          <div className="space-y-2">
+                            {bomResult.sheetOptimization?.sheets_by_thickness ? (
+                              Object.entries(bomResult.sheetOptimization.sheets_by_thickness).map(([thickness, count]) => (
+                                <div key={thickness} className="flex justify-between items-center">
+                                  <span className="text-sm font-medium text-gray-600 dark:text-gray-400">{thickness}:</span>
+                                  <span className="text-lg font-bold text-blue-600">{count} sheets</span>
+                                </div>
+                              ))
+                            ) : (
+                              <div className="text-3xl font-bold text-blue-600 mb-1">
+                                {Math.ceil(bomResult.totalBoardArea / 32)} sheets
+                              </div>
+                            )}
+                            {bomResult.sheetOptimization?.sheets_by_thickness && (
+                              <div className="pt-2 border-t">
+                                <div className="flex justify-between items-center">
+                                  <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">Total:</span>
+                                  <span className="text-xl font-bold text-blue-700">
+                                    {Object.values(bomResult.sheetOptimization.sheets_by_thickness).reduce((sum: number, count: number) => sum + count, 0)} sheets
+                                  </span>
+                                </div>
+                              </div>
+                            )}
                           </div>
                           <div className="text-xs text-gray-500 space-y-1">
                             <div>Efficiency: {Math.round((bomResult.sheetOptimization?.totalUtilization || 0.85) * 100)}%</div>
@@ -2408,8 +2429,12 @@ export default function BOMCalculator() {
                         <h4 className="font-medium text-sm mb-2 text-green-800 dark:text-green-200">Quick Purchase Summary</h4>
                         <div className="text-sm text-green-700 dark:text-green-300">
                           {(() => {
-                            // Use backend's optimized sheet count
-                            if (bomResult.sheetOptimization?.totalSheets) {
+                            // Use backend's optimized sheet count with thickness breakdown
+                            if (bomResult.sheetOptimization?.sheets_by_thickness) {
+                              return Object.entries(bomResult.sheetOptimization.sheets_by_thickness).map(([thickness, count]) => (
+                                <div key={`sheet-${thickness}`}>• {thickness}: {count} sheets of {form.watch('boardType')} board</div>
+                              ));
+                            } else if (bomResult.sheetOptimization?.totalSheets) {
                               return (
                                 <div key="optimized-sheets">• {bomResult.sheetOptimization.totalSheets} sheets of {form.watch('boardType')} board (optimized cutting)</div>
                               );
