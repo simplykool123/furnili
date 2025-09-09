@@ -192,14 +192,14 @@ const furnitureTypes = [
     id: "bed", 
     name: "Beds", 
     icon: Bed, 
-    description: "Bed frames and storage beds",
+    description: "",
     defaultConfig: { shutters: 0, shelves: 0, drawers: 2, doors: 0, backPanels: 1, exposedSides: false, backThickness: 6, slideColorance: 12.5, boxThickness: 12, bottomThickness: 6, doorClearance: 12 }
   },
   { 
     id: "kitchen_cabinet", 
     name: "Kitchen", 
     icon: Package, 
-    description: "Modular kitchen cabinets and accessories",
+    description: "",
     defaultConfig: { 
       baseCabinets: 4, 
       wallCabinets: 4, 
