@@ -990,6 +990,185 @@ export const insertBomHardwareRate = createInsertSchema(bomHardwareRates).omit({
 export const insertBomBoardRate = createInsertSchema(bomBoardRates).omit({ id: true, lastUpdated: true });
 export const insertTelegramUserSessionSchema = createInsertSchema(telegramUserSessions).omit({ id: true, createdAt: true, updatedAt: true });
 
+// Production Planning & Manufacturing Tables
+export const workOrders = pgTable("work_orders", {
+  id: serial("id").primaryKey(),
+  orderNumber: text("order_number").notNull().unique(), // WO-001, WO-002, etc.
+  projectId: integer("project_id").references(() => projects.id).notNull(),
+  quoteId: integer("quote_id").references(() => projectQuotes.id), // Reference to approved quote
+  clientId: integer("client_id").references(() => clients.id).notNull(),
+  title: text("title").notNull(),
+  description: text("description"),
+  status: text("status").notNull().default("pending"), // pending, planned, in_progress, paused, completed, cancelled
+  priority: text("priority").notNull().default("medium"), // low, medium, high, urgent
+  orderType: text("order_type").notNull().default("manufacturing"), // manufacturing, assembly, finishing, installation
+  estimatedStartDate: timestamp("estimated_start_date"),
+  estimatedEndDate: timestamp("estimated_end_date"),
+  actualStartDate: timestamp("actual_start_date"),
+  actualEndDate: timestamp("actual_end_date"),
+  estimatedHours: real("estimated_hours").default(0),
+  actualHours: real("actual_hours").default(0),
+  completionPercentage: integer("completion_percentage").default(0),
+  totalQuantity: integer("total_quantity").default(1),
+  completedQuantity: integer("completed_quantity").default(0),
+  rejectedQuantity: integer("rejected_quantity").default(0),
+  assignedTeam: text("assigned_team").array().default([]), // Array of user IDs
+  workstationRequired: text("workstation_required"), // Required machine/workstation
+  materials: jsonb("materials").default([]), // Required materials with quantities
+  specifications: text("specifications"), // Technical specifications
+  qualityStandards: text("quality_standards"), // Quality requirements
+  notes: text("notes"),
+  attachments: text("attachments").array().default([]),
+  createdBy: integer("created_by").references(() => users.id).notNull(),
+  approvedBy: integer("approved_by").references(() => users.id),
+  approvedAt: timestamp("approved_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const productionSchedules = pgTable("production_schedules", {
+  id: serial("id").primaryKey(),
+  workOrderId: integer("work_order_id").references(() => workOrders.id).notNull(),
+  workstationId: text("workstation_id").notNull(), // Machine/workstation identifier
+  workstationName: text("workstation_name").notNull(),
+  scheduledDate: timestamp("scheduled_date").notNull(),
+  startTime: text("start_time").notNull(), // HH:MM format
+  endTime: text("end_time").notNull(), // HH:MM format
+  duration: integer("duration").notNull(), // Duration in minutes
+  status: text("status").notNull().default("scheduled"), // scheduled, in_progress, completed, cancelled, delayed
+  assignedWorkers: text("assigned_workers").array().default([]), // Array of user IDs
+  actualStartTime: timestamp("actual_start_time"),
+  actualEndTime: timestamp("actual_end_time"),
+  notes: text("notes"),
+  delayReason: text("delay_reason"),
+  setupTime: integer("setup_time").default(0), // Setup time in minutes
+  operationType: text("operation_type").notNull(), // cutting, assembly, finishing, inspection, etc.
+  capacity: integer("capacity").default(1), // How many units can be processed
+  scheduledBy: integer("scheduled_by").references(() => users.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const qualityChecks = pgTable("quality_checks", {
+  id: serial("id").primaryKey(),
+  checkNumber: text("check_number").notNull().unique(), // QC-001, QC-002, etc.
+  workOrderId: integer("work_order_id").references(() => workOrders.id).notNull(),
+  productionTaskId: integer("production_task_id"), // References production task if applicable
+  checkType: text("check_type").notNull(), // incoming, in_process, final, customer_inspection
+  inspectionStage: text("inspection_stage").notNull(), // material_received, cutting_complete, assembly_complete, finishing_complete, packaging_complete
+  furnitureType: text("furniture_type"), // chair, table, cabinet, sofa, etc.
+  checklist: jsonb("checklist").default([]), // Array of inspection items with pass/fail status
+  overallStatus: text("overall_status").notNull().default("pending"), // pending, passed, failed, conditional_pass
+  defectsFound: jsonb("defects_found").default([]), // Array of defect details
+  correctionRequired: boolean("correction_required").default(false),
+  correctionNotes: text("correction_notes"),
+  reworkRequired: boolean("rework_required").default(false),
+  reworkNotes: text("rework_notes"),
+  quantityInspected: integer("quantity_inspected").default(1),
+  quantityPassed: integer("quantity_passed").default(0),
+  quantityFailed: integer("quantity_failed").default(0),
+  inspectedBy: integer("inspected_by").references(() => users.id).notNull(),
+  approvedBy: integer("approved_by").references(() => users.id),
+  inspectionDate: timestamp("inspection_date").defaultNow(),
+  approvalDate: timestamp("approval_date"),
+  photoUrls: text("photo_urls").array().default([]), // Photos of defects/quality issues
+  measurementData: jsonb("measurement_data").default([]), // Dimensional measurements
+  materialGrade: text("material_grade"), // A, B, C grade classification
+  finishQuality: text("finish_quality"), // excellent, good, acceptable, poor
+  notes: text("notes"),
+  correctionDeadline: timestamp("correction_deadline"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const productionTasks = pgTable("production_tasks", {
+  id: serial("id").primaryKey(),
+  taskNumber: text("task_number").notNull().unique(), // PT-001, PT-002, etc.
+  workOrderId: integer("work_order_id").references(() => workOrders.id).notNull(),
+  scheduleId: integer("schedule_id").references(() => productionSchedules.id),
+  title: text("title").notNull(),
+  description: text("description"),
+  operationType: text("operation_type").notNull(), // cutting, drilling, assembly, sanding, finishing, packaging
+  status: text("status").notNull().default("pending"), // pending, in_progress, completed, paused, cancelled, quality_check
+  priority: text("priority").notNull().default("medium"), // low, medium, high, urgent
+  sequence: integer("sequence").default(1), // Task sequence in the workflow
+  estimatedDuration: integer("estimated_duration").default(0), // In minutes
+  actualDuration: integer("actual_duration").default(0), // In minutes
+  quantityToProcess: integer("quantity_to_process").default(1),
+  quantityCompleted: integer("quantity_completed").default(0),
+  assignedTo: integer("assigned_to").references(() => users.id),
+  workstation: text("workstation"), // Machine/workstation used
+  toolsRequired: text("tools_required").array().default([]), // Required tools
+  materialsUsed: jsonb("materials_used").default([]), // Materials consumed with quantities
+  workInstructions: text("work_instructions"), // Detailed instructions
+  safetyNotes: text("safety_notes"), // Safety requirements
+  qualityStandards: text("quality_standards"), // Quality requirements for this task
+  startTime: timestamp("start_time"),
+  endTime: timestamp("end_time"),
+  pausedTime: integer("paused_time").default(0), // Total paused time in minutes
+  issues: text("issues"), // Any issues encountered
+  notes: text("notes"),
+  photoUrls: text("photo_urls").array().default([]), // Progress photos
+  completedBy: integer("completed_by").references(() => users.id),
+  verifiedBy: integer("verified_by").references(() => users.id),
+  createdBy: integer("created_by").references(() => users.id).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const machineDowntime = pgTable("machine_downtime", {
+  id: serial("id").primaryKey(),
+  workstationId: text("workstation_id").notNull(),
+  workstationName: text("workstation_name").notNull(),
+  downtimeType: text("downtime_type").notNull(), // planned_maintenance, breakdown, material_shortage, no_operator, power_outage
+  startTime: timestamp("start_time").notNull(),
+  endTime: timestamp("end_time"),
+  duration: integer("duration").default(0), // Duration in minutes
+  reason: text("reason").notNull(),
+  description: text("description"),
+  impactedOrders: text("impacted_orders").array().default([]), // Work order IDs affected
+  repairCost: real("repair_cost").default(0),
+  maintenanceNotes: text("maintenance_notes"),
+  reportedBy: integer("reported_by").references(() => users.id).notNull(),
+  resolvedBy: integer("resolved_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Production Insert Schemas
+export const insertWorkOrderSchema = createInsertSchema(workOrders).omit({ 
+  id: true, 
+  orderNumber: true, // Auto-generated
+  createdAt: true, 
+  updatedAt: true 
+});
+
+export const insertProductionScheduleSchema = createInsertSchema(productionSchedules).omit({ 
+  id: true, 
+  createdAt: true, 
+  updatedAt: true 
+});
+
+export const insertQualityCheckSchema = createInsertSchema(qualityChecks).omit({ 
+  id: true, 
+  checkNumber: true, // Auto-generated
+  createdAt: true, 
+  updatedAt: true 
+});
+
+export const insertProductionTaskSchema = createInsertSchema(productionTasks).omit({ 
+  id: true, 
+  taskNumber: true, // Auto-generated
+  createdAt: true, 
+  updatedAt: true 
+});
+
+export const insertMachineDowntimeSchema = createInsertSchema(machineDowntime).omit({ 
+  id: true, 
+  createdAt: true, 
+  updatedAt: true 
+});
+
 // PO System and Brand Management Types
 export type Supplier = typeof suppliers.$inferSelect;
 export type InsertSupplier = z.infer<typeof insertSupplierSchema>;
@@ -1029,6 +1208,49 @@ export type BomSettings = typeof bomSettings.$inferSelect;
 export type InsertBomSettings = z.infer<typeof insertBomSettingsSchema>;
 export type TelegramUserSession = typeof telegramUserSessions.$inferSelect;
 export type InsertTelegramUserSession = z.infer<typeof insertTelegramUserSessionSchema>;
+
+// Production Planning & Manufacturing Types
+export type WorkOrder = typeof workOrders.$inferSelect;
+export type InsertWorkOrder = z.infer<typeof insertWorkOrderSchema>;
+export type ProductionSchedule = typeof productionSchedules.$inferSelect;
+export type InsertProductionSchedule = z.infer<typeof insertProductionScheduleSchema>;
+export type QualityCheck = typeof qualityChecks.$inferSelect;
+export type InsertQualityCheck = z.infer<typeof insertQualityCheckSchema>;
+export type ProductionTask = typeof productionTasks.$inferSelect;
+export type InsertProductionTask = z.infer<typeof insertProductionTaskSchema>;
+export type MachineDowntime = typeof machineDowntime.$inferSelect;
+export type InsertMachineDowntime = z.infer<typeof insertMachineDowntimeSchema>;
+
+// Extended Production types for API responses
+export type WorkOrderWithDetails = WorkOrder & {
+  project: { name: string; code: string };
+  client: { name: string };
+  quote?: { quoteNumber: string; title: string };
+  createdByUser: { name: string };
+  approvedByUser?: { name: string };
+  schedules: ProductionSchedule[];
+  tasks: ProductionTask[];
+  qualityChecks: QualityCheck[];
+};
+
+export type ProductionScheduleWithDetails = ProductionSchedule & {
+  workOrder: { orderNumber: string; title: string };
+  scheduledByUser: { name: string };
+  assignedWorkerNames: string[];
+};
+
+export type QualityCheckWithDetails = QualityCheck & {
+  workOrder: { orderNumber: string; title: string };
+  inspectedByUser: { name: string };
+  approvedByUser?: { name: string };
+};
+
+export type ProductionTaskWithDetails = ProductionTask & {
+  workOrder: { orderNumber: string; title: string };
+  assignedToUser?: { name: string };
+  createdByUser: { name: string };
+  completedByUser?: { name: string };
+};
 
 // Extended BOM types for API responses
 export type BomCalculationWithDetails = BomCalculation & {
