@@ -105,7 +105,7 @@ const bomCalculationSchema = z.object({
     loftHeight: z.number().optional(), // height of loft section
     loftWidth: z.number().optional(), // width of loft section
     shutterCount: z.number().default(2), // renamed from shutters for clarity
-    shelfCount: z.number().default(3), // renamed from shelves for clarity
+    shelfCount: z.number().min(0).default(3), // renamed from shelves for clarity - allow 0 for walk-in wardrobes
     drawerCount: z.number().default(0), // renamed from drawers for clarity
     hangingRods: z.number().optional(),
     mirror: z.boolean().optional(),
@@ -844,7 +844,6 @@ export default function BOMCalculator() {
         </div>
       </div>
 
-      <div>
       {/* Beds Calculator */}
       {selectedFurnitureType === 'bed' && (
         <div className="bg-card shadow-sm border rounded-lg mb-6">
@@ -986,7 +985,6 @@ export default function BOMCalculator() {
           </div>
         </div>
       )}
-      </div>
 
       {/* Calculator Section */}
       <div className="space-y-4 p-4">
