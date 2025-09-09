@@ -415,44 +415,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         // Get work orders with related data
         workOrdersData = await db
-        .select({
-          workOrder: workOrders,
-          project: {
-            id: projects.id,
-            name: projects.name,
-            code: projects.code,
-          },
-          client: {
-            id: clients.id,
-            name: clients.name,
-          },
-          quote: {
-            id: quotes.id,
-            quoteNumber: quotes.quoteNumber,
-            title: quotes.title,
-          },
-          createdBy: {
-            id: users.id,
-            name: users.name,
-          }
-        })
-        .from(workOrders)
-        .leftJoin(projects, eq(workOrders.projectId, projects.id))
-        .leftJoin(clients, eq(workOrders.clientId, clients.id))
-        .leftJoin(quotes, eq(workOrders.quoteId, quotes.id))
-        .leftJoin(users, eq(workOrders.createdBy, users.id))
-        .where(whereConditions.length > 0 ? and(...whereConditions) : undefined)
-        .orderBy(desc(workOrders.createdAt));
+          .select({
+            workOrder: workOrders,
+            project: {
+              id: projects.id,
+              name: projects.name,
+              code: projects.code,
+            },
+            client: {
+              id: clients.id,
+              name: clients.name,
+            },
+            quote: {
+              id: quotes.id,
+              quoteNumber: quotes.quoteNumber,
+              title: quotes.title,
+            },
+            createdBy: {
+              id: users.id,
+              name: users.name,
+            }
+          })
+          .from(workOrders)
+          .leftJoin(projects, eq(workOrders.projectId, projects.id))
+          .leftJoin(clients, eq(workOrders.clientId, clients.id))
+          .leftJoin(quotes, eq(workOrders.quoteId, quotes.id))
+          .leftJoin(users, eq(workOrders.createdBy, users.id))
+          .where(whereConditions.length > 0 ? and(...whereConditions) : undefined)
+          .orderBy(desc(workOrders.createdAt));
+      } catch (tableError: any) {
+        if (tableError.code === '42P01') {
+          console.warn('work_orders table not found, using empty data');
+          workOrdersData = [];
+        } else {
+          throw tableError;
+        }
+      }
 
       // Apply search filter if provided
       let filteredWorkOrders = workOrdersData;
       if (search) {
         const searchTerm = (search as string).toLowerCase();
         filteredWorkOrders = workOrdersData.filter(item => 
-          item.workOrder.orderNumber.toLowerCase().includes(searchTerm) ||
-          item.workOrder.title.toLowerCase().includes(searchTerm) ||
-          item.project?.name.toLowerCase().includes(searchTerm) ||
-          item.client?.name.toLowerCase().includes(searchTerm)
+          item.workOrder?.orderNumber?.toLowerCase().includes(searchTerm) ||
+          item.workOrder?.title?.toLowerCase().includes(searchTerm) ||
+          item.project?.name?.toLowerCase().includes(searchTerm) ||
+          item.client?.name?.toLowerCase().includes(searchTerm)
         );
       }
 

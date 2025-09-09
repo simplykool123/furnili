@@ -285,19 +285,19 @@ function Router() {
         </ProtectedRoute>
       </Route>
       
-      <Route path="/production-planning">
+      <Route path="/production/planning">
         <ProtectedRoute>
           <ProductionPlanning />
         </ProtectedRoute>
       </Route>
       
-      <Route path="/work-orders">
+      <Route path="/production/work-orders">
         <ProtectedRoute>
           <WorkOrders />
         </ProtectedRoute>
       </Route>
       
-      <Route path="/quality-control">
+      <Route path="/production/quality">
         <ProtectedRoute>
           <QualityControl />
         </ProtectedRoute>
@@ -315,11 +315,15 @@ function Router() {
 
 export default function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider>
-        <Router />
-        <Toaster />
-      </ThemeProvider>
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <DataPreloader routes={['Dashboard', 'Projects', 'ProductionPlanning']}>
+          <ThemeProvider>
+            <Router />
+            <Toaster />
+          </ThemeProvider>
+        </DataPreloader>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }
