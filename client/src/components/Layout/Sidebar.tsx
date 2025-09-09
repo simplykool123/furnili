@@ -72,6 +72,7 @@ export const navigation = [
     subItems: [
       { name: 'OCR Wizard', href: '/ocr-wizard', icon: Brain, roles: ['admin', 'manager', 'staff'] }, // Store keeper doesn't need OCR
       { name: 'Price Comparison', href: '/price-comparison', icon: TrendingUp, roles: ['admin', 'manager'] },
+      { name: 'WhatsApp Link', href: '/whatsapp-link', icon: MessageCircle, roles: ['admin', 'manager', 'staff', 'store_incharge'] },
       { name: 'Theme & Layout', href: '/display-settings', icon: Settings, roles: ['admin', 'manager', 'staff', 'store_incharge'] },
       { name: 'Workflow', href: '/system-flowchart', icon: GitBranch, roles: ['admin', 'manager', 'staff'] }, // Store keeper doesn't need flowchart
       { name: 'Backups', href: '/backups', icon: Download, roles: ['admin'] },

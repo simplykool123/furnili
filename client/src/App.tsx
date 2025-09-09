@@ -35,6 +35,7 @@ import ProjectDetail from "@/pages/ProjectDetail";
 import TaskManagement from "@/pages/TaskManagement";
 import BOMCalculator from "@/pages/BOMCalculator";
 import BOMSettings from "@/pages/BOMSettings";
+import WhatsAppLink from "@/pages/WhatsAppLink";
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -276,6 +277,12 @@ function Router() {
       <Route path="/bom-settings">
         <ProtectedRoute>
           <BOMSettings />
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/whatsapp-link">
+        <ProtectedRoute>
+          <WhatsAppLink />
         </ProtectedRoute>
       </Route>
     </Switch>

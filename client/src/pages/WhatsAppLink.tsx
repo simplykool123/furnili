@@ -1,0 +1,157 @@
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { MessageCircle, Smartphone, QrCode, CheckCircle } from "lucide-react";
+import { useState, useEffect } from "react";
+
+export default function WhatsAppLink() {
+  const [qrCode, setQrCode] = useState<string>("");
+  const [isConnected, setIsConnected] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState("Disconnected");
+
+  useEffect(() => {
+    // Check WhatsApp bot status
+    checkBotStatus();
+  }, []);
+
+  const checkBotStatus = async () => {
+    try {
+      const response = await fetch('/api/whatsapp/status');
+      if (response.ok) {
+        const data = await response.json();
+        setIsConnected(data.connected);
+        setConnectionStatus(data.status);
+        if (!data.connected && data.qrCode) {
+          setQrCode(data.qrCode);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to check WhatsApp status:', error);
+    }
+  };
+
+  const generateQR = async () => {
+    try {
+      const response = await fetch('/api/whatsapp/generate-qr', { method: 'POST' });
+      if (response.ok) {
+        const data = await response.json();
+        setQrCode(data.qrCode);
+        setConnectionStatus("Waiting for scan...");
+      }
+    } catch (error) {
+      console.error('Failed to generate QR code:', error);
+    }
+  };
+
+  const disconnectBot = async () => {
+    try {
+      const response = await fetch('/api/whatsapp/disconnect', { method: 'POST' });
+      if (response.ok) {
+        setIsConnected(false);
+        setConnectionStatus("Disconnected");
+        setQrCode("");
+      }
+    } catch (error) {
+      console.error('Failed to disconnect WhatsApp bot:', error);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold text-foreground">WhatsApp Bot Connection</h1>
+        <p className="text-muted-foreground">Connect your WhatsApp to receive and respond to messages</p>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <MessageCircle className="w-5 h-5 text-[hsl(28,100%,25%)]" />
+                WhatsApp Bot Status
+              </CardTitle>
+              <CardDescription>
+                Manage your WhatsApp bot connection and settings
+              </CardDescription>
+            </div>
+            <Badge variant={isConnected ? "default" : "secondary"} className="flex items-center gap-1">
+              {isConnected ? (
+                <>
+                  <CheckCircle className="w-3 h-3" />
+                  Connected
+                </>
+              ) : (
+                <>
+                  <Smartphone className="w-3 h-3" />
+                  {connectionStatus}
+                </>
+              )}
+            </Badge>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {!isConnected ? (
+            <div className="space-y-4">
+              <div className="text-center">
+                <h3 className="text-lg font-medium mb-2">Connect WhatsApp</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Scan the QR code with your WhatsApp to connect the bot
+                </p>
+                
+                {qrCode ? (
+                  <div className="flex flex-col items-center space-y-4">
+                    <div className="bg-white p-4 rounded-lg border">
+                      <pre className="text-xs font-mono whitespace-pre-wrap">{qrCode}</pre>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Open WhatsApp → Linked Devices → Link a Device → Scan this QR code
+                    </p>
+                    <Button onClick={generateQR} variant="outline" size="sm">
+                      <QrCode className="w-4 h-4 mr-2" />
+                      Generate New QR Code
+                    </Button>
+                  </div>
+                ) : (
+                  <Button onClick={generateQR} className="bg-[hsl(28,100%,25%)] hover:bg-[hsl(28,100%,20%)]">
+                    <QrCode className="w-4 h-4 mr-2" />
+                    Generate QR Code
+                  </Button>
+                )}
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="text-center">
+                <div className="flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mx-auto mb-4">
+                  <CheckCircle className="w-8 h-8 text-green-600" />
+                </div>
+                <h3 className="text-lg font-medium mb-2">WhatsApp Connected</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Your WhatsApp bot is active and ready to receive messages
+                </p>
+                <Button 
+                  onClick={disconnectBot} 
+                  variant="outline" 
+                  className="border-red-200 text-red-600 hover:bg-red-50"
+                >
+                  Disconnect WhatsApp
+                </Button>
+              </div>
+            </div>
+          )}
+
+          <div className="border-t pt-4">
+            <h4 className="font-medium mb-2">Bot Behavior Settings</h4>
+            <div className="space-y-2 text-sm text-muted-foreground">
+              <p>• Bot only responds when directly messaged or mentioned</p>
+              <p>• Normal WhatsApp messages will not trigger the bot</p>
+              <p>• Type "bot" or mention the bot to start interaction</p>
+              <p>• Bot can help with furniture calculations and project quotes</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
