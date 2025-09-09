@@ -419,6 +419,29 @@ export default function BOMCalculator() {
     form
   ]);
 
+  // 🏠 LOFT SMART DEFAULTS - Auto-set loft dimensions when enabled
+  useEffect(() => {
+    const currentHasLoft = form.watch('partsConfig.hasLoft');
+    const currentLoftHeight = form.watch('partsConfig.loftHeight');
+    const currentLoftWidth = form.watch('partsConfig.loftWidth');
+    const wardrobeWidth = form.watch('width');
+    
+    // Only apply defaults when loft is first enabled and values are not set
+    if (currentHasLoft && selectedFurnitureType === 'wardrobe') {
+      if (!currentLoftHeight) {
+        form.setValue('partsConfig.loftHeight', 610, { shouldDirty: false }); // 2ft default
+      }
+      if (!currentLoftWidth && wardrobeWidth) {
+        form.setValue('partsConfig.loftWidth', wardrobeWidth, { shouldDirty: false }); // Match wardrobe width
+      }
+    }
+  }, [
+    form.watch('partsConfig.hasLoft'),
+    form.watch('width'),
+    selectedFurnitureType,
+    form
+  ]);
+
   // Fetch projects for project linking
   const { data: projects = [], isError: projectsError } = useQuery<any[]>({
     queryKey: ['/api/projects'],
@@ -1700,14 +1723,14 @@ export default function BOMCalculator() {
                                           type="number"
                                           min="300"
                                           max="1000"
-                                          placeholder="400"
+                                          placeholder="610"
                                           className="h-8 text-xs"
                                           {...field}
                                           value={field.value || ''}
-                                          onChange={(e) => field.onChange(parseInt(e.target.value) || 400)}
+                                          onChange={(e) => field.onChange(parseInt(e.target.value) || 610)}
                                         />
                                       </FormControl>
-                                      <p className="text-[10px] text-muted-foreground">Recommended: 300-600mm</p>
+                                      <p className="text-[10px] text-muted-foreground">Recommended: 2ft (610mm) standard</p>
                                     </FormItem>
                                   )}
                                 />
@@ -1722,7 +1745,7 @@ export default function BOMCalculator() {
                                           type="number"
                                           min="300"
                                           max="2400"
-                                          placeholder="1200"
+                                          placeholder={`${form.watch('width') || 1200}`}
                                           className="h-8 text-xs"
                                           {...field}
                                           value={field.value || ''}
@@ -2382,7 +2405,7 @@ export default function BOMCalculator() {
                         shutters={form.getValues('partsConfig.shutterCount') || form.getValues('partsConfig.shutters') || 2}
                         wardrobeType={form.getValues('partsConfig.wardrobeType') || 'openable'}
                         hasLoft={form.getValues('partsConfig.hasLoft') || false}
-                        loftHeight={form.getValues('partsConfig.loftHeight') || 400}
+                        loftHeight={form.getValues('partsConfig.loftHeight') || 610}
                         loftWidth={form.getValues('partsConfig.loftWidth') || form.getValues('width') || 1200}
                         loftDepth={form.getValues('depth') || 600}
                         mirror={form.getValues('partsConfig.mirror') || false}
