@@ -749,7 +749,34 @@ class DatabaseStorage implements IStorage {
 
   // Project operations
   async getProject(id: number): Promise<any | undefined> {
-    const result = await db.select()
+    const result = await db.select({
+      // Explicitly select only the columns we need from projects
+      id: projects.id,
+      code: projects.code,
+      name: projects.name,
+      description: projects.description,
+      clientId: projects.clientId,
+      stage: projects.stage,
+      budget: projects.budget,
+      differentSiteLocation: projects.differentSiteLocation,
+      siteAddressLine1: projects.siteAddressLine1,
+      siteAddressLine2: projects.siteAddressLine2,
+      siteState: projects.siteState,
+      siteCity: projects.siteCity,
+      siteLocation: projects.siteLocation,
+      sitePincode: projects.sitePincode,
+      completionPercentage: projects.completionPercentage,
+      notes: projects.notes,
+      files: projects.files,
+      isActive: projects.isActive,
+      createdAt: projects.createdAt,
+      updatedAt: projects.updatedAt,
+      // Explicitly select only the columns we need from clients
+      client_name: clients.name,
+      client_mobile: clients.mobile,
+      client_email: clients.email,
+      client_address: clients.address1
+    })
       .from(projects)
       .leftJoin(clients, eq(projects.clientId, clients.id))
       .where(eq(projects.id, id))
@@ -757,14 +784,7 @@ class DatabaseStorage implements IStorage {
     
     if (result.length === 0) return undefined;
     
-    const row = result[0];
-    return {
-      ...row.projects,
-      client_name: row.clients?.name || null,
-      client_mobile: row.clients?.mobile || null,
-      client_email: row.clients?.email || null,
-      client_address: row.clients?.address1 || null
-    };
+    return result[0];
   }
 
   async getAllProjects(): Promise<any[]> {
@@ -1188,7 +1208,28 @@ class DatabaseStorage implements IStorage {
   }
 
   async getClient(id: number): Promise<Client | undefined> {
-    const result = await db.select().from(clients).where(eq(clients.id, id)).limit(1);
+    const result = await db.select({
+      id: clients.id,
+      name: clients.name,
+      email: clients.email,
+      mobile: clients.mobile,
+      city: clients.city,
+      contactPerson: clients.contactPerson,
+      phone: clients.phone,
+      address1: clients.address1,
+      address2: clients.address2,
+      state: clients.state,
+      pinCode: clients.pinCode,
+      gstNumber: clients.gstNumber,
+      convertedFromLeadId: clients.convertedFromLeadId,
+      clientRating: clients.clientRating,
+      totalProjects: clients.totalProjects,
+      totalRevenue: clients.totalRevenue,
+      lastProjectDate: clients.lastProjectDate,
+      isActive: clients.isActive,
+      createdAt: clients.createdAt,
+      updatedAt: clients.updatedAt
+    }).from(clients).where(eq(clients.id, id)).limit(1);
     return result[0];
   }
 
