@@ -377,7 +377,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Work Orders API
   app.get("/api/work-orders", authenticateToken, async (req: AuthRequest, res) => {
     try {
-      const { search, status, priority } = req.query;
+      const { search, status, priority, projectId } = req.query;
       
       // Build where conditions for filtering
       let whereConditions = [];
@@ -388,6 +388,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (priority && priority !== 'all') {
         whereConditions.push(eq(workOrders.priority, priority as string));
+      }
+
+      if (projectId) {
+        whereConditions.push(eq(workOrders.projectId, parseInt(projectId as string)));
       }
 
       // Get work orders with related data

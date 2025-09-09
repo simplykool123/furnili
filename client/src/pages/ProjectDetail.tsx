@@ -97,6 +97,7 @@ import FurniliButton from "@/components/UI/FurniliButton";
 import ProjectQuotes from "@/components/Project/ProjectQuotes";
 import { authService, authenticatedApiRequest } from "@/lib/auth";
 import ProjectActivities from "@/components/Project/ProjectActivities";
+import ProjectWorkOrders from "@/components/Project/ProjectWorkOrders";
 
 // Schemas for various forms
 const taskSchema = z.object({
@@ -1892,6 +1893,15 @@ export default function ProjectDetail() {
                   <span className="font-medium text-sm">Quotes</span>
                 </TabsTrigger>
               )}
+              {canViewFinances && (
+                <TabsTrigger
+                  value="workorders"
+                  className="flex items-center space-x-2 px-0 py-3 border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent bg-transparent hover:bg-gray-50 text-gray-600 data-[state=active]:text-blue-600 rounded-none transition-all duration-200"
+                >
+                  <span className="text-base">🏭</span>
+                  <span className="font-medium text-sm">Production</span>
+                </TabsTrigger>
+              )}
               <TabsTrigger
                 value="orders"
                 className="flex items-center space-x-2 px-0 py-3 border-b-2 border-transparent data-[state=active]:border-blue-500 data-[state=active]:bg-transparent bg-transparent hover:bg-gray-50 text-gray-600 data-[state=active]:text-blue-600 rounded-none transition-all duration-200"
@@ -3425,6 +3435,28 @@ export default function ProjectDetail() {
           {canViewFinances && (
             <TabsContent value="quotes" className="p-6 bg-gray-50">
               <ProjectQuotes projectId={projectId} />
+            </TabsContent>
+          )}
+
+          {canViewFinances && (
+            <TabsContent value="workorders" className="p-6 bg-gray-50">
+              <div className="space-y-6">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">Work Orders & Production</h3>
+                    <p className="text-sm text-gray-600">View production status and work orders for this project</p>
+                  </div>
+                  <Button 
+                    onClick={() => setLocation('/production/work-orders')}
+                    className="bg-furnili-primary hover:bg-furnili-primary/90"
+                  >
+                    <BarChart3 className="h-4 w-4 mr-2" />
+                    View Production Dashboard
+                  </Button>
+                </div>
+
+                <ProjectWorkOrders projectId={projectId} />
+              </div>
             </TabsContent>
           )}
 
