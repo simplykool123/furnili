@@ -856,6 +856,57 @@ export default function BOMCalculator() {
             
             <Form {...form}>
               <div className="space-y-4">
+                {/* Bed Type Selection */}
+                <h3 className="flex items-center text-sm font-medium text-foreground mb-3">
+                  <Bed className="w-4 h-4" />
+                  Bed Type
+                </h3>
+                <FormField
+                  control={form.control}
+                  name="partsConfig.bedType"
+                  render={({ field }) => (
+                    <FormItem>
+                      <div className="grid grid-cols-5 gap-2">
+                        {[
+                          { value: 'single', label: 'Single', desc: '90×190cm', icon: Bed, size: { width: 900, depth: 1900 } },
+                          { value: 'queen', label: 'Queen', desc: '150×200cm', icon: Bed, size: { width: 1500, depth: 2000 } },
+                          { value: 'king', label: 'King', desc: '180×200cm', icon: Bed, size: { width: 1800, depth: 2000 } },
+                          { value: 'king_xl', label: 'King XL', desc: '200×220cm', icon: Bed, size: { width: 2000, depth: 2200 } },
+                          { value: 'bunk', label: 'Bunk', desc: '90×190cm', icon: Layers, size: { width: 900, depth: 1900 } }
+                        ].map((bedType) => {
+                          const IconComponent = bedType.icon;
+                          const isSelected = field.value === bedType.value;
+                          
+                          return (
+                            <button
+                              key={bedType.value}
+                              type="button"
+                              onClick={() => {
+                                field.onChange(bedType.value);
+                                // Auto-update dimensions based on bed size
+                                form.setValue('width', bedType.size.width);
+                                form.setValue('depth', bedType.size.depth);
+                                form.setValue('height', 900); // Standard bed height
+                              }}
+                              className={`p-2 rounded-lg border transition-all duration-200 text-center ${
+                                isSelected 
+                                  ? 'border-[hsl(28,100%,25%)] bg-[hsl(28,100%,25%)] text-white shadow-md' 
+                                  : 'border-border bg-card hover:border-[hsl(28,100%,25%)]/30 hover:bg-accent text-foreground'
+                              }`}
+                            >
+                              <IconComponent className={`w-4 h-4 mx-auto mb-1 ${isSelected ? 'text-white' : 'text-[hsl(28,100%,25%)]'}`} />
+                              <div className={`text-xs font-medium ${isSelected ? 'text-white' : 'text-foreground'}`}>
+                                {bedType.label}
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </Form>
           </div>
         </div>
       )}
