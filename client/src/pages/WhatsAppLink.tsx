@@ -38,9 +38,8 @@ export default function WhatsAppLink() {
       const response = await fetch('/api/whatsapp/generate-qr', { method: 'POST' });
       if (response.ok) {
         const data = await response.json();
-        if (data.qrCodeAscii || data.qrCode) {
-          // Prefer ASCII version for display, fallback to raw data
-          setQrCode(data.qrCodeAscii || data.qrCode);
+        if (data.qrCode) {
+          setQrCode(data.qrCode);
           setConnectionStatus("Waiting for scan...");
         } else {
           setConnectionStatus("QR code generating...");
@@ -63,9 +62,8 @@ export default function WhatsAppLink() {
         const response = await fetch('/api/whatsapp/status');
         if (response.ok) {
           const data = await response.json();
-          if (data.qrCodeAscii || data.qrCode) {
-            // Prefer ASCII version for display, fallback to raw data
-            setQrCode(data.qrCodeAscii || data.qrCode);
+          if (data.qrCode) {
+            setQrCode(data.qrCode);
             setConnectionStatus("Waiting for scan...");
             return;
           }
@@ -144,11 +142,14 @@ export default function WhatsAppLink() {
                 
                 {qrCode ? (
                   <div className="flex flex-col items-center space-y-4">
-                    <div className="bg-white p-6 rounded-lg border-2 border-gray-300 max-w-md">
-                      <pre className="text-[8px] leading-[8px] font-mono whitespace-pre-wrap overflow-hidden text-black"
-                           style={{ fontFamily: 'monospace', lineHeight: '0.5em' }}>
-                        {qrCode}
-                      </pre>
+                    <div className="bg-white p-4 rounded-lg border-2 border-gray-200 shadow-sm">
+                      <div 
+                        id="qr-display"
+                        className="flex items-center justify-center"
+                        style={{ minHeight: '200px', minWidth: '200px' }}
+                      >
+                        <div dangerouslySetInnerHTML={{ __html: `<div style="font-family: monospace; font-size: 2px; line-height: 2px; white-space: pre;">${qrCode}</div>` }} />
+                      </div>
                     </div>
                     <div className="text-center space-y-2">
                       <p className="text-sm font-medium text-gray-900">

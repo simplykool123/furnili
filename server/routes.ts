@@ -5381,8 +5381,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ 
       connected: !!isConnected, 
       status: isConnected ? 'Connected' : 'Disconnected',
-      qrCode: global.qrCodeData || null,
-      qrCodeAscii: global.qrCodeDataAscii || null
+      qrCode: global.qrCodeData || null
     });
   });
 
