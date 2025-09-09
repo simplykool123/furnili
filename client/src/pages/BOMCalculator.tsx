@@ -1190,14 +1190,12 @@ export default function BOMCalculator() {
                             <FormLabel className={`text-xs ${
                               isPreLamBoard ? 'text-muted-foreground' : ''
                             }`}>
-                              <div className="flex items-center gap-2">
-                                Finish
-                                {isPreLamBoard && (
-                                  <span className="text-xs bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded text-[10px]">
-                                    Pre-Applied
-                                  </span>
-                                )}
-                              </div>
+                              Finish
+                              {isPreLamBoard && (
+                                <span className="ml-2 text-xs bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded text-[10px]">
+                                  Pre-Applied
+                                </span>
+                              )}
                             </FormLabel>
                             <Select 
                               onValueChange={field.onChange} 
@@ -1579,7 +1577,7 @@ export default function BOMCalculator() {
                       {/* Wardrobe-specific part configurations */}
                       {selectedFurnitureType === 'wardrobe' && (
                         <div className="col-span-2">
-                          <div className="grid grid-cols-4 gap-2">
+                          <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
                             <FormField
                               control={form.control}
                               name="partsConfig.shutterCount"
