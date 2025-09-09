@@ -480,8 +480,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/whatsapp/sessions", authenticateToken, async (req: AuthRequest, res) => {
     try {
-      // Get actual WhatsApp sessions from database
-      const sessions = await storage.getAllTelegramSessions();
+      // Mock WhatsApp sessions - replace with actual database query when method is available
+      const sessions = [];
       
       // Filter only WhatsApp sessions (those with whatsappUserId)
       const whatsappSessions = sessions
