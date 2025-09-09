@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus, Search, Filter, Users, Phone, Mail, Calendar, Star } from "lucide-react";
@@ -14,6 +15,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import ResponsiveLayout from "@/components/Layout/ResponsiveLayout";
 
 const leadFormSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -167,13 +169,12 @@ export default function Leads() {
   };
 
   return (
-    <div className="container mx-auto p-4 space-y-6 max-w-7xl" data-testid="leads-page">
-      {/* Page Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900" data-testid="text-page-title">Lead Management</h1>
-          <p className="text-gray-600 mt-1">Capture, qualify, and convert potential customers</p>
-        </div>
+    <ResponsiveLayout
+      title="Lead Management"
+      subtitle="Capture, qualify, and convert potential customers"
+      showAddButton={true}
+      onAddClick={() => setIsNewLeadOpen(true)}
+    >
         
         <Dialog open={isNewLeadOpen} onOpenChange={setIsNewLeadOpen}>
           <DialogTrigger asChild>
@@ -369,7 +370,6 @@ export default function Leads() {
             </Form>
           </DialogContent>
         </Dialog>
-      </div>
 
       {/* Lead Statistics */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -548,6 +548,6 @@ export default function Leads() {
           ))}
         </div>
       )}
-    </div>
+    </ResponsiveLayout>
   );
 }

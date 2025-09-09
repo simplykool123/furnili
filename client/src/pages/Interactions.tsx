@@ -15,6 +15,7 @@ import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { format } from "date-fns";
+import ResponsiveLayout from "@/components/Layout/ResponsiveLayout";
 
 const interactionFormSchema = z.object({
   leadId: z.number().optional(),
@@ -190,21 +191,19 @@ export default function Interactions() {
   };
 
   return (
-    <div className="container mx-auto p-4 space-y-6 max-w-7xl" data-testid="interactions-page">
-      {/* Page Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900" data-testid="text-page-title">Customer Interactions</h1>
-          <p className="text-gray-600 mt-1">Track all customer communications and touchpoints</p>
-        </div>
-        
-        <Dialog open={isNewInteractionOpen} onOpenChange={setIsNewInteractionOpen}>
-          <DialogTrigger asChild>
-            <Button className="bg-amber-600 hover:bg-amber-700" data-testid="button-new-interaction">
-              <Plus className="h-4 w-4 mr-2" />
-              Record Interaction
-            </Button>
-          </DialogTrigger>
+    <ResponsiveLayout
+      title="Customer Interactions"
+      subtitle="Track all customer communications and touchpoints"
+      showAddButton={true}
+      onAddClick={() => setIsNewInteractionOpen(true)}
+    >
+      <Dialog open={isNewInteractionOpen} onOpenChange={setIsNewInteractionOpen}>
+        <DialogTrigger asChild>
+          <Button className="bg-amber-600 hover:bg-amber-700" data-testid="button-new-interaction" style={{ display: 'none' }}>
+            <Plus className="h-4 w-4 mr-2" />
+            Record Interaction
+          </Button>
+        </DialogTrigger>
           
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
@@ -553,6 +552,6 @@ export default function Interactions() {
           ))}
         </div>
       )}
-    </div>
+    </ResponsiveLayout>
   );
 }
