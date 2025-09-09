@@ -1,12 +1,23 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CalendarIcon, ClockIcon, Package, Users, AlertTriangle, CheckCircle } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { CalendarIcon, ClockIcon, Package, Users, AlertTriangle, CheckCircle, Plus, Calendar, ExternalLink } from "lucide-react";
 import { format } from "date-fns";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { useToast } from "@/hooks/use-toast";
+import { useLocation } from "wouter";
 import Layout from "@/components/Layout/Layout";
+import { apiRequest } from "@/lib/queryClient";
 import type { WorkOrder, ProductionSchedule, QualityCheck } from "@shared/schema";
 
 interface ProductionStats {
@@ -24,12 +35,88 @@ interface DashboardData {
   pendingQualityChecks: QualityCheck[];
 }
 
+const workOrderSchema = z.object({
+  projectId: z.number().min(1, "Project is required"),
+  quoteId: z.number().optional(),
+  title: z.string().min(1, "Title is required"),
+  description: z.string().optional(),
+  priority: z.enum(["low", "medium", "high"]).default("medium"),
+  orderType: z.enum(["manufacturing", "assembly", "finishing", "packaging"]).default("manufacturing"),
+  totalQuantity: z.number().min(1, "Quantity must be at least 1"),
+  specifications: z.string().optional(),
+  estimatedStartDate: z.string(),
+  estimatedEndDate: z.string(),
+});
+
+type WorkOrderFormData = z.infer<typeof workOrderSchema>;
+
 export default function ProductionPlanning() {
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [isCreateWorkOrderDialogOpen, setIsCreateWorkOrderDialogOpen] = useState(false);
+  const [isScheduleDialogOpen, setIsScheduleDialogOpen] = useState(false);
+  const { toast } = useToast();
+  const [, setLocation] = useLocation();
+  const queryClient = useQueryClient();
 
   const { data: dashboardData, isLoading } = useQuery<DashboardData>({
     queryKey: ['/api/production/dashboard'],
   });
+
+  // Fetch projects for work order creation
+  const { data: projects = [] } = useQuery({
+    queryKey: ['/api/projects'],
+  });
+
+  // Fetch quotes for work order creation
+  const { data: quotes = [] } = useQuery({
+    queryKey: ['/api/quotes'],
+  });
+
+  // Create work order mutation
+  const createWorkOrderMutation = useMutation({
+    mutationFn: (data: WorkOrderFormData) =>
+      apiRequest('/api/work-orders', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/production/dashboard'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/work-orders'] });
+      setIsCreateWorkOrderDialogOpen(false);
+      form.reset();
+      toast({ title: "Work order created successfully" });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error creating work order",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Form setup
+  const form = useForm<WorkOrderFormData>({
+    resolver: zodResolver(workOrderSchema),
+    defaultValues: {
+      title: "",
+      description: "",
+      priority: "medium",
+      orderType: "manufacturing",
+      totalQuantity: 1,
+      specifications: "",
+      estimatedStartDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      estimatedEndDate: new Date(Date.now() + 21 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    },
+  });
+
+  const onSubmit = (data: WorkOrderFormData) => {
+    createWorkOrderMutation.mutate({
+      ...data,
+      estimatedStartDate: new Date(data.estimatedStartDate).toISOString(),
+      estimatedEndDate: new Date(data.estimatedEndDate).toISOString(),
+    });
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -84,16 +171,243 @@ export default function ProductionPlanning() {
             </p>
           </div>
           <div className="flex gap-2">
+            <Dialog open={isCreateWorkOrderDialogOpen} onOpenChange={setIsCreateWorkOrderDialogOpen}>
+              <DialogTrigger asChild>
+                <Button 
+                  variant="outline"
+                  data-testid="button-create-work-order"
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Create Work Order
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                  <DialogTitle>Create Work Order</DialogTitle>
+                  <DialogDescription>
+                    Create a new production work order for manufacturing
+                  </DialogDescription>
+                </DialogHeader>
+                <Form {...form}>
+                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="projectId"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Project</FormLabel>
+                            <Select onValueChange={(value) => field.onChange(parseInt(value))}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select project" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {projects.map((project: any) => (
+                                  <SelectItem key={project.id} value={project.id.toString()}>
+                                    {project.name} ({project.code})
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="quoteId"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Quote (Optional)</FormLabel>
+                            <Select onValueChange={(value) => field.onChange(value ? parseInt(value) : undefined)}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select quote (optional)" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {quotes.map((quote: any) => (
+                                  <SelectItem key={quote.quote.id} value={quote.quote.id.toString()}>
+                                    {quote.quote.quoteNumber} - {quote.quote.title}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
+                    <FormField
+                      control={form.control}
+                      name="title"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Work Order Title</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Enter work order title" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="description"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Description</FormLabel>
+                          <FormControl>
+                            <Textarea placeholder="Enter work order description" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="priority"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Priority</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="low">Low</SelectItem>
+                                <SelectItem value="medium">Medium</SelectItem>
+                                <SelectItem value="high">High</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="orderType"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Order Type</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="manufacturing">Manufacturing</SelectItem>
+                                <SelectItem value="assembly">Assembly</SelectItem>
+                                <SelectItem value="finishing">Finishing</SelectItem>
+                                <SelectItem value="packaging">Packaging</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="totalQuantity"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Quantity</FormLabel>
+                            <FormControl>
+                              <Input 
+                                type="number" 
+                                min="1"
+                                {...field}
+                                onChange={(e) => field.onChange(parseInt(e.target.value))}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="estimatedStartDate"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Estimated Start Date</FormLabel>
+                            <FormControl>
+                              <Input type="date" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="estimatedEndDate"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Estimated End Date</FormLabel>
+                            <FormControl>
+                              <Input type="date" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
+                    <FormField
+                      control={form.control}
+                      name="specifications"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Specifications</FormLabel>
+                          <FormControl>
+                            <Textarea placeholder="Enter technical specifications" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <div className="flex justify-end gap-2">
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        onClick={() => setIsCreateWorkOrderDialogOpen(false)}
+                      >
+                        Cancel
+                      </Button>
+                      <Button 
+                        type="submit" 
+                        disabled={createWorkOrderMutation.isPending}
+                      >
+                        {createWorkOrderMutation.isPending ? "Creating..." : "Create Work Order"}
+                      </Button>
+                    </div>
+                  </form>
+                </Form>
+              </DialogContent>
+            </Dialog>
+
             <Button 
-              variant="outline"
-              data-testid="button-create-work-order"
+              data-testid="button-schedule-production"
+              onClick={() => setLocation('/production/work-orders')}
             >
-              <Package className="mr-2 h-4 w-4" />
-              Create Work Order
-            </Button>
-            <Button data-testid="button-schedule-production">
-              <CalendarIcon className="mr-2 h-4 w-4" />
-              Schedule Production
+              <Calendar className="mr-2 h-4 w-4" />
+              Manage Work Orders
             </Button>
           </div>
         </div>
@@ -183,8 +497,9 @@ export default function ProductionPlanning() {
                   {dashboardData?.recentWorkOrders?.map((order) => (
                     <div 
                       key={order.id} 
-                      className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50"
+                      className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 cursor-pointer"
                       data-testid={`work-order-${order.id}`}
+                      onClick={() => setLocation(`/production/work-orders/${order.id}`)}
                     >
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
@@ -192,6 +507,20 @@ export default function ProductionPlanning() {
                           <Badge className={getPriorityColor(order.priority)}>
                             {order.priority}
                           </Badge>
+                          {order.project && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 px-2 text-xs"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setLocation(`/projects/${order.project.id}`);
+                              }}
+                            >
+                              <ExternalLink className="h-3 w-3 mr-1" />
+                              {order.project.code}
+                            </Button>
+                          )}
                         </div>
                         <p className="text-sm text-muted-foreground">{order.title}</p>
                         <div className="flex items-center gap-4 text-xs text-muted-foreground">
@@ -200,6 +529,9 @@ export default function ProductionPlanning() {
                           {order.estimatedStartDate && (
                             <span>Start: {format(new Date(order.estimatedStartDate), 'MMM dd')}</span>
                           )}
+                          {order.client && (
+                            <span>Client: {order.client.name}</span>
+                          )}
                         </div>
                       </div>
                       <div className="text-right space-y-1">
@@ -207,13 +539,25 @@ export default function ProductionPlanning() {
                           {order.status.replace('_', ' ')}
                         </Badge>
                         <div className="text-sm text-muted-foreground">
-                          {order.completionPercentage}% complete
+                          {order.createdAt && format(new Date(order.createdAt), 'MMM dd')}
                         </div>
                       </div>
                     </div>
                   )) || (
                     <div className="text-center py-8 text-muted-foreground">
-                      No work orders found. Create your first work order to get started.
+                      <Package className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                      <h3 className="text-lg font-medium mb-2">No work orders found</h3>
+                      <p className="mb-4">Create your first work order to get started with production planning.</p>
+                      <Button 
+                        onClick={() => setIsCreateWorkOrderDialogOpen(true)}
+                        className="mb-2"
+                      >
+                        <Plus className="h-4 w-4 mr-2" />
+                        Create Work Order
+                      </Button>
+                      <p className="text-sm text-gray-500">
+                        Or approve quotes in projects to automatically create work orders.
+                      </p>
                     </div>
                   )}
                 </div>
