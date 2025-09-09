@@ -430,6 +430,117 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // WhatsApp Console API endpoints
+  app.get("/api/whatsapp/status", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      // Mock WhatsApp bot status - replace with actual bot status checks
+      const status = {
+        isConnected: true, // Should check actual WhatsApp Web connection
+        lastActivity: new Date(),
+        totalSessions: 5,
+        activeChats: 3,
+        messagesProcessed: 142
+      };
+      
+      res.json(status);
+    } catch (error) {
+      console.error("WhatsApp status error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get("/api/whatsapp/messages", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      // Mock WhatsApp messages - replace with actual message log
+      const messages = [
+        {
+          id: "1",
+          from: "John Doe",
+          body: "Hi, I need help with my order",
+          timestamp: new Date(Date.now() - 300000), // 5 minutes ago
+          type: "incoming",
+          status: "read"
+        },
+        {
+          id: "2",
+          from: "Bot",
+          body: "Hello! I'm here to help. Could you please provide your phone number?",
+          timestamp: new Date(Date.now() - 240000), // 4 minutes ago
+          type: "outgoing",
+          status: "delivered"
+        }
+      ];
+      
+      res.json(messages);
+    } catch (error) {
+      console.error("WhatsApp messages error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get("/api/whatsapp/sessions", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      // Get actual WhatsApp sessions from database
+      const sessions = await storage.getAllTelegramSessions();
+      
+      // Filter only WhatsApp sessions (those with whatsappUserId)
+      const whatsappSessions = sessions
+        .filter(session => session.whatsappUserId)
+        .map(session => ({
+          id: session.id,
+          whatsappUserId: session.whatsappUserId,
+          whatsappName: session.whatsappName || 'Unknown User',
+          phoneNumber: session.phoneNumber || 'Unknown',
+          systemUserId: session.systemUserId,
+          lastInteraction: session.lastInteraction,
+          sessionState: session.sessionState || 'idle'
+        }));
+      
+      res.json(whatsappSessions);
+    } catch (error) {
+      console.error("WhatsApp sessions error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.post("/api/whatsapp/send", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const { to, message } = req.body;
+      
+      if (!to || !message) {
+        return res.status(400).json({ message: "Phone number and message are required" });
+      }
+      
+      // Mock send message - replace with actual WhatsApp send functionality
+      // In production, this would integrate with the WhatsApp bot service
+      console.log(`Sending WhatsApp message to ${to}: ${message}`);
+      
+      res.json({ 
+        success: true, 
+        messageId: `msg_${Date.now()}`,
+        message: "Message sent successfully" 
+      });
+    } catch (error) {
+      console.error("Send WhatsApp message error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.post("/api/whatsapp/reconnect", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      // Mock reconnect - replace with actual bot restart functionality
+      console.log("Attempting to reconnect WhatsApp bot...");
+      
+      res.json({ 
+        success: true, 
+        message: "Reconnection initiated" 
+      });
+    } catch (error) {
+      console.error("WhatsApp reconnect error:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   app.post("/api/auth/register", authenticateToken, requireRole(["admin"]), async (req, res) => {
     try {
       const userData = insertUserSchema.parse(req.body);

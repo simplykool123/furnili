@@ -38,6 +38,7 @@ import BOMSettings from "@/pages/BOMSettings";
 import ProductionPlanning from "@/pages/ProductionPlanning";
 import WorkOrders from "@/pages/WorkOrders";
 import QualityControl from "@/pages/QualityControl";
+import WhatsAppConsole from "@/pages/WhatsAppConsole";
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -297,6 +298,12 @@ function Router() {
       <Route path="/quality-control">
         <ProtectedRoute>
           <QualityControl />
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/whatsapp-console">
+        <ProtectedRoute>
+          <WhatsAppConsole />
         </ProtectedRoute>
       </Route>
       
