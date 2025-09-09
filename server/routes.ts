@@ -24,8 +24,8 @@ import { db } from "./db";
 import { calculateBOM, generateBOMNumber, convertDimensions, DEFAULT_RATES, calculateWardrobeBOM, calculateSheetOptimization } from "./utils/bomCalculations";
 import { optimizeSheetCutting, OptimizedPanel, SheetDimensions } from "./utils/advanced-nesting";
 
-import { eq, and, gt } from "drizzle-orm";
-import { projectFiles, users, suppliers, products, purchaseOrders, purchaseOrderItems, stockMovements, bomCalculations, bomItems } from "@shared/schema";
+import { eq, and, gt, desc } from "drizzle-orm";
+import { projectFiles, users, suppliers, products, purchaseOrders, purchaseOrderItems, stockMovements, bomCalculations, bomItems, workOrders, quotes, projects, clients } from "@shared/schema";
 
 // OpenAI client removed - AI functionality simplified
 import {
@@ -298,18 +298,73 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Production Dashboard API
   app.get("/api/production/dashboard", authenticateToken, async (req: AuthRequest, res) => {
     try {
-      // Mock production dashboard data - replace with actual storage calls when available
+      // Get actual work orders from database
+      const allWorkOrders = await db
+        .select({
+          workOrder: workOrders,
+          project: {
+            id: projects.id,
+            name: projects.name,
+            code: projects.code,
+          },
+          client: {
+            id: clients.id,
+            name: clients.name,
+          },
+          quote: {
+            id: quotes.id,
+            quoteNumber: quotes.quoteNumber,
+            title: quotes.title,
+          },
+          createdBy: {
+            id: users.id,
+            name: users.name,
+          }
+        })
+        .from(workOrders)
+        .leftJoin(projects, eq(workOrders.projectId, projects.id))
+        .leftJoin(clients, eq(workOrders.clientId, clients.id))
+        .leftJoin(quotes, eq(workOrders.quoteId, quotes.id))
+        .leftJoin(users, eq(workOrders.createdBy, users.id))
+        .orderBy(desc(workOrders.createdAt));
+
+      const today = new Date();
+      const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      const todayEnd = new Date(todayStart.getTime() + 24 * 60 * 60 * 1000);
+
+      // Calculate statistics
+      const totalWorkOrders = allWorkOrders.length;
+      const activeWorkOrders = allWorkOrders.filter(wo => 
+        ['pending', 'planned', 'in_progress'].includes(wo.workOrder.status)
+      ).length;
+      
+      const completedToday = allWorkOrders.filter(wo => 
+        wo.workOrder.status === 'completed' && 
+        wo.workOrder.actualEndDate &&
+        new Date(wo.workOrder.actualEndDate) >= todayStart &&
+        new Date(wo.workOrder.actualEndDate) < todayEnd
+      ).length;
+
+      // Get recent work orders (last 10)
+      const recentWorkOrders = allWorkOrders.slice(0, 10);
+
       const dashboardData = {
         stats: {
-          totalWorkOrders: 0,
-          activeWorkOrders: 0,
-          completedToday: 0,
-          pendingQuality: 0,
-          capacityUtilization: 85
+          totalWorkOrders,
+          activeWorkOrders,
+          completedToday,
+          pendingQuality: 0, // Will be implemented when quality checks are integrated
+          capacityUtilization: totalWorkOrders > 0 ? Math.round((activeWorkOrders / totalWorkOrders) * 100) : 0
         },
-        recentWorkOrders: [],
-        todaySchedule: [],
-        pendingQualityChecks: []
+        recentWorkOrders: recentWorkOrders.map(wo => ({
+          ...wo.workOrder,
+          project: wo.project,
+          client: wo.client,
+          quote: wo.quote,
+          createdByUser: wo.createdBy
+        })),
+        todaySchedule: [], // Will be implemented when production schedules are added
+        pendingQualityChecks: [] // Will be implemented when quality checks are integrated
       };
       
       res.json(dashboardData);
@@ -324,10 +379,74 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { search, status, priority } = req.query;
       
-      // Mock work orders data - replace with actual storage calls when available
-      const workOrders = [];
+      // Build where conditions for filtering
+      let whereConditions = [];
       
-      res.json(workOrders);
+      if (status && status !== 'all') {
+        whereConditions.push(eq(workOrders.status, status as string));
+      }
+      
+      if (priority && priority !== 'all') {
+        whereConditions.push(eq(workOrders.priority, priority as string));
+      }
+
+      // Get work orders with related data
+      const workOrdersData = await db
+        .select({
+          workOrder: workOrders,
+          project: {
+            id: projects.id,
+            name: projects.name,
+            code: projects.code,
+          },
+          client: {
+            id: clients.id,
+            name: clients.name,
+          },
+          quote: {
+            id: quotes.id,
+            quoteNumber: quotes.quoteNumber,
+            title: quotes.title,
+          },
+          createdBy: {
+            id: users.id,
+            name: users.name,
+          }
+        })
+        .from(workOrders)
+        .leftJoin(projects, eq(workOrders.projectId, projects.id))
+        .leftJoin(clients, eq(workOrders.clientId, clients.id))
+        .leftJoin(quotes, eq(workOrders.quoteId, quotes.id))
+        .leftJoin(users, eq(workOrders.createdBy, users.id))
+        .where(whereConditions.length > 0 ? and(...whereConditions) : undefined)
+        .orderBy(desc(workOrders.createdAt));
+
+      // Apply search filter if provided
+      let filteredWorkOrders = workOrdersData;
+      if (search) {
+        const searchTerm = (search as string).toLowerCase();
+        filteredWorkOrders = workOrdersData.filter(item => 
+          item.workOrder.orderNumber.toLowerCase().includes(searchTerm) ||
+          item.workOrder.title.toLowerCase().includes(searchTerm) ||
+          item.project?.name.toLowerCase().includes(searchTerm) ||
+          item.client?.name.toLowerCase().includes(searchTerm)
+        );
+      }
+
+      // Transform to include related data
+      const result = filteredWorkOrders.map(wo => ({
+        ...wo.workOrder,
+        project: wo.project || { name: 'No Project', code: 'N/A' },
+        client: wo.client || { name: 'No Client' },
+        quote: wo.quote,
+        createdByUser: wo.createdBy || { name: 'Unknown' },
+        approvedByUser: null, // Will be populated when approval workflow is added
+        schedules: [], // Will be populated when schedules are integrated
+        tasks: [], // Will be populated when tasks are integrated
+        qualityChecks: [] // Will be populated when quality checks are integrated
+      }));
+      
+      res.json(result);
     } catch (error) {
       console.error("Work orders error:", error);
       res.status(500).json({ message: "Internal server error" });

@@ -1,8 +1,8 @@
 import type { Express } from "express";
 import { db } from "./db";
-import { quotes, quoteItems, clients, salesProducts, users, projects } from "@shared/schema";
-import { eq, desc, and, like, or } from "drizzle-orm";
-import { insertQuoteSchema, insertQuoteItemSchema } from "@shared/schema";
+import { quotes, quoteItems, clients, salesProducts, users, projects, workOrders } from "@shared/schema";
+import { eq, desc, and, like, or, sql } from "drizzle-orm";
+import { insertQuoteSchema, insertQuoteItemSchema, insertWorkOrderSchema } from "@shared/schema";
 import { z } from "zod";
 import { authenticateToken, type AuthRequest } from "./middleware/auth";
 
@@ -499,6 +499,91 @@ export function setupQuotesRoutes(app: Express) {
     } catch (error) {
       console.error("Error updating quote:", error);
       res.status(500).json({ error: "Failed to update quote" });
+    }
+  });
+
+  // Approve quote and create work order
+  app.post("/api/quotes/:id/approve", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const quoteId = parseInt(req.params.id);
+      const userId = req.user?.id;
+
+      if (!userId) {
+        return res.status(401).json({ error: "User not authenticated" });
+      }
+
+      // Get the quote details first
+      const [existingQuote] = await db
+        .select({
+          quote: quotes,
+          client: {
+            id: clients.id,
+            name: clients.name,
+          },
+          project: {
+            id: projects.id,
+            name: projects.name,
+            code: projects.code,
+          }
+        })
+        .from(quotes)
+        .leftJoin(clients, eq(quotes.clientId, clients.id))
+        .leftJoin(projects, eq(quotes.projectId, projects.id))
+        .where(eq(quotes.id, quoteId));
+
+      if (!existingQuote) {
+        return res.status(404).json({ error: "Quote not found" });
+      }
+
+      // Update quote status to approved
+      const [updatedQuote] = await db
+        .update(quotes)
+        .set({ 
+          status: 'approved',
+          updatedAt: new Date(),
+        })
+        .where(eq(quotes.id, quoteId))
+        .returning();
+
+      // Generate work order number
+      const workOrderCount = await db
+        .select({ count: sql`count(*)` })
+        .from(workOrders);
+      
+      const orderNumber = `WO-${String(Number(workOrderCount[0].count) + 1).padStart(3, '0')}`;
+
+      // Create work order from approved quote
+      const workOrderData = {
+        orderNumber,
+        projectId: existingQuote.quote.projectId!,
+        quoteId: quoteId,
+        clientId: existingQuote.quote.clientId,
+        title: `Production for ${existingQuote.quote.title}`,
+        description: `Manufacturing work order created from approved quote ${existingQuote.quote.quoteNumber}`,
+        status: 'pending' as const,
+        priority: 'medium' as const,
+        orderType: 'manufacturing' as const,
+        totalQuantity: 1, // Will be calculated from quote items
+        specifications: existingQuote.quote.furnitureSpecifications || '',
+        qualityStandards: 'Standard quality control as per company guidelines',
+        createdBy: userId,
+        estimatedStartDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 1 week from now
+        estimatedEndDate: new Date(Date.now() + 21 * 24 * 60 * 60 * 1000), // 3 weeks from now
+      };
+
+      const [newWorkOrder] = await db
+        .insert(workOrders)
+        .values(workOrderData)
+        .returning();
+
+      res.json({ 
+        message: "Quote approved and work order created successfully",
+        quote: updatedQuote,
+        workOrder: newWorkOrder
+      });
+    } catch (error) {
+      console.error("Error approving quote:", error);
+      res.status(500).json({ error: "Failed to approve quote" });
     }
   });
 }
