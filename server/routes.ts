@@ -911,15 +911,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Client routes
   app.get("/api/clients", authenticateToken, async (req, res) => {
     try {
-      console.log("🔍 DEBUG: Starting getAllClients...");
       const clients = await storage.getAllClients();
-      console.log("✅ DEBUG: Successfully got", clients.length, "clients");
       res.json(clients);
     } catch (error) {
-      console.error("❌ ERROR in getAllClients:", error);
-      console.error("❌ ERROR message:", error.message);
-      console.error("❌ ERROR code:", error.code);
-      console.error("❌ Full error:", JSON.stringify(error, null, 2));
+      console.error("Error fetching clients:", error);
       res.status(500).json({ message: "Failed to fetch clients", error });
     }
   });
@@ -2285,16 +2280,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const attendance = await storage.getAllAttendance(filters);
       
-      // Include user information
-      const attendanceWithUsers = await Promise.all(
-        attendance.map(async (att) => {
-          const user = await storage.getUser(att.userId);
-          return {
-            ...att,
-            user: user ? { id: user.id, name: user.name, email: user.email } : null,
-          };
-        })
-      );
+      // PERFORMANCE FIX: Get all users once instead of N+1 queries
+      const allUsers = await storage.getAllUsers();
+      const userMap = new Map(allUsers.map(user => [user.id, user]));
+      
+      // Include user information using lookup map
+      const attendanceWithUsers = attendance.map(att => {
+        const user = userMap.get(att.userId);
+        return {
+          ...att,
+          user: user ? { id: user.id, name: user.name, email: user.email } : null,
+        };
+      });
       
       res.json(attendanceWithUsers);
     } catch (error) {
@@ -2581,16 +2578,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
             return attDate.getMonth() + 1 === monthNum && attDate.getFullYear() === yearNum;
           });
           
-          // Get user details for each attendance record
-          const attendanceWithUsers = await Promise.all(
-            monthlyAttendance.map(async (record: any) => {
-              const user = await storage.getUser(record.userId);
-              return {
-                ...record,
-                userName: user ? user.name || user.username : 'Unknown User'
-              };
-            })
-          );
+          // PERFORMANCE FIX: Get user details efficiently
+          const allUsers = await storage.getAllUsers();
+          const userMap = new Map(allUsers.map(user => [user.id, user]));
+          
+          const attendanceWithUsers = monthlyAttendance.map((record: any) => {
+            const user = userMap.get(record.userId);
+            return {
+              ...record,
+              userName: user ? user.name || user.username : 'Unknown User'
+            };
+          });
           
           // Filter by employee name if specified
           let filteredAttendance = attendanceWithUsers;
