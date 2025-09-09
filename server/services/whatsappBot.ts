@@ -60,7 +60,42 @@ export class FurniliWhatsAppBot {
   private setupHandlers() {
     // QR Code for authentication
     this.client.on('qr', (qr) => {
+      // Store the raw QR data
       global.qrCodeData = qr;
+      
+      // Generate ASCII QR code for display using a different method
+      try {
+        // Capture console output to get ASCII QR
+        const originalLog = console.log;
+        let asciiQrCode = '';
+        
+        console.log = (message: any) => {
+          if (typeof message === 'string' && (message.includes('█') || message.includes('▄') || message.includes('▀'))) {
+            asciiQrCode += message + '\n';
+          }
+        };
+        
+        // Generate the QR code and capture the ASCII output
+        qrcode.generate(qr, { small: true });
+        
+        // Restore original console.log
+        console.log = originalLog;
+        
+        // Store the captured ASCII QR code
+        if (asciiQrCode.trim()) {
+          global.qrCodeDataAscii = asciiQrCode.trim();
+          console.log('\n🔗 WhatsApp QR Code Generated and ASCII Captured');
+          console.log('ASCII Length:', asciiQrCode.length);
+        } else {
+          global.qrCodeDataAscii = null;
+          console.log('\n🔗 WhatsApp QR Code Generated (ASCII capture failed)');
+        }
+        
+      } catch (error) {
+        console.log('Error generating ASCII QR:', error);
+        global.qrCodeDataAscii = null;
+      }
+      
       console.log('\n🔗 WhatsApp QR Code:');
       qrcode.generate(qr, { small: true });
       console.log('\n📱 Scan this QR code with your WhatsApp to connect the bot\n');

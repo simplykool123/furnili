@@ -38,8 +38,9 @@ export default function WhatsAppLink() {
       const response = await fetch('/api/whatsapp/generate-qr', { method: 'POST' });
       if (response.ok) {
         const data = await response.json();
-        if (data.qrCode) {
-          setQrCode(data.qrCode);
+        if (data.qrCodeAscii || data.qrCode) {
+          // Prefer ASCII version for display, fallback to raw data
+          setQrCode(data.qrCodeAscii || data.qrCode);
           setConnectionStatus("Waiting for scan...");
         } else {
           setConnectionStatus("QR code generating...");
@@ -62,8 +63,9 @@ export default function WhatsAppLink() {
         const response = await fetch('/api/whatsapp/status');
         if (response.ok) {
           const data = await response.json();
-          if (data.qrCode) {
-            setQrCode(data.qrCode);
+          if (data.qrCodeAscii || data.qrCode) {
+            // Prefer ASCII version for display, fallback to raw data
+            setQrCode(data.qrCodeAscii || data.qrCode);
             setConnectionStatus("Waiting for scan...");
             return;
           }

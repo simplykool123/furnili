@@ -5373,10 +5373,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/whatsapp/status', (req, res) => {
     // Check if WhatsApp bot is connected
     const isConnected = global.whatsappClient && global.whatsappClient.info && global.whatsappClient.info.wid;
+    console.log('WhatsApp Status Check:', { 
+      connected: !!isConnected, 
+      hasQRData: !!global.qrCodeData,
+      qrLength: global.qrCodeData ? global.qrCodeData.length : 0
+    });
     res.json({ 
       connected: !!isConnected, 
       status: isConnected ? 'Connected' : 'Disconnected',
-      qrCode: global.qrCodeData || null
+      qrCode: global.qrCodeData || null,
+      qrCodeAscii: global.qrCodeDataAscii || null
     });
   });
 
