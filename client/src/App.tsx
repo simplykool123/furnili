@@ -42,6 +42,7 @@ import WorkOrders from "@/pages/WorkOrders";
 import QualityControl from "@/pages/QualityControl";
 import WhatsAppConsole from "@/pages/WhatsAppConsole";
 import Leads from "@/pages/Leads";
+import Interactions from "@/pages/Interactions";
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -313,6 +314,12 @@ function Router() {
       <Route path="/leads">
         <ProtectedRoute>
           <Leads />
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/interactions">
+        <ProtectedRoute>
+          <Interactions />
         </ProtectedRoute>
       </Route>
       
