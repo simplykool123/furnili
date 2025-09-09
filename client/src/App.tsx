@@ -35,6 +35,7 @@ import ProjectDetail from "@/pages/ProjectDetail";
 import TaskManagement from "@/pages/TaskManagement";
 import BOMCalculator from "@/pages/BOMCalculator";
 import BOMSettings from "@/pages/BOMSettings";
+import WhatsAppSettings from "@/pages/WhatsAppSettings";
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -222,6 +223,12 @@ function Router() {
       <Route path="/price-comparison">
         <ProtectedRoute>
           <PriceComparison />
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/whatsapp-settings">
+        <ProtectedRoute>
+          <WhatsAppSettings />
         </ProtectedRoute>
       </Route>
       

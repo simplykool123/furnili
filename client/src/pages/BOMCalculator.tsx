@@ -1160,17 +1160,15 @@ export default function BOMCalculator() {
                         )}
                       />
                     </div>
-                  )}
                 </div>
-              </div>
             </Form>
           </div>
         </div>
       )}
 
       {/* Main Calculator Form */}
-      <div className="bg-card shadow-sm border rounded-lg mb-6">
-        <div className="px-4 py-6">
+      <Card>
+        <CardContent className="p-6">
           <div className="text-center mb-6">
             <Calculator className="w-8 h-8 mx-auto text-[hsl(28,100%,25%)] mb-2" />
             <h2 className="text-xl font-bold text-foreground">Furniture Calculator</h2>
@@ -2274,7 +2272,8 @@ export default function BOMCalculator() {
                     {calculateBOMMutation.isPending ? "Calculating..." : "Calculate BOM"}
                     <Calculator className="w-5 h-5 ml-2" />
                   </Button>
-                </form>
+                </div>
+              </form>
               </Form>
             </CardContent>
           </Card>
@@ -3039,7 +3038,6 @@ export default function BOMCalculator() {
               </Card>
             )}
           </div>
-        </div>
       </ResponsiveLayout>
   );
 }
