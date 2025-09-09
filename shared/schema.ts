@@ -118,22 +118,18 @@ export const interactions = pgTable("interactions", {
 export const clients = pgTable("clients", {
   id: serial("id").primaryKey(),
   name: text("name").notNull().unique(),
-  email: text("email"), // Made optional
+  email: text("email"),
   mobile: text("mobile").notNull(),
   city: text("city").notNull(),
   contactPerson: text("contact_person"),
   phone: text("phone"),
-  address1: text("address1"), // New field
-  address2: text("address2"), // New field
-  state: text("state"), // New field
-  pinCode: text("pin_code"), // New field
+  address1: text("address1"),
+  address2: text("address2"),
+  state: text("state"),
+  pinCode: text("pin_code"),
   gstNumber: text("gst_number"),
-  // CRM Integration Fields
-  convertedFromLeadId: integer("converted_from_lead_id").references(() => leads.id),
-  clientRating: integer("client_rating").default(5), // 1-5 satisfaction rating
-  totalProjects: integer("total_projects").default(0),
-  totalRevenue: real("total_revenue").default(0),
-  lastProjectDate: timestamp("last_project_date"),
+  // Simple field to differentiate leads from clients
+  type: text("type").notNull().default("client"), // "lead" or "client"
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),

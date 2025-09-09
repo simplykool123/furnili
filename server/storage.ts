@@ -1183,53 +1183,11 @@ class DatabaseStorage implements IStorage {
 
   // Client operations
   async getAllClients(): Promise<Client[]> {
-    return db.select({
-      id: clients.id,
-      name: clients.name,
-      email: clients.email,
-      mobile: clients.mobile,
-      city: clients.city,
-      contactPerson: clients.contactPerson,
-      phone: clients.phone,
-      address1: clients.address1,
-      address2: clients.address2,
-      state: clients.state,
-      pinCode: clients.pinCode,
-      gstNumber: clients.gstNumber,
-      convertedFromLeadId: clients.convertedFromLeadId,
-      clientRating: clients.clientRating,
-      totalProjects: clients.totalProjects,
-      totalRevenue: clients.totalRevenue,
-      lastProjectDate: clients.lastProjectDate,
-      isActive: clients.isActive,
-      createdAt: clients.createdAt,
-      updatedAt: clients.updatedAt
-    }).from(clients).where(eq(clients.isActive, true)).orderBy(asc(clients.name));
+    return db.select().from(clients).where(and(eq(clients.isActive, true), eq(clients.type, "client"))).orderBy(asc(clients.name));
   }
 
   async getClient(id: number): Promise<Client | undefined> {
-    const result = await db.select({
-      id: clients.id,
-      name: clients.name,
-      email: clients.email,
-      mobile: clients.mobile,
-      city: clients.city,
-      contactPerson: clients.contactPerson,
-      phone: clients.phone,
-      address1: clients.address1,
-      address2: clients.address2,
-      state: clients.state,
-      pinCode: clients.pinCode,
-      gstNumber: clients.gstNumber,
-      convertedFromLeadId: clients.convertedFromLeadId,
-      clientRating: clients.clientRating,
-      totalProjects: clients.totalProjects,
-      totalRevenue: clients.totalRevenue,
-      lastProjectDate: clients.lastProjectDate,
-      isActive: clients.isActive,
-      createdAt: clients.createdAt,
-      updatedAt: clients.updatedAt
-    }).from(clients).where(eq(clients.id, id)).limit(1);
+    const result = await db.select().from(clients).where(eq(clients.id, id)).limit(1);
     return result[0];
   }
 
