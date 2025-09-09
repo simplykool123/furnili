@@ -54,6 +54,7 @@ export const leadSources = pgTable("lead_sources", {
 export const pipelineStages = pgTable("pipeline_stages", {
   id: serial("id").primaryKey(),
   name: text("name").notNull().unique(),
+  description: text("description"), // Added to match database
   order: integer("order").notNull().default(0),
   probability: integer("probability").default(0), // 0-100 percentage
   color: text("color").default("#6b7280"), // Hex color for UI
