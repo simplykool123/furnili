@@ -295,38 +295,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Production Dashboard API
+  // Production Dashboard API - Safe with table check
   app.get("/api/production/dashboard", authenticateToken, async (req: AuthRequest, res) => {
     try {
-      // Get actual work orders from database
-      const allWorkOrders = await db
-        .select({
-          workOrder: workOrders,
-          project: {
-            id: projects.id,
-            name: projects.name,
-            code: projects.code,
-          },
-          client: {
-            id: clients.id,
-            name: clients.name,
-          },
-          quote: {
-            id: quotes.id,
-            quoteNumber: quotes.quoteNumber,
-            title: quotes.title,
-          },
-          createdBy: {
-            id: users.id,
-            name: users.name,
-          }
-        })
-        .from(workOrders)
-        .leftJoin(projects, eq(workOrders.projectId, projects.id))
-        .leftJoin(clients, eq(workOrders.clientId, clients.id))
-        .leftJoin(quotes, eq(workOrders.quoteId, quotes.id))
-        .leftJoin(users, eq(workOrders.createdBy, users.id))
-        .orderBy(desc(workOrders.createdAt));
+      // Check if work_orders table exists first
+      let allWorkOrders = [];
+      try {
+        allWorkOrders = await db
+          .select({
+            workOrder: workOrders,
+            project: {
+              id: projects.id,
+              name: projects.name,
+              code: projects.code,
+            },
+            client: {
+              id: clients.id,
+              name: clients.name,
+            },
+            quote: {
+              id: quotes.id,
+              quoteNumber: quotes.quoteNumber,
+              title: quotes.title,
+            },
+            createdBy: {
+              id: users.id,
+              name: users.name,
+            }
+          })
+          .from(workOrders)
+          .leftJoin(projects, eq(workOrders.projectId, projects.id))
+          .leftJoin(clients, eq(workOrders.clientId, clients.id))
+          .leftJoin(quotes, eq(workOrders.quoteId, quotes.id))
+          .leftJoin(users, eq(workOrders.createdBy, users.id))
+          .orderBy(desc(workOrders.createdAt));
+      } catch (tableError: any) {
+        if (tableError.code === '42P01') {
+          console.warn('work_orders table not found, using empty data');
+          allWorkOrders = [];
+        } else {
+          throw tableError;
+        }
+      }
 
       const today = new Date();
       const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
@@ -367,6 +377,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         pendingQualityChecks: [] // Will be implemented when quality checks are integrated
       };
       
+      // Cache headers for better performance
+      res.set({
+        'Cache-Control': 'public, max-age=60',
+        'ETag': `"dashboard-${Date.now()}"`
+      });
+      
       res.json(dashboardData);
     } catch (error) {
       console.error("Production dashboard error:", error);
@@ -374,28 +390,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Work Orders API
+  // Work Orders API - Safe with table check
   app.get("/api/work-orders", authenticateToken, async (req: AuthRequest, res) => {
     try {
       const { search, status, priority, projectId } = req.query;
       
-      // Build where conditions for filtering
-      let whereConditions = [];
-      
-      if (status && status !== 'all') {
-        whereConditions.push(eq(workOrders.status, status as string));
-      }
-      
-      if (priority && priority !== 'all') {
-        whereConditions.push(eq(workOrders.priority, priority as string));
-      }
+      // Check if work_orders table exists first
+      let workOrdersData = [];
+      try {
+        // Build where conditions for filtering
+        let whereConditions = [];
+        
+        if (status && status !== 'all') {
+          whereConditions.push(eq(workOrders.status, status as string));
+        }
+        
+        if (priority && priority !== 'all') {
+          whereConditions.push(eq(workOrders.priority, priority as string));
+        }
 
-      if (projectId) {
-        whereConditions.push(eq(workOrders.projectId, parseInt(projectId as string)));
-      }
+        if (projectId) {
+          whereConditions.push(eq(workOrders.projectId, parseInt(projectId as string)));
+        }
 
-      // Get work orders with related data
-      const workOrdersData = await db
+        // Get work orders with related data
+        workOrdersData = await db
         .select({
           workOrder: workOrders,
           project: {
