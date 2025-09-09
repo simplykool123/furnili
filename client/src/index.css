@@ -11,9 +11,9 @@
 /* Mobile optimizations */
 @media (max-width: 768px) {
   /* Reduce animations on mobile for better performance - EXCEPT sidebar */
-  *:not(.mobile-sidebar):not(.mobile-backdrop), 
-  *:not(.mobile-sidebar):not(.mobile-backdrop)::before, 
-  *:not(.mobile-sidebar):not(.mobile-backdrop)::after {
+  .mobile-animation-reduce:not(.mobile-sidebar):not(.mobile-backdrop), 
+  .mobile-animation-reduce:not(.mobile-sidebar):not(.mobile-backdrop)::before, 
+  .mobile-animation-reduce:not(.mobile-sidebar):not(.mobile-backdrop)::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
@@ -41,7 +41,7 @@
 
 /* Reduce motion for performance */
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
+  .animation-reduce, .animation-reduce::before, .animation-reduce::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
