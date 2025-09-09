@@ -19,6 +19,7 @@ import {
 import { createBackupZip } from "./utils/backupExport";
 import { canOrderMaterials, getMaterialRequestEligibleProjects, getStageDisplayName } from "./utils/projectStageValidation";
 import { setupQuotesRoutes } from "./quotesRoutes";
+import { registerCRMRoutes } from "./crmRoutes";
 // ObjectStorageService removed - using local storage only
 import { db } from "./db";
 import { calculateBOM, generateBOMNumber, convertDimensions, DEFAULT_RATES, calculateWardrobeBOM, calculateSheetOptimization } from "./utils/bomCalculations";
@@ -4979,6 +4980,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Setup quotes routes
   setupQuotesRoutes(app);
+  
+  // CRM Routes
+  registerCRMRoutes(app);
 
   // Purchase Order PDF generation
   app.get("/api/purchase-orders/:id/pdf", authenticateToken, async (req, res) => {

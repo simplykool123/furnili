@@ -332,7 +332,7 @@ export function registerCRMRoutes(app: Express) {
         })
         .from(interactions)
         .leftJoin(users, eq(interactions.userId, users.id))
-        .where(whereConditions.length > 0 ? and(...whereConditions) : sql`1=1`)
+        .where(whereConditions.length > 0 ? and(...whereConditions) : undefined)
         .orderBy(desc(interactions.createdAt));
 
       res.json(interactionsData);
@@ -475,7 +475,7 @@ export function registerCRMRoutes(app: Express) {
         })
         .from(satisfactionSurveys)
         .leftJoin(clients, eq(satisfactionSurveys.clientId, clients.id))
-        .where(whereConditions.length > 0 ? and(...whereConditions) : sql`1=1`)
+        .where(whereConditions.length > 0 ? and(...whereConditions) : undefined)
         .orderBy(desc(satisfactionSurveys.createdAt));
 
       res.json(surveysData);
