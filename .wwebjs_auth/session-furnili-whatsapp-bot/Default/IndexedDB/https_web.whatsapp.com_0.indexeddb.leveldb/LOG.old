@@ -1,29 +1,19 @@
-2025/09/09-08:23:26.879 2271 Reusing MANIFEST /home/runner/workspace/.wwebjs_auth/session-furnili-whatsapp-bot/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
-2025/09/09-08:23:26.880 2271 Recovering log #2312
-2025/09/09-08:23:26.881 2271 Reusing old log /home/runner/workspace/.wwebjs_auth/session-furnili-whatsapp-bot/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/002312.log 
-2025/09/09-08:23:27.462 2279 Compacting 1@1 + 3@2 files
-2025/09/09-08:23:27.621 2279 Generated table #2315@1: 77043 keys, 2242709 bytes
-2025/09/09-08:23:27.714 2279 Generated table #2316@1: 41061 keys, 2210672 bytes
-2025/09/09-08:23:27.782 2279 Generated table #2317@1: 20510 keys, 1965281 bytes
-2025/09/09-08:23:27.782 2279 Compacted 1@1 + 3@2 files => 6418662 bytes
-2025/09/09-08:23:27.795 2279 compacted to: files[ 0 0 4 0 0 0 0 ]
-2025/09/09-08:23:27.795 2279 Delete type=2 #2308
-2025/09/09-08:23:27.795 2279 Delete type=2 #2309
-2025/09/09-08:23:27.795 2279 Delete type=2 #2310
-2025/09/09-08:23:27.795 2279 Delete type=2 #2313
-2025/09/09-08:23:28.349 2271 Level-0 table #2319: started
-2025/09/09-08:23:28.379 2271 Level-0 table #2319: 31413 bytes OK
-2025/09/09-08:23:28.405 2271 Delete type=0 #2312
-2025/09/09-08:23:28.406 2271 Manual compaction at level-0 from ' \xf5\x02\x00\x00\x00' @ 72057594037927935 : 1 .. ' \xf6\x02\x00\x00\x00' @ 0 : 0; will stop at (end)
-2025/09/09-08:23:31.273 2271 Compacting 1@1 + 4@2 files
-2025/09/09-08:23:31.610 2271 Generated table #2320@1: 76385 keys, 2240786 bytes
-2025/09/09-08:23:31.776 2271 Generated table #2321@1: 40904 keys, 2210208 bytes
-2025/09/09-08:23:31.899 2271 Generated table #2322@1: 33283 keys, 2196137 bytes
-2025/09/09-08:23:31.924 2271 Generated table #2323@1: 5187 keys, 128690 bytes
-2025/09/09-08:23:31.924 2271 Compacted 1@1 + 4@2 files => 6775821 bytes
-2025/09/09-08:23:31.950 2271 compacted to: files[ 0 0 4 0 0 0 0 ]
-2025/09/09-08:23:31.951 2271 Delete type=2 #2311
-2025/09/09-08:23:31.951 2271 Delete type=2 #2315
-2025/09/09-08:23:31.951 2271 Delete type=2 #2316
-2025/09/09-08:23:31.951 2271 Delete type=2 #2317
-2025/09/09-08:23:31.951 2271 Delete type=2 #2319
+2025/09/09-08:45:10.477 2ffc Reusing MANIFEST /home/runner/workspace/.wwebjs_auth/session-furnili-whatsapp-bot/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
+2025/09/09-08:45:10.478 2ffc Recovering log #2325
+2025/09/09-08:45:10.540 2ffc Reusing old log /home/runner/workspace/.wwebjs_auth/session-furnili-whatsapp-bot/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/002325.log 
+2025/09/09-08:45:12.647 2ffc Level-0 table #2333: started
+2025/09/09-08:45:12.680 2ffc Level-0 table #2333: 274359 bytes OK
+2025/09/09-08:45:12.720 2ffc Delete type=0 #2325
+2025/09/09-08:45:12.741 2ffc Manual compaction at level-0 from ' \xf7\x02\x00\x00\x00' @ 72057594037927935 : 1 .. ' \xf8\x02\x00\x00\x00' @ 0 : 0; will stop at (end)
+2025/09/09-08:45:16.471 2ffd Compacting 1@1 + 4@2 files
+2025/09/09-08:45:16.757 2ffd Generated table #2334@1: 78921 keys, 2244055 bytes
+2025/09/09-08:45:17.002 2ffd Generated table #2335@1: 41149 keys, 2211298 bytes
+2025/09/09-08:45:17.127 2ffd Generated table #2336@1: 30347 keys, 2193003 bytes
+2025/09/09-08:45:17.151 2ffd Generated table #2337@1: 8195 keys, 194201 bytes
+2025/09/09-08:45:17.151 2ffd Compacted 1@1 + 4@2 files => 6842557 bytes
+2025/09/09-08:45:17.166 2ffd compacted to: files[ 0 0 4 0 0 0 0 ]
+2025/09/09-08:45:17.166 2ffd Delete type=2 #2327
+2025/09/09-08:45:17.166 2ffd Delete type=2 #2328
+2025/09/09-08:45:17.166 2ffd Delete type=2 #2329
+2025/09/09-08:45:17.166 2ffd Delete type=2 #2330
+2025/09/09-08:45:17.166 2ffd Delete type=2 #2333

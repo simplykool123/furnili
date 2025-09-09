@@ -70,13 +70,26 @@ export default function Interactions() {
   const [searchTerm, setSearchTerm] = useState("");
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [dateFilter, setDateFilter] = useState<string>("all");
+  
+  // NEW: Unified filtering by Client ID and Project ID
+  const [clientIdFilter, setClientIdFilter] = useState<string>("");
+  const [projectIdFilter, setProjectIdFilter] = useState<string>("");
+  const [viewMode, setViewMode] = useState<"all" | "client" | "project">("all");
 
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  // Fetch interactions
+  // Fetch interactions based on view mode
   const { data: interactions = [], isLoading: interactionsLoading } = useQuery<Interaction[]>({
-    queryKey: ["/api/crm/interactions", searchTerm, typeFilter, dateFilter],
+    queryKey: [
+      viewMode === "client" ? `/api/crm/interactions/client/${clientIdFilter}` :
+      viewMode === "project" ? `/api/crm/interactions/project/${projectIdFilter}` :
+      "/api/crm/interactions/all/all",
+      searchTerm, typeFilter, dateFilter
+    ],
+    enabled: viewMode === "all" || 
+             (viewMode === "client" && clientIdFilter) || 
+             (viewMode === "project" && projectIdFilter)
   });
 
   // Fetch leads for form
@@ -84,9 +97,14 @@ export default function Interactions() {
     queryKey: ["/api/crm/leads"],
   });
 
-  // Fetch clients for form
+  // Fetch clients for form and filtering
   const { data: clients = [] } = useQuery<Client[]>({
     queryKey: ["/api/clients"],
+  });
+
+  // Fetch projects for filtering  
+  const { data: projects = [] } = useQuery<any[]>({
+    queryKey: ["/api/projects"],
   });
 
   // Form setup
@@ -122,13 +140,25 @@ export default function Interactions() {
     // Ensure at least one contact is selected
     if (!data.leadId && !data.clientId) {
       toast({
-        title: "Error",
+        title: "Error", 
         description: "Please select either a lead or client",
         variant: "destructive",
       });
       return;
     }
-    createInteractionMutation.mutate(data);
+
+    // Prepare the data for the new unified API
+    const submissionData = {
+      entityType: data.leadId ? "lead" : "client",
+      entityId: data.leadId || data.clientId,
+      clientId: data.clientId, // Will be resolved by backend
+      type: "note", // Default to note type for manual entries
+      subject: data.subject,
+      content: data.description,
+      outcome: data.outcome,
+    };
+
+    createInteractionMutation.mutate(submissionData);
   };
 
   // Filter interactions
@@ -411,46 +441,120 @@ export default function Interactions() {
         </Card>
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-4 items-center">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-          <Input
-            placeholder="Search interactions..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-            data-testid="input-search-interactions"
-          />
+      {/* NEW: Unified Filtering System */}
+      <div className="space-y-4">
+        {/* View Mode Selector */}
+        <div className="flex flex-wrap gap-2">
+          <Button
+            variant={viewMode === "all" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setViewMode("all")}
+            className="flex items-center gap-2"
+            data-testid="button-view-all"
+          >
+            <MessageCircle className="h-4 w-4" />
+            All Notes
+          </Button>
+          <Button
+            variant={viewMode === "client" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setViewMode("client")}
+            className="flex items-center gap-2"
+            data-testid="button-view-client"
+          >
+            <User className="h-4 w-4" />
+            By Client (CI No.)
+          </Button>
+          <Button
+            variant={viewMode === "project" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setViewMode("project")}
+            className="flex items-center gap-2"
+            data-testid="button-view-project"
+          >
+            <Calendar className="h-4 w-4" />
+            By Project (PID)
+          </Button>
         </div>
-        
-        <Select value={typeFilter} onValueChange={setTypeFilter}>
-          <SelectTrigger className="w-48" data-testid="select-type-filter">
-            <SelectValue placeholder="Filter by type" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Types</SelectItem>
-            <SelectItem value="call">Phone Calls</SelectItem>
-            <SelectItem value="email">Emails</SelectItem>
-            <SelectItem value="meeting">Meetings</SelectItem>
-            <SelectItem value="whatsapp">WhatsApp</SelectItem>
-            <SelectItem value="site_visit">Site Visits</SelectItem>
-            <SelectItem value="proposal_sent">Proposals</SelectItem>
-            <SelectItem value="follow_up">Follow Ups</SelectItem>
-          </SelectContent>
-        </Select>
-        
-        <Select value={dateFilter} onValueChange={setDateFilter}>
-          <SelectTrigger className="w-48" data-testid="select-date-filter">
-            <SelectValue placeholder="Filter by date" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Time</SelectItem>
-            <SelectItem value="today">Today</SelectItem>
-            <SelectItem value="week">This Week</SelectItem>
-            <SelectItem value="month">This Month</SelectItem>
-          </SelectContent>
-        </Select>
+
+        {/* Filter Controls */}
+        <div className="flex flex-col sm:flex-row gap-4 items-center">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <Input
+              placeholder="Search interactions..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+              data-testid="input-search-interactions"
+            />
+          </div>
+
+          {/* Client Filter (only show when client view mode) */}
+          {viewMode === "client" && (
+            <Select value={clientIdFilter} onValueChange={setClientIdFilter}>
+              <SelectTrigger className="w-48" data-testid="select-client-filter">
+                <User className="h-4 w-4 mr-2" />
+                <SelectValue placeholder="Select client" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">All Clients</SelectItem>
+                {clients.map((client) => (
+                  <SelectItem key={client.id} value={client.id.toString()}>
+                    CI-{client.id}: {client.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+
+          {/* Project Filter (only show when project view mode) */}
+          {viewMode === "project" && (
+            <Select value={projectIdFilter} onValueChange={setProjectIdFilter}>
+              <SelectTrigger className="w-48" data-testid="select-project-filter">
+                <Calendar className="h-4 w-4 mr-2" />
+                <SelectValue placeholder="Select project" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">All Projects</SelectItem>
+                {projects.map((project) => (
+                  <SelectItem key={project.id} value={project.id.toString()}>
+                    PID-{project.id}: {project.code}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+          
+          <Select value={typeFilter} onValueChange={setTypeFilter}>
+            <SelectTrigger className="w-48" data-testid="select-type-filter">
+              <SelectValue placeholder="Filter by type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Types</SelectItem>
+              <SelectItem value="call">Phone Calls</SelectItem>
+              <SelectItem value="email">Emails</SelectItem>
+              <SelectItem value="meeting">Meetings</SelectItem>
+              <SelectItem value="whatsapp">WhatsApp</SelectItem>
+              <SelectItem value="note">Notes</SelectItem>
+              <SelectItem value="site_visit">Site Visits</SelectItem>
+              <SelectItem value="proposal_sent">Proposals</SelectItem>
+              <SelectItem value="follow_up">Follow Ups</SelectItem>
+            </SelectContent>
+          </Select>
+          
+          <Select value={dateFilter} onValueChange={setDateFilter}>
+            <SelectTrigger className="w-48" data-testid="select-date-filter">
+              <SelectValue placeholder="Filter by date" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Time</SelectItem>
+              <SelectItem value="today">Today</SelectItem>
+              <SelectItem value="week">This Week</SelectItem>
+              <SelectItem value="month">This Month</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {/* Interactions Timeline */}
