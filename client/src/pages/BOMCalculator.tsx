@@ -1096,140 +1096,20 @@ export default function BOMCalculator() {
         </div>
       )}
 
-                            >
-                              <FormControl>
-                                <SelectTrigger className={`h-8 text-xs ${
-                                  isPreLamBoard ? 'opacity-50 cursor-not-allowed bg-muted' : ''
-                                }`} tabIndex={7}>
-                                  <SelectValue placeholder={
-                                    isPreLamBoard 
-                                      ? "Laminate (Pre-Applied)" 
-                                      : "Select finish"
-                                  } />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                {finishTypes.map((finish) => (
-                                  <SelectItem key={finish.value} value={finish.value}>
-                                    {finish.label}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            {isPreLamBoard && (
-                              <p className="text-[10px] text-muted-foreground mt-1">
-                                Pre-Lam boards already have laminate finish applied during manufacturing
-                              </p>
-                            )}
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                  </div>
+      {/* Bill of Materials Display */}
+      {bomResult && (
+        <div className="bg-card shadow-sm border rounded-lg mb-6">
+          <div className="px-4 py-6">
+            {/* Bill of Materials content will go here */}
+            <div className="space-y-4">
+              {/* BOM content will be added here */}
+            </div>
+          </div>
+        </div>
+      )}
 
-                  {/* Configuration */}
-                  <div className="space-y-2">
-                    <h3 className="text-sm font-medium">Configuration</h3>
-                    <div className="grid grid-cols-2 gap-2">
-                      
-                  {/* Bed Type Selection */}
-                  {selectedFurnitureType === 'bed' && (
-                    <div className="space-y-2">
-                      <h3 className="text-sm font-medium flex items-center gap-2">
-                        <Bed className="w-4 h-4" />
-                        Bed Type
-                      </h3>
-                      <FormField
-                        control={form.control}
-                        name="partsConfig.bedType"
-                        render={({ field }) => (
-                          <FormItem>
-                            <div className="grid grid-cols-2 gap-2">
-                              {[
-                                { value: 'platform', label: 'Platform Bed', desc: 'Simple platform', icon: Bed },
-                                { value: 'storage', label: 'Storage Bed', desc: 'Built-in storage', icon: Archive },
-                                { value: 'hydraulic', label: 'Hydraulic Bed', desc: 'Gas lift storage', icon: ArrowLeftRight },
-                                { value: 'standard', label: 'Standard Bed', desc: 'Traditional frame', icon: Home }
-                              ].map((layout) => {
-                                const IconComponent = layout.icon;
-                                const isSelected = field.value === layout.value;
-                                
-                                return (
-                                  <button
-                                    key={layout.value}
-                                    type="button"
-                                    onClick={() => field.onChange(layout.value)}
-                                    className={`p-2 rounded-lg border transition-all text-center ${
-                                      isSelected 
-                                        ? 'border-furnili-brown bg-orange-50 dark:bg-orange-950/20 text-furnili-brown' 
-                                        : 'border-gray-200 dark:border-gray-700 hover:border-furnili-brown/50'
-                                    }`}
-                                  >
-                                    <IconComponent className={`w-5 h-5 mx-auto mb-1 ${isSelected ? 'text-furnili-brown' : 'text-gray-600'}`} />
-                                    <div className="text-xs font-medium">{layout.label}</div>
-                                    <div className="text-xs text-gray-500">{layout.desc}</div>
-                                  </button>
-                                );
-                              })}
-                            </div>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                  )}
-
-                  {/* Kitchen Layout Selection */}
-                  {selectedFurnitureType === 'kitchen_cabinet' && (
-                    <div className="space-y-2">
-                      <h3 className="text-sm font-medium flex items-center gap-2">
-                        <Package className="w-4 h-4" />
-                        Kitchen Layout
-                      </h3>
-                      <FormField
-                        control={form.control}
-                        name="partsConfig.kitchenLayout"
-                        render={({ field }) => (
-                          <FormItem>
-                            <div className="grid grid-cols-3 gap-2">
-                              {[
-                                { value: 'straight', label: 'Straight', desc: 'Single wall', icon: Minus },
-                                { value: 'L-shaped', label: 'L-Shaped', desc: 'Corner layout', icon: CornerDownRight },
-                                { value: 'U-shaped', label: 'U-Shaped', desc: 'Three walls', icon: Archive },
-                                { value: 'island', label: 'Island', desc: 'Central island', icon: Home },
-                                { value: 'galley', label: 'Galley', desc: 'Parallel walls', icon: ArrowLeftRight }
-                              ].map((layout) => {
-                                const IconComponent = layout.icon;
-                                const isSelected = field.value === layout.value;
-                                
-                                return (
-                                  <button
-                                    key={layout.value}
-                                    type="button"
-                                    onClick={() => field.onChange(layout.value)}
-                                    className={`p-2 rounded-lg border transition-all text-center ${
-                                      isSelected 
-                                        ? 'border-furnili-brown bg-orange-50 dark:bg-orange-950/20 text-furnili-brown' 
-                                        : 'border-gray-200 dark:border-gray-700 hover:border-furnili-brown/50'
-                                    }`}
-                                  >
-                                    <IconComponent className={`w-5 h-5 mx-auto mb-1 ${isSelected ? 'text-furnili-brown' : 'text-gray-600'}`} />
-                                    <div className="text-xs font-medium">{layout.label}</div>
-                                    <div className="text-xs text-gray-500">{layout.desc}</div>
-                                  </button>
-                                );
-                              })}
-                            </div>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                  )}
-
-                  {/* TV Unit Type Selection */}
-                  {selectedFurnitureType === 'tv_unit' && (
+      {/* TV Unit Type Selection */}
+      {selectedFurnitureType === 'tv_unit' && (
                     <div className="space-y-2">
                       <h3 className="text-sm font-medium flex items-center gap-2">
                         <PanelTop className="w-4 h-4" />
