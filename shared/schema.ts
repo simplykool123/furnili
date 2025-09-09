@@ -947,9 +947,12 @@ export const bomBoardRates = pgTable("bom_board_rates", {
 // Telegram User Sessions - tracks active project selections per user
 export const telegramUserSessions = pgTable("telegram_user_sessions", {
   id: serial("id").primaryKey(),
-  telegramUserId: text("telegram_user_id").notNull(), // Telegram user ID (as string)
+  telegramUserId: text("telegram_user_id"), // Telegram user ID (as string)
   telegramUsername: text("telegram_username"), // Telegram username (optional)
   telegramFirstName: text("telegram_first_name"), // User's first name
+  whatsappUserId: text("whatsapp_user_id"), // WhatsApp user ID (as string)
+  whatsappUsername: text("whatsapp_username"), // WhatsApp username (optional)
+  whatsappName: text("whatsapp_name"), // User's WhatsApp name
   phoneNumber: text("phone_number"), // Phone number for authentication
   systemUserId: integer("system_user_id").references(() => users.id), // Link to actual system user
   activeProjectId: integer("active_project_id").references(() => projects.id), // Currently selected project
