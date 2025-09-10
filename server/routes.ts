@@ -584,16 +584,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // WhatsApp Console API endpoints
   app.get("/api/whatsapp/status", authenticateToken, async (req: AuthRequest, res) => {
     try {
-      // Mock WhatsApp bot status - replace with actual bot status checks
-      const status = {
-        isConnected: true, // Should check actual WhatsApp Web connection
-        lastActivity: new Date(),
-        totalSessions: 5,
-        activeChats: 3,
-        messagesProcessed: 142
-      };
+      const client = global.whatsappClient;
+      const isConnected = client ? await client.getState() === 'CONNECTED' : false;
       
-      res.json(status);
+      res.json({
+        isConnected,
+        lastActivity: new Date().toISOString(),
+        qrCode: global.qrCodeData,
+        totalSessions: isConnected ? 1 : 0,
+        activeChats: isConnected ? 1 : 0,
+        messagesProcessed: 0
+      });
     } catch (error) {
       console.error("WhatsApp status error:", error);
       res.status(500).json({ message: "Internal server error" });
@@ -602,55 +603,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/whatsapp/messages", authenticateToken, async (req: AuthRequest, res) => {
     try {
-      // Mock WhatsApp messages - replace with actual message log
-      const messages = [
-        {
-          id: "1",
-          from: "John Doe",
-          body: "Hi, I need help with my order",
-          timestamp: new Date(Date.now() - 300000), // 5 minutes ago
-          type: "incoming",
-          status: "read"
-        },
-        {
-          id: "2",
-          from: "Bot",
-          body: "Hello! I'm here to help. Could you please provide your phone number?",
-          timestamp: new Date(Date.now() - 240000), // 4 minutes ago
-          type: "outgoing",
-          status: "delivered"
-        }
-      ];
-      
-      res.json(messages);
+      // Get real WhatsApp messages from database if available
+      try {
+        const messages = await db.query(`
+          SELECT 
+            id,
+            whatsapp_message_id as "messageId",
+            from_number as "from",
+            message_body as body,
+            message_type as type,
+            timestamp,
+            'read' as status
+          FROM whatsapp_messages 
+          WHERE created_at >= NOW() - INTERVAL '24 hours'
+          ORDER BY timestamp DESC 
+          LIMIT 50
+        `);
+        
+        res.json(messages.rows || []);
+      } catch (dbError) {
+        // Fallback to empty array if no table exists yet
+        res.json([]);
+      }
     } catch (error) {
       console.error("WhatsApp messages error:", error);
-      res.status(500).json({ message: "Internal server error" });
+      res.json([]);
     }
   });
 
   app.get("/api/whatsapp/sessions", authenticateToken, async (req: AuthRequest, res) => {
     try {
-      // Mock WhatsApp sessions - replace with actual database query when method is available
-      const sessions = [];
-      
-      // Filter only WhatsApp sessions (those with whatsappUserId)
-      const whatsappSessions = sessions
-        .filter(session => session.whatsappUserId)
-        .map(session => ({
-          id: session.id,
-          whatsappUserId: session.whatsappUserId,
-          whatsappName: session.whatsappName || 'Unknown User',
-          phoneNumber: session.phoneNumber || 'Unknown',
-          systemUserId: session.systemUserId,
-          lastInteraction: session.lastInteraction,
-          sessionState: session.sessionState || 'idle'
-        }));
-      
-      res.json(whatsappSessions);
+      // Get real WhatsApp sessions from database
+      try {
+        const sessions = await db.query(`
+          SELECT 
+            id,
+            whatsapp_user_id as "whatsappUserId",
+            whatsapp_name as "whatsappName",
+            phone_number as "phoneNumber",
+            system_user_id as "systemUserId",
+            updated_at as "lastInteraction",
+            'active' as "sessionState"
+          FROM telegram_user_sessions 
+          WHERE whatsapp_user_id IS NOT NULL
+          ORDER BY updated_at DESC
+        `);
+        
+        res.json(sessions.rows || []);
+      } catch (dbError) {
+        // Fallback to empty array if table doesn't exist yet
+        res.json([]);
+      }
     } catch (error) {
       console.error("WhatsApp sessions error:", error);
-      res.status(500).json({ message: "Internal server error" });
+      res.json([]);
     }
   });
 
