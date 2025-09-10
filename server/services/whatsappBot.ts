@@ -32,7 +32,8 @@ export class FurniliWhatsAppBot {
   constructor() {
     this.client = new Client({
       authStrategy: new LocalAuth({
-        clientId: "furnili-whatsapp-bot"
+        clientId: "furnili-whatsapp-bot",
+        dataPath: "/tmp/whatsapp-session"
       }),
       puppeteer: {
         headless: true,
@@ -45,7 +46,16 @@ export class FurniliWhatsAppBot {
           '--disable-web-security',
           '--disable-extensions',
           '--no-first-run',
-          '--disable-default-apps'
+          '--disable-default-apps',
+          '--disable-features=VizDisplayCompositor',
+          '--disable-background-timer-throttling',
+          '--disable-backgrounding-occluded-windows',
+          '--disable-renderer-backgrounding',
+          '--disable-component-update',
+          '--disable-ipc-flooding-protection',
+          '--user-data-dir=/tmp/chrome-whatsapp-bot',
+          '--single-process',
+          '--no-zygote'
         ]
       }
     });
