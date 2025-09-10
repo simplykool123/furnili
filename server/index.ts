@@ -138,15 +138,16 @@ app.use((req, res, next) => {
     log(`serving on port ${port}`);
     
     // Initialize Telegram Bot
-    if (process.env.TELEGRAM_BOT_TOKEN) {
-      try {
-        new FurniliTelegramBot(process.env.TELEGRAM_BOT_TOKEN);
+    try {
+      const { TELEGRAM_BOT_TOKEN } = await import('./config.js');
+      if (TELEGRAM_BOT_TOKEN) {
+        new FurniliTelegramBot(TELEGRAM_BOT_TOKEN);
         log("🤖 Telegram bot initialized successfully");
-      } catch (error) {
-        console.error("❌ Failed to initialize Telegram bot:", error);
+      } else {
+        console.log("⚠️ TELEGRAM_BOT_TOKEN not found in config, skipping bot initialization");
       }
-    } else {
-      console.log("⚠️ TELEGRAM_BOT_TOKEN not found, skipping bot initialization");
+    } catch (error) {
+      console.error("❌ Failed to initialize Telegram bot:", error);
     }
 
     // Initialize WhatsApp Bot
