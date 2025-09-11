@@ -36,8 +36,17 @@ export const authenticateToken = async (req: AuthRequest, res: Response, next: N
     const user = await storage.getUser(decoded.id);
     // console.log('Auth middleware - User found:', user ? user.username : 'none');
     
-    if (!user || !user.isActive) {
-      // console.log('Auth middleware - User invalid or inactive');
+    if (!user) {
+      // console.log('Auth middleware - User not found');
+      return res.status(401).json({ message: "Invalid or inactive user" });
+    }
+
+    // Handle both possible field name formats (camelCase and snake_case)
+    // Drizzle should map is_active -> isActive, but handle both just in case
+    const isActive = user.isActive !== undefined ? user.isActive : (user as any).is_active;
+    
+    if (isActive === false || isActive === null || isActive === undefined) {
+      // console.log('Auth middleware - User inactive');
       return res.status(401).json({ message: "Invalid or inactive user" });
     }
 
