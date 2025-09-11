@@ -705,7 +705,6 @@ export default function Interactions() {
                       </>
                     );
                   })()}
-                  </div>
                 </div>
               </CardContent>
             </Card>

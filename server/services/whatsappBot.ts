@@ -1,6 +1,6 @@
 import pkg from 'whatsapp-web.js';
 const { Client, LocalAuth, MessageMedia } = pkg;
-import type { Message } from 'whatsapp-web.js';
+import type { Message, Client as ClientType } from 'whatsapp-web.js';
 import { Pool } from 'pg';
 import { telegramUserSessions, projects, clients, projectFiles } from '@shared/schema';
 import { eq } from 'drizzle-orm';
@@ -10,6 +10,7 @@ import path from 'path';
 import crypto from 'crypto';
 // @ts-ignore
 import qrcodeTerminal from 'qrcode-terminal';
+// @ts-ignore
 import QRCode from 'qrcode';
 
 // Import database configuration
@@ -37,20 +38,51 @@ interface BotStatus {
   totalSessions: number;
   activeChats: number;
   messagesProcessed: number;
+  retryCount: number;
+  lastRetryTime?: Date;
+  connectionHealth: 'healthy' | 'degraded' | 'failed';
 }
+
+// Rate limiting for message handling
+interface RateLimitTracker {
+  lastMessageTime: number;
+  messageCount: number;
+  windowStart: number;
+}
+
+const userRateLimits = new Map<string, RateLimitTracker>();
+const RATE_LIMIT_WINDOW = 60000; // 1 minute
+const MAX_MESSAGES_PER_WINDOW = 10; // Max 10 messages per minute per user
+const MIN_MESSAGE_DELAY = 2000; // 2 seconds between responses
 
 let botStatus: BotStatus = {
   isConnected: false,
   lastActivity: new Date(),
   totalSessions: 0,
   activeChats: 0,
-  messagesProcessed: 0
+  messagesProcessed: 0,
+  retryCount: 0,
+  connectionHealth: 'failed'
 };
 
 export class FurniliWhatsAppBot {
-  private client: Client;
+  private client!: ClientType; // Using definite assignment assertion since it's initialized in createClient()
+  private isInitializing: boolean = false;
+  private maxRetries: number = 5;
+  private retryDelay: number = 5000; // Start with 5 seconds
+  private reconnectTimer?: NodeJS.Timeout;
+  private healthCheckInterval?: NodeJS.Timeout;
+  private messageQueue: Array<{ msg: Message; handler: () => Promise<void> }> = [];
+  private processingQueue: boolean = false;
   
   constructor() {
+    this.createClient();
+    this.setupHandlers();
+    this.startHealthCheck();
+    console.log('📱 Furnili WhatsApp Bot initializing with optimizations...');
+  }
+
+  private createClient() {
     this.client = new Client({
       authStrategy: new LocalAuth({
         clientId: "furnili-whatsapp-bot",
@@ -76,12 +108,26 @@ export class FurniliWhatsAppBot {
           '--disable-ipc-flooding-protection',
           '--user-data-dir=/tmp/chrome-whatsapp-bot',
           '--single-process',
-          '--no-zygote'
-        ]
+          '--no-zygote',
+          // Additional stability improvements
+          '--disable-crash-reporter',
+          '--disable-features=TranslateUI',
+          '--disable-plugins-discovery',
+          '--disable-print-preview',
+          '--disable-smooth-scrolling',
+          '--disable-threaded-scrolling',
+          '--memory-pressure-off'
+        ],
+        timeout: 30000,
+        // Slow down operations to prevent detection
+        slowMo: 100
+      },
+      // Additional settings for stability
+      takeoverOnConflict: false,
+      webVersionCache: {
+        type: 'local'
       }
     });
-    this.setupHandlers();
-    console.log('📱 Furnili WhatsApp Bot initializing...');
   }
 
   getClient() {
@@ -90,7 +136,7 @@ export class FurniliWhatsAppBot {
 
   private setupHandlers() {
     // QR Code for authentication
-    this.client.on('qr', async (qr) => {
+    this.client.on('qr', async (qr: string) => {
       try {
         // Store raw QR data
         botStatus.qrCodeData = qr;
@@ -137,44 +183,313 @@ export class FurniliWhatsAppBot {
     });
 
     // Authentication failure
-    this.client.on('auth_failure', (msg) => {
+    this.client.on('auth_failure', (msg: any) => {
       console.error('❌ WhatsApp authentication failed:', msg);
       botStatus.isConnected = false;
       botStatus.lastActivity = new Date();
     });
 
     // Disconnected
-    this.client.on('disconnected', (reason) => {
+    this.client.on('disconnected', (reason: string) => {
       console.log('📴 WhatsApp Bot disconnected:', reason);
       botStatus.isConnected = false;
+      botStatus.connectionHealth = 'failed';
       botStatus.lastActivity = new Date();
       // Clear QR code data when disconnected
       botStatus.qrCodeData = undefined;
       botStatus.qrCodeDataURL = undefined;
+      
+      // Schedule reconnection with exponential backoff
+      this.scheduleReconnection();
     });
 
-    // Handle incoming messages
-    this.client.on('message', async (msg) => {
-      // Update message count and activity
-      botStatus.messagesProcessed++;
-      botStatus.lastActivity = new Date();
-      
-      // Handle media messages
-      if (msg.hasMedia) {
-        if (msg.type === 'image') {
-          await this.handlePhoto(msg);
-        } else if (msg.type === 'document' || msg.type === 'audio' || msg.type === 'video') {
-          await this.handleDocument(msg);
+    // Handle incoming messages with rate limiting
+    this.client.on('message', async (msg: Message) => {
+      try {
+        // Update message count and activity
+        botStatus.messagesProcessed++;
+        botStatus.lastActivity = new Date();
+        
+        // Check rate limiting
+        if (!this.checkRateLimit(msg)) {
+          console.log(`📱 Rate limited user: ${msg.from}`);
+          return;
         }
-      } else {
-        // Handle text messages
-        await this.handleMessage(msg);
+        
+        // Queue message for processing
+        this.queueMessage(msg);
+      } catch (error) {
+        console.error('Error in message handler:', error);
       }
+    });
+
+    // Add error handler for client
+    this.client.on('error', (error: Error) => {
+      console.error('WhatsApp Client Error:', error);
+      botStatus.connectionHealth = 'degraded';
+      this.handleClientError(error);
     });
   }
 
   async initialize() {
-    await this.client.initialize();
+    if (this.isInitializing) {
+      console.log('📱 WhatsApp bot already initializing, skipping...');
+      return;
+    }
+    
+    this.isInitializing = true;
+    
+    try {
+      console.log('📱 Starting WhatsApp bot initialization...');
+      await this.client.initialize();
+      botStatus.retryCount = 0; // Reset retry count on successful init
+      botStatus.connectionHealth = 'healthy';
+      console.log('✅ WhatsApp bot initialized successfully');
+    } catch (error) {
+      console.error('❌ Failed to initialize WhatsApp bot:', error);
+      botStatus.connectionHealth = 'failed';
+      this.scheduleReconnection();
+    } finally {
+      this.isInitializing = false;
+    }
+  }
+
+  private checkRateLimit(msg: Message): boolean {
+    const userId = msg.from;
+    const now = Date.now();
+    
+    let tracker = userRateLimits.get(userId);
+    if (!tracker) {
+      tracker = {
+        lastMessageTime: now,
+        messageCount: 1,
+        windowStart: now
+      };
+      userRateLimits.set(userId, tracker);
+      return true;
+    }
+    
+    // Reset window if expired
+    if (now - tracker.windowStart > RATE_LIMIT_WINDOW) {
+      tracker.windowStart = now;
+      tracker.messageCount = 1;
+      tracker.lastMessageTime = now;
+      return true;
+    }
+    
+    // Check if too many messages in window
+    if (tracker.messageCount >= MAX_MESSAGES_PER_WINDOW) {
+      return false;
+    }
+    
+    // Check minimum delay between messages
+    if (now - tracker.lastMessageTime < MIN_MESSAGE_DELAY) {
+      return false;
+    }
+    
+    tracker.messageCount++;
+    tracker.lastMessageTime = now;
+    return true;
+  }
+
+  private queueMessage(msg: Message) {
+    const handler = async () => {
+      try {
+        // Handle media messages
+        if (msg.hasMedia) {
+          if (msg.type === 'image') {
+            await this.handlePhoto(msg);
+          } else if (msg.type === 'document' || msg.type === 'audio' || msg.type === 'video') {
+            await this.handleDocument(msg);
+          }
+        } else {
+          // Handle text messages
+          await this.handleMessage(msg);
+        }
+      } catch (error) {
+        console.error('Error processing message:', error);
+      }
+    };
+    
+    this.messageQueue.push({ msg, handler });
+    this.processMessageQueue();
+  }
+
+  private async processMessageQueue() {
+    if (this.processingQueue || this.messageQueue.length === 0) {
+      return;
+    }
+    
+    this.processingQueue = true;
+    
+    while (this.messageQueue.length > 0) {
+      const { handler } = this.messageQueue.shift()!;
+      
+      try {
+        await handler();
+        // Add delay between processing messages to avoid spam detection
+        await this.sleep(1000);
+      } catch (error) {
+        console.error('Error in message queue processing:', error);
+      }
+    }
+    
+    this.processingQueue = false;
+  }
+
+  private sleep(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  private scheduleReconnection() {
+    if (this.reconnectTimer) {
+      clearTimeout(this.reconnectTimer);
+    }
+    
+    if (botStatus.retryCount >= this.maxRetries) {
+      console.error('📱 Max reconnection attempts reached. Manual intervention required.');
+      return;
+    }
+    
+    // Exponential backoff: 5s, 10s, 20s, 40s, 80s
+    const delay = this.retryDelay * Math.pow(2, botStatus.retryCount);
+    botStatus.retryCount++;
+    botStatus.lastRetryTime = new Date();
+    
+    console.log(`📱 Scheduling reconnection attempt ${botStatus.retryCount} in ${delay}ms`);
+    
+    this.reconnectTimer = setTimeout(async () => {
+      try {
+        console.log('📱 Attempting to reconnect WhatsApp bot...');
+        this.createClient();
+        this.setupHandlers();
+        await this.initialize();
+      } catch (error) {
+        console.error('❌ Reconnection failed:', error);
+        this.scheduleReconnection();
+      }
+    }, delay);
+  }
+
+  private handleClientError(error: Error) {
+    console.error('📱 Client error detected:', error.message);
+    
+    // Handle specific error types
+    if (error.message.includes('ECONNRESET') || 
+        error.message.includes('WebSocket') ||
+        error.message.includes('Protocol error')) {
+      console.log('📱 Connection error detected, scheduling reconnection...');
+      this.scheduleReconnection();
+    }
+  }
+
+  private startHealthCheck() {
+    this.healthCheckInterval = setInterval(() => {
+      const now = new Date();
+      const timeSinceLastActivity = now.getTime() - botStatus.lastActivity.getTime();
+      
+      // If no activity for 5 minutes and supposedly connected, check health
+      if (timeSinceLastActivity > 300000 && botStatus.isConnected) {
+        console.log('📱 No activity detected, checking connection health...');
+        this.checkConnectionHealth();
+      }
+    }, 60000); // Check every minute
+  }
+
+  private async checkConnectionHealth() {
+    try {
+      const state = await this.client.getState();
+      console.log('📱 WhatsApp connection state:', state);
+      
+      if (state !== 'CONNECTED') {
+        botStatus.isConnected = false;
+        botStatus.connectionHealth = 'failed';
+        this.scheduleReconnection();
+      } else {
+        botStatus.connectionHealth = 'healthy';
+      }
+    } catch (error) {
+      console.error('📱 Health check failed:', error);
+      botStatus.isConnected = false;
+      botStatus.connectionHealth = 'failed';
+      this.scheduleReconnection();
+    }
+  }
+
+  public destroy() {
+    if (this.reconnectTimer) {
+      clearTimeout(this.reconnectTimer);
+    }
+    if (this.healthCheckInterval) {
+      clearInterval(this.healthCheckInterval);
+    }
+    
+    try {
+      this.client.destroy();
+    } catch (error) {
+      console.error('Error destroying client:', error);
+    }
+  }
+
+  // Rate-limited message sending wrapper
+  private async sendMessage(msg: Message, text: string): Promise<void> {
+    try {
+      // Add small delay to prevent rapid-fire responses
+      await this.sleep(500);
+      await msg.reply(text);
+    } catch (error) {
+      console.error('Error sending message:', error);
+      // Don't throw error to prevent breaking the flow
+    }
+  }
+
+  // Create or update user session tracking
+  private async createOrUpdateSession(whatsappUserId: string, contactName?: string, pushName?: string): Promise<void> {
+    try {
+      const client = await botPool.connect();
+      try {
+        // Update or insert session tracking
+        await client.query(`
+          INSERT INTO telegram_user_sessions 
+          (whatsapp_user_id, contact_name, push_name, last_activity, created_at, updated_at)
+          VALUES ($1, $2, $3, NOW(), NOW(), NOW())
+          ON CONFLICT (whatsapp_user_id) 
+          DO UPDATE SET 
+            contact_name = EXCLUDED.contact_name,
+            push_name = EXCLUDED.push_name,
+            last_activity = NOW(),
+            updated_at = NOW()
+        `, [whatsappUserId, contactName || '', pushName || '']);
+        
+        console.log(`\ud83d\udcf1 Session updated for WhatsApp user ${whatsappUserId}`);
+      } finally {
+        client.release();
+      }
+    } catch (error) {
+      console.error('Error creating/updating session:', error);
+    }
+  }
+
+  // Get system user information from database
+  private async getSystemUserInfo(whatsappUserId: string): Promise<{ id: number; name: string; phone: string } | null> {
+    try {
+      const client = await botPool.connect();
+      try {
+        const result = await client.query(`
+          SELECT u.id, u.name, u.phone 
+          FROM telegram_user_sessions tus
+          LEFT JOIN users u ON tus.phone_number = u.phone
+          WHERE tus.whatsapp_user_id = $1 AND u.phone IS NOT NULL
+        `, [whatsappUserId]);
+
+        return result.rows.length > 0 ? result.rows[0] : null;
+      } finally {
+        client.release();
+      }
+    } catch (error) {
+      console.error('Error getting system user info:', error);
+      return null;
+    }
   }
 
   private async handleMessage(msg: Message) {
@@ -280,7 +595,7 @@ export class FurniliWhatsAppBot {
         await this.handleCategorySelection(msg, 'notes');
         break;
       default:
-        await msg.reply(`❓ Unknown command: #${cmd}\n\nAvailable commands:\n• #start - Get started\n• #projects - View projects\n• #select [number] - Select project\n• #recce, #design, #drawings, #notes - Set category`);
+        await this.sendMessage(msg, `❓ Unknown command: #${cmd}\n\nAvailable commands:\n• #start - Get started\n• #projects - View projects\n• #select [number] - Select project\n• #recce, #design, #drawings, #notes - Set category`);
     }
   }
 
@@ -307,16 +622,11 @@ Quick Start:
 3. Choose category (#recce, #design, #drawings, #notes)
 4. Send your files!`;
 
-      await msg.reply(welcomeMessage);
+      await this.sendMessage(msg, welcomeMessage);
     } else {
       // Request phone number for authentication
       userStates.set(userId, 'awaiting_phone');
-      await msg.reply(`🔐 Welcome to Furnili Assistant!
-
-For security, I need to verify your phone number.
-
-Please share your registered phone number (10 digits):
-Example: 9876543210`);
+      await this.sendMessage(msg, `🔐 Welcome to Furnili Assistant!\n\nFor security, I need to verify your phone number.\n\nPlease share your registered phone number (10 digits):\nExample: 9876543210`);
     }
   }
 
@@ -399,7 +709,7 @@ Example: 9876543210`);
     
     // Validate phone number format (10-15 digits)
     if (cleanPhone.length < 10 || cleanPhone.length > 15) {
-      await msg.reply(`❌ Invalid phone number format. Please enter 10-15 digits only:
+      await this.sendMessage(msg, `❌ Invalid phone number format. Please enter 10-15 digits only:
 Example: 9876543210`);
       return;
     }
@@ -452,7 +762,7 @@ Once added, please try #start again.`);
         `);
 
         if (result.rows.length === 0) {
-          await msg.reply('📋 No active projects found.');
+          await this.sendMessage(msg, '📋 No active projects found.');
           return;
         }
 
@@ -468,14 +778,14 @@ Once added, please try #start again.`);
 
         projectsList += `💡 To select a project, type:\n#select [number] or just the number\n\nExample: #select 1 or just 1`;
 
-        await msg.reply(projectsList);
+        await this.sendMessage(msg, projectsList);
 
       } finally {
         client.release();
       }
     } catch (error) {
       console.error('Error fetching projects:', error);
-      await msg.reply('❌ Error fetching projects. Please try again.');
+      await this.sendMessage(msg, '❌ Error fetching projects. Please try again.');
     }
   }
 
@@ -496,30 +806,21 @@ Once added, please try #start again.`);
         `, [projectNumber - 1]);
 
         if (result.rows.length === 0) {
-          await msg.reply(`❌ Project ${projectNumber} not found. Use #projects to see available projects.`);
+          await this.sendMessage(msg, `❌ Project ${projectNumber} not found. Use #projects to see available projects.`);
           return;
         }
 
         const project = result.rows[0];
         userProjects.set(userId, project.id);
 
-        await msg.reply(`✅ Selected: *${project.name}*
-📁 ${project.code}${project.client_name ? `\n👤 ${project.client_name}` : ''}
-
-📂 Choose upload category:
-• #recce - Site photos & measurements
-• #design - Design files & concepts  
-• #drawings - Technical drawings & plans
-• #notes - Text notes & attachments
-
-Then send your files!`);
+        await this.sendMessage(msg, `✅ Selected: *${project.name}*\n📁 ${project.code}${project.client_name ? `\n👤 ${project.client_name}` : ''}\n\n📂 Choose upload category:\n• #recce - Site photos & measurements\n• #design - Design files & concepts\n• #drawings - Technical drawings & plans\n• #notes - Text notes & attachments\n\nThen send your files!`);
 
       } finally {
         client.release();
       }
     } catch (error) {
       console.error('Error selecting project:', error);
-      await msg.reply('❌ Error selecting project. Please try again.');
+      await this.sendMessage(msg, '❌ Error selecting project. Please try again.');
     }
   }
 
@@ -529,7 +830,7 @@ Then send your files!`);
 
     const projectId = userProjects.get(userId);
     if (!projectId) {
-      await msg.reply('⚠️ Please select a project first using #projects → #select [number]');
+      await this.sendMessage(msg, '⚠️ Please select a project first using #projects → #select [number]');
       return;
     }
 
@@ -542,7 +843,7 @@ Then send your files!`);
       notes: "📝 *Notes Mode Active*\n\nSend text notes with any attachments. Everything will be saved under Notes category."
     };
 
-    await msg.reply(categoryMessages[category]);
+    await this.sendMessage(msg, categoryMessages[category]);
   }
 
   private async handlePhoto(msg: Message) {
@@ -554,7 +855,7 @@ Then send your files!`);
     const currentMode = userModes.get(userId) || 'general';
 
     if (!projectId) {
-      await msg.reply('⚠️ Please select a project first using #projects → #select [number]');
+      await this.sendMessage(msg, '⚠️ Please select a project first using #projects → #select [number]');
       return;
     }
 
@@ -605,11 +906,11 @@ Then send your files!`);
         client.release();
       }
 
-      await msg.reply(`✅ Photo saved to ${this.getCategoryDisplayName(currentMode)} category!${msg.body ? `\n\nCaption: ${msg.body}` : ''}\n\nSend more files or use #projects to switch projects.`);
+      await this.sendMessage(msg, `✅ Photo saved to ${this.getCategoryDisplayName(currentMode)} category!${msg.body ? `\n\nCaption: ${msg.body}` : ''}\n\nSend more files or use #projects to switch projects.`);
 
     } catch (error) {
       console.error('Error handling photo:', error);
-      await msg.reply("Sorry, I couldn't save the photo. Please try again.");
+      await this.sendMessage(msg, "Sorry, I couldn't save the photo. Please try again.");
     }
   }
 
@@ -622,7 +923,7 @@ Then send your files!`);
     const currentMode = userModes.get(userId) || 'general';
 
     if (!projectId) {
-      await msg.reply('⚠️ Please select a project first using #projects → #select [number]');
+      await this.sendMessage(msg, '⚠️ Please select a project first using #projects → #select [number]');
       return;
     }
 
@@ -673,11 +974,11 @@ Then send your files!`);
         client.release();
       }
 
-      await msg.reply(`✅ Document saved to ${this.getCategoryDisplayName(currentMode)} category!${msg.body ? `\n\nComment: ${msg.body}` : ''}\n\nSend more files or use #projects to switch projects.`);
+      await this.sendMessage(msg, `✅ Document saved to ${this.getCategoryDisplayName(currentMode)} category!${msg.body ? `\n\nComment: ${msg.body}` : ''}\n\nSend more files or use #projects to switch projects.`);
 
     } catch (error) {
       console.error('Error handling document:', error);
-      await msg.reply("Sorry, I couldn't save the document. Please try again.");
+      await this.sendMessage(msg, "Sorry, I couldn't save the document. Please try again.");
     }
   }
 
@@ -687,7 +988,7 @@ Then send your files!`);
     const projectId = userProjects.get(userId);
 
     if (!projectId) {
-      await msg.reply('⚠️ Please select a project first using #projects → #select [number]');
+      await this.sendMessage(msg, '⚠️ Please select a project first using #projects → #select [number]');
       return;
     }
 
@@ -733,65 +1034,15 @@ Then send your files!`);
         client.release();
       }
 
-      await msg.reply(`✅ Note saved!\n\n"${noteText.substring(0, 100)}${noteText.length > 100 ? '...' : ''}"\n\nSend more notes or use #projects to switch projects.`);
+      await this.sendMessage(msg, `✅ Note saved!\n\n"${noteText.substring(0, 100)}${noteText.length > 100 ? '...' : ''}"\n\nSend more notes or use #projects to switch projects.`);
 
     } catch (error) {
       console.error('Error handling text note:', error);
-      await msg.reply("Sorry, I couldn't save the note. Please try again.");
+      await this.sendMessage(msg, "Sorry, I couldn't save the note. Please try again.");
     }
   }
 
-  private async createOrUpdateSession(userId: string, name?: string, pushname?: string) {
-    try {
-      const client = await botPool.connect();
-      try {
-        const result = await client.query(`
-          SELECT id FROM telegram_user_sessions WHERE whatsapp_user_id = $1
-        `, [userId]);
-
-        if (result.rows.length > 0) {
-          // Update existing session
-          await client.query(`
-            UPDATE telegram_user_sessions 
-            SET whatsapp_username = $1, whatsapp_name = $2, updated_at = NOW()
-            WHERE whatsapp_user_id = $3
-          `, [name, pushname, userId]);
-        } else {
-          // Create new session
-          await client.query(`
-            INSERT INTO telegram_user_sessions 
-            (whatsapp_user_id, whatsapp_username, whatsapp_name, created_at, updated_at)
-            VALUES ($1, $2, $3, NOW(), NOW())
-          `, [userId, name, pushname]);
-        }
-      } finally {
-        client.release();
-      }
-    } catch (error) {
-      console.error('Error creating/updating session:', error);
-    }
-  }
-
-  private async getSystemUserInfo(whatsappUserId: string) {
-    try {
-      const client = await botPool.connect();
-      try {
-        const result = await client.query(`
-          SELECT u.id, u.name, u.phone 
-          FROM telegram_user_sessions tus
-          LEFT JOIN users u ON tus.phone_number = u.phone
-          WHERE tus.whatsapp_user_id = $1 AND u.phone IS NOT NULL
-        `, [whatsappUserId]);
-
-        return result.rows.length > 0 ? result.rows[0] : null;
-      } finally {
-        client.release();
-      }
-    } catch (error) {
-      console.error('Error getting system user info:', error);
-      return null;
-    }
-  }
+  // Removed duplicate implementations - using the earlier implementations
 
   private mapCategoryToFileCategory(category: string): string {
     const mapping: { [key: string]: string } = {
@@ -817,9 +1068,14 @@ Then send your files!`);
   getBotStatus(): BotStatus {
     return { ...botStatus };
   }
+
+  // Global method to get status (exported for API access)
+  getGlobalBotStatus(): BotStatus {
+    return { ...botStatus };
+  }
 }
 
-// Export functions for API endpoints
+// Export function for API access
 export function getBotStatus(): BotStatus {
   return { ...botStatus };
 }
