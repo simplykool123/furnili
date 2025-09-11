@@ -102,6 +102,9 @@ export const clients = pgTable("clients", {
   gstNumber: text("gst_number"),
   // Simple field to differentiate leads from clients
   type: text("type").notNull().default("client"), // "lead" or "client"
+  // CRM fields for lead management
+  leadSourceId: integer("lead_source_id").references(() => leadSources.id),
+  pipelineStageId: integer("pipeline_stage_id").references(() => pipelineStages.id),
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),

@@ -19,14 +19,17 @@ import ResponsiveLayout from "@/components/Layout/ResponsiveLayout";
 
 const leadFormSchema = z.object({
   name: z.string().min(1, "Name is required"),
-  email: z.string().email("Valid email is required"),
-  phone: z.string().min(10, "Valid phone number is required"),
-  company: z.string().optional(),
+  email: z.string().email("Valid email is required").optional(),
+  mobile: z.string().min(10, "Valid mobile number is required"),
+  city: z.string().min(1, "City is required"),
+  contactPerson: z.string().optional(),
+  phone: z.string().optional(),
+  address1: z.string().optional(),
+  address2: z.string().optional(),
+  state: z.string().optional(),
+  pinCode: z.string().optional(),
   leadSourceId: z.number().optional(),
-  pipelineStageId: z.number(),
-  budget: z.number().optional(),
-  requirements: z.string().optional(),
-  notes: z.string().optional(),
+  pipelineStageId: z.number().optional(),
 });
 
 type LeadFormData = z.infer<typeof leadFormSchema>;
@@ -34,32 +37,43 @@ type LeadFormData = z.infer<typeof leadFormSchema>;
 interface Lead {
   id: number;
   name: string;
-  email: string;
-  phone: string;
-  company?: string;
-  budget?: number;
-  requirements?: string;
-  notes?: string;
-  score: number;
-  status: string;
-  lastContactDate?: string;
-  nextFollowUpDate?: string;
+  email?: string;
+  mobile: string;
+  city: string;
+  contactPerson?: string;
+  phone?: string;
+  address1?: string;
+  address2?: string;
+  state?: string;
+  pinCode?: string;
+  type: string;
+  leadSourceId?: number;
+  pipelineStageId?: number;
+  isActive: boolean;
   createdAt: string;
-  leadSource?: { name: string };
-  pipelineStage?: { name: string; color: string };
-  assignedTo?: { name: string };
+  updatedAt: string;
+  leadSource?: { id: number; name: string; type: string };
+  pipelineStage?: { id: number; name: string; color: string; probability: number };
 }
 
 interface PipelineStage {
   id: number;
   name: string;
+  description?: string;
+  order: number;
+  probability: number;
   color: string;
-  orderIndex: number;
+  isActive: boolean;
+  createdAt: string;
 }
 
 interface LeadSource {
   id: number;
   name: string;
+  type: string;
+  description?: string;
+  isActive: boolean;
+  createdAt: string;
 }
 
 export default function Leads() {
@@ -92,11 +106,16 @@ export default function Leads() {
     defaultValues: {
       name: "",
       email: "",
+      mobile: "",
+      city: "",
+      contactPerson: "",
       phone: "",
-      company: "",
-      requirements: "",
-      notes: "",
-      pipelineStageId: pipelineStages[0]?.id || 1,
+      address1: "",
+      address2: "",
+      state: "",
+      pinCode: "",
+      leadSourceId: undefined,
+      pipelineStageId: undefined,
     },
   });
 
@@ -211,7 +230,7 @@ export default function Leads() {
                     name="email"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-xs">Email *</FormLabel>
+                        <FormLabel className="text-xs">Email</FormLabel>
                         <FormControl>
                           <Input {...field} type="email" className="h-8" data-testid="input-lead-email" />
                         </FormControl>
@@ -222,12 +241,12 @@ export default function Leads() {
                   
                   <FormField
                     control={form.control}
-                    name="phone"
+                    name="mobile"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-xs">Phone *</FormLabel>
+                        <FormLabel className="text-xs">Mobile *</FormLabel>
                         <FormControl>
-                          <Input {...field} className="h-8" data-testid="input-lead-phone" />
+                          <Input {...field} className="h-8" data-testid="input-lead-mobile" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -236,12 +255,12 @@ export default function Leads() {
                   
                   <FormField
                     control={form.control}
-                    name="company"
+                    name="city"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-xs">Company</FormLabel>
+                        <FormLabel className="text-xs">City *</FormLabel>
                         <FormControl>
-                          <Input {...field} className="h-8" data-testid="input-lead-company" />
+                          <Input {...field} className="h-8" data-testid="input-lead-city" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -254,7 +273,7 @@ export default function Leads() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-xs">Lead Source</FormLabel>
-                        <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value?.toString()}>
+                        <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value?.toString() || ""}>
                           <FormControl>
                             <SelectTrigger className="h-8" data-testid="select-lead-source">
                               <SelectValue placeholder="Select source" />
@@ -278,8 +297,8 @@ export default function Leads() {
                     name="pipelineStageId"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-xs">Pipeline Stage *</FormLabel>
-                        <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value.toString()}>
+                        <FormLabel className="text-xs">Pipeline Stage</FormLabel>
+                        <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value?.toString() || ""}>
                           <FormControl>
                             <SelectTrigger className="h-8" data-testid="select-pipeline-stage">
                               <SelectValue placeholder="Select stage" />
@@ -299,54 +318,93 @@ export default function Leads() {
                   />
                 </div>
 
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="contactPerson"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs">Contact Person</FormLabel>
+                        <FormControl>
+                          <Input {...field} className="h-8" data-testid="input-lead-contact-person" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="phone"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs">Phone</FormLabel>
+                        <FormControl>
+                          <Input {...field} className="h-8" data-testid="input-lead-phone" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                
                 <FormField
                   control={form.control}
-                  name="budget"
+                  name="address1"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-xs">Budget (₹)</FormLabel>
+                      <FormLabel className="text-xs">Address Line 1</FormLabel>
                       <FormControl>
-                        <Input 
-                          {...field} 
-                          type="number" 
-                          className="h-8"
-                          value={field.value || ""}
-                          onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
-                          data-testid="input-lead-budget"
-                        />
+                        <Input {...field} className="h-8" data-testid="input-lead-address1" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
                 
-                <FormField
-                  control={form.control}
-                  name="requirements"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-xs">Requirements</FormLabel>
-                      <FormControl>
-                        <Textarea {...field} rows={3} data-testid="textarea-lead-requirements" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="notes"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-xs">Notes</FormLabel>
-                      <FormControl>
-                        <Textarea {...field} rows={3} data-testid="textarea-lead-notes" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="address2"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs">Address Line 2</FormLabel>
+                        <FormControl>
+                          <Input {...field} className="h-8" data-testid="input-lead-address2" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="state"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs">State</FormLabel>
+                        <FormControl>
+                          <Input {...field} className="h-8" data-testid="input-lead-state" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="pinCode"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs">Pin Code</FormLabel>
+                        <FormControl>
+                          <Input {...field} className="h-8" data-testid="input-lead-pincode" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
                 
                 <div className="flex justify-end space-x-2 pt-4">
                   <Button 

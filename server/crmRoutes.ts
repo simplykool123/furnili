@@ -109,8 +109,23 @@ export function registerCRMRoutes(app: Express) {
       }
       
       const leads = await db
-        .select()
+        .select({
+          ...clients,
+          leadSource: {
+            id: leadSources.id,
+            name: leadSources.name,
+            type: leadSources.type
+          },
+          pipelineStage: {
+            id: pipelineStages.id,
+            name: pipelineStages.name,
+            color: pipelineStages.color,
+            probability: pipelineStages.probability
+          }
+        })
         .from(clients)
+        .leftJoin(leadSources, eq(clients.leadSourceId, leadSources.id))
+        .leftJoin(pipelineStages, eq(clients.pipelineStageId, pipelineStages.id))
         .where(and(...whereConditions))
         .orderBy(desc(clients.createdAt));
 
@@ -131,12 +146,40 @@ export function registerCRMRoutes(app: Express) {
         eq(clients.type, "lead")
       ];
 
-      // For now, just return all leads since clients table doesn't have stage/source fields yet
-      // TODO: Add stage/source fields to clients table for full CRM functionality
+      // Filter by pipeline stage if not 'all'
+      if (stage && stage !== 'all') {
+        const stageId = parseInt(stage);
+        if (!isNaN(stageId)) {
+          whereConditions.push(eq(clients.pipelineStageId, stageId));
+        }
+      }
+
+      // Filter by lead source if not 'all'
+      if (source && source !== 'all') {
+        const sourceId = parseInt(source);
+        if (!isNaN(sourceId)) {
+          whereConditions.push(eq(clients.leadSourceId, sourceId));
+        }
+      }
       
       const leads = await db
-        .select()
+        .select({
+          ...clients,
+          leadSource: {
+            id: leadSources.id,
+            name: leadSources.name,
+            type: leadSources.type
+          },
+          pipelineStage: {
+            id: pipelineStages.id,
+            name: pipelineStages.name,
+            color: pipelineStages.color,
+            probability: pipelineStages.probability
+          }
+        })
         .from(clients)
+        .leftJoin(leadSources, eq(clients.leadSourceId, leadSources.id))
+        .leftJoin(pipelineStages, eq(clients.pipelineStageId, pipelineStages.id))
         .where(and(...whereConditions))
         .orderBy(desc(clients.createdAt));
 
@@ -149,7 +192,7 @@ export function registerCRMRoutes(app: Express) {
 
   app.post("/api/crm/leads", authenticateToken, requireRole(['admin', 'manager', 'staff']), async (req, res) => {
     try {
-      const { name, email, mobile, city, contactPerson, phone, address1, address2, state, pinCode } = req.body;
+      const { name, email, mobile, city, contactPerson, phone, address1, address2, state, pinCode, leadSourceId, pipelineStageId } = req.body;
       
       if (!name || !mobile || !city) {
         return res.status(400).json({ error: "Name, mobile, and city are required" });
@@ -168,6 +211,8 @@ export function registerCRMRoutes(app: Express) {
           address2,
           state,
           pinCode,
+          leadSourceId: leadSourceId || null,
+          pipelineStageId: pipelineStageId || null,
           type: "lead" // This makes it a lead instead of a client
         })
         .returning();
