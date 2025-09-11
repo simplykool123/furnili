@@ -316,7 +316,7 @@ export default function ProductForm({ product, onClose, isMobile = false }: Prod
           {/* Row 1: Product Name and Category */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label htmlFor="name" className="text-xs font-medium mb-1">Product Name *</Label>
+              <Label htmlFor="name" className="text-xs font-medium mb-1 !text-xs">Product Name *</Label>
               <Autocomplete
                 value={watch("name") || ""}
                 onChange={(value) => {
@@ -346,7 +346,7 @@ export default function ProductForm({ product, onClose, isMobile = false }: Prod
             </div>
 
             <div>
-              <Label htmlFor="category" className="text-xs font-medium mb-1">Category *</Label>
+              <Label htmlFor="category" className="text-xs font-medium mb-1 !text-xs">Category *</Label>
               <Select 
                 value={watch("category")}
                 onValueChange={(value) => setValue("category", value)}
@@ -369,7 +369,7 @@ export default function ProductForm({ product, onClose, isMobile = false }: Prod
           {/* Row 2: Brand, Size and Thickness */}
           <div className="grid grid-cols-3 gap-2">
             <div>
-              <Label htmlFor="brand" className="text-xs font-medium mb-1">Brand</Label>
+              <Label htmlFor="brand" className="text-xs font-medium mb-1 !text-xs">Brand</Label>
               <Input
                 id="brand"
                 {...register("brand")}
@@ -379,7 +379,7 @@ export default function ProductForm({ product, onClose, isMobile = false }: Prod
             </div>
 
             <div>
-              <Label htmlFor="size" className="text-xs font-medium mb-1">Size</Label>
+              <Label htmlFor="size" className="text-xs font-medium mb-1 !text-xs">Size</Label>
               <Input
                 id="size"
                 {...register("size")}
@@ -389,7 +389,7 @@ export default function ProductForm({ product, onClose, isMobile = false }: Prod
             </div>
 
             <div>
-              <Label htmlFor="thickness" className="text-xs font-medium mb-1">Thickness</Label>
+              <Label htmlFor="thickness" className="text-xs font-medium mb-1 !text-xs">Thickness</Label>
               <Input
                 id="thickness"
                 {...register("thickness")}
@@ -402,7 +402,7 @@ export default function ProductForm({ product, onClose, isMobile = false }: Prod
           {/* Row 3: SKU, Price per unit, and Unit */}
           <div className="grid grid-cols-3 gap-2">
             <div>
-              <Label htmlFor="sku" className="text-xs font-medium mb-1">SKU</Label>
+              <Label htmlFor="sku" className="text-xs font-medium mb-1 !text-xs">SKU</Label>
               <Input
                 id="sku"
                 {...register("sku")}
@@ -412,7 +412,7 @@ export default function ProductForm({ product, onClose, isMobile = false }: Prod
             </div>
 
             <div>
-              <Label htmlFor="price" className="text-xs font-medium mb-1">Price per Unit *</Label>
+              <Label htmlFor="price" className="text-xs font-medium mb-1 !text-xs">Price per Unit *</Label>
               <Input
                 id="price"
                 type="number"
@@ -427,7 +427,7 @@ export default function ProductForm({ product, onClose, isMobile = false }: Prod
             </div>
 
             <div>
-              <Label htmlFor="unit" className="text-xs font-medium mb-1">Unit *</Label>
+              <Label htmlFor="unit" className="text-xs font-medium mb-1 !text-xs">Unit *</Label>
               <Select 
                 value={watch("unit")}
                 onValueChange={(value) => setValue("unit", value)}
@@ -450,7 +450,7 @@ export default function ProductForm({ product, onClose, isMobile = false }: Prod
           {/* Row 4: Product Type */}
           <div className="grid grid-cols-1 gap-3">
             <div>
-              <Label htmlFor="productType" className="text-xs font-medium mb-1">Product Type *</Label>
+              <Label htmlFor="productType" className="text-xs font-medium mb-1 !text-xs">Product Type *</Label>
               <Select 
                 value={watch("productType")}
                 onValueChange={(value) => setValue("productType", value as 'raw_material' | 'finishing_good' | 'assembly' | 'seasonal')}
@@ -474,7 +474,7 @@ export default function ProductForm({ product, onClose, isMobile = false }: Prod
           {/* Stock Information - Two columns */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label htmlFor="currentStock" className="text-xs font-medium mb-1">Current Stock *</Label>
+              <Label htmlFor="currentStock" className="text-xs font-medium mb-1 !text-xs">Current Stock *</Label>
               <Input
                 id="currentStock"
                 type="number"
@@ -488,7 +488,7 @@ export default function ProductForm({ product, onClose, isMobile = false }: Prod
             </div>
 
             <div>
-              <Label htmlFor="minStock" className="text-xs font-medium mb-1">Minimum Stock Level *</Label>
+              <Label htmlFor="minStock" className="text-xs font-medium mb-1 !text-xs">Minimum Stock Level *</Label>
               <Input
                 id="minStock"
                 type="number"
@@ -504,7 +504,7 @@ export default function ProductForm({ product, onClose, isMobile = false }: Prod
 
           {/* Image Upload - Compact */}
           <div>
-            <Label className="text-xs font-medium mb-1">Product Image</Label>
+            <Label className="text-xs font-medium mb-1 !text-xs">Product Image</Label>
             <div className="mt-1">
               {imagePreview ? (
                 <div className="relative inline-block">
