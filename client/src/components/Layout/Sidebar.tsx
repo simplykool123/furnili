@@ -87,9 +87,9 @@ export const navigation = [
     roles: ['admin', 'manager', 'staff'],
     isCollapsible: true,
     subItems: [
-      { name: 'Production Planning', href: '/production-planning', icon: LayoutDashboard, roles: ['admin', 'manager', 'staff'] },
-      { name: 'Work Orders', href: '/work-orders', icon: Cog, roles: ['admin', 'manager', 'staff'] },
-      { name: 'Quality Control', href: '/quality-control', icon: ClipboardCheck, roles: ['admin', 'manager', 'staff'] },
+      { name: 'Production Planning', href: '/production/planning', icon: LayoutDashboard, roles: ['admin', 'manager', 'staff'] },
+      { name: 'Work Orders', href: '/production/work-orders', icon: Cog, roles: ['admin', 'manager', 'staff'] },
+      { name: 'Quality Control', href: '/production/quality', icon: ClipboardCheck, roles: ['admin', 'manager', 'staff'] },
     ]
   },
 

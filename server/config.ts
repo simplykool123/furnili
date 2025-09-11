@@ -5,8 +5,8 @@ export const config = {
   // Database Configuration
   DATABASE_URL: "postgresql://postgres.qopynbelowyghyciuofo:Furnili@123@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres",
   
-  // Bot Configuration
-  TELEGRAM_BOT_TOKEN: "7738740095:AAF9t9I-DgbcWOBHhtxnFcyXi8iCEGVlWG0",
+  // Bot Configuration (Leave empty if you don't have a valid Telegram bot token)
+  TELEGRAM_BOT_TOKEN: "",
   
   // Server Configuration  
   NODE_ENV: "development",

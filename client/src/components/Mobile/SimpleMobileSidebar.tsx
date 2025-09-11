@@ -103,6 +103,26 @@ const navItems: NavItem[] = [
     roles: ["admin", "manager", "staff"]
   },
   {
+    name: "CRM & Sales",
+    icon: Users,
+    roles: ["admin", "manager", "staff"],
+    children: [
+      { name: "Leads", href: "/leads", icon: TrendingUp, roles: ["admin", "manager", "staff"] },
+      { name: "Interactions", href: "/interactions", icon: MessageSquare, roles: ["admin", "manager", "staff"] },
+      { name: "Quotes", href: "/quotes", icon: FileText, roles: ["admin", "manager", "staff"] },
+    ]
+  },
+  {
+    name: "Production",
+    icon: Layers,
+    roles: ["admin", "manager", "staff"],
+    children: [
+      { name: "Planning", href: "/production/planning", icon: Calculator, roles: ["admin", "manager", "staff"] },
+      { name: "Work Orders", href: "/production/work-orders", icon: Clipboard, roles: ["admin", "manager", "staff"] },
+      { name: "Quality Control", href: "/production/quality", icon: CheckSquare, roles: ["admin", "manager", "staff"] },
+    ]
+  },
+  {
     name: "Reports",
     href: "/reports",
     icon: BarChart3,

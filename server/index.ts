@@ -140,11 +140,11 @@ app.use((req, res, next) => {
     // Initialize Telegram Bot
     try {
       const { TELEGRAM_BOT_TOKEN } = await import('./config.js');
-      if (TELEGRAM_BOT_TOKEN) {
+      if (TELEGRAM_BOT_TOKEN && TELEGRAM_BOT_TOKEN.trim() !== "") {
         new FurniliTelegramBot(TELEGRAM_BOT_TOKEN);
         log("🤖 Telegram bot initialized successfully");
       } else {
-        console.log("⚠️ TELEGRAM_BOT_TOKEN not found in config, skipping bot initialization");
+        console.log("⚠️ No valid TELEGRAM_BOT_TOKEN found in config, skipping bot initialization");
       }
     } catch (error) {
       console.error("❌ Failed to initialize Telegram bot:", error);
