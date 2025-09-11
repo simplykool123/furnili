@@ -5527,6 +5527,176 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       });
 
+      // ✅ GENERATE CONSOLIDATED ITEMS - Ensure consistent calculations across all views
+      const generateConsolidatedItems = (items: any[]) => {
+        const result = [];
+        
+        // 1. Group 18mm PLY boards with sheet calculation
+        const boards18mm = items.filter(item => 
+          item.itemCategory === 'Board' && item.materialType?.includes('18mm')
+        );
+        if (boards18mm.length > 0) {
+          const totalQty = boards18mm.reduce((sum, item) => sum + item.quantity, 0);
+          const totalArea = boards18mm.reduce((sum, item) => sum + (item.area_sqft || 0), 0);
+          const totalCost = boards18mm.reduce((sum, item) => sum + item.totalCost, 0);
+          
+          // Calculate sheets needed (8' x 4' = 32 sqft with 10% wastage)
+          const sheetArea = 32;
+          const wastage = 0.10;
+          const sheetsNeeded = Math.ceil((totalArea * (1 + wastage)) / sheetArea);
+          
+          result.push({
+            name: '18mm PLY',
+            items: boards18mm,
+            totalQty: sheetsNeeded, // Use sheet count for consistency
+            totalArea: Math.round(totalArea * 100) / 100,
+            avgRate: Math.round(totalCost / totalArea),
+            totalCost: Math.round(totalCost),
+            unit: 'sheets',
+            order: 1,
+            isBoard: true
+          });
+        }
+        
+        // 2. Group 12mm boards
+        const boards12mm = items.filter(item => 
+          item.itemCategory === 'Board' && item.materialType?.includes('12mm')
+        );
+        if (boards12mm.length > 0) {
+          const totalQty = boards12mm.reduce((sum, item) => sum + item.quantity, 0);
+          const totalArea = boards12mm.reduce((sum, item) => sum + (item.area_sqft || 0), 0);
+          const totalCost = boards12mm.reduce((sum, item) => sum + item.totalCost, 0);
+          
+          // Calculate sheets needed
+          const sheetArea = 32;
+          const wastage = 0.10;
+          const sheetsNeeded = Math.ceil((totalArea * (1 + wastage)) / sheetArea);
+          
+          result.push({
+            name: '12mm PLY',
+            items: boards12mm,
+            totalQty: sheetsNeeded,
+            totalArea: Math.round(totalArea * 100) / 100,
+            avgRate: Math.round(totalCost / totalArea),
+            totalCost: Math.round(totalCost),
+            unit: 'sheets',
+            order: 2,
+            isBoard: true
+          });
+        }
+        
+        // 3. Group 6mm boards  
+        const boards6mm = items.filter(item => 
+          item.itemCategory === 'Board' && item.materialType?.includes('6mm')
+        );
+        if (boards6mm.length > 0) {
+          const totalQty = boards6mm.reduce((sum, item) => sum + item.quantity, 0);
+          const totalArea = boards6mm.reduce((sum, item) => sum + (item.area_sqft || 0), 0);
+          const totalCost = boards6mm.reduce((sum, item) => sum + item.totalCost, 0);
+          
+          // Calculate sheets needed
+          const sheetArea = 32;
+          const wastage = 0.10;
+          const sheetsNeeded = Math.ceil((totalArea * (1 + wastage)) / sheetArea);
+          
+          result.push({
+            name: '6mm PLY',
+            items: boards6mm,
+            totalQty: sheetsNeeded,
+            totalArea: Math.round(totalArea * 100) / 100,
+            avgRate: Math.round(totalCost / totalArea),
+            totalCost: Math.round(totalCost),
+            unit: 'sheets',
+            order: 3,
+            isBoard: true
+          });
+        }
+        
+        // 4. Inner Surface Laminate
+        const innerLaminate = items.filter(item => 
+          item.materialType === 'Inner Surface Laminate'
+        );
+        if (innerLaminate.length > 0) {
+          const totalQty = innerLaminate.reduce((sum, item) => sum + item.quantity, 0);
+          const totalArea = innerLaminate.reduce((sum, item) => sum + (item.area_sqft || 0), 0);
+          const totalCost = innerLaminate.reduce((sum, item) => sum + item.totalCost, 0);
+          
+          result.push({
+            name: 'Inner Surface Laminate',
+            items: innerLaminate,
+            totalQty: Math.round(totalQty),
+            totalArea: Math.round(totalArea * 100) / 100,
+            avgRate: Math.round(totalCost / totalArea),
+            totalCost: Math.round(totalCost),
+            unit: 'sheets',
+            order: 4
+          });
+        }
+        
+        // 5. Outer Surface Laminate
+        const outerLaminate = items.filter(item => 
+          item.materialType === 'Outer Surface Laminate'
+        );
+        if (outerLaminate.length > 0) {
+          const totalQty = outerLaminate.reduce((sum, item) => sum + item.quantity, 0);
+          const totalArea = outerLaminate.reduce((sum, item) => sum + (item.area_sqft || 0), 0);
+          const totalCost = outerLaminate.reduce((sum, item) => sum + item.totalCost, 0);
+          
+          result.push({
+            name: 'Outer Surface Laminate',
+            items: outerLaminate,
+            totalQty: Math.round(totalQty),
+            totalArea: Math.round(totalArea * 100) / 100,
+            avgRate: Math.round(totalCost / totalArea),
+            totalCost: Math.round(totalCost),
+            unit: 'sheets',
+            order: 5
+          });
+        }
+        
+        // 6. Adhesives
+        const adhesives = items.filter(item => 
+          item.itemCategory === 'Adhesive'
+        );
+        if (adhesives.length > 0) {
+          const totalQty = adhesives.reduce((sum, item) => sum + item.quantity, 0);
+          const totalCost = adhesives.reduce((sum, item) => sum + item.totalCost, 0);
+          
+          result.push({
+            name: 'Adhesives',
+            items: adhesives,
+            totalQty: Math.round(totalQty * 100) / 100,
+            totalArea: 0,
+            avgRate: Math.round(totalCost / totalQty),
+            totalCost: Math.round(totalCost),
+            unit: 'mixed',
+            order: 6
+          });
+        }
+        
+        // 7. Hardware
+        const hardware = items.filter(item => 
+          item.itemCategory === 'Hardware'
+        );
+        if (hardware.length > 0) {
+          const totalQty = hardware.reduce((sum, item) => sum + item.quantity, 0);
+          const totalCost = hardware.reduce((sum, item) => sum + item.totalCost, 0);
+          
+          result.push({
+            name: 'Hardware',
+            items: hardware,
+            totalQty: Math.round(totalQty),
+            totalArea: 0,
+            avgRate: Math.round(totalCost / totalQty),
+            totalCost: Math.round(totalCost),
+            unit: 'pieces',
+            order: 7
+          });
+        }
+        
+        return result.sort((a, b) => a.order - b.order);
+      };
+
       // Save BOM calculation to database
       const [savedBom] = await db.insert(bomCalculations).values({
         calculationNumber: calculationNumber,
@@ -5618,9 +5788,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Add other consolidated items (hardware, laminate, adhesives stay the same as they are already consolidated)
-      const nonBoardItems = bomItemsData.filter(item => item.itemCategory !== 'Board');
-      consolidatedItems.push(...nonBoardItems);
+      // ✅ GENERATE COMPLETE CONSOLIDATED ITEMS using the comprehensive function
+      const consolidatedItemsFromFunction = generateConsolidatedItems(bomItemsData);
 
       // Return calculation results with database ID and optimization data
       res.json({
@@ -5635,7 +5804,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         totalCost: bomResult.total_cost,
         sheetOptimization,
         items: bomItemsData, // Details view - individual panels
-        consolidatedItems: consolidatedItems, // ✅ Consolidated view - actual purchase requirements
+        consolidatedItems: consolidatedItemsFromFunction, // ✅ Consolidated view - comprehensive purchase requirements
       });
     } catch (error) {
       console.error("BOM calculation error:", error);

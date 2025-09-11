@@ -141,8 +141,25 @@ interface BomResult {
   totalHardwareCost: number;
   totalCost: number;
   items: BomItem[];
-  sheetOptimization?: any[];
-  consolidatedItems?: BomItem[];
+  sheetOptimization?: {
+    sheets_by_thickness?: { [thickness: string]: number };
+    totalSheets?: number;
+    totalUtilization?: number;
+    efficiency?: number;
+  };
+  consolidatedItems?: ConsolidatedItem[];
+}
+
+interface ConsolidatedItem {
+  name: string;
+  items: BomItem[];
+  totalQty: number;
+  totalArea: number;
+  avgRate: number;
+  totalCost: number;
+  unit: string;
+  order: number;
+  isBoard?: boolean;
 }
 
 interface BomItem {
@@ -368,6 +385,22 @@ export default function BOMCalculator() {
     if (selectedFurniture) {
       form.setValue('unitType', selectedFurniture.id);
       form.setValue('partsConfig', {
+        // Include all required schema properties with defaults
+        shelves: 0,
+        drawers: 0,
+        shutters: 0,
+        doors: 0,
+        backPanels: 0,
+        exposedSides: false,
+        backThickness: 6,
+        slideColorance: 12.5,
+        boxThickness: 12,
+        bottomThickness: 6,
+        doorClearance: 12,
+        bedType: 'platform',
+        tvUnitType: 'floor_standing',
+        storageType: 'floor_standing',
+        bookshelfType: 'open_shelving',
         ...selectedFurniture.defaultConfig,
         customParts: []
       });
@@ -607,8 +640,16 @@ export default function BOMCalculator() {
     setCustomParts([...customParts, { name: "", quantity: 1 }]);
   };
 
-  // COMPLETELY NEW CONSOLIDATION LOGIC - CLEAN AND SIMPLE
+  // ✅ COMPLETELY NEW CONSOLIDATION LOGIC - PRIORITIZE BACKEND DATA
   const getConsolidatedMaterials = (items: BomItem[]) => {
+    // ✅ PRIORITY 1: Use backend-provided consolidatedItems when available
+    if (bomResult?.consolidatedItems && bomResult.consolidatedItems.length > 0) {
+      console.log('🎯 Using backend consolidatedItems for consistent calculations');
+      return bomResult.consolidatedItems;
+    }
+    
+    // ✅ FALLBACK: Calculate locally if backend data is not available
+    console.log('⚠️ Falling back to frontend calculation');
     const result = [];
     
     // 1. Group 18mm PLY boards
@@ -2487,7 +2528,7 @@ export default function BOMCalculator() {
                             )}
                           </div>
                           <div className="text-xs text-gray-500 space-y-1">
-                            <div>Efficiency: {Math.round((bomResult.sheetOptimization?.totalUtilization || 0.85) * 100)}%</div>
+                            <div>Efficiency: {Math.round((bomResult.sheetOptimization?.totalUtilization || bomResult.sheetOptimization?.efficiency || 0.85) * 100)}%</div>
                             <div>Total Area: {bomResult.totalBoardArea.toFixed(1)} sq.ft</div>
                             <div>Standard 8'×4' sheets</div>
                           </div>
@@ -2566,10 +2607,10 @@ export default function BOMCalculator() {
                             <div>• {Math.ceil((bomResult.totalEdgeBanding0_8mm * 0.3048 * 1.05) / 50)} rolls of 0.8mm edge banding</div>
                           )}
                           {(() => {
-                            // Calculate laminate quantities
-                            const laminateItems = getConsolidatedMaterials(bomResult.items);
-                            const innerLaminate = laminateItems['Inner Surface Laminate'];
-                            const outerLaminate = laminateItems['Outer Surface Laminate'];
+                            // ✅ Use backend-provided consolidatedItems for consistent calculations
+                            const consolidatedItems = bomResult.consolidatedItems || [];
+                            const innerLaminate = consolidatedItems.find(item => item.name === 'Inner Surface Laminate');
+                            const outerLaminate = consolidatedItems.find(item => item.name === 'Outer Surface Laminate');
                             
                             const laminateList = [];
                             if (innerLaminate && innerLaminate.totalArea > 0) {

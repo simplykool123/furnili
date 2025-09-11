@@ -2,8 +2,9 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { Request, Response, NextFunction } from "express";
 import { storage } from "./storage";
+import { config } from "./config";
 
-const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-here";
+const JWT_SECRET = config.JWT_SECRET;
 
 export interface AuthRequest extends Request {
   user?: {

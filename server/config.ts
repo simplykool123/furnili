@@ -1,28 +1,35 @@
 // Furnili Management System Configuration
-// Update these values before deploying to your VPS
+// This configuration loads from environment variables first, with fallbacks for development
+// For production deployment: Set these environment variables on your VPS
 
 export const config = {
   // Database Configuration
-  DATABASE_URL: "postgresql://postgres.qopynbelowyghyciuofo:Furnili@123@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres",
+  // Production: Set DATABASE_URL environment variable
+  DATABASE_URL: process.env.DATABASE_URL || "postgresql://postgres.qopynbelowyghyciuofo:Furnili@123@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres",
   
-  // Bot Configuration (Leave empty if you don't have a valid Telegram bot token)
-  TELEGRAM_BOT_TOKEN: "",
+  // Bot Configuration
+  // Production: Set TELEGRAM_BOT_TOKEN environment variable (leave empty if not using)
+  TELEGRAM_BOT_TOKEN: process.env.TELEGRAM_BOT_TOKEN || "8388446773:AAGert9QZiJpi90LumzRGKN9XBqGFHveLZg",
+  
+  // JWT Secret for authentication
+  // Production: Set JWT_SECRET environment variable with a secure random key
+  JWT_SECRET: process.env.JWT_SECRET || "your-development-jwt-secret",
   
   // Server Configuration  
-  NODE_ENV: "development",
-  PORT: 5000,
+  NODE_ENV: process.env.NODE_ENV || "development",
+  PORT: parseInt(process.env.PORT || "5000", 10),
   
   // WhatsApp Bot Configuration
-  WHATSAPP_SESSION_PATH: "/tmp/whatsapp-session",
-  CHROME_USER_DATA_DIR: "/tmp/chrome-whatsapp-bot",
+  WHATSAPP_SESSION_PATH: process.env.WHATSAPP_SESSION_PATH || "/tmp/whatsapp-session",
+  CHROME_USER_DATA_DIR: process.env.CHROME_USER_DATA_DIR || "/tmp/chrome-whatsapp-bot",
   
   // File Storage Paths (Local VPS Storage)
   UPLOAD_PATHS: {
-    products: "uploads/products/",
-    receipts: "uploads/receipts/", 
-    documents: "uploads/documents/",
-    telegram: "uploads/telegram/",
-    whatsapp: "uploads/whatsapp/"
+    products: process.env.UPLOAD_PATH_PRODUCTS || "uploads/products/",
+    receipts: process.env.UPLOAD_PATH_RECEIPTS || "uploads/receipts/", 
+    documents: process.env.UPLOAD_PATH_DOCUMENTS || "uploads/documents/",
+    telegram: process.env.UPLOAD_PATH_TELEGRAM || "uploads/telegram/",
+    whatsapp: process.env.UPLOAD_PATH_WHATSAPP || "uploads/whatsapp/"
   }
 };
 
