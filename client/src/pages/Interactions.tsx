@@ -32,16 +32,19 @@ type InteractionFormData = z.infer<typeof interactionFormSchema>;
 interface Interaction {
   id: number;
   type: string;
+  direction?: string;
   subject: string;
-  description: string;
+  content?: string;
+  description?: string; // Legacy field for backward compatibility
   outcome?: string;
-  nextFollowUpDate?: string;
+  duration?: number;
+  completedDate?: string;
+  entityType: string;
+  entityId: number;
+  clientId?: number;
+  projectId?: number;
   createdAt: string;
   user?: {
-    name: string;
-    email: string;
-  };
-  lead?: {
     id: number;
     name: string;
     email: string;
@@ -50,6 +53,20 @@ interface Interaction {
     id: number;
     name: string;
     email: string;
+    type: string;
+  };
+  project?: {
+    id: number;
+    name: string;
+    code: string;
+  };
+  // Legacy nested structure for backward compatibility
+  interaction?: {
+    id: number;
+    type: string;
+    subject: string;
+    content: string;
+    createdAt: string;
   };
 }
 
@@ -79,18 +96,30 @@ export default function Interactions() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  // Fetch interactions based on view mode
-  const { data: interactions = [], isLoading: interactionsLoading } = useQuery<Interaction[]>({
-    queryKey: [
-      viewMode === "client" ? `/api/crm/interactions/client/${clientIdFilter}` :
-      viewMode === "project" ? `/api/crm/interactions/project/${projectIdFilter}` :
-      "/api/crm/interactions/all/all",
-      searchTerm, typeFilter, dateFilter
-    ],
-    enabled: viewMode === "all" || 
-             (viewMode === "client" && clientIdFilter) || 
-             (viewMode === "project" && projectIdFilter)
+  // Separate queries for each view mode to handle authentication properly
+  const { data: allInteractions = [], isLoading: allInteractionsLoading } = useQuery<Interaction[]>({
+    queryKey: ["/api/crm/interactions/all"],
+    enabled: viewMode === "all"
   });
+
+  const { data: clientInteractions = [], isLoading: clientInteractionsLoading } = useQuery<Interaction[]>({
+    queryKey: ["/api/crm/interactions/client", clientIdFilter],
+    enabled: viewMode === "client" && !!clientIdFilter
+  });
+
+  const { data: projectInteractions = [], isLoading: projectInteractionsLoading } = useQuery<Interaction[]>({
+    queryKey: ["/api/crm/interactions/project", projectIdFilter],
+    enabled: viewMode === "project" && !!projectIdFilter
+  });
+
+  // Get the appropriate data based on view mode
+  const interactions = viewMode === "client" ? clientInteractions :
+                      viewMode === "project" ? projectInteractions :
+                      allInteractions;
+
+  const interactionsLoading = viewMode === "client" ? clientInteractionsLoading :
+                             viewMode === "project" ? projectInteractionsLoading :
+                             allInteractionsLoading;
 
   // Fetch leads for form
   const { data: leads = [] } = useQuery<Lead[]>({
@@ -122,6 +151,7 @@ export default function Interactions() {
   const createInteractionMutation = useMutation({
     mutationFn: (data: InteractionFormData) => apiRequest("/api/crm/interactions", { method: "POST", body: JSON.stringify(data) }),
     onSuccess: () => {
+      // Invalidate all interaction queries using prefix matching
       queryClient.invalidateQueries({ queryKey: ["/api/crm/interactions"] });
       setIsNewInteractionOpen(false);
       form.reset();
@@ -152,7 +182,7 @@ export default function Interactions() {
       entityType: data.leadId ? "lead" : "client",
       entityId: data.leadId || data.clientId,
       clientId: data.clientId, // Will be resolved by backend
-      type: "note", // Default to note type for manual entries
+      type: data.type, // Use selected interaction type from form
       subject: data.subject,
       content: data.description,
       outcome: data.outcome,
@@ -161,17 +191,25 @@ export default function Interactions() {
     createInteractionMutation.mutate(submissionData);
   };
 
-  // Filter interactions
+  // Filter interactions - account for both flat and nested data structures
   const filteredInteractions = interactions.filter(interaction => {
-    const matchesSearch = interaction.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         interaction.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         interaction.lead?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         interaction.client?.name.toLowerCase().includes(searchTerm.toLowerCase());
+    // Handle both flat data (from new API) and legacy nested data 
+    const subject = interaction.subject || interaction.interaction?.subject || "";
+    const content = interaction.content || interaction.description || interaction.interaction?.content || "";
+    const type = interaction.type || interaction.interaction?.type || "";
+    const clientName = interaction.client?.name || interaction.lead?.name || "";
     
-    const matchesType = typeFilter === "all" || interaction.type === typeFilter;
+    const matchesSearch = subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         content.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         clientName.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesType = typeFilter === "all" || type === typeFilter;
     
     const matchesDate = dateFilter === "all" || (() => {
-      const interactionDate = new Date(interaction.createdAt);
+      const createdAt = interaction.createdAt || interaction.interaction?.createdAt;
+      if (!createdAt) return true;
+      
+      const interactionDate = new Date(createdAt);
       const today = new Date();
       const daysDiff = Math.ceil((today.getTime() - interactionDate.getTime()) / (1000 * 3600 * 24));
       
@@ -186,12 +224,12 @@ export default function Interactions() {
     return matchesSearch && matchesType && matchesDate;
   });
 
-  // Interaction statistics
+  // Interaction statistics - handle both flat and nested data
   const interactionStats = {
     total: interactions.length,
-    calls: interactions.filter(i => i.type === "call").length,
-    meetings: interactions.filter(i => i.type === "meeting").length,
-    emails: interactions.filter(i => i.type === "email").length,
+    calls: interactions.filter(i => (i.type || i.interaction?.type) === "call").length,
+    meetings: interactions.filter(i => (i.type || i.interaction?.type) === "meeting").length,
+    emails: interactions.filter(i => (i.type || i.interaction?.type) === "email").length,
   };
 
   const getInteractionIcon = (type: string) => {
@@ -203,6 +241,7 @@ export default function Interactions() {
       case "site_visit": return <Calendar className="h-4 w-4" />;
       case "proposal_sent": return <Star className="h-4 w-4" />;
       case "follow_up": return <Clock className="h-4 w-4" />;
+      case "note": return <MessageCircle className="h-4 w-4" />;
       default: return <MessageCircle className="h-4 w-4" />;
     }
   };
@@ -216,6 +255,7 @@ export default function Interactions() {
       case "site_visit": return "bg-orange-50 border-orange-200 text-orange-800";
       case "proposal_sent": return "bg-yellow-50 border-yellow-200 text-yellow-800";
       case "follow_up": return "bg-gray-50 border-gray-200 text-gray-800";
+      case "note": return "bg-slate-50 border-slate-200 text-slate-800";
       default: return "bg-gray-50 border-gray-200 text-gray-800";
     }
   };
@@ -588,66 +628,83 @@ export default function Interactions() {
             <Card key={interaction.id} className="hover:shadow-md transition-shadow" data-testid={`card-interaction-${interaction.id}`}>
               <CardContent className="p-4">
                 <div className="flex items-start space-x-4">
-                  <div className={`p-2 rounded-full ${getInteractionColor(interaction.type)}`}>
-                    {getInteractionIcon(interaction.type)}
-                  </div>
-                  
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between mb-2">
-                      <div>
-                        <h3 className="font-semibold text-gray-900" data-testid={`text-interaction-subject-${interaction.id}`}>
-                          {interaction.subject}
-                        </h3>
-                        <div className="flex items-center gap-2 mt-1">
-                          <Badge className={getInteractionColor(interaction.type)} data-testid={`badge-type-${interaction.id}`}>
-                            {interaction.type.replace('_', ' ').toUpperCase()}
-                          </Badge>
-                          {interaction.lead && (
-                            <span className="text-sm text-gray-600" data-testid={`text-lead-${interaction.id}`}>
-                              Lead: {interaction.lead.name}
-                            </span>
-                          )}
-                          {interaction.client && (
-                            <span className="text-sm text-gray-600" data-testid={`text-client-${interaction.id}`}>
-                              Client: {interaction.client.name}
-                            </span>
-                          )}
+                  {(() => {
+                    // Handle both flat and nested data structures
+                    const type = interaction.type || interaction.interaction?.type || "note";
+                    const subject = interaction.subject || interaction.interaction?.subject || "No Subject";
+                    const content = interaction.content || interaction.description || interaction.interaction?.content || "";
+                    const createdAt = interaction.createdAt || interaction.interaction?.createdAt || new Date().toISOString();
+                    const outcome = interaction.outcome || interaction.interaction?.outcome;
+                    const user = interaction.user || { name: "Unknown User" };
+                    const client = interaction.client;
+                    const project = interaction.project;
+                    
+                    return (
+                      <>
+                        <div className={`p-2 rounded-full ${getInteractionColor(type)}`}>
+                          {getInteractionIcon(type)}
                         </div>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-sm text-gray-500" data-testid={`text-interaction-date-${interaction.id}`}>
-                          {format(new Date(interaction.createdAt), "MMM dd, yyyy")}
-                        </div>
-                        <div className="text-xs text-gray-400">
-                          {format(new Date(interaction.createdAt), "HH:mm")}
-                        </div>
-                        {interaction.user && (
-                          <div className="text-xs text-gray-500 mt-1" data-testid={`text-interaction-user-${interaction.id}`}>
-                            by {interaction.user.name}
+                        
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between mb-2">
+                            <div>
+                              <h3 className="font-semibold text-gray-900" data-testid={`text-interaction-subject-${interaction.id}`}>
+                                {subject}
+                              </h3>
+                              <div className="flex items-center gap-2 mt-1">
+                                <Badge className={getInteractionColor(type)} data-testid={`badge-type-${interaction.id}`}>
+                                  {type.replace('_', ' ').toUpperCase()}
+                                </Badge>
+                                {client && (
+                                  <span className="text-sm text-gray-600" data-testid={`text-client-${interaction.id}`}>
+                                    {client.type === "lead" ? "Lead" : "Client"}: {client.name}
+                                  </span>
+                                )}
+                                {project && (
+                                  <span className="text-sm text-blue-600" data-testid={`text-project-${interaction.id}`}>
+                                    Project: {project.code}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <div className="text-sm text-gray-500" data-testid={`text-interaction-date-${interaction.id}`}>
+                                {format(new Date(createdAt), "MMM dd, yyyy")}
+                              </div>
+                              <div className="text-xs text-gray-400">
+                                {format(new Date(createdAt), "HH:mm")}
+                              </div>
+                              {user && (
+                                <div className="text-xs text-gray-500 mt-1" data-testid={`text-interaction-user-${interaction.id}`}>
+                                  by {user.name}
+                                </div>
+                              )}
+                            </div>
                           </div>
-                        )}
-                      </div>
-                    </div>
-                    
-                    <p className="text-gray-700 mb-3" data-testid={`text-interaction-description-${interaction.id}`}>
-                      {interaction.description}
-                    </p>
-                    
-                    {interaction.outcome && (
-                      <div className="bg-gray-50 p-3 rounded-lg mb-3">
-                        <h4 className="text-sm font-medium text-gray-900 mb-1">Outcome:</h4>
-                        <p className="text-sm text-gray-700" data-testid={`text-interaction-outcome-${interaction.id}`}>
-                          {interaction.outcome}
-                        </p>
-                      </div>
-                    )}
-                    
-                    {interaction.nextFollowUpDate && (
-                      <div className="flex items-center text-sm text-amber-600 bg-amber-50 px-3 py-2 rounded-lg">
-                        <Calendar className="h-4 w-4 mr-2" />
-                        Next follow-up: {format(new Date(interaction.nextFollowUpDate), "MMM dd, yyyy HH:mm")}
-                      </div>
-                    )}
+                          
+                          <p className="text-gray-700 mb-3" data-testid={`text-interaction-description-${interaction.id}`}>
+                            {content}
+                          </p>
+                          
+                          {outcome && (
+                            <div className="bg-gray-50 p-3 rounded-lg mb-3">
+                              <h4 className="text-sm font-medium text-gray-900 mb-1">Outcome:</h4>
+                              <p className="text-sm text-gray-700" data-testid={`text-interaction-outcome-${interaction.id}`}>
+                                {outcome}
+                              </p>
+                            </div>
+                          )}
+                          
+                          {interaction.nextFollowUpDate && (
+                            <div className="flex items-center text-sm text-amber-600 bg-amber-50 px-3 py-2 rounded-lg">
+                              <Calendar className="h-4 w-4 mr-2" />
+                              Next follow-up: {format(new Date(interaction.nextFollowUpDate), "MMM dd, yyyy HH:mm")}
+                            </div>
+                          )}
+                        </div>
+                      </>
+                    );
+                  })()}
                   </div>
                 </div>
               </CardContent>

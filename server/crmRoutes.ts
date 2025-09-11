@@ -282,21 +282,35 @@ export function registerCRMRoutes(app: Express) {
     }
   });
 
-  // NEW: Get ALL interactions for a client (across lead→project transition)
+  // FLAT-RESPONSE: Get ALL interactions for a client (across lead→project transition)
   app.get("/api/crm/interactions/client/:clientId", authenticateToken, async (req, res) => {
     try {
       const { clientId } = req.params;
       
       const interactionData = await db
         .select({
-          interaction: interactions,
+          id: interactions.id,
+          type: interactions.type,
+          direction: interactions.direction,
+          subject: interactions.subject,
+          content: interactions.content,
+          outcome: interactions.outcome,
+          duration: interactions.duration,
+          completedDate: interactions.completedDate,
+          entityType: interactions.entityType,
+          entityId: interactions.entityId,
+          clientId: interactions.clientId,
+          projectId: interactions.projectId,
+          createdAt: interactions.createdAt,
           user: {
             id: users.id,
             name: users.name,
+            email: users.email
           },
           client: {
             id: clients.id,
             name: clients.name,
+            email: clients.email,
             type: clients.type
           },
           project: {
@@ -319,21 +333,35 @@ export function registerCRMRoutes(app: Express) {
     }
   });
 
-  // NEW: Get interactions for a specific project
+  // FLAT-RESPONSE: Get interactions for a specific project
   app.get("/api/crm/interactions/project/:projectId", authenticateToken, async (req, res) => {
     try {
       const { projectId } = req.params;
       
       const interactionData = await db
         .select({
-          interaction: interactions,
+          id: interactions.id,
+          type: interactions.type,
+          direction: interactions.direction,
+          subject: interactions.subject,
+          content: interactions.content,
+          outcome: interactions.outcome,
+          duration: interactions.duration,
+          completedDate: interactions.completedDate,
+          entityType: interactions.entityType,
+          entityId: interactions.entityId,
+          clientId: interactions.clientId,
+          projectId: interactions.projectId,
+          createdAt: interactions.createdAt,
           user: {
             id: users.id,
             name: users.name,
+            email: users.email
           },
           client: {
             id: clients.id,
             name: clients.name,
+            email: clients.email,
             type: clients.type
           },
           project: {
@@ -353,6 +381,55 @@ export function registerCRMRoutes(app: Express) {
     } catch (error) {
       console.error("Error fetching project interactions:", error);
       res.status(500).json({ error: "Failed to fetch project interactions" });
+    }
+  });
+
+  // FLAT-RESPONSE: Get ALL interactions (for "all" view)
+  app.get("/api/crm/interactions/all", authenticateToken, async (req, res) => {
+    try {
+      const interactionData = await db
+        .select({
+          id: interactions.id,
+          type: interactions.type,
+          direction: interactions.direction,
+          subject: interactions.subject,
+          content: interactions.content,
+          outcome: interactions.outcome,
+          duration: interactions.duration,
+          completedDate: interactions.completedDate,
+          entityType: interactions.entityType,
+          entityId: interactions.entityId,
+          clientId: interactions.clientId,
+          projectId: interactions.projectId,
+          createdAt: interactions.createdAt,
+          user: {
+            id: users.id,
+            name: users.name,
+            email: users.email
+          },
+          client: {
+            id: clients.id,
+            name: clients.name,
+            email: clients.email,
+            type: clients.type
+          },
+          project: {
+            id: projects.id,
+            name: projects.name,
+            code: projects.code
+          }
+        })
+        .from(interactions)
+        .leftJoin(users, eq(interactions.userId, users.id))
+        .leftJoin(clients, eq(interactions.clientId, clients.id))
+        .leftJoin(projects, eq(interactions.projectId, projects.id))
+        .orderBy(desc(interactions.createdAt))
+        .limit(200); // Limit for performance
+
+      res.json(interactionData);
+    } catch (error) {
+      console.error("Error fetching all interactions:", error);
+      res.status(500).json({ error: "Failed to fetch all interactions" });
     }
   });
 
