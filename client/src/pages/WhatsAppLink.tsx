@@ -16,36 +16,73 @@ export default function WhatsAppLink() {
 
   const checkBotStatus = async () => {
     try {
-      const response = await fetch('/api/whatsapp/status');
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.error('No authentication token found');
+        setConnectionStatus('Authentication required');
+        return;
+      }
+
+      const response = await fetch('/api/whatsapp/status', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Cache-Control': 'no-cache'
+        }
+      });
+      
       if (response.ok) {
         const data = await response.json();
-        setIsConnected(data.connected);
-        setConnectionStatus(data.status);
-        if (!data.connected && data.qrCode) {
+        setIsConnected(data.isConnected);
+        setConnectionStatus(data.isConnected ? 'Connected' : 'Disconnected');
+        if (!data.isConnected && data.qrCode) {
           setQrCode(data.qrCode);
+        } else if (data.isConnected) {
+          setQrCode(''); // Clear QR code when connected
         }
+      } else if (response.status === 401) {
+        setConnectionStatus('Authentication failed');
+        console.error('Authentication failed for WhatsApp status');
+      } else {
+        setConnectionStatus('Error checking status');
       }
     } catch (error) {
       console.error('Failed to check WhatsApp status:', error);
+      setConnectionStatus('Connection error');
     }
   };
 
   const generateQR = async () => {
     try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setConnectionStatus('Authentication required');
+        return;
+      }
+
       setConnectionStatus("Generating QR code...");
       setQrCode(""); // Clear existing QR
       
-      const response = await fetch('/api/whatsapp/generate-qr', { method: 'POST' });
+      const response = await fetch('/api/whatsapp/generate-qr', { 
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
       if (response.ok) {
         const data = await response.json();
-        if (data.qrCode) {
-          setQrCode(data.qrCode);
-          setConnectionStatus("Waiting for scan...");
-        } else {
-          setConnectionStatus("QR code generating...");
-          // Poll for QR code if not immediately available
+        if (data.success) {
+          setConnectionStatus("QR code generation initiated...");
+          // Poll for QR code since it's generated asynchronously
           pollForQRCode();
+        } else {
+          setConnectionStatus(data.message || "Failed to generate QR code");
         }
+      } else if (response.status === 401) {
+        setConnectionStatus('Authentication failed');
+      } else {
+        setConnectionStatus("Error generating QR code");
       }
     } catch (error) {
       console.error('Failed to generate QR code:', error);
@@ -59,12 +96,29 @@ export default function WhatsAppLink() {
     
     const poll = async () => {
       try {
-        const response = await fetch('/api/whatsapp/status');
+        const token = localStorage.getItem('token');
+        if (!token) {
+          setConnectionStatus('Authentication required');
+          return;
+        }
+
+        const response = await fetch('/api/whatsapp/status', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Cache-Control': 'no-cache'
+          }
+        });
+        
         if (response.ok) {
           const data = await response.json();
           if (data.qrCode) {
             setQrCode(data.qrCode);
             setConnectionStatus("Waiting for scan...");
+            return;
+          } else if (data.isConnected) {
+            setIsConnected(true);
+            setConnectionStatus("Connected");
+            setQrCode(''); // Clear QR code
             return;
           }
         }
@@ -86,7 +140,19 @@ export default function WhatsAppLink() {
 
   const disconnectBot = async () => {
     try {
-      const response = await fetch('/api/whatsapp/disconnect', { method: 'POST' });
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setConnectionStatus('Authentication required');
+        return;
+      }
+
+      const response = await fetch('/api/whatsapp/reconnect', { 
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
       if (response.ok) {
         setIsConnected(false);
         setConnectionStatus("Disconnected");
@@ -143,13 +209,16 @@ export default function WhatsAppLink() {
                 {qrCode ? (
                   <div className="flex flex-col items-center space-y-4">
                     <div className="bg-white p-4 rounded-lg border-2 border-gray-200 shadow-sm">
-                      <div 
-                        id="qr-display"
-                        className="flex items-center justify-center"
-                        style={{ minHeight: '200px', minWidth: '200px' }}
-                      >
-                        <div dangerouslySetInnerHTML={{ __html: `<div style="font-family: monospace; font-size: 2px; line-height: 2px; white-space: pre;">${qrCode}</div>` }} />
-                      </div>
+                      <img 
+                        src={qrCode} 
+                        alt="WhatsApp QR Code" 
+                        className="w-64 h-64 object-contain"
+                        data-testid="qr-code-image"
+                        onError={(e) => {
+                          console.error('QR code image failed to load');
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
                     </div>
                     <div className="text-center space-y-2">
                       <p className="text-sm font-medium text-gray-900">

@@ -45,7 +45,7 @@ interface WhatsAppSession {
 
 interface BotStatus {
   isConnected: boolean;
-  qrCode?: string;
+  qrCode?: string; // Data URL format for displaying QR code image
   lastActivity: Date;
   totalSessions: number;
   activeChats: number;
@@ -233,6 +233,10 @@ export default function WhatsAppConsole() {
                     alt="WhatsApp QR Code" 
                     className="w-64 h-64 object-contain"
                     data-testid="qr-code-image"
+                    onError={(e) => {
+                      console.error('QR code image failed to load');
+                      e.currentTarget.style.display = 'none';
+                    }}
                   />
                 </div>
                 <div className="text-center">
@@ -243,6 +247,38 @@ export default function WhatsAppConsole() {
                     QR code refreshes automatically every few minutes
                   </p>
                 </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Show loading state when not connected and no QR code yet */}
+        {!botStatus?.isConnected && !botStatus?.qrCode && !statusLoading && (
+          <Card className="border-dashed border-2 border-blue-300 bg-blue-50 dark:bg-blue-950 dark:border-blue-700">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <RefreshCw className="h-5 w-5 animate-spin" />
+                Generating QR Code
+              </CardTitle>
+              <CardDescription>
+                Please wait while we generate a new QR code for WhatsApp connection
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center">
+                <p className="text-sm text-muted-foreground">
+                  This may take a few moments. The QR code will appear automatically once ready.
+                </p>
+                <Button 
+                  variant="outline" 
+                  onClick={() => reconnectMutation.mutate()}
+                  disabled={reconnectMutation.isPending}
+                  className="mt-4"
+                  data-testid="button-generate-qr"
+                >
+                  <RefreshCw className={`mr-2 h-4 w-4 ${reconnectMutation.isPending ? 'animate-spin' : ''}`} />
+                  Generate New QR Code
+                </Button>
               </div>
             </CardContent>
           </Card>

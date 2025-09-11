@@ -588,11 +588,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get bot status from the new WhatsApp service
       const botStatus = getBotStatus();
       
+      // Add cache control headers to prevent QR code caching
+      res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.set('Pragma', 'no-cache');
+      res.set('Expires', '0');
+      
       res.json({
         isConnected: botStatus.isConnected,
         lastActivity: botStatus.lastActivity,
-        qrCode: botStatus.qrCodeDataURL, // Send data URL for web display
-        qrCodeRaw: botStatus.qrCodeData, // Raw QR data for debugging
+        qrCode: botStatus.qrCodeDataURL, // Send data URL for web display (consistent field name)
         totalSessions: botStatus.totalSessions,
         activeChats: botStatus.activeChats,
         messagesProcessed: botStatus.messagesProcessed
@@ -687,16 +691,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/whatsapp/reconnect", authenticateToken, async (req: AuthRequest, res) => {
     try {
-      // Mock reconnect - replace with actual bot restart functionality
-      console.log("Attempting to reconnect WhatsApp bot...");
+      const { FurniliWhatsAppBot } = await import('./services/whatsappBot.js');
+      
+      // Destroy existing bot if any
+      if (global.whatsappBot) {
+        try {
+          await global.whatsappBot.getClient().destroy();
+          global.whatsappBot = undefined;
+          console.log('Previous WhatsApp bot instance destroyed');
+        } catch (error) {
+          console.log('Error destroying previous bot (non-critical):', error);
+        }
+      }
+      
+      // Initialize new bot
+      global.whatsappBot = new FurniliWhatsAppBot();
+      await global.whatsappBot.initialize();
       
       res.json({ 
         success: true, 
-        message: "Reconnection initiated" 
+        message: "WhatsApp bot reconnection initiated. Check status for QR code." 
       });
     } catch (error) {
       console.error("WhatsApp reconnect error:", error);
-      res.status(500).json({ message: "Internal server error" });
+      res.status(500).json({ 
+        success: false, 
+        message: "Failed to reconnect WhatsApp bot",
+        error: error.message 
+      });
+    }
+  });
+
+  // Generate QR Code endpoint (authenticated)
+  app.post("/api/whatsapp/generate-qr", authenticateToken, async (req: AuthRequest, res) => {
+    try {
+      const { FurniliWhatsAppBot } = await import('./services/whatsappBot.js');
+      
+      // Clear any existing bot
+      if (global.whatsappBot) {
+        try {
+          await global.whatsappBot.getClient().destroy();
+          global.whatsappBot = undefined;
+          // Wait for cleanup
+          await new Promise(resolve => setTimeout(resolve, 2000));
+        } catch (error) {
+          console.log('Cleanup error (non-critical):', error);
+        }
+      }
+      
+      // Initialize new bot instance
+      global.whatsappBot = new FurniliWhatsAppBot();
+      await global.whatsappBot.initialize();
+      
+      res.json({ 
+        success: true, 
+        message: "QR code generation initiated. Check status endpoint for QR code." 
+      });
+    } catch (error) {
+      console.error("WhatsApp generate-qr error:", error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Failed to generate QR code",
+        error: error.message 
+      });
     }
   });
 
@@ -5781,86 +5838,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   const httpServer = createServer(app);
-  // WhatsApp Bot Management APIs
-  app.get('/api/whatsapp/status', (req, res) => {
-    // Check if WhatsApp bot is connected
-    const isConnected = global.whatsappClient && global.whatsappClient.info && global.whatsappClient.info.wid;
-    console.log('WhatsApp Status Check:', { 
-      connected: !!isConnected, 
-      hasQRData: !!global.qrCodeData,
-      qrLength: global.qrCodeData ? global.qrCodeData.length : 0
-    });
-    res.json({ 
-      connected: !!isConnected, 
-      status: isConnected ? 'Connected' : 'Disconnected',
-      qrCode: global.qrCodeData || null
-    });
-  });
-
-  app.post('/api/whatsapp/generate-qr', async (req, res) => {
-    try {
-      // Clear any existing QR data
-      global.qrCodeData = null;
-      
-      // Properly cleanup existing client if exists
-      if (global.whatsappClient) {
-        try {
-          await global.whatsappClient.destroy();
-          global.whatsappClient = null;
-          // Wait a bit for cleanup
-          await new Promise(resolve => setTimeout(resolve, 2000));
-        } catch (error) {
-          console.log('Cleanup error (non-critical):', error.message);
-        }
-      }
-      
-      // Initialize new bot
-      if (global.initializeWhatsAppBot) {
-        await global.initializeWhatsAppBot();
-        
-        // Wait for QR code generation (up to 10 seconds)
-        let attempts = 0;
-        while (!global.qrCodeData && attempts < 20) {
-          await new Promise(resolve => setTimeout(resolve, 500));
-          attempts++;
-        }
-        
-        if (global.qrCodeData) {
-          res.json({ 
-            success: true, 
-            message: 'QR code generated successfully',
-            qrCode: global.qrCodeData 
-          });
-        } else {
-          res.json({ 
-            success: true, 
-            message: 'QR code generation started, please wait...' 
-          });
-        }
-      } else {
-        res.status(500).json({ success: false, error: 'WhatsApp bot not available' });
-      }
-    } catch (error) {
-      console.error('Error generating QR:', error);
-      res.status(500).json({ success: false, error: 'Failed to generate QR code' });
-    }
-  });
-
-  app.post('/api/whatsapp/disconnect', (req, res) => {
-    // Disconnect WhatsApp bot
-    if (global.whatsappClient) {
-      global.whatsappClient.destroy().then(() => {
-        global.whatsappClient = null;
-        global.qrCodeData = null;
-        res.json({ success: true, message: 'WhatsApp bot disconnected' });
-      }).catch((error) => {
-        console.error('Error disconnecting WhatsApp:', error);
-        res.status(500).json({ success: false, error: 'Failed to disconnect' });
-      });
-    } else {
-      res.json({ success: true, message: 'WhatsApp bot was not connected' });
-    }
-  });
 
   return httpServer;
 }
