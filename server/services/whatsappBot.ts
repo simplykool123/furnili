@@ -9,7 +9,8 @@ import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
 // @ts-ignore
-import qrcode from 'qrcode-terminal';
+import qrcodeTerminal from 'qrcode-terminal';
+import QRCode from 'qrcode';
 
 // Import database configuration
 import { DATABASE_URL } from '../config.js';
@@ -26,6 +27,25 @@ const botPool = new Pool({
 const userModes = new Map<string, string>();
 const userProjects = new Map<string, number>();
 const userStates = new Map<string, string>(); // Track user authentication state
+
+// Global state for QR code and bot status
+interface BotStatus {
+  isConnected: boolean;
+  qrCodeData?: string;
+  qrCodeDataURL?: string;
+  lastActivity: Date;
+  totalSessions: number;
+  activeChats: number;
+  messagesProcessed: number;
+}
+
+let botStatus: BotStatus = {
+  isConnected: false,
+  lastActivity: new Date(),
+  totalSessions: 0,
+  activeChats: 0,
+  messagesProcessed: 0
+};
 
 export class FurniliWhatsAppBot {
   private client: Client;
@@ -70,35 +90,75 @@ export class FurniliWhatsAppBot {
 
   private setupHandlers() {
     // QR Code for authentication
-    this.client.on('qr', (qr) => {
-      global.qrCodeData = qr;
-      console.log('\n🔗 WhatsApp QR Code:');
-      qrcode.generate(qr, { small: true });
-      console.log('\n📱 Scan this QR code with your WhatsApp to connect the bot\n');
+    this.client.on('qr', async (qr) => {
+      try {
+        // Store raw QR data
+        botStatus.qrCodeData = qr;
+        botStatus.isConnected = false;
+        
+        // Generate data URL for web interface
+        botStatus.qrCodeDataURL = await QRCode.toDataURL(qr, {
+          type: 'image/png',
+          quality: 0.92,
+          margin: 1,
+          color: {
+            dark: '#000000',
+            light: '#FFFFFF'
+          },
+          width: 256
+        });
+        
+        // Display ASCII QR in console for debugging
+        console.log('\n🔗 WhatsApp QR Code:');
+        qrcodeTerminal.generate(qr, { small: true });
+        console.log('\n📱 Scan this QR code with your WhatsApp to connect the bot\n');
+        
+        // Update last activity
+        botStatus.lastActivity = new Date();
+      } catch (error) {
+        console.error('Error generating QR code:', error);
+      }
     });
 
     // Ready event
     this.client.on('ready', () => {
       console.log('✅ WhatsApp Bot is ready and connected!');
+      botStatus.isConnected = true;
+      botStatus.lastActivity = new Date();
+      // Clear QR code data when connected
+      botStatus.qrCodeData = undefined;
+      botStatus.qrCodeDataURL = undefined;
     });
 
     // Authentication success
     this.client.on('authenticated', () => {
       console.log('🔐 WhatsApp Bot authenticated successfully');
+      botStatus.lastActivity = new Date();
     });
 
     // Authentication failure
     this.client.on('auth_failure', (msg) => {
       console.error('❌ WhatsApp authentication failed:', msg);
+      botStatus.isConnected = false;
+      botStatus.lastActivity = new Date();
     });
 
     // Disconnected
     this.client.on('disconnected', (reason) => {
       console.log('📴 WhatsApp Bot disconnected:', reason);
+      botStatus.isConnected = false;
+      botStatus.lastActivity = new Date();
+      // Clear QR code data when disconnected
+      botStatus.qrCodeData = undefined;
+      botStatus.qrCodeDataURL = undefined;
     });
 
     // Handle incoming messages
     this.client.on('message', async (msg) => {
+      // Update message count and activity
+      botStatus.messagesProcessed++;
+      botStatus.lastActivity = new Date();
+      
       // Handle media messages
       if (msg.hasMedia) {
         if (msg.type === 'image') {
@@ -752,4 +812,18 @@ Then send your files!`);
     };
     return names[category] || 'General';
   }
+  
+  // Public method to get bot status
+  getBotStatus(): BotStatus {
+    return { ...botStatus };
+  }
+}
+
+// Export functions for API endpoints
+export function getBotStatus(): BotStatus {
+  return { ...botStatus };
+}
+
+export function updateBotStats(stats: Partial<BotStatus>) {
+  Object.assign(botStatus, stats);
 }

@@ -215,7 +215,7 @@ export default function WhatsAppConsole() {
 
         {/* QR Code for Connection */}
         {!botStatus?.isConnected && botStatus?.qrCode && (
-          <Card className="border-dashed border-2 border-yellow-300 bg-yellow-50">
+          <Card className="border-dashed border-2 border-yellow-300 bg-yellow-50 dark:bg-yellow-950 dark:border-yellow-700">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Phone className="h-5 w-5" />
@@ -226,11 +226,22 @@ export default function WhatsAppConsole() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="flex justify-center">
-                <div className="bg-white p-4 rounded-lg">
-                  <pre className="text-xs font-mono whitespace-pre">
-                    {botStatus.qrCode}
-                  </pre>
+              <div className="flex flex-col items-center gap-4">
+                <div className="bg-white p-4 rounded-lg shadow-sm">
+                  <img 
+                    src={botStatus.qrCode} 
+                    alt="WhatsApp QR Code" 
+                    className="w-64 h-64 object-contain"
+                    data-testid="qr-code-image"
+                  />
+                </div>
+                <div className="text-center">
+                  <p className="text-sm text-muted-foreground">
+                    Scan this QR code with WhatsApp on your phone to connect the bot
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    QR code refreshes automatically every few minutes
+                  </p>
                 </div>
               </div>
             </CardContent>

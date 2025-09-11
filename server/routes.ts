@@ -24,6 +24,7 @@ import { registerCRMRoutes } from "./crmRoutes";
 import { db } from "./db";
 import { calculateBOM, generateBOMNumber, convertDimensions, DEFAULT_RATES, calculateWardrobeBOM, calculateSheetOptimization } from "./utils/bomCalculations";
 import { optimizeSheetCutting, OptimizedPanel, SheetDimensions } from "./utils/advanced-nesting";
+import { getBotStatus } from "./services/whatsappBot";
 
 import { eq, and, gt, desc } from "drizzle-orm";
 import { projectFiles, users, suppliers, products, purchaseOrders, purchaseOrderItems, stockMovements, bomCalculations, bomItems, workOrders, quotes, projects, clients } from "@shared/schema";
@@ -584,16 +585,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // WhatsApp Console API endpoints
   app.get("/api/whatsapp/status", authenticateToken, async (req: AuthRequest, res) => {
     try {
-      const client = global.whatsappClient;
-      const isConnected = client ? await client.getState() === 'CONNECTED' : false;
+      // Get bot status from the new WhatsApp service
+      const botStatus = getBotStatus();
       
       res.json({
-        isConnected,
-        lastActivity: new Date().toISOString(),
-        qrCode: global.qrCodeData,
-        totalSessions: isConnected ? 1 : 0,
-        activeChats: isConnected ? 1 : 0,
-        messagesProcessed: 0
+        isConnected: botStatus.isConnected,
+        lastActivity: botStatus.lastActivity,
+        qrCode: botStatus.qrCodeDataURL, // Send data URL for web display
+        qrCodeRaw: botStatus.qrCodeData, // Raw QR data for debugging
+        totalSessions: botStatus.totalSessions,
+        activeChats: botStatus.activeChats,
+        messagesProcessed: botStatus.messagesProcessed
       });
     } catch (error) {
       console.error("WhatsApp status error:", error);
