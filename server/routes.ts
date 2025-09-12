@@ -182,19 +182,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       console.log('🔍 Found user:', { id: user.id, username: user.username, email: user.email, hasPassword: !!user.password });
-      console.log('🔐 Password details:', { 
-        providedPassword: `"${password}"`, 
-        providedLength: password.length,
-        storedHashPrefix: user.password.substring(0, 20) + '...',
-        storedHashLength: user.password.length 
-      });
       
       const isValidPassword = await comparePassword(password, user.password);
-      console.log('🔑 Password comparison:', { isValid: isValidPassword, providedPasswordLength: password.length });
+      console.log('🔑 Password validation:', { isValid: isValidPassword });
       
       if (!isValidPassword) {
         console.log('❌ Password invalid');
         return res.status(401).json({ message: "Invalid credentials" });
+      }
+
+      // Check if user is active - handle both field formats and normalize
+      const isActive = user.isActive !== undefined ? user.isActive : (user as any).is_active;
+      console.log('✅ User active status:', { isActive });
+      
+      if (isActive === false || isActive === null || isActive === undefined) {
+        console.log('❌ User is not active');
+        return res.status(401).json({ message: "Account is not active" });
       }
 
       // Update last login
@@ -208,7 +211,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         role: user.role 
       });
 
-      const { password: _, ...userWithoutPassword } = user;
+      // Normalize user object to ensure isActive is properly set
+      const { password: _, ...userWithoutPassword } = {
+        ...user,
+        isActive: isActive  // Ensure normalized isActive field
+      };
 
       res.json({
         user: userWithoutPassword,
