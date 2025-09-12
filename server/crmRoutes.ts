@@ -110,7 +110,24 @@ export function registerCRMRoutes(app: Express) {
       
       const leads = await db
         .select({
-          ...clients,
+          id: clients.id,
+          name: clients.name,
+          email: clients.email,
+          mobile: clients.mobile,
+          city: clients.city,
+          contactPerson: clients.contactPerson,
+          phone: clients.phone,
+          address1: clients.address1,
+          address2: clients.address2,
+          state: clients.state,
+          pinCode: clients.pinCode,
+          gstNumber: clients.gstNumber,
+          type: clients.type,
+          leadSourceId: clients.leadSourceId,
+          pipelineStageId: clients.pipelineStageId,
+          isActive: clients.isActive,
+          createdAt: clients.createdAt,
+          updatedAt: clients.updatedAt,
           leadSource: {
             id: leadSources.id,
             name: leadSources.name,
@@ -164,7 +181,24 @@ export function registerCRMRoutes(app: Express) {
       
       const leads = await db
         .select({
-          ...clients,
+          id: clients.id,
+          name: clients.name,
+          email: clients.email,
+          mobile: clients.mobile,
+          city: clients.city,
+          contactPerson: clients.contactPerson,
+          phone: clients.phone,
+          address1: clients.address1,
+          address2: clients.address2,
+          state: clients.state,
+          pinCode: clients.pinCode,
+          gstNumber: clients.gstNumber,
+          type: clients.type,
+          leadSourceId: clients.leadSourceId,
+          pipelineStageId: clients.pipelineStageId,
+          isActive: clients.isActive,
+          createdAt: clients.createdAt,
+          updatedAt: clients.updatedAt,
           leadSource: {
             id: leadSources.id,
             name: leadSources.name,
