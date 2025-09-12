@@ -16,7 +16,14 @@ export function registerCRMRoutes(app: Express) {
   app.get("/api/crm/lead-sources", authenticateToken, async (req, res) => {
     try {
       const sources = await db
-        .select()
+        .select({
+          id: leadSources.id,
+          name: leadSources.name,
+          type: leadSources.type,
+          description: leadSources.description,
+          isActive: leadSources.isActive,
+          createdAt: leadSources.createdAt
+        })
         .from(leadSources)
         .where(eq(leadSources.isActive, true))
         .orderBy(asc(leadSources.name));
@@ -52,7 +59,16 @@ export function registerCRMRoutes(app: Express) {
   app.get("/api/crm/pipeline-stages", authenticateToken, async (req, res) => {
     try {
       const stages = await db
-        .select()
+        .select({
+          id: pipelineStages.id,
+          name: pipelineStages.name,
+          description: pipelineStages.description,
+          order: pipelineStages.order,
+          probability: pipelineStages.probability,
+          color: pipelineStages.color,
+          isActive: pipelineStages.isActive,
+          createdAt: pipelineStages.createdAt
+        })
         .from(pipelineStages)
         .where(eq(pipelineStages.isActive, true))
         .orderBy(asc(pipelineStages.order));

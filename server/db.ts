@@ -2,23 +2,20 @@ import { Pool } from 'pg';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import * as schema from "@shared/schema";
 
-// Use Supabase database connection
-const SUPABASE_DATABASE_URL = "postgresql://postgres.qopynbelowyghyciuofo:Furnili@123@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres";
-
-if (!process.env.DATABASE_URL && !SUPABASE_DATABASE_URL) {
+// Use environment database connection
+if (!process.env.DATABASE_URL) {
   throw new Error(
     "DATABASE_URL must be set. Did you forget to provision a database?",
   );
 }
 
-// Log connection attempt for debugging
-// console.log('Attempting to connect to database...');
-// console.log('Database URL format:', process.env.DATABASE_URL?.replace(/:([^:@]+)@/, ':****@'));
+// Log connection attempt for debugging (without exposing credentials)
+console.log('Connecting to database:', process.env.DATABASE_URL?.replace(/:([^:@]+)@/, ':****@'));
 
-// Force use Supabase database connection
+// Use the proper environment database connection
 export const pool = new Pool({ 
-  connectionString: SUPABASE_DATABASE_URL, // Always use Supabase
-  ssl: {
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.DATABASE_URL?.includes('localhost') ? false : {
     rejectUnauthorized: false
   },
   connectionTimeoutMillis: 15000,
@@ -28,12 +25,12 @@ export const pool = new Pool({
 
 // Test connection with better error handling
 pool.on('connect', () => {
-  // console.log('✓ Connected to Supabase database successfully');
+  console.log('✓ Connected to database successfully');
 });
 
 pool.on('error', (err) => {
   console.error('✗ Database connection error:', err.message);
-  console.error('Please verify your Supabase connection details');
+  console.error('Please verify your DATABASE_URL environment variable');
 });
 
 // Test initial connection
@@ -45,7 +42,7 @@ pool.on('error', (err) => {
   } catch (err) {
     const error = err as Error;
     console.error('✗ Initial database connection failed:', error.message);
-    console.error('Running with fallback configuration - please check Supabase settings');
+    console.error('Please check your DATABASE_URL environment variable');
   }
 })();
 

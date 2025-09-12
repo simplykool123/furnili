@@ -279,16 +279,43 @@ export function setupQuotesRoutes(app: Express) {
         return res.status(404).json({ error: "Quote not found" });
       }
 
-      // Get client data - using correct column name from database
+      // Get client data - use explicit column selection to avoid schema issues
       const [client] = await db
-        .select()
+        .select({
+          id: clients.id,
+          name: clients.name,
+          email: clients.email,
+          mobile: clients.mobile,
+          city: clients.city,
+          contactPerson: clients.contactPerson,
+          phone: clients.phone,
+          address1: clients.address1,
+          address2: clients.address2,
+          state: clients.state,
+          pinCode: clients.pinCode,
+          gstNumber: clients.gstNumber,
+          type: clients.type,
+          isActive: clients.isActive,
+          createdAt: clients.createdAt,
+          updatedAt: clients.updatedAt
+        })
         .from(clients)
         .where(eq(clients.id, quote.clientId))
         .limit(1);
 
-      // Get project data - using correct column name from database
+      // Get project data - use explicit column selection to avoid schema issues  
       const [project] = quote.projectId ? await db
-        .select()
+        .select({
+          id: projects.id,
+          code: projects.code,
+          name: projects.name,
+          description: projects.description,
+          clientId: projects.clientId,
+          stage: projects.stage,
+          budget: projects.budget,
+          createdAt: projects.createdAt,
+          updatedAt: projects.updatedAt
+        })
         .from(projects)
         .where(eq(projects.id, quote.projectId))
         .limit(1) : [null];
@@ -311,11 +338,7 @@ export function setupQuotesRoutes(app: Express) {
         .where(eq(quoteItems.quoteId, quoteId))
         .orderBy(quoteItems.sortOrder);
 
-      // Simple console log for debugging
-      console.log(`QUOTE ${quoteId}: Client ID = ${quote.clientId}, Client found = ${!!client}`);
-      if (client) {
-        console.log(`QUOTE ${quoteId}: Client name = "${client.name}", Address = "${client.address1}"`);
-      }
+      // Data successfully retrieved
       
       const response = {
         ...quote,
@@ -328,9 +351,7 @@ export function setupQuotesRoutes(app: Express) {
         }))
       };
       
-      // Debug final response structure
-      console.log(`RESPONSE ${quoteId}: Client =`, JSON.stringify(response.client));
-      console.log(`RESPONSE ${quoteId}: Items count = ${response.items?.length || 0}`);
+      // Prepare final response
       
       res.json(response);
     } catch (error) {
