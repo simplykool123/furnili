@@ -91,7 +91,7 @@ export default function ProjectActivities({ projectId }: ProjectActivitiesProps)
   const activitiesQuery = useQuery({
     queryKey: ["/api/projects", projectId, "activities"],
     queryFn: async () => {
-      const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+      const token = localStorage.getItem('authToken');
       const response = await fetch(`/api/projects/${projectId}/activities`, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -107,7 +107,7 @@ export default function ProjectActivities({ projectId }: ProjectActivitiesProps)
   // Create/Update activity mutation
   const activityMutation = useMutation({
     mutationFn: async (data: any) => {
-      const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+      const token = localStorage.getItem('authToken');
       const url = editingActivity
         ? `/api/projects/${projectId}/activities/${editingActivity.id}`
         : `/api/projects/${projectId}/activities`;
@@ -148,7 +148,7 @@ export default function ProjectActivities({ projectId }: ProjectActivitiesProps)
   // Delete activity mutation
   const deleteActivityMutation = useMutation({
     mutationFn: async (activityId: number) => {
-      const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+      const token = localStorage.getItem('authToken');
       const response = await fetch(`/api/projects/${projectId}/activities/${activityId}`, {
         method: "DELETE",
         headers: {

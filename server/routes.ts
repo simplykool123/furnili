@@ -25,6 +25,7 @@ import { db } from "./db";
 import { calculateBOM, generateBOMNumber, convertDimensions, DEFAULT_RATES, calculateWardrobeBOM, calculateSheetOptimization } from "./utils/bomCalculations";
 import { optimizeSheetCutting, OptimizedPanel, SheetDimensions } from "./utils/advanced-nesting";
 import { getBotStatus } from "./services/whatsappBot";
+import fileRoutes from "./fileRoutes";
 
 import { eq, and, gt, desc } from "drizzle-orm";
 import { projectFiles, users, suppliers, products, purchaseOrders, purchaseOrderItems, stockMovements, bomCalculations, bomItems, workOrders, quotes, projects, clients } from "@shared/schema";
@@ -159,22 +160,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { username, password } = req.body;
       
+      console.log('🔐 LOGIN ATTEMPT:', { username, passwordLength: password?.length });
+      
       if (!username || !password) {
+        console.log('❌ Missing credentials');
         return res.status(400).json({ message: "Username and password are required" });
       }
 
       // Try to find user by username first, then by email if it looks like an email
       let user = await storage.getUserByUsername(username);
+      console.log('👤 User lookup by username:', { found: !!user, username });
+      
       if (!user && username.includes('@')) {
         user = await storage.getUserByEmail(username);
+        console.log('📧 User lookup by email:', { found: !!user, email: username });
       }
       
       if (!user) {
+        console.log('❌ User not found');
         return res.status(401).json({ message: "Invalid credentials" });
       }
 
+      console.log('🔍 Found user:', { id: user.id, username: user.username, email: user.email, hasPassword: !!user.password });
+      console.log('🔐 Password details:', { 
+        providedPassword: `"${password}"`, 
+        providedLength: password.length,
+        storedHashPrefix: user.password.substring(0, 20) + '...',
+        storedHashLength: user.password.length 
+      });
+      
       const isValidPassword = await comparePassword(password, user.password);
+      console.log('🔑 Password comparison:', { isValid: isValidPassword, providedPasswordLength: password.length });
+      
       if (!isValidPassword) {
+        console.log('❌ Password invalid');
         return res.status(401).json({ message: "Invalid credentials" });
       }
 
@@ -5052,6 +5071,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // CRM Routes
   registerCRMRoutes(app);
+
+  // Register file upload routes
+  app.use('/api', fileRoutes);
 
   // Purchase Order PDF generation
   app.get("/api/purchase-orders/:id/pdf", authenticateToken, async (req, res) => {

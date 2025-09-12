@@ -79,7 +79,7 @@ export default function WhatsAppConsole() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
         },
         body: JSON.stringify({ to, message })
       }).then(res => res.json());
@@ -96,7 +96,7 @@ export default function WhatsAppConsole() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
         }
       }).then(res => res.json());
     },

@@ -5,7 +5,7 @@ import { Pool } from 'pg';
 import { telegramUserSessions, projects, clients, projectFiles } from '@shared/schema';
 import { eq } from 'drizzle-orm';
 import axios from 'axios';
-import fs from 'fs';
+import fs from 'fs-extra';
 import path from 'path';
 import crypto from 'crypto';
 // @ts-ignore
@@ -852,7 +852,7 @@ Once added, please try #start again.`);
     const contact = await msg.getContact();
     const userId = contact.id.user;
     const projectId = userProjects.get(userId);
-    const currentMode = userModes.get(userId) || 'general';
+    const currentMode = userModes.get(userId) || 'delivery_chalan';
 
     if (!projectId) {
       await this.sendMessage(msg, '⚠️ Please select a project first using #projects → #select [number]');
@@ -863,10 +863,14 @@ Once added, please try #start again.`);
       const media = await msg.downloadMedia();
       if (!media) return;
 
-      // Generate unique filename
+      // Automatically categorize photos as delivery chalans
+      const category = 'delivery_chalan';
       const uniqueName = crypto.randomBytes(8).toString('hex');
-      const ext = media.mimetype?.includes('jpeg') ? '.jpg' : '.png';
-      const fileName = `whatsapp_photo_${uniqueName}${ext}`;
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      const ext = media.mimetype?.includes('jpeg') ? '.jpg' : 
+                  media.mimetype?.includes('png') ? '.png' : 
+                  media.mimetype?.includes('webp') ? '.webp' : '.jpg';
+      const fileName = `delivery_chalan_${timestamp}_${uniqueName}${ext}`;
       const filePath = `uploads/projects/${fileName}`;
 
       // Ensure upload directory exists
@@ -920,7 +924,6 @@ Once added, please try #start again.`);
     const contact = await msg.getContact();
     const userId = contact.id.user;
     const projectId = userProjects.get(userId);
-    const currentMode = userModes.get(userId) || 'general';
 
     if (!projectId) {
       await this.sendMessage(msg, '⚠️ Please select a project first using #projects → #select [number]');
@@ -931,26 +934,42 @@ Once added, please try #start again.`);
       const media = await msg.downloadMedia();
       if (!media) return;
 
-      // Generate filename with proper extension
+      // Auto-categorize based on file type
+      const ext = media.filename ? path.extname(media.filename).toLowerCase() : '.pdf';
+      const mimeType = media.mimetype || '';
+      
+      // Check if it's a manual quote (PDF or Excel)
+      const isManualQuote = ext === '.pdf' || 
+                           ext === '.xlsx' || 
+                           ext === '.xls' || 
+                           mimeType.includes('pdf') || 
+                           mimeType.includes('excel') || 
+                           mimeType.includes('spreadsheet');
+
+      const category = isManualQuote ? 'manual_quote' : 'general';
       const uniqueName = crypto.randomBytes(8).toString('hex');
-      const ext = media.filename ? path.extname(media.filename) : '.pdf';
-      const fileName = `whatsapp_doc_${uniqueName}${ext}`;
-      const filePath = `uploads/projects/${fileName}`;
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      const fileName = isManualQuote ? 
+        `manual_quote_${timestamp}_${uniqueName}${ext}` : 
+        `whatsapp_doc_${timestamp}_${uniqueName}${ext}`;
+      
+      // Create category-specific directory
+      const categoryFolder = isManualQuote ? 'manual_quotes' : 'projects';
+      const filePath = `uploads/${categoryFolder}/project_${projectId}/${fileName}`;
 
       // Ensure upload directory exists
-      const uploadDir = path.dirname(filePath);
-      if (!fs.existsSync(uploadDir)) {
-        fs.mkdirSync(uploadDir, { recursive: true });
-      }
+      const fullPath = path.join(process.cwd(), filePath);
+      const uploadDir = path.dirname(fullPath);
+      await fs.ensureDir(uploadDir);
 
       // Save file
-      fs.writeFileSync(filePath, media.data, 'base64');
-      const stats = fs.statSync(filePath);
+      await fs.writeFile(fullPath, media.data, 'base64');
+      const stats = await fs.stat(fullPath);
 
       // Get system user info
       const systemUser = await this.getSystemUserInfo(userId);
 
-      // Save to database
+      // Save to database with proper categorization
       const client = await botPool.connect();
       try {
         await client.query(`
@@ -960,11 +979,11 @@ Once added, please try #start again.`);
         `, [
           projectId,
           fileName,
-          media.filename || `WhatsApp_Document_${new Date().toISOString().slice(0, 10)}${ext}`,
+          media.filename || `WhatsApp_${isManualQuote ? 'ManualQuote' : 'Document'}_${new Date().toISOString().slice(0, 10)}${ext}`,
           filePath,
           stats.size,
           media.mimetype || 'application/octet-stream',
-          this.mapCategoryToFileCategory(currentMode),
+          category,
           'Uploaded via WhatsApp',
           msg.body || '',
           systemUser?.id || 1,
@@ -974,7 +993,8 @@ Once added, please try #start again.`);
         client.release();
       }
 
-      await this.sendMessage(msg, `✅ Document saved to ${this.getCategoryDisplayName(currentMode)} category!${msg.body ? `\n\nComment: ${msg.body}` : ''}\n\nSend more files or use #projects to switch projects.`);
+      const categoryDisplayName = isManualQuote ? 'Manual Quote' : 'General Document';
+      await this.sendMessage(msg, `✅ ${categoryDisplayName} uploaded successfully!\n📁 Project: ${projectId}\n📄 Category: ${categoryDisplayName}\n📎 File: ${fileName}${msg.body ? `\n📝 Comment: ${msg.body}` : ''}\n\nYour ${isManualQuote ? 'manual quote' : 'document'} has been automatically categorized and saved!`);
 
     } catch (error) {
       console.error('Error handling document:', error);

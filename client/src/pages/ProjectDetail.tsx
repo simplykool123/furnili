@@ -163,7 +163,7 @@ function ProjectFinancials({ projectId }: { projectId: string }) {
     queryFn: async () => {
       const response = await fetch(`/api/petty-cash?projectId=${projectId}`, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("authToken") || localStorage.getItem("token")}`,
+          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
           "Content-Type": "application/json",
         },
       });
@@ -180,7 +180,7 @@ function ProjectFinancials({ projectId }: { projectId: string }) {
     queryFn: async () => {
       const response = await fetch(`/api/requests?projectId=${projectId}`, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("authToken") || localStorage.getItem("token")}`,
+          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
           "Content-Type": "application/json",
         },
       });

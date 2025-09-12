@@ -16,7 +16,7 @@ export default function WhatsAppLink() {
 
   const checkBotStatus = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('authToken');
       if (!token) {
         console.error('No authentication token found');
         setConnectionStatus('Authentication required');
@@ -53,7 +53,7 @@ export default function WhatsAppLink() {
 
   const generateQR = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('authToken');
       if (!token) {
         setConnectionStatus('Authentication required');
         return;
@@ -96,7 +96,7 @@ export default function WhatsAppLink() {
     
     const poll = async () => {
       try {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('authToken');
         if (!token) {
           setConnectionStatus('Authentication required');
           return;
@@ -140,7 +140,7 @@ export default function WhatsAppLink() {
 
   const disconnectBot = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('authToken');
       if (!token) {
         setConnectionStatus('Authentication required');
         return;

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Search, Filter, Building2, Calendar, User, MapPin, Eye, Edit, FolderOpen, Trash2 } from "lucide-react";
+import { Plus, Search, Filter, Building2, Calendar, User, MapPin, Eye, Edit, FolderOpen, Trash2, Upload, FileImage, FileText, Download, X } from "lucide-react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,7 +19,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import type { Project, Client } from "@shared/schema";
+import type { Project, Client, ProjectFile } from "@shared/schema";
 import { insertClientSchema } from "@shared/schema";
 import { getCitiesByState } from "@/data/indianCities";
 import ResponsiveLayout from "@/components/Layout/ResponsiveLayout";
@@ -62,10 +62,184 @@ export default function Projects() {
   const [activeProjectTab, setActiveProjectTab] = useState("all");
   const [selectedState, setSelectedState] = useState("Maharashtra");
   const [availableCities, setAvailableCities] = useState<string[]>(getCitiesByState("Maharashtra"));
+
+  // File management states
+  const [isFileDialogOpen, setIsFileDialogOpen] = useState(false);
+  const [selectedProjectForFiles, setSelectedProjectForFiles] = useState<Project | null>(null);
+  const [fileTabActive, setFileTabActive] = useState("general");
+  const [uploadingFiles, setUploadingFiles] = useState(false);
   
   // Authentication and role-based permissions
   const user = authService.getUser();
   const canManageProjects = user && ['admin', 'manager'].includes(user.role);
+
+  // File upload mutations
+  const manualQuoteUploadMutation = useMutation({
+    mutationFn: async ({ projectId, files }: { projectId: number; files: File[] }) => {
+      const formData = new FormData();
+      files.forEach(file => {
+        formData.append('files', file);
+      });
+      
+      const response = await fetch(`/api/projects/${projectId}/files/manual-quotes/multiple`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+        },
+        body: formData,
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Upload failed');
+      }
+      
+      return response.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/projects', selectedProjectForFiles?.id, 'files'] });
+      toast({ 
+        title: "Manual quotes uploaded successfully",
+        description: `${data.files?.length || 0} files uploaded`
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error uploading manual quotes",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const generalFileUploadMutation = useMutation({
+    mutationFn: async ({ projectId, files }: { projectId: number; files: File[] }) => {
+      const formData = new FormData();
+      files.forEach(file => {
+        formData.append('files', file);
+      });
+      
+      const response = await fetch(`/api/projects/${projectId}/files/general/multiple`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+        },
+        body: formData,
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Upload failed');
+      }
+      
+      return response.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/projects', selectedProjectForFiles?.id, 'files'] });
+      toast({ 
+        title: "Files uploaded successfully",
+        description: `${data.files?.length || 0} files uploaded`
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error uploading files",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  // File upload handlers
+  const handleManualQuoteUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || []);
+    if (files.length === 0 || !selectedProjectForFiles) return;
+
+    // Validate file types for manual quotes
+    const validTypes = ['application/pdf', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'];
+    const invalidFiles = files.filter(file => !validTypes.includes(file.type));
+    
+    if (invalidFiles.length > 0) {
+      toast({
+        title: "Invalid file type",
+        description: "Only PDF and Excel files are allowed for manual quotes",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate file sizes (50MB max)
+    const oversizedFiles = files.filter(file => file.size > 50 * 1024 * 1024);
+    if (oversizedFiles.length > 0) {
+      toast({
+        title: "Files too large",
+        description: "Maximum file size is 50MB per file",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setUploadingFiles(true);
+    manualQuoteUploadMutation.mutate(
+      { projectId: selectedProjectForFiles.id, files },
+      {
+        onSettled: () => setUploadingFiles(false)
+      }
+    );
+  };
+
+  const handleGeneralFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || []);
+    if (files.length === 0 || !selectedProjectForFiles) return;
+
+    // Validate file sizes (25MB max)
+    const oversizedFiles = files.filter(file => file.size > 25 * 1024 * 1024);
+    if (oversizedFiles.length > 0) {
+      toast({
+        title: "Files too large",
+        description: "Maximum file size is 25MB per file",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setUploadingFiles(true);
+    generalFileUploadMutation.mutate(
+      { projectId: selectedProjectForFiles.id, files },
+      {
+        onSettled: () => setUploadingFiles(false)
+      }
+    );
+  };
+
+  const handleDeleteFile = async (fileId: number) => {
+    if (!selectedProjectForFiles) return;
+    
+    try {
+      await apiRequest(`/api/projects/${selectedProjectForFiles.id}/files/${fileId}`, {
+        method: 'DELETE',
+      });
+      
+      queryClient.invalidateQueries({ 
+        queryKey: ['/api/projects', selectedProjectForFiles.id, 'files'] 
+      });
+      
+      toast({ title: "File deleted successfully" });
+    } catch (error: any) {
+      toast({
+        title: "Error deleting file",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDownloadFile = (fileId: number, fileName: string) => {
+    const link = document.createElement('a');
+    link.href = `/api/files/${fileId}/download`;
+    link.download = fileName;
+    link.click();
+  };
 
   const { data: projects = [], isLoading, error: projectsError } = useQuery<Project[]>({
     queryKey: ['/api/projects'],
@@ -74,6 +248,19 @@ export default function Projects() {
   const { data: clients = [], error: clientsError } = useQuery<Client[]>({
     queryKey: ['/api/clients'],
   });
+
+  // File management queries
+  const { data: projectFiles = [] } = useQuery<ProjectFile[]>({
+    queryKey: ['/api/projects', selectedProjectForFiles?.id, 'files'],
+    queryFn: () => selectedProjectForFiles ? 
+      apiRequest(`/api/projects/${selectedProjectForFiles.id}/files`) : Promise.resolve([]),
+    enabled: !!selectedProjectForFiles,
+  });
+
+  // Filter files by category
+  const generalFiles = projectFiles.filter(f => f.category === 'general' || !f.category);
+  const deliveryChalans = projectFiles.filter(f => f.category === 'delivery_chalan');
+  const manualQuotes = projectFiles.filter(f => f.category === 'manual_quote');
 
   const projectForm = useForm({
     resolver: zodResolver(createProjectSchema),
@@ -318,7 +505,6 @@ export default function Projects() {
           </p>
           {isAuthError ? (
             <Button onClick={() => {
-              localStorage.removeItem('token');
               localStorage.removeItem('authToken');
               localStorage.removeItem('user');
               localStorage.removeItem('authUser');
@@ -1620,6 +1806,240 @@ export default function Projects() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      
+      {/* File Management Dialog */}
+      <Dialog open={isFileDialogOpen} onOpenChange={setIsFileDialogOpen}>
+        <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Project Files - {selectedProjectForFiles?.name}</DialogTitle>
+            <DialogDescription>
+              Manage files for this project with organized categories
+            </DialogDescription>
+          </DialogHeader>
+          
+          <Tabs value={fileTabActive} onValueChange={setFileTabActive} className="w-full">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="general" data-testid="tab-general-files">
+                General Files
+                {generalFiles.length > 0 && (
+                  <Badge variant="secondary" className="ml-2">{generalFiles.length}</Badge>
+                )}
+              </TabsTrigger>
+              <TabsTrigger value="delivery_chalans" data-testid="tab-delivery-chalans">
+                Delivery Chalans
+                {deliveryChalans.length > 0 && (
+                  <Badge variant="secondary" className="ml-2">{deliveryChalans.length}</Badge>
+                )}
+              </TabsTrigger>
+              <TabsTrigger value="manual_quotes" data-testid="tab-manual-quotes">
+                Manual Quotes
+                {manualQuotes.length > 0 && (
+                  <Badge variant="secondary" className="ml-2">{manualQuotes.length}</Badge>
+                )}
+              </TabsTrigger>
+            </TabsList>
+
+            {/* General Files Tab */}
+            <TabsContent value="general" className="space-y-4">
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6">
+                <div className="text-center">
+                  <Upload className="mx-auto h-12 w-12 text-gray-400" />
+                  <div className="mt-4">
+                    <label htmlFor="general-file-upload" className="cursor-pointer">
+                      <span className="mt-2 block text-sm font-medium text-gray-900">
+                        Drop general files here, or click to browse
+                      </span>
+                      <span className="mt-1 block text-xs text-gray-500">
+                        Any file type up to 25MB each
+                      </span>
+                    </label>
+                    <input
+                      id="general-file-upload"
+                      type="file"
+                      multiple
+                      onChange={handleGeneralFileUpload}
+                      className="hidden"
+                      data-testid="input-general-files"
+                    />
+                  </div>
+                  {uploadingFiles && fileTabActive === 'general' && (
+                    <div className="mt-4">
+                      <div className="flex items-center justify-center">
+                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                        <span className="ml-2 text-sm text-gray-600">Uploading files...</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+              
+              {generalFiles.length > 0 && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {generalFiles.map((file) => (
+                    <FileCard key={file.id} file={file} onDelete={handleDeleteFile} onDownload={handleDownloadFile} />
+                  ))}
+                </div>
+              )}
+              
+              {generalFiles.length === 0 && (
+                <div className="text-center py-8 text-gray-500">
+                  No general files uploaded yet.
+                </div>
+              )}
+            </TabsContent>
+
+            {/* Manual Quotes Tab */}
+            <TabsContent value="manual_quotes" className="space-y-4">
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6">
+                <div className="text-center">
+                  <FileText className="mx-auto h-12 w-12 text-gray-400" />
+                  <div className="mt-4">
+                    <label htmlFor="manual-quote-upload" className="cursor-pointer">
+                      <span className="mt-2 block text-sm font-medium text-gray-900">
+                        Drop manual quote files here, or click to browse
+                      </span>
+                      <span className="mt-1 block text-xs text-gray-500">
+                        PDF and Excel files up to 50MB each
+                      </span>
+                    </label>
+                    <input
+                      id="manual-quote-upload"
+                      type="file"
+                      multiple
+                      accept=".pdf,.xlsx,.xls"
+                      onChange={handleManualQuoteUpload}
+                      className="hidden"
+                      data-testid="input-manual-quote-files"
+                    />
+                  </div>
+                  {uploadingFiles && fileTabActive === 'manual_quotes' && (
+                    <div className="mt-4">
+                      <div className="flex items-center justify-center">
+                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                        <span className="ml-2 text-sm text-gray-600">Uploading files...</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+              
+              {manualQuotes.length > 0 && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {manualQuotes.map((file) => (
+                    <FileCard key={file.id} file={file} onDelete={handleDeleteFile} onDownload={handleDownloadFile} />
+                  ))}
+                </div>
+              )}
+              
+              {manualQuotes.length === 0 && (
+                <div className="text-center py-8 text-gray-500">
+                  No manual quotes uploaded yet.
+                </div>
+              )}
+            </TabsContent>
+
+            {/* Delivery Chalans Tab */}
+            <TabsContent value="delivery_chalans" className="space-y-4">
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6">
+                <div className="text-center">
+                  <FileImage className="mx-auto h-12 w-12 text-gray-400" />
+                  <div className="mt-4">
+                    <span className="mt-2 block text-sm font-medium text-gray-900">
+                      Delivery chalans are managed from the Production Planning module
+                    </span>
+                    <span className="mt-1 block text-xs text-gray-500">
+                      Visit Production Planning to upload delivery chalan images
+                    </span>
+                  </div>
+                </div>
+              </div>
+              
+              {deliveryChalans.length > 0 && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {deliveryChalans.map((file) => (
+                    <FileCard key={file.id} file={file} onDelete={handleDeleteFile} onDownload={handleDownloadFile} />
+                  ))}
+                </div>
+              )}
+              
+              {deliveryChalans.length === 0 && (
+                <div className="text-center py-8 text-gray-500">
+                  No delivery chalans uploaded yet.
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
+
+          <div className="flex justify-end">
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setIsFileDialogOpen(false);
+                setSelectedProjectForFiles(null);
+                setFileTabActive('general');
+              }}
+              data-testid="button-close-file-dialog"
+            >
+              Close
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </ResponsiveLayout>
+  );
+}
+
+// File Card Component
+function FileCard({ 
+  file, 
+  onDelete, 
+  onDownload 
+}: { 
+  file: ProjectFile; 
+  onDelete: (id: number) => void; 
+  onDownload: (id: number, name: string) => void; 
+}) {
+  const getFileIcon = (mimeType: string) => {
+    if (mimeType?.startsWith('image/')) return <FileImage className="h-6 w-6 text-blue-500" />;
+    if (mimeType?.includes('pdf')) return <FileText className="h-6 w-6 text-red-500" />;
+    if (mimeType?.includes('excel') || mimeType?.includes('spreadsheet')) return <FileText className="h-6 w-6 text-green-500" />;
+    return <FileText className="h-6 w-6 text-gray-500" />;
+  };
+
+  return (
+    <div 
+      className="flex items-center justify-between p-3 border rounded-lg bg-white hover:bg-gray-50"
+      data-testid={`file-card-${file.id}`}
+    >
+      <div className="flex items-center space-x-3 flex-1 min-w-0">
+        {getFileIcon(file.mimeType || '')}
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium truncate" title={file.originalName}>
+            {file.originalName}
+          </p>
+          <p className="text-xs text-gray-500">
+            {(file.fileSize / 1024 / 1024).toFixed(1)} MB
+          </p>
+        </div>
+      </div>
+      <div className="flex space-x-2">
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => onDownload(file.id, file.originalName)}
+          data-testid={`button-download-${file.id}`}
+        >
+          <Download className="h-4 w-4" />
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => onDelete(file.id)}
+          data-testid={`button-delete-${file.id}`}
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      </div>
+    </div>
   );
 }

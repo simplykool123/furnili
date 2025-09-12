@@ -264,7 +264,7 @@ export const projectFiles = pgTable("project_files", {
   filePath: text("file_path").notNull(),
   fileSize: integer("file_size").default(0),
   mimeType: text("mime_type"),
-  category: text("category").default("general"), // drawings, photos, documents, contracts, permits
+  category: text("category").default("general"), // drawings, photos, documents, contracts, permits, delivery_chalan, manual_quote
   description: text("description"),
   comment: text("comment"), // New field for image comments
   uploadedBy: integer("uploaded_by").references(() => users.id),

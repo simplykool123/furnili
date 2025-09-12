@@ -11,7 +11,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { CalendarIcon, ClockIcon, Package, Users, AlertTriangle, CheckCircle, Plus, Calendar, ExternalLink } from "lucide-react";
+import { CalendarIcon, ClockIcon, Package, Users, AlertTriangle, CheckCircle, Plus, Calendar, ExternalLink, Upload, FileImage, Download, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -20,7 +20,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 import ResponsiveLayout from "@/components/Layout/ResponsiveLayout";
 import { apiRequest } from "@/lib/queryClient";
-import type { WorkOrder, ProductionSchedule, QualityCheck } from "@shared/schema";
+import type { WorkOrder, ProductionSchedule, QualityCheck, ProjectFile } from "@shared/schema";
 
 interface ProductionStats {
   totalWorkOrders: number;
@@ -56,9 +56,12 @@ export default function ProductionPlanning() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [isCreateWorkOrderDialogOpen, setIsCreateWorkOrderDialogOpen] = useState(false);
   const [isScheduleDialogOpen, setIsScheduleDialogOpen] = useState(false);
+  const [isDeliveryChalanDialogOpen, setIsDeliveryChalanDialogOpen] = useState(false);
+  const [selectedProjectForChalan, setSelectedProjectForChalan] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [priorityFilter, setPriorityFilter] = useState("all");
+  const [uploadingFiles, setUploadingFiles] = useState(false);
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
@@ -121,6 +124,123 @@ export default function ProductionPlanning() {
       estimatedStartDate: new Date(data.estimatedStartDate).toISOString(),
       estimatedEndDate: new Date(data.estimatedEndDate).toISOString(),
     });
+  };
+
+  // Delivery Chalan file upload mutation
+  const deliveryChalanUploadMutation = useMutation({
+    mutationFn: async ({ projectId, files }: { projectId: number; files: File[] }) => {
+      const formData = new FormData();
+      files.forEach(file => {
+        formData.append('files', file);
+      });
+      
+      const response = await fetch(`/api/projects/${projectId}/files/delivery-chalans/multiple`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+        },
+        body: formData,
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Upload failed');
+      }
+      
+      return response.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/projects'] });
+      setIsDeliveryChalanDialogOpen(false);
+      setSelectedProjectForChalan(null);
+      toast({ 
+        title: "Delivery chalans uploaded successfully",
+        description: `${data.files?.length || 0} files uploaded`
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error uploading delivery chalans",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Fetch delivery chalans for a project
+  const { data: deliveryChalansData } = useQuery<{ files: ProjectFile[] }>({
+    queryKey: ['/api/projects', selectedProjectForChalan, 'files', 'delivery_chalan'],
+    queryFn: () => selectedProjectForChalan ? 
+      apiRequest(`/api/projects/${selectedProjectForChalan}/files?type=delivery_chalan`) : Promise.resolve({ files: [] }),
+    enabled: !!selectedProjectForChalan,
+  });
+
+  const deliveryChalans = deliveryChalansData?.files || [];
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || []);
+    if (files.length === 0 || !selectedProjectForChalan) return;
+
+    // Validate file types
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+    const invalidFiles = files.filter(file => !validTypes.includes(file.mimetype || file.type));
+    
+    if (invalidFiles.length > 0) {
+      toast({
+        title: "Invalid file type",
+        description: "Only image files (JPEG, PNG, GIF, WebP) are allowed for delivery chalans",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate file sizes (10MB max)
+    const oversizedFiles = files.filter(file => file.size > 10 * 1024 * 1024);
+    if (oversizedFiles.length > 0) {
+      toast({
+        title: "Files too large",
+        description: "Maximum file size is 10MB per file",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setUploadingFiles(true);
+    deliveryChalanUploadMutation.mutate(
+      { projectId: selectedProjectForChalan, files },
+      {
+        onSettled: () => setUploadingFiles(false)
+      }
+    );
+  };
+
+  const handleDeleteDeliveryChalan = async (fileId: number) => {
+    if (!selectedProjectForChalan) return;
+    
+    try {
+      await apiRequest(`/api/projects/${selectedProjectForChalan}/files/${fileId}`, {
+        method: 'DELETE',
+      });
+      
+      queryClient.invalidateQueries({ 
+        queryKey: ['/api/projects', selectedProjectForChalan, 'files', 'delivery_chalan'] 
+      });
+      
+      toast({ title: "Delivery chalan deleted successfully" });
+    } catch (error: any) {
+      toast({
+        title: "Error deleting file",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDownloadFile = (fileId: number, fileName: string) => {
+    const link = document.createElement('a');
+    link.href = `/api/files/${fileId}/download`;
+    link.download = fileName;
+    link.click();
   };
 
   const getStatusColor = (status: string) => {
@@ -425,6 +545,15 @@ export default function ProductionPlanning() {
                 </Form>
               </DialogContent>
             </Dialog>
+            
+            <Button 
+              variant="outline"
+              onClick={() => setIsDeliveryChalanDialogOpen(true)}
+              data-testid="button-upload-delivery-chalan"
+            >
+              <Upload className="mr-2 h-4 w-4" />
+              Upload Delivery Chalan
+            </Button>
 
             <Button 
               data-testid="button-schedule-production"
@@ -899,6 +1028,132 @@ export default function ProductionPlanning() {
             </Card>
           </TabsContent>
         </Tabs>
+
+        {/* Delivery Chalan Upload Dialog */}
+        <Dialog open={isDeliveryChalanDialogOpen} onOpenChange={setIsDeliveryChalanDialogOpen}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Upload Delivery Chalans</DialogTitle>
+              <DialogDescription>
+                Upload delivery chalan photos for your projects
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="space-y-4">
+              {/* Project Selection */}
+              <div>
+                <label className="text-sm font-medium">Select Project</label>
+                <Select onValueChange={(value) => setSelectedProjectForChalan(parseInt(value))}>
+                  <SelectTrigger data-testid="select-project-for-chalan">
+                    <SelectValue placeholder="Choose a project" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(projects as any[])?.map((project: any) => (
+                      <SelectItem key={project.id} value={project.id.toString()}>
+                        {project.name} ({project.code})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* File Upload */}
+              {selectedProjectForChalan && (
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6">
+                  <div className="text-center">
+                    <FileImage className="mx-auto h-12 w-12 text-gray-400" />
+                    <div className="mt-4">
+                      <label htmlFor="delivery-chalan-upload" className="cursor-pointer">
+                        <span className="mt-2 block text-sm font-medium text-gray-900">
+                          Drop delivery chalan images here, or click to browse
+                        </span>
+                        <span className="mt-1 block text-xs text-gray-500">
+                          PNG, JPG, WEBP up to 10MB each
+                        </span>
+                      </label>
+                      <input
+                        id="delivery-chalan-upload"
+                        type="file"
+                        multiple
+                        accept="image/*"
+                        onChange={handleFileUpload}
+                        className="hidden"
+                        data-testid="input-delivery-chalan-files"
+                      />
+                    </div>
+                    {uploadingFiles && (
+                      <div className="mt-4">
+                        <div className="flex items-center justify-center">
+                          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                          <span className="ml-2 text-sm text-gray-600">Uploading files...</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Existing Files */}
+              {selectedProjectForChalan && deliveryChalans.length > 0 && (
+                <div className="mt-6">
+                  <h4 className="text-sm font-medium mb-3">Uploaded Delivery Chalans</h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {deliveryChalans.map((file) => (
+                      <div 
+                        key={file.id} 
+                        className="flex items-center justify-between p-3 border rounded-lg"
+                        data-testid={`delivery-chalan-${file.id}`}
+                      >
+                        <div className="flex items-center space-x-3">
+                          <FileImage className="h-6 w-6 text-blue-500" />
+                          <div>
+                            <p className="text-sm font-medium truncate max-w-[150px]">
+                              {file.originalName}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              {(file.fileSize / 1024 / 1024).toFixed(1)} MB
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex space-x-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleDownloadFile(file.id, file.originalName)}
+                            data-testid={`button-download-${file.id}`}
+                          >
+                            <Download className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleDeleteDeliveryChalan(file.id)}
+                            data-testid={`button-delete-${file.id}`}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="flex justify-end">
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setIsDeliveryChalanDialogOpen(false);
+                  setSelectedProjectForChalan(null);
+                }}
+                data-testid="button-close-delivery-chalan-dialog"
+              >
+                Close
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </ResponsiveLayout>
     </ErrorBoundary>
   );
