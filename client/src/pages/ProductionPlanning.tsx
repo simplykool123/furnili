@@ -254,8 +254,8 @@ export default function ProductionPlanning() {
                               </FormControl>
                               <SelectContent>
                                 {(quotes as any[])?.map((quote: any) => (
-                                  <SelectItem key={quote.quote.id} value={quote.quote.id.toString()}>
-                                    {quote.quote.quoteNumber} - {quote.quote.title}
+                                  <SelectItem key={quote.id} value={quote.id.toString()}>
+                                    {quote.quoteNumber} - {quote.title}
                                   </SelectItem>
                                 ))}
                               </SelectContent>
