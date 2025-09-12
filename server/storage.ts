@@ -855,9 +855,41 @@ class DatabaseStorage implements IStorage {
   }
 
   async createProject(project: InsertProject): Promise<Project> {
-    const lastProject = await db.select({ id: projects.id }).from(projects).orderBy(desc(projects.id)).limit(1);
-    const nextId = lastProject[0] ? lastProject[0].id + 1 : 1;
-    const code = `FUN-${nextId.toString().padStart(4, '0')}`;
+    // Generate financial year-based project code (Fur/25-26/XXX)
+    // Financial year: April 1st to March 31st
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth() + 1; // getMonth() returns 0-11
+    
+    // Determine financial year based on current date
+    let startYear, endYear;
+    if (currentMonth >= 4) { // April (4) to December (12)
+      startYear = currentYear;
+      endYear = currentYear + 1;
+    } else { // January (1) to March (3)
+      startYear = currentYear - 1;
+      endYear = currentYear;
+    }
+    
+    const financialYear = `${startYear.toString().slice(-2)}-${endYear.toString().slice(-2)}`;
+    
+    // Get the last project with the same financial year pattern to continue sequence
+    const existingProjects = await db.select({ code: projects.code }).from(projects)
+      .where(sql`${projects.code} LIKE ${'Fur/' + financialYear + '/%'}`)
+      .orderBy(desc(projects.code));
+    
+    let nextSequence = 101; // Start from 101 if no existing projects in this financial year
+    if (existingProjects.length > 0) {
+      // Extract the highest sequence number from existing codes
+      const sequences = existingProjects
+        .map(p => parseInt(p.code.split('/').pop() || '0'))
+        .filter(num => !isNaN(num))
+        .sort((a, b) => b - a);
+      
+      nextSequence = sequences.length > 0 ? sequences[0] + 1 : 101;
+    }
+    
+    const code = `Fur/${financialYear}/${nextSequence}`;
     
     const projectData = {
       ...project,
