@@ -139,7 +139,7 @@ export default function Leads() {
 
   // Convert lead to client mutation
   const convertToClientMutation = useMutation({
-    mutationFn: (leadId: number) => apiRequest(`/api/crm/leads/${leadId}/convert`, "POST"),
+    mutationFn: (leadId: number) => apiRequest(`/api/crm/leads/${leadId}/convert`, "PUT"),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/crm/leads"] });
       toast({ title: "Success", description: "Lead converted to client successfully!" });
