@@ -43,6 +43,7 @@ import QualityControl from "@/pages/QualityControl";
 import WhatsAppConsole from "@/pages/WhatsAppConsole";
 import Leads from "@/pages/Leads";
 import Interactions from "@/pages/Interactions";
+import CreateQuote from "@/pages/CreateQuote";
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -205,7 +206,7 @@ function Router() {
       
       <Route path="/projects/:projectId/quotes/create">
         <ProtectedRoute>
-          <ProjectDetail />
+          <CreateQuote />
         </ProtectedRoute>
       </Route>
       
