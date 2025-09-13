@@ -497,6 +497,8 @@ class DatabaseStorage implements IStorage {
         minStock: 0,
         description: null,
         updatedAt: null,
+        imageUrl: null,
+        productType: 'material',
       }
     }));
 
@@ -507,11 +509,11 @@ class DatabaseStorage implements IStorage {
 
     const result = {
       ...request[0],
-      requestedByUser,
-      approvedByUser,
-      issuedByUser,
+      requestedByUser: requestedByUser ? { name: requestedByUser.name, email: requestedByUser.email } : { name: 'Unknown', email: '' },
+      approvedByUser: approvedByUser ? { name: approvedByUser.name, email: approvedByUser.email } : undefined,
+      issuedByUser: issuedByUser ? { name: issuedByUser.name, email: issuedByUser.email } : undefined,
       items,
-    };
+    } as MaterialRequestWithItems;
 
     return result;
   }
@@ -575,6 +577,7 @@ class DatabaseStorage implements IStorage {
       totalRequestValue += totalPrice;
       
       
+      // Create raw item data for database insert (bypassing type validation since we're adding requestId internally)
       const itemWithRequestId = {
         ...item,
         requestId: createdRequest.id,
@@ -1212,12 +1215,8 @@ class DatabaseStorage implements IStorage {
   }
 
   // Request Item operations
-  async createRequestItem(item: InsertRequestItem): Promise<RequestItem> {
-    const itemWithRequestId = {
-      ...item,
-      requestId: item.requestId || 0 // Ensure requestId is present
-    };
-    const result = await db.insert(requestItems).values([itemWithRequestId]).returning();
+  async createRequestItem(item: any): Promise<RequestItem> {
+    const result = await db.insert(requestItems).values([item]).returning();
     return result[0];
   }
 
@@ -1367,7 +1366,7 @@ class DatabaseStorage implements IStorage {
     const createdLog = result[0];
     
     // Get user details for response
-    const user = await this.getUser(createdLog.createdBy);
+    const user = createdLog.createdBy ? await this.getUser(createdLog.createdBy) : null;
     
     return {
       id: createdLog.id,
@@ -1402,7 +1401,7 @@ class DatabaseStorage implements IStorage {
     if (!updatedLog) return null;
 
     // Get user details for response
-    const user = await this.getUser(updatedLog.createdBy);
+    const user = updatedLog.createdBy ? await this.getUser(updatedLog.createdBy) : null;
     
     return {
       id: updatedLog.id,
@@ -1509,8 +1508,8 @@ class DatabaseStorage implements IStorage {
     const attendanceData: InsertAttendance = {
       userId,
       date: new Date(date),
-      checkIn,
-      checkOut: checkOut || null,
+      checkInTime: checkIn,
+      checkOutTime: checkOut || null,
       status: 'present'
     };
     return this.createAttendance(attendanceData);
@@ -1674,14 +1673,14 @@ class DatabaseStorage implements IStorage {
 
   async getTodayAttendance(userId?: number): Promise<any[]> {
     const today = new Date().toISOString().split('T')[0];
-    let query = db.select().from(attendance)
-      .where(sql`DATE(check_in_time) = ${today}`);
     
     if (userId) {
-      query = query.where(and(sql`DATE(check_in_time) = ${today}`, eq(attendance.userId, userId))) as any;
+      return await db.select().from(attendance)
+        .where(and(sql`DATE(check_in_time) = ${today}`, eq(attendance.userId, userId)));
+    } else {
+      return await db.select().from(attendance)
+        .where(sql`DATE(check_in_time) = ${today}`);
     }
-    
-    return query;
   }
 
   async getAttendanceStats(month: number, year: number): Promise<any> {
@@ -1937,13 +1936,14 @@ class DatabaseStorage implements IStorage {
     const result = await query.orderBy(desc(purchaseOrders.createdAt));
     
     // Get items for each PO
-    const posWithItems = [];
+    const posWithItems: PurchaseOrderWithDetails[] = [];
     for (const po of result) {
       const items = await this.getPurchaseOrderItems(po.id);
       posWithItems.push({
         ...po,
+        supplier: po.supplier || null,
         items
-      });
+      } as PurchaseOrderWithDetails);
     }
     
     return posWithItems;
@@ -1980,8 +1980,9 @@ class DatabaseStorage implements IStorage {
     
     return {
       ...po,
+      supplier: po.supplier || null,
       items
-    };
+    } as PurchaseOrderWithDetails;
   }
 
   async createPurchaseOrder(po: InsertPurchaseOrder, items: InsertPurchaseOrderItem[]): Promise<PurchaseOrder> {
@@ -2142,7 +2143,10 @@ class DatabaseStorage implements IStorage {
     .leftJoin(products, eq(purchaseOrderItems.productId, products.id))
     .where(eq(purchaseOrderItems.poId, poId));
     
-    return result;
+    return result.map(item => ({
+      ...item,
+      product: item.product || {} as Product
+    }));
   }
 
   // Audit Log operations
@@ -2277,11 +2281,11 @@ class DatabaseStorage implements IStorage {
     // Create separate POs for each supplier
     const createdPOs: PurchaseOrder[] = [];
     
-    for (const [supplierId, supplierData] of productSupplierMap) {
+    for (const [supplierId, supplierData] of Array.from(productSupplierMap.entries())) {
       const { supplier, products: supplierProducts, relationships } = supplierData;
       
       // Create PO items for this supplier's products
-      const items: InsertPurchaseOrderItem[] = supplierProducts.map((product, index) => {
+      const items: InsertPurchaseOrderItem[] = supplierProducts.map((product: Product, index: number) => {
         const relationship = relationships[index];
         const qtyNeeded = Math.max(1, (product.minStock || 10) - product.currentStock);
         
@@ -2370,9 +2374,9 @@ class DatabaseStorage implements IStorage {
 
   // Supplier Auto-suggestion for Products
   async getSuggestedSuppliersForProducts(productIds: number[]): Promise<{ productId: number; suppliers: Supplier[] }[]> {
-    const products = await db.select().from(products).where(inArray(products.id, productIds));
+    const productsResult = await db.select().from(products).where(inArray(products.id, productIds));
     
-    const suggestions = await Promise.all(products.map(async (product) => {
+    const suggestions = await Promise.all(productsResult.map(async (product: Product) => {
       // Get preferred suppliers since brand relationship is removed
       const preferredSuppliersResult = await db.select()
         .from(suppliers)
@@ -2434,7 +2438,7 @@ class DatabaseStorage implements IStorage {
 
   async deleteBomSettings(id: number): Promise<boolean> {
     const result = await db.delete(bomSettings).where(eq(bomSettings.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount || 0) > 0;
   }
 
   // 🎯 Smart Price Resolution: Check settings → custom default → product price → DEFAULT_RATES fallback
